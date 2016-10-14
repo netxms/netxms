@@ -1189,6 +1189,8 @@ extern FileMonitoringList g_monitoringList;
 
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
 
+extern HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap;
+
 /**
  * Alarm category functions
  */
@@ -1196,6 +1198,7 @@ void GetCategories(NXCPMessage *msg);
 UINT32 UpdateAlarmCategory(NXCPMessage *pRequest);
 UINT32 ModifyAlarmAcl(NXCPMessage *pRequest);
 UINT32 DeleteAlarmCategory(NXCPMessage *pRequest);
+void CacheAlarmCategoryAcl();
 
 
 #endif   /* _nms_core_h_ */

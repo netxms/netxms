@@ -812,6 +812,9 @@ retry_db_lock:
 		return FALSE;
 	}
 
+	// Cache alarm category ACLs
+	CacheAlarmCategoryAcl();
+
 	// Start threads
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);

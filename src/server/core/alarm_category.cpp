@@ -22,6 +22,13 @@
 
 #include "nxcore.h"
 
+static RWLOCK lock = RWLockCreate();
+
+ /**
+  * Alarm category acl map
+  */
+HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap = NULL;
+
 /**
 * Callback for sending alarm category configuration change notifications
 */
@@ -36,52 +43,52 @@ static void SendAlarmCategoryDBChangeNotification(ClientSession *session, void *
 void GetCategories(NXCPMessage *msg)
 {
    if (!(g_flags & AF_DB_CONNECTION_LOST))
+   {
+      // Prepare data message
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,name,descr FROM alarm_categories"));
+      DB_RESULT hResultAcl = DBSelect(hdb, _T("SELECT category_id,user_id FROM alarm_category_acl"));
+
+      if (hResult != NULL && hResultAcl != NULL)
       {
-         // Prepare data message
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,name,descr FROM alarm_categories"));
-         DB_RESULT hResultAcl = DBSelect(hdb, _T("SELECT category_id,user_id FROM alarm_category_acl"));
-
-         if (hResult != NULL && hResultAcl != NULL)
+         int base = VID_LOC_LIST_BASE;
+         int i;
+         UINT32 numRows = (UINT32)DBGetNumRows(hResult);
+         UINT32 numRowsAcl = (UINT32)DBGetNumRows(hResultAcl);
+         IntegerArray<UINT32> *dwUserId = new IntegerArray<UINT32>(16, 16);
+         for(i = 0; i < numRowsAcl; i++)
          {
-            int base = VID_LOC_LIST_BASE;
-            int i;
-            UINT32 numRows = (UINT32)DBGetNumRows(hResult);
-            UINT32 numRowsAcl = (UINT32)DBGetNumRows(hResultAcl);
-            IntegerArray<UINT32> *dwUserId = new IntegerArray<UINT32>(16, 16);
-            for(i = 0; i < numRowsAcl; i++)
-            {
-               dwUserId->add(DBGetFieldULong(hResultAcl, i, 1));
-            }
-
-            TCHAR szBuffer[256];
-            UINT32 counter = 5+numRowsAcl;
-
-            msg->setField(VID_NUM_RECORDS, numRows);
-            msg->setField(VID_NUM_FIELDS, counter);
-
-            for (i = 0; i < numRows; i++, base+=counter)
-            {
-               msg->setField(base, DBGetFieldULong(hResult, i, 0));
-               msg->setField(base+1, DBGetField(hResult, i, 1, szBuffer, 64));
-               msg->setField(base+2, DBGetField(hResult, i, 2, szBuffer, 256));
-               msg->setFieldFromInt32Array(base+3, dwUserId);
-            }
-
-            DBFreeResult(hResult);
-            DBFreeResult(hResultAcl);
-            delete dwUserId;
+            dwUserId->add(DBGetFieldULong(hResultAcl, i, 1));
          }
-         else
+
+         TCHAR szBuffer[256];
+         UINT32 counter = 5+numRowsAcl;
+
+         msg->setField(VID_NUM_RECORDS, numRows);
+         msg->setField(VID_NUM_FIELDS, counter);
+
+         for (i = 0; i < numRows; i++, base+=counter)
          {
-            msg->setField(VID_RCC, RCC_DB_FAILURE);
+            msg->setField(base, DBGetFieldULong(hResult, i, 0));
+            msg->setField(base+1, DBGetField(hResult, i, 1, szBuffer, 64));
+            msg->setField(base+2, DBGetField(hResult, i, 2, szBuffer, 256));
+            msg->setFieldFromInt32Array(base+3, dwUserId);
          }
-         DBConnectionPoolReleaseConnection(hdb);
+
+         DBFreeResult(hResult);
+         DBFreeResult(hResultAcl);
+         delete dwUserId;
       }
       else
       {
-         msg->setField(VID_RCC, RCC_DB_CONNECTION_LOST);
+         msg->setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      msg->setField(VID_RCC, RCC_DB_CONNECTION_LOST);
+   }
 }
 
 /**
@@ -193,8 +200,8 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
    UINT32 result = 0;
    UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
 
-   IntegerArray<UINT32> *dwUserId = new IntegerArray<UINT32>(16, 16);
-   pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, dwUserId);
+   IntegerArray<UINT32> *userIds = new IntegerArray<UINT32>(16, 16);
+   pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, userIds);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = DBBegin(hdb);
@@ -207,14 +214,18 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
          success = !DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
+      else
+      {
+         success = false;
+      }
 
       hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-         for (int i = 0; i < dwUserId->size(); i++)
+         for (int i = 0; i < userIds->size(); i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwUserId->get(i));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userIds->get(i));
             success = DBExecute(hStmt);
             if (!success)
             {
@@ -223,16 +234,17 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
          }
 
          DBFreeStatement(hStmt);
-         delete dwUserId;
+         delete userIds;
       }
       else
       {
-         result = RCC_DB_FAILURE;
+         success = false;
       }
 
       if (success)
       {
          DBCommit(hdb);
+         CacheAlarmCategoryAcl();
          result = RCC_SUCCESS;
       }
       else
@@ -317,4 +329,49 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
    DBConnectionPoolReleaseConnection(hdb);
 
    return result;
+}
+
+/**
+ * Cache alarm category acls
+ */
+void CacheAlarmCategoryAcl()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_id,category_id FROM alarm_category_acl ORDER BY user_id"));
+
+   if (hResult != NULL)
+   {
+      UINT32 numRows = (UINT32)DBGetNumRows(hResult);
+      if (numRows > 0)
+      {
+         IntegerArray<UINT32> *categoryIds = new IntegerArray<UINT32>(16, 16);
+         HashMap<UINT32, IntegerArray<UINT32> > *categoryAclTemp = new HashMap<UINT32, IntegerArray<UINT32> >(true);
+         delete(g_alarmCategoryAclMap);
+
+         DbgPrintf(7, _T("AlarmCategories: caching alarm category ACLs"));
+
+         UINT32 userId = DBGetFieldULong(hResult, 0, 0);
+         for(int i = 0; i < numRows; i++)
+         {
+            if (userId == DBGetFieldULong(hResult, i, 0))
+            {
+               categoryIds->add(DBGetFieldULong(hResult, i, 1));
+            }
+            else
+            {
+               categoryAclTemp->set(userId, categoryIds);
+               userId = DBGetFieldULong(hResult, i, 0);
+               categoryIds = new IntegerArray<UINT32>(16, 16);
+               categoryIds->add(DBGetFieldULong(hResult, i, 1));
+            }
+         }
+         categoryAclTemp->set(userId, categoryIds);
+
+         RWLockWriteLock(lock, INFINITE);
+         g_alarmCategoryAclMap = categoryAclTemp;
+         RWLockUnlock(lock);
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }

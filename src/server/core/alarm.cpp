@@ -27,6 +27,7 @@
  */
 static ObjectArray<Alarm> *m_alarmList;
 static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
+static RWLOCK lock = RWLockCreate();
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
 
@@ -214,26 +215,22 @@ bool Alarm::checkCategoryAcl(DWORD userId, ClientSession *session) const
       return true;
    }
 
-   TCHAR szQuery[256];
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_acl WHERE user_id=%d"), userId);
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
-
-   if (hResult == NULL)
-      return false;
-
-   UINT32 count = DBGetNumRows(hResult);
-   for(int i = 0; i < count; i++)
+   RWLockReadLock(lock, INFINITE);
+   if (g_alarmCategoryAclMap->contains(userId))
    {
-      if (DBGetFieldULong(hResult, i, 0) == m_alarmCategoryList->get(i))
+      IntegerArray<UINT32> *categoryIds = g_alarmCategoryAclMap->get(userId);
+      for(int i = 0; i < categoryIds->size(); i++)
       {
-         DBFreeResult(hResult);
-         DBConnectionPoolReleaseConnection(hdb);
-         return true;
+         for(int n = 0; n < m_alarmCategoryList->size(); n++)
+         {
+            if (categoryIds->get(i) == m_alarmCategoryList->get(n))
+            {
+            return true;
+            }
+         }
       }
    }
-   DBFreeResult(hResult);
-   DBConnectionPoolReleaseConnection(hdb);
+   RWLockUnlock(lock);
 
    return false;
 }
