@@ -49,9 +49,9 @@ public abstract class AbstractSessionTest extends TestCase
             }
         });
 
-        NXCSession session = new NXCSession(serverAddress, serverPort, useEncryption);
+        NXCSession session = new NXCSession(TestConstants.serverAddress, TestConstants.serverPort, useEncryption);
         session.connect(new int[]{ProtocolVersion.INDEX_FULL});
-        session.login(loginName, password);
+        session.login(TestConstants.loginName, TestConstants.password);
         return session;
     }
 

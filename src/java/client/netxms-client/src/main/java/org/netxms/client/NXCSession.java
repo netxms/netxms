@@ -2936,21 +2936,6 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-
-   /**
-    * Terminate alarm.
-    *
-    * @param alarmId Identifier of alarm to be terminated.
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void terminateAlarm(final long alarmId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
    
    /**
     * Terminate bulk alarms.
@@ -3655,7 +3640,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_OVERVIEW_ONLY, overviewOnly);
       msg.setField(NXCPCodes.VID_INCLUDE_NOVALUE_OBJECTS, includeNoValueObjects);
       sendMessage(msg);
-
+      
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
