@@ -824,14 +824,14 @@ void ClientSession::processingThread()
 			case CMD_CONFIG_SET_CLOB:
 				setConfigCLOB(pMsg);
 				break;
-         case CMD_LOAD_CATEGORY_DB:
-            sendCategories(pMsg->getId());
+         case CMD_GET_ALARM_CATEGORIES:
+            getAlarmCategories(pMsg->getId());
             break;
-         case CMD_SET_CATEGORY_INFO:
+         case CMD_MODIFY_ALARM_CATEGORY:
             modifyAlarmCategory(pMsg);
             break;
-         case CMD_DELETE_CATEGORY:
-            removeAlarmCategory(pMsg);
+         case CMD_DELETE_ALARM_CATEGORY:
+            deleteAlarmCategory(pMsg);
             break;
          case CMD_LOAD_EVENT_DB:
             sendEventDB(pMsg->getId());
@@ -974,10 +974,16 @@ void ClientSession::processingThread()
             resolveAlarm(pMsg, false);
             break;
          case CMD_TERMINATE_ALARM:
-            terminateBulkAlarms(pMsg);
+            resolveAlarm(pMsg, true);
             break;
          case CMD_DELETE_ALARM:
             deleteAlarm(pMsg);
+            break;
+         case CMD_BULK_RESOLVE_ALARMS:
+            bulkResolveAlarms(pMsg, false);
+            break;
+         case CMD_BULK_TERMINATE_ALARMS:
+            bulkResolveAlarms(pMsg, true);
             break;
          case CMD_OPEN_HELPDESK_ISSUE:
             CALL_IN_NEW_THREAD(openHelpdeskIssue, pMsg);
@@ -2018,18 +2024,19 @@ void ClientSession::login(NXCPMessage *pRequest)
 /**
  * Send alarm categories to client
 */
-void ClientSession::sendCategories(UINT32 dwRqId)
+void ClientSession::getAlarmCategories(UINT32 requestId)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
 
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      GetCategories(&msg);
+      GetAlarmCategories(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
@@ -2059,7 +2066,7 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
       }
       else if (pRequest->getFieldAsUInt32(VID_FIELDS) & ALARM_MODIFY_ACCESS_LIST)
       {
-         msg.setField(VID_RCC, ModifyAlarmAcl(pRequest));
+         msg.setField(VID_RCC, ModifyAlarmCategoryAcl(pRequest));
       }
       else
       {
@@ -2078,22 +2085,19 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
 /**
 * Delete alarm category
 */
-void ClientSession::removeAlarmCategory(NXCPMessage *pRequest)
+void ClientSession::deleteAlarmCategory(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 dwCategoryId;
-
-   // Prepare reply message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      dwCategoryId = pRequest->getFieldAsInt32(VID_CATEGORY_ID);
-      if (!g_pEventPolicy->isCategoryInUse(dwCategoryId))
+      UINT32 categoryId = request->getFieldAsInt32(VID_CATEGORY_ID);
+      if (!g_pEventPolicy->isCategoryInUse(categoryId))
       {
-         msg.setField(VID_RCC, DeleteAlarmCategory(pRequest));
+         msg.setField(VID_RCC, DeleteAlarmCategory(categoryId));
       }
       else
       {
@@ -5730,17 +5734,15 @@ void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
 /**
  * Terminate bulk alarms
  */
-void ClientSession::terminateBulkAlarms(NXCPMessage *pRequest)
+void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
 {
    NXCPMessage msg;
-
-   // Prepare response mesage
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
    IntegerArray<UINT32> alarmIds;
-   pRequest->getFieldAsInt32Array(VID_ALARM_ID, &alarmIds);
-   msg.setField(VID_RCC, ResolveAlarmsById(&alarmIds, &msg, this, true));
+   pRequest->getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
+   msg.setField(VID_RCC, ResolveAlarmsById(&alarmIds, &msg, this, terminate));
 
    sendMessage(&msg);
 }

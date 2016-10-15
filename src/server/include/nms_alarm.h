@@ -98,7 +98,7 @@ public:
 
    void updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, IntegerArray<UINT32> *alarmCategoryList);
    UINT32 acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
-   void resolve(UINT32 userId, Event *event, bool terminate);
+   void resolve(UINT32 userId, Event *event, bool terminate, bool notify);
    UINT32 openHelpdeskIssue(ClientSession *session, TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
    UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);

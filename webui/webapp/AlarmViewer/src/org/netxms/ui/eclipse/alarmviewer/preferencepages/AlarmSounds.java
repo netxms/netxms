@@ -189,7 +189,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
 
             for(int i = 0; i < 5; i++)
             {
-               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.severityArray[i])); //$NON-NLS-1$
+               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.SEVERITY_TEXT[i])); //$NON-NLS-1$
             }
             melodyList.addAll(currentMelodyList);
 
@@ -303,7 +303,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          {
             for(int i = 0; i < 5; i++)
             {
-               changeMelody(newMelodyList.get(i), AlarmNotifier.severityArray[i], i);
+               changeMelody(newMelodyList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
             }
             for(String oldName : oldMelodyList)
             {

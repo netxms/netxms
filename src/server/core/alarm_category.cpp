@@ -40,7 +40,7 @@ static void SendAlarmCategoryDBChangeNotification(ClientSession *session, void *
 /**
  * Get alarm categories from database
 */
-void GetCategories(NXCPMessage *msg)
+void GetAlarmCategories(NXCPMessage *msg)
 {
    if (!(g_flags & AF_DB_CONNECTION_LOST))
    {
@@ -195,7 +195,7 @@ UINT32 UpdateAlarmCategory(NXCPMessage *pRequest)
 /**
  * Modify alarm acl
  */
-UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
+UINT32 ModifyAlarmCategoryAcl(NXCPMessage *pRequest)
 {
    UINT32 result = 0;
    UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
@@ -265,14 +265,13 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
 /**
 * Delete alarm category from database
 */
-UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
+UINT32 DeleteAlarmCategory(UINT32 id)
 {
    UINT32 result = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check if category with specific ID exists
-   UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
-   bool bCategoryExist = IsDatabaseRecordExist(hdb, _T("alarm_categories"), _T("id"), dwCategoryId);
+   bool bCategoryExist = IsDatabaseRecordExist(hdb, _T("alarm_categories"), _T("id"), id);
 
    // Prepare and execute SQL query
    DB_STATEMENT hStmt;
@@ -281,15 +280,15 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
       hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_categories WHERE id=?"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
          if (DBExecute(hStmt))
          {
             result = RCC_SUCCESS;
 
             NXCPMessage nmsg;
             nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-            nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ALARM_CATEGORY_DELETE);
-            nmsg.setField(VID_CATEGORY_ID, dwCategoryId);
+            nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
+            nmsg.setField(VID_CATEGORY_ID, id);
             EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
 
             DBFreeStatement(hStmt);
@@ -297,7 +296,7 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
             hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
             if (hStmt != NULL)
             {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
                   if (DBExecute(hStmt))
                   {
                      result = RCC_SUCCESS;

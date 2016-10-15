@@ -59,12 +59,13 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AcknowledgeCustomTimeDialog;
-import org.netxms.ui.eclipse.alarmviewer.dialogs.TerminateAlarmDialog;
+import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmStateChangeFailureDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFunctions;
@@ -134,12 +135,12 @@ public class AlarmList extends CompositeWithMessageBar
     * @param configPrefix prefix for saving/loading widget configuration
     */
    public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
-   {
-      super(parent, style);
-      session = (NXCSession)ConsoleSharedData.getSession();
-      this.viewPart = viewPart;
-
-      // Setup table columns
+	{
+		super(parent, style);
+		session = (NXCSession)ConsoleSharedData.getSession();
+		this.viewPart = viewPart;	
+		
+		// Setup table columns
 		final String[] names = { 
 		      Messages.get().AlarmList_ColumnSeverity, 
 		      Messages.get().AlarmList_ColumnState, 
@@ -152,7 +153,7 @@ public class AlarmList extends CompositeWithMessageBar
 		      Messages.get().AlarmList_ColumnCreated, 
 		      Messages.get().AlarmList_ColumnLastChange
 		   };
-      final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
+		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 
@@ -199,33 +200,56 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-      // Add client library listener
-      clientListener = new SessionListener() {
-         @SuppressWarnings("unchecked")
+		// Add client library listener
+		clientListener = new SessionListener() {
          @Override
-         public void notificationHandler(SessionNotification n)
-         {
-            switch(n.getCode())
-            {
-               case SessionNotification.NEW_ALARM:
-               case SessionNotification.ALARM_CHANGED:
+			public void notificationHandler(SessionNotification n)
+			{
+				switch(n.getCode())
+				{
+					case SessionNotification.NEW_ALARM:
+					case SessionNotification.ALARM_CHANGED:
+						synchronized(alarmList)
+						{
+							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     filterAndLimit();
+						}
+						refreshTimer.execute();
+						break;
+					case SessionNotification.ALARM_TERMINATED:
+					case SessionNotification.ALARM_DELETED:
                   synchronized(alarmList)
                   {
-                     alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     alarmList.remove(((Alarm)n.getObject()).getId());
                      filterAndLimit();
                   }
                   refreshTimer.execute();
                   break;
-               case SessionNotification.ALARM_TERMINATED:
-               case SessionNotification.ALARM_DELETED:
+               case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
                   synchronized(alarmList)
                   {
-                     for(Long id : (List<Long>)n.getObject())
+                     BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
+                     for(Long id : d.getAlarms())
                      {
-                        alarmList.remove(id);
+                        Alarm a = alarmList.get(id);
+                        if (a != null)
+                        {
+                           a.setResolved(d.getUserId(), d.getChangeTime());
+                        }
                      }
                      filterAndLimit();
                   }
+                  refreshTimer.execute();
+                  break;
+               case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
+						synchronized(alarmList)
+						{
+						   for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
+						   {
+						      alarmList.remove(id);
+						   }
+						   filterAndLimit();
+						}
                   refreshTimer.execute();
                   break;
                default:
@@ -261,14 +285,14 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-    * Get selection provider of alarm list
-    * 
-    * @return
-    */
-   public ISelectionProvider getSelectionProvider()
-   {
-      return alarmViewer;
-   }
+	 * Get selection provider of alarm list
+	 * 
+	 * @return
+	 */
+	public ISelectionProvider getSelectionProvider()
+	{
+		return alarmViewer;
+	}
 
    /**
     * Create actions
@@ -311,24 +335,24 @@ public class AlarmList extends CompositeWithMessageBar
       };
       actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
 
-      actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
-         @Override
-         public void run()
-         {
-            resolveAlarms();
-         }
-      };
-      actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve"); //$NON-NLS-1$
+		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
+			@Override
+			public void run()
+			{
+				resolveAlarms();
+			}
+		};
+		actionResolve.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Resolve"); //$NON-NLS-1$
 
-      actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
-         @Override
-         public void run()
-         {
-            terminateAlarms();
-         }
-      };
-      actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
-
+		actionTerminate = new Action(Messages.get().AlarmList_Terminate, Activator.getImageDescriptor("icons/terminated.png")) { //$NON-NLS-1$
+			@Override
+			public void run()
+			{
+				terminateAlarms();
+			}
+		};
+		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
+		
       actionCreateIssue = new Action(Messages.get().AlarmList_CreateTicket, Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
          @Override
          public void run()
@@ -336,7 +360,7 @@ public class AlarmList extends CompositeWithMessageBar
             createIssue();
          }
       };
-
+      
       actionShowIssue = new Action(Messages.get().AlarmList_ShowTicketInBrowser, SharedIcons.BROWSER) {
          @Override
          public void run()
@@ -344,7 +368,7 @@ public class AlarmList extends CompositeWithMessageBar
             showIssue();
          }
       };
-
+      
       actionUnlinkIssue = new Action(Messages.get().AlarmList_UnlinkTicket) {
          @Override
          public void run()
@@ -352,20 +376,20 @@ public class AlarmList extends CompositeWithMessageBar
             unlinkIssue();
          }
       };
-
-      actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
-         @Override
-         public void run()
-         {
-            showObjectDetails();
-         }
-      };
-      actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
-
-      actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
-
+      
+		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
+			@Override
+			public void run()
+			{
+				showObjectDetails();
+			}
+		};
+		actionShowObjectDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectDetails"); //$NON-NLS-1$
+		
+		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
+		
 		//time based sticky acknowledgement	
-      timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
          {
@@ -378,13 +402,13 @@ public class AlarmList extends CompositeWithMessageBar
             }
          }
       };
-      timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther"); //$NON-NLS-1$
-   }
+      timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther");  //$NON-NLS-1$
+	}
 
-   /**
+	/**
 	 * 
 	 */
-   private void initializeTimeAcknowledge()
+	private void initializeTimeAcknowledge()
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       int menuSize;
@@ -438,18 +462,18 @@ public class AlarmList extends CompositeWithMessageBar
       };
       act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge0ID"); //$NON-NLS-1$
       timeAcknowledge.add(act);
-
+      
       act = new Action("4 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
          {
             int time = 4 * 60 * 60; // hour to minutes, seconds
-            acknowledgeAlarms(true, time);
+            acknowledgeAlarms(true, time); 
          }
       };
       act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge1ID"); //$NON-NLS-1$
       timeAcknowledge.add(act);
-
+      
       act = new Action("1 day(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
@@ -460,7 +484,7 @@ public class AlarmList extends CompositeWithMessageBar
       };
       act.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge2ID"); //$NON-NLS-1$
       timeAcknowledge.add(act);
-
+      
       act = new Action("2 days(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
@@ -628,7 +652,7 @@ public class AlarmList extends CompositeWithMessageBar
             filteredAlarmList.add(alarm);
          }
       }
-
+      
       // limit number of alarms to display
       if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() > session.getAlarmListDisplayLimit()))
       {
@@ -726,123 +750,87 @@ public class AlarmList extends CompositeWithMessageBar
       {
          MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
                Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
-      }
-   }
-
-   /**
-    * @param filter
-    */
-   public void setStateFilter(int filter)
-   {
-      alarmFilter.setStateFilter(filter);
-   }
-
-   /**
-    * @param filter
-    */
-   public void setSeverityFilter(int filter)
-   {
-      alarmFilter.setSeverityFilter(filter);
-   }
-
-   /**
-    * Acknowledge selected alarms
-    * 
-    * @param sticky
-    */
-   private void acknowledgeAlarms(final boolean sticky, final int time)
-   {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-      if (selection.size() == 0)
-         return;
-
-      final Object[] alarms = selection.toArray();
-      new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            monitor.beginTask(Messages.get(getDisplay()).AcknowledgeAlarm_TaskName, alarms.length);
-            for(Object o : alarms)
-            {
-               if (monitor.isCanceled())
-                  break;
-               if (o instanceof Alarm)
-                  session.acknowledgeAlarm(((Alarm)o).getId(), sticky, time);
-               monitor.worked(1);
-            }
-            monitor.done();
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().AcknowledgeAlarm_ErrorMessage;
-         }
-      }.start();
-   }
-
-   /**
-    * Resolve selected alarms
-    */
-   private void resolveAlarms()
-   {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-      if (selection.size() == 0)
-         return;
-
-      final Object[] alarms = selection.toArray();
-      new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            monitor.beginTask(Messages.get(getDisplay()).AlarmList_ResolveAlarm, alarms.length);
-            for(Object o : alarms)
-            {
-               if (monitor.isCanceled())
-                  break;
-               if (o instanceof Alarm)
-                  session.resolveAlarm(((Alarm)o).getId());
-               monitor.worked(1);
-            }
-            monitor.done();
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().AlarmList_CannotResoveAlarm;
-         }
-      }.start();
-   }
-
-   /**
-    * Terminate selected alarms
-    */
-   private void terminateAlarms()
-   {
-      final List<Long> accessRightFail = new ArrayList<Long>();
-      final List<Long> openInHelpdesk = new ArrayList<Long>();
-      final List<Long> idCheckFail = new ArrayList<Long>();
-      
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-      if (selection.size() == 0)
-         return;     
-      
-      Object[] alarms = selection.toArray();
-      final long[] alarmIds = new long[alarms.length];
-      for(int i = 0; i < alarms.length; i++)
-         alarmIds[i] = ((Alarm)alarms[i]).getId();
-      new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            if (!session.terminateBulkAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+		}
+	}
+	
+	/**
+	 * @param filter
+	 */
+	public void setStateFilter(int filter)
+	{
+		alarmFilter.setStateFilter(filter);
+	}
+	
+	/**
+	 * @param filter
+	 */
+	public void setSeverityFilter(int filter)
+	{
+		alarmFilter.setSeverityFilter(filter);
+	}
+	
+	/**
+	 * Acknowledge selected alarms
+	 * 
+	 * @param sticky
+	 */
+	private void acknowledgeAlarms(final boolean sticky, final int time)
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		final Object[] alarms = selection.toArray();
+		new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
+				for(Object o : alarms)
+				{
+					if (monitor.isCanceled())
+						break;
+					if (o instanceof Alarm)
+						session.acknowledgeAlarm(((Alarm)o).getId(), sticky, time);
+					monitor.worked(1);
+				}
+				monitor.done();
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.get().AcknowledgeAlarm_ErrorMessage;
+			}
+		}.start();
+	}
+		
+	/**
+	 * Resolve selected alarms
+	 */
+	private void resolveAlarms()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.isEmpty())
+			return;
+		
+      final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+      for(Object o : selection.toList())
+         alarmIds.add(((Alarm)o).getId());
+		new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+            final List<Long> accessRightFail = new ArrayList<Long>();
+            final List<Long> openInHelpdesk = new ArrayList<Long>();
+            final List<Long> idCheckFail = new ArrayList<Long>();
+            if (!session.bulkResolveAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TerminateAlarmDialog dlg = new TerminateAlarmDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
                      if (dlg.open() == Window.OK)
                      {
                         return;
@@ -850,15 +838,58 @@ public class AlarmList extends CompositeWithMessageBar
                   }
                });
             }
-         }
-         
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().TerminateAlarm_ErrorMessage;
-         }
-      }.start();
-   }
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.get().AlarmList_CannotResoveAlarm;
+			}
+		}.start();
+	}
+
+	/**
+	 * Terminate selected alarms
+	 */
+	private void terminateAlarms()
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.isEmpty())
+			return;		
+
+		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+		for(Object o : selection.toList())
+		   alarmIds.add(((Alarm)o).getId());
+		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+		      final List<Long> accessRightFail = new ArrayList<Long>();
+		      final List<Long> openInHelpdesk = new ArrayList<Long>();
+		      final List<Long> idCheckFail = new ArrayList<Long>();
+				if (!session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+				{
+				   runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     if (dlg.open() == Window.OK)
+                     {
+                        return;
+                     }
+                  }
+               });
+				}
+			}
+			
+			@Override
+			protected String getErrorMessage()
+			{
+				return Messages.get().TerminateAlarm_ErrorMessage;
+			}
+		}.start();
+	}
 
    /**
     * Create helpdesk ticket (issue) from selected alarms
@@ -868,7 +899,7 @@ public class AlarmList extends CompositeWithMessageBar
       IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
       if (selection.size() != 1)
          return;
-
+      
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
@@ -876,7 +907,7 @@ public class AlarmList extends CompositeWithMessageBar
          {
             session.openHelpdeskIssue(id);
          }
-
+         
          @Override
          protected String getErrorMessage()
          {
@@ -893,14 +924,14 @@ public class AlarmList extends CompositeWithMessageBar
       IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
       if (selection.size() != 1)
          return;
-
+      
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final String url = session.getHelpdeskIssueUrl(id);
-            runInUIThread(new Runnable() {
+            runInUIThread(new Runnable() { 
                @Override
                public void run()
                {

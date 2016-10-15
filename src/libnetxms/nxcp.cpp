@@ -373,10 +373,17 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_GET_REPOSITORIES"),
       _T("CMD_ADD_REPOSITORY"),
       _T("CMD_MODIFY_REPOSITORY"),
-      _T("CMD_DELETE_REPOSITORY")
+      _T("CMD_DELETE_REPOSITORY"),
+      _T("CMD_GET_ALARM_CATEGORIES"),
+      _T("CMD_MODIFY_ALARM_CATEGORY"),
+      _T("CMD_DELETE_ALARM_CATEGORY"),
+      _T("CMD_ALARM_CATEGORY_UPDATE"),
+      _T("CMD_BULK_TERMINATE_ALARMS"),
+      _T("CMD_BULK_RESOLVE_ALARMS"),
+      _T("CMD_BULK_ALARM_STATE_CHANGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_REPOSITORY))
+   if ((code >= CMD_LOGIN) && (code <= CMD_BULK_ALARM_STATE_CHANGE))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);

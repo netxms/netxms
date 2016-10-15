@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -47,6 +46,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmReminderDialog;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -58,7 +58,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
-   public static String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
    private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
@@ -105,16 +105,42 @@ public class AlarmNotifier
             }
             else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
             {               
-               @SuppressWarnings("unchecked")
-               List<Long> alarmIds = (List<Long>)n.getObject();
-               for(int i = 0; i < alarmIds.size(); i++)
+               Alarm a = (Alarm)n.getObject();
+               Integer state = alarmStates.get(a.getId());
+               if (state != null)
                {
-                  Integer state = alarmStates.get(alarmIds.get(i));
+                  if (state == Alarm.STATE_OUTSTANDING)
+                     outstandingAlarms--;
+                  alarmStates.remove(a.getId());
+               }
+            }
+            else if (n.getCode() == SessionNotification.MULTIPLE_ALARMS_RESOLVED)
+            {               
+               BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
+               for(Long id : d.getAlarms())
+               {
+                  Integer state = alarmStates.get(id);
+                  if (state != null)
+                  {
+                     if (state == Alarm.STATE_OUTSTANDING)
+                     {
+                        outstandingAlarms--;
+                     }
+                  }
+                  alarmStates.put(id, Alarm.STATE_RESOLVED);
+               }
+            }
+            else if (n.getCode() == SessionNotification.MULTIPLE_ALARMS_TERMINATED)
+            {               
+               BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
+               for(Long id : d.getAlarms())
+               {
+                  Integer state = alarmStates.get(id);
                   if (state != null)
                   {
                      if (state == Alarm.STATE_OUTSTANDING)
                         outstandingAlarms--;
-                     alarmStates.remove((alarmIds.get(i)));
+                     alarmStates.remove(id);
                   }
                }
             }
@@ -166,7 +192,7 @@ public class AlarmNotifier
    {
       for(int i = 0; i < 5; i++)
       {
-         getMelodyAndDownloadIfRequired(severityArray[i]);
+         getMelodyAndDownloadIfRequired(SEVERITY_TEXT[i]);
       }
    }
 
@@ -278,7 +304,7 @@ public class AlarmNotifier
       String fileName;
       try
       {
-         fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity().getValue()]);
+         fileName = getMelodyAndDownloadIfRequired(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
       }
       catch(ArrayIndexOutOfBoundsException e)
       {

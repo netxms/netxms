@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
-   public static final String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
    private SessionListener listener = null;
    private Display display;
@@ -93,26 +93,11 @@ public class AlarmNotifier
       
       listener = new SessionListener() {
          @Override
-         public void notificationHandler(final SessionNotification n)
+         public void notificationHandler(SessionNotification n)
          {
             if ((n.getCode() == SessionNotification.NEW_ALARM) || (n.getCode() == SessionNotification.ALARM_CHANGED))
             {
                processNewAlarm((Alarm)n.getObject());
-            }
-            else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
-            {               
-               @SuppressWarnings("unchecked")
-               List<Long> alarmIds = (List<Long>)n.getObject();
-               for(int i = 0; i < alarmIds.size(); i++)
-               {
-                  Integer state = alarmStates.get(alarmIds.get(i));
-                  if (state != null)
-                  {
-                     if (state == Alarm.STATE_OUTSTANDING)
-                        outstandingAlarms--;
-                     alarmStates.remove((alarmIds.get(i)));
-                  }
-               }
             }
          }
       };
@@ -126,7 +111,7 @@ public class AlarmNotifier
    {
       for(int i = 0; i < 5; i++)
       {
-         getMelodyAndDownloadIfRequired(severityArray[i]);
+         getMelodyAndDownloadIfRequired(SEVERITY_TEXT[i]);
       }
    }
 
@@ -213,7 +198,7 @@ public class AlarmNotifier
       String fileName;
       try
       {
-         fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity().getValue()]);
+         fileName = getMelodyAndDownloadIfRequired(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
       }
       catch(ArrayIndexOutOfBoundsException e)
       {

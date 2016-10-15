@@ -95,6 +95,7 @@ import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.AlarmComment;
+import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
@@ -474,6 +475,9 @@ public class NXCSession
                         msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE,
                         new Alarm(msg)));
                      break;
+                  case NXCPCodes.CMD_BULK_ALARM_STATE_CHANGE:
+                     processBulkAlarmStateChange(msg);
+                     break;
                   case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
                      sendNotification(new SessionNotification(SessionNotification.JOB_CHANGE, new ServerJob(msg)));
                      break;
@@ -485,9 +489,6 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_ABORT_FILE_TRANSFER:
                      processFileTransferError(msg);
-                     break;
-                  case NXCPCodes.CMD_ALARM_BULK_TERMINATE:
-                     processAlarmBulkTerminateNotification(msg);
                      break;
                   case NXCPCodes.CMD_NOTIFY:
                      processNotificationMessage(msg, true);
@@ -640,24 +641,15 @@ public class NXCSession
          }
       }
       
-      
       /**
-       * Process CMD_ALARM_BULK_TERMINATE termination message
+       * Process CMD_BULK_ALARM_STATE_CHANGE notification message
+       * 
        * @param msg NXCP message
        */
-      private void processAlarmBulkTerminateNotification(final NXCPMessage msg)
+      private void processBulkAlarmStateChange(final NXCPMessage msg)
       {
-         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE);
-         code += SessionNotification.NOTIFY_BASE;
-         int numAlarms = msg.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-         long base = NXCPCodes.VID_ALARM_BULK_TERMINATE_BASE;
-         List<Long> alarmIds = new ArrayList<Long>();
-         for(int i = 0; i < numAlarms; i++, base++)
-         {
-            alarmIds.add(msg.getFieldAsInt64(base));
-         }
-         
-         sendNotification(new SessionNotification(code, alarmIds));
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
+         sendNotification(new SessionNotification(code, new BulkAlarmStateChangeData(msg)));
       }
 
       /**
@@ -2917,7 +2909,7 @@ public class NXCSession
    public void resolveAlarm(final long alarmId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_ALARM);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -2938,21 +2930,43 @@ public class NXCSession
    }
    
    /**
-    * Terminate bulk alarms.
+    * Terminate alarm.
     *
-    * @param alarmIds Identifier of alarms to be terminated.
+    * @param alarmId Identifier of alarm to be terminated.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
-    * @return true if all alarms were terminated, false if some, or all, were not terminated
     */
-   public boolean terminateBulkAlarms(final long[] alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   public void terminateAlarm(final long alarmId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Terminate alarm by helpdesk reference.
+    *
+    * @param helpdeskReference  Identifier of alarm to be resolved.
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void terminateAlarm(final String helpdeskReference) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
+      msg.setField(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   private boolean bulkAlarmOperation(int cmd, List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
    {
       boolean result = true;
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
-      msg.setField(NXCPCodes.VID_ALARM_ID, alarmIds);
+      NXCPMessage msg = newMessage(cmd);
+      msg.setField(NXCPCodes.VID_ALARM_ID_LIST, alarmIds.toArray(new Long[alarmIds.size()]));
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
       
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
       if (response.findField(NXCPCodes.VID_ACCESS_RIGHT_FAIL) != null)
       {
          for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACCESS_RIGHT_FAIL))
@@ -2976,18 +2990,29 @@ public class NXCSession
    }
 
    /**
-    * Terminate alarm by helpdesk reference.
+    * Bulk terminate alarms.
     *
-    * @param helpdeskReference  Identifier of alarm to be resolved.
+    * @param alarmIds Identifiers of alarms to be terminated.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return true if all alarms were terminated, false if some, or all, were not terminated
     */
-   public void terminateAlarm(final String helpdeskReference) throws IOException, NXCException
+   public boolean bulkResolveAlarms(List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
-      msg.setField(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      return bulkAlarmOperation(NXCPCodes.CMD_BULK_RESOLVE_ALARMS, alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
+   }
+
+   /**
+    * Bulk terminate alarms.
+    *
+    * @param alarmIds Identifiers of alarms to be terminated.
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return true if all alarms were terminated, false if some, or all, were not terminated
+    */
+   public boolean bulkTerminateAlarms(List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   {
+      return bulkAlarmOperation(NXCPCodes.CMD_BULK_TERMINATE_ALARMS, alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
    }
 
    /**
@@ -5645,7 +5670,7 @@ public class NXCSession
     */
    public List<AlarmCategory> getAlarmCategories() throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_CATEGORY_DB);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_CATEGORIES);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       ArrayList<AlarmCategory> list = new ArrayList<AlarmCategory>();
@@ -5668,7 +5693,7 @@ public class NXCSession
     */
    public void modifyAlarmCategory(AlarmCategory object, int fields) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CATEGORY_INFO);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_ALARM_CATEGORY);
       msg.setFieldInt32(NXCPCodes.VID_FIELDS, fields);
       object.fillMessage(msg);
       sendMessage(msg);

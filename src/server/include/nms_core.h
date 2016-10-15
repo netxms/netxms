@@ -526,9 +526,9 @@ private:
    void setPassword(NXCPMessage *request);
    void validatePassword(NXCPMessage *request);
    void lockUserDB(UINT32 dwRqId, BOOL bLock);
-   void sendCategories(UINT32 dwRqId);
+   void getAlarmCategories(UINT32 requestId);
    void modifyAlarmCategory(NXCPMessage *pRequest);
-   void removeAlarmCategory(NXCPMessage *pRequest);
+   void deleteAlarmCategory(NXCPMessage *pRequest);
    void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(NXCPMessage *pRequest);
    void deleteEventTemplate(NXCPMessage *pRequest);
@@ -565,8 +565,8 @@ private:
    void getAlarm(NXCPMessage *request);
    void getAlarmEvents(NXCPMessage *request);
    void acknowledgeAlarm(NXCPMessage *request);
-   void terminateBulkAlarms(NXCPMessage *pRequest);
    void resolveAlarm(NXCPMessage *request, bool terminate);
+   void bulkResolveAlarms(NXCPMessage *pRequest, bool terminate);
    void deleteAlarm(NXCPMessage *request);
    void openHelpdeskIssue(NXCPMessage *request);
    void getHelpdeskUrl(NXCPMessage *request);
@@ -1110,6 +1110,15 @@ void StopHouseKeeper();
 void RunHouseKeeper();
 
 /**
+ * Alarm category functions
+ */
+void GetAlarmCategories(NXCPMessage *msg);
+UINT32 UpdateAlarmCategory(NXCPMessage *pRequest);
+UINT32 ModifyAlarmCategoryAcl(NXCPMessage *pRequest);
+UINT32 DeleteAlarmCategory(UINT32 id);
+void CacheAlarmCategoryAcl();
+
+/**
  * File monitoring
  */
 struct MONITORED_FILE
@@ -1190,15 +1199,5 @@ extern FileMonitoringList g_monitoringList;
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
 
 extern HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap;
-
-/**
- * Alarm category functions
- */
-void GetCategories(NXCPMessage *msg);
-UINT32 UpdateAlarmCategory(NXCPMessage *pRequest);
-UINT32 ModifyAlarmAcl(NXCPMessage *pRequest);
-UINT32 DeleteAlarmCategory(NXCPMessage *pRequest);
-void CacheAlarmCategoryAcl();
-
 
 #endif   /* _nms_core_h_ */

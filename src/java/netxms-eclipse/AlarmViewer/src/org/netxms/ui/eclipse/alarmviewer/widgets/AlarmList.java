@@ -64,12 +64,13 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AcknowledgeCustomTimeDialog;
-import org.netxms.ui.eclipse.alarmviewer.dialogs.TerminateAlarmDialog;
+import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmStateChangeFailureDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFunctions;
@@ -240,7 +241,6 @@ public class AlarmList extends CompositeWithMessageBar
 
 		// Add client library listener
 		clientListener = new SessionListener() {
-			@SuppressWarnings("unchecked")
          @Override
 			public void notificationHandler(SessionNotification n)
 			{
@@ -257,9 +257,33 @@ public class AlarmList extends CompositeWithMessageBar
 						break;
 					case SessionNotification.ALARM_TERMINATED:
 					case SessionNotification.ALARM_DELETED:
+                  synchronized(alarmList)
+                  {
+                     alarmList.remove(((Alarm)n.getObject()).getId());
+                     filterAndLimit();
+                  }
+                  refreshTimer.execute();
+                  break;
+               case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
+                  synchronized(alarmList)
+                  {
+                     BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
+                     for(Long id : d.getAlarms())
+                     {
+                        Alarm a = alarmList.get(id);
+                        if (a != null)
+                        {
+                           a.setResolved(d.getUserId(), d.getChangeTime());
+                        }
+                     }
+                     filterAndLimit();
+                  }
+                  refreshTimer.execute();
+                  break;
+               case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
 						synchronized(alarmList)
 						{
-						   for(Long id : (List<Long>)n.getObject())
+						   for(Long id : ((BulkAlarmStateChangeData)n.getObject()).getAlarms())
 						   {
 						      alarmList.remove(id);
 						   }
@@ -901,24 +925,33 @@ public class AlarmList extends CompositeWithMessageBar
 	private void resolveAlarms()
 	{
 		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-		if (selection.size() == 0)
+      if (selection.isEmpty())
 			return;
 		
-		final Object[] alarms = selection.toArray();
+      final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+      for(Object o : selection.toList())
+         alarmIds.add(((Alarm)o).getId());
 		new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AlarmList_ResolveAlarm, alarms.length);
-				for(Object o : alarms)
-				{
-					if (monitor.isCanceled())
-						break;
-					if (o instanceof Alarm)
-						session.resolveAlarm(((Alarm)o).getId());
-					monitor.worked(1);
-				}
-				monitor.done();
+            final List<Long> accessRightFail = new ArrayList<Long>();
+            final List<Long> openInHelpdesk = new ArrayList<Long>();
+            final List<Long> idCheckFail = new ArrayList<Long>();
+            if (!session.bulkResolveAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     if (dlg.open() == Window.OK)
+                     {
+                        return;
+                     }
+                  }
+               });
+            }
 			}
 			
 			@Override
@@ -934,29 +967,27 @@ public class AlarmList extends CompositeWithMessageBar
 	 */
 	private void terminateAlarms()
 	{
-	   final List<Long> accessRightFail = new ArrayList<Long>();
-	   final List<Long> openInHelpdesk = new ArrayList<Long>();
-	   final List<Long> idCheckFail = new ArrayList<Long>();
-	   
 		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-		if (selection.size() == 0)
+		if (selection.isEmpty())
 			return;		
-		
-		Object[] alarms = selection.toArray();
-		final long[] alarmIds = new long[alarms.length];
-		for(int i = 0; i < alarms.length; i++)
-		   alarmIds[i] = ((Alarm)alarms[i]).getId();
+
+		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+		for(Object o : selection.toList())
+		   alarmIds.add(((Alarm)o).getId());
 		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				if (!session.terminateBulkAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+		      final List<Long> accessRightFail = new ArrayList<Long>();
+		      final List<Long> openInHelpdesk = new ArrayList<Long>();
+		      final List<Long> idCheckFail = new ArrayList<Long>();
+				if (!session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
 				{
 				   runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TerminateAlarmDialog dlg = new TerminateAlarmDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
                      if (dlg.open() == Window.OK)
                      {
                         return;

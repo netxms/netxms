@@ -40,18 +40,19 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Dialog box for alarm terminate results
+ * Show alarm state change failures
  */
-public class TerminateAlarmDialog extends Dialog
+public class AlarmStateChangeFailureDialog extends Dialog
 {
+   private static final String[] REASONS = { "Insufficient object access rights", "Alarm open in helpdesk", "Invalid alarm ID" };
+   
    private SortableTableViewer alarmList;
    private Map<Long, String> terminationFails = new HashMap<Long, String>();
-   private String[] failReasons = { "Insufficient object access rights", "Alarm open in helpdesk", "Invalid alarm ID" };
 
    /**
     * @param parentShell
     */
-   public TerminateAlarmDialog(Shell parentShell, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail)
+   public AlarmStateChangeFailureDialog(Shell parentShell, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail)
    {
       super(parentShell);
       sortData(accessRightFail, openInHelpdesk, idCheckFail);
@@ -66,7 +67,7 @@ public class TerminateAlarmDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Alarm termination errors");
+      newShell.setText("ALarm State Change Errors");
    }
 
    /*
@@ -87,7 +88,7 @@ public class TerminateAlarmDialog extends Dialog
       dialogArea.setLayout(layout);
       
       Label text = new Label(dialogArea, SWT.NONE);
-      text.setText("The following alarms were not terminated due to the reasons below.");
+      text.setText("State of some alarms was not changed due to the following reasons:");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
@@ -134,15 +135,15 @@ public class TerminateAlarmDialog extends Dialog
    {
       for(Long id : accessRightFail)
       {
-         terminationFails.put(id, failReasons[0]);
+         terminationFails.put(id, REASONS[0]);
       }
       for(Long id : openInHelpdesk)
       {
-         terminationFails.put(id, failReasons[1]);
+         terminationFails.put(id, REASONS[1]);
       }
       for(Long id : idCheckFail)
       {
-         terminationFails.put(id, failReasons[2]);
+         terminationFails.put(id, REASONS[2]);
       }
    }
 

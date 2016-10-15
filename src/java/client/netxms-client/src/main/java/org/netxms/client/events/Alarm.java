@@ -97,6 +97,21 @@ public class Alarm
 		commentsCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COMMENTS);
 		ackTime = msg.getFieldAsInt32(NXCPCodes.VID_TIMESTAMP);
 	}
+	
+	/**
+	 * Mark alarm as resolved. This call only updates local object state and do not change
+	 * actual alarm state on server. It can be used to update local alarm objects after
+	 * receiving bulk alarm state change notification.
+	 * 
+	 * @param userId
+	 * @param changeTime
+	 */
+	public void setResolved(int userId, Date changeTime)
+	{
+	   state = STATE_RESOLVED;
+	   lastChangeTime = changeTime;
+	   resolvedByUser = userId;
+	}
 
 	/**
 	 * @return the id

@@ -79,9 +79,9 @@ public class AlarmTest extends AbstractSessionTest
          final List<Long> idCheckFail = new ArrayList<Long>();
 		   
 			final Semaphore s = new Semaphore(0);			
-			final long[] alarmIds = new long[2];
-			alarmIds[0] = list.keySet().iterator().next();
-			alarmIds[1] = 123456789; // Made up alarm ID to check if it is returned
+			final List<Long> alarmIds = new ArrayList<Long>(2);
+			alarmIds.add(list.keySet().iterator().next());
+			alarmIds.add(123456789L); // Made up alarm ID to check if it is returned
 			final boolean[] success = new boolean[1];
 			success[0] = false;
 			session.addListener(new SessionListener() {
@@ -91,14 +91,14 @@ public class AlarmTest extends AbstractSessionTest
                List<Long> termAlarmIdss = (List<Long>)n.getObject();
 				   long termAlarmId = termAlarmIdss.get(0);
 					assertEquals(SessionNotification.ALARM_TERMINATED, n.getCode());
-					assertEquals(alarmIds[0], termAlarmId);
+					assertEquals(alarmIds.get(0).longValue(), termAlarmId);
 					success[0] = true;
 					s.release();
 				}
 			});
 			session.subscribe(NXCSession.CHANNEL_ALARMS);
-			session.terminateBulkAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
-			assertTrue(alarmIds[1] == idCheckFail.get(0));
+			session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
+			assertTrue(alarmIds.get(1) == idCheckFail.get(0));
 			assertTrue(s.tryAcquire(3, TimeUnit.SECONDS));
 			assertEquals(true, success[0]);
 		}

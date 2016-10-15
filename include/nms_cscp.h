@@ -569,11 +569,13 @@ typedef struct
 #define CMD_ADD_REPOSITORY             0x0150
 #define CMD_MODIFY_REPOSITORY          0x0151
 #define CMD_DELETE_REPOSITORY          0x0152
-#define CMD_LOAD_CATEGORY_DB           0x0153
-#define CMD_SET_CATEGORY_INFO          0x0154
-#define CMD_DELETE_CATEGORY            0x0155
+#define CMD_GET_ALARM_CATEGORIES       0x0153
+#define CMD_MODIFY_ALARM_CATEGORY      0x0154
+#define CMD_DELETE_ALARM_CATEGORY      0x0155
 #define CMD_ALARM_CATEGORY_UPDATE      0x0156
-#define CMD_ALARM_BULK_TERMINATE       0x0157
+#define CMD_BULK_TERMINATE_ALARMS      0x0157
+#define CMD_BULK_RESOLVE_ALARMS        0x0158
+#define CMD_BULK_ALARM_STATE_CHANGE    0x0159
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1149,6 +1151,7 @@ typedef struct
 #define VID_NUM_ALARM_CATEGORIES    ((UINT32)558)
 #define VID_ALARM_CATEGORY_ACL      ((UINT32)559)
 #define VID_NUM_ALARM_CATEGORY_ACL  ((UINT32)560)
+#define VID_ALARM_ID_LIST           ((UINT32)561)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1346,8 +1349,6 @@ typedef struct
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
 
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
-
-#define VID_ALARM_BULK_TERMINATE_BASE ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 
