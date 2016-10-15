@@ -164,10 +164,42 @@ static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
+static StringSet s_components;
 
 #ifndef _WIN32
 static pthread_t m_signalHandlerThread;
 #endif
+
+/**
+ * Register component
+ */
+void NXCORE_EXPORTABLE RegisterComponent(const TCHAR *id)
+{
+   s_components.add(id);
+}
+
+/**
+ * Check if component with given ID is registered
+ */
+bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id)
+{
+   return s_components.contains(id);
+}
+
+/**
+ * Fill NXCP message with components data
+ */
+void FillComponentsMessage(NXCPMessage *msg)
+{
+   msg->setField(VID_NUM_COMPONENTS, (INT32)s_components.size());
+   UINT32 fieldId = VID_COMPONENT_LIST_BASE;
+   Iterator<const TCHAR> *it = s_components.iterator();
+   while(it->hasNext())
+   {
+      msg->setField(fieldId++, it->next());
+   }
+   delete it;
+}
 
 /**
  * Sleep for specified number of seconds or until system shutdown arrives
@@ -514,8 +546,7 @@ static void OracleSessionInitCallback(DB_HANDLE hdb)
  */
 BOOL NXCORE_EXPORTABLE Initialize()
 {
-	int i, iDBVersion;
-	TCHAR szInfo[256];
+	s_components.add(_T("CORE"));
 
 	g_serverStartTime = time(NULL);
 	srand((unsigned int)g_serverStartTime);
@@ -599,7 +630,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	// Connect to database
 	DB_HANDLE hdbBootstrap = NULL;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-	for(i = 0; ; i++)
+	for(int i = 0; ; i++)
 	{
 	   hdbBootstrap = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
 		if ((hdbBootstrap != NULL) || (i == 5))
@@ -613,11 +644,11 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	}
 	nxlog_debug(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
-	// Check database version
-	iDBVersion = DBGetSchemaVersion(hdbBootstrap);
-	if (iDBVersion != DB_FORMAT_VERSION)
+	// Check database schema version
+	int schemaVersion = DBGetSchemaVersion(hdbBootstrap);
+	if (schemaVersion != DB_FORMAT_VERSION)
 	{
-		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
+		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", schemaVersion, DB_FORMAT_VERSION);
 		DBDisconnect(hdbBootstrap);
 		return FALSE;
 	}
@@ -649,25 +680,26 @@ BOOL NXCORE_EXPORTABLE Initialize()
    MetaDataPreLoad();
 
 	// Read server ID
-	MetaDataReadStr(_T("ServerID"), szInfo, 256, _T(""));
-	StrStrip(szInfo);
-	if (szInfo[0] != 0)
+   TCHAR buffer[256];
+	MetaDataReadStr(_T("ServerID"), buffer, 256, _T(""));
+	StrStrip(buffer);
+	if (buffer[0] != 0)
 	{
-      g_serverId = _tcstoull(szInfo, NULL, 16);
+      g_serverId = _tcstoull(buffer, NULL, 16);
 	}
 	else
 	{
 		// Generate new ID
 		g_serverId = ((UINT64)time(NULL) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
-      _sntprintf(szInfo, 256, UINT64X_FMT(_T("016")), g_serverId);
-		MetaDataWriteStr(_T("ServerID"), szInfo);
+      _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
+		MetaDataWriteStr(_T("ServerID"), buffer);
 	}
 	nxlog_debug(1, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
 	// Initialize locks
 retry_db_lock:
    InetAddress addr;
-	if (!InitLocks(&addr, szInfo))
+	if (!InitLocks(&addr, buffer))
 	{
       if (!addr.isValid())    // Some SQL problems
 		{
@@ -688,7 +720,7 @@ retry_db_lock:
 					goto retry_db_lock;
 				}
 			}
-			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, szInfo);
+			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, buffer);
 		}
 		return FALSE;
 	}

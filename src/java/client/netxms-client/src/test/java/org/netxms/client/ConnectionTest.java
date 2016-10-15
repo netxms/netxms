@@ -30,6 +30,11 @@ public class ConnectionTest extends AbstractSessionTest
       final NXCSession session = connect();
 
       assertEquals(TestConstants.USER_ID, session.getUserId());
+      assertTrue(session.isServerComponentRegistered("CORE"));
+      
+      System.out.println("Server components:");
+      for(String c : session.getRegisteredServerComponents())
+         System.out.println("   " + c);
       
       Thread.sleep(2000);
       session.disconnect();
@@ -40,6 +45,7 @@ public class ConnectionTest extends AbstractSessionTest
       final NXCSession session = connect(true);
 
       assertEquals(TestConstants.USER_ID, session.getUserId());
+      assertTrue(session.isServerComponentRegistered("CORE"));
       
       Thread.sleep(2000);
       session.disconnect();

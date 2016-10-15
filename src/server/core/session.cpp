@@ -72,6 +72,7 @@ void ResetDiscoveryPoller();
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(NXCPMessage *msg);
+void FillComponentsMessage(NXCPMessage *msg);
 
 /**
  * Node poller start data
@@ -1836,6 +1837,8 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 
 	ConfigReadStr(_T("DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
 	msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
+
+	FillComponentsMessage(&msg);
 
    // Send response
    sendMessage(&msg);

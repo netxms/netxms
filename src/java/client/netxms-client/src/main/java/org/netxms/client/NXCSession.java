@@ -300,6 +300,7 @@ public class NXCSession
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
    private int alarmListDisplayLimit;
+   private Set<String> serverComponents = new HashSet<String>(0);
 
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
@@ -1824,6 +1825,11 @@ public class NXCSession
          shortTimeFormat = response.getFieldAsString(NXCPCodes.VID_SHORT_TIME_FORMAT);
          if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0)) 
             shortTimeFormat = "HH:mm";
+         
+         int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_COMPONENTS);
+         long fieldId = NXCPCodes.VID_COMPONENT_LIST_BASE;
+         for(int i = 0; i < count; i++)
+            serverComponents.add(response.getFieldAsString(fieldId++));
 
          // Setup encryption if required
          if (connUseEncryption)
@@ -2214,6 +2220,27 @@ public class NXCSession
    public byte[] getServerChallenge()
    {
       return serverChallenge;
+   }
+   
+   /**
+    * Check if server component with given id is registered
+    * 
+    * @param componentId
+    * @return
+    */
+   public boolean isServerComponentRegistered(String componentId)
+   {
+      return serverComponents.contains(componentId);
+   }
+   
+   /**
+    * Get list og registered server components
+    * 
+    * @return
+    */
+   public String[] getRegisteredServerComponents()
+   {
+      return serverComponents.toArray(new String[serverComponents.size()]);
    }
 
    /**

@@ -940,6 +940,7 @@ public class NXCPCodes
    public static final long VID_ALARM_CATEGORY_ACL = 559;
    public static final long VID_NUM_ALARM_CATEGORY_ACL = 560;
    public static final long VID_ALARM_ID_LIST = 561;
+   public static final long VID_NUM_COMPONENTS = 562;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

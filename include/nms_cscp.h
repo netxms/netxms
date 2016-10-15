@@ -1152,6 +1152,7 @@ typedef struct
 #define VID_ALARM_CATEGORY_ACL      ((UINT32)559)
 #define VID_NUM_ALARM_CATEGORY_ACL  ((UINT32)560)
 #define VID_ALARM_ID_LIST           ((UINT32)561)
+#define VID_NUM_COMPONENTS          ((UINT32)562)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
