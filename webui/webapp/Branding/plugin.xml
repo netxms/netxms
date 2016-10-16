@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="product"
+         name="NetXMS Management Console"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="nxmc"
+            name="NetXMS Management Console">
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+      </product>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.entrypoint">
+      <entrypoint
+            applicationId="org.netxms.ui.eclipse.branding.nxmc"
+            brandingId="org.netxms.webui.design.branding.classic"
+            id="org.netxms.webui.entrypoint"
+            path="/nxmc">
+      </entrypoint>
+   </extension>
+   <extension
+         id="nxmc"
+         name="NetXMS Management Console"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.netxms.ui.eclipse.console.Application">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.branding">
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.branding.classic"
+            themeId="org.netxms.webui.design.theme.classic"
+            title="NetXMS Management Console">
+         <presentationFactory
+               id="org.netxms.ui.eclipse.console.factory.classic"
+               viewActionsVisible="true">
+         </presentationFactory>
+      </branding>
+   </extension>
+
+</plugin>

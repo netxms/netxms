@@ -6,19 +6,6 @@
    <extension-point id="org.netxms.ui.eclipse.sessionproviders" name="Session Providers" schema="schema/org.netxms.ui.eclipse.sessionproviders.exsd"/>
    <extension-point id="org.netxms.ui.eclipse.colorproviders" name="Color Providers" schema="schema/org.netxms.ui.eclipse.colorproviders.exsd"/>
    <extension
-         id="nxmc"
-         name="NetXMS Management Console"
-         point="org.eclipse.core.runtime.applications">
-      <application
-            thread="main"
-            cardinality="singleton-global"
-            visible="true">
-         <run
-               class="org.netxms.ui.eclipse.console.Application">
-         </run>
-      </application>
-   </extension>
-   <extension
          point="org.eclipse.ui.perspectives">
       <perspective
             name="%perspective.default"
@@ -396,30 +383,6 @@
       </propertyTester>
    </extension>
    <extension
-         point="org.eclipse.rap.ui.branding">
-      <branding
-            favicon="icons/favicon.png"
-            id="org.netxms.webui.design.branding.classic"
-            themeId="org.netxms.webui.design.theme.classic"
-            title="NetXMS Management Console">
-         <presentationFactory
-               id="org.netxms.ui.eclipse.console.factory.classic"
-               viewActionsVisible="true">
-         </presentationFactory>
-      </branding>
-      <branding
-            favicon="icons/favicon.png"
-            id="org.netxms.webui.design.branding.material"
-            themeId="org.netxms.webui.design.theme.material"
-            title="NetXMS Management Console">
-         <presentationFactory
-               defaultLayoutId="org.netxms.ui.eclipse.console.layouts.modern"
-               id="org.netxms.ui.eclipse.console.factory.material"
-               viewActionsVisible="true">
-         </presentationFactory>
-      </branding>
-   </extension>
-   <extension
          point="org.eclipse.rap.ui.themes">
       <theme
             file="theme/classic.css"
@@ -431,21 +394,6 @@
             id="org.netxms.webui.design.theme.material"
             name="Material Theme">
       </theme>
-   </extension>
-   <extension
-         point="org.eclipse.rap.ui.entrypoint">
-      <entrypoint
-            applicationId="org.netxms.webui.core.nxmc"
-            brandingId="org.netxms.webui.design.branding.classic"
-            id="org.netxms.webui.entrypoint"
-            path="/nxmc">
-      </entrypoint>
-      <entrypoint
-            applicationId="org.netxms.webui.core.nxmc"
-            brandingId="org.netxms.webui.design.branding.material"
-            id="org.netxms.webui.entrypoint"
-            path="/nxmc2">
-      </entrypoint>
    </extension>
    <extension
       point="org.eclipse.equinox.http.registry.servlets">
@@ -460,19 +408,6 @@
             class="org.netxms.ui.eclipse.console.DownloadServiceHandler"
             id="downloadServiceHandler">
       </serviceHandler>
-   </extension>
-   <extension
-         id="product"
-         name="NetXMS Management Console"
-         point="org.eclipse.core.runtime.products">
-      <product
-            application="nxmc"
-            name="NetXMS Management Console">
-         <property
-               name="preferenceCustomization"
-               value="plugin_customization.ini">
-         </property>
-      </product>
    </extension>
    <extension
          point="org.eclipse.rap.ui.resources">

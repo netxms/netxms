@@ -98,7 +98,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          StringBuilder js = new StringBuilder();
          js.append("document.title = "); //$NON-NLS-1$
          js.append("\"");
-         js.append(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
+         js.append(BrandingManager.getInstance().getProductName());
          js.append(" - [");
          js.append(session.getUserName());
          js.append("@");
