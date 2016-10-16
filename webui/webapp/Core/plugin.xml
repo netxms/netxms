@@ -386,6 +386,16 @@
       </activityPatternBinding>
    </extension>
    <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.netxms.ui.eclipse.console.ServerComponentPropertyTester"
+            id="org.netxms.ui.eclipse.console.ServerComponentPropertyTester"
+            namespace="org.netxms.ui.eclipse"
+            properties="isComponentRegistered"
+            type="java.lang.Object">
+      </propertyTester>
+   </extension>
+   <extension
          point="org.eclipse.rap.ui.branding">
       <branding
             favicon="icons/favicon.png"
