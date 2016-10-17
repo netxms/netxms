@@ -58,7 +58,6 @@ struct ORACLE_FETCH_BUFFER
  */
 struct ORACLE_CONN
 {
-	OCIEnv *handleEnv;
 	OCIServer *handleServer;
 	OCISvcCtx *handleService;
 	OCISession *handleSession;

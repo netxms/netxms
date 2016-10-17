@@ -27,6 +27,11 @@ DECLARE_DRIVER_HEADER("ORACLE")
 static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
 
 /**
+ * Global environment handle
+ */
+static OCIEnv *s_handleEnv = NULL;
+
+/**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
@@ -103,7 +108,14 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
+   if (OCIEnvNlsCreate(&s_handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
+                       NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) != OCI_SUCCESS)
+   {
+      nxlog_debug(1, _T("ORACLE: cannot allocate environment handle"));
+      return false;
+   }
 	return true;
+
 }
 
 /**
@@ -111,6 +123,8 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
  */
 extern "C" void EXPORT DrvUnload()
 {
+   if (s_handleEnv != NULL)
+      OCIHandleFree(s_handleEnv, OCI_HTYPE_ENV);
 	OCITerminate(OCI_DEFAULT);
 }
 
@@ -179,100 +193,91 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 	ORACLE_CONN *pConn;
 	UCS2CHAR *pwszStr;
 
-	pConn = (ORACLE_CONN *)malloc(sizeof(ORACLE_CONN));
+	pConn = (ORACLE_CONN *)calloc(1, sizeof(ORACLE_CONN));
 	if (pConn != NULL)
 	{
-		memset(pConn, 0, sizeof(ORACLE_CONN));
-
-		if (OCIEnvNlsCreate(&pConn->handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
-		                    NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) == OCI_SUCCESS)
+      OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, NULL);
+		OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
+		pwszStr = UCS2StringFromMBString(host);
+		if (OCIServerAttach(pConn->handleServer, pConn->handleError,
+		                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT) == OCI_SUCCESS)
 		{
-			OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, NULL);
-			OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
-			pwszStr = UCS2StringFromMBString(host);
-			if (OCIServerAttach(pConn->handleServer, pConn->handleError,
-			                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT) == OCI_SUCCESS)
+			free(pwszStr);
+
+			// Initialize service handle
+			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, NULL);
+			OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleServer, 0, OCI_ATTR_SERVER, pConn->handleError);
+			
+			// Initialize session handle
+			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, NULL);
+			pwszStr = UCS2StringFromMBString(login);
+			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
+			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
+			free(pwszStr);
+			pwszStr = UCS2StringFromMBString(password);
+			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
+			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
+
+			// Authenticate
+			if (OCISessionBegin(pConn->handleService, pConn->handleError,
+			                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
 			{
-				free(pwszStr);
+				OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
+				pConn->mutexQueryLock = MutexCreate();
+				pConn->nTransLevel = 0;
+				pConn->lastErrorCode = 0;
+				pConn->lastErrorText[0] = 0;
+            pConn->prefetchLimit = 10;
 
-				// Initialize service handle
-				OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, NULL);
-				OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleServer, 0, OCI_ATTR_SERVER, pConn->handleError);
-				
-				// Initialize session handle
-				OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, NULL);
-				pwszStr = UCS2StringFromMBString(login);
-				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-				           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
-				free(pwszStr);
-				pwszStr = UCS2StringFromMBString(password);
-				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-				           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
-
-				// Authenticate
-				if (OCISessionBegin(pConn->handleService, pConn->handleError,
-				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
+				if ((schema != NULL) && (schema[0] != 0))
 				{
-					OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
-					pConn->mutexQueryLock = MutexCreate();
-					pConn->nTransLevel = 0;
-					pConn->lastErrorCode = 0;
-					pConn->lastErrorText[0] = 0;
-               pConn->prefetchLimit = 10;
+					free(pwszStr);
+					pwszStr = UCS2StringFromMBString(schema);
+					OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
+								  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
+				}
 
-					if ((schema != NULL) && (schema[0] != 0))
-					{
-						free(pwszStr);
-						pwszStr = UCS2StringFromMBString(schema);
-						OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-									  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
-					}
+            // Setup session
+            DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 
-               // Setup session
-               DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
-
-               UCS2CHAR version[1024];
-               if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
-               {
+            UCS2CHAR version[1024];
+            if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
+            {
 #ifdef UNICODE
 #if UNICODE_UCS4
-                  WCHAR *wver = UCS4StringFromUCS2String(version);
-                  nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
-                  free(wver);
+               WCHAR *wver = UCS4StringFromUCS2String(version);
+               nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
+               free(wver);
 #else
-                  nxlog_debug(5, _T("ORACLE: connected to %s"), version);
+               nxlog_debug(5, _T("ORACLE: connected to %s"), version);
 #endif
 #else
-                  char *mbver = MBStringFromUCS2String(version);
-                  nxlog_debug(5, _T("ORACLE: connected to %s"), mbver);
-                  free(mbver);
+               char *mbver = MBStringFromUCS2String(version);
+               nxlog_debug(5, _T("ORACLE: connected to %s"), mbver);
+               free(mbver);
 #endif
-               }
-				}
-				else
-				{
-					GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
-			      OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
-					OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
-					free(pConn);
-					pConn = NULL;
-				}
-			}
+            }
+         }
 			else
 			{
 				GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
-				OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
+		      OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
+			   OCIHandleFree(pConn->handleService, OCI_HTYPE_SVCCTX);
+				OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
+			   OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
 				free(pConn);
 				pConn = NULL;
 			}
-			free(pwszStr);
 		}
 		else
 		{
-			wcscpy(errorText, L"Cannot allocate environment handle");
+			GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
+			OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
+			OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
 			free(pConn);
 			pConn = NULL;
 		}
+		free(pwszStr);
 	}
 	else
 	{
@@ -292,7 +297,9 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 
    OCISessionEnd(pConn->handleService, pConn->handleError, NULL, OCI_DEFAULT);
    OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
-   OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
+   OCIHandleFree(pConn->handleService, OCI_HTYPE_SVCCTX);
+   OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
+   OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
    MutexDestroy(pConn->mutexQueryLock);
    free(pConn);
 }
@@ -402,7 +409,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->buffers = new Array(8, 8, true);
       stmt->batchMode = false;
       stmt->batchSize = 0;
-		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
+		OCIHandleAlloc(s_handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
 		*pdwError = DBERR_SUCCESS;
 	}
 	else
@@ -948,7 +955,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
             if (type == OCI_TYPECODE_CLOB)
             {
                pBuffers[i].pData = NULL;
-               OCIDescriptorAlloc(pConn->handleEnv, (void **)&pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+               OCIDescriptorAlloc(s_handleEnv, (void **)&pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
 				   handleDefine = NULL;
 				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
                                         &pBuffers[i].lobLocator, 0, SQLT_CLOB, &pBuffers[i].isNull, 
@@ -1287,7 +1294,7 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
             if (type == OCI_TYPECODE_CLOB)
             {
                result->pBuffers[i].pData = NULL;
-               OCIDescriptorAlloc(pConn->handleEnv, (void **)&result->pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+               OCIDescriptorAlloc(s_handleEnv, (void **)&result->pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
                handleDefine = NULL;
                nStatus = OCIDefineByPos(result->handleStmt, &handleDefine, pConn->handleError, i + 1,
                                         &result->pBuffers[i].lobLocator, 0, SQLT_CLOB, &result->pBuffers[i].isNull,
