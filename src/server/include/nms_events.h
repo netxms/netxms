@@ -188,7 +188,7 @@ public:
    void createNXMPRecord(String &str);
 
    bool isActionInUse(UINT32 dwActionId);
-   bool isCategoryInUse(UINT32 dwCategoryId);
+   bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList->contains(categoryId); }
 };
 
 /**

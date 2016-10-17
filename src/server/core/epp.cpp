@@ -789,19 +789,6 @@ bool EPRule::isActionInUse(UINT32 dwActionId)
 }
 
 /**
- * Check if given category is used within rule
- */
-bool EPRule::isCategoryInUse(UINT32 dwCategoryId)
-{
-   UINT32 i;
-
-   for(i = 0; i < m_alarmCategoryList->size(); i++)
-      if (m_alarmCategoryList->get(i) == dwCategoryId)
-         return true;
-   return false;
-}
-
-/**
  * Event processing policy constructor
  */
 EventPolicy::EventPolicy()
