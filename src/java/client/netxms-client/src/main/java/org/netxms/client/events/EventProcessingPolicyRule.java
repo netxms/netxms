@@ -174,7 +174,6 @@ public class EventProcessingPolicyRule
 		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
 		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
 		
-		msg.setFieldInt32(NXCPCodes.VID_NUM_ALARM_CATEGORIES, alarmCategoryIds.size());
 		msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
 
 		msg.setFieldInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);

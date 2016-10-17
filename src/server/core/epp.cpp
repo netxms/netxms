@@ -86,7 +86,6 @@ EPRule::EPRule(ConfigEntry *config)
    m_iAlarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_dwAlarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
-	m_alarmCategoryCount = 0;
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
@@ -152,7 +151,6 @@ EPRule::EPRule(DB_RESULT hResult, int row)
    }
 	m_dwAlarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
-	m_alarmCategoryCount = 0;
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
 	m_dwSituationId = DBGetFieldULong(hResult, row, 10);
    DBGetField(hResult, row, 11, m_szSituationInstance, MAX_DB_STRING);
@@ -195,7 +193,6 @@ EPRule::EPRule(NXCPMessage *msg)
 	m_dwAlarmTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
 	m_dwAlarmTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
 
-   m_alarmCategoryCount = msg->getFieldAsUInt32(VID_NUM_ALARM_CATEGORIES);
    m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
 
@@ -764,7 +761,6 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setField(VID_ALARM_MESSAGE, m_szAlarmMessage);
    msg->setField(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
-   msg->setField(VID_NUM_ALARM_CATEGORIES, m_alarmCategoryCount);
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
    msg->setField(VID_NUM_ACTIONS, m_dwNumActions);
@@ -799,7 +795,7 @@ bool EPRule::isCategoryInUse(UINT32 dwCategoryId)
 {
    UINT32 i;
 
-   for(i = 0; i < m_alarmCategoryCount; i++)
+   for(i = 0; i < m_alarmCategoryList->size(); i++)
       if (m_alarmCategoryList->get(i) == dwCategoryId)
          return true;
    return false;

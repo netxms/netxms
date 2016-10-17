@@ -73,6 +73,19 @@ public class AlarmCategory
       description = msg.getFieldAsString(baseId + 2);
       accessControl = msg.getFieldAsUInt32ArrayEx(baseId + 3);
    }
+   
+   /**
+    * Copy constructor for alarm category object.
+    * 
+    * @param src Original alarm category object
+    */
+   public AlarmCategory(final AlarmCategory src)
+   {
+      id = src.id;
+      name = src.name;
+      description = src.description;
+      accessControl = src.accessControl;
+   }
 
    /**
     * Fill NXCP message with alarm category data
@@ -86,15 +99,16 @@ public class AlarmCategory
    }
 
    /**
-    * Set all attributes from another event template object.
+    * Set all attributes from another alarm category object.
     * 
-    * @param src Original event template object
+    * @param src Original alarm category object
     */
    public void setAll(final AlarmCategory src)
    {
       id = src.id;
       name = src.name;
       description = src.description;
+      accessControl = src.accessControl;
    }
 
    /**
