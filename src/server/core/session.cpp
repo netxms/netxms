@@ -1527,7 +1527,6 @@ void ClientSession::processingThread()
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
 								pMsg = NULL;	// Prevent deletion
-								InterlockedIncrement(&m_refCount);
 							}
 							break;   // Message was processed by the module
 						}

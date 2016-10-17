@@ -195,96 +195,98 @@ static void GetAgentTable(void *pArg)
       // Load column information
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
-      if (hStmt == NULL)
+      if (hStmt != NULL)
       {
-         DBConnectionPoolReleaseConnection(hdb);
-         return;
-      }
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
 
-      hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
-      {
-         dwNumCols = DBGetNumRows(hResult);
-         if (dwNumCols > 0)
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
          {
-            pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
-            for(i = 0; i < dwNumCols; i++)
+            dwNumCols = DBGetNumRows(hResult);
+            if (dwNumCols > 0)
             {
-               DBGetField(hResult, i, 0, buffer, 256);
-					table.addColumn(buffer, DBGetFieldULong(hResult, i, 1));
-               pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
-            }
-	         if (_tregcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
-	         {
-               pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
-               if (pConn != NULL)
+               pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
+               for(i = 0; i < dwNumCols; i++)
                {
-                  dwResult = pConn->getList(pszEnum);
-                  if (dwResult == ERR_SUCCESS)
+                  DBGetField(hResult, i, 0, buffer, 256);
+                  table.addColumn(buffer, DBGetFieldULong(hResult, i, 1));
+                  pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
+               }
+               if (_tregcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
+               {
+                  pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
+                  if (pConn != NULL)
                   {
-                     dwNumRows = pConn->getNumDataLines();
-                     pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
-                     for(i = 0; i < dwNumRows; i++)
+                     dwResult = pConn->getList(pszEnum);
+                     if (dwResult == ERR_SUCCESS)
                      {
-                        pszLine = (TCHAR *)pConn->getDataLine(i);
-                        if (_tregexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
+                        dwNumRows = pConn->getNumDataLines();
+                        pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
+                        for(i = 0; i < dwNumRows; i++)
                         {
-									table.addRow();
-
-                           // Write data for current row into message
-                           for(j = 0; j < dwNumCols; j++)
+                           pszLine = (TCHAR *)pConn->getDataLine(i);
+                           if (_tregexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
                            {
-                              nPos = pnSubstrPos[j];
-                              dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
-                              memcpy(buffer, &pszLine[pMatchList[nPos].rm_so], dwLen * sizeof(TCHAR));
-                              buffer[dwLen] = 0;
-										table.set(j, buffer);
+                              table.addRow();
+
+                              // Write data for current row into message
+                              for(j = 0; j < dwNumCols; j++)
+                              {
+                                 nPos = pnSubstrPos[j];
+                                 dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
+                                 memcpy(buffer, &pszLine[pMatchList[nPos].rm_so], dwLen * sizeof(TCHAR));
+                                 buffer[dwLen] = 0;
+                                 table.set(j, buffer);
+                              }
                            }
                         }
-                     }
-                     free(pMatchList);
+                        free(pMatchList);
 
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-							table.fillMessage(msg, 0, -1);
+                        msg.setField(VID_RCC, RCC_SUCCESS);
+                        table.fillMessage(msg, 0, -1);
+                     }
+                     else
+                     {
+                        msg.setField(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+                     }
+                     pConn->decRefCount();
                   }
                   else
                   {
-                     msg.setField(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+                     msg.setField(VID_RCC, RCC_COMM_FAILURE);
                   }
-                  pConn->decRefCount();
+                  regfree(&preg);
                }
-               else
+               else     // Regexp compilation failed
                {
-                  msg.setField(VID_RCC, RCC_COMM_FAILURE);
+                  msg.setField(VID_RCC, RCC_BAD_REGEXP);
                }
-               regfree(&preg);
+               free(pnSubstrPos);
             }
-            else     // Regexp compilation failed
+            else  // No columns defined
             {
-               msg.setField(VID_RCC, RCC_BAD_REGEXP);
+               msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
-            free(pnSubstrPos);
+            DBFreeResult(hResult);
          }
-         else  // No columns defined
+         else     // Cannot load column info from DB
          {
-            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
-         DBFreeResult(hResult);
+         DBFreeStatement(hStmt);
       }
-      else     // Cannot load column info from DB
+      else
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
-      DBFreeStatement(hStmt);
-   }
+  }
    else
    {
       msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
    }
 
-   // Send responce to client
+   // Send response to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
@@ -404,7 +406,6 @@ static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
  */
 static void GetSNMPTable(void *pArg)
 {
-   DB_RESULT hResult;
    NXCPMessage msg;
    UINT32 i, dwNumCols;
    TCHAR buffer[256];
@@ -418,67 +419,68 @@ static void GetSNMPTable(void *pArg)
    msg.setId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
-   if (hStmt == NULL)
+   if (hStmt != NULL)
    {
-      DBConnectionPoolReleaseConnection(hdb);
-      return;
-   }
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
 
-   hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
-   {
-      dwNumCols = DBGetNumRows(hResult);
-      if (dwNumCols > 0)
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
       {
-         args.dwNumCols = dwNumCols;
-         args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
-         args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
-         args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
-         args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
-			args.table = &table;
-         for(i = 0; i < dwNumCols; i++)
+         dwNumCols = DBGetNumRows(hResult);
+         if (dwNumCols > 0)
          {
-            DBGetField(hResult, i, 0, buffer, 256);
-            args.ppszOidList[i] = DBGetField(hResult, i, 1, NULL, 0);
-            args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
-				table.addColumn(buffer, args.pnFormatList[i]);
-         }
+            args.dwNumCols = dwNumCols;
+            args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
+            args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
+            args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
+            args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
+            args.table = &table;
+            for(i = 0; i < dwNumCols; i++)
+            {
+               DBGetField(hResult, i, 0, buffer, 256);
+               args.ppszOidList[i] = DBGetField(hResult, i, 1, NULL, 0);
+               args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
+               table.addColumn(buffer, args.pnFormatList[i]);
+            }
 
-         // Enumerate
-         if (((TOOL_STARTUP_INFO *)pArg)->pNode->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
-         {
-            // Fill in message with results
-            msg.setField(VID_RCC, RCC_SUCCESS);
-				table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
-				table.fillMessage(msg, 0, -1);
+            // Enumerate
+            if (((TOOL_STARTUP_INFO *)pArg)->pNode->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
+            {
+               // Fill in message with results
+               msg.setField(VID_RCC, RCC_SUCCESS);
+               table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+               table.fillMessage(msg, 0, -1);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_SNMP_ERROR);
+            }
+
+            // Cleanup
+            for(i = 0; i < dwNumCols; i++)
+               safe_free(args.ppszOidList[i]);
+            free(args.ppszOidList);
+            free(args.pnFormatList);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_SNMP_ERROR);
+            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
          }
-
-         // Cleanup
-         for(i = 0; i < dwNumCols; i++)
-            safe_free(args.ppszOidList[i]);
-         free(args.ppszOidList);
-         free(args.pnFormatList);
+         DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+         msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
-      DBFreeResult(hResult);
+      DBFreeStatement(hStmt);
    }
    else
    {
       msg.setField(VID_RCC, RCC_DB_FAILURE);
    }
-
    DBConnectionPoolReleaseConnection(hdb);
-   DBFreeStatement(hStmt);
 
-   // Send responce to client
+   // Send response to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);

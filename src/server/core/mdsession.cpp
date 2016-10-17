@@ -349,7 +349,6 @@ void MobileDeviceSession::processingThread()
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
 								msg = NULL;	// Prevent deletion
-								m_dwRefCount++;
 							}
 							break;   // Message was processed by the module
 						}
