@@ -822,7 +822,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
    NXCPMessage notification;
    notification.setCode(CMD_BULK_ALARM_STATE_CHANGE);
    notification.setField(VID_NOTIFICATION_CODE, terminate ? NX_NOTIFY_MULTIPLE_ALARMS_TERMINATED : NX_NOTIFY_MULTIPLE_ALARMS_RESOLVED);
-   notification.setField(VID_USER_ID, session->getUserId());
+   notification.setField(VID_USER_ID, (session != NULL) ? session->getUserId() : 0);
    notification.setFieldFromTime(VID_LAST_CHANGE_TIME, changeTime);
    notification.setFieldFromInt32Array(VID_ALARM_ID_LIST, &processedAlarms);
    EnumerateClientSessions(SendBulkAlarmTerminateNotification, &notification);

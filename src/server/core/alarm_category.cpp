@@ -211,30 +211,30 @@ UINT32 ModifyAlarmCategoryAcl(NXCPMessage *pRequest)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-         success = !DBExecute(hStmt);
+         success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
 
-      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-         for (int i = 0; i < userIds->size(); i++)
+         hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
+         if (hStmt != NULL)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userIds->get(i));
-            success = DBExecute(hStmt);
-            if (!success)
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+            for (int i = 0; i < userIds->size(); i++)
             {
-               break;
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userIds->get(i));
+               success = DBExecute(hStmt);
+               if (!success)
+               {
+                  break;
+               }
             }
-         }
 
-         DBFreeStatement(hStmt);
-         delete userIds;
+            DBFreeStatement(hStmt);
+            delete userIds;
+         }
+         else
+         {
+            success = false;
+         }
       }
       else
       {
@@ -272,42 +272,42 @@ UINT32 DeleteAlarmCategory(UINT32 id)
 
    // Check if category with specific ID exists
    bool bCategoryExist = IsDatabaseRecordExist(hdb, _T("alarm_categories"), _T("id"), id);
+   bool success = DBBegin(hdb);
 
-   // Prepare and execute SQL query
-   DB_STATEMENT hStmt;
-   if (bCategoryExist && DBBegin(hdb))
+   if (success)
    {
-      hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_categories WHERE id=?"));
-      if (hStmt != NULL)
+      // Prepare and execute SQL query
+      if (bCategoryExist)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-         if (DBExecute(hStmt))
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_categories WHERE id=?"));
+         if (hStmt != NULL)
          {
-            result = RCC_SUCCESS;
-
-            NXCPMessage nmsg;
-            nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-            nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
-            nmsg.setField(VID_CATEGORY_ID, id);
-            EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+            success = DBExecute(hStmt);
 
             DBFreeStatement(hStmt);
-            // If category delete was successful, delete its acl as well
-            hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
-            if (hStmt != NULL)
+            if (success)
             {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-                  if (DBExecute(hStmt))
-                  {
-                     result = RCC_SUCCESS;
-                     DBCommit(hdb);
-                  }
-                  else
-                  {
-                     result = RCC_DB_FAILURE;
-                     DBRollback(hdb);
-                  }
-                  DBFreeStatement(hStmt);
+               NXCPMessage nmsg;
+               nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+               nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
+               nmsg.setField(VID_CATEGORY_ID, id);
+               EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
+
+               // If category delete was successful, delete its acl as well
+               hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
+               if (hStmt != NULL)
+               {
+                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+                     success = DBExecute(hStmt);
+
+                     DBFreeStatement(hStmt);
+               }
+               else
+               {
+                  result = RCC_DB_FAILURE;
+                  success = false;
+               }
             }
             else
             {
@@ -317,13 +317,24 @@ UINT32 DeleteAlarmCategory(UINT32 id)
          else
          {
             result = RCC_DB_FAILURE;
+            success = false;
          }
       }
+      else
+      {
+         result = RCC_INVALID_OBJECT_ID;
+      }
 
-   }
-   else
-   {
-      result = RCC_INVALID_OBJECT_ID;
+      if (success)
+      {
+         result = RCC_SUCCESS;
+         DBCommit(hdb);
+      }
+      else
+      {
+         result = RCC_DB_FAILURE;
+         DBRollback(hdb);
+      }
    }
    DBConnectionPoolReleaseConnection(hdb);
 
