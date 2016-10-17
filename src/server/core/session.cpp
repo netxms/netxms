@@ -3478,21 +3478,13 @@ void ClientSession::validatePassword(NXCPMessage *request)
 void ClientSession::setPassword(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 dwUserId;
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   dwUserId = request->getFieldAsUInt32(VID_USER_ID);
-
-   if (((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-        !((dwUserId == 0) && (m_dwUserId != 0))) ||   // Only administrator can change password for UID 0
-       (dwUserId == m_dwUserId))     // User can change password for itself
+   UINT32 userId = request->getFieldAsUInt32(VID_USER_ID);
+   if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_dwUserId))     // User can change password for itself
    {
-      UINT32 dwResult;
       TCHAR newPassword[1024], oldPassword[1024];
-
 #ifdef UNICODE
       request->getFieldAsString(VID_PASSWORD, newPassword, 256);
 		if (request->isFieldExist(VID_OLD_PASSWORD))
@@ -3504,13 +3496,14 @@ void ClientSession::setPassword(NXCPMessage *request)
 #endif
 		else
 			oldPassword[0] = 0;
-      dwResult = SetUserPassword(dwUserId, newPassword, oldPassword, dwUserId == m_dwUserId);
-      msg.setField(VID_RCC, dwResult);
 
-      if (dwResult == RCC_SUCCESS)
+      UINT32 rcc = SetUserPassword(userId, newPassword, oldPassword, userId == m_dwUserId);
+      msg.setField(VID_RCC, rcc);
+
+      if (rcc == RCC_SUCCESS)
       {
          TCHAR userName[MAX_DB_STRING];
-         ResolveUserId(dwUserId, userName, MAX_DB_STRING);
+         ResolveUserId(userId, userName, MAX_DB_STRING);
          WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Changed password for user %s"), userName);
       }
    }

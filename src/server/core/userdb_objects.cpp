@@ -200,16 +200,20 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
-		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
-			m_flags |= flags & UF_CHANGE_PASSWORD;
+		if (m_id == 0)
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+		else if (m_id == GROUP_EVERYONE)
+         m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
-
 	}
 
 	m_flags |= UF_MODIFIED;
 }
 
+/**
+ * Detach user from LDAP user
+ */
 void UserDatabaseObject::detachLdapUser()
 {
    m_flags &= ~UF_LDAP_USER;
