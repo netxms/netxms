@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.alarmviewer.dialogs;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -44,18 +45,16 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmStateChangeFailureDialog extends Dialog
 {
-   private static final String[] REASONS = { "Insufficient object access rights", "Alarm open in helpdesk", "Invalid alarm ID" };
-   
    private SortableTableViewer alarmList;
-   private Map<Long, String> terminationFails = new HashMap<Long, String>();
+   private Map<Long, Integer> terminationFails = new HashMap<Long, Integer>();
 
    /**
     * @param parentShell
     */
-   public AlarmStateChangeFailureDialog(Shell parentShell, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail)
+   public AlarmStateChangeFailureDialog(Shell parentShell, Map<Long, Integer> terminationFails)
    {
       super(parentShell);
-      sortData(accessRightFail, openInHelpdesk, idCheckFail);
+      this.terminationFails = terminationFails;
    }
 
    /*
@@ -126,28 +125,6 @@ public class AlarmStateChangeFailureDialog extends Dialog
    }
 
    /**
-    * Sorts the passed lists of alarm termination fail reasons
-    * 
-    * @param accessRightFail
-    * @param openInHelpdesk
-    */
-   private void sortData(List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail)
-   {
-      for(Long id : accessRightFail)
-      {
-         terminationFails.put(id, REASONS[0]);
-      }
-      for(Long id : openInHelpdesk)
-      {
-         terminationFails.put(id, REASONS[1]);
-      }
-      for(Long id : idCheckFail)
-      {
-         terminationFails.put(id, REASONS[2]);
-      }
-   }
-
-   /**
     * Creates the columns for the table
     * @param parent
     * @param viewer
@@ -185,7 +162,7 @@ public class AlarmStateChangeFailureDialog extends Dialog
             Object value = ((Entry)cell.getElement()).getValue();
 
             if (value != null)
-               cell.setText(value.toString());
+               cell.setText(RCC.getText((int)value, Locale.getDefault().getLanguage(), null));
             else
                cell.setText("");
          }

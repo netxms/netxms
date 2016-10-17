@@ -2986,34 +2986,28 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
    
-   private boolean bulkAlarmOperation(int cmd, List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   private Map<Long, Integer> bulkAlarmOperation(int cmd, List<Long> alarmIds) throws IOException, NXCException
    {
-      boolean result = true;
       NXCPMessage msg = newMessage(cmd);
       msg.setField(NXCPCodes.VID_ALARM_ID_LIST, alarmIds.toArray(new Long[alarmIds.size()]));
       sendMessage(msg);
       
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      if (response.findField(NXCPCodes.VID_ACCESS_RIGHT_FAIL) != null)
-      {
-         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACCESS_RIGHT_FAIL))
-            accessRightFail.add(id);
-         result = false;
-      }
-      if (response.findField(NXCPCodes.VID_OPEN_IN_HELPDESK) != null)
-      {
-         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_OPEN_IN_HELPDESK))
-            openInHelpdesk.add(id);
-         result = false;
-      }
-      if (response.findField(NXCPCodes.VID_ID_CHECK_FAIL) != null)
-      {
-         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ID_CHECK_FAIL))
-            idCheckFail.add(id);
-         result = false;
-      }      
       
-      return result;
+      Map<Long, Integer> operationFails = new HashMap<Long, Integer>();
+      
+      // Returned alarm ID`s if there were any failed operations
+      if (response.findField(NXCPCodes.VID_ALARM_ID_LIST) != null)
+      {
+         for(int i = 0; i < response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_ID_LIST).length; i++)
+         {
+            operationFails.put(response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_ID_LIST)[i], 
+                  (Integer)response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_FAIL_CODE_LIST)[i].intValue());
+         }
+      }
+      
+      
+      return operationFails;
    }
 
    /**
@@ -3024,9 +3018,9 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return true if all alarms were terminated, false if some, or all, were not terminated
     */
-   public boolean bulkResolveAlarms(List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   public Map<Long, Integer> bulkResolveAlarms(List<Long> alarmIds) throws IOException, NXCException
    {
-      return bulkAlarmOperation(NXCPCodes.CMD_BULK_RESOLVE_ALARMS, alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
+      return bulkAlarmOperation(NXCPCodes.CMD_BULK_RESOLVE_ALARMS, alarmIds);
    }
 
    /**
@@ -3037,9 +3031,9 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return true if all alarms were terminated, false if some, or all, were not terminated
     */
-   public boolean bulkTerminateAlarms(List<Long> alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   public Map<Long, Integer> bulkTerminateAlarms(List<Long> alarmIds) throws IOException, NXCException
    {
-      return bulkAlarmOperation(NXCPCodes.CMD_BULK_TERMINATE_ALARMS, alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
+      return bulkAlarmOperation(NXCPCodes.CMD_BULK_TERMINATE_ALARMS, alarmIds);
    }
 
    /**

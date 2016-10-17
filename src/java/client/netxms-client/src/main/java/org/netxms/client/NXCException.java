@@ -19,9 +19,7 @@
 package org.netxms.client;
 
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
+import org.netxms.client.constants.RCC;
 
 /**
  * NetXMS client library exception. Used to report API call errors.
@@ -70,22 +68,7 @@ public class NXCException extends Exception
     */
 	protected String getErrorMessage(int code, String lang)
 	{
-	   try
-	   {
-   	   ResourceBundle bundle = PropertyResourceBundle.getBundle("messages", new Locale(lang));
-   	   try
-   	   {
-   	      return String.format(bundle.getString(String.format("RCC_%04d", code)), additionalInfo);
-   	   }
-   	   catch(MissingResourceException e)
-   	   {
-   	      return String.format(bundle.getString("RCC_UNKNOWN"), code);
-   	   }
-	   }
-	   catch(Exception e)
-	   {
-         return "Error " + Integer.toString(code);
-	   }
+	   return RCC.getText(code, lang, additionalInfo);
 	}
 
    /**

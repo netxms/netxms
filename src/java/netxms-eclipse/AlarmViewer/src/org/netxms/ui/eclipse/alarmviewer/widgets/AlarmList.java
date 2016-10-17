@@ -935,16 +935,14 @@ public class AlarmList extends CompositeWithMessageBar
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            final List<Long> accessRightFail = new ArrayList<Long>();
-            final List<Long> openInHelpdesk = new ArrayList<Long>();
-            final List<Long> idCheckFail = new ArrayList<Long>();
-            if (!session.bulkResolveAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+			   final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
+            if (!resolveFails.isEmpty())
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), resolveFails);
                      if (dlg.open() == Window.OK)
                      {
                         return;
@@ -977,17 +975,15 @@ public class AlarmList extends CompositeWithMessageBar
 		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-		      final List<Long> accessRightFail = new ArrayList<Long>();
-		      final List<Long> openInHelpdesk = new ArrayList<Long>();
-		      final List<Long> idCheckFail = new ArrayList<Long>();
-				if (!session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+			{		      
+		      final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
+				if (!terminationFails.isEmpty())
 				{
 				   runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), terminationFails);
                      if (dlg.open() == Window.OK)
                      {
                         return;

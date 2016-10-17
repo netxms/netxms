@@ -1134,7 +1134,7 @@ NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
    Alarm *alarm = (Alarm *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, NULL, false));
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, false));
    return 0;
 }
 
@@ -1144,7 +1144,7 @@ NXSL_METHOD_DEFINITION(Alarm, resolve)
 NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
    Alarm *alarm = (Alarm *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, NULL, true));
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, true));
    return 0;
 }
 

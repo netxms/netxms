@@ -18,6 +18,10 @@
  */
 package org.netxms.client.constants;
 
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import org.netxms.base.CommonRCC;
 
 /**
@@ -25,6 +29,7 @@ import org.netxms.base.CommonRCC;
  */
 public final class RCC extends CommonRCC
 {
+   public static final int ACCESS_DENIED = 2;
 	public static final int INVALID_OBJECT_ID = 7;
    public static final int CANT_CREATE_OBJECT = 8;
 	public static final int DUPLICATE_DCI = 13;
@@ -115,4 +120,32 @@ public final class RCC extends CommonRCC
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
 	public static final int BAD_MIB_FILE_DATA = 1002;
+	
+	/**
+	 * Get message text for given RCC
+	 * 
+	 * @param code request completion code
+	 * @param lang language code
+	 * @param additionalInfo additional info (to be included into message text)
+	 * @return formatted message text
+	 */
+	public static String getText(int code, String lang, String additionalInfo)
+	{
+      try
+      {
+         ResourceBundle bundle = PropertyResourceBundle.getBundle("messages", new Locale(lang));
+         try
+         {
+            return String.format(bundle.getString(String.format("RCC_%04d", code)), additionalInfo);
+         }
+         catch(MissingResourceException e)
+         {
+            return String.format(bundle.getString("RCC_UNKNOWN"), code);
+         }
+      }
+      catch(Exception e)
+      {
+         return "Error " + Integer.toString(code);
+      }
+	}
 }

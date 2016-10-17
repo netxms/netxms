@@ -5743,10 +5743,17 @@ void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   IntegerArray<UINT32> alarmIds;
+   IntegerArray<UINT32> alarmIds, failIds, failCodes;
    pRequest->getFieldAsInt32Array(VID_ALARM_ID_LIST, &alarmIds);
-   msg.setField(VID_RCC, ResolveAlarmsById(&alarmIds, &msg, this, terminate));
 
+   ResolveAlarmsById(&alarmIds, &failIds, &failCodes, this, terminate);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   if (failIds.size() > 0)
+   {
+      msg.setFieldFromInt32Array(VID_ALARM_ID_LIST, &failIds);
+      msg.setFieldFromInt32Array(VID_FAIL_CODE_LIST, &failCodes);
+   }
    sendMessage(&msg);
 }
 
@@ -5786,7 +5793,7 @@ void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
          msg.setField(VID_RCC,
             byHelpdeskRef ?
             ResolveAlarmByHDRef(hdref, this, terminate) :
-            ResolveAlarmById(alarmId, &msg, this, terminate));
+            ResolveAlarmById(alarmId, this, terminate));
       }
       else
       {

@@ -739,21 +739,29 @@ void Alarm::resolve(UINT32 userId, Event *event, bool terminate, bool notify)
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, NXCPMessage *msg, ClientSession *session, bool terminate)
+UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate)
 {
-   IntegerArray<UINT32> list(1);
+   IntegerArray<UINT32> list(1), failIds, failCodes;
    list.add(alarmId);
-   return ResolveAlarmsById(&list, msg, session, terminate);
+   ResolveAlarmsById(&list, &failIds, &failCodes, session, terminate);
+
+   if (failCodes.size() > 0)
+   {
+      return failCodes.get(0);
+   }
+   else
+   {
+      return RCC_SUCCESS;
+   }
 }
 
 /**
  * Resolve and possibly terminate alarms with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPMessage *msg, ClientSession *session, bool terminate)
+void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, IntegerArray<UINT32> *failIds, IntegerArray<UINT32> *failCodes, ClientSession *session, bool terminate)
 {
-   UINT32 result = RCC_INVALID_ALARM_ID;
-   IntegerArray<UINT32> accessRightFail, idCheckFail, openInHelpdesk, processedAlarms, updatedObjects;
+   IntegerArray<UINT32> processedAlarms, updatedObjects;
 
    MutexLock(m_mutex);
    time_t changeTime = time(NULL);
@@ -774,8 +782,9 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
                   // If user does not have the required object access rights, the alarm cannot be terminated
                   if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
                   {
-                     accessRightFail.add(alarmIds->get(i));
-                     continue;
+                     failIds->add(alarmIds->get(i));
+                     failCodes->add(RCC_ACCESS_DENIED);
+                     break;
                   }
 
                   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
@@ -787,7 +796,6 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
                processedAlarms.add(alarm->getAlarmId());
                if (!updatedObjects.contains(object->getId()))
                   updatedObjects.add(object->getId());
-               result = RCC_SUCCESS;
                if (terminate)
                {
                   m_alarmList->remove(n);
@@ -796,14 +804,16 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
             }
             else
             {
-               openInHelpdesk.add(alarmIds->get(i));
+               failIds->add(alarmIds->get(i));
+               failCodes->add(RCC_ALARM_OPEN_IN_HELPDESK);
             }
             break;
          }
       }
       if (n == m_alarmList->size())
       {
-         idCheckFail.add(alarmIds->get(i));
+         failIds->add(alarmIds->get(i));
+         failCodes->add(RCC_INVALID_ALARM_ID);
       }
    }
    MutexUnlock(m_mutex);
@@ -815,28 +825,9 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
    notification.setFieldFromTime(VID_LAST_CHANGE_TIME, changeTime);
    notification.setFieldFromInt32Array(VID_ALARM_ID_LIST, &processedAlarms);
    EnumerateClientSessions(SendBulkAlarmTerminateNotification, &notification);
-   result = RCC_SUCCESS;
-
-   // Add fields if there were alarms that could not be terminated
-   if (msg != NULL)
-   {
-      if (accessRightFail.size() > 0)
-      {
-         msg->setFieldFromInt32Array(VID_ACCESS_RIGHT_FAIL, &accessRightFail);
-      }
-      if (openInHelpdesk.size() > 0)
-      {
-         msg->setFieldFromInt32Array(VID_OPEN_IN_HELPDESK, &openInHelpdesk);
-      }
-      if (idCheckFail.size() > 0)
-      {
-         msg->setFieldFromInt32Array(VID_ID_CHECK_FAIL, &idCheckFail);
-      }
-   }
 
    for(int i = 0; i < updatedObjects.size(); i++)
       UpdateObjectStatus(updatedObjects.get(i));
-   return result;
 }
 
 /**

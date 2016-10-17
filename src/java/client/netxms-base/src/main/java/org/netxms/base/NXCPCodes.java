@@ -931,16 +931,14 @@ public class NXCPCodes
    public static final long VID_MESSAGE_LENGTH = 550;
    public static final long VID_LDAP_DN = 551;
    public static final long VID_LDAP_ID = 552;
-   public static final long VID_ACCESS_RIGHT_FAIL = 553;
-   public static final long VID_OPEN_IN_HELPDESK = 554;
-   public static final long VID_ID_CHECK_FAIL = 555;
-   public static final long VID_CATEGORY_DESCRIPTION = 556;
-   public static final long VID_ALARM_CATEGORY_ID = 557;
-   public static final long VID_NUM_ALARM_CATEGORIES = 558;
-   public static final long VID_ALARM_CATEGORY_ACL = 559;
-   public static final long VID_NUM_ALARM_CATEGORY_ACL = 560;
-   public static final long VID_ALARM_ID_LIST = 561;
-   public static final long VID_NUM_COMPONENTS = 562;
+   public static final long VID_FAIL_CODE_LIST = 553;
+   public static final long VID_CATEGORY_DESCRIPTION = 554;
+   public static final long VID_ALARM_CATEGORY_ID = 555;
+   public static final long VID_NUM_ALARM_CATEGORIES = 556;
+   public static final long VID_ALARM_CATEGORY_ACL = 557;
+   public static final long VID_NUM_ALARM_CATEGORY_ACL = 558;
+   public static final long VID_ALARM_ID_LIST = 559;
+   public static final long VID_NUM_COMPONENTS = 560;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
