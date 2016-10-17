@@ -305,24 +305,18 @@ UINT32 DeleteAlarmCategory(UINT32 id)
                }
                else
                {
-                  result = RCC_DB_FAILURE;
                   success = false;
                }
-            }
-            else
-            {
-               result = RCC_DB_FAILURE;
             }
          }
          else
          {
-            result = RCC_DB_FAILURE;
             success = false;
          }
       }
       else
       {
-         result = RCC_INVALID_OBJECT_ID;
+         success = false;
       }
 
       if (success)
@@ -332,9 +326,13 @@ UINT32 DeleteAlarmCategory(UINT32 id)
       }
       else
       {
-         result = RCC_DB_FAILURE;
+         result = (!bCategoryExist) ? RCC_INVALID_OBJECT_ID : RCC_DB_FAILURE;
          DBRollback(hdb);
       }
+   }
+   else
+   {
+      result = RCC_DB_FAILURE;
    }
    DBConnectionPoolReleaseConnection(hdb);
 
