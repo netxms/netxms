@@ -529,6 +529,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
    m_timeoutEvent = timeoutEvent;
    m_ackTimeout = ackTimeout;
    nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   delete m_alarmCategoryList;
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
 
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
