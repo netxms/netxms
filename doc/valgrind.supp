@@ -36,18 +36,21 @@
 {
 	OpenSSL/condition
 	Memcheck:Cond
+	...
 	obj:*/libcrypto.so.1.0.0
 }
 
 {
 	OpenSSL/value8
 	Memcheck:Value8
+	...
 	obj:*/libcrypto.so.1.0.0
 }
 
 {
 	OpenSSL/value4
 	Memcheck:Value4
+	...
 	obj:*/libcrypto.so.1.0.0
 }
 
@@ -166,30 +169,48 @@
 }
 
 {
-	Oracle Client 12/Jump
+	Oracle Client 12/libclntsh/Jump
 	Memcheck:Cond
 	obj:*/libclntsh.so.12.1
 }
 
 {
-	Oracle Client 12/Uninitialized 8
+	Oracle Client 12/libclntshcore/Jump
+	Memcheck:Cond
+	obj:*/libclntshcore.so.12.1
+}
+
+{
+	Oracle Client 12/libnnz12/Jump
+	Memcheck:Cond
+	obj:*/libnnz12.so
+}
+
+{
+	Oracle Client 12/libnnz12/Uninitialized 8
 	Memcheck:Value8
 	obj:*/libnnz12.so
 }
 
 {
-	Oracle Client 12/malloc
-	Memcheck:Leak
-	fun:malloc
+	Oracle Client 12/libclntshcore/Uninitialized 8
+	Memcheck:Value8
 	obj:*/libclntshcore.so.12.1
 }
 
-{
-	Oracle Client 12/calloc
-	Memcheck:Leak
-	fun:calloc
-	obj:*/libclntshcore.so.12.1
-}
+#{
+#	Oracle Client 12/malloc
+#	Memcheck:Leak
+#	fun:malloc
+#	obj:*/libclntshcore.so.12.1
+#}
+
+#{
+#	Oracle Client 12/calloc
+#	Memcheck:Leak
+#	fun:calloc
+#	obj:*/libclntshcore.so.12.1
+#}
 
 {
 	Static mutexes
