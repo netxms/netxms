@@ -6,6 +6,7 @@
 	- Alarm categories can be created and configured in Alarm Category Configurator
 	- By default view_all_alarms acl added to Everyone group
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
+- SMS driver for Nexmo service
 - Fixed issues: #1285, #1312, #1320
 
 

@@ -584,7 +584,7 @@ AC_ARG_WITH(dist,
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
-	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
+	SMSDRV_DIRS="kannel nexmo nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -1785,7 +1785,7 @@ fi
 
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS kannel slack text2reach websms"
+  SMSDRV_DIRS="$SMSDRV_DIRS kannel nexmo slack text2reach websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -3329,6 +3329,7 @@ AC_CONFIG_FILES([
 	src/smsdrv/dummy/Makefile
 	src/smsdrv/generic/Makefile
 	src/smsdrv/kannel/Makefile
+	src/smsdrv/nexmo/Makefile
 	src/smsdrv/nxagent/Makefile
 	src/smsdrv/portech/Makefile
 	src/smsdrv/slack/Makefile
