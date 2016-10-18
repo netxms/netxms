@@ -307,7 +307,8 @@ public class AlarmCategoryList extends Composite implements SessionListener
       if (selection.isEmpty())
          return;
 
-      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, selection.getFirstElement());
+      AlarmCategory category = new AlarmCategory((AlarmCategory)selection.getFirstElement());
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, category);
       if (dlg != null)
       {
          dlg.getShell().setText("Properties");

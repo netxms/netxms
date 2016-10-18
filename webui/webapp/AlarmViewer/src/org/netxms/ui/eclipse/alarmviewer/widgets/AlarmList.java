@@ -806,31 +806,29 @@ public class AlarmList extends CompositeWithMessageBar
 	}
 		
 	/**
-	 * Resolve selected alarms
-	 */
-	private void resolveAlarms()
-	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+    * Resolve selected alarms
+    */
+   private void resolveAlarms()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
       if (selection.isEmpty())
-			return;
-		
+         return;
+      
       final List<Long> alarmIds = new ArrayList<Long>(selection.size());
       for(Object o : selection.toList())
          alarmIds.add(((Alarm)o).getId());
-		new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-            final List<Long> accessRightFail = new ArrayList<Long>();
-            final List<Long> openInHelpdesk = new ArrayList<Long>();
-            final List<Long> idCheckFail = new ArrayList<Long>();
-            if (!session.bulkResolveAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
+      new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
+            if (!resolveFails.isEmpty())
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), resolveFails);
                      if (dlg.open() == Window.OK)
                      {
                         return;
@@ -838,58 +836,56 @@ public class AlarmList extends CompositeWithMessageBar
                   }
                });
             }
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().AlarmList_CannotResoveAlarm;
-			}
-		}.start();
-	}
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AlarmList_CannotResoveAlarm;
+         }
+      }.start();
+   }
 
 	/**
-	 * Terminate selected alarms
-	 */
-	private void terminateAlarms()
-	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-		if (selection.isEmpty())
-			return;		
+    * Terminate selected alarms
+    */
+   private void terminateAlarms()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.isEmpty())
+         return;     
 
-		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
-		for(Object o : selection.toList())
-		   alarmIds.add(((Alarm)o).getId());
-		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-		      final List<Long> accessRightFail = new ArrayList<Long>();
-		      final List<Long> openInHelpdesk = new ArrayList<Long>();
-		      final List<Long> idCheckFail = new ArrayList<Long>();
-				if (!session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
-				{
-				   runInUIThread(new Runnable() {
+      final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+      for(Object o : selection.toList())
+         alarmIds.add(((Alarm)o).getId());
+      new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {           
+            final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
+            if (!terminationFails.isEmpty())
+            {
+               runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), terminationFails);
                      if (dlg.open() == Window.OK)
                      {
                         return;
                      }
                   }
                });
-				}
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().TerminateAlarm_ErrorMessage;
-			}
-		}.start();
-	}
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().TerminateAlarm_ErrorMessage;
+         }
+      }.start();
+   }
 
    /**
     * Create helpdesk ticket (issue) from selected alarms
