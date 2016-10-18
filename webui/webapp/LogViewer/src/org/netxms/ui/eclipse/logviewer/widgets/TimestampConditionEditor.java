@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class TimestampConditionEditor extends ConditionEditor
 {
-	private final String[] OPERATIONS = { Messages.get().TimestampConditionEditor_Between, Messages.get().TimestampConditionEditor_Before, Messages.get().TimestampConditionEditor_After };
+	private static final String[] OPERATIONS = { Messages.get().TimestampConditionEditor_Between, Messages.get().TimestampConditionEditor_Before, Messages.get().TimestampConditionEditor_After, "TODAY" };
 	
 	private DateTime datePicker1;
 	private DateTime timePicker1;
@@ -113,6 +113,14 @@ public class TimestampConditionEditor extends ConditionEditor
 			datePicker2.setVisible(true);
 			timePicker2.setVisible(true);
 		}
+		else if (selectionIndex == 3)
+		{
+		   andLabel.setVisible(false);
+		   datePicker1.setVisible(false);
+         timePicker1.setVisible(false);
+         datePicker2.setVisible(false);
+         timePicker2.setVisible(false);
+		}
 		else
 		{
 			andLabel.setVisible(false);
@@ -148,6 +156,17 @@ public class TimestampConditionEditor extends ConditionEditor
 			case 2:	// after
 				filter = new ColumnFilter(ColumnFilterType.GREATER, timestamp);
 				break;
+			case 3: // today
+			   c.clear();
+			   c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
+		            0, 0, 0);
+			   long from = c.getTimeInMillis() / 1000;
+			   c.clear();
+			   c.set(datePicker1.getYear(), datePicker1.getMonth(), datePicker1.getDay(),
+                  23, 59, 59);
+			   long to = c.getTimeInMillis() / 1000;
+			   filter = new ColumnFilter(from, to);
+			   break;
 			default:
 				filter = new ColumnFilter(timestamp, timestamp);
 				break;
