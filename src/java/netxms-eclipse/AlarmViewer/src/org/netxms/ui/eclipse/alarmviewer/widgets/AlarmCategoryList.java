@@ -63,10 +63,12 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
+/**
+ * Alarm category list
+ */
+@SuppressWarnings("restriction")
 public class AlarmCategoryList extends Composite implements SessionListener
 {
-   public static final String JOB_FAMILY = "AlarmCategorySelectorJob"; //$NON-NLS-1$
-
    // Columns
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_NAME = 1;
@@ -85,6 +87,13 @@ public class AlarmCategoryList extends Composite implements SessionListener
    private ViewPart viewPart;
    private HashMap<Long, AlarmCategory> alarmCategories;
 
+   /**
+    * @param viewPart
+    * @param parent
+    * @param style
+    * @param configPrefix
+    * @param showFilter
+    */
    public AlarmCategoryList(ViewPart viewPart, Composite parent, int style, final String configPrefix, boolean showFilter)
    {
       this(parent, style, configPrefix, showFilter);
@@ -224,7 +233,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
     */
    public void refreshView()
    {
-      new ConsoleJob("Open alarm category list", null, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob("Open alarm category list", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -529,6 +538,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
       return viewer;
    }
    
+   /* (non-Javadoc)
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
    @Override
    public void notificationHandler(final SessionNotification n)
    {
@@ -566,6 +578,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Widget#dispose()
+    */
    @Override
    public void dispose()
    {

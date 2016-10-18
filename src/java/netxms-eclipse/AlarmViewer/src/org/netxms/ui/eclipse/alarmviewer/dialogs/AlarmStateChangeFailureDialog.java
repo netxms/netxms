@@ -18,24 +18,22 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.dialogs;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -46,15 +44,15 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class AlarmStateChangeFailureDialog extends Dialog
 {
    private SortableTableViewer alarmList;
-   private Map<Long, Integer> terminationFails = new HashMap<Long, Integer>();
+   private Map<Long, Integer> failures;
 
    /**
     * @param parentShell
     */
-   public AlarmStateChangeFailureDialog(Shell parentShell, Map<Long, Integer> terminationFails)
+   public AlarmStateChangeFailureDialog(Shell parentShell, Map<Long, Integer> failures)
    {
       super(parentShell);
-      this.terminationFails = terminationFails;
+      this.failures = failures;
    }
 
    /*
@@ -66,7 +64,7 @@ public class AlarmStateChangeFailureDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("ALarm State Change Errors");
+      newShell.setText("Alarm State Change Errors");
    }
 
    /*
@@ -82,30 +80,23 @@ public class AlarmStateChangeFailureDialog extends Dialog
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.numColumns = 2;
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
       
       Label text = new Label(dialogArea, SWT.NONE);
-      text.setText("State of some alarms was not changed due to the following reasons:");
+      text.setText("State of some alarms was not changed due to following reasons:");
+
+      final String[] names = { "ID", "Reason" };
+      final int[] widths = { 80, 250 };
+      alarmList = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL);
+      alarmList.setContentProvider(new MapContentProvider());
+      alarmList.setLabelProvider(new FailuresLabelProvider());
+      alarmList.setInput(failures);
+
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
       gd.verticalAlignment = SWT.FILL;
-      gd.grabExcessVerticalSpace = true;
-      gd.minimumHeight = 50;
-      text.setLayoutData(gd);
-
-      alarmList = new SortableTableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL);
-      alarmList.setContentProvider(new MapContentProvider());
-      createColumns(parent, alarmList);
-      alarmList.setInput(terminationFails);
-
-      gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 350;
       alarmList.getTable().setLayoutData(gd);
@@ -123,69 +114,23 @@ public class AlarmStateChangeFailureDialog extends Dialog
    {
       super.okPressed();
    }
-
+   
    /**
-    * Creates the columns for the table
-    * @param parent
-    * @param viewer
+    * Label provider for failures map
     */
-   private void createColumns(final Composite parent, final SortableTableViewer viewer)
+   private class FailuresLabelProvider extends LabelProvider implements ITableLabelProvider
    {
-      final String[] titles = { "ID", "Reason" };
-      final int[] widths = { 80, 250 };
-
-      // first column for alarm id
-      TableViewerColumn col = createTableViewerColumn(titles[0], widths[0], 0);
-      col.setLabelProvider(new CellLabelProvider()
+      @Override
+      public Image getColumnImage(Object element, int columnIndex)
       {
-         @Override
-         public void update(ViewerCell cell)
-         {
-            @SuppressWarnings("rawtypes")
-            Object value = ((Entry)cell.getElement()).getKey();
+         return null;
+      }
 
-            if (value != null)
-               cell.setText(value.toString());
-            else
-               cell.setText("");
-         }
-      });
-
-      // second column for termination failure reason
-      col = createTableViewerColumn(titles[1], widths[1], 1);
-      col.setLabelProvider(new CellLabelProvider()
+      @Override
+      public String getColumnText(Object element, int columnIndex)
       {
-         @Override
-         public void update(ViewerCell cell)
-         {
-            @SuppressWarnings("rawtypes")
-            Object value = ((Entry)cell.getElement()).getValue();
-
-            if (value != null)
-               cell.setText(RCC.getText((int)value, Locale.getDefault().getLanguage(), null));
-            else
-               cell.setText("");
-         }
-      });
-   }
-
-   /**
-    * Creates a single column
-    * 
-    * @param title
-    * @param bound
-    * @param colNumber
-    * @return TableViewerColumn
-    */
-   private TableViewerColumn createTableViewerColumn(String title, int bound, final int colNumber)
-   {
-      final TableViewerColumn viewerColumn = new TableViewerColumn(alarmList, SWT.NONE);
-      final TableColumn column = viewerColumn.getColumn();
-      column.setText(title);
-      column.setWidth(bound);
-      column.setResizable(true);
-      column.setMoveable(true);
-      return viewerColumn;
+         return (columnIndex == 0) ? ((Entry<?, ?>)element).getKey().toString() : RCC.getText((Integer)((Entry<?, ?>)element).getValue(), Locale.getDefault().getLanguage(), null);
+      }
    }
 
    /**
