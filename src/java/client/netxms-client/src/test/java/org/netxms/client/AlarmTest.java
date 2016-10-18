@@ -25,7 +25,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.events.EventInfo;
 
 /**
@@ -73,11 +75,7 @@ public class AlarmTest extends AbstractSessionTest
 		
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
-		{
-		   final List<Long> accessRightFail = new ArrayList<Long>();
-         final List<Long> openInHelpdesk = new ArrayList<Long>();
-         final List<Long> idCheckFail = new ArrayList<Long>();
-		   
+		{		   
 			final Semaphore s = new Semaphore(0);			
 			final List<Long> alarmIds = new ArrayList<Long>(2);
 			alarmIds.add(list.keySet().iterator().next());
@@ -87,18 +85,17 @@ public class AlarmTest extends AbstractSessionTest
 			session.addListener(new SessionListener() {
 				public void notificationHandler(SessionNotification n)
 				{
-				   @SuppressWarnings("unchecked")
-               List<Long> termAlarmIdss = (List<Long>)n.getObject();
-				   long termAlarmId = termAlarmIdss.get(0);
-					assertEquals(SessionNotification.ALARM_TERMINATED, n.getCode());
+               List<Long> termAlarmIds = ((BulkAlarmStateChangeData)n.getObject()).getAlarms();
+				   long termAlarmId = termAlarmIds.get(0);
+					assertEquals(SessionNotification.MULTIPLE_ALARMS_TERMINATED, n.getCode());
 					assertEquals(alarmIds.get(0).longValue(), termAlarmId);
 					success[0] = true;
 					s.release();
 				}
 			});
 			session.subscribe(NXCSession.CHANNEL_ALARMS);
-			session.bulkTerminateAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
-			assertTrue(alarmIds.get(1) == idCheckFail.get(0));
+			Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
+			assertTrue(terminationFails.get(alarmIds.get(1)) == RCC.INVALID_ALARM_ID);
 			assertTrue(s.tryAcquire(3, TimeUnit.SECONDS));
 			assertEquals(true, success[0]);
 		}
