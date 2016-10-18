@@ -6,7 +6,7 @@
 	- Alarm categories can be created and configured in Alarm Category Configurator
 	- By default view_all_alarms acl added to Everyone group
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
-- Fixed issues: #1285
+- Fixed issues: #1285, #1312
 
 *
 * 2.1-M1
