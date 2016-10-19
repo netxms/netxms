@@ -1504,9 +1504,9 @@ CREATE TABLE alarm_categories
 ) TABLE_TYPE;
 
 COMMENT_TABLE (alarm_categories, 'Alarm categories')
-COMMENT_COLUMN(id, 'Category ID')
-COMMENT_COLUMN(name, 'Category name')
-COMMENT_COLUMN(descr, 'Category description')
+COMMENT_COLUMN(alarm_categories.id, 'Category ID')
+COMMENT_COLUMN(alarm_categories.name, 'Category name')
+COMMENT_COLUMN(alarm_categories.descr, 'Category description')
 
 /*
 ** Alarm category access control list
@@ -1519,8 +1519,8 @@ CREATE TABLE alarm_category_acl
 ) TABLE_TYPE;
 
 COMMENT_TABLE(alarm_category_acl, 'Alarm category-user correspondence')
-COMMENT_COLUMN(category_id, 'Category ID')
-COMMENT_COLUMN(user_id, 'User ID')
+COMMENT_COLUMN(alarm_category_acl.category_id, 'Category ID')
+COMMENT_COLUMN(alarm_category_acl.user_id, 'User ID')
 
 /*
 ** Alarm-category map
@@ -1533,8 +1533,8 @@ CREATE TABLE alarm_category_map
 ) TABLE_TYPE;
 
 COMMENT_TABLE(alarm_category_map, 'Alarm-category correspondence')
-COMMENT_COLUMN(alarm_id, 'Alarm ID')
-COMMENT_COLUMN(category_id, 'Category ID')
+COMMENT_COLUMN(alarm_category_map.alarm_id, 'Alarm ID')
+COMMENT_COLUMN(alarm_category_map.category_id, 'Category ID')
 
 /*
 ** SNMP trap configuration
