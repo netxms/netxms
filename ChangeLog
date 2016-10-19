@@ -7,6 +7,7 @@
 	- By default view_all_alarms acl added to Everyone group
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - SMS driver for Nexmo service
+- SMS driver for SMSEagle gateway
 - Fixed issues: #1285, #1312, #1320
 
 
