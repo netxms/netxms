@@ -584,8 +584,8 @@ public:
    void resetStatus() { m_status = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
-   bool isInMaintenanceMode() { return m_maintenanceMode; }
-   UINT64 getMaintenanceEventId() { return m_maintenanceEventId; }
+   bool isInMaintenanceMode() const { return m_maintenanceMode; }
+   UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
 
@@ -1516,6 +1516,7 @@ public:
    const TCHAR *getSshLogin() const { return m_sshLogin; }
    const TCHAR *getSshPassword() const { return m_sshPassword; }
    UINT32 getSshProxy() const { return m_sshProxy; }
+   time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
