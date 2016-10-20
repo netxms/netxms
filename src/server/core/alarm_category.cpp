@@ -27,7 +27,7 @@ static RWLOCK lock = RWLockCreate();
  /**
   * Alarm category acl map
   */
-HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap = NULL;
+HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap = new HashMap<UINT32, IntegerArray<UINT32> >(true);
 
 /**
 * Callback for sending alarm category configuration change notifications
