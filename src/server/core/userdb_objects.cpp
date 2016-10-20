@@ -28,6 +28,7 @@ static int CompareUserId(const void *e1, const void *e2)
 {
    UINT32 id1 = *((UINT32 *)e1);
    UINT32 id2 = *((UINT32 *)e2);
+
    return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
 }
 
@@ -908,16 +909,37 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Check if given user is a member
  */
-bool Group::isMember(UINT32 userId)
+bool Group::isMember(UINT32 userId, IntegerArray<UINT32> *searchPath)
 {
-	if (m_id == GROUP_EVERYONE)
-		return true;
+   if (m_id == GROUP_EVERYONE)
+      return true;
 
    // This is to avoid applying disabled group rights on enabled user
    if ((m_flags & UF_DISABLED))
       return false;
 
-   return bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL;
+   if (bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL)
+      return true;
+
+   if (searchPath != NULL)
+   {
+      // To avoid going into a recursive loop (e.g. A->B->C->A)
+      if (searchPath->contains(m_id))
+         return false;
+
+      searchPath->add(m_id);
+
+      // Loops backwards because groups will be at the end of the list, if userId is encountered, normal bsearch takes place
+      for(int i = m_memberCount - 1; i >= 0; i--)
+      {
+         if (!(m_members[i] & GROUP_FLAG))
+            break;
+         if (CheckUserMembershipInternal(userId, m_members[i], searchPath))
+            return true;
+      }
+   }
+
+   return false;
 }
 
 /**

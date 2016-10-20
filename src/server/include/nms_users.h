@@ -345,7 +345,7 @@ public:
 
 	void addUser(UINT32 userId);
 	void deleteUser(UINT32 userId);
-	bool isMember(UINT32 userId);
+	bool isMember(UINT32 userId, IntegerArray<UINT32> *searchPath = NULL);
 	int getMembers(UINT32 **members);
 };
 
@@ -397,6 +397,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
 UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
+bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked = false);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);

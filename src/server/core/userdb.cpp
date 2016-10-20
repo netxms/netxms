@@ -115,12 +115,32 @@ static UINT64 GetEffectiveSystemRights(User *user)
 {
    UINT64 systemRights = user->getSystemRights();
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   IntegerArray<UINT32> *searchPath = new IntegerArray<UINT32>(16, 16);
    while(it->hasNext())
    {
       UserDatabaseObject *object = it->next();
-      if (object->isGroup() && (((Group *)object)->isMember(user->getId())))
+
+      // The previous search path is checked to avoid performing a deep membership search again
+      if (object->isGroup() && searchPath->contains(((Group *)object)->getId()))
+      {
          systemRights |= ((Group *)object)->getSystemRights();
+         continue;
+      }
+      else
+      {
+         searchPath->clear();
+      }
+
+      if (object->isGroup() && (((Group *)object)->isMember(user->getId(), searchPath)))
+      {
+         systemRights |= ((Group *)object)->getSystemRights();
+      }
+      else
+      {
+         searchPath->clear();
+      }
    }
+   delete searchPath;
    delete it;
    return systemRights;
 }
@@ -477,6 +497,19 @@ result:
 }
 
 /**
+ * Check if user is a member of specific child group
+ */
+bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath)
+{
+   Group *group = (Group *)s_userDatabase.get(groupId);
+   if (group != NULL)
+   {
+      return group->isMember(userId, searchPath);
+   }
+   return false;
+}
+
+/**
  * Check if user is a member of specific group
  */
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
@@ -488,13 +521,14 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
 		return true;
 
    bool result = false;
+   IntegerArray<UINT32> searchPath(16, 16);
+
    RWLockReadLock(s_userDatabaseLock, INFINITE);
-   Group *group = (Group *)s_userDatabase.get(groupId);
-   if (group != NULL)
-   {
-      result = group->isMember(userId);
-   }
+
+   result = CheckUserMembershipInternal(userId, groupId, &searchPath);
+
    RWLockUnlock(s_userDatabaseLock);
+
    return result;
 }
 
@@ -747,7 +781,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
 }
 
 /**
- * Synchronize new user list with old user list of given group. Not LDAP usera will not be changed.
+ * Synchronize new user list with old user list of given group. Note: LDAP user will not be changed.
  */
 static void SyncGroupMembers(Group *group, Entry *obj)
 {
@@ -764,7 +798,7 @@ static void SyncGroupMembers(Group *group, Entry *obj)
    for(int i = 0; i < count; i++)
    {
       UserDatabaseObject *user = s_userDatabase.get(oldMembers[i]);
-      if ((user == NULL) || user->isGroup() || !user->isLDAPUser())
+      if ((user == NULL) || !user->isLDAPUser())
          continue;
 
       if (!newMembers->contains(user->getDn()))
@@ -785,7 +819,7 @@ static void SyncGroupMembers(Group *group, Entry *obj)
    {
       const TCHAR *dn = it->next();
       UserDatabaseObject *user = s_ldapNames.get(dn);
-      if ((user == NULL) || user->isGroup())
+      if (user == NULL)
          continue;
 
       if (!group->isMember(user->getId()))

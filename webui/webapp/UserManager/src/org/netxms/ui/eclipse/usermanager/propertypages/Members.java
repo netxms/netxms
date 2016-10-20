@@ -39,7 +39,6 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -112,7 +111,7 @@ public class Members extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), User.class);
+				SelectUserDialog dlg = new SelectUserDialog(Members.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();
