@@ -556,11 +556,11 @@ static bool EventNameResolver(const TCHAR *name, UINT32 *code)
  */
 static void CreateParserFromConfig()
 {
-	char *xml;
-
 	MutexLock(s_parserLock);
-	delete_and_null(s_parser);
+	LogParser *prev = s_parser;
+	s_parser = NULL;
 #ifdef UNICODE
+   char *xml;
 	WCHAR *wxml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
 	if (wxml != NULL)
 	{
@@ -572,7 +572,7 @@ static void CreateParserFromConfig()
 		xml = NULL;
 	}
 #else
-	xml = ConfigReadCLOB("SyslogParser", "<parser></parser>");
+	char *xml = ConfigReadCLOB("SyslogParser", "<parser></parser>");
 #endif
 	if (xml != NULL)
 	{
@@ -582,6 +582,8 @@ static void CreateParserFromConfig()
 		{
 			s_parser = parsers->get(0);
 			s_parser->setCallback(SyslogParserCallback);
+			if (prev != NULL)
+			   s_parser->restoreCounters(prev);
 			DbgPrintf(3, _T("syslogd: parser successfully created from config"));
 		}
 		else
@@ -592,6 +594,7 @@ static void CreateParserFromConfig()
 		delete parsers;
 	}
 	MutexUnlock(s_parserLock);
+	delete prev;
 }
 
 /**

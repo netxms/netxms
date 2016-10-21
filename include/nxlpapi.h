@@ -176,6 +176,8 @@ public:
 
 	int getCheckCount() const { return m_checkCount; }
    int getMatchCount() const { return m_matchCount; }
+
+   void restoreCounters(const LogParserRule *rule);
 };
 
 /**
@@ -278,6 +280,8 @@ public:
 
    int getRuleCheckCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getCheckCount() : -1; }
    int getRuleMatchCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount() : -1; }
+
+   void restoreCounters(const LogParser *parser);
 };
 
 /**

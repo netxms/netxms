@@ -800,3 +800,18 @@ const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
    }
    return NULL;
 }
+
+/**
+ * Restore counters from previous parser copy
+ */
+void LogParser::restoreCounters(const LogParser *parser)
+{
+   for(int i = 0; i < m_numRules; i++)
+   {
+      const LogParserRule *rule = parser->findRuleByName(m_rules[i]->getName());
+      if (rule != NULL)
+      {
+         m_rules[i]->restoreCounters(rule);
+      }
+   }
+}

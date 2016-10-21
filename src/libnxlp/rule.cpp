@@ -305,3 +305,12 @@ bool LogParserRule::matchRepeatCount()
       m_matchArray->clear();
    return match;
 }
+
+/**
+ * Restore counters from previous rule version
+ */
+void LogParserRule::restoreCounters(const LogParserRule *rule)
+{
+   m_checkCount = rule->m_checkCount;
+   m_matchCount = rule->m_matchCount;
+}
