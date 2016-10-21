@@ -211,8 +211,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
             free(params);
 #endif
 
-            m_matchCount++;
 			}
+         m_matchCount++;
 			return true;
 		}
 	}
