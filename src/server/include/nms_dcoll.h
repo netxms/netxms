@@ -209,7 +209,7 @@ protected:
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_Program *m_transformationScript;  // Compiled transformation script
 	TCHAR *m_comments;
-	bool m_forcePoll;
+	ClientSession *m_pollingSession;
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -306,8 +306,9 @@ public:
 	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
 	void addSchedule(const TCHAR *pszSchedule);
    void setTransformationScript(const TCHAR *source);
-   void setForcePoll(bool poll) { m_forcePoll = poll; }
-
+   ClientSession *processForcePoll();
+   void requestForcePoll(ClientSession *session);
+   ClientSession *getPollingSession() { return m_pollingSession; }
 	bool prepareForDeletion();
 
 	static int m_defaultRetentionTime;

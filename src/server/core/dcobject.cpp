@@ -64,7 +64,7 @@ DCObject::DCObject()
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_comments = NULL;
-   m_forcePoll = false;
+   m_pollingSession = NULL;
 }
 
 /**
@@ -96,7 +96,7 @@ DCObject::DCObject(const DCObject *pSrc)
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
 	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
-   m_forcePoll = false;
+	m_pollingSession = pSrc->m_pollingSession;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
@@ -142,7 +142,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_comments = NULL;
-   m_forcePoll = false;
+   m_pollingSession = NULL;
 }
 
 /**
@@ -181,7 +181,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
 	m_comments = NULL;
-   m_forcePoll = false;
+   m_pollingSession = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
    // for compatibility with old format
@@ -530,9 +530,8 @@ bool DCObject::isReadyForPolling(time_t currTime)
    bool result;
 
    lock();
-   if (m_forcePoll)
+   if ((m_pollingSession != NULL) && !m_busy)
    {
-      m_forcePoll = false;
       unlock();
       return true;
    }
@@ -969,6 +968,30 @@ const TCHAR *DCObject::getOwnerName() const
 NXSL_Value *DCObject::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslDciClass, new DCObjectInfo(this)));
+}
+
+ClientSession *DCObject::processForcePoll()
+{
+   MutexLock(m_hMutex);
+
+   ClientSession *session = m_pollingSession;
+   m_pollingSession = NULL;
+
+   MutexUnlock(m_hMutex);
+   return session;
+}
+
+void DCObject::requestForcePoll(ClientSession *session)
+{
+   MutexLock(m_hMutex);
+
+   if (m_pollingSession != NULL)
+      m_pollingSession->decRefCount();
+
+   m_pollingSession = session;
+   m_pollingSession->incRefCount();
+
+   MutexUnlock(m_hMutex);
 }
 
 /**

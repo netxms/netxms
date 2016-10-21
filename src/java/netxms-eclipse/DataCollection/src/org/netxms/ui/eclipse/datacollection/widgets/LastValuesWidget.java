@@ -51,6 +51,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -88,6 +90,7 @@ public class LastValuesWidget extends Composite
 	private final ViewPart viewPart;
 	private DataCollectionTarget dcTarget;
 	private NXCSession session;
+	private SessionListener clientListener = null;
 	private boolean filterEnabled = true;
 	private FilterText filterText;
 	private SortableTableViewer dataViewer;
@@ -259,6 +262,24 @@ public class LastValuesWidget extends Composite
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
+		
+		clientListener = new SessionListener()
+		{
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            switch(n.getCode())
+            {
+               case SessionNotification.FORCE_DCI_POLL:
+                  refresh();
+                  break;
+               default:
+                  break;
+            }            
+         }		   
+		};
+		
+		session.addListener(clientListener);
 	}
 	
 	/**

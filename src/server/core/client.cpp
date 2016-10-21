@@ -423,6 +423,20 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 }
 
 /**
+ * Send notification to specified user session
+ */
+void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData)
+{
+   int i;
+
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == sessionId))
+         m_pSessionList[i]->notify(dwCode, dwData);
+   RWLockUnlock(m_rwlockSessionListAccess);
+}
+
+/**
  * Get number of active user sessions
  */
 int GetSessionCount(bool includeSystemAccount)

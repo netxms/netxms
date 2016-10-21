@@ -408,6 +408,7 @@ enum SessionState
 #define NX_NOTIFY_ALARM_CATEGORY_DELETE      31
 #define NX_NOTIFY_MULTIPLE_ALARMS_TERMINATED 32
 #define NX_NOTIFY_MULTIPLE_ALARMS_RESOLVED   33
+#define NX_NOTIFY_FORCE_DCI_POLL             34
 
 /**
  * Request completion codes

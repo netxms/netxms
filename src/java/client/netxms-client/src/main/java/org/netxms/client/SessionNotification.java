@@ -79,6 +79,7 @@ public class SessionNotification
    public static final int ALARM_CATEGORY_DELETED = 1031;
    public static final int MULTIPLE_ALARMS_TERMINATED = 1032;
    public static final int MULTIPLE_ALARMS_RESOLVED = 1033;
+   public static final int FORCE_DCI_POLL = 1034;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

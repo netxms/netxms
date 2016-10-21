@@ -3909,7 +3909,7 @@ void ClientSession::forceDCIPoll(NXCPMessage *request)
             DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId);
 				if (dci != NULL)
 				{
-				   dci->setForcePoll(true);
+				   dci->requestForcePoll(this);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dwItemId, object->getId());
 				}

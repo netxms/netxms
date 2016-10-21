@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
@@ -25,7 +25,7 @@
 /**
  * Interval between DCI polling
  */
-#define ITEM_POLLING_INTERVAL    1	
+#define ITEM_POLLING_INTERVAL    1
 
 /**
  * Externals
@@ -72,7 +72,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             break;
          case DS_SNMP_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
-				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
+				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE,
 					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
@@ -324,6 +324,14 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             }
          }
 
+         // Send session notification when force poll is performed
+         if (pItem->getPollingSession() != NULL)
+         {
+            ClientSession *session = pItem->processForcePoll();
+            session->notify(NX_NOTIFY_FORCE_DCI_POLL, NULL);
+            session->decRefCount();
+         }
+
          // Decrement node's usage counter
          target->decRefCount();
 			if ((pItem->getSourceNode() != 0) && (pItem->getOwner() != NULL))
@@ -362,7 +370,7 @@ static void QueueItems(NetObj *object, void *data)
 }
 
 /**
- * Item poller thread: check nodes' items and put into the 
+ * Item poller thread: check nodes' items and put into the
  * data collector queue when data polling required
  */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
@@ -479,7 +487,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       if (dci == INVALID_POINTER_VALUE)
          break;
 
-      DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"), 
+      DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                 dci->getName(), dci->getId(), dci->getOwnerName(), dci->getOwnerId());
       dci->reloadCache();
       dci->getOwner()->decRefCount();
