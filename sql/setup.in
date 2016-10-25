@@ -252,3 +252,8 @@ INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_N
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
+
+/*
+** Default community string
+*/
+INSERT INTO snmp_communities (id,community) VALUES(1,'public');
