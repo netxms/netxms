@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
@@ -96,8 +97,9 @@ public class NetworkServicePolling extends PropertyPage
 		port.setLayoutData(gd);
 		
 		ipAddress = new LabeledText(dialogArea, SWT.NONE);
-		ipAddress.setLabel("Ip Address");
-		ipAddress.setText(object.getIpAddress().getHostAddress().toString());
+		ipAddress.setLabel("IP Address");
+		if (object.getIpAddress().isValidAddress())
+		   ipAddress.setText(object.getIpAddress().address.getHostAddress());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -165,15 +167,23 @@ public class NetworkServicePolling extends PropertyPage
 		
 		md.setRequiredPolls(pollCount.getSelection());
 		md.setServiceType(serviceType.getSelectionIndex());
-		try
-      		{
-         		md.setPrimaryIpAddress(InetAddress.getByName(ipAddress.getText()));
-      		}
-      		catch(UnknownHostException e)
-      		{
-         		MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_AddressValidationError);
-         		return false;
-      		}
+		String addr = ipAddress.getText().trim();
+		if (!addr.isEmpty())
+		{
+   		try
+         {
+         	md.setIpAddress(new InetAddressEx(InetAddress.getByName(addr)));
+         }
+         catch(UnknownHostException e)
+         {
+         	MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_AddressValidationError);
+         	return false;
+         }
+		}
+		else
+		{
+		   md.setIpAddress(new InetAddressEx());
+		}
 		md.setRequest(request.getText());
 		md.setResponse(response.getText());
 		md.setPollerNode(pollerNode.getObjectId());

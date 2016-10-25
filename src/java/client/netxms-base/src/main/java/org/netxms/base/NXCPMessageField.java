@@ -310,8 +310,8 @@ public class NXCPMessageField
 				   int family = in.readUnsignedByte();
 				   int bits = in.readUnsignedByte();
 				   in.skipBytes(6);
-				   inetAddressValue = new InetAddressEx(
-				         InetAddress.getByAddress((family == 0) ? Arrays.copyOf(binaryValue, 4) : binaryValue), bits);
+				   inetAddressValue = (family == 2) ? new InetAddressEx() :
+				      new InetAddressEx(InetAddress.getByAddress((family == 0) ? Arrays.copyOf(binaryValue, 4) : binaryValue), bits);
 				   stringValue = inetAddressValue.toString();
 				   break;
 			}
@@ -625,7 +625,12 @@ public class NXCPMessageField
 					out.write(binaryValue);
 					break;
 				case TYPE_INETADDR:
-				   if (inetAddressValue.address instanceof Inet4Address)
+				   if (inetAddressValue.address == null)
+				   {
+                  out.write(PADDING, 0, 16);
+                  out.writeByte(2);
+				   }
+				   else if (inetAddressValue.address instanceof Inet4Address)
 				   {
                   out.write(inetAddressValue.address.getAddress());
                   out.write(PADDING, 0, 12);

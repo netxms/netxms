@@ -84,6 +84,7 @@
  */
 #define NXCP_AF_INET    0
 #define NXCP_AF_INET6   1
+#define NXCP_AF_UNSPEC  2
 
 /**
  * NXCP data field structure

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.base;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 
 /**
@@ -28,6 +29,15 @@ public class InetAddressEx
    public InetAddress address;
    public int mask;
    
+   /**
+    * @param address
+    */
+   public InetAddressEx(InetAddress address)
+   {
+      this.address = address;
+      this.mask = (address instanceof Inet4Address) ? 32 : 128;
+   }
+
    /**
     * @param address
     * @param mask
@@ -58,6 +68,25 @@ public class InetAddressEx
       this.address = src.address;
       this.mask = src.mask;
    }
+   
+   /**
+    * Create AF_UNSPEC address
+    */
+   public InetAddressEx()
+   {
+      address = null;
+      mask = 0;
+   }
+   
+   /**
+    * Check if address is a valid IPv4/IPv6 address
+    * 
+    * @return
+    */
+   public boolean isValidAddress()
+   {
+      return address != null;
+   }
 
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
@@ -65,7 +94,7 @@ public class InetAddressEx
    @Override
    public String toString()
    {
-      return address.getHostAddress().replaceFirst("(^|:)(0+(:|$)){2,8}", "::") + "/" + mask;
+      return (address != null) ? address.getHostAddress().replaceFirst("(^|:)(0+(:|$)){2,8}", "::") + "/" + mask : "UNSPEC";
    }
    
    /**
@@ -101,6 +130,8 @@ public class InetAddressEx
     */
    public InetAddress maskFromBits()
    {
+      if (address == null)
+         return null;
       try
       {
          byte[] bytes = address.getAddress();

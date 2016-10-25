@@ -305,13 +305,15 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
          break;
       case NXCP_DT_INETADDR:
          entry = CreateMessageField(32);
-         entry->data.df_inetaddr.family = (((InetAddress *)value)->getFamily() == AF_INET) ? NXCP_AF_INET : NXCP_AF_INET6;
+         entry->data.df_inetaddr.family =
+                  (((InetAddress *)value)->getFamily() == AF_INET) ? NXCP_AF_INET :
+                           ((((InetAddress *)value)->getFamily() == AF_INET6) ? NXCP_AF_INET6 : NXCP_AF_UNSPEC);
          entry->data.df_inetaddr.maskBits = (BYTE)((InetAddress *)value)->getMaskBits();
          if (((InetAddress *)value)->getFamily() == AF_INET)
          {
             entry->data.df_inetaddr.addr.v4 = ((InetAddress *)value)->getAddressV4();
          }
-         else
+         else if (((InetAddress *)value)->getFamily() == AF_INET6)
          {
             memcpy(entry->data.df_inetaddr.addr.v6, ((InetAddress *)value)->getAddressV6(), 16);
          }
@@ -495,7 +497,7 @@ InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId) const
       InetAddress a = 
          (f->df_inetaddr.family == NXCP_AF_INET) ?
             InetAddress(f->df_inetaddr.addr.v4) :
-            InetAddress(f->df_inetaddr.addr.v6);
+            ((f->df_inetaddr.family == NXCP_AF_INET6) ? InetAddress(f->df_inetaddr.addr.v6) : InetAddress());
       a.setMaskBits(f->df_inetaddr.maskBits);
       return a;
    }

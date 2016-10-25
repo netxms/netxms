@@ -4600,6 +4600,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.IP_ADDRESS))
+      {
+         msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+      }
+
       if (data.isFieldSet(NXCObjectModificationData.IP_PROTOCOL))
       {
          msg.setFieldInt16(NXCPCodes.VID_IP_PROTO, data.getIpProtocol());

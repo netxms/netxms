@@ -166,7 +166,7 @@ public class NXCObjectModificationData
 	private int serviceType;
 	private int ipProtocol;
 	private int ipPort;
-	private int ipAddress;
+	private InetAddressEx ipAddress;
 	private String request;
 	private String response;
 	private int objectFlags;
@@ -1002,7 +1002,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the ipAddress
 	 */
-	public int getIpAddress()
+	public InetAddressEx getIpAddress()
 	{
 		return ipAddress;
 	}
@@ -1010,7 +1010,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param ipAddress the ipAddress to set
 	 */
-	public void setIpAddress(int ipAddress)
+	public void setIpAddress(InetAddressEx ipAddress)
 	{
 		this.ipAddress = ipAddress;
 		fieldSet.add(IP_ADDRESS);
