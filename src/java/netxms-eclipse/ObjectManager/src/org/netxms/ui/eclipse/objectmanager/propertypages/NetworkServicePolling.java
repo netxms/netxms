@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -50,6 +52,7 @@ public class NetworkServicePolling extends PropertyPage
 	private LabeledText port;
 	private LabeledText request;
 	private LabeledText response;
+	private LabeledText ipAddress;
 	private ObjectSelector pollerNode;
 	private Spinner pollCount;
 	
@@ -91,6 +94,15 @@ public class NetworkServicePolling extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		port.setLayoutData(gd);
+		
+		ipAddress = new LabeledText(dialogArea, SWT.NONE);
+		ipAddress.setLabel("Ip Address");
+		ipAddress.setText(object.getIpAddress().getHostAddress().toString());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      ipAddress.setLayoutData(gd);
 		
 		request = new LabeledText(dialogArea, SWT.NONE);
 		request.setLabel(Messages.get().NetworkServicePolling_Request);
@@ -153,6 +165,15 @@ public class NetworkServicePolling extends PropertyPage
 		
 		md.setRequiredPolls(pollCount.getSelection());
 		md.setServiceType(serviceType.getSelectionIndex());
+		try
+      		{
+         		md.setPrimaryIpAddress(InetAddress.getByName(ipAddress.getText()));
+      		}
+      		catch(UnknownHostException e)
+      		{
+         		MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_AddressValidationError);
+         		return false;
+      		}
 		md.setRequest(request.getText());
 		md.setResponse(response.getText());
 		md.setPollerNode(pollerNode.getObjectId());

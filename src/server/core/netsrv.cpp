@@ -231,6 +231,7 @@ void NetworkService::fillMessageInternal(NXCPMessage *pMsg)
 {
    NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
+   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_IP_PROTO, m_proto);
    pMsg->setField(VID_IP_PORT, m_port);
    pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);

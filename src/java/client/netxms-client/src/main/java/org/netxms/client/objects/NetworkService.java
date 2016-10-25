@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -37,6 +38,7 @@ public class NetworkService extends GenericObject
 	public static final int TELNET = 7;
 	
 	int serviceType;
+	InetAddress ipAddress;
 	int protocol;
 	int port;
 	String request;
@@ -52,6 +54,7 @@ public class NetworkService extends GenericObject
 	{
 		super(msg, session);
 		serviceType = msg.getFieldAsInt32(NXCPCodes.VID_SERVICE_TYPE);
+		ipAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		protocol = msg.getFieldAsInt32(NXCPCodes.VID_IP_PROTO);
 		port = msg.getFieldAsInt32(NXCPCodes.VID_IP_PORT);
 		request = msg.getFieldAsString(NXCPCodes.VID_SERVICE_REQUEST);
@@ -76,6 +79,14 @@ public class NetworkService extends GenericObject
 	{
 		return serviceType;
 	}
+	
+	/**
+    * @return the ipAddress
+    */
+   public InetAddress getIpAddress()
+   {
+      return ipAddress;
+   }
 
 	/**
 	 * @return the protocol
