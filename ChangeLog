@@ -1,6 +1,7 @@
 *
 * 2.1-M2
 *
+
 - Added alarm category functionality to manage which alarms are seen by what users
 	- EPP rules can be configured to generate categorised alarms
 	- Alarm categories can be created and configured in Alarm Category Configurator
@@ -9,6 +10,7 @@
 - New NXSL "Node" class attributes: isInMaintenanceMode, lastAgentCommTime
 - SMS driver for Nexmo service
 - SMS driver for SMSEagle gateway
+- Fixed FDB handling on Cisco switches
 - Fixed issues: #1285, #1312, #1320
 
 
