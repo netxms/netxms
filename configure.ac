@@ -3051,6 +3051,22 @@ AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
+# Get compiler version
+#--------------------------------------------------------------------
+
+COMPILER_VERSION=""
+for opt in --version -v -V -qversion; do
+	v=`$CXX $opt 2>/dev/null | head -1`
+	if test $? = 0; then
+		if test "x$COMPILER_VERSION" = "x"; then
+			COMPILER_VERSION="$v"
+			AC_DEFINE_UNQUOTED([CPP_COMPILER_VERSION], "$COMPILER_VERSION", [C++ compiler version information])
+		fi
+	fi
+done
+
+
+#--------------------------------------------------------------------
 # Cleanup variables
 #--------------------------------------------------------------------
 
@@ -3324,6 +3340,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxget/Makefile
+	src/server/tools/nxminfo/Makefile
 	src/server/tools/nxupload/Makefile
 	src/smsdrv/Makefile
 	src/smsdrv/dummy/Makefile
@@ -3492,6 +3509,7 @@ fi
 
 echo "C compiler              : ${CC}"
 echo "C++ compiler            : ${CXX}"
+echo "C++ compiler info       : ${COMPILER_VERSION}"
 echo "CPPFLAGS                : ${CPPFLAGS}"
 echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"

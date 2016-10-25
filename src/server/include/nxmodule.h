@@ -101,6 +101,22 @@ typedef struct
 } NXMODULE;
 
 /**
+ * Module metadata
+ */
+typedef struct
+{
+   UINT32 size;   // structure size in bytes
+   int unicode;  // unicode flag
+   char name[MAX_OBJECT_NAME];
+   char vendor[128];
+   char coreVersion[16];
+   char coreBuildTag[32];
+   char moduleVersion[16];
+   char moduleBuildTag[32];
+   char compiler[256];
+} NXMODULE_METADATA;
+
+/**
  * Enumerate all modules where given entry point available
  */
 #define ENUMERATE_MODULES(e) if (!(g_flags & AF_SHUTDOWN)) \

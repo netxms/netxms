@@ -72,7 +72,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
    {
       bool (* ModuleInit)(NXMODULE *, Config *);
 
-      ModuleInit = (bool (*)(NXMODULE *, Config *))DLGetSymbolAddr(hModule, "NetXMSModuleInit", szErrorText);
+      ModuleInit = (bool (*)(NXMODULE *, Config *))DLGetSymbolAddr(hModule, "NXM_Init", szErrorText);
       if (ModuleInit != NULL)
       {
          NXMODULE module;

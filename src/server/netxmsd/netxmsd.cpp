@@ -213,6 +213,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
                _tprintf(_T("NXCP: %d.%d.%d.%d (%s)\n"), 
                   NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,
                   ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.getBuffer());
+               _tprintf(_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
             }
 				return FALSE;
 			case 'c':

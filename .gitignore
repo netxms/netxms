@@ -201,6 +201,7 @@ target
 /src/server/tools/nxdbmgr/tables.cpp
 /src/server/tools/nxencpasswd/nxencpasswd
 /src/server/tools/nxget/nxget
+/src/server/tools/nxminfo/nxminfo
 /src/server/tools/nxupload/nxupload
 /src/snmp/nxmibc/lex.mp.c
 /src/snmp/nxmibc/lex.parser.cpp
