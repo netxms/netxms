@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         36
+#define MAX_ERROR_NUMBER         38
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -74,7 +74,9 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Attempt to use hash map element access operation on non hash map"),
    _T("Function or operation argument is not a container"),
    _T("Hash map key is not a string"),
-   _T("Selector not found")
+   _T("Selector not found"),
+   _T("Object constructor not found"),
+   _T("Invalid number of object constructor's arguments")
 };
 
 /**
@@ -493,6 +495,7 @@ void NXSL_VM::execute()
    UINT32 dwNext = m_cp + 1;
    TCHAR szBuffer[256];
    int i, nRet;
+   bool constructor;
 
    cp = m_instructionSet->get(m_cp);
    switch(cp->m_nOpCode)
@@ -871,11 +874,11 @@ void NXSL_VM::execute()
          callFunction(cp->m_nStackItems);
          break;
       case OPCODE_CALL_EXTERNAL:
+         constructor = !_tcsncmp(cp->m_operand.m_pszString, _T("__new@"), 6);
          pFunc = m_env->findFunction(cp->m_operand.m_pszString);
          if (pFunc != NULL)
          {
-            if ((cp->m_nStackItems == pFunc->m_iNumArgs) ||
-                (pFunc->m_iNumArgs == -1))
+            if ((cp->m_nStackItems == pFunc->m_iNumArgs) || (pFunc->m_iNumArgs == -1))
             {
                if (m_dataStack->getSize() >= cp->m_nStackItems)
                {
@@ -906,7 +909,7 @@ void NXSL_VM::execute()
             }
             else
             {
-               error(NXSL_ERR_INVALID_ARGUMENT_COUNT);
+               error(constructor ? NXSL_ERR_INVALID_OC_ARG_COUNT : NXSL_ERR_INVALID_ARGUMENT_COUNT);
             }
          }
          else
@@ -921,7 +924,7 @@ void NXSL_VM::execute()
             }
             else
             {
-               error(NXSL_ERR_NO_FUNCTION);
+               error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
             }
          }
          break;

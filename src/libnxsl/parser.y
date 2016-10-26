@@ -52,6 +52,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FOREACH
 %token T_GLOBAL
 %token T_IF
+%token T_NEW
 %token T_NULL
 %token T_PRINT
 %token T_PRINTLN
@@ -106,7 +107,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> SelectList
 %type <pInstruction> SimpleStatementKeyword
 
-%destructor { safe_free($$); } <valStr>
+%destructor { free($$); } <valStr>
 %destructor { delete $$; } <pConstant>
 %destructor { delete $$; } <pInstruction>
 
@@ -659,6 +660,7 @@ Operand:
 |	TypeCast
 |	ArrayInitializer
 |	HashMapInitializer
+|	New
 |	T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, $1));
@@ -1088,6 +1090,33 @@ GlobalVariableDeclaration:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 1));
 	$1 = NULL;
+}
+;
+
+New:
+	T_NEW T_IDENTIFIER
+{
+	char fname[256];
+	snprintf(fname, 256, "__new@%s", $2); 
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), 0));
+	free($2);
+	$2 = NULL;
+}
+|	T_NEW T_IDENTIFIER '(' ParameterList ')'
+{
+	char fname[256];
+	snprintf(fname, 256, "__new@%s", $2); 
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), $4));
+	free($2);
+	$2 = NULL;
+}
+|	T_NEW T_IDENTIFIER '(' ')'
+{
+	char fname[256];
+	snprintf(fname, 256, "__new@%s", $2); 
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), 0));
+	free($2);
+	$2 = NULL;
 }
 ;
 

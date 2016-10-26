@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -63,7 +63,7 @@ bool NXSL_Class::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *val
  * Call method
  * Default implementation calls methods registered with NXSL_REGISTER_METHOD macro.
  */
-BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    NXSL_ExtMethod *m = m_methods->get(name);
    if (m != NULL)
@@ -77,6 +77,13 @@ BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NX
 }
 
 /**
+ * Object creation handler. Called by interpreter immediately after new object was created.
+ */
+void NXSL_Class::onObjectCreate(NXSL_Object *object)
+{
+}
+
+/**
  * Object deletion handler. Called by interpreter when last reference to object being deleted.
  */
 void NXSL_Class::onObjectDelete(NXSL_Object *object)
@@ -84,20 +91,24 @@ void NXSL_Class::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * Object constructors
+ * Create new NXSL object of given class
  */
-NXSL_Object::NXSL_Object(NXSL_Class *pClass, void *pData)
+NXSL_Object::NXSL_Object(NXSL_Class *nxslClass, void *data)
 {
-   m_class = pClass;
+   m_class = nxslClass;
 	m_data = (__nxsl_class_data *)malloc(sizeof(__nxsl_class_data));
 	m_data->refCount = 1;
-	m_data->data = pData;
+	m_data->data = data;
+	m_class->onObjectCreate(this);
 }
 
-NXSL_Object::NXSL_Object(NXSL_Object *pObject)
+/**
+ * Create new reference to existing object
+ */
+NXSL_Object::NXSL_Object(NXSL_Object *object)
 {
-   m_class = pObject->m_class;
-   m_data = pObject->m_data;
+   m_class = object->m_class;
+   m_data = object->m_data;
 	m_data->refCount++;
 }
 

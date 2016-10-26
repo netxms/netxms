@@ -67,6 +67,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"int64"    return T_TYPE_INT64;
 <INITIAL>"like"     return T_LIKE;
 <INITIAL>"match"    return T_MATCH;
+<INITIAL>"new"      return T_NEW;
 <INITIAL>"NULL"     return T_NULL;
 <INITIAL>"null"     return T_NULL;
 <INITIAL>"print"    return T_PRINT;

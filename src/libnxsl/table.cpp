@@ -263,3 +263,12 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *att
    }
    return value;
 }
+
+/**
+ * NXSL constructor for "Table" class
+ */
+int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   *result = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, new Table()));
+   return 0;
+}

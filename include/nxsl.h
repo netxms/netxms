@@ -78,6 +78,8 @@
 #define NXSL_ERR_NOT_CONTAINER            34
 #define NXSL_ERR_KEY_NOT_STRING           35
 #define NXSL_ERR_NO_SELECTOR              36
+#define NXSL_ERR_NO_OBJECT_CONSTRUCTOR    37
+#define NXSL_ERR_INVALID_OC_ARG_COUNT     38
 
 /**
  * Special return codes for external functions

@@ -64,6 +64,7 @@ int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -90,6 +91,8 @@ int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, i
  */
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
+   { _T("__new@Table"), F_Table, 0 },
+   { _T("__new@TIME"), F_TIME, 0 },
 	{ _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
    { _T("ceil"), F_ceil, 1 },

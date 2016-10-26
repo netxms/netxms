@@ -117,6 +117,7 @@ public:
 
    virtual int callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+   virtual void onObjectCreate(NXSL_Object *object);
 	virtual void onObjectDelete(NXSL_Object *object);
 
    const TCHAR *getName() { return m_name; }
@@ -141,8 +142,8 @@ private:
    __nxsl_class_data *m_data;
 
 public:
-   NXSL_Object(NXSL_Object *pObject);
-   NXSL_Object(NXSL_Class *pClass, void *pData);
+   NXSL_Object(NXSL_Object *object);
+   NXSL_Object(NXSL_Class *nxslClass, void *data);
    ~NXSL_Object();
 
    NXSL_Class *getClass() { return m_class; }
