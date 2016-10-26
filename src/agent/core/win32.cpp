@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -40,7 +40,7 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
          ret_uint64(value, mse.ullAvailPhys);
          break;
       case MEMINFO_PHYSICAL_FREE_PCT:
-         ret_uint(value, (DWORD)(mse.ullAvailPhys * 100 / mse.ullTotalPhys));
+         ret_double(value, ((double)mse.ullAvailPhys * 100.0 / mse.ullTotalPhys), 2);
          break;
       case MEMINFO_PHYSICAL_TOTAL:
          ret_uint64(value, mse.ullTotalPhys);
@@ -49,13 +49,13 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
          ret_uint64(value, mse.ullTotalPhys - mse.ullAvailPhys);
          break;
       case MEMINFO_PHYSICAL_USED_PCT:
-         ret_uint(value, (DWORD)((mse.ullTotalPhys - mse.ullAvailPhys) * 100 / mse.ullTotalPhys));
+         ret_double(value, (((double)mse.ullTotalPhys - mse.ullAvailPhys) * 100.0 / mse.ullTotalPhys), 2);
          break;
       case MEMINFO_VIRTUAL_FREE:
          ret_uint64(value, mse.ullAvailPageFile);
          break;
       case MEMINFO_VIRTUAL_FREE_PCT:
-         ret_uint(value, (DWORD)(mse.ullAvailPageFile * 100 / mse.ullTotalPageFile));
+         ret_double(value, ((double)mse.ullAvailPageFile * 100.0 / mse.ullTotalPageFile), 2);
          break;
       case MEMINFO_VIRTUAL_TOTAL:
          ret_uint64(value, mse.ullTotalPageFile);
@@ -64,18 +64,18 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
          ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile);
          break;
       case MEMINFO_VIRTUAL_USED_PCT:
-         ret_uint(value, (DWORD)((mse.ullTotalPageFile - mse.ullAvailPageFile) * 100 / mse.ullTotalPageFile));
+         ret_double(value, (((double)mse.ullTotalPageFile - mse.ullAvailPageFile) * 100.0 / mse.ullTotalPageFile), 2);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
-   
+
    return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Handler for System.Hostname parameter
- */ 
+ */
 LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    DWORD dwSize;

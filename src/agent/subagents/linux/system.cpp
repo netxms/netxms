@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2004-2016 Raden Solutions
 **
@@ -329,7 +329,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          ret_uint64(pValue, ((QWORD)s_memFree) * 1024);
          break;
       case PHYSICAL_FREE_PCT: // ph-free percentage
-         ret_uint(pValue, (DWORD)((QWORD)s_memFree * 100 / (QWORD)s_memTotal));
+         ret_double(pValue, ((double)s_memFree * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_TOTAL: // ph-total
          ret_uint64(pValue, ((QWORD)s_memTotal) * 1024);
@@ -338,34 +338,34 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree)) * 1024);
          break;
       case PHYSICAL_USED_PCT: // ph-used percentage
-         ret_uint(pValue, (DWORD)((QWORD)(s_memTotal - s_memFree) * 100 / (QWORD)s_memTotal));
+         ret_double(pValue, (((double)s_memTotal - s_memFree) * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_AVAILABLE:
          ret_uint64(pValue, ((QWORD)s_memAvailable) * 1024);
          break;
       case PHYSICAL_AVAILABLE_PCT:
-         ret_uint(pValue, (DWORD)((QWORD)s_memAvailable * 100 / (QWORD)s_memTotal));
+         ret_double(pValue, ((double)s_memAvailable * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_CACHED:
          ret_uint64(pValue, ((QWORD)s_memCached) * 1024);
          break;
       case PHYSICAL_CACHED_PCT:
-         ret_uint(pValue, (DWORD)((QWORD)s_memCached * 100 / (QWORD)s_memTotal));
+         ret_double(pValue, ((double)s_memCached * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_BUFFERS:
          ret_uint64(pValue, ((QWORD)s_memBuffers) * 1024);
          break;
       case PHYSICAL_BUFFERS_PCT:
-         ret_uint(pValue, (DWORD)((QWORD)s_memBuffers * 100 / (QWORD)s_memTotal));
+         ret_double(pValue, ((double)s_memBuffers * 100.0 / s_memTotal), 2);
          break;
       case SWAP_FREE: // sw-free
          ret_uint64(pValue, ((QWORD)s_swapFree) * 1024);
          break;
       case SWAP_FREE_PCT: // sw-free percentage
          if (s_swapTotal > 0)
-            ret_uint(pValue, (DWORD)((QWORD)s_swapFree * 100 / (QWORD)s_swapTotal));
+            ret_double(pValue, ((double)s_swapFree * 100.0 / s_swapTotal), 2);
          else
-            ret_uint(pValue, 100);
+            ret_double(pValue, 100.0, 2);
          break;
       case SWAP_TOTAL: // sw-total
          ret_uint64(pValue, ((QWORD)s_swapTotal) * 1024);
@@ -375,15 +375,15 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          break;
       case SWAP_USED_PCT: // sw-used percentage
          if (s_swapTotal > 0)
-            ret_uint(pValue, (DWORD)((QWORD)(s_swapTotal - s_swapFree) * 100 / (QWORD)s_swapTotal));
+            ret_double(pValue, (((double)s_swapTotal - s_swapFree) * 100.0 / s_swapTotal), 2);
          else
-            ret_uint(pValue, 0);
+            ret_double(pValue, 0.0, 2);
          break;
       case VIRTUAL_FREE: // vi-free
          ret_uint64(pValue, ((QWORD)s_memFree + (QWORD)s_swapFree) * 1024);
          break;
       case VIRTUAL_FREE_PCT: // vi-free percentage
-         ret_uint(pValue, (DWORD)(((QWORD)s_memFree + (QWORD)s_swapFree) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         ret_double(pValue, (((double)s_memFree + s_swapFree) * 100.0 / (s_memTotal + s_swapTotal)), 2);
          break;
       case VIRTUAL_TOTAL: // vi-total
          ret_uint64(pValue, ((QWORD)s_memTotal + (QWORD)s_swapTotal) * 1024);
@@ -392,19 +392,18 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree) + (QWORD)(s_swapTotal - s_swapFree)) * 1024);
          break;
       case VIRTUAL_USED_PCT: // vi-used percentage
-         ret_uint(pValue, (DWORD)(((QWORD)(s_memTotal - s_memFree) + (QWORD)(s_swapTotal - s_swapFree)) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         ret_double(pValue, ((((double)s_memTotal - s_memFree) + (s_swapTotal - s_swapFree)) * 100.0 / (s_memTotal + s_swapTotal)), 2);
          break;
       case VIRTUAL_AVAILABLE:
          ret_uint64(pValue, ((QWORD)s_memAvailable + (QWORD)s_swapFree) * 1024);
          break;
       case VIRTUAL_AVAILABLE_PCT:
-         ret_uint(pValue, (DWORD)(((QWORD)s_memAvailable + (QWORD)s_swapFree) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         ret_double(pValue, (((double)s_memAvailable + s_swapFree) * 100.0 / (s_memTotal + s_swapTotal)), 2);
          break;
       default: // error
          rc = SYSINFO_RC_UNSUPPORTED;
          break;
    }
-
    MutexUnlock(s_memStatLock);
 	return rc;
 }

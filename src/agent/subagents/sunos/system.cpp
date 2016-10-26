@@ -386,7 +386,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue, (double)kn.value.ul * 100.0 / (double)sysconf(_SC_PHYS_PAGES));
+            ret_double(pValue, (double)kn.value.ul * 100.0 / (double)sysconf(_SC_PHYS_PAGES), 2);
          }
          break;
       case MEMINFO_PHYSICAL_USED:
@@ -400,7 +400,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
          nRet = ReadKStatValue("unix", 0, "system_pages", "freemem", NULL, &kn);
          if (nRet == SYSINFO_RC_SUCCESS)
          {
-            ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 / sysconf(_SC_PHYS_PAGES));
+            ret_double(pValue, (double)(sysconf(_SC_PHYS_PAGES) - kn.value.ul) * 100.0 / sysconf(_SC_PHYS_PAGES), 2);
          }
          break;
       case MEMINFO_SWAP_TOTAL:
@@ -412,7 +412,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
       case MEMINFO_SWAP_FREEPCT:
          {
             GetSwapCounter(&s_swapTotal);
-            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapFree) * 100.0 / s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapFree) * 100.0 / s_swapTotal, 2);
          }
          break;
       case MEMINFO_SWAP_USED:
@@ -421,7 +421,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
       case MEMINFO_SWAP_USEDPCT:
          {
             GetSwapCounter(&s_swapTotal);
-            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapUsed) * 100.0 / s_swapTotal);
+            ret_double(pValue, s_swapTotal == 0 ? 0 : (double)GetSwapCounter(&s_swapUsed) * 100.0 / s_swapTotal, 2);
          }
          break;
       case MEMINFO_VIRTUAL_TOTAL:
@@ -441,7 +441,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
             UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);
             UINT64 totalMem = (UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal);
 
-            ret_double(pValue, (double)(freeMem * 100) / totalMem);
+            ret_double(pValue, (double)(freeMem * 100) / totalMem, 2);
          }
          break;
       case MEMINFO_VIRTUAL_USED:
@@ -458,7 +458,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
             UINT64 freeMem = (UINT64)kn.value.ul + GetSwapCounter(&s_swapFree);
             UINT64 totalMem = (UINT64)sysconf(_SC_PHYS_PAGES) + GetSwapCounter(&s_swapTotal);
 
-            ret_double(pValue, (double)(totalMem - freeMem) * 100.0 / totalMem);
+            ret_double(pValue, (double)(totalMem - freeMem) * 100.0 / totalMem, 2);
          }
          break;
       default:

@@ -1,6 +1,6 @@
 /* $Id$ */
 
-/* 
+/*
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2006 Victor Kirhenshtein
@@ -256,7 +256,7 @@ printf("PageSize = %d\n",dwPageSize);
 				ret_uint64(pValue, (QWORD)vmStat.t_free * dwPageSize);
 				break;
 			case PHYSICAL_FREE_PCT:
-				ret_uint(pValue, (DWORD)(((QWORD)vmStat.t_free * 100 * dwPageSize) / (QWORD)dwPhysMem));
+				ret_double(pValue, (((double)vmStat.t_free * 100.0 * dwPageSize) / dwPhysMem), 2);
 				break;
 			case PHYSICAL_TOTAL:
 				ret_uint64(pValue, (QWORD)dwPhysMem);
@@ -265,7 +265,7 @@ printf("PageSize = %d\n",dwPageSize);
 				ret_uint64(pValue, (QWORD)dwPhysMem - (QWORD)vmStat.t_arm * dwPageSize);
 				break;
 			case PHYSICAL_USED_PCT:
-				ret_uint(pValue, (DWORD)((((QWORD)dwPhysMem - (QWORD)vmStat.t_arm * dwPageSize) * 100) / (QWORD)dwPhysMem));
+				ret_double(pValue, ((((double)dwPhysMem - vmStat.t_arm * dwPageSize) * 100.0) / dwPhysMem), 2);
 				break;
 			default:
 				nRet = SYSINFO_RC_UNSUPPORTED;

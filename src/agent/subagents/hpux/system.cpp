@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for HP-UX
 ** Copyright (C) 2006 Alex Kirhenshtein
 ** Copyright (C) 2010 Victor Kirhenshtein
@@ -123,7 +123,7 @@ LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 				nCount++;
 			}
 		}
-		
+
 		fclose(f);
 
 		ret_uint(pValue, nCount);
@@ -260,7 +260,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size);
 			break;
 		case PHYSICAL_FREE_PCT:
-			ret_uint(pValue, (DWORD)(((QWORD)psd.psd_free * 100) / (QWORD)pss.physical_memory));
+			ret_double(pValue, (((double)psd.psd_free * 100.0) / pss.physical_memory), 2);
 			break;
 		case PHYSICAL_TOTAL: // ph-total
 			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size);
@@ -269,16 +269,16 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size);
 			break;
 		case PHYSICAL_USED_PCT:
-			ret_uint(pValue, (DWORD)(((QWORD)(pss.physical_memory - psd.psd_free) * 100) / (QWORD)pss.physical_memory));
+			ret_double(pValue, (((double)(pss.physical_memory - psd.psd_free) * 100.0) / pss.physical_memory), 2);
 			break;
 		case SWAP_FREE: // sw-free
 			ret_uint64(pValue, qwSwapFree);
 			break;
 		case SWAP_FREE_PCT:
 			if (qwSwapTotal > 0)
-				ret_uint(pValue, (DWORD)((qwSwapFree * 100) / qwSwapTotal));
+				ret_double(pValue, (((double)qwSwapFree * 100.0) / qwSwapTotal), 2);
 			else
-				ret_uint(pValue, 100);
+				ret_double(pValue, 100.0, 2);
 			break;
 		case SWAP_TOTAL: // sw-total
 			ret_uint64(pValue, qwSwapTotal);
@@ -288,15 +288,15 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 			break;
 		case SWAP_USED_PCT:
 			if (qwSwapTotal > 0)
-				ret_uint(pValue, (DWORD)(((qwSwapTotal - qwSwapFree) * 100) / qwSwapTotal));
+				ret_double(pValue, ((((double)qwSwapTotal - qwSwapFree) * 100.0) / qwSwapTotal), 2);
 			else
-				ret_uint(pValue, 0);
+				ret_double(pValue, 0.0, 2);
 			break;
 		case VIRTUAL_FREE: // vi-free
 			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size + qwSwapFree);
 			break;
 		case VIRTUAL_FREE_PCT:
-			ret_uint(pValue, (DWORD)((((QWORD)psd.psd_free * (QWORD)pss.page_size + qwSwapFree) * 100) / ((QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal)));
+			ret_double(pValue, ((((double)psd.psd_free * pss.page_size + qwSwapFree) * 100.0) / (pss.physical_memory * pss.page_size + qwSwapTotal)), 2);
 			break;
 		case VIRTUAL_TOTAL: // vi-total
 			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal);
@@ -305,7 +305,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree));
 			break;
 		case VIRTUAL_USED_PCT:
-			ret_uint(pValue, (DWORD)((((QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree)) * 100) / ((QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal)));
+			ret_double(pValue, ((((double)(pss.physical_memory - psd.psd_free) * pss.page_size + (qwSwapTotal - qwSwapFree)) * 100.0) / (pss.physical_memory * pss.page_size + qwSwapTotal)), 2);
 			break;
 		default: // error
 			nRet = SYSINFO_RC_ERROR;

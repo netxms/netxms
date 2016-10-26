@@ -137,13 +137,13 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 				ret_uint64(pValue, vmi.numfrb * getpagesize());
 				break;
 			case MEMINFO_PHYSICAL_FREE_PERC:
-				ret_uint(pValue, vmi.numfrb * 100 / vmi.memsizepgs);
+				ret_double(pValue, (double)vmi.numfrb * 100.0 / vmi.memsizepgs, 2);
 				break;
 			case MEMINFO_PHYSICAL_USED:
 				ret_uint64(pValue, (vmi.memsizepgs - vmi.numfrb) * getpagesize());
 				break;
 			case MEMINFO_PHYSICAL_USED_PERC:
-				ret_uint(pValue, (vmi.memsizepgs - vmi.numfrb) * 100 / vmi.memsizepgs);
+				ret_double(pValue, ((double)vmi.memsizepgs - vmi.numfrb) * 100.0 / vmi.memsizepgs, 2);
 				break;
 			case MEMINFO_PHYSICAL_TOTAL:
 				ret_uint64(pValue, vmi.memsizepgs * getpagesize());
@@ -174,13 +174,13 @@ LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 				ret_uint64(pValue, memStats.pgsp_free * 4096);
 				break;
 			case MEMINFO_SWAP_FREE_PERC:
-				ret_uint(pValue, memStats.pgsp_free * 100 / memStats.pgsp_total);
+				ret_double(pValue, (double)memStats.pgsp_free * 100.0 / memStats.pgsp_total, 2);
 				break;
 			case MEMINFO_SWAP_USED:
 				ret_uint64(pValue, (memStats.pgsp_total - memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_SWAP_USED_PERC:
-				ret_uint(pValue, (memStats.pgsp_total - memStats.pgsp_free) * 100 / memStats.pgsp_total);
+				ret_double(pValue, ((double)memStats.pgsp_total - memStats.pgsp_free) * 100.0 / memStats.pgsp_total);
 				break;
 			case MEMINFO_SWAP_TOTAL:
 				ret_uint64(pValue, memStats.pgsp_total * 4096);
@@ -189,19 +189,19 @@ LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 				ret_uint64(pValue, memStats.virt_active * 4096);
 				break;
 			case MEMINFO_VIRTUAL_ACTIVE_PERC:
-				ret_uint(pValue, memStats.virt_active * 100 / memStats.virt_total);
+				ret_double(pValue, (double)memStats.virt_active * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_FREE:
 				ret_uint64(pValue, (memStats.real_free + memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_VIRTUAL_FREE_PERC:
-				ret_uint(pValue, (memStats.real_free + memStats.pgsp_free) * 100 / memStats.virt_total);
+				ret_double(pValue, ((double)memStats.real_free + memStats.pgsp_free) * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_USED:
 				ret_uint64(pValue, (memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 4096);
 				break;
 			case MEMINFO_VIRTUAL_USED_PERC:
-				ret_uint(pValue, (memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 100 / memStats.virt_total);
+				ret_double(pValue, ((double)memStats.virt_total - memStats.real_free - memStats.pgsp_free) * 100.0 / memStats.virt_total);
 				break;
 			case MEMINFO_VIRTUAL_TOTAL:
 				ret_uint64(pValue, memStats.virt_total * 4096);

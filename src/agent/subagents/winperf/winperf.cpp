@@ -327,7 +327,7 @@ static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
    if (!GlobalMemoryStatusEx(&mse))
       return SYSINFO_RC_ERROR;
 
-   ret_int(pValue, (int)(free * 100 / mse.ullTotalPhys));
+   ret_double(pValue, ((double)free * 100.0 / mse.ullTotalPhys), 2);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -542,7 +542,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    {
       AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is supported"));
       AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);
-      AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_INT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
+      AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
    }
    else
    {

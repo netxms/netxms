@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 **
@@ -246,7 +246,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 				ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
 				break;
 			case PHYSICAL_FREE_PCT: // ph-free %
-				ret_uint(pValue, (DWORD)(((int64_t)nFreeCount * 100) / (int64_t)nPageCount));
+				ret_double(pValue, (((double)nFreeCount * 100.0) / nPageCount), 2);
 				break;
 			case PHYSICAL_TOTAL: // ph-total
 				ret_uint64(pValue, ((int64_t)nPageCount) * nPageSize);
@@ -255,16 +255,16 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 				ret_uint64(pValue, ((int64_t)(nPageCount - nFreeCount)) * nPageSize);
 				break;
 			case PHYSICAL_USED_PCT: // ph-used %
-				ret_uint(pValue, (DWORD)(((int64_t)(nPageCount - nFreeCount) * 100) / (int64_t)nPageCount));
+				ret_double(pValue, (((double)(nPageCount - nFreeCount) * 100.0) / nPageCount), 2);
 				break;
 			case SWAP_FREE: // sw-free
 				ret_uint64(pValue, (nSwapTotal - nSwapUsed) * nPageSize);
 				break;
 			case SWAP_FREE_PCT:
 				if (nSwapTotal > 0)
-					ret_uint(pValue, (DWORD)(((nSwapTotal - nSwapUsed) * 100) / nSwapTotal));
+					ret_double(pValue, ((((double)nSwapTotal - nSwapUsed) * 100.0) / nSwapTotal), 2);
 				else
-					ret_uint(pValue, 100);
+					ret_double(pValue, 100.0, 2);
 				break;
 			case SWAP_TOTAL: // sw-total
 				ret_uint64(pValue, nSwapTotal * nPageSize);
@@ -274,16 +274,16 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 				break;
 			case SWAP_USED_PCT:
 				if (nSwapTotal > 0)
-					ret_uint(pValue, (DWORD)((nSwapUsed * 100) / nSwapTotal));
+					ret_double(pValue, (((double)nSwapUsed * 100.0) / nSwapTotal), 2);
 				else
-					ret_uint(pValue, 0);
+					ret_double(pValue, 0.0, 2);
 				break;
 			case VIRTUAL_FREE: // vi-free
 				ret_uint64(pValue, ((nSwapTotal - nSwapUsed) * nPageSize) +
 						(((int64_t)nFreeCount) * nPageSize));
 				break;
 			case VIRTUAL_FREE_PCT:
-				ret_uint(pValue, (DWORD)(((int64_t)nFreeCount + (nSwapTotal - nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
+				ret_double(pValue, (((double)nFreeCount + (nSwapTotal - nSwapUsed) * 100.0) / (nPageCount + nSwapTotal)), 2);
 				break;
 			case VIRTUAL_TOTAL: // vi-total
 				ret_uint64(pValue, (nSwapTotal * nPageSize) +
@@ -294,7 +294,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 						(((int64_t)(nPageCount - nFreeCount)) * nPageSize));
 				break;
 			case VIRTUAL_USED_PCT:
-				ret_uint(pValue, (DWORD)((((int64_t)(nPageCount - nFreeCount) + nSwapUsed) * 100) / ((int64_t)nPageCount + nSwapTotal)));
+				ret_double(pValue, ((((double)(nPageCount - nFreeCount) + nSwapUsed) * 100.0) / (nPageCount + nSwapTotal)), 2);
 				break;
 			default: // error
 				nRet = SYSINFO_RC_ERROR;
