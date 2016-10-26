@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -220,7 +220,7 @@ void ExportDatabase(const char *file)
                     KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       DWORD size = MAX_PATH - 16;
-      if (RegQueryValueExA(hKey, "InstallPath", NULL, NULL, 
+      if (RegQueryValueExA(hKey, "InstallPath", NULL, NULL,
                            (BYTE *)buffer, &size) == ERROR_SUCCESS)
       {
 			strcat(buffer, "\\lib\\sql\\dbschema_sqlite.sql");
@@ -365,20 +365,6 @@ void ExportDatabase(const char *file)
             }
 
             _sntprintf(idataTable, 128, _T("tdata_%d"), id);
-            if (!ExportTable(db, idataTable))
-            {
-               DBFreeResult(hResult);
-               goto cleanup;
-            }
-
-            _sntprintf(idataTable, 128, _T("tdata_records_%d"), id);
-            if (!ExportTable(db, idataTable))
-            {
-               DBFreeResult(hResult);
-               goto cleanup;
-            }
-
-            _sntprintf(idataTable, 128, _T("tdata_rows_%d"), id);
             if (!ExportTable(db, idataTable))
             {
                DBFreeResult(hResult);
