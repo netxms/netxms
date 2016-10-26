@@ -31,6 +31,9 @@ class NXSL_NetObjClass : public NXSL_Class
 public:
    NXSL_NetObjClass();
 
+   virtual void onObjectCreate(NXSL_Object *object);
+   virtual void onObjectDelete(NXSL_Object *object);
+
    virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 

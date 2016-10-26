@@ -155,6 +155,22 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 }
 
 /**
+ * Object creation handler
+ */
+void NXSL_NetObjClass::onObjectCreate(NXSL_Object *object)
+{
+   ((NetObj *)object->getData())->incRefCount();
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_NetObjClass::onObjectDelete(NXSL_Object *object)
+{
+   ((NetObj *)object->getData())->decRefCount();
+}
+
+/**
  * NXSL class NetObj: get attribute
  */
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
