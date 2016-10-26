@@ -328,7 +328,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          if (pItem->getPollingSession() != NULL)
          {
             ClientSession *session = pItem->processForcePoll();
-            session->notify(NX_NOTIFY_FORCE_DCI_POLL, NULL);
+            session->notify(NX_NOTIFY_FORCE_DCI_POLL, pItem->getOwnerId());
             session->decRefCount();
          }
 

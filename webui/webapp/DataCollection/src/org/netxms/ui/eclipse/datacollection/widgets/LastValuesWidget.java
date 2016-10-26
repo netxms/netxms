@@ -116,7 +116,7 @@ public class LastValuesWidget extends Composite
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 * @param validator additional visibility validator (used to suppress unneded refresh calls, may be null)
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, final AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -265,14 +265,8 @@ public class LastValuesWidget extends Composite
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            switch(n.getCode())
-            {
-               case SessionNotification.FORCE_DCI_POLL:
-                  refresh();
-                  break;
-               default:
-                  break;
-            }            
+            if (n.getCode() == SessionNotification.FORCE_DCI_POLL && n.getSubCode() == dcTarget.getObjectId())
+               refresh();
          }         
       };
       
