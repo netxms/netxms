@@ -722,6 +722,22 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+*  Upgrade from V416 to V417
+*/
+static BOOL H_UpgradeFromV416(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("JiraIssueType"), _T("Task"), true, false));
+   CHK_EXEC(CreateConfigParam(_T("JiraLogin"), _T("netxms"), true, true));
+   CHK_EXEC(CreateConfigParam(_T("JiraPassword"), _T(""), true, true));
+   CHK_EXEC(CreateConfigParam(_T("JiraProjectCode"), _T("NETXMS"), true, false));
+   CHK_EXEC(CreateConfigParam(_T("JiraProjectComponent"), _T(""), true, false));
+   CHK_EXEC(CreateConfigParam(_T("JiraServerURL"), _T("http://localhost"), true, true));
+
+   CHK_EXEC(SetSchemaVersion(417));
+   return TRUE;
+}
+
+/**
 *  Upgrade from V415 to V416
 */
 static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
@@ -10608,6 +10624,7 @@ static struct
    { 413, 414, H_UpgradeFromV413 },
    { 414, 415, H_UpgradeFromV414 },
    { 415, 416, H_UpgradeFromV415 },
+   { 416, 417, H_UpgradeFromV416 },
    { 0, 0, NULL }
 };
 

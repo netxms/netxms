@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Jira
 ** Copyright (C) 2014 Raden Solutions
@@ -68,7 +68,6 @@ JiraLink::JiraLink() : HelpDeskLink()
    strcpy(m_login, "netxms");
    m_password[0] = 0;
    m_curl = NULL;
-   m_components = NULL;
 }
 
 /**
@@ -78,7 +77,6 @@ JiraLink::~JiraLink()
 {
    disconnect();
    MutexDestroy(m_mutex);
-   delete m_components;
 }
 
 /**
@@ -111,9 +109,6 @@ bool JiraLink::init()
    ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
    ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    ConfigReadStrUTF8(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
-   ConfigReadStrUTF8(_T("JiraProjectCode"), m_projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
-   ConfigReadStr(_T("JiraProjectComponent"), m_projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
-   ConfigReadStrUTF8(_T("JiraIssueType"), m_issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
    DbgPrintf(5, _T("Jira: server URL set to %hs"), m_serverUrl);
    return true;
 }
@@ -217,12 +212,6 @@ UINT32 JiraLink::connect()
    free(request);
    free(data);
 
-   if (rcc == RCC_SUCCESS)
-   {
-      delete m_components;
-      m_components = getProjectComponents(m_projectCode);
-   }
-
    return rcc;
 }
 
@@ -236,8 +225,6 @@ void JiraLink::disconnect()
 
    curl_easy_cleanup(m_curl);
    m_curl = NULL;
-
-   delete_and_null(m_components);
 }
 
 /**
@@ -250,7 +237,7 @@ bool JiraLink::checkConnection()
    bool success = false;
 
    lock();
-   
+
    if (m_curl != NULL)
    {
       RequestData *data = (RequestData *)malloc(sizeof(RequestData));
@@ -320,7 +307,11 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_t *root = json_object();
    json_t *fields = json_object();
    json_t *project = json_object();
-   json_object_set_new(project, "key", json_string(m_projectCode));
+
+
+   char projectCode[JIRA_MAX_PROJECT_CODE_LEN];
+   ConfigReadStrUTF8(_T("JiraProjectCode"), projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
+   json_object_set_new(project, "key", json_string(projectCode));
    json_object_set_new(fields, "project", project);
 #ifdef UNICODE
    char *mbdescr = UTF8StringFromWideString(description);
@@ -332,14 +323,24 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_object_set_new(fields, "description", json_string(description));
 #endif
    json_t *issuetype = json_object();
-   json_object_set_new(issuetype, "name", json_string(m_issueType));
+
+
+   char issueType[JIRA_MAX_ISSUE_TYPE_LEN];
+   ConfigReadStrUTF8(_T("JiraIssueType"), issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
+   json_object_set_new(issuetype, "name", json_string(issueType));
    json_object_set_new(fields, "issuetype", issuetype);
-   if ((m_projectComponent[0] != 0) && (m_components != NULL))
+
+
+   TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
+   ConfigReadStr(_T("JiraProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
+   ObjectArray<ProjectComponent> *projectComponents = getProjectComponents(projectCode);
+
+   if ((projectComponent[0] != 0) && (projectComponents != NULL))
    {
-      for(int i = 0; i < m_components->size(); i++)
+      for(int i = 0; i < projectComponents->size(); i++)
       {
-         ProjectComponent *c = m_components->get(i);
-         if (!_tcsicmp(c->m_name, m_projectComponent))
+         ProjectComponent *c = projectComponents->get(i);
+         if (!_tcsicmp(c->m_name, projectComponent))
          {
             json_t *components = json_array();
             json_t *component = json_object();
@@ -411,6 +412,7 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    }
    free(request);
    free(data);
+   delete projectComponents;
 
    unlock();
    return rcc;
@@ -429,7 +431,7 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
       return RCC_HDLINK_COMM_FAILURE;
 
    UINT32 rcc = RCC_HDLINK_COMM_FAILURE;
-   
+
    lock();
    DbgPrintf(4, _T("Jira: add comment to issue \"%s\" (comment text \"%s\")"), hdref, comment);
 

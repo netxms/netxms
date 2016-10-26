@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Helpdesk link module for Jira
 ** Copyright (C) 2014 Raden Solutions
@@ -79,12 +79,8 @@ private:
    char m_serverUrl[MAX_PATH];
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
-   char m_projectCode[JIRA_MAX_PROJECT_CODE_LEN];
-   TCHAR m_projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
-   char m_issueType[JIRA_MAX_ISSUE_TYPE_LEN];
    CURL *m_curl;
    char m_errorBuffer[CURL_ERROR_SIZE];
-   ObjectArray<ProjectComponent> *m_components;
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }

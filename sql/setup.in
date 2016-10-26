@@ -87,6 +87,12 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('InternalCA','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IntruderLockoutThreshold','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IntruderLockoutTime','30',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraIssueType','Task',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraLogin','netxms',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraPassword','',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraProjectCode','NETXMS',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraProjectComponent','',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JiraServerURL','http://localhost',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JobHistoryRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('JobRetryCount','5',1,0,'I','Maximum mumber of job execution retrys');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('KeepAliveInterval','60',1,1);
