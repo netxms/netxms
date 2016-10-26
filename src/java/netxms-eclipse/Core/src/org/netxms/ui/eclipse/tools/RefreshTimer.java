@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,20 +59,24 @@ public class RefreshTimer
     */
    public synchronized void execute()
    {
-      if(refreshDisabled)
+      if (refreshDisabled)
       {
          updateMissed = true;
          return;
       }
       
-      if (control.isDisposed())
-         return;
-      
       long curr = System.currentTimeMillis();
       if ((interval <= 0) || (curr - lastRun >= interval))
       {
          lastRun = curr;
-         control.getDisplay().asyncExec(callback);
+         control.getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               if (!control.isDisposed())
+                  callback.run();
+            }
+         });
       }
       else if (!scheduled)
       {
@@ -82,8 +86,7 @@ public class RefreshTimer
             @Override
             public void run()
             {
-
-               if(refreshDisabled)
+               if (refreshDisabled)
                {
                   updateMissed = true;
                   return;
@@ -126,7 +129,7 @@ public class RefreshTimer
    public synchronized void enableRefresh()
    {
       refreshDisabled = false;
-      if(updateMissed)
+      if (updateMissed)
          execute();
    }
 }
