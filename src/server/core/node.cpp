@@ -6721,7 +6721,7 @@ NXSL_Array *Node::getParentsForNXSL()
 			  (m_pParentList[i]->getObjectClass() == OBJECT_SERVICEROOT)) &&
 		    m_pParentList[i]->isTrustedNode(m_id))
 		{
-			parents->set(index++, object->createNXSLObject());
+			parents->set(index++, m_pParentList[i]->createNXSLObject());
 		}
 	}
 	UnlockParentList();
@@ -6743,7 +6743,7 @@ NXSL_Array *Node::getTemplatesForNXSL()
 		if ((m_pParentList[i]->getObjectClass() == OBJECT_TEMPLATE) &&
 		    m_pParentList[i]->isTrustedNode(m_id))
 		{
-			parents->set(index++, object->createNXSLObject());
+			parents->set(index++, m_pParentList[i]->createNXSLObject());
 		}
 	}
 	UnlockParentList();
@@ -6764,7 +6764,7 @@ NXSL_Array *Node::getInterfacesForNXSL()
 	{
 		if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 		{
-			ifaces->set(index++, m_childList->get(i)->createNXSLObject());
+			ifaces->set(index++, m_pChildList[i]->createNXSLObject());
 		}
 	}
 	UnlockChildList();

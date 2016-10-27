@@ -91,8 +91,8 @@ static UINT32 PortWalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    if (iface != NULL)
    {
       iface->isPhysicalPort = true;
-      iface->slot = var->getName().getElement(18);
-      iface->port = var->getName().getElement(20);
+      iface->slot = var->getName()->getValue()[18];
+      iface->port = var->getName()->getValue()[20];
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -100,20 +100,20 @@ static UINT32 PortWalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 /**
  * Handler for IPv6 address walk
  */
-static UINT32 IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 IPv6WalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
    // Address type should be IPv6 and address length 16 bytes
-   if ((var->getName().getElement(18) == 2) &&
-       (var->getName().length() == 36) &&
-       (var->getName().getElement(19) == 16))
+   if ((var->getName()->getValue()[18] == 2) &&
+       (var->getName()->getLength() == 36) &&
+       (var->getName()->getValue()[19] == 16))
    {
-      InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(17));
+      InterfaceInfo *iface = ifList->findByIfIndex(var->getName()->getValue()[17]);
       if (iface != NULL)
       {
          BYTE addrBytes[16];
          for(int i = 20; i < 36; i++)
-            addrBytes[i - 20] = (BYTE)var->getName().getElement(i);
+            addrBytes[i - 20] = (BYTE)var->getName()->getValue()[i];
          InetAddress addr(addrBytes, var->getValueAsInt());
          iface->ipAddrList.add(addr);
       }
@@ -135,10 +135,10 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attribu
 		return NULL;
 
 	// Find physical ports
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
+   SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList, FALSE);
 
    // Read IPv6 addresses
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.10.2.71.1.1.2.1.4"), IPv6WalkHandler, ifList);
+   SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.43.45.1.10.2.71.1.1.2.1.4"), IPv6WalkHandler, ifList, FALSE);
 
 	return ifList;
 }

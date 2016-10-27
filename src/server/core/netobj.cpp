@@ -1746,7 +1746,7 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-      children->set(index++, m_childList->get(i)->createNXSLObject());
+      children->set(index++, m_pChildList[i]->createNXSLObject());
 	}
 	UnlockChildList();
 
