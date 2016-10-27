@@ -1501,10 +1501,10 @@ void ClientSession::processingThread()
          case CMD_ZMQ_UNSUBSCRIBE_DATA:
             zmqManageSubscription(pMsg, zmq::DATA, false);
             break;
-         case CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS:
+         case CMD_ZMQ_GET_EVT_SUBSCRIPTIONS:
             zmqListSubscriptions(pMsg, zmq::EVENT);
             break;
-         case CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS:
+         case CMD_ZMQ_GET_DATA_SUBSCRIPTIONS:
             zmqListSubscriptions(pMsg, zmq::DATA);
             break;
 #endif
