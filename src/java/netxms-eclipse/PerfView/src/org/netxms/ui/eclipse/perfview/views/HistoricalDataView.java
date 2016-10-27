@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.perfview.views;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -64,6 +66,8 @@ public class HistoricalDataView extends ViewPart
 	private long nodeId;
 	private long dciId;
 	private String nodeName;
+	private String[] subparts;
+	private String tableName, instance, column;
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -95,9 +99,29 @@ public class HistoricalDataView extends ViewPart
 			throw new PartInitException(Messages.get().HistoricalDataView_InvalidObjectID);
 		nodeName = object.getObjectName();
 		
-		dciId = Long.parseLong(parts[1]);
+      if (parts[1].contains("@"))
+      {
+         subparts = parts[1].split("@");
+         try
+         {
+         dciId = Long.parseLong(subparts[0]);
+         tableName = URLDecoder.decode(subparts[1], "UTF-8"); //$NON-NLS-1$
+         instance = URLDecoder.decode(subparts[2], "UTF-8"); //$NON-NLS-1$
+         column = URLDecoder.decode(subparts[3], "UTF-8"); //$NON-NLS-1$
+         }
+         catch(NumberFormatException e)
+         {
+            e.printStackTrace();
+         }
+         catch(UnsupportedEncodingException e)
+         {
+            e.printStackTrace();
+         }
+      }
+      else
+         dciId = Long.parseLong(parts[1]);		
 		
-		setPartName(nodeName + ": [" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+		setPartName(nodeName + ": [" + (tableName == null ? Long.toString(dciId) : tableName) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -237,7 +261,12 @@ public class HistoricalDataView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DciData data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit);
+			   final DciData data;
+			   if (subparts != null)
+			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
+			   else
+			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit);
+			   
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

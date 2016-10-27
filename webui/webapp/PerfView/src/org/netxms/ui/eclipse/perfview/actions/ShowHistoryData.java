@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.perfview.actions;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -37,7 +39,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowHistoryData implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Object currentSelection = null;
+	private List <Object> currentSelection;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -54,20 +56,23 @@ public class ShowHistoryData implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (currentSelection != null)
+		if (currentSelection != null && currentSelection.size() != 0)
 		{
-			final String id =
-					(currentSelection instanceof DataCollectionItem) ?
-							Long.toString(((DataCollectionItem)currentSelection).getNodeId()) + "&" + Long.toString(((DataCollectionItem)currentSelection).getId()) : //$NON-NLS-1$
-							Long.toString(((SimpleDciValue)currentSelection).getNodeId()) + "&" + Long.toString(((SimpleDciValue)currentSelection).getId()); //$NON-NLS-1$
-			try
-			{
-				window.getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
-			}
-			catch(Exception e)
-			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryData_Error, String.format(Messages.get().ShowHistoryData_ErrorOpeningView, e.getMessage()));
-			}
+		   for(Object o : currentSelection)
+		   {
+   			final String id =
+   					(o instanceof DataCollectionItem) ?
+   							Long.toString(((DataCollectionItem)o).getNodeId()) + "&" + Long.toString(((DataCollectionItem)o).getId()) : //$NON-NLS-1$
+   							Long.toString(((SimpleDciValue)o).getNodeId()) + "&" + Long.toString(((SimpleDciValue)o).getId()); //$NON-NLS-1$
+   			try
+   			{
+   				window.getActivePage().showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+   			}
+   			catch(Exception e)
+   			{
+   				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryData_Error, String.format(Messages.get().ShowHistoryData_ErrorOpeningView, e.getMessage()));
+   			}
+		   }
 		}
 	}
 
@@ -79,21 +84,15 @@ public class ShowHistoryData implements IObjectActionDelegate
 	{
 		if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
 		{
-			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if ((element instanceof DataCollectionItem) || (element instanceof SimpleDciValue))
-			{
-				currentSelection = element;
-			}
-			else
-			{
-				currentSelection = null;
-			}
-		}
-		else
-		{
-			currentSelection = null;
+			@SuppressWarnings("unchecked")
+         List<Object> element = ((IStructuredSelection)selection).toList();
+			currentSelection = new ArrayList<Object>();
+			
+			for(Object o : element)
+   			if ((o instanceof DataCollectionItem) || (o instanceof SimpleDciValue))
+   				currentSelection.add(o);
 		}
 
-		action.setEnabled(currentSelection != null);
+		action.setEnabled(currentSelection != null && currentSelection.size() > 0);
 	}
 }

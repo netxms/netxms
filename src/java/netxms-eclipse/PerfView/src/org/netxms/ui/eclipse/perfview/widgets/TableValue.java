@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.DataComparisonView;
+import org.netxms.ui.eclipse.perfview.views.HistoricalDataView;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.perfview.widgets.helpers.CellSelectionManager;
 import org.netxms.ui.eclipse.perfview.widgets.helpers.TableContentProvider;
@@ -85,6 +86,7 @@ public class TableValue extends Composite
    private TableLabelProvider labelProvider;
    private CLabel errorLabel;
    private CellSelectionManager cellSelectionManager;
+   private Action actionShowHistory;
    private Action actionShowLineChart;
    private Action actionShowBarChart;
    private Action actionShowPieChart;
@@ -139,6 +141,14 @@ public class TableValue extends Composite
     */
    private void createActions()
    {
+      actionShowHistory = new Action("History", Activator.getImageDescriptor("icons/data_history.gif")) { //$NON-NLS-1$
+         @Override
+         public void run()
+         {
+            showHistory();
+         }
+      };
+      
       actionShowLineChart = new Action(Messages.get().TableValue_LineChart, Activator.getImageDescriptor("icons/chart_line.png")) { //$NON-NLS-1$
          @Override
          public void run()
@@ -207,6 +217,7 @@ public class TableValue extends Composite
     */
    private void fillContextMenu(IMenuManager manager)
    {
+      manager.add(actionShowHistory);
       manager.add(actionShowLineChart);
       manager.add(actionShowBarChart);
       manager.add(actionShowPieChart);
@@ -355,6 +366,41 @@ public class TableValue extends Composite
          }
       }
       return instance.toString();
+   }
+   
+   /**
+    * Show history
+    */
+   private void showHistory()
+   {
+      if (currentData == null)
+         return;
+
+      ViewerCell[] cells = cellSelectionManager.getSelectedCells();
+      if (cells.length == 0)
+         return;
+      
+      for(int i = 0; i < cells.length; i++)
+      {
+         TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
+         final String instance = buildInstanceString(cells[i].getViewerRow());
+
+         String id = Long.toString(objectId) + "&" + Long.toString(dciId) + "@" //$NON-NLS-1$ //$NON-NLS-2$
+               + safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + "@" //$NON-NLS-1$
+               + safeEncode(instance) + "@" + safeEncode(column.getName());//$NON-NLS-1$ //$NON-NLS-2$
+         
+         final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench()
+               .getActiveWorkbenchWindow().getActivePage();
+         try
+         {
+            page.showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(page.getWorkbenchWindow().getShell(), Messages.get().TableValue_Error,
+                  String.format(Messages.get().TableValue_ErrorOpeningView, e.getLocalizedMessage()));
+         }
+      }
    }
    
    /**
