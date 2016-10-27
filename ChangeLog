@@ -9,6 +9,7 @@
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - New NXSL "Node" class attributes: isInMaintenanceMode, lastAgentCommTime
 - Operator "new" in NXSL which can be used to instantiate objects if object class supports it
+- H3C driver correctly reads IPv6 addresses on interfaces
 - SMS driver for Nexmo service
 - SMS driver for SMSEagle gateway
 - Fixed FDB handling on Cisco switches

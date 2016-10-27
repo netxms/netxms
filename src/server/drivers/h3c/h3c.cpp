@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for H3C (now HP A-series) switches
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -87,16 +87,35 @@ void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap 
 static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
-   UINT32 ifIndex = var->getValueAsUInt();
-   for(int i = 0; i < ifList->size(); i++)
+   InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
+   if (iface != NULL)
    {
-      InterfaceInfo *iface = ifList->get(i);
-      if (iface->index == ifIndex)
+      iface->isPhysicalPort = true;
+      iface->slot = var->getName().getElement(18);
+      iface->port = var->getName().getElement(20);
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Handler for IPv6 address walk
+ */
+static UINT32 IPv6WalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+{
+   InterfaceList *ifList = (InterfaceList *)arg;
+   // Address type should be IPv6 and address length 16 bytes
+   if ((var->getName().getElement(18) == 2) &&
+       (var->getName().length() == 36) &&
+       (var->getName().getElement(19) == 16))
+   {
+      InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(17));
+      if (iface != NULL)
       {
-         iface->isPhysicalPort = true;
-         iface->slot = var->getName().getElement(18);
-         iface->port = var->getName().getElement(20);
-         break;
+         BYTE addrBytes[16];
+         for(int i = 20; i < 36; i++)
+            addrBytes[i - 20] = (BYTE)var->getName().getElement(i);
+         InetAddress addr(addrBytes, var->getValueAsInt());
+         iface->ipAddrList.add(addr);
       }
    }
    return SNMP_ERR_SUCCESS;
@@ -117,6 +136,10 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attribu
 
 	// Find physical ports
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
+
+   // Read IPv6 addresses
+   SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.10.2.71.1.1.2.1.4"), IPv6WalkHandler, ifList);
+
 	return ifList;
 }
 
