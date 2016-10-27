@@ -33,7 +33,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.DataCollectionTarget;
 
 /**
  * Test cases for data collection
