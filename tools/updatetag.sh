@@ -13,9 +13,10 @@ fi
 
 HEADER="$FILE_PREFIX-build-tag.h"
 
+BUILD_TAG=`git describe --always 2>/dev/null`
+[ $? -ne 0 ] && [ -f $HEADER ] && exit
 [ -f $HEADER ] || touch $HEADER
 
-BUILD_TAG=`git describe --always 2>/dev/null`
 [ -z $BUILD_TAG ] && BUILD_TAG=UNKNOWN
 grep "BUILDTAG:$BUILD_TAG" $HEADER >/dev/null 2>&1
 if [ $? != 0 ]; then
