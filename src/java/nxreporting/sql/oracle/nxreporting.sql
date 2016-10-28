@@ -1,6 +1,3 @@
-DROP TABLE "REPORTING_RESULTS";
-DROP SEQUENCE HIBERNATE_SEQUENCE;
-
 CREATE TABLE REPORTING_RESULTS
 (
   ID decimal(10) PRIMARY KEY NOT NULL,
@@ -16,7 +13,7 @@ CREATE TABLE REPORT_NOTIFICATION
   jobid char(36) not null,
   mail varchar(255) not null,
   report_name varchar(255),
-  attach_report integer default 0 not null
+  attach_format_code integer default 0 not null
 );
 
 CREATE SEQUENCE HIBERNATE_SEQUENCE
