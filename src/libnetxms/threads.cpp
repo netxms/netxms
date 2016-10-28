@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -20,9 +20,151 @@
 **
 **/
 
+#include "libnetxms.h"
+
+/**
+ * Mutex class constructor
+ */
+Mutex::Mutex()
+{
+   m_mutex = MutexCreate();
+   m_refCount = new VolatileCounter(1);
+}
+
+/**
+ * Mutex class copy constructor
+ */
+Mutex::Mutex(const Mutex& src)
+{
+   InterlockedIncrement(src.m_refCount);
+   m_mutex = src.m_mutex;
+   m_refCount = src.m_refCount;
+}
+
+/**
+ * Mutex destructor
+ */
+Mutex::~Mutex()
+{
+   if (InterlockedDecrement(m_refCount) == 0)
+   {
+      MutexDestroy(m_mutex);
+      delete m_refCount;
+   }
+}
+
+/**
+ * Mutex assignment operator
+ */
+Mutex& Mutex::operator =(const Mutex& src)
+{
+   if (InterlockedDecrement(m_refCount))
+   {
+      MutexDestroy(m_mutex);
+      delete m_refCount;
+   }
+   InterlockedIncrement(src.m_refCount);
+   m_mutex = src.m_mutex;
+   m_refCount = src.m_refCount;
+   return *this;
+}
+
+/**
+ * R/W Lock class constructor
+ */
+RWLock::RWLock()
+{
+   m_rwlock = RWLockCreate();
+   m_refCount = new VolatileCounter(1);
+}
+
+/**
+ * R/W Lock class copy constructor
+ */
+RWLock::RWLock(const RWLock& src)
+{
+   InterlockedIncrement(src.m_refCount);
+   m_rwlock = src.m_rwlock;
+   m_refCount = src.m_refCount;
+}
+
+/**
+ * R/W Lock destructor
+ */
+RWLock::~RWLock()
+{
+   if (InterlockedDecrement(m_refCount) == 0)
+   {
+      RWLockDestroy(m_rwlock);
+      delete m_refCount;
+   }
+}
+
+/**
+ * R/W Lock assignment operator
+ */
+RWLock& RWLock::operator =(const RWLock& src)
+{
+   if (InterlockedDecrement(m_refCount))
+   {
+      RWLockDestroy(m_rwlock);
+      delete m_refCount;
+   }
+   InterlockedIncrement(src.m_refCount);
+   m_rwlock = src.m_rwlock;
+   m_refCount = src.m_refCount;
+   return *this;
+}
+
+/**
+ * Condition class constructor
+ */
+Condition::Condition(bool broadcast)
+{
+   m_condition = ConditionCreate(broadcast);
+   m_refCount = new VolatileCounter(1);
+}
+
+/**
+ * Condition class copy constructor
+ */
+Condition::Condition(const Condition& src)
+{
+   InterlockedIncrement(src.m_refCount);
+   m_condition = src.m_condition;
+   m_refCount = src.m_refCount;
+}
+
+/**
+ * Condition destructor
+ */
+Condition::~Condition()
+{
+   if (InterlockedDecrement(m_refCount) == 0)
+   {
+      ConditionDestroy(m_condition);
+      delete m_refCount;
+   }
+}
+
+/**
+ * Condition assignment operator
+ */
+Condition& Condition::operator =(const Condition& src)
+{
+   if (InterlockedDecrement(m_refCount))
+   {
+      ConditionDestroy(m_condition);
+      delete m_refCount;
+   }
+   InterlockedIncrement(src.m_refCount);
+   m_condition = src.m_condition;
+   m_refCount = src.m_refCount;
+   return *this;
+}
+
 #if !defined(_WIN32) && !defined(_NETWARE)
 
-#include "libnetxms.h"
 #include <signal.h>
 #include <sys/wait.h>
 

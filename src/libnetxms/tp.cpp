@@ -72,7 +72,7 @@ struct ThreadPool
  * Thread pool registry
  */
 static StringObjectMap<ThreadPool> s_registry(false);
-static MUTEX s_registryLock = MutexCreate();
+static Mutex s_registryLock;
 
 /**
  * Thread work request
@@ -198,9 +198,9 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads
 
    p->maintThread = ThreadCreateEx(MaintenanceThread, 0, p);
 
-   MutexLock(s_registryLock);
+   s_registryLock.lock();
    s_registry.set(p->name, p);
-   MutexUnlock(s_registryLock);
+   s_registryLock.unlock();
 
    nxlog_debug(1, _T("Thread pool %s initialized (min=%d, max=%d)"), p->name, p->minThreads, p->maxThreads);
    return p;
@@ -222,9 +222,9 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 {
    nxlog_debug(3, _T("Stopping threads in thread pool %s"), p->name);
 
-   MutexLock(s_registryLock);
+   s_registryLock.lock();
    s_registry.remove(p->name);
-   MutexUnlock(s_registryLock);
+   s_registryLock.unlock();
 
    MutexLock(p->mutex);
    p->shutdownMode = true;
@@ -381,11 +381,11 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
  */
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info)
 {
-   MutexLock(s_registryLock);
+   s_registryLock.lock();
    ThreadPool *p = s_registry.get(name);
    if (p != NULL)
       ThreadPoolGetInfo(p, info);
-   MutexUnlock(s_registryLock);
+   s_registryLock.unlock();
    return p != NULL;
 }
 
@@ -394,8 +394,8 @@ bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *i
  */
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools()
 {
-   MutexLock(s_registryLock);
+   s_registryLock.lock();
    StringList *list = s_registry.keys();
-   MutexUnlock(s_registryLock);
+   s_registryLock.unlock();
    return list;
 }

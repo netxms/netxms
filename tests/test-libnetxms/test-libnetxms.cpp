@@ -1,10 +1,14 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxqueue.h>
+#include <nxcpapi.h>
 #include <testtools.h>
 
 void TestMsgWaitQueue();
 void TestMessageClass();
+void TestMutexWrapper();
+void TestRWLockWrapper();
+void TestConditionWrapper();
 
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -656,5 +660,10 @@ int main(int argc, char *argv[])
    TestHashMap();
    TestObjectArray();
    TestTable();
+   TestMutexWrapper();
+   TestRWLockWrapper();
+   TestConditionWrapper();
+
+   MsgWaitQueue::shutdown();
    return 0;
 }

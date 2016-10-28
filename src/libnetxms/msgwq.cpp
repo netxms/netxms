@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,9 +36,9 @@
 /**
  * Housekeeper data
  */
-MUTEX MsgWaitQueue::m_housekeeperLock = MutexCreate();
-HashMap<UINT64, MsgWaitQueue> *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
-CONDITION MsgWaitQueue::m_shutdownCondition = ConditionCreate(TRUE);
+Mutex MsgWaitQueue::m_housekeeperLock;
+HashMap<UINT64, MsgWaitQueue> MsgWaitQueue::m_activeQueues(false);
+Condition MsgWaitQueue::m_shutdownCondition(true);
 THREAD MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -65,13 +65,13 @@ MsgWaitQueue::MsgWaitQueue()
 #endif
 
    // register new queue
-   MutexLock(m_housekeeperLock);
-   m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
+   m_housekeeperLock.lock();
+   m_activeQueues.set(CAST_FROM_POINTER(this, UINT64), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
       m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
    }
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
 }
 
 /**
@@ -80,9 +80,9 @@ MsgWaitQueue::MsgWaitQueue()
 MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
-   MutexLock(m_housekeeperLock);
-   m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.lock();
+   m_activeQueues.remove(CAST_FROM_POINTER(this, UINT64));
+   m_housekeeperLock.unlock();
 
    clear();
    safe_free(m_elements);
@@ -379,11 +379,11 @@ EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const void *key, con
  */
 THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
 {
-   while(!ConditionWait(m_shutdownCondition, TTL_CHECK_INTERVAL))
+   while(!m_shutdownCondition.wait(TTL_CHECK_INTERVAL))
    {
-      MutexLock(m_housekeeperLock);
-      m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback, NULL);
-      MutexUnlock(m_housekeeperLock);
+      m_housekeeperLock.lock();
+      m_activeQueues.forEach(MsgWaitQueue::houseKeeperCallback, NULL);
+      m_housekeeperLock.unlock();
    }
    return THREAD_OK;
 }
@@ -393,11 +393,11 @@ THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
  */
 void MsgWaitQueue::shutdown()
 {
-   ConditionSet(m_shutdownCondition);
+   m_shutdownCondition.set();
    ThreadJoin(m_housekeeperThread);
-   MutexLock(m_housekeeperLock);
+   m_housekeeperLock.lock();
    m_housekeeperThread = INVALID_THREAD_HANDLE;
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
 }
 
 /**
@@ -418,15 +418,15 @@ EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const void *key, const 
 String MsgWaitQueue::getDiagInfo()
 {
    String out;
-   MutexLock(m_housekeeperLock);
-   out.append(m_activeQueues->size());
+   m_housekeeperLock.lock();
+   out.append(m_activeQueues.size());
    out.append(_T(" active queues\nHousekeeper thread state is "));
    out.append((m_housekeeperThread != INVALID_THREAD_HANDLE) ? _T("RUNNING\n") : _T("STOPPED\n"));
-   if (m_activeQueues->size() > 0)
+   if (m_activeQueues.size() > 0)
    {
       out.append(_T("Active queues:\n"));
-      m_activeQueues->forEach(MsgWaitQueue::diagInfoCallback, &out);
+      m_activeQueues.forEach(MsgWaitQueue::diagInfoCallback, &out);
    }
-   MutexUnlock(m_housekeeperLock);
+   m_housekeeperLock.unlock();
    return out;
 }

@@ -1121,6 +1121,69 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 
 #endif   /* _WIN32 */
 
+/**
+ * Wrappers for mutex
+ */
+class LIBNETXMS_EXPORTABLE Mutex
+{
+private:
+   MUTEX m_mutex;
+   VolatileCounter *m_refCount;
+
+public:
+   Mutex();
+   Mutex(const Mutex& src);
+   ~Mutex();
+
+   Mutex& operator =(const Mutex &src);
+
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
+};
+
+/**
+ * Wrappers for read/write lock
+ */
+class LIBNETXMS_EXPORTABLE RWLock
+{
+private:
+   RWLOCK m_rwlock;
+   VolatileCounter *m_refCount;
+
+public:
+   RWLock();
+   RWLock(const RWLock& src);
+   ~RWLock();
+
+   RWLock& operator =(const RWLock &src);
+
+   void readLock(UINT32 timeout = INFINITE) { RWLockReadLock(m_rwlock, timeout); }
+   void writeLock(UINT32 timeout = INFINITE) { RWLockWriteLock(m_rwlock, timeout); }
+   void unlock() { RWLockUnlock(m_rwlock); }
+};
+
+/**
+ * Wrappers for condition
+ */
+class LIBNETXMS_EXPORTABLE Condition
+{
+private:
+   CONDITION m_condition;
+   VolatileCounter *m_refCount;
+
+public:
+   Condition(bool broadcast);
+   Condition(const Condition& src);
+   ~Condition();
+
+   Condition& operator =(const Condition &src);
+
+   void set() { ConditionSet(m_condition); }
+   void pulse() { ConditionPulse(m_condition); }
+   void reset() { ConditionReset(m_condition); }
+   bool wait(UINT32 timeout = INFINITE) { return ConditionWait(m_condition, timeout); }
+};
+
 #endif   /* __cplusplus */
 
 #endif   /* _nms_threads_h_ */
