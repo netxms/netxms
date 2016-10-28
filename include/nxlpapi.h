@@ -63,12 +63,15 @@
 // File encoding
 //
 
+#define LP_FCP_AUTO    -1
 #define LP_FCP_ACP      0
 #define LP_FCP_UTF8     1
 #define LP_FCP_UCS2     2
 #define LP_FCP_UCS2_LE  3
-#define LP_FCP_UCS4     4
-#define LP_FCP_UCS4_LE  5
+#define LP_FCP_UCS2_BE  4
+#define LP_FCP_UCS4     5
+#define LP_FCP_UCS4_LE  6
+#define LP_FCP_UCS4_BE  7
 
 /**
  * Log parser callback

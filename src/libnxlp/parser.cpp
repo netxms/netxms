@@ -394,7 +394,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		const char *encoding = XMLGetAttr(attrs, "encoding");
 		if (encoding != NULL)
 		{
-			if (!stricmp(encoding, "acp") || (*encoding == 0))
+			if ((*encoding == 0))
+			{
+				ps->encodings.add(new int(LP_FCP_AUTO));
+			}
+			if (!stricmp(encoding, "acp"))
 			{
 				ps->encodings.add(new int(LP_FCP_ACP));
 			}
@@ -406,9 +410,25 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			{
 				ps->encodings.add(new int(LP_FCP_UCS2));
 			}
+			else if (!stricmp(encoding, "ucs2le") || !stricmp(encoding, "ucs-2le") || !stricmp(encoding, "utf-16le"))
+			{
+				ps->encodings.add(new int(LP_FCP_UCS2_LE));
+			}
+			else if (!stricmp(encoding, "ucs2be") || !stricmp(encoding, "ucs-2be") || !stricmp(encoding, "utf-16be"))
+			{
+				ps->encodings.add(new int(LP_FCP_UCS2_BE));
+			}
 			else if (!stricmp(encoding, "ucs4") || !stricmp(encoding, "ucs-4") || !stricmp(encoding, "utf-32"))
 			{
 				ps->encodings.add(new int(LP_FCP_UCS4));
+			}
+			else if (!stricmp(encoding, "ucs4le") || !stricmp(encoding, "ucs-4le") || !stricmp(encoding, "utf-32le"))
+			{
+				ps->encodings.add(new int(LP_FCP_UCS4_LE));
+			}
+			else if (!stricmp(encoding, "ucs4be") || !stricmp(encoding, "ucs-4be") || !stricmp(encoding, "utf-32be"))
+			{
+				ps->encodings.add(new int(LP_FCP_UCS4_BE));
 			}
 			else
 			{
@@ -418,7 +438,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		}
 		else
 		{
-			ps->encodings.add(new int(LP_FCP_ACP));
+			ps->encodings.add(new int(LP_FCP_AUTO));
 		}
 	}
 	else if (!strcmp(name, "macros"))
@@ -554,6 +574,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 static void EndElement(void *userData, const char *name)
 {
 	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (ps->state == XML_STATE_ERROR)
+      return;
 
 	if (!strcmp(name, "parser"))
 	{

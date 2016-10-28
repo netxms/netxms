@@ -48,8 +48,8 @@ public class LogParser
 	private Integer trace = null;
 	
 	@Element(required=false)
-	private String file = null;
-	
+	private LogParserFile file = new LogParserFile();
+   
 	@ElementList(required=false)
 	private ArrayList<LogParserRule> rules = new ArrayList<LogParserRule>(0);
 	
@@ -101,13 +101,46 @@ public class LogParser
       this.isSyslogParser = isSyslogParser;
       if(isSyslogParser)
       {
-         setFile(null);
+         file.setFile(null);
+         file.setEncoding(null);
       }
 
       for(LogParserRule rule : rules)
       {
          rule.updateFieldsCorrectly(isSyslogParser);
       }
+   }
+   
+   /**
+    * @return filename
+    */
+   public String getFile()
+   {
+      return file.getFile();
+   }
+   
+   /**
+    * @param filename
+    */
+   public void setFile(String file)
+   {
+      this.file.setFile(file);
+   }
+   
+   /**
+    * @return file encoding
+    */
+   public String getEncoding()
+   {
+      return file.getEncoding();
+   }
+   
+   /**
+    * @param encoding
+    */
+   public void setEncoding(String encoding)
+   {
+      file.setEncoding(encoding);
    }
 
    /**
@@ -127,14 +160,6 @@ public class LogParser
 	}
 
 	/**
-	 * @return
-	 */
-	public String getFile()
-	{
-		return file;
-	}
-
-	/**
     * @return the processALL
     */
    public boolean getProcessALL()
@@ -149,14 +174,6 @@ public class LogParser
    {
       this.processALL = booleanToString(processALL);
    }
-
-   /**
-	 * @param file
-	 */
-	public void setFile(String file)
-	{
-		this.file = file;
-	}
 
 	/**
 	 * @return

@@ -100,15 +100,29 @@ static char *FindEOL(char *start, int length, int encoding)
 	switch(encoding)
 	{
 		case LP_FCP_UCS2:
+#if WORDS_BIGENDIAN
+			eol = FindSequence(start, length, "\0\n", 2);
+#else
 			eol = FindSequence(start, length, "\n\0", 2);
+#endif
 			break;
 		case LP_FCP_UCS2_LE:
+			eol = FindSequence(start, length, "\n\0", 2);
+			break;
+		case LP_FCP_UCS2_BE:
 			eol = FindSequence(start, length, "\0\n", 2);
 			break;
 		case LP_FCP_UCS4:
+#if WORDS_BIGENDIAN
+         eol = FindSequence(start, length, "\0\0\0\n", 4);
+#else
+         eol = FindSequence(start, length, "\n\0\0\0", 4);
+#endif
+		   break;
+		case LP_FCP_UCS4_LE:
 			eol = FindSequence(start, length, "\n\0\0\0", 4);
 			break;
-		case LP_FCP_UCS4_LE:
+		case LP_FCP_UCS4_BE:
 			eol = FindSequence(start, length, "\0\0\0\n", 4);
 			break;
 		default:
@@ -121,16 +135,30 @@ static char *FindEOL(char *start, int length, int encoding)
       // Try to find CR
 	   switch(encoding)
 	   {
-		   case LP_FCP_UCS2:
+		case LP_FCP_UCS2:
+#if WORDS_BIGENDIAN
+			eol = FindSequence(start, length, "\0\r", 2);
+#else
+			eol = FindSequence(start, length, "\r\0", 2);
+#endif
+			break;
+		   case LP_FCP_UCS2_LE:
 			   eol = FindSequence(start, length, "\r\0", 2);
 				break;
-		   case LP_FCP_UCS2_LE:
+		   case LP_FCP_UCS2_BE:
 			   eol = FindSequence(start, length, "\0\r", 2);
 				break;
-		   case LP_FCP_UCS4:
+		case LP_FCP_UCS4:
+#if WORDS_BIGENDIAN
+         eol = FindSequence(start, length, "\0\0\0\r", 4);
+#else
+         eol = FindSequence(start, length, "\r\0\0\0", 4);
+#endif
+		   break;
+		   case LP_FCP_UCS4_LE:
 			   eol = FindSequence(start, length, "\r\0\0\0", 4);
 				break;
-		   case LP_FCP_UCS4_LE:
+		   case LP_FCP_UCS4_BE:
 			   eol = FindSequence(start, length, "\0\0\0\r", 4);
 				break;
 		   default:
@@ -167,28 +195,53 @@ static void ParseNewRecords(LogParser *parser, int fh)
                memmove(buffer, ptr, bufPos);
                break;
             }
-
 				// remove possible CR character and put 0 to indicate end of line
 				switch(encoding)
 				{
 					case LP_FCP_UCS2:
+#if WORDS_BIGENDIAN
+                  if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
+							eptr -= 2;
+						*eptr = 0;
+						*(eptr + 1) = 0;
+#else
+
+						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
+							eptr -= 2;
+						*eptr = 0;
+						*(eptr + 1) = 0;
+#endif
+						break;
+					case LP_FCP_UCS2_LE:
 						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\r\0", 2))
 							eptr -= 2;
 						*eptr = 0;
 						*(eptr + 1) = 0;
 						break;
-					case LP_FCP_UCS2_LE:
+					case LP_FCP_UCS2_BE:
 						if ((eptr - ptr >= 2) && !memcmp(eptr - 2, "\0\r", 2))
 							eptr -= 2;
 						*eptr = 0;
 						*(eptr + 1) = 0;
 						break;
 					case LP_FCP_UCS4:
+#if WORDS_BIGENDIAN
+                 if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
+							eptr -= 4;
+						memset(eptr, 0, 4);
+#else
+
+						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
+							eptr -= 4;
+						memset(eptr, 0, 4);
+#endif
+						break;
+					case LP_FCP_UCS4_LE:
 						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\r\0\0\0", 4))
 							eptr -= 4;
 						memset(eptr, 0, 4);
 						break;
-					case LP_FCP_UCS4_LE:
+					case LP_FCP_UCS4_BE:
 						if ((eptr - ptr >= 4) && !memcmp(eptr - 4, "\0\0\0\r", 4))
 							eptr -= 4;
 						memset(eptr, 0, 4);
@@ -199,10 +252,8 @@ static void ParseNewRecords(LogParser *parser, int fh)
 						*eptr = 0;
 						break;
 				}
-
 				// Now ptr points to null-terminated string in original encoding
 				// Do the conversion to platform encoding
-/* TODO: implement all conversions */
 #ifdef UNICODE
 				switch(encoding)
 				{
@@ -212,6 +263,60 @@ static void ParseNewRecords(LogParser *parser, int fh)
 					case LP_FCP_UTF8:
 						MultiByteToWideChar(CP_UTF8, 0, ptr, -1, text, READ_BUFFER_SIZE);
 						break;
+               case LP_FCP_UCS2_LE:
+#if WORDS_BIGENDIAN
+                  bswap_array_16((UINT16 *)ptr, -1);
+#endif
+#ifdef UNICODE_UCS2
+						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#else
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#endif
+                  break;
+               case LP_FCP_UCS2_BE:
+#if !WORDS_BIGENDIAN
+                  bswap_array_16((UINT16 *)ptr, -1);
+#endif
+#ifdef UNICODE_UCS2
+						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#else
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#endif
+                  break;
+               case LP_FCP_UCS2:
+#ifdef UNICODE_UCS2
+						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#else
+                  ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#endif
+                  break;
+               case LP_FCP_UCS4_LE:
+#if WORDS_BIGENDIAN
+                  bswap_array_32((UINT32 *)ptr, -1);
+#endif
+#ifdef UNICODE_UCS2
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#else
+                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#endif
+                  break;
+               case LP_FCP_UCS4_BE:
+#if !WORDS_BIGENDIAN
+                  bswap_array_32((UINT32 *)ptr, -1);
+#endif
+#ifdef UNICODE_UCS2
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#else
+                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#endif
+                  break;
+               case LP_FCP_UCS4:
+#ifdef UNICODE_UCS2
+                  ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
+#else
+                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+#endif
+                  break;
 					default:
 						break;
 				}
@@ -221,11 +326,43 @@ static void ParseNewRecords(LogParser *parser, int fh)
 					case LP_FCP_ACP:
 						nx_strncpy(text, ptr, READ_BUFFER_SIZE);
 						break;
+               case LP_FCP_UTF8:
+                  utf8_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS2_LE:
+#if WORDS_BIGENDIAN
+                  bswap_array_16((UINT16 *)ptr, -1);
+#endif
+                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS2_BE:
+#if !WORDS_BIGENDIAN
+                  bswap_array_16((UINT16 *)ptr, -1);
+#endif
+                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS2:
+                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS4_LE:
+#if WORDS_BIGENDIAN
+                  bswap_array_32((UINT32 *)ptr, -1);
+#endif
+                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS4_BE:
+#if !WORDS_BIGENDIAN
+                  bswap_array_32((UINT32 *)ptr, -1);
+#endif
+                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
+               case LP_FCP_UCS4:
+                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  break;
 					default:
 						break;
 				}
 #endif
-
 				parser->matchLine(text);
          }
       }
@@ -234,6 +371,29 @@ static void ParseNewRecords(LogParser *parser, int fh)
          bytes = 0;
       }
    } while(bytes == READ_BUFFER_SIZE);
+}
+
+/**
+ * Scan first 10 bytes of a file to find its encoding
+ */
+static int ScanFileEncoding(int fh)
+{
+   char buffer[10];
+   if (read(fh, buffer, 4) > 3)
+   {
+      if (!memcmp(buffer, "\x00\x00\xFE\xFF", 4))
+         return LP_FCP_UCS4_BE;
+      if (!memcmp(buffer, "\xFF\xFE\x00\x00", 4))
+         return LP_FCP_UCS4_LE;
+      if (!memcmp(buffer, "\xEF\xBB\xBF", 3))
+         return LP_FCP_UTF8;
+      if (!memcmp(buffer, "\xFE\xFF", 2))
+         return LP_FCP_UCS2_BE;
+      if (!memcmp(buffer, "\xFF\xFE", 2))
+         return LP_FCP_UCS2_LE;
+   }
+
+   return LP_FCP_ACP;
 }
 
 /**
@@ -264,6 +424,12 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 #else
 			fh = _topen(fname, O_RDONLY);
 #endif
+         if (m_fileEncoding == -1)
+         {
+            m_fileEncoding = ScanFileEncoding(fh);
+            lseek(fh, 0, SEEK_SET);
+         }
+
 			if (fh != -1)
 			{
 				setStatus(LPS_RUNNING);

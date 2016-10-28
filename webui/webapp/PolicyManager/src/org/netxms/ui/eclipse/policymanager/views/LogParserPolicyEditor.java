@@ -237,13 +237,14 @@ public class LogParserPolicyEditor  extends ViewPart implements ISaveablePart
    {
       final String xml = editor.getParserXml();
       actionSave.setEnabled(false);
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob("Save log parser configuration", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             NXCObjectModificationData md = new NXCObjectModificationData(logParser.getObjectId());
             md.setConfigFileContent(xml);
-            ((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+            session.modifyObject(md);
             runInUIThread(new Runnable() {
                @Override
                public void run()

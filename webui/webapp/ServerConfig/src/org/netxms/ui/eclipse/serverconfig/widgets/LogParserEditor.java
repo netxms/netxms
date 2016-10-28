@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.widgets;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -42,6 +43,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
@@ -91,6 +93,7 @@ public class LogParserEditor extends Composite
 	
 	/* General section */
    private LabeledText labelFileName;
+   private Combo comboFileEncoding;
    private Spinner spinerTrace;
    private Button checkProcessAll;
 
@@ -249,7 +252,6 @@ public class LogParserEditor extends Composite
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
          labelFileName.setLayoutData(gd);
-         labelFileName.setText(parser.getFile());
          labelFileName.getTextControl().addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e)
@@ -261,10 +263,24 @@ public class LogParserEditor extends Composite
                      rule.getEditor().updateWindowsEventLogFields();
                }
             }
+         });     
+
+         String[] items = { "AUTO", "ACP", "UTF-8", "UCS-2", "UCS-2LE" , "UCS-2BE", 
+                           "UCS-4", "UCS-4LE", "UCS-4BE" };
+         gd = new GridData();
+         comboFileEncoding = (Combo)WidgetHelper.createLabeledCombo(generalArea, SWT.BORDER | SWT.READ_ONLY, "Parsing file encoding", gd);
+         comboFileEncoding.setItems(items);
+         comboFileEncoding.select((parser.getEncoding() != null) ? Arrays.asList(items).indexOf(parser.getEncoding()) : 0);
+         comboFileEncoding.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               fireModifyListeners();
+            }
          });
       }
       
-      final WidgetFactory factory = new WidgetFactory() {
+      final WidgetFactory spinnerFactory = new WidgetFactory() {
          @Override
          public Control createControl(Composite parent, int style)
          {
@@ -274,7 +290,7 @@ public class LogParserEditor extends Composite
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      spinerTrace = (Spinner)WidgetHelper.createLabeledControl(generalArea, SWT.BORDER, factory, "Trace level", gd);
+      spinerTrace = (Spinner)WidgetHelper.createLabeledControl(generalArea, SWT.BORDER, spinnerFactory, "Trace level", gd);
       spinerTrace.setMinimum(0);
       spinerTrace.setMaximum(9);
       spinerTrace.addModifyListener(new ModifyListener() {
@@ -452,7 +468,10 @@ public class LogParserEditor extends Composite
 	private String buildParserXml()
 	{
 	   if (!isSyslogParser)
+	   {
 	      parser.setFile(labelFileName.getText());
+	      parser.setEncoding((comboFileEncoding.getSelectionIndex() == 0) ? null : comboFileEncoding.getText());
+	   }
 	   parser.setProcessALL(checkProcessAll.getSelection());
 	   parser.setTrace(spinerTrace.getSelection());
 	   
@@ -507,8 +526,11 @@ public class LogParserEditor extends Composite
 		parser.setSyslogParser(isSyslogParser);
 		
 		/* general */
-		if(!isSyslogParser)
+		if (!isSyslogParser)
+      {
 		   labelFileName.setText(parser.getFile());
+         comboFileEncoding.setText((parser.getEncoding() == null) ? "AUTO" : parser.getEncoding());
+      }
 		spinerTrace.setSelection(parser.getTrace() != null ? parser.getTrace() : 0);
 		checkProcessAll.setSelection(parser.getProcessALL());
 		
