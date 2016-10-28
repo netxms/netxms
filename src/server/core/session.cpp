@@ -5109,7 +5109,7 @@ void ClientSession::createObject(NXCPMessage *request)
                            NetObjInsert(object, true, false);
                            break;
                         case OBJECT_CONDITION:
-                           object = new Condition(TRUE);
+                           object = new ConditionObject(true);
                            object->setName(objectName);
                            NetObjInsert(object, true, false);
                            break;

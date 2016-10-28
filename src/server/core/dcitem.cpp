@@ -1055,7 +1055,7 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
 		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects(true);
 		for(int i = 0; i < conditions->size(); i++)
       {
-			Condition *c = (Condition *)conditions->get(i);
+		   ConditionObject *c = (ConditionObject *)conditions->get(i);
 			dwSize = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
          if (dwSize > dwRequiredSize)
             dwRequiredSize = dwSize;

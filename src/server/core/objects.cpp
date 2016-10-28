@@ -1180,7 +1180,7 @@ BOOL LoadObjects()
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         Condition *condition = new Condition;
+         ConditionObject *condition = new ConditionObject();
          if (condition->loadFromDatabase(hdb, id))
          {
             NetObjInsert(condition, false, false);  // Insert into indexes

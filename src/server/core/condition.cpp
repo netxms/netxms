@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Condition::Condition() : NetObj()
+ConditionObject::ConditionObject() : NetObj()
 {
    m_scriptSource = NULL;
    m_script = NULL;
@@ -44,7 +44,7 @@ Condition::Condition() : NetObj()
 /**
  * Constructor for new objects
  */
-Condition::Condition(bool hidden) : NetObj()
+ConditionObject::ConditionObject(bool hidden) : NetObj()
 {
    m_scriptSource = NULL;
    m_script = NULL;
@@ -64,17 +64,17 @@ Condition::Condition(bool hidden) : NetObj()
 /**
  * Destructor
  */
-Condition::~Condition()
+ConditionObject::~ConditionObject()
 {
-   safe_free(m_dciList);
-   safe_free(m_scriptSource);
+   free(m_dciList);
+   free(m_scriptSource);
    delete m_script;
 }
 
 /**
  * Load object from database
  */
-bool Condition::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
@@ -155,7 +155,7 @@ bool Condition::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Condition::saveToDatabase(DB_HANDLE hdb)
+BOOL ConditionObject::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR *pszEscScript, *pszQuery;
    DB_RESULT hResult;
@@ -227,7 +227,7 @@ BOOL Condition::saveToDatabase(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Condition::deleteFromDatabase(DB_HANDLE hdb)
+bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
@@ -240,7 +240,7 @@ bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::fillMessageInternal(NXCPMessage *pMsg)
+void ConditionObject::fillMessageInternal(NXCPMessage *pMsg)
 {
    NetObj::fillMessageInternal(pMsg);
 
@@ -265,7 +265,7 @@ void Condition::fillMessageInternal(NXCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
    UINT32 i, dwId;
    NetObj *pObject;
@@ -360,7 +360,7 @@ UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Lock for polling
  */
-void Condition::lockForPoll()
+void ConditionObject::lockForPoll()
 {
    m_queuedForPolling = TRUE;
 }
@@ -368,7 +368,7 @@ void Condition::lockForPoll()
 /**
  * Poller entry point
  */
-void Condition::doPoll(PollerInfo *poller)
+void ConditionObject::doPoll(PollerInfo *poller)
 {
    poller->startExecution();
    check();
@@ -382,7 +382,7 @@ void Condition::doPoll(PollerInfo *poller)
 /**
  * Check condition
  */
-void Condition::check()
+void ConditionObject::check()
 {
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
@@ -529,7 +529,7 @@ void Condition::check()
 /**
  * Determine DCI cache size required by condition object
  */
-int Condition::getCacheSizeForDCI(UINT32 itemId, bool noLock)
+int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
 {
    UINT32 i;
    int nSize = 0;

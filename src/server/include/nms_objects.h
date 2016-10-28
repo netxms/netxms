@@ -2053,7 +2053,7 @@ public:
 /**
  * Condition
  */
-class NXCORE_EXPORTABLE Condition : public NetObj
+class NXCORE_EXPORTABLE ConditionObject : public NetObj
 {
 protected:
    UINT32 m_dciCount;
@@ -2073,9 +2073,9 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
-   Condition();
-   Condition(bool hidden);
-   virtual ~Condition();
+   ConditionObject();
+   ConditionObject(bool hidden);
+   virtual ~ConditionObject();
 
    virtual int getObjectClass() const { return OBJECT_CONDITION; }
 

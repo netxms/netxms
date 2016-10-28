@@ -523,12 +523,12 @@ static void QueueForPolling(NetObj *object, void *data)
 			break;
 		case OBJECT_CONDITION:
 			{
-				Condition *cond = (Condition *)object;
+			   ConditionObject *cond = (ConditionObject *)object;
 				if (cond->isReadyForPoll())
 				{
 					cond->lockForPoll();
 					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cond, &Condition::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
+               ThreadPoolExecute(g_pollerThreadPool, cond, &ConditionObject::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
 				}
 			}
 			break;
