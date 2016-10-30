@@ -104,7 +104,7 @@ public:
    UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
    UINT32 deleteComment(UINT32 commentId);
 
-   bool checkCategoryAcl(DWORD userId, ClientSession *session) const;
+   bool checkCategoryAccess(ClientSession *session) const;
 };
 
 /**

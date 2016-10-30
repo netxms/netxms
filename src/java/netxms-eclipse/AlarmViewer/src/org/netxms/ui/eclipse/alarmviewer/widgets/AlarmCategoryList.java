@@ -85,7 +85,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
    private IStructuredSelection selection;
    private SortableTableViewer viewer;
    private ViewPart viewPart;
-   private HashMap<Long, AlarmCategory> alarmCategories;
+   private HashMap<Integer, AlarmCategory> alarmCategories;
 
    /**
     * @param viewPart
@@ -242,7 +242,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
                @Override
                public void run()
                {
-                  alarmCategories = new HashMap<Long, AlarmCategory>(list.size());
+                  alarmCategories = new HashMap<Integer, AlarmCategory>(list.size());
                   for(final AlarmCategory c : list)
                   {
                      alarmCategories.put(c.getId(), c);
@@ -430,7 +430,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
     */
    public void createCategory()
    {
-      AlarmCategory category = new AlarmCategory(-1);
+      AlarmCategory category = new AlarmCategory();
       PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, category);
       if (dlg != null)
       {
@@ -559,7 +559,7 @@ public class AlarmCategoryList extends Composite implements SessionListener
                   }
                   else
                   {
-                     alarmCategories.put(n.getSubCode(), (AlarmCategory)n.getObject());
+                     alarmCategories.put((int)n.getSubCode(), (AlarmCategory)n.getObject());
                      viewer.setInput(alarmCategories.values().toArray());
                   }
                }

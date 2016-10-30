@@ -27,8 +27,8 @@
  */
 static ObjectArray<Alarm> *m_alarmList;
 static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
-static RWLOCK lock = RWLockCreate();
-static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
+//static RWLOCK lock = RWLockCreate();
+static Condition m_condShutdown(true);
 static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -206,32 +206,18 @@ String Alarm::categoryListToString()
 }
 
 /**
- * Check alarm category acl
+ * Check alarm category access
  */
-bool Alarm::checkCategoryAcl(DWORD userId, ClientSession *session) const
+bool Alarm::checkCategoryAccess(ClientSession *session) const
 {
    if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
-   {
       return true;
-   }
 
-   RWLockReadLock(lock, INFINITE);
-   if (g_alarmCategoryAclMap->contains(userId))
+   for(int i = 0; i < m_alarmCategoryList->size(); i++)
    {
-      IntegerArray<UINT32> *categoryIds = g_alarmCategoryAclMap->get(userId);
-      for(int i = 0; i < categoryIds->size(); i++)
-      {
-         for(int n = 0; n < m_alarmCategoryList->size(); n++)
-         {
-            if (categoryIds->get(i) == m_alarmCategoryList->get(n))
-            {
-            return true;
-            }
-         }
-      }
+      if (CheckAlarmCategoryAccess(session->getUserId(), m_alarmCategoryList->get(i)))
+         return true;
    }
-   RWLockUnlock(lock);
-
    return false;
 }
 
@@ -996,7 +982,7 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
    {
       if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
+         if (m_alarmList->get(i)->checkCategoryAccess(session))
          {
             if ((m_alarmList->get(i)->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (m_alarmList->get(i)->getHelpDeskRef()[0] != 0))
             {
@@ -1199,7 +1185,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
       NetObj *pObject = FindObjectById(alarm->getSourceObject());
       if (pObject != NULL)
       {
-         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAcl(dwUserId, pSession))
+         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAccess(pSession))
          {
             alarm->fillMessage(&msg);
             pSession->sendMessage(&msg);
@@ -1227,7 +1213,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
    {
       if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
+         if (m_alarmList->get(i)->checkCategoryAccess(session))
          {
             dwRet = RCC_SUCCESS;
             break;
@@ -1257,7 +1243,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
    {
       if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
+         if (m_alarmList->get(i)->checkCategoryAccess(session))
          {
             dwRet = RCC_SUCCESS;
             break;
@@ -1369,9 +1355,9 @@ void GetAlarmStats(NXCPMessage *pMsg)
  */
 static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
-	while(1)
+	while(true)
 	{
-		if (ConditionWait(m_condShutdown, 1000))
+		if (m_condShutdown.wait(1000))
 			break;
 
 		MutexLock(m_mutex);
@@ -1746,7 +1732,6 @@ bool InitAlarmManager()
 {
    m_alarmList = new ObjectArray<Alarm>(64, 64, true);
    m_mutex = MutexCreate();
-	m_condShutdown = ConditionCreate(FALSE);
 	m_hWatchdogThread = INVALID_THREAD_HANDLE;
 
    DB_RESULT hResult;
@@ -1784,7 +1769,7 @@ bool InitAlarmManager()
  */
 void ShutdownAlarmManager()
 {
-	ConditionSet(m_condShutdown);
+	m_condShutdown.set();
 	ThreadJoin(m_hWatchdogThread);
    MutexDestroy(m_mutex);
    delete m_alarmList;

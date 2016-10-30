@@ -28,9 +28,9 @@
 static StringObjectMap<SchedulerCallback> s_callbacks(true);
 static ObjectArray<ScheduledTask> s_cronSchedules(5, 5, true);
 static ObjectArray<ScheduledTask> s_oneTimeSchedules(5, 5, true);
-static CONDITION s_wakeupCondition = ConditionCreate(false);
-static MUTEX s_cronScheduleLock = MutexCreate();
-static MUTEX s_oneTimeScheduleLock = MutexCreate();
+static Condition s_wakeupCondition(false);
+static Mutex s_cronScheduleLock;
+static Mutex s_oneTimeScheduleLock;
 
 /**
  * Scheduled task execution pool
@@ -221,7 +221,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
 
    if (oneTimeSchedule)
    {
-      MutexLock(s_oneTimeScheduleLock);
+      s_oneTimeScheduleLock.lock();
    }
 
    removeFlag(SCHEDULED_TASK_RUNNING);
@@ -230,7 +230,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
    if (oneTimeSchedule)
    {
       s_oneTimeSchedules.sort(ScheduledTaskComparator);
-      MutexUnlock(s_oneTimeScheduleLock);
+      s_oneTimeScheduleLock.unlock();
    }
 
    if (oneTimeSchedule && checkFlag(SCHEDULED_TASK_SYSTEM))
@@ -303,11 +303,11 @@ UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *p
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, params);
-   MutexLock(s_cronScheduleLock);
+   s_cronScheduleLock.lock();
    ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, schedule, params, owner, objectId, flags);
    sh->saveToDatabase(true);
    s_cronSchedules.add(sh);
-   MutexUnlock(s_cronScheduleLock);
+   s_cronScheduleLock.unlock();
    return RCC_SUCCESS;
 }
 
@@ -319,13 +319,13 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
-   MutexLock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.lock();
    ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, nextExecutionTime, params, owner, objectId, flags);
    sh->saveToDatabase(true);
    s_oneTimeSchedules.add(sh);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
-   MutexUnlock(s_oneTimeScheduleLock);
-   ConditionSet(s_wakeupCondition);
+   s_oneTimeScheduleLock.unlock();
+   s_wakeupCondition.set();
    return RCC_SUCCESS;
 }
 
@@ -335,7 +335,7 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
 UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags)
 {
    DbgPrintf(7, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
-   MutexLock(s_cronScheduleLock);
+   s_cronScheduleLock.lock();
    UINT32 rcc = RCC_SUCCESS;
    bool found = false;
    for (int i = 0; i < s_cronSchedules.size(); i++)
@@ -353,17 +353,17 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
          break;
       }
    }
-   MutexUnlock(s_cronScheduleLock);
+   s_cronScheduleLock.unlock();
 
    if (!found)
    {
-      //check in different que and if exists - remove from one and add to another
-      MutexLock(s_oneTimeScheduleLock);
-      for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+      //check in different queue and if exists - remove from one and add to another
+      s_oneTimeScheduleLock.lock();
+      for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          if (s_oneTimeSchedules.get(i)->getId() == id)
          {
-            if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+            if (!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
             {
                rcc = RCC_ACCESS_DENIED;
                break;
@@ -374,14 +374,14 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
             st->update(task, schedule, params, owner, objectId, flags);
             st->saveToDatabase(false);
 
-            MutexLock(s_cronScheduleLock);
+            s_cronScheduleLock.unlock();
             s_cronSchedules.add(st);
-            MutexUnlock(s_cronScheduleLock);
+            s_cronScheduleLock.unlock();
 
             break;
          }
       }
-      MutexUnlock(s_oneTimeScheduleLock);
+      s_oneTimeScheduleLock.unlock();
    }
 
    return rcc;
@@ -394,7 +394,7 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
 {
    DbgPrintf(7, _T("UpdateOneTimeAction: update one time schedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
    bool found = false;
-   MutexLock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.lock();
    UINT32 rcc = RCC_SUCCESS;
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
@@ -412,12 +412,12 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
          break;
       }
    }
-   MutexUnlock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.unlock();
 
    if (!found)
    {
       //check in different queue and if exists - remove from one and add to another
-      MutexLock(s_cronScheduleLock);
+      s_cronScheduleLock.lock();
       for (int i = 0; i < s_cronSchedules.size(); i++)
       {
          if (s_cronSchedules.get(i)->getId() == id)
@@ -432,20 +432,20 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
             st->update(task, nextExecutionTime, params, owner, objectId, flags);
             st->saveToDatabase(false);
 
-            MutexLock(s_oneTimeScheduleLock);
+            s_oneTimeScheduleLock.lock();
             s_oneTimeSchedules.add(st);
             s_oneTimeSchedules.sort(ScheduledTaskComparator);
-            MutexUnlock(s_oneTimeScheduleLock);
+            s_oneTimeScheduleLock.unlock();
 
             found = true;
             break;
          }
       }
-      MutexUnlock(s_cronScheduleLock);
+      s_cronScheduleLock.unlock();
    }
 
-   if(found)
-      ConditionSet(s_wakeupCondition);
+   if (found)
+      s_wakeupCondition.set();
    return rcc;
 }
 
@@ -471,7 +471,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
    bool found = false;
    UINT32 rcc = RCC_SUCCESS;
 
-   MutexLock(s_cronScheduleLock);
+   s_cronScheduleLock.lock();
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
       if (s_cronSchedules.get(i)->getId() == id)
@@ -486,7 +486,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
          break;
       }
    }
-   MutexUnlock(s_cronScheduleLock);
+   s_cronScheduleLock.unlock();
 
    if(found)
    {
@@ -494,7 +494,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
       return rcc;
    }
 
-   MutexLock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.lock();
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       if (s_oneTimeSchedules.get(i)->getId() == id)
@@ -510,11 +510,11 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
          break;
       }
    }
-   MutexUnlock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.unlock();
 
    if (found)
    {
-      ConditionSet(s_wakeupCondition);
+      s_wakeupCondition.set();
       DeleteScheduledTaskFromDB(id);
    }
    return rcc;
@@ -528,7 +528,7 @@ void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
    int scheduleCount = 0;
    int base = VID_SCHEDULE_LIST_BASE;
 
-   MutexLock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.lock();
    for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       if (s_oneTimeSchedules.get(i)->canAccess(userId, systemRights))
@@ -538,9 +538,9 @@ void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
          base += 10;
       }
    }
-   MutexUnlock(s_oneTimeScheduleLock);
+   s_oneTimeScheduleLock.unlock();
 
-   MutexLock(s_cronScheduleLock);
+   s_cronScheduleLock.lock();
    for(int i = 0; i < s_cronSchedules.size(); i++)
    {
       if (s_cronSchedules.get(i)->canAccess(userId, systemRights))
@@ -550,7 +550,7 @@ void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
          base += 10;
       }
    }
-   MutexUnlock(s_cronScheduleLock);
+   s_cronScheduleLock.unlock();
 
    msg->setField(VID_SCHEDULE_COUNT, scheduleCount);
 }
@@ -643,7 +643,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
    DbgPrintf(7, _T("OneTimeEventThread: started"));
    while(true)
    {
-      ConditionWait(s_wakeupCondition, sleepTime);
+      s_wakeupCondition.wait(sleepTime);
       if(g_flags & AF_SHUTDOWN)
          break;
 
@@ -651,7 +651,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
 
-      MutexLock(s_oneTimeScheduleLock);
+      s_oneTimeScheduleLock.lock();
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          ScheduledTask *sh = s_oneTimeSchedules.get(i);
@@ -700,7 +700,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
       }
 
       DbgPrintf(7, _T("OneTimeEventThread: thread will sleep for %d"), sleepTime);
-      MutexUnlock(s_oneTimeScheduleLock);
+      s_oneTimeScheduleLock.unlock();
    }
    DbgPrintf(3, _T("OneTimeEventThread: stopped"));
    return THREAD_OK;
@@ -755,7 +755,7 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
 
-      MutexLock(s_cronScheduleLock);
+      s_cronScheduleLock.lock();
       for(int i = 0; i < s_cronSchedules.size(); i++)
       {
          ScheduledTask *sh = s_cronSchedules.get(i);
@@ -773,7 +773,7 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
       }
-      MutexUnlock(s_cronScheduleLock);
+      s_cronScheduleLock.unlock();
    } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
    DbgPrintf(3, _T("CronCheckThread: stopped"));
    return THREAD_OK;
@@ -825,11 +825,8 @@ void InitializeTaskScheduler()
  */
 void CloseTaskScheduler()
 {
-   ConditionSet(s_wakeupCondition);
+   s_wakeupCondition.set();
    ThreadJoin(s_oneTimeEventThread);
    ThreadJoin(s_cronSchedulerThread);
-   ConditionDestroy(s_wakeupCondition);
    ThreadPoolDestroy(g_schedulerThreadPool);
-   MutexDestroy(s_cronScheduleLock);
-   MutexDestroy(s_oneTimeScheduleLock);
 }

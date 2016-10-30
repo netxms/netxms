@@ -2062,18 +2062,7 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      if (pRequest->getFieldAsUInt32(VID_FIELDS) & ALARM_MODIFY_CATEGORY)
-      {
-         msg.setField(VID_RCC, UpdateAlarmCategory(pRequest));
-      }
-      else if (pRequest->getFieldAsUInt32(VID_FIELDS) & ALARM_MODIFY_ACCESS_LIST)
-      {
-         msg.setField(VID_RCC, ModifyAlarmCategoryAcl(pRequest));
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_REQUEST);
-      }
+      msg.setField(VID_RCC, UpdateAlarmCategory(pRequest));
    }
    else
    {
@@ -5566,16 +5555,13 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
  */
 void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
 {
-   UPDATE_INFO *pUpdate;
-   NetObj *object;
-
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(alarm->getSourceObject());
+      NetObj *object = FindObjectById(alarm->getSourceObject());
       if (object != NULL)
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAcl(m_dwUserId, this))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAccess(this))
          {
-            pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+            UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
             pUpdate->dwCode = dwCode;
             pUpdate->pData = new Alarm(alarm, false);

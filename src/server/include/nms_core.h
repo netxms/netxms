@@ -1117,10 +1117,10 @@ void RunHouseKeeper();
  * Alarm category functions
  */
 void GetAlarmCategories(NXCPMessage *msg);
-UINT32 UpdateAlarmCategory(NXCPMessage *pRequest);
-UINT32 ModifyAlarmCategoryAcl(NXCPMessage *pRequest);
+UINT32 UpdateAlarmCategory(const NXCPMessage *request);
 UINT32 DeleteAlarmCategory(UINT32 id);
-void CacheAlarmCategoryAcl();
+bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
+void LoadAlarmCategories();
 
 /**
  * File monitoring
@@ -1201,7 +1201,5 @@ extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
-
-extern HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap;
 
 #endif   /* _nms_core_h_ */

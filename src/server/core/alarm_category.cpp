@@ -22,363 +22,383 @@
 
 #include "nxcore.h"
 
-static RWLOCK lock = RWLockCreate();
-
- /**
-  * Alarm category acl map
-  */
-HashMap<UINT32, IntegerArray<UINT32> > *g_alarmCategoryAclMap = new HashMap<UINT32, IntegerArray<UINT32> >(true);
-
 /**
-* Callback for sending alarm category configuration change notifications
-*/
-static void SendAlarmCategoryDBChangeNotification(ClientSession *session, void *arg)
-{
-   if (session->isAuthenticated())
-      session->postMessage((NXCPMessage *)arg);
-}
-/**
- * Get alarm categories from database
-*/
-void GetAlarmCategories(NXCPMessage *msg)
-{
-   if (!(g_flags & AF_DB_CONNECTION_LOST))
-   {
-      // Prepare data message
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,name,descr FROM alarm_categories"));
-      DB_RESULT hResultAcl = DBSelect(hdb, _T("SELECT category_id,user_id FROM alarm_category_acl"));
-
-      if (hResult != NULL && hResultAcl != NULL)
-      {
-         int base = VID_LOC_LIST_BASE;
-         int i;
-         UINT32 numRows = (UINT32)DBGetNumRows(hResult);
-         UINT32 numRowsAcl = (UINT32)DBGetNumRows(hResultAcl);
-         IntegerArray<UINT32> *dwUserId = new IntegerArray<UINT32>(16, 16);
-         for(i = 0; i < numRowsAcl; i++)
-         {
-            dwUserId->add(DBGetFieldULong(hResultAcl, i, 1));
-         }
-
-         TCHAR szBuffer[256];
-         UINT32 counter = 5+numRowsAcl;
-
-         msg->setField(VID_NUM_RECORDS, numRows);
-         msg->setField(VID_NUM_FIELDS, counter);
-
-         for (i = 0; i < numRows; i++, base+=counter)
-         {
-            msg->setField(base, DBGetFieldULong(hResult, i, 0));
-            msg->setField(base+1, DBGetField(hResult, i, 1, szBuffer, 64));
-            msg->setField(base+2, DBGetField(hResult, i, 2, szBuffer, 256));
-            msg->setFieldFromInt32Array(base+3, dwUserId);
-         }
-
-         DBFreeResult(hResult);
-         DBFreeResult(hResultAcl);
-         delete dwUserId;
-      }
-      else
-      {
-         msg->setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      msg->setField(VID_RCC, RCC_DB_CONNECTION_LOST);
-   }
-}
-
-/**
-* Update alarm category database
-*/
-UINT32 UpdateAlarmCategory(NXCPMessage *pRequest)
-{
-   UINT32 result = 0;
-   UINT32 newId = 0;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
-
-   // Check if category with specified name exists
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name FROM alarm_categories WHERE id!=? AND name=?"));
-   if (hStmt != NULL)
-   {
-      TCHAR name[64];
-      pRequest->getFieldAsString(VID_CATEGORY_NAME, name, 64);
-
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      UINT32 rowCount = (UINT32)DBGetNumRows(hResult);
-      DBFreeStatement(hStmt);
-      DBFreeResult(hResult);
-
-      // Prepare and execute SQL query
-      if (IsValidObjectName(name, FALSE))
-      {
-         if (rowCount == 0)
-         {
-            // If new category is created, the passed id == -1
-            if (dwCategoryId != -1)
-            {
-               hStmt = DBPrepare(hdb, _T("UPDATE alarm_categories SET name=?,descr=? WHERE id=?"));
-            }
-            else
-            {
-               hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_categories (name,descr,id) VALUES (?,?,?)"));
-            }
-
-            if(hStmt != NULL)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_CATEGORY_DESCRIPTION), DB_BIND_DYNAMIC, 255);
-
-               if (dwCategoryId != -1)
-               {
-                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, dwCategoryId);
-               }
-               else
-               {
-                  newId = CreateUniqueId(IDG_ALARM_CATEGORY);
-                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, newId);
-               }
-
-               if (DBExecute(hStmt))
-               {
-                  // Notify client for DB change
-                  NXCPMessage nmsg(pRequest);
-                  nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-                  nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ALARM_CATEGORY_UPDATE);
-
-                  if (newId != 0)
-                  {
-                     nmsg.setField(VID_CATEGORY_ID, newId);
-                  }
-
-                  EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
-                  DBFreeStatement(hStmt);
-
-                  result = RCC_SUCCESS;
-               }
-               else
-               {
-                  result = RCC_DB_FAILURE;
-               }
-            }
-            else
-            {
-               result = RCC_DB_FAILURE;
-            }
-         }
-         else
-         {
-            result = RCC_NAME_ALEARDY_EXISTS;
-         }
-      }
-      else
-      {
-         result = RCC_INVALID_OBJECT_NAME;
-      }
-   }
-   else
-   {
-      result = RCC_DB_FAILURE;
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-
-   return result;
-}
-
-/**
- * Modify alarm acl
+ * Alarm category
  */
-UINT32 ModifyAlarmCategoryAcl(NXCPMessage *pRequest)
+class AlarmCategory
 {
-   UINT32 result = 0;
-   UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
+private:
+   UINT32 m_id;
+   TCHAR *m_name;
+   TCHAR *m_description;
+   IntegerArray<UINT32> m_acl;
 
-   IntegerArray<UINT32> *userIds = new IntegerArray<UINT32>(16, 16);
-   pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, userIds);
+public:
+   AlarmCategory(UINT32 id);
+   AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache);
+   ~AlarmCategory();
 
+   UINT32 getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+
+   bool checkAccess(UINT32 userId) const { return m_acl.contains(userId); }
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void modifyFromMessage(const NXCPMessage *msg);
+   bool saveToDatabase() const;
+};
+
+/**
+ * Create new category
+ */
+AlarmCategory::AlarmCategory(UINT32 id)
+{
+   m_id = id;
+   m_name = NULL;
+   m_description = NULL;
+}
+
+/**
+ * Create category from DB record
+ */
+AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache)
+{
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_name = DBGetField(hResult, row, 1, NULL, 0);
+   m_description = DBGetField(hResult, row, 2, NULL, 0);
+
+   int i = 0;
+   while((i < aclCache->size()) && (aclCache->get(i) != m_id))
+      i += 2;
+   while((i < aclCache->size()) && (aclCache->get(i) == m_id))
+   {
+      m_acl.add(aclCache->get(i + 1));
+      i += 2;
+   }
+}
+
+/**
+ * Destructor
+ */
+AlarmCategory::~AlarmCategory()
+{
+   free(m_name);
+   free(m_description);
+}
+
+/**
+ * Fill message with alarm category data
+ */
+void AlarmCategory::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+{
+   msg->setField(baseId, m_id);
+   msg->setField(baseId + 1, m_name);
+   msg->setField(baseId + 2, m_description);
+   msg->setFieldFromInt32Array(baseId + 3, &m_acl);
+}
+
+/**
+ * Modify category from NXCP message
+ */
+void AlarmCategory::modifyFromMessage(const NXCPMessage *msg)
+{
+   UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
+
+   if (fields & ALARM_MODIFY_CATEGORY)
+   {
+      free(m_name);
+      m_name = msg->getFieldAsString(VID_NAME);
+
+      free(m_description);
+      m_description = msg->getFieldAsString(VID_DESCRIPTION);
+   }
+
+   if (fields & ALARM_MODIFY_ACCESS_LIST)
+   {
+      msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
+   }
+}
+
+/**
+ * Save category to database
+ */
+bool AlarmCategory::saveToDatabase() const
+{
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    bool success = DBBegin(hdb);
    if (success)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("alarm_categories"), _T("id"), m_id))
+         hStmt = DBPrepare(hdb, _T("UPDATE alarm_categories SET name=?,descr=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_categories (name,descr,id) VALUES (?,?,?)"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
+      }
 
-         hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
          if (hStmt != NULL)
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-            for (int i = 0; i < userIds->size(); i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userIds->get(i));
-               success = DBExecute(hStmt);
-               if (!success)
-               {
-                  break;
-               }
-            }
-
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            success = DBExecute(hStmt);
             DBFreeStatement(hStmt);
-            delete userIds;
          }
          else
          {
             success = false;
          }
       }
-      else
-      {
-         success = false;
-      }
 
       if (success)
       {
-         DBCommit(hdb);
-         CacheAlarmCategoryAcl();
-         result = RCC_SUCCESS;
+         hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_acl.size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_acl.get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
       }
+
+      if (success)
+         success = DBCommit(hdb);
       else
-      {
          DBRollback(hdb);
-         result = RCC_DB_FAILURE;
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
+ * Alarm categories
+ */
+static HashMap<UINT32, AlarmCategory> s_categories(true);
+static RWLock s_lock;
+
+/**
+ * Callback for sending alarm category configuration change notifications
+ */
+static void SendAlarmCategoryDBChangeNotification(ClientSession *session, void *arg)
+{
+   if (session->isAuthenticated())
+      session->postMessage((NXCPMessage *)arg);
+}
+
+/**
+ * Get alarm categories from database
+ */
+void GetAlarmCategories(NXCPMessage *msg)
+{
+   s_lock.readLock();
+   msg->setField(VID_NUM_ELEMENTS, s_categories.size());
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   Iterator<AlarmCategory> *it = s_categories.iterator();
+   while(it->hasNext())
+   {
+      AlarmCategory *c = it->next();
+      c->fillMessage(msg, fieldId);
+      fieldId += 10;
+   }
+   delete it;
+   s_lock.unlock();
+}
+
+/**
+* Update alarm category database
+*/
+UINT32 UpdateAlarmCategory(const NXCPMessage *request)
+{
+   UINT32 id = request->getFieldAsUInt32(VID_CATEGORY_ID);
+
+   TCHAR name[64];
+   request->getFieldAsString(VID_NAME, name, 64);
+   s_lock.readLock();
+   bool nameExists = false;
+   Iterator<AlarmCategory> *it = s_categories.iterator();
+   while(it->hasNext())
+   {
+      AlarmCategory *c = it->next();
+      if (!_tcsicmp(c->getName(), name) && (c->getId() != id))
+      {
+         nameExists = true;
+         break;
       }
+   }
+   delete it;
+   s_lock.unlock();
+   if (nameExists)
+      return RCC_NAME_ALEARDY_EXISTS;
+
+   AlarmCategory *category;
+   s_lock.writeLock();
+   if (id == 0)
+   {
+      id = CreateUniqueId(IDG_ALARM_CATEGORY);
+      category = new AlarmCategory(id);
+      s_categories.set(id, category);
    }
    else
    {
-      result = RCC_DB_FAILURE;
+      category = s_categories.get(id);
+      if (category == NULL)
+      {
+         s_lock.unlock();
+         return RCC_INVALID_OBJECT_ID;
+      }
    }
-   DBConnectionPoolReleaseConnection(hdb);
+   category->modifyFromMessage(request);
+   UINT32 rcc = category->saveToDatabase() ? RCC_SUCCESS : RCC_DB_FAILURE;
 
-   return result;
- }
+   // Notify client for DB change
+   if (rcc == RCC_SUCCESS)
+   {
+      NXCPMessage msg;
+      msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+      msg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_UPDATE);
+      category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &msg);
+   }
+
+   s_lock.unlock();
+   return rcc;
+}
 
 /**
 * Delete alarm category from database
 */
 UINT32 DeleteAlarmCategory(UINT32 id)
 {
-   UINT32 result = 0;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   // Check if category with specific ID exists
-   bool bCategoryExist = IsDatabaseRecordExist(hdb, _T("alarm_categories"), _T("id"), id);
-   bool success = DBBegin(hdb);
-
-   if (success)
+   UINT32 rcc;
+   s_lock.readLock();
+   if (s_categories.contains(id))
    {
-      // Prepare and execute SQL query
-      if (bCategoryExist)
+      s_lock.unlock();
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      bool success = DBBegin(hdb);
+      if (success)
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_categories WHERE id=?"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
             success = DBExecute(hStmt);
-
             DBFreeStatement(hStmt);
-            if (success)
-            {
-               NXCPMessage nmsg;
-               nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
-               nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
-               nmsg.setField(VID_CATEGORY_ID, id);
-               EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
-
-               // If category delete was successful, delete its acl as well
-               hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
-               if (hStmt != NULL)
-               {
-                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-                     success = DBExecute(hStmt);
-
-                     DBFreeStatement(hStmt);
-               }
-               else
-               {
-                  success = false;
-               }
-            }
          }
          else
          {
             success = false;
          }
-      }
-      else
-      {
-         success = false;
-      }
 
-      if (success)
-      {
-         result = RCC_SUCCESS;
-         DBCommit(hdb);
-      }
-      else
-      {
-         result = (!bCategoryExist) ? RCC_INVALID_OBJECT_ID : RCC_DB_FAILURE;
-         DBRollback(hdb);
+         if (success)
+         {
+            hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
+            if (hStmt != NULL)
+            {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+                  success = DBExecute(hStmt);
+                  DBFreeStatement(hStmt);
+            }
+            else
+            {
+               success = false;
+            }
+         }
+
+         if (success)
+         {
+            success = DBCommit(hdb);
+            if (success)
+            {
+               s_lock.writeLock();
+               s_categories.remove(id);
+               s_lock.unlock();
+
+               NXCPMessage nmsg;
+               nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+               nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
+               nmsg.setField(VID_CATEGORY_ID, id);
+               EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
+            }
+         }
+         else
+         {
+            DBRollback(hdb);
+         }
+         rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
       }
    }
    else
    {
-      result = RCC_DB_FAILURE;
+      s_lock.unlock();
+      rcc = RCC_INVALID_OBJECT_ID;
    }
-   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
 
+/**
+ * Check user access to alarm category
+ */
+bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId)
+{
+   bool result = false;
+   s_lock.readLock();
+   AlarmCategory *c = s_categories.get(categoryId);
+   if (c != NULL)
+   {
+      result = c->checkAccess(userId);
+   }
+   s_lock.unlock();
    return result;
 }
 
 /**
- * Cache alarm category acls
+ * Load alarm categories
  */
-void CacheAlarmCategoryAcl()
+void LoadAlarmCategories()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_id,category_id FROM alarm_category_acl ORDER BY user_id"));
 
+   IntegerArray<UINT32> aclCache(256, 256);
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT category_id,user_id FROM alarm_category_acl ORDER BY category_id"));
    if (hResult != NULL)
    {
-      UINT32 numRows = (UINT32)DBGetNumRows(hResult);
-      if (numRows > 0)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         IntegerArray<UINT32> *categoryIds = new IntegerArray<UINT32>(16, 16);
-         HashMap<UINT32, IntegerArray<UINT32> > *categoryAclTemp = new HashMap<UINT32, IntegerArray<UINT32> >(true);
-         delete(g_alarmCategoryAclMap);
-
-         DbgPrintf(7, _T("AlarmCategories: caching alarm category ACLs"));
-
-         UINT32 userId = DBGetFieldULong(hResult, 0, 0);
-         for(int i = 0; i < numRows; i++)
-         {
-            if (userId == DBGetFieldULong(hResult, i, 0))
-            {
-               categoryIds->add(DBGetFieldULong(hResult, i, 1));
-            }
-            else
-            {
-               categoryAclTemp->set(userId, categoryIds);
-               userId = DBGetFieldULong(hResult, i, 0);
-               categoryIds = new IntegerArray<UINT32>(16, 16);
-               categoryIds->add(DBGetFieldULong(hResult, i, 1));
-            }
-         }
-         categoryAclTemp->set(userId, categoryIds);
-
-         RWLockWriteLock(lock, INFINITE);
-         g_alarmCategoryAclMap = categoryAclTemp;
-         RWLockUnlock(lock);
+         aclCache.add(DBGetFieldULong(hResult, i, 0));
+         aclCache.add(DBGetFieldULong(hResult, i, 1));
       }
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, _T("SELECT id,name,descr FROM alarm_categories"));
+   if (hResult != NULL)
+   {
+      int numRows = DBGetNumRows(hResult);
+      s_lock.writeLock();
+      s_categories.clear();
+      for(int i = 0; i < numRows; i++)
+      {
+         AlarmCategory *c = new AlarmCategory(hResult, i, &aclCache);
+         s_categories.set(c->getId(), c);
+      }
+      s_lock.unlock();
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);

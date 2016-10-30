@@ -360,7 +360,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_REPOSITORY = 0x0152;
    public static final int CMD_GET_ALARM_CATEGORIES = 0x0153;
    public static final int CMD_MODIFY_ALARM_CATEGORY = 0x0154;
-   public static final int CMD_DELETE_CATEGORY = 0x0155;
+   public static final int CMD_DELETE_ALARM_CATEGORY = 0x0155;
    public static final int CMD_ALARM_CATEGORY_UPDATE = 0x0156;
    public static final int CMD_BULK_TERMINATE_ALARMS = 0x0157;
    public static final int CMD_BULK_RESOLVE_ALARMS = 0x0158;
@@ -482,7 +482,7 @@ public class NXCPCodes
 	public static final long VID_ACTION_DATA = 100;
 	public static final long VID_EMAIL_SUBJECT = 101;
 	public static final long VID_RCPT_ADDR = 102;
-	public static final long VID_CATEGORY_NAME = 103;
+//	public static final long VID_CATEGORY_NAME = 103;
 	public static final long VID_CATEGORY_ID = 104;
 	public static final long VID_DCI_DELTA_CALCULATION = 105;
 	public static final long VID_TRANSFORMATION_SCRIPT = 106;
@@ -932,11 +932,11 @@ public class NXCPCodes
    public static final long VID_LDAP_DN = 551;
    public static final long VID_LDAP_ID = 552;
    public static final long VID_FAIL_CODE_LIST = 553;
-   public static final long VID_CATEGORY_DESCRIPTION = 554;
+//   public static final long VID_CATEGORY_DESCRIPTION = 554;
    public static final long VID_ALARM_CATEGORY_ID = 555;
-   public static final long VID_NUM_ALARM_CATEGORIES = 556;
+//   public static final long VID_NUM_ALARM_CATEGORIES = 556;
    public static final long VID_ALARM_CATEGORY_ACL = 557;
-   public static final long VID_NUM_ALARM_CATEGORY_ACL = 558;
+//   public static final long VID_NUM_ALARM_CATEGORY_ACL = 558;
    public static final long VID_ALARM_ID_LIST = 559;
    public static final long VID_NUM_COMPONENTS = 560;
 
@@ -1034,5 +1034,4 @@ public class NXCPCodes
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
    public static final long VID_CALLBACK_BASE= 0x10000000L;
    public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
-   public static final long VID_CATEGORY_LIST_BASE= 0x10000000L;
 }

@@ -866,7 +866,7 @@ void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, size_t numElements, con
 /**
  * set binary field to an array of UINT32s
  */
-void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data)
+void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data)
 {
    UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), false, data->size() * sizeof(UINT32));
    if (pdwBuffer != NULL)

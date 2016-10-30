@@ -30,19 +30,17 @@ public class AlarmCategory
    public static final int MODIFY_ALARM_CATEGORY = 0x0001;
    public static final int MODIFY_ACCESS_CONTROL = 0x0002;
    
-   private long id;
+   private int id;
    private String name;
    private String description;
    private Long[] accessControl;
 
    /**
     * Create new empty alarm category.
-    * 
-    * @param id Alarm category ID
     */
-   public AlarmCategory(long id)
+   public AlarmCategory()
    {
-      this.id = id;
+      this.id = 0;
       name = "";
       description = "";
       accessControl = new Long[0];
@@ -53,22 +51,9 @@ public class AlarmCategory
     * 
     * @param msg NXCP message
     */
-   public AlarmCategory(final NXCPMessage msg)
-   {
-      id = msg.getFieldAsInt64(NXCPCodes.VID_CATEGORY_ID);
-      name = msg.getFieldAsString(NXCPCodes.VID_CATEGORY_NAME);
-      description = msg.getFieldAsString(NXCPCodes.VID_CATEGORY_DESCRIPTION);
-      accessControl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ACL);
-   }
-
-   /**
-    * Create alarm category from NXCP message
-    * 
-    * @param msg NXCP message
-    */
    public AlarmCategory(final NXCPMessage msg, long baseId)
    {
-      id = msg.getFieldAsInt64(baseId);
+      id = msg.getFieldAsInt32(baseId);
       name = msg.getFieldAsString(baseId + 1);
       description = msg.getFieldAsString(baseId + 2);
       accessControl = msg.getFieldAsUInt32ArrayEx(baseId + 3);
@@ -92,9 +77,9 @@ public class AlarmCategory
     */
    public void fillMessage(final NXCPMessage msg)
    {
-      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);
-      msg.setField(NXCPCodes.VID_CATEGORY_NAME, name);
-      msg.setField(NXCPCodes.VID_CATEGORY_DESCRIPTION, description);
+      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, id);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ACL, accessControl);
    }
 
@@ -146,19 +131,11 @@ public class AlarmCategory
    /**
     * @return the id
     */
-   public long getId()
+   public int getId()
    {
       return id;
    }
 
-   /**
-    * @param code the code to set
-    */
-   public void setId(long id)
-   {
-      this.id = id;
-   }
-   
    /**
     * @return Access List
     */

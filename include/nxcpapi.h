@@ -112,7 +112,7 @@ public:
 #endif
    void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
    void setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements);
-   void setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
+   void setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data);
    bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId) const;

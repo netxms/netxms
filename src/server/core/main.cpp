@@ -797,6 +797,7 @@ retry_db_lock:
 		return FALSE;
 
 	// Initialize alarms
+   LoadAlarmCategories();
 	if (!InitAlarmManager())
 		return FALSE;
 
@@ -843,9 +844,6 @@ retry_db_lock:
 		nxlog_write(MSG_CANNOT_FIND_SELF, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-
-	// Cache alarm category ACLs
-	CacheAlarmCategoryAcl();
 
 	// Start threads
 	ThreadCreate(WatchdogThread, 0, NULL);

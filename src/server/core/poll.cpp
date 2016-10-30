@@ -36,16 +36,16 @@ ThreadPool *g_pollerThreadPool = NULL;
  * Active pollers
  */
 static HashMap<UINT64, PollerInfo> s_pollers(false);
-static MUTEX s_pollerLock = MutexCreate();
+static Mutex s_pollerLock;
 
 /**
  * Poller info destructor - will unregister poller and decrease ref count on object
  */
 PollerInfo::~PollerInfo()
 {
-   MutexLock(s_pollerLock);
+   s_pollerLock.lock();
    s_pollers.remove(CAST_FROM_POINTER(this, UINT64));
-   MutexUnlock(s_pollerLock);
+   s_pollerLock.unlock();
    m_object->decRefCount();
 }
 
@@ -56,9 +56,9 @@ PollerInfo *RegisterPoller(PollerType type, NetObj *object)
 {
    PollerInfo *p = new PollerInfo(type, object);
    object->incRefCount();
-   MutexLock(s_pollerLock);
+   s_pollerLock.lock();
    s_pollers.set(CAST_FROM_POINTER(p, UINT64), p);
-   MutexUnlock(s_pollerLock);
+   s_pollerLock.unlock();
    return p;
 }
 
@@ -86,9 +86,9 @@ void ShowPollers(CONSOLE_CTX console)
 {
    ConsoleWrite(console, _T("Type | Object ID | Object name                    | Status\n")
                          _T("-----+-----------+--------------------------------+--------------------------\n"));
-   MutexLock(s_pollerLock);
+   s_pollerLock.lock();
    s_pollers.forEach(ShowPollerInfo, console);
-   MutexUnlock(s_pollerLock);
+   s_pollerLock.unlock();
 }
 
 /**

@@ -314,7 +314,7 @@ public class NXCSession
    private boolean eventTemplatesNeedSync = false;
    
    // Alarm categories
-   private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
+   private Map<Integer, AlarmCategory> alarmCategories = new HashMap<Integer, AlarmCategory>();
    private boolean alarmCategoriesNeedSync = false;
    
    /**
@@ -879,8 +879,8 @@ public class NXCSession
       private void processAlarmCategoryConfigChange(final NXCPMessage msg)
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
-         long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_CATEGORY_ID);
-         AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg) : null;
+         int categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
+         AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) : null;
          if (alarmCategoriesNeedSync)
          {
             synchronized(alarmCategories)
@@ -5700,12 +5700,12 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       ArrayList<AlarmCategory> list = new ArrayList<AlarmCategory>();
-      long baseId = NXCPCodes.VID_CATEGORY_LIST_BASE;
-      int records = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      int counter = response.getFieldAsInt32(NXCPCodes.VID_NUM_FIELDS);
-      for(int i = 0; i < records; i++, baseId+=counter)
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      for(int i = 0; i < count; i++)
       {
-         list.add(new AlarmCategory(response, baseId));
+         list.add(new AlarmCategory(response, fieldId));
+         fieldId += 10;
       }
       return list;
    }
@@ -5732,9 +5732,9 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAlarmCategory(long id) throws IOException, NXCException
+   public void deleteAlarmCategory(int id) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CATEGORY);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_CATEGORY);
       msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
