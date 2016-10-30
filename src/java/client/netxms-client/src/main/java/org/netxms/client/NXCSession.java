@@ -314,7 +314,7 @@ public class NXCSession
    private boolean eventTemplatesNeedSync = false;
    
    // Alarm categories
-   private Map<Integer, AlarmCategory> alarmCategories = new HashMap<Integer, AlarmCategory>();
+   private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
    private boolean alarmCategoriesNeedSync = false;
    
    /**
@@ -879,7 +879,7 @@ public class NXCSession
       private void processAlarmCategoryConfigChange(final NXCPMessage msg)
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
-         int categoryId = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
+         long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_CATEGORY_ID);
          AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) : null;
          if (alarmCategoriesNeedSync)
          {
@@ -5732,7 +5732,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAlarmCategory(int id) throws IOException, NXCException
+   public void deleteAlarmCategory(long id) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_CATEGORY);
       msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);

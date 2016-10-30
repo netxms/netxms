@@ -30,7 +30,7 @@ public class AlarmCategory
    public static final int MODIFY_ALARM_CATEGORY = 0x0001;
    public static final int MODIFY_ACCESS_CONTROL = 0x0002;
    
-   private int id;
+   private long id;
    private String name;
    private String description;
    private Long[] accessControl;
@@ -53,7 +53,7 @@ public class AlarmCategory
     */
    public AlarmCategory(final NXCPMessage msg, long baseId)
    {
-      id = msg.getFieldAsInt32(baseId);
+      id = msg.getFieldAsInt64(baseId);
       name = msg.getFieldAsString(baseId + 1);
       description = msg.getFieldAsString(baseId + 2);
       accessControl = msg.getFieldAsUInt32ArrayEx(baseId + 3);
@@ -77,7 +77,7 @@ public class AlarmCategory
     */
    public void fillMessage(final NXCPMessage msg)
    {
-      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, id);
+      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ACL, accessControl);
@@ -131,7 +131,7 @@ public class AlarmCategory
    /**
     * @return the id
     */
-   public int getId()
+   public long getId()
    {
       return id;
    }
