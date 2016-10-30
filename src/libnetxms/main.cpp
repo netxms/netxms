@@ -24,50 +24,41 @@
 #include "libnetxms.h"
 
 /**
- * Swap byte order in 64-bit integer
+ * Swap bytes in INT16 array or UCS-2 string
+ * Length -1 causes stop at first 0 value
  */
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-
-QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal)
+void LIBNETXMS_EXPORTABLE bswap_array_16(UINT16 *v, int len)
 {
-   QWORD qwResult;
-   BYTE *sptr = (BYTE *)&qwVal;
-   BYTE *dptr = (BYTE *)&qwResult + 7;
-   int i;
-
-   for(i = 0; i < 8; i++, sptr++, dptr--)
-      *dptr = *sptr;
-
-   return qwResult;
-}
-
-#endif
-
-/**
- * Swap bytes in double
- */
-double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
-{
-   double dResult;
-   BYTE *sptr = (BYTE *)&dVal;
-   BYTE *dptr = (BYTE *)&dResult + 7;
-   int i;
-
-   for(i = 0; i < 8; i++, sptr++, dptr--)
-      *dptr = *sptr;
-
-   return dResult;
+   if (len < 0)
+   {
+      for(UINT16 *p = v; *p != 0; p++)
+         *p = bswap_16(*p);
+   }
+   else
+   {
+      int count = 0;
+      for(UINT16 *p = v; count < len; p++, count++)
+         *p = bswap_16(*p);
+   }
 }
 
 /**
- * Swap bytes in wide string (UCS-2)
+ * Swap bytes in INT32 array or UCS-4 string
+ * Length -1 causes stop at first 0 value
  */
-void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr)
+void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len)
 {
-   UCS2CHAR *pch;
-
-   for(pch = pStr; *pch != 0; pch++)
-      *pch = htons(*pch);
+   if (len < 0)
+   {
+      for(UINT32 *p = v; *p != 0; p++)
+         *p = bswap_32(*p);
+   }
+   else
+   {
+      int count = 0;
+      for(UINT32 *p = v; count < len; p++, count++)
+         *p = bswap_32(*p);
+   }
 }
 
 #if !defined(_WIN32) && !defined(_NETWARE)

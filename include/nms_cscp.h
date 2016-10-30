@@ -94,7 +94,7 @@ typedef struct
    UINT32 fieldId;  // Field identifier
    BYTE type;       // Data type
    BYTE flags;      // flags (may by type-dependent)
-   WORD int16;
+   UINT16 int16;
    union
    {
       INT32 int32;
@@ -105,7 +105,7 @@ typedef struct
       struct
       {
          UINT32 length;
-         WORD value[1]; // actual size depends on length value
+         UINT16 value[1]; // actual size depends on length value
       } string;
       struct
       {

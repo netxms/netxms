@@ -51,38 +51,69 @@
 #define ntohq(x) (x)
 #define htond(x) (x)
 #define ntohd(x) (x)
-#define SwapWideString(x)
+#define SwapUCS2String(x)
 #else
-#ifdef HAVE_HTONLL
+#if HAVE_HTONLL
 #define htonq(x) htonll(x)
 #else
-#define htonq(x) __bswap_64(x)
+#define htonq(x) bswap_64(x)
 #endif
-#ifdef HAVE_NTOHLL
+#if HAVE_NTOHLL
 #define ntohq(x) ntohll(x)
 #else
-#define ntohq(x) __bswap_64(x)
+#define ntohq(x) bswap_64(x)
 #endif
-#define htond(x) __bswap_double(x)
-#define ntohd(x) __bswap_double(x)
-#define SwapWideString(x)  __bswap_wstr(x)
+#define htond(x) bswap_double(x)
+#define ntohd(x) bswap_double(x)
+#define SwapUCS2String(x) bswap_array_16((x), -1)
 #endif
 
 #ifdef __cplusplus
-extern "C" {
-#endif
 
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
-UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
-#endif
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
-#endif
-double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
-void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
-
-#ifdef __cplusplus
+#if !(HAVE_DECL_BSWAP_16)
+inline UINT16 bswap_16(UINT16 val)
+{
+   return (val >> 8) | ((val << 8) & 0xFF00);
 }
+#endif
+
+#if !(HAVE_DECL_BSWAP_32)
+inline UINT32 bswap_32(UINT32 val)
+{
+   UINT32 result;
+   BYTE *sptr = (BYTE *)&val;
+   BYTE *dptr = (BYTE *)&result + 7;
+   for(int i = 0; i < 4; i++, sptr++, dptr--)
+      *dptr = *sptr;
+   return result;
+}
+#endif
+
+#if !(HAVE_DECL_BSWAP_64)
+inline UINT64 bswap_64(UINT64 val)
+{
+   UINT64 result;
+   BYTE *sptr = (BYTE *)&val;
+   BYTE *dptr = (BYTE *)&result + 7;
+   for(int i = 0; i < 8; i++, sptr++, dptr--)
+      *dptr = *sptr;
+   return result;
+}
+#endif
+
+inline double bswap_double(double val)
+{
+   double result;
+   BYTE *sptr = (BYTE *)&val;
+   BYTE *dptr = (BYTE *)&result + 7;
+   for(int i = 0; i < 8; i++, sptr++, dptr--)
+      *dptr = *sptr;
+   return result;
+}
+
+void LIBNETXMS_EXPORTABLE bswap_array_16(UINT16 *v, int len);
+void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
+
 #endif
 
 

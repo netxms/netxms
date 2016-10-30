@@ -1987,7 +1987,7 @@ AC_RUN_IFELSE(
 # Checks for macros and definitions
 #--------------------------------------------------------------------
 
-AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
+AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64, htonll, ntohll],,,[
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

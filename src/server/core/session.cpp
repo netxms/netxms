@@ -4308,7 +4308,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 #else
             mb_to_ucs2(value.getString(), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
-            SwapWideString(pCurr->value.string);
+            SwapUCS2String(pCurr->value.string);
             break;
       }
       pData->numRows = 1;
@@ -4428,7 +4428,7 @@ read_from_db:
                      DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
                      mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
-                     SwapWideString(pCurr->value.string);
+                     SwapUCS2String(pCurr->value.string);
                      break;
                }
 				}
@@ -4469,7 +4469,7 @@ read_from_db:
 #else
 		                     mb_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
-		                     SwapWideString(pCurr->value.string);
+		                     SwapUCS2String(pCurr->value.string);
 		                     break;
 		               }
 				         delete table;

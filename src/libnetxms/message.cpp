@@ -192,8 +192,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
             case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
                entry->data.df_string.length = ntohl(entry->data.df_string.length);
-               for(i = 0; i < entry->data.df_string.length / 2; i++)
-                  entry->data.df_string.value[i] = ntohs(entry->data.df_string.value[i]);
+               bswap_array_16(entry->data.df_string.value, entry->data.df_string.length / 2);
 #endif
                break;
             case NXCP_DT_BINARY:
@@ -798,8 +797,7 @@ NXCP_MESSAGE *NXCPMessage::createMessage() const
             case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
                {
-                  for(UINT32 i = 0; i < field->df_string.length / 2; i++)
-                     field->df_string.value[i] = htons(field->df_string.value[i]);
+                  bswap_array_16(field->df_string.value, field->df_string.length / 2);
                   field->df_string.length = htonl(field->df_string.length);
                }
 #endif
@@ -1046,8 +1044,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
          case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
             convertedField->df_string.length = ntohl(convertedField->df_string.length);
-            for(i = 0; i < (int)convertedField->df_string.length / 2; i++)
-               convertedField->df_string.value[i] = ntohs(convertedField->df_string.value[i]);
+            bswap_array_16(convertedField->df_string.value, (int)convertedField->df_string.length / 2);
 #endif
             str = GetStringFromField((BYTE *)convertedField + 8);
             out.appendFormattedString(_T("  ** [%6d] STRING   \"%s\"\n"), (int)convertedField->fieldId, str);

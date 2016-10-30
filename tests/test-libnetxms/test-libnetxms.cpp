@@ -639,6 +639,52 @@ static void TestTable()
 }
 
 /**
+ * Test byte swap
+ */
+static void TestByteSwap()
+{
+   StartTest(_T("bswap_16"));
+   AssertEquals(bswap_16(0xABCD), 0xCDAB);
+   EndTest();
+
+   StartTest(_T("bswap_32"));
+   AssertEquals(bswap_32(0x0102ABCD), 0xCDAB0201);
+   EndTest();
+
+   StartTest(_T("bswap_64"));
+   AssertEquals(bswap_64(_ULL(0x01020304A1A2A3A4)), _ULL(0xA4A3A2A104030201));
+   EndTest();
+
+   StartTest(_T("bswap_array_16"));
+   UINT16 s16[] = { 0xABCD, 0x1020, 0x2233, 0x0102 };
+   UINT16 d16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201 };
+   bswap_array_16(s16, 4);
+   AssertTrue(!memcmp(s16, d16, 8));
+   EndTest();
+
+   StartTest(_T("bswap_array_16 (string)"));
+   UINT16 ss16[] = { 0xABCD, 0x1020, 0x2233, 0x0102, 0 };
+   UINT16 sd16[] = { 0xCDAB, 0x2010, 0x3322, 0x0201, 0 };
+   bswap_array_16(ss16, -1);
+   AssertTrue(!memcmp(ss16, sd16, 10));
+   EndTest();
+
+   StartTest(_T("bswap_array_32"));
+   UINT32 s32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304 };
+   UINT32 d32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201 };
+   bswap_array_32(s32, 4);
+   AssertTrue(!memcmp(s32, d32, 16));
+   EndTest();
+
+   StartTest(_T("bswap_array_32 (string)"));
+   UINT32 ss32[] = { 0xABCDEF01, 0x10203040, 0x22334455, 0x01020304, 0 };
+   UINT32 sd32[] = { 0x01EFCDAB, 0x40302010, 0x55443322, 0x04030201, 0 };
+   bswap_array_32(ss32, -1);
+   AssertTrue(!memcmp(ss32, sd32, 20));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -663,6 +709,7 @@ int main(int argc, char *argv[])
    TestMutexWrapper();
    TestRWLockWrapper();
    TestConditionWrapper();
+   TestByteSwap();
 
    MsgWaitQueue::shutdown();
    return 0;
