@@ -30,6 +30,12 @@
 #endif
 
 /**
+ * Additional message name resolvers
+ */
+static Array s_resolvers(4, 4, false);
+static Mutex s_resolversLock;
+
+/**
  * Get symbolic name for message code
  */
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
@@ -384,10 +390,45 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
    };
 
    if ((code >= CMD_LOGIN) && (code <= CMD_BULK_ALARM_STATE_CHANGE))
+   {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
+   }
    else
-      _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
+   {
+      bool resolved = false;
+      s_resolversLock.lock();
+      for(int i = 0; i < s_resolvers.size(); i++)
+         if (((NXCPMessageNameResolver)s_resolvers.get(i))(code, pszBuffer))
+         {
+            resolved = true;
+            break;
+         }
+      s_resolversLock.unlock();
+      if (!resolved)
+         _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
+   }
    return pszBuffer;
+}
+
+/**
+ * Register NXCP message name resolver
+ */
+void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r)
+{
+   s_resolversLock.lock();
+   if (s_resolvers.indexOf((void *)r) == -1)
+      s_resolvers.add((void *)r);
+   s_resolversLock.unlock();
+}
+
+/**
+ * Unregister NXCP message name resolver
+ */
+void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResolver r)
+{
+   s_resolversLock.lock();
+   s_resolvers.remove((void *)r);
+   s_resolversLock.unlock();
 }
 
 /**

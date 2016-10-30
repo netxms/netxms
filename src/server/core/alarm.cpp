@@ -27,7 +27,6 @@
  */
 static ObjectArray<Alarm> *m_alarmList;
 static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
-//static RWLOCK lock = RWLockCreate();
 static Condition m_condShutdown(true);
 static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
 
