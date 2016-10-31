@@ -348,7 +348,9 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *src);
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *src);
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *src);
 char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *src);
+char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *src);
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src);
+char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *src);
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src);
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *src);
 
