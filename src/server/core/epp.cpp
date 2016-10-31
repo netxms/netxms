@@ -44,7 +44,6 @@ EPRule::EPRule(UINT32 id)
    m_pScript = NULL;
 	m_dwAlarmTimeout = 0;
 	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
-	m_alarmCategoryCount = 0;
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
 	m_dwSituationId = 0;
 	m_szSituationInstance[0] = 0;
@@ -232,11 +231,11 @@ EPRule::EPRule(NXCPMessage *msg)
  */
 EPRule::~EPRule()
 {
-   safe_free(m_pdwSourceList);
-   safe_free(m_pdwEventList);
-   safe_free(m_pdwActionList);
-   safe_free(m_pszComment);
-   safe_free(m_pszScript);
+   free(m_pdwSourceList);
+   free(m_pdwEventList);
+   free(m_pdwActionList);
+   free(m_pszComment);
+   free(m_pszScript);
    delete m_alarmCategoryList;
    delete m_pScript;
 }

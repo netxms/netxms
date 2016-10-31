@@ -157,7 +157,6 @@ private:
    TCHAR m_szAlarmKey[MAX_DB_STRING];
 	UINT32 m_dwAlarmTimeout;
 	UINT32 m_dwAlarmTimeoutEvent;
-	UINT32 m_alarmCategoryCount;
 	IntegerArray<UINT32> *m_alarmCategoryList;
 
 	UINT32 m_dwSituationId;
