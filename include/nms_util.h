@@ -65,7 +65,7 @@
 #endif
 #define htond(x) bswap_double(x)
 #define ntohd(x) bswap_double(x)
-#define SwapUCS2String(x) bswap_array_16((x), -1)
+#define SwapUCS2String(x) bswap_array_16((UINT16 *)(x), -1)
 #endif
 
 #ifdef __cplusplus

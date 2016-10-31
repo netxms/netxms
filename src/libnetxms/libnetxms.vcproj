@@ -366,6 +366,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cc_mb.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cc_ucs2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cc_ucs4.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cc_utf8.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\config.cpp"
 				>
 			</File>
@@ -669,6 +685,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\unicode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\unicode_cc.h"
 				>
 			</File>
 			<File

@@ -37,7 +37,7 @@
  * Housekeeper data
  */
 Mutex MsgWaitQueue::m_housekeeperLock;
-HashMap<UINT64, MsgWaitQueue> MsgWaitQueue::m_activeQueues(false);
+HashMap<UINT64, MsgWaitQueue> *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
 Condition MsgWaitQueue::m_shutdownCondition(true);
 THREAD MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
@@ -66,7 +66,7 @@ MsgWaitQueue::MsgWaitQueue()
 
    // register new queue
    m_housekeeperLock.lock();
-   m_activeQueues.set(CAST_FROM_POINTER(this, UINT64), this);
+   m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
       m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
@@ -81,7 +81,7 @@ MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
    m_housekeeperLock.lock();
-   m_activeQueues.remove(CAST_FROM_POINTER(this, UINT64));
+   m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
    m_housekeeperLock.unlock();
 
    clear();
@@ -382,7 +382,7 @@ THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
    while(!m_shutdownCondition.wait(TTL_CHECK_INTERVAL))
    {
       m_housekeeperLock.lock();
-      m_activeQueues.forEach(MsgWaitQueue::houseKeeperCallback, NULL);
+      m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback, NULL);
       m_housekeeperLock.unlock();
    }
    return THREAD_OK;
@@ -398,6 +398,7 @@ void MsgWaitQueue::shutdown()
    m_housekeeperLock.lock();
    m_housekeeperThread = INVALID_THREAD_HANDLE;
    m_housekeeperLock.unlock();
+   delete m_activeQueues;
 }
 
 /**
@@ -419,13 +420,13 @@ String MsgWaitQueue::getDiagInfo()
 {
    String out;
    m_housekeeperLock.lock();
-   out.append(m_activeQueues.size());
+   out.append(m_activeQueues->size());
    out.append(_T(" active queues\nHousekeeper thread state is "));
    out.append((m_housekeeperThread != INVALID_THREAD_HANDLE) ? _T("RUNNING\n") : _T("STOPPED\n"));
-   if (m_activeQueues.size() > 0)
+   if (m_activeQueues->size() > 0)
    {
       out.append(_T("Active queues:\n"));
-      m_activeQueues.forEach(MsgWaitQueue::diagInfoCallback, &out);
+      m_activeQueues->forEach(MsgWaitQueue::diagInfoCallback, &out);
    }
    m_housekeeperLock.unlock();
    return out;

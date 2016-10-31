@@ -130,8 +130,6 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
  */
 NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
 {
-   UINT32 i;
-
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
    m_id = ntohl(msg->id);

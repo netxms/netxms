@@ -345,6 +345,10 @@
 				RelativePath=".\test-libnetxms.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\threads.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

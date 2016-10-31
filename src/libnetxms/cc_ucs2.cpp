@@ -44,7 +44,7 @@ static int __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *ds
  */
 int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen)
 {
-#ifndef __DISABLE_ICONV
+#if !defined(__DISABLE_ICONV) && !defined(_WIN32)
    iconv_t cd;
    const char *inbuf;
    char *outbuf;

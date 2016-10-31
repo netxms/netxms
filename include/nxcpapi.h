@@ -211,7 +211,7 @@ private:
    void housekeeperRun();
 
    static Mutex m_housekeeperLock;
-   static HashMap<UINT64, MsgWaitQueue> m_activeQueues;
+   static HashMap<UINT64, MsgWaitQueue> *m_activeQueues;
    static Condition m_shutdownCondition;
    static THREAD m_housekeeperThread;
    static EnumerationCallbackResult houseKeeperCallback(const void *key, const void *object, void *arg);

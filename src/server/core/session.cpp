@@ -2053,9 +2053,6 @@ void ClientSession::getAlarmCategories(UINT32 requestId)
 void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   UINT32 dwCategoryId;
-
-   // Prepare reply message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
