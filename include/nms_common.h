@@ -201,6 +201,10 @@ typedef int bool;
 
 #define HAVE_ALLOCA             1
 
+#define HAVE_WCSLEN             1
+#define HAVE_WCSNCPY            1
+#define HACE_WCSDUP             1
+
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
 #endif

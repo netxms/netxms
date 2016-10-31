@@ -71,51 +71,10 @@
 
 #endif	/* UNICODE */
 
-#define ucs2_strlen	wcslen
-#define ucs2_strdup	wcsdup
-#define ucs2_strncpy	wcsncpy
-
-#define ucs2_to_mb(wstr, wlen, mstr, mlen)	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, wlen, mstr, mlen, NULL, NULL)
-#define mb_to_ucs2(mstr, mlen, wstr, wlen)	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, mlen, wstr, wlen)
-
 #define UCS2CHAR	WCHAR
+#define UCS4CHAR  unsigned int
 
-#elif defined(__SYMBIAN32__)
-
-// Ensure that both UNICODE and _UNICODE are defined
-#ifdef _UNICODE
-#ifndef UNICODE
-#define UNICODE
-#endif
-#endif
-
-#ifdef UNICODE
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#endif
-
-// Symbian always use UCS-2
-#define UNICODE_UCS2				1
-
-#define TCHAR     TText
-#define WCHAR     TText16
-#define UCS2CHAR  TText16
-
-#ifdef UNICODE
-#define _T(x)     L##x
-#else
-#define _T(x)     x
-#endif
-
-#else    /* not _WIN32 and __SYMBIAN32__ */
-
-#if defined(_NETWARE) && defined(__GNUC__) && defined(__cplusplus)
-#define _WCHAR_T
-#define _WCHAR_T_DEFINED
-#define wchar_t unsigned short
-#endif
-
+#else    /* not _WIN32 */
 
 #if HAVE_WCHAR_H
 #include <wchar.h>
@@ -130,40 +89,20 @@
 #define WCHAR     wchar_t
 #if UNICODE_UCS2
 #define UCS2CHAR  wchar_t
+#define UCS4CHAR  unsigned int
 #else
 #define UCS2CHAR  unsigned short
+#define UCS4CHAR  wchar_t
 #endif
 
 #else	/* wchar_t not presented */
 
 #define WCHAR     unsigned short
 #define UCS2CHAR  unsigned short
+#define UCS4CHAR  unsigned int
 #undef UNICODE_UCS2
 #undef UNICODE_UCS4
 #define UNICODE_UCS2 1
-
-#endif
-
-// Use system wide character functions if system's wchar_t is 2 bytes long
-#if UNICODE_UCS2
-
-#if HAVE_WCSLEN
-#define ucs2_strlen	wcslen
-#else
-#define wcslen          ucs2_strlen
-#endif
-
-#if HAVE_WCSDUP
-#define ucs2_strdup	wcsdup
-#else
-#define wcsdup          ucs2_strdup
-#endif
-
-#if HAVE_WCSNCPY
-#define ucs2_strncpy	wcsncpy
-#else
-#define wcsncpy         ucs2_strncpy
-#endif
 
 #endif
 
@@ -360,19 +299,11 @@
 
 #endif	/* _WIN32 */
 
-// Define UCS2-specific helper functions as define to wide string helper functions if possible
-#if UNICODE_UCS2
-#define UCS2StringFromMBString	WideStringFromMBString
-#define MBStringFromUCS2String	MBStringFromWideString
-#endif
-
-
 #ifdef UNICODE
 #define _t_inet_addr    inet_addr_w
 #else
 #define _t_inet_addr    inet_addr
 #endif
-
 
 // Check that either UNICODE_UCS2 or UNICODE_UCS4 are defined
 #if !defined(UNICODE_UCS2) && !defined(UNICODE_UCS4)
@@ -380,4 +311,3 @@
 #endif
 
 #endif   /* _unicode_h_ */
-
