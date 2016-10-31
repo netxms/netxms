@@ -340,8 +340,8 @@ UINT32 DeleteAlarmCategory(UINT32 id)
          {
             DBRollback(hdb);
          }
-         rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
       }
+      rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
    }
    else
    {

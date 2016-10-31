@@ -284,15 +284,27 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
    if (vm != NULL)
    {
       if(object != NULL)
-         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+      {
+         vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+         if (object->getObjectClass() == OBJECT_NODE)
+            vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
+      }
       if (vm->run(&args))
       {
-			nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"), param->m_params, object->getName(), object->getId());
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
+                        param->m_params, object->getName(), object->getId());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), param->m_params);
       }
       else
       {
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
-                     param->m_params, object->getName(), object->getId(), vm->getErrorText());
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
+                        param->m_params, object->getName(), object->getId(), vm->getErrorText());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
+                        param->m_params, vm->getErrorText());
       }
       delete vm;
    }
