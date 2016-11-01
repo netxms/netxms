@@ -13,7 +13,7 @@
 - SMS driver for Nexmo service
 - SMS driver for SMSEagle gateway
 - Fixed FDB handling on Cisco switches
-- Added support for CHAP and MS-CHAPv1 in RADIUS authentication
+- Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
 - Fixed issues: #130, #953, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326
 
 

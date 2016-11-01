@@ -738,6 +738,7 @@ static bool CanRetry(int result)
 #ifdef _WITH_ENCRYPTION
 #include <openssl/rand.h>
 #include <openssl/md4.h>
+#include <openssl/sha.h>
 #include <openssl/des.h>
 
 /**
@@ -770,6 +771,21 @@ static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHas
       DES_set_key_unchecked(&k, &ks);
       DES_ecb_encrypt((DES_cblock *)challenge, (DES_cblock *)&response[i * 8], &ks, DES_ENCRYPT);
    }
+}
+
+/**
+ * Calculate MS-CHAPv2 challenge
+ */
+static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChallenge, const char *login, BYTE *challenge)
+{
+   SHA_CTX ctx;
+   SHA1_Init(&ctx);
+   SHA1_Update(&ctx, peerChallenge, 16);
+   SHA1_Update(&ctx, authChallenge, 16);
+   SHA1_Update(&ctx, login, strlen(login));
+   BYTE hash[SHA1_DIGEST_SIZE];
+   SHA1_Final(hash, &ctx);
+   memcpy(challenge, hash, 8);
 }
 
 #endif
@@ -874,6 +890,29 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
       memset(&response[2], 0, 24);   // LM challenge response
       MsChapChallengeResponse(challenge, passwdHash, &response[26]);
       PAIR_ADD_VENDOR_LEN(VENDOR_MICROSOFT, PW_MS_CHAP_RESPONSE, response, 50);
+   }
+   else if (!stricmp(authMethod, "MS-CHAPv2"))
+   {
+      BYTE authChallenge[16];
+      RAND_bytes(authChallenge, 16);
+      PAIR_ADD_VENDOR_LEN(VENDOR_MICROSOFT, PW_MS_CHAP_CHALLENGE, authChallenge, 16);
+
+      UCS2CHAR upasswd[256];
+      utf8_to_ucs2(passwd, -1, upasswd, 256);
+
+      BYTE passwdHash[21];
+      NtPasswordHash(upasswd, passwdHash);
+      memset(&passwdHash[16], 0, 5);
+
+      BYTE response[50];
+      response[0] = (BYTE)(rand() % 255);
+      response[1] = 0;
+      RAND_bytes(&response[2], 16);  // peer challenge
+      memset(&response[18], 0, 8);   // reserved bytes
+      BYTE challenge[8];
+      MsChap2ChallengeHash(&response[2], authChallenge, login, challenge);
+      MsChapChallengeResponse(challenge, passwdHash, &response[26]);
+      PAIR_ADD_VENDOR_LEN(VENDOR_MICROSOFT, PW_MS_CHAP2_RESPONSE, response, 50);
    }
 #endif
    else
