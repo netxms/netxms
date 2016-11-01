@@ -1,5 +1,8 @@
 # vim:ts=3:sw=3
 
+radiusdir=$(pkgdatadir)
+radius_DATA = radius.dict
+
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
@@ -64,4 +67,5 @@ endif
 
 EXTRA_DIST = \
 	nxcore.vcproj \
-	nxcore.h radius.h
+	nxcore.h radius.h \
+	radius.dict
