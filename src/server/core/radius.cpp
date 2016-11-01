@@ -25,6 +25,62 @@
 
 #include "nxcore.h"
 
+#ifdef _WITH_ENCRYPTION
+
+#include <openssl/rand.h>
+#include <openssl/md4.h>
+#include <openssl/sha.h>
+#include <openssl/des.h>
+
+/**
+ * Calculate NT password hash
+ */
+static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
+{
+   MD4_CTX ctx;
+   MD4_Init(&ctx);
+   MD4_Update(&ctx, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
+   MD4_Final(hash, &ctx);
+}
+
+/**
+ * Encrypt given 8 byte data block using DES
+ */
+static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHash, BYTE *response)
+{
+   for(int i = 0; i < 3; i++)
+   {
+      const BYTE *ki = &passwdHash[i * 7];
+      DES_cblock k;
+      k[0] = ki[0];
+      for(int b = 1; b < 7; b++)
+         k[b] = (ki[b - 1] << (8 - b)) | (ki[b] >> b);
+      k[7] = ki[6] << 1;
+      DES_set_odd_parity(&k);
+
+      DES_key_schedule ks;
+      DES_set_key_unchecked(&k, &ks);
+      DES_ecb_encrypt((DES_cblock *)challenge, (DES_cblock *)&response[i * 8], &ks, DES_ENCRYPT);
+   }
+}
+
+/**
+ * Calculate MS-CHAPv2 challenge
+ */
+static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChallenge, const char *login, BYTE *challenge)
+{
+   SHA_CTX ctx;
+   SHA1_Init(&ctx);
+   SHA1_Update(&ctx, peerChallenge, 16);
+   SHA1_Update(&ctx, authChallenge, 16);
+   SHA1_Update(&ctx, login, strlen(login));
+   BYTE hash[SHA1_DIGEST_SIZE];
+   SHA1_Final(hash, &ctx);
+   memcpy(challenge, hash, 8);
+}
+
+#endif /* _WITH_ENCRYPTION */
+
 #if !USE_RADCLI
 
 #include "radius.h"
@@ -332,7 +388,7 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 }
 
 
-/*
+/**
  * void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp);
  *
  * Encrypts vp->strvalue using style vp->flags.encrypt, possibly using 
@@ -340,7 +396,6 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
  *
  * This should always succeed.
  */
-
 static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 {
 	switch(vp->flags.encrypt)
@@ -604,7 +659,7 @@ static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int
 /**
  * Authenticate user via RADIUS using primary or secondary server
  */
-static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSecondaryServer, char *serverName)
+static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName)
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
@@ -642,20 +697,116 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 
 	// User name
 	vp = paircreate(PW_USER_NAME, PW_TYPE_STRING, "User-Name");
-	strncpy(vp->strvalue, cLogin, AUTH_STRING_LEN);
-	vp->length = min((int)strlen(cLogin), AUTH_STRING_LEN);
+	strncpy(vp->strvalue, login, AUTH_STRING_LEN);
+	vp->length = min((int)strlen(login), AUTH_STRING_LEN);
 	pairadd(&req, vp);
 
-	// Password
-	vp = paircreate(PW_PASSWORD, PW_TYPE_STRING, "User-Password");
-	vp->length = rad_pwencode(cPasswd, vp->strvalue, szSecret, (char *)auth->vector);
-	pairadd(&req, vp);
+   char authMethod[16];
+   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "CHAP");
+	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
+   if (!stricmp(authMethod, "PAP"))
+   {
+	   vp = paircreate(PW_PASSWORD, PW_TYPE_STRING, "User-Password");
+	   vp->length = rad_pwencode(passwd, vp->strvalue, szSecret, (char *)auth->vector);
+	   pairadd(&req, vp);
+   }
+   else if (!stricmp(authMethod, "CHAP"))
+   {
+      char challenge[16];
+#ifdef _WITH_ENCRYPTION
+      RAND_bytes((BYTE *)challenge, 16);
+#else
+      for(int i = 0; i < 16; i++)
+         challenge[i] = (char)(rand() % 256);
+#endif
+      vp = paircreate(PW_CHAP_CHALLENGE, PW_TYPE_STRING, "CHAP-Challenge");
+	   memcpy(vp->strvalue, challenge, 16);
+	   vp->length = 16;
+	   pairadd(&req, vp);
+
+      BYTE temp[256];
+      temp[0] = (BYTE)(rand() % 255);
+      size_t pwdlen = strlen(passwd);
+      memcpy(&temp[1], passwd, pwdlen);
+      memcpy(&temp[pwdlen + 1], challenge, 16);
+
+      char response[17];
+      response[0] = (char)temp[0];
+      CalculateMD5Hash(temp, pwdlen + 17, (BYTE *)&response[1]);
+      vp = paircreate(PW_CHAP_PASSWORD, PW_TYPE_STRING, "CHAP-Password");
+	   memcpy(vp->strvalue, response, 17);
+	   vp->length = 17;
+	   pairadd(&req, vp);
+   }
+#ifdef _WITH_ENCRYPTION
+   else if (!stricmp(authMethod, "MS-CHAPv1"))
+   {
+      BYTE challenge[8];
+      RAND_bytes(challenge, 8);
+      vp = paircreate(PW_MS_CHAP_CHALLENGE, PW_TYPE_STRING, "MS-CHAP-Challenge");
+	   memcpy(vp->strvalue, challenge, 8);
+	   vp->length = 8;
+	   pairadd(&req, vp);
+
+      UCS2CHAR upasswd[256];
+      utf8_to_ucs2(passwd, -1, upasswd, 256);
+
+      BYTE passwdHash[21];
+      NtPasswordHash(upasswd, passwdHash);
+      memset(&passwdHash[16], 0, 5);
+
+      BYTE response[50];
+      response[0] = (BYTE)(rand() % 255);
+      response[1] = 1;
+      memset(&response[2], 0, 24);   // LM challenge response
+      MsChapChallengeResponse(challenge, passwdHash, &response[26]);
+      vp = paircreate(PW_MS_CHAP_RESPONSE, PW_TYPE_STRING, "MS-CHAP-Response");
+	   memcpy(vp->strvalue, response, 50);
+	   vp->length = 50;
+	   pairadd(&req, vp);
+   }
+   else if (!stricmp(authMethod, "MS-CHAPv2"))
+   {
+      BYTE authChallenge[16];
+      RAND_bytes(authChallenge, 16);
+      vp = paircreate(PW_MS_CHAP_CHALLENGE, PW_TYPE_STRING, "MS-CHAP-Challenge");
+	   memcpy(vp->strvalue, authChallenge, 16);
+	   vp->length = 16;
+	   pairadd(&req, vp);
+
+      UCS2CHAR upasswd[256];
+      utf8_to_ucs2(passwd, -1, upasswd, 256);
+
+      BYTE passwdHash[21];
+      NtPasswordHash(upasswd, passwdHash);
+      memset(&passwdHash[16], 0, 5);
+
+      BYTE response[50];
+      response[0] = (BYTE)(rand() % 255);
+      response[1] = 0;
+      RAND_bytes(&response[2], 16);  // peer challenge
+      memset(&response[18], 0, 8);   // reserved bytes
+      BYTE challenge[8];
+      MsChap2ChallengeHash(&response[2], authChallenge, login, challenge);
+      MsChapChallengeResponse(challenge, passwdHash, &response[26]);
+      vp = paircreate(PW_MS_CHAP2_RESPONSE, PW_TYPE_STRING, "MS-CHAP2-Response");
+	   memcpy(vp->strvalue, response, 50);
+	   vp->length = 50;
+	   pairadd(&req, vp);
+   }
+#endif
+   else
+   {
+      nxlog_debug(3, _T("RADIUS: unknown authentication method %hs"), authMethod);
+		pairfree(req);
+		return 11;
+   }
 
 	// Resolve hostname.
 	InetAddress serverAddr = InetAddress::resolveHostName(serverName);
 	if (!serverAddr.isValidUnicast())
 	{
-		DbgPrintf(3, _T("RADIUS: cannot resolve server name \"%hs\""), serverName);
+		nxlog_debug(3, _T("RADIUS: cannot resolve server name \"%hs\""), serverName);
 		pairfree(req);
 		return 3;
 	}
@@ -664,7 +815,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	sockfd = socket(serverAddr.getFamily(), SOCK_DGRAM, 0);
 	if (sockfd == INVALID_SOCKET)
 	{
-		DbgPrintf(3, _T("RADIUS: Cannot create socket"));
+		nxlog_debug(3, _T("RADIUS: Cannot create socket"));
 		pairfree(req);
 		return 5;
 	}
@@ -673,8 +824,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	serverAddr.fillSockAddr(&sa, port);
 
 	// Build final radius packet.
-	length = rad_build_packet(auth, sizeof(send_buffer),
-			req, NULL, szSecret, (char *)auth->vector, send_buffer);
+	length = rad_build_packet(auth, sizeof(send_buffer), req, NULL, szSecret, (char *)auth->vector, send_buffer);
 	memcpy(vector, auth->vector, sizeof(vector));
 	pairfree(req);
 
@@ -683,7 +833,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	{
 		if (i > 0)
 		{
-			DbgPrintf(3, _T("RADIUS: Re-sending request..."));
+			nxlog_debug(5, _T("RADIUS: Re-sending request..."));
 		}
 		sendto(sockfd, (char *)auth, length, 0, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa));
 
@@ -729,65 +879,10 @@ static bool CanRetry(int result)
    return (result == 3) || (result == 7) || (result == 10); // Bad server name, timeout, comm. error, or server not configured
 }
 
-#else
+#else /* USE_RADCLI */
 
 #if HAVE_RADCLI_RADCLI_H
 #include <radcli/radcli.h>
-#endif
-
-#ifdef _WITH_ENCRYPTION
-#include <openssl/rand.h>
-#include <openssl/md4.h>
-#include <openssl/sha.h>
-#include <openssl/des.h>
-
-/**
- * Calculate NT password hash
- */
-static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
-{
-   MD4_CTX ctx;
-   MD4_Init(&ctx);
-   MD4_Update(&ctx, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
-   MD4_Final(hash, &ctx);
-}
-
-/**
- * Encrypt given 8 byte data block using DES
- */
-static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHash, BYTE *response)
-{
-   for(int i = 0; i < 3; i++)
-   {
-      const BYTE *ki = &passwdHash[i * 7];
-      DES_cblock k;
-      k[0] = ki[0];
-      for(int b = 1; b < 7; b++)
-         k[b] = (ki[b - 1] << (8 - b)) | (ki[b] >> b);
-      k[7] = ki[6] << 1;
-      DES_set_odd_parity(&k);
-
-      DES_key_schedule ks;
-      DES_set_key_unchecked(&k, &ks);
-      DES_ecb_encrypt((DES_cblock *)challenge, (DES_cblock *)&response[i * 8], &ks, DES_ENCRYPT);
-   }
-}
-
-/**
- * Calculate MS-CHAPv2 challenge
- */
-static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChallenge, const char *login, BYTE *challenge)
-{
-   SHA_CTX ctx;
-   SHA1_Init(&ctx);
-   SHA1_Update(&ctx, peerChallenge, 16);
-   SHA1_Update(&ctx, authChallenge, 16);
-   SHA1_Update(&ctx, login, strlen(login));
-   BYTE hash[SHA1_DIGEST_SIZE];
-   SHA1_Final(hash, &ctx);
-   memcpy(challenge, hash, 8);
-}
-
 #endif
 
 /**
@@ -844,6 +939,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 
    char authMethod[16];
    ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "CHAP");
+	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {
       PAIR_ADD(PW_USER_PASSWORD, passwd);
@@ -917,7 +1013,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 #endif
    else
    {
-      nxlog_debug(4, _T("RADIUS: unknown authentication method %hs"), authMethod);
+      nxlog_debug(3, _T("RADIUS: unknown authentication method %hs"), authMethod);
       rc_destroy(rh);
       rc_avpair_free(request);
       return ERROR_RC;
