@@ -167,6 +167,13 @@ typedef int bool;
 
 /********** WINDOWS ********************/
 
+#ifdef _MSC_FULL_VER
+#define __BUILD_VERSION_STRING(s,v) s v
+#define __STR_NX(x) #x
+#define __STR(x) __STR_NX(x)
+#define CPP_COMPILER_VERSION __STR(__BUILD_VERSION_STRING(Microsoft C/C++ Optimizing Compiler Version,_MSC_FULL_VER))
+#endif
+
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT		0x0501
 #endif

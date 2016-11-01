@@ -111,9 +111,32 @@ inline double bswap_double(double val)
    return result;
 }
 
+#else
+
+#if !(HAVE_DECL_BSWAP_16)
+UINT16 LIBNETXMS_EXPORTABLE __bswap_16(UINT16 val);
+#define bswap_16 __bswap_16
+#endif
+
+#if !(HAVE_DECL_BSWAP_32)
+UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 val);
+#define bswap_32 __bswap_32
+#endif
+
+#if !(HAVE_DECL_BSWAP_64)
+UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 val);
+#define bswap_64 __bswap_64
+#endif
+
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void LIBNETXMS_EXPORTABLE bswap_array_16(UINT16 *v, int len);
 void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
-
+#ifdef __cplusplus
+}
 #endif
 
 

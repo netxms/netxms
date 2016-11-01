@@ -24,6 +24,30 @@
 #include "libnetxms.h"
 
 /**
+ * Wrappers for byte swap functions for C code linking
+ */
+#if !(HAVE_DECL_BSWAP_16)
+extern "C" UINT16 LIBNETXMS_EXPORTABLE __bswap_16(UINT16 val)
+{
+   return bswap_16(val);
+}
+#endif
+
+#if !(HAVE_DECL_BSWAP_32)
+extern "C" UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 val)
+{
+   return bswap_32(val);
+}
+#endif
+
+#if !(HAVE_DECL_BSWAP_64)
+extern "C" UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 val)
+{
+   return bswap_64(val);
+}
+#endif
+
+/**
  * Swap bytes in INT16 array or UCS-2 string
  * Length -1 causes stop at first 0 value
  */

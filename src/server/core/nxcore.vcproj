@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\alarm_category.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ap_config.cpp"
 				>
 			</File>
