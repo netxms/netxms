@@ -1615,6 +1615,22 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 	fi
 fi
 
+
+#--------------------------------------------------------------------
+# Checks for RADIUS client library
+#--------------------------------------------------------------------
+
+if test "x$BUILD_SERVER" = "xyes" ; then
+	AC_CHECK_HEADERS([radcli/radcli.h])
+	if test "x$ac_cv_header_radcli_radcli_h" = "xyes"; then
+		AC_CHECK_LIB(radcli, rc_auth, [
+			SERVER_LIBS="$SERVER_LIBS -lradcli"
+			AC_DEFINE(USE_RADCLI, 1, Define to 1 if radcli is used as RADIUS client)
+		])
+	fi
+fi
+
+
 #--------------------------------------------------------------------
 # Checks for other libs.
 #--------------------------------------------------------------------
