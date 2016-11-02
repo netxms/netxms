@@ -44,17 +44,10 @@
 #include <aclapi.h>
 #endif
 
-
 /**
  * Version
  */
-
-#ifdef _DEBUG
-#define DEBUG_SUFFIX          _T("-debug")
-#else
-#define DEBUG_SUFFIX          _T("")
-#endif
-#define AGENT_VERSION_STRING  NETXMS_VERSION_STRING DEBUG_SUFFIX
+#define AGENT_VERSION_STRING  NETXMS_BUILD_TAG
 
 /**
  * Default files
@@ -85,7 +78,6 @@
 #define AGENT_DEFAULT_DATA_DIR   _T("{default}")
 #endif
 
-
 /**
  * Constants
  */
@@ -101,7 +93,6 @@
 #define MAX_SERVERS        32
 #define MAX_ESA_USER_NAME  64
 #define MAX_AGENT_MSG_SIZE 4194304
-
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002
@@ -148,7 +139,6 @@
 #define MEMINFO_VIRTUAL_TOTAL       8
 #define MEMINFO_VIRTUAL_USED        9
 #define MEMINFO_VIRTUAL_USED_PCT    10
-
 
 /**
  * Request types for H_DiskInfo
