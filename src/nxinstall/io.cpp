@@ -28,7 +28,7 @@
  */
 NXSL_FileClass::NXSL_FileClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("FILE"));
+   setName(_T("FILE"));
 }
 
 NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
