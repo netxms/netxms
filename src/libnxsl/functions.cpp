@@ -425,7 +425,7 @@ public:
  */
 NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("TIME"));
+   setName(_T("TIME"));
 }
 
 /**

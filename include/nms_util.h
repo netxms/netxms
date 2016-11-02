@@ -850,7 +850,9 @@ public:
 	int size() const { return m_count; }
 	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
 	int indexOf(const TCHAR *value) const;
+	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
 	int indexOfIgnoreCase(const TCHAR *value) const;
+   bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
 	void remove(int index);
    void addAll(const StringList *src);
    void merge(const StringList *src, bool matchCase);

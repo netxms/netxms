@@ -841,8 +841,27 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
  */
 int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
+   if ((argc != 1) && (argc != 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(_T("NetObj")))
+      return NXSL_ERR_NOT_INTEGER;
+
+   UINT32 objectId = 0;
+   if (argc == 2)
+   {
+      if (argv[1]->isInteger())
+      {
+         objectId = argv[1]->getValueAsUInt32();
+      }
+      else
+      {
+         ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+      }
+   }
 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
@@ -852,7 +871,7 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleCheckCount(argv[0]->getValueAsCString()));
+   *result = new NXSL_Value(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }
@@ -862,8 +881,24 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
  */
 int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (!argv[0]->isString())
-      return NXSL_ERR_NOT_STRING;
+   if ((argc != 1) && (argc != 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc == 2) && !argv[1]->isInteger() && !argv[1]->isObject(_T("NetObj")))
+      return NXSL_ERR_NOT_INTEGER;
+
+   UINT32 objectId = 0;
+   if (argc == 2)
+   {
+      if (argv[1]->isInteger())
+      {
+         objectId = argv[1]->getValueAsUInt32();
+      }
+      else
+      {
+         ((NetObj *)argv[1]->getValueAsObject()->getData())->getId();
+      }
+   }
 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
@@ -873,7 +908,7 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleMatchCount(argv[0]->getValueAsCString()));
+   *result = new NXSL_Value(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }

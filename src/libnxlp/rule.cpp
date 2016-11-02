@@ -57,6 +57,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_resetRepeat = resetRepeat;
 	m_checkCount = 0;
 	m_matchCount = 0;
+   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
 }
 
 /**
@@ -95,8 +96,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    {
       m_matchArray = new IntegerArray<time_t>();
    }
-   m_checkCount = src->m_checkCount;
-   m_matchCount = src->m_matchCount;
+   m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
+   restoreCounters(src);
 }
 
 /**
@@ -115,6 +116,7 @@ LogParserRule::~LogParserRule()
 	free(m_context);
 	free(m_contextToChange);
 	delete m_matchArray;
+	delete m_objectCounters;
 }
 
 /**
@@ -123,7 +125,7 @@ LogParserRule::~LogParserRule()
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 								          const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
 {
-   m_checkCount++;
+   incCheckCount(objectId);
    if (extMode)
    {
 	   if (m_source != NULL)
@@ -164,7 +166,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, 
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
-			m_matchCount++;
+			incMatchCount(objectId);
 			return true;
 		}
 	}
@@ -212,7 +214,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 #endif
 
 			}
-         m_matchCount++;
+         incMatchCount(objectId);
 			return true;
 		}
 	}
@@ -307,10 +309,79 @@ bool LogParserRule::matchRepeatCount()
 }
 
 /**
+ * Increment check count
+ */
+void LogParserRule::incCheckCount(UINT32 objectId)
+{
+   m_checkCount++;
+   if (objectId == 0)
+      return;
+   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   if (s == NULL)
+   {
+      s = new ObjectRuleStats();
+      m_objectCounters->set(objectId, s);
+   }
+   s->checkCount++;
+}
+
+/**
+ * Increment match count
+ */
+void LogParserRule::incMatchCount(UINT32 objectId)
+{
+   m_matchCount++;
+   if (objectId == 0)
+      return;
+   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   if (s == NULL)
+   {
+      s = new ObjectRuleStats();
+      m_objectCounters->set(objectId, s);
+   }
+   s->matchCount++;
+}
+
+/**
+ * Get check count for specfic object
+ */
+int LogParserRule::getCheckCount(UINT32 objectId) const
+{
+   if (objectId == 0)
+      return m_checkCount;
+   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   return (s != NULL) ? s->checkCount : 0;
+}
+
+/**
+ * Get match count for specfic object
+ */
+int LogParserRule::getMatchCount(UINT32 objectId) const
+{
+   if (objectId == 0)
+      return m_matchCount;
+   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   return (s != NULL) ? s->matchCount : 0;
+}
+
+/**
+ * Callback for copying object counters
+ */
+static EnumerationCallbackResult RestoreCountersCallback(const void *key, const void *value, void *arg)
+{
+   ObjectRuleStats *s = new ObjectRuleStats;
+   s->checkCount = ((const ObjectRuleStats *)value)->checkCount;
+   s->matchCount = ((const ObjectRuleStats *)value)->matchCount;
+   ((HashMap<UINT32, ObjectRuleStats> *)arg)->set(*((UINT32 *)key), s);
+   return _CONTINUE;
+}
+
+/**
  * Restore counters from previous rule version
  */
 void LogParserRule::restoreCounters(const LogParserRule *rule)
 {
    m_checkCount = rule->m_checkCount;
    m_matchCount = rule->m_matchCount;
+   rule->m_objectCounters->forEach(RestoreCountersCallback, m_objectCounters);
 }

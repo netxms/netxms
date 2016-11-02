@@ -83,6 +83,15 @@ typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const T
 class LIBNXLP_EXPORTABLE LogParser;
 
 /**
+ * Per object rule statistics
+ */
+struct ObjectRuleStats
+{
+   int checkCount;
+   int matchCount;
+};
+
+/**
  * Log parser rule
  */
 class LIBNXLP_EXPORTABLE LogParserRule
@@ -115,11 +124,14 @@ private:
 	bool m_resetRepeat;
 	int m_checkCount;
 	int m_matchCount;
+	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, String &out);
+   void incCheckCount(UINT32 objectId);
+   void incMatchCount(UINT32 objectId);
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
@@ -174,8 +186,8 @@ public:
 
 	const TCHAR *getRegexpSource() const { return CHECK_NULL(m_regexp); }
 
-	int getCheckCount() const { return m_checkCount; }
-   int getMatchCount() const { return m_matchCount; }
+   int getCheckCount(UINT32 objectId = 0) const;
+   int getMatchCount(UINT32 objectId = 0) const;
 
    void restoreCounters(const LogParserRule *rule);
 };
@@ -278,8 +290,8 @@ public:
    void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
 
-   int getRuleCheckCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getCheckCount() : -1; }
-   int getRuleMatchCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount() : -1; }
+   int getRuleCheckCount(const TCHAR *ruleName, UINT32 objectId = 0) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getCheckCount(objectId) : -1; }
+   int getRuleMatchCount(const TCHAR *ruleName, UINT32 objectId = 0) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount(objectId) : -1; }
 
    void restoreCounters(const LogParser *parser);
 };

@@ -135,7 +135,7 @@ NXSL_METHOD_DEFINITION(Table, set)
  */
 NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("Table"));
+   setName(_T("Table"));
 
    NXSL_REGISTER_METHOD(Table, addColumn, 1);
    NXSL_REGISTER_METHOD(Table, addRow, 0);
@@ -220,7 +220,7 @@ void NXSL_StaticTableClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_TableColumnClass::NXSL_TableColumnClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("TableColumn"));
+   setName(_T("TableColumn"));
 }
 
 /**

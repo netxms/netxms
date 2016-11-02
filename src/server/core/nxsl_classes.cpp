@@ -146,7 +146,7 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
  */
 NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("NetObj"));
+   setName(_T("NetObj"));
 
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
@@ -248,7 +248,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
  */
 NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("Zone"));
+   setName(_T("Zone"));
 }
 
 /**
@@ -356,7 +356,7 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("Node"));
+   setName(_T("Node"));
 
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
@@ -589,7 +589,7 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("Interface"));
+   setName(_T("Interface"));
 
    NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
    NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
@@ -802,7 +802,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
  */
 NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("MobileDevice"));
+   setName(_T("MobileDevice"));
 }
 
 /**
@@ -856,7 +856,7 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *at
  */
 NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("Chassis"));
+   setName(_T("Chassis"));
 }
 
 /**
@@ -942,7 +942,7 @@ NXSL_METHOD_DEFINITION(Cluster, getResourceOwner)
  */
 NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
 {
-   _tcscpy(m_name, _T("Cluster"));
+   setName(_T("Cluster"));
 
    NXSL_REGISTER_METHOD(Cluster, getResourceOwner, 1);
 }
@@ -1048,7 +1048,7 @@ NXSL_METHOD_DEFINITION(Event, toJson)
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("Event"));
+   setName(_T("Event"));
 
    NXSL_REGISTER_METHOD(Event, setMessage, 1);
    NXSL_REGISTER_METHOD(Event, setSeverity, 1);
@@ -1177,7 +1177,7 @@ NXSL_METHOD_DEFINITION(Alarm, terminate)
  */
 NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("Alarm"));
+   setName(_T("Alarm"));
 
    NXSL_REGISTER_METHOD(Alarm, acknowledge, 0);
    NXSL_REGISTER_METHOD(Alarm, resolve, 0);
@@ -1276,7 +1276,7 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("DCI"));
+   setName(_T("DCI"));
 }
 
 /**
@@ -1352,7 +1352,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
  */
 NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
 {
-	_tcscpy(m_name, _T("SNMP_Transport"));
+	setName(_T("SNMP_Transport"));
 }
 
 /**
@@ -1386,7 +1386,7 @@ void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
-	_tcscpy(m_name, _T("SNMP_VarBind"));
+	setName(_T("SNMP_VarBind"));
 }
 
 /**

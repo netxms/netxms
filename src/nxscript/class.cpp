@@ -39,7 +39,7 @@ NXSL_METHOD_DEFINITION(Test, quote)
 
 NXSL_TestClass::NXSL_TestClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("Test"));
+   setName(_T("Test"));
    NXSL_REGISTER_METHOD(Test, debug, 0);
    NXSL_REGISTER_METHOD(Test, quote, 1);
 }

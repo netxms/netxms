@@ -104,9 +104,14 @@ struct NXSL_ExtMethod
  */
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
-protected:
+private:
    TCHAR m_name[MAX_CLASS_NAME];
+   StringList m_classHierarchy;
+
+protected:
    StringObjectMap<NXSL_ExtMethod> *m_methods;
+
+   void setName(const TCHAR *name);
 
 public:
    NXSL_Class();
@@ -120,7 +125,8 @@ public:
    virtual void onObjectCreate(NXSL_Object *object);
 	virtual void onObjectDelete(NXSL_Object *object);
 
-   const TCHAR *getName() { return m_name; }
+   const TCHAR *getName() const { return m_name; }
+   bool instanceOf(const TCHAR *name) const { return !_tcscmp(name, m_name) || m_classHierarchy.contains(name); }
 };
 
 /**

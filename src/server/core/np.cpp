@@ -43,7 +43,7 @@ public:
  */
 NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("NewNode"));
+   setName(_T("NewNode"));
 }
 
 NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)

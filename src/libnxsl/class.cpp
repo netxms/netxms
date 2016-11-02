@@ -28,7 +28,7 @@
  */
 NXSL_Class::NXSL_Class()
 {
-   _tcscpy(m_name, _T("generic"));
+   setName(_T("Object"));
    m_methods = new StringObjectMap<NXSL_ExtMethod>(true);
    m_methods->setIgnoreCase(false);
 }
@@ -39,6 +39,15 @@ NXSL_Class::NXSL_Class()
 NXSL_Class::~NXSL_Class()
 {
    delete m_methods;
+}
+
+/**
+ * Set class name. Should be called only from constructor.
+ */
+void NXSL_Class::setName(const TCHAR *name)
+{
+   nx_strncpy(m_name, name, MAX_CLASS_NAME);
+   m_classHierarchy.add(name);
 }
 
 /**

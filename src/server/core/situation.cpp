@@ -478,7 +478,7 @@ public:
 NXSL_SituationClass::NXSL_SituationClass()
                     :NXSL_Class()
 {
-   _tcscpy(m_name, _T("Situation"));
+   setName(_T("Situation"));
 }
 
 NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)

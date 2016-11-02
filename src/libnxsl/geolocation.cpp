@@ -34,7 +34,7 @@ NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
  */
 NXSL_GeoLocationClass::NXSL_GeoLocationClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("GeoLocation"));
+   setName(_T("GeoLocation"));
 }
 
 /**

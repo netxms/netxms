@@ -1290,7 +1290,7 @@ bool NXSL_Value::isObject(const TCHAR *className) const
 	if (m_nDataType != NXSL_DT_OBJECT)
 		return false;
 
-	return !_tcscmp(m_value.object->getClass()->getName(), className) ? true : false;
+	return m_value.object->getClass()->instanceOf(className);
 }
 
 /**
