@@ -29,6 +29,8 @@ escape		\\[bnrt0\"\\]
 #define YY_EXTRA_TYPE	NXSL_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->lexerInput(buf, maxSize); }
 
+#define YY_NO_UNPUT
+
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 

@@ -30,6 +30,7 @@ Query::Query()
    m_name = NULL;
    m_dbid = NULL;
    m_query = NULL;
+   m_interval = 60;
    m_lastPoll = 0;
    m_status = QUERY_STATUS_UNKNOWN;
    _tcscpy(m_statusText, _T("UNKNOWN"));
@@ -45,10 +46,10 @@ Query::Query()
  */
 Query::~Query()
 {
-   safe_free(m_name);
-   safe_free(m_dbid);
-   safe_free(m_query);
-   safe_free(m_description);
+   free(m_name);
+   free(m_dbid);
+   free(m_query);
+   free(m_description);
    if (m_result != NULL)
       DBFreeResult(m_result);
    MutexDestroy(m_mutex);
@@ -169,12 +170,12 @@ Query *Query::createFromConfig(const TCHAR *src)
 
    // Rest is SQL query
    query->m_query = _tcsdup(curr);
-   safe_free(config);
    query->m_pollRequired = true;
+   free(config);
    return query;
 
 fail:
-   safe_free(config);
+   free(config);
    delete query;
    return NULL;
 }
