@@ -63,7 +63,8 @@
 #define DDIR_IMAGES           _T("\\images")
 #define DDIR_FILES            _T("\\files")
 
-#define DDIR_TEMPLATES        _T("\\templates")
+#define SDIR_TEMPLATES        _T("\\templates")
+#define SFILE_RADDICT         _T("\\radius.dict")
 
 #else    /* _WIN32 */
 
@@ -96,7 +97,8 @@
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
 
-#define DDIR_TEMPLATES        _T("/templates")
+#define SDIR_TEMPLATES        _T("/templates")
+#define SFILE_RADDICT         _T("/radius.dict")
 
 #endif   /* _WIN32 */
 

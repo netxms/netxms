@@ -918,7 +918,16 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
    rc_handle *rh = rc_new();
    if (rc_config_init(rh) == NULL)
       return ERROR_RC;
-   if (rc_read_dictionary(rh, "/opt/netxms/share/netxms/radius.dict") != 0)
+   TCHAR dictionaryFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, dictionaryFile);
+   _tcscat(dictionaryFile, SFILE_RADDICT);
+#ifdef UNICODE
+   char dictionaryFileUTF8[MAX_PATH];
+   WideCharToMultiByte(CP_UTF8, 0, dictionaryFile, -1, dictionaryFileUTF8, MAX_PATH, NULL, NULL);
+   if (rc_read_dictionary(rh, dictionaryFileUTF8) != 0)
+#else
+   if (rc_read_dictionary(rh, dictionaryFile) != 0)
+#endif
       return ERROR_RC;  // rc_read_dictionary will destroy rh on failure
 
    char connectString[1024];

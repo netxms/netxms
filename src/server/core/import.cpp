@@ -567,7 +567,7 @@ void ImportLocalConfiguration()
 {
    TCHAR path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
-   _tcscat(path, DDIR_TEMPLATES);
+   _tcscat(path, SDIR_TEMPLATES);
 
    int count = 0;
    DbgPrintf(1, _T("Import configuration files from %s"), path);
