@@ -325,7 +325,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.TimedOutRequests"), H_UIntPtr, (TCHAR *)&m_dwTimedOutRequests, DCI_DT_UINT, DCIDESC_AGENT_TIMEDOUTREQUESTS },
    { _T("Agent.UnsupportedRequests"), H_UIntPtr, (TCHAR *)&m_dwUnsupportedRequests, DCI_DT_UINT, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },
    { _T("Agent.Uptime"), H_AgentUptime, NULL, DCI_DT_UINT, DCIDESC_AGENT_UPTIME },
-   { _T("Agent.Version"), H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
+   { _T("Agent.Version"), H_StringConstant, NETXMS_BUILD_TAG, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
    { _T("File.FolderCount(*)"), H_DirInfo, (TCHAR *)DIRINFO_FOLDER_COUNT, DCI_DT_UINT, DCIDESC_FILE_FOLDERCOUNT },
    { _T("File.Hash.CRC32(*)"), H_CRC32, NULL, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },

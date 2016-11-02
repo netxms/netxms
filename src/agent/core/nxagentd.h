@@ -45,11 +45,6 @@
 #endif
 
 /**
- * Version
- */
-#define AGENT_VERSION_STRING  NETXMS_BUILD_TAG
-
-/**
  * Default files
  */
 #if defined(_WIN32)

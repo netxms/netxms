@@ -254,6 +254,7 @@ typedef int bool;
 #define strnicmp     _strnicmp
 #define strupr(s)    _strupr(s)
 #define getpid       _getpid
+#define putenv(s)    _putenv(s)
 #define fileno(f)    _fileno(f)
 #define chdir(p)     _chdir(p)
 #define mkdir(p,m)   _mkdir(p,m)
