@@ -35,9 +35,9 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 	int rc = 0;
 
 	NXSL_Value *value = (NXSL_Value *)stack->pop();
-	if (value->isArray())
+	if (value->isArray() || value->isNull())
 	{
-		NXSL_Array *array = value->getValueAsArray();
+		NXSL_Array *array = value->isArray() ? value->getValueAsArray() : new NXSL_Array();
 		array->incHandleCount();
 
 		delete value;

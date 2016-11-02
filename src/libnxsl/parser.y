@@ -904,12 +904,25 @@ ForStatement:
 ;
 
 ForEachStatement:
-	T_FOREACH '(' T_IDENTIFIER 
+	ForEach ForEachBody
+;
+
+ForEach:
+	T_FOREACH '(' T_IDENTIFIER ':'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
 	safe_free_and_null($3);
 }
-	':' Expression ')'
+|
+	T_FOR '(' T_IDENTIFIER ':'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
+	safe_free_and_null($3);
+}
+;
+
+ForEachBody:
+	Expression ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_FOREACH));
 	pCompiler->pushAddr(pScript->getCodeSize());
