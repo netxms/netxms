@@ -1745,6 +1745,12 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, i
 char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s);
 char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s);
 
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+#define utf8_to_ucs2(src, srcLen, dst, dstLen) MultiByteToWideChar(CP_UTF8, 0, (src), (srcLen), (dst), (dstLen))
+#else
+int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
+#endif
+
 #if !defined(_WIN32) && !HAVE_WSTAT
 int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif

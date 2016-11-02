@@ -1171,6 +1171,78 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, i
 #endif
 }
 
+#if !defined(UNICODE_UCS2)
+
+/**
+ * Convert UTF-8 to UCS-2 using stub (no actual conversion for character codes above 0x007F)
+ */
+static int __internal_utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   const char *psrc;
+   UCS2CHAR *pdst;
+   int pos, size;
+
+   size = (srcLen == -1) ? strlen(src) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? (UCS2CHAR)(*psrc) : '?';
+   *pdst = 0;
+   return size;
+}
+
+/**
+ * Convert UTF-8 to UCS-2
+ */
+int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = IconvOpen(UCS2_CODEPAGE_NAME, "UTF-8");
+   if (cd == (iconv_t) (-1))
+   {
+      return __internal_utf8_to_ucs2(src, srcLen, dst, dstLen);
+   }
+
+   inbuf = (const char *)src;
+   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t) srcLen;
+   outbuf = (char *)dst;
+   outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
+   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   IconvClose(cd);
+
+   if (count == (size_t) - 1)
+   {
+      if (errno == EILSEQ)
+      {
+         count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
+      }
+      else
+      {
+         count = 0;
+      }
+   }
+   else
+   {
+      count = (dstLen - outbytes) / sizeof(UCS2CHAR);
+   }
+   if ((srcLen == -1) && (outbytes >= sizeof(UCS2CHAR)))
+   {
+      *((UCS2CHAR *)outbuf) = 0;
+   }
+
+   return (int)count;
+#else
+   return __internal_utf8_to_ucs2(src, srcLen, dst, dstLen);
+#endif
+}
+
+#endif /* !defined(UNICODE_UCS2) */
+
 #endif	/* !defined(_WIN32) */
 
 /**

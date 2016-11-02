@@ -44,6 +44,7 @@ typedef struct pw_auth_hdr {
 #define PW_AUTH_UDP_PORT            1645
 #define PW_ACCT_UDP_PORT            1646
 
+#define VENDORPEC_MICROSOFT         311
 #define VENDORPEC_USR               429
 #define VENDORPEC_CISTRON           8246
 
@@ -115,7 +116,22 @@ typedef struct pw_auth_hdr {
 #define PW_CONNECT_INFO             77
 
 /* Vendor specific attributes */
-#define PW_CISTRON_PROXIED_TO       ((VENDORPEC_CISTRON<<16)|11)
+#define PW_CISTRON_PROXIED_TO             ((VENDORPEC_CISTRON<<16)|11)
+
+#define PW_MS_CHAP_CHALLENGE              ((VENDORPEC_MICROSOFT<<16)|11)
+#define PW_MS_CHAP_RESPONSE               ((VENDORPEC_MICROSOFT<<16)|1)
+#define PW_MS_CHAP2_RESPONSE              ((VENDORPEC_MICROSOFT<<16)|25)
+#define PW_MS_CHAP2_SUCCESS               ((VENDORPEC_MICROSOFT<<16)|26)
+#define PW_MS_MPPE_ENCRYPTION_POLICY      ((VENDORPEC_MICROSOFT<<16)|7)
+#define PW_MS_MPPE_ENCRYPTION_TYPE        ((VENDORPEC_MICROSOFT<<16)|8)
+#define PW_MS_MPPE_ENCRYPTION_TYPES       PW_MS_MPPE_ENCRYPTION_TYPE
+#define PW_MS_CHAP_MPPE_KEYS              ((VENDORPEC_MICROSOFT<<16)|12)
+#define PW_MS_MPPE_SEND_KEY               ((VENDORPEC_MICROSOFT<<16)|16)
+#define PW_MS_MPPE_RECV_KEY               ((VENDORPEC_MICROSOFT<<16)|17)
+#define PW_MS_PRIMARY_DNS_SERVER          ((VENDORPEC_MICROSOFT<<16)|28)
+#define PW_MS_SECONDARY_DNS_SERVER        ((VENDORPEC_MICROSOFT<<16)|29)
+#define PW_MS_PRIMARY_NBNS_SERVER         ((VENDORPEC_MICROSOFT<<16)|30)
+#define PW_MS_SECONDARY_NBNS_SERVER       ((VENDORPEC_MICROSOFT<<16)|31)
 
 /* Server side attributes */
 #define PW_FALL_THROUGH			500

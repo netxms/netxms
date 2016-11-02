@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+ ** Copyright (C) 2003-2016 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -24,13 +24,68 @@
  **/
 
 #include "nxcore.h"
+
+#ifdef _WITH_ENCRYPTION
+
+#include <openssl/rand.h>
+#include <openssl/md4.h>
+#include <openssl/sha.h>
+#include <openssl/des.h>
+
+/**
+ * Calculate NT password hash
+ */
+static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
+{
+   MD4_CTX ctx;
+   MD4_Init(&ctx);
+   MD4_Update(&ctx, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
+   MD4_Final(hash, &ctx);
+}
+
+/**
+ * Encrypt given 8 byte data block using DES
+ */
+static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHash, BYTE *response)
+{
+   for(int i = 0; i < 3; i++)
+   {
+      const BYTE *ki = &passwdHash[i * 7];
+      DES_cblock k;
+      k[0] = ki[0];
+      for(int b = 1; b < 7; b++)
+         k[b] = (ki[b - 1] << (8 - b)) | (ki[b] >> b);
+      k[7] = ki[6] << 1;
+      DES_set_odd_parity(&k);
+
+      DES_key_schedule ks;
+      DES_set_key_unchecked(&k, &ks);
+      DES_ecb_encrypt((DES_cblock *)challenge, (DES_cblock *)&response[i * 8], &ks, DES_ENCRYPT);
+   }
+}
+
+/**
+ * Calculate MS-CHAPv2 challenge
+ */
+static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChallenge, const char *login, BYTE *challenge)
+{
+   SHA_CTX ctx;
+   SHA1_Init(&ctx);
+   SHA1_Update(&ctx, peerChallenge, 16);
+   SHA1_Update(&ctx, authChallenge, 16);
+   SHA1_Update(&ctx, login, strlen(login));
+   BYTE hash[SHA1_DIGEST_SIZE];
+   SHA1_Final(hash, &ctx);
+   memcpy(challenge, hash, 8);
+}
+
+#endif /* _WITH_ENCRYPTION */
+
 #include "radius.h"
 
-
-//
-// Add a pair at the end of a VALUE_PAIR list.
-//
-
+/**
+ * Add a pair at the end of a VALUE_PAIR list.
+ */
 static void pairadd(VALUE_PAIR **first, VALUE_PAIR *newPair)
 {
 	VALUE_PAIR *i;
@@ -45,11 +100,9 @@ static void pairadd(VALUE_PAIR **first, VALUE_PAIR *newPair)
 	i->next = newPair;
 }
 
-
-//
-// Release the memory used by a list of attribute-value pairs.
-//
-
+/**
+ * Release the memory used by a list of attribute-value pairs.
+ */
 static void pairfree(VALUE_PAIR *pair)
 {
 	VALUE_PAIR *next;
@@ -62,11 +115,9 @@ static void pairfree(VALUE_PAIR *pair)
 	}
 }
 
-
-//
-// Create a new pair.
-//
-
+/**
+ * Create a new pair.
+ */
 static VALUE_PAIR *paircreate(int attr, int type, const char *pszName)
 {
 	VALUE_PAIR *vp;
@@ -102,11 +153,9 @@ static VALUE_PAIR *paircreate(int attr, int type, const char *pszName)
 	return vp;
 }
 
-
-//
-// Generate AUTH_VECTOR_LEN worth of random data.
-//
-
+/**
+ * Generate AUTH_VECTOR_LEN worth of random data.
+ */
 static void random_vector(unsigned char *vector)
 {
 	static int did_srand = 0;
@@ -337,7 +386,7 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 }
 
 
-/*
+/**
  * void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp);
  *
  * Encrypts vp->strvalue using style vp->flags.encrypt, possibly using 
@@ -345,7 +394,6 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
  *
  * This should always succeed.
  */
-
 static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 {
 	switch(vp->flags.encrypt)
@@ -368,13 +416,11 @@ static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 	}
 }
 
-
-//
-// Build radius packet. We assume that the header part
-// of AUTH_HDR has already been filled in, we just
-// fill auth->data with the A/V pairs from reply.
-//
-
+/**
+ * Build radius packet. We assume that the header part
+ * of AUTH_HDR has already been filled in, we just
+ * fill auth->data with the A/V pairs from reply.
+ */
 static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 		VALUE_PAIR *reply, char *msg, char *secret,
 		char *vector, int *send_buffer)
@@ -571,12 +617,10 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 	return total_length;
 }
 
-
-//
-// Receive result from server
-//
-
-static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
+/**
+ * Receive result from server
+ */
+static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
 {
 	AUTH_HDR *auth;
 	int totallen, secretlen;
@@ -605,25 +649,20 @@ static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYT
 		DbgPrintf(3, _T("RADIUS: Received invalid reply digest from server"));
 	}
 
-	IpToStr(ntohl(host), szHostName);
-	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"),
-             szHostName, auth->code, auth->id, totallen);
+	host.toString(szHostName);
+	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"), szHostName, auth->code, auth->id, totallen);
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
 
 /**
  * Authenticate user via RADIUS using primary or secondary server
  */
-static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSecondaryServer, TCHAR *serverName)
+static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondaryServer, char *serverName)
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
-	UINT32 server_ip;
-	struct sockaddr saremote;
-	struct sockaddr_in *sin;
 	struct timeval		tv;
 	fd_set readfds;
-	socklen_t salen;
 	int port, result = 0, length, i;
 	int nRetries, nTimeout;
 	SOCKET sockfd;
@@ -632,13 +671,13 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	BYTE vector[AUTH_VECTOR_LEN];
 	char szSecret[256];
 
-	ConfigReadStr(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, _T("none"));
+	ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondaryServer") : _T("RADIUSServer"), serverName, 256, "none");
 	ConfigReadStrA(useSecondaryServer ? _T("RADIUSSecondarySecret"): _T("RADIUSSecret"), szSecret, 256, "netxms");
 	port = ConfigReadInt(useSecondaryServer ? _T("RADIUSSecondaryPort") : _T("RADIUSPort"), PW_AUTH_UDP_PORT);
 	nRetries = ConfigReadInt(_T("RADIUSNumRetries"), 5);
 	nTimeout = ConfigReadInt(_T("RADIUSTimeout"), 3);
 
-	if (!_tcscmp(serverName, _T("none")))
+	if (!strcmp(serverName, "none"))
 	{
 		DbgPrintf(4, _T("RADIUS: %s server set to none, skipping"), useSecondaryServer ? _T("secondary") : _T("primary"));
 		return 10;
@@ -656,42 +695,134 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 
 	// User name
 	vp = paircreate(PW_USER_NAME, PW_TYPE_STRING, "User-Name");
-	strncpy(vp->strvalue, cLogin, AUTH_STRING_LEN);
-	vp->length = min((int)strlen(cLogin), AUTH_STRING_LEN);
+	strncpy(vp->strvalue, login, AUTH_STRING_LEN);
+	vp->length = min((int)strlen(login), AUTH_STRING_LEN);
 	pairadd(&req, vp);
 
-	// Password
-	vp = paircreate(PW_PASSWORD, PW_TYPE_STRING, "User-Password");
-	vp->length = rad_pwencode(cPasswd, vp->strvalue, szSecret, (char *)auth->vector);
-	pairadd(&req, vp);
+   char authMethod[16];
+   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "CHAP");
+	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
+   if (!stricmp(authMethod, "PAP"))
+   {
+	   vp = paircreate(PW_PASSWORD, PW_TYPE_STRING, "User-Password");
+	   vp->length = rad_pwencode(passwd, vp->strvalue, szSecret, (char *)auth->vector);
+	   pairadd(&req, vp);
+   }
+   else if (!stricmp(authMethod, "CHAP"))
+   {
+      char challenge[16];
+#ifdef _WITH_ENCRYPTION
+      RAND_bytes((BYTE *)challenge, 16);
+#else
+      for(int i = 0; i < 16; i++)
+         challenge[i] = (char)(rand() % 256);
+#endif
+      vp = paircreate(PW_CHAP_CHALLENGE, PW_TYPE_STRING, "CHAP-Challenge");
+	   memcpy(vp->strvalue, challenge, 16);
+	   vp->length = 16;
+	   pairadd(&req, vp);
+
+      BYTE temp[256];
+      temp[0] = (BYTE)(rand() % 255);
+      size_t pwdlen = strlen(passwd);
+      memcpy(&temp[1], passwd, pwdlen);
+      memcpy(&temp[pwdlen + 1], challenge, 16);
+
+      char response[17];
+      response[0] = (char)temp[0];
+      CalculateMD5Hash(temp, pwdlen + 17, (BYTE *)&response[1]);
+      vp = paircreate(PW_CHAP_PASSWORD, PW_TYPE_STRING, "CHAP-Password");
+	   memcpy(vp->strvalue, response, 17);
+	   vp->length = 17;
+	   pairadd(&req, vp);
+   }
+#ifdef _WITH_ENCRYPTION
+   else if (!stricmp(authMethod, "MS-CHAPv1"))
+   {
+      BYTE challenge[8];
+      RAND_bytes(challenge, 8);
+      vp = paircreate(PW_MS_CHAP_CHALLENGE, PW_TYPE_STRING, "MS-CHAP-Challenge");
+	   memcpy(vp->strvalue, challenge, 8);
+	   vp->length = 8;
+	   pairadd(&req, vp);
+
+      UCS2CHAR upasswd[256];
+      utf8_to_ucs2(passwd, -1, upasswd, 256);
+
+      BYTE passwdHash[21];
+      NtPasswordHash(upasswd, passwdHash);
+      memset(&passwdHash[16], 0, 5);
+
+      BYTE response[50];
+      response[0] = (BYTE)(rand() % 255);
+      response[1] = 1;
+      memset(&response[2], 0, 24);   // LM challenge response
+      MsChapChallengeResponse(challenge, passwdHash, &response[26]);
+      vp = paircreate(PW_MS_CHAP_RESPONSE, PW_TYPE_STRING, "MS-CHAP-Response");
+	   memcpy(vp->strvalue, response, 50);
+	   vp->length = 50;
+	   pairadd(&req, vp);
+   }
+   else if (!stricmp(authMethod, "MS-CHAPv2"))
+   {
+      BYTE authChallenge[16];
+      RAND_bytes(authChallenge, 16);
+      vp = paircreate(PW_MS_CHAP_CHALLENGE, PW_TYPE_STRING, "MS-CHAP-Challenge");
+	   memcpy(vp->strvalue, authChallenge, 16);
+	   vp->length = 16;
+	   pairadd(&req, vp);
+
+      UCS2CHAR upasswd[256];
+      utf8_to_ucs2(passwd, -1, upasswd, 256);
+
+      BYTE passwdHash[21];
+      NtPasswordHash(upasswd, passwdHash);
+      memset(&passwdHash[16], 0, 5);
+
+      BYTE response[50];
+      response[0] = (BYTE)(rand() % 255);
+      response[1] = 0;
+      RAND_bytes(&response[2], 16);  // peer challenge
+      memset(&response[18], 0, 8);   // reserved bytes
+      BYTE challenge[8];
+      MsChap2ChallengeHash(&response[2], authChallenge, login, challenge);
+      MsChapChallengeResponse(challenge, passwdHash, &response[26]);
+      vp = paircreate(PW_MS_CHAP2_RESPONSE, PW_TYPE_STRING, "MS-CHAP2-Response");
+	   memcpy(vp->strvalue, response, 50);
+	   vp->length = 50;
+	   pairadd(&req, vp);
+   }
+#endif
+   else
+   {
+      nxlog_debug(3, _T("RADIUS: unknown authentication method %hs"), authMethod);
+		pairfree(req);
+		return 11;
+   }
 
 	// Resolve hostname.
-	server_ip = ResolveHostName(serverName);
-	if ((server_ip == INADDR_NONE) || (server_ip == INADDR_ANY))
+	InetAddress serverAddr = InetAddress::resolveHostName(serverName);
+	if (!serverAddr.isValidUnicast())
 	{
-		DbgPrintf(3, _T("RADIUS: cannot resolve server name \"%s\""), serverName);
+		nxlog_debug(3, _T("RADIUS: cannot resolve server name \"%hs\""), serverName);
 		pairfree(req);
 		return 3;
 	}
 
 	// Open a socket.
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = socket(serverAddr.getFamily(), SOCK_DGRAM, 0);
 	if (sockfd == INVALID_SOCKET)
 	{
-		DbgPrintf(3, _T("RADIUS: Cannot create socket"));
+		nxlog_debug(3, _T("RADIUS: Cannot create socket"));
 		pairfree(req);
 		return 5;
 	}
 
-	sin = (struct sockaddr_in *)&saremote;
-	memset(sin, 0, sizeof (saremote));
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = server_ip;
-	sin->sin_port = htons(port);
+	SockAddrBuffer sa;
+	serverAddr.fillSockAddr(&sa, port);
 
 	// Build final radius packet.
-	length = rad_build_packet(auth, sizeof(send_buffer),
-			req, NULL, szSecret, (char *)auth->vector, send_buffer);
+	length = rad_build_packet(auth, sizeof(send_buffer), req, NULL, szSecret, (char *)auth->vector, send_buffer);
 	memcpy(vector, auth->vector, sizeof(vector));
 	pairfree(req);
 
@@ -700,9 +831,9 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	{
 		if (i > 0)
 		{
-			DbgPrintf(3, _T("RADIUS: Re-sending request..."));
+			nxlog_debug(5, _T("RADIUS: Re-sending request..."));
 		}
-		sendto(sockfd, (char *)auth, length, 0, &saremote, sizeof(struct sockaddr_in));
+		sendto(sockfd, (char *)auth, length, 0, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa));
 
 		FD_ZERO(&readfds);
 		FD_SET(sockfd, &readfds);
@@ -713,9 +844,11 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 			continue;
 		}
 
-		salen = sizeof(saremote);
-		result = recvfrom(sockfd, (char *)recv_buffer, sizeof(recv_buffer), 0, &saremote, &salen);
-		if (result >= 0)
+		SockAddrBuffer sarecv;
+		socklen_t salen = sizeof(sa);
+		result = recvfrom(sockfd, (char *)recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr *)&sarecv, &salen);
+		InetAddress addrRecv = InetAddress::createFromSockaddr((struct sockaddr *)&sarecv);
+		if ((result >= 0) && addrRecv.equals(serverAddr) && (SA_PORT(&sarecv) == SA_PORT(&sa)))
 		{
 			break;
 		}
@@ -725,9 +858,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 
 	if (result > 0 && i < nRetries)
 	{
-		result = result_recv(sin->sin_addr.s_addr, sin->sin_port,
-				(char *)recv_buffer, result, vector,
-				szSecret);
+		result = result_recv(serverAddr, port, (char *)recv_buffer, result, vector, szSecret);
 	}
 	else
 	{
@@ -738,36 +869,40 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	return result;
 }
 
+/**
+ * Check if authentication can be retried on other server
+ */
+static bool CanRetry(int result)
+{
+   return (result == 3) || (result == 7) || (result == 10); // Bad server name, timeout, comm. error, or server not configured
+}
 
-//
-// Authenticate user via RADIUS
-//
-
+/**
+ * Authenticate user via RADIUS
+ */
 bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
 {
 	static bool useSecondary = false;
 
-	TCHAR server[256];
+	char server[256], rlogin[256], rpasswd[256];
 #ifdef UNICODE
-	char mbLogin[256], mbPasswd[256];
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, login, -1, mbLogin, 256, NULL, NULL);
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, passwd, -1, mbPasswd, 256, NULL, NULL);
-	mbLogin[255] = 0;
-	mbPasswd[255] = 0;
-	int result = DoRadiusAuth(mbLogin, mbPasswd, useSecondary, server);
+	WideCharToMultiByte(CP_UTF8, 0, login, -1, rlogin, 256, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, passwd, -1, rpasswd, 256, NULL, NULL);
 #else
-	int result = DoRadiusAuth(login, passwd, useSecondary, server);
+	mb_to_utf8(login, -1, rlogin, 256);
+   mb_to_utf8(passwd, -1, rpasswd, 256);
 #endif
-	if ((result == 3) || (result == 7) || (result == 10))	// Bad server name, timeout, comm. error, or server not configured
+   rlogin[255] = 0;
+   rpasswd[255] = 0;
+   int result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
+	nxlog_debug(4, _T("RADIUS: DoRadiusAuth returned %d for user %s"), result, login);
+	if (CanRetry(result))
 	{
 		useSecondary = !useSecondary;
-		DbgPrintf(3, _T("RADIUS: unable to use %s server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
-#ifdef UNICODE
-		result = DoRadiusAuth(mbLogin, mbPasswd, useSecondary, server);
-#else
-		result = DoRadiusAuth(login, passwd, useSecondary, server);
-#endif
+		nxlog_debug(3, _T("RADIUS: unable to use %s server, switching to %s"), useSecondary ? _T("primary") : _T("secondary"), useSecondary ? _T("secondary") : _T("primary"));
+		result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
+	   nxlog_debug(4, _T("RADIUS: DoRadiusAuth returned %d for user %s"), result, login);
 	}
-	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED, NXLOG_INFO, "ss", login, server);
+	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED, NXLOG_INFO, "sm", login, server);
 	return result == 0;
 }
