@@ -333,31 +333,31 @@ static void ParseNewRecords(LogParser *parser, int fh)
 #if WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
-                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
                case LP_FCP_UCS2_BE:
 #if !WORDS_BIGENDIAN
                   bswap_array_16((UINT16 *)ptr, -1);
 #endif
-                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
                case LP_FCP_UCS2:
-                  ucs2_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs2_to_mb((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
                case LP_FCP_UCS4_LE:
 #if WORDS_BIGENDIAN
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
-                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
                case LP_FCP_UCS4_BE:
 #if !WORDS_BIGENDIAN
                   bswap_array_32((UINT32 *)ptr, -1);
 #endif
-                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
                case LP_FCP_UCS4:
-                  ucs4_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
+                  ucs4_to_mb((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
                   break;
 					default:
 						break;
