@@ -15,7 +15,7 @@
 - SMS driver for SMSEagle gateway
 - Fixed FDB handling on Cisco switches
 - Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
-- Fixed issues: #130, #185, #876, #953, #1043, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326
+- Fixed issues: #130, #185, #876, #953, #1043, #1090, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326
 
 
 *

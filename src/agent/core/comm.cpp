@@ -52,8 +52,15 @@ UINT32 GenerateMessageId()
  */
 void InitSessionList()
 {
-	// Create session list and it's access mutex
-	g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
+   if (g_dwMaxSessions == 0)  // default value
+   {
+      g_dwMaxSessions = (g_dwFlags & (AF_ENABLE_PROXY | AF_ENABLE_SNMP_PROXY)) ? 1024 : 32;
+   }
+   else
+   {
+      g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 4096);
+   }
+   nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_dwMaxSessions);
 	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
 	memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
 	g_hSessionListAccess = MutexCreate();
