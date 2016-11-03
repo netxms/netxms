@@ -156,6 +156,7 @@ int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool = NULL;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
+InetAddressList g_peerNodeAddrList;
 
 /**
  * Static data
@@ -444,32 +445,77 @@ static BOOL InitCryptografy()
 /**
  * Check if process with given PID exists and is a NetXMS server process
  */
-static BOOL IsNetxmsdProcess(UINT32 dwPID)
+static bool IsNetxmsdProcess(UINT32 pid)
 {
 #ifdef _WIN32
-	HANDLE hProcess;
-	TCHAR szExtModule[MAX_PATH], szIntModule[MAX_PATH];
-	BOOL bRet = FALSE;
-
-	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwPID);
+	bool result = false;
+	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
 	if (hProcess != NULL)
 	{
+	   TCHAR szExtModule[MAX_PATH], szIntModule[MAX_PATH];
 		if ((GetModuleBaseName(hProcess, NULL, szExtModule, MAX_PATH) > 0) &&
-				(GetModuleBaseName(GetCurrentProcess(), NULL, szIntModule, MAX_PATH) > 0))
+			 (GetModuleBaseName(GetCurrentProcess(), NULL, szIntModule, MAX_PATH) > 0))
 		{
-			bRet = !_tcsicmp(szExtModule, szIntModule);
+			result = (_tcsicmp(szExtModule, szIntModule) == 0);
 		}
 		else
 		{
 			// Cannot read process name, for safety assume that it's a server process
-			bRet = TRUE;
+			result = true;
 		}
 		CloseHandle(hProcess);
 	}
-	return bRet;
+	return result;
 #else
-	return (kill((pid_t)dwPID, 0) != -1);
+	return kill((pid_t)pid, 0) != -1;
 #endif
+}
+
+/**
+ * Check if remote netxmsd is running
+ */
+static bool PeerNodeIsRunning(const InetAddress& addr)
+{
+   bool result = false;
+
+   TCHAR keyFile[MAX_PATH];
+   _tcscpy(keyFile, g_netxmsdDataDir);
+   _tcscat(keyFile, DFILE_KEYS);
+   RSA *key = LoadRSAKeys(keyFile);
+
+   AgentConnection *ac = new AgentConnection(addr);
+   if (ac->connect(key))
+   {
+      TCHAR result[MAX_RESULT_LENGTH];
+#ifdef _WIN32
+      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd.exe)"), MAX_RESULT_LENGTH, result);
+#else
+      UINT32 rcc = ac->getParameter(_T("Process.Count(netxmsd)"), MAX_RESULT_LENGTH, result);
+#endif
+      ac->decRefCount();
+      if (key != NULL)
+         RSA_free(key);
+      if (rcc == ERR_SUCCESS)
+      {
+         return _tcstol(result, NULL, 10) > 0;
+      }
+   }
+   else
+   {
+      ac->decRefCount();
+      if (key != NULL)
+         RSA_free(key);
+   }
+
+   UINT16 port = (UINT16)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
+   SOCKET s = ConnectToHost(addr, port, 5000);
+   if (s != INVALID_SOCKET)
+   {
+      shutdown(s, SHUT_RDWR);
+      closesocket(s);
+      result = true;
+   }
+   return result;
 }
 
 /**
@@ -701,27 +747,34 @@ retry_db_lock:
    InetAddress addr;
 	if (!InitLocks(&addr, buffer))
 	{
-      if (!addr.isValid())    // Some SQL problems
-		{
-			nxlog_write(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
-		}
-		else     // Database already locked by another server instance
+		if (addr.isValidUnicast())     // Database already locked by another server instance
 		{
 			// Check for lock from crashed/terminated local process
 			if (GetLocalIpAddr().equals(addr))
 			{
-				UINT32 dwPID;
-
-				dwPID = ConfigReadULong(_T("DBLockPID"), 0);
-				if (!IsNetxmsdProcess(dwPID) || (dwPID == GetCurrentProcessId()))
+				UINT32 pid = ConfigReadULong(_T("DBLockPID"), 0);
+				if (!IsNetxmsdProcess(pid) || (pid == GetCurrentProcessId()))
 				{
 					UnlockDB();
 					nxlog_write(MSG_DB_LOCK_REMOVED, EVENTLOG_INFORMATION_TYPE, NULL);
 					goto retry_db_lock;
 				}
 			}
+			else if (g_peerNodeAddrList.hasAddress(addr))
+			{
+			   if (!PeerNodeIsRunning(addr))
+			   {
+               UnlockDB();
+               nxlog_write(MSG_DB_LOCK_REMOVED, EVENTLOG_INFORMATION_TYPE, NULL);
+               goto retry_db_lock;
+			   }
+			}
 			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, buffer);
 		}
+		else
+      {
+         nxlog_write(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      }
 		return FALSE;
 	}
 	g_flags |= AF_DB_LOCKED;

@@ -29,6 +29,7 @@
 extern char g_szCodePage[];
 extern TCHAR *g_moduleLoadList;
 extern TCHAR *g_pdsLoadList;
+extern InetAddressList g_peerNodeAddrList;
 
 /**
  * database connection parameters
@@ -45,6 +46,11 @@ TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
  * Debug level from config
  */
 static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+
+/**
+ * Peer node information
+ */
+static TCHAR s_peerNode[MAX_DB_STRING];
 
 /**
  * Config file template
@@ -75,6 +81,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, NULL },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, NULL },
    { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_moduleLoadList, NULL },
+   { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, NULL },
    { _T("PerfDataStorageDriver"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pdsLoadList, NULL },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
@@ -158,6 +165,21 @@ stop_search:
 
 	// Decrypt password
    DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
+
+   // Parse peer node information
+   if (s_peerNode[0] != 0)
+   {
+      int count = 0;
+      TCHAR **list = SplitString(s_peerNode, _T(','), &count);
+      for(int i = 0; i < count; i++)
+      {
+         InetAddress a = InetAddress::resolveHostName(list[i]);
+         if (a.isValidUnicast())
+            g_peerNodeAddrList.add(a);
+         free(list[i]);
+      }
+      free(list);
+   }
    return bSuccess;
 }
 
