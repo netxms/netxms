@@ -769,7 +769,7 @@ retry_db_lock:
                goto retry_db_lock;
 			   }
 			}
-			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, buffer);
+			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "Is", &addr, buffer);
 		}
 		else
       {
