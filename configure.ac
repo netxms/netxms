@@ -74,8 +74,9 @@ PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
-BUILD_UNICODE="no"
+BUILD_UNICODE="yes"
 FORCE_INTERNAL_EXPAT="no"
+FORCE_INTERNAL_LIBTRE="yes"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_JANSSON="no"
@@ -97,7 +98,7 @@ ZEROMQ_REQUIRED="no"
 ZEROMQ_CPPFLAGS=""
 ZEROMQ_LDFLAGS=""
 LDAP_SUPPORT="yes"
-DISABLE_READLINE="no"
+DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
@@ -506,13 +507,17 @@ AC_ARG_WITH(jemalloc,
 AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
-	DISABLE_ICONV="yes"
+	if test "x$$enableval" = "xno"; then
+		DISABLE_ICONV="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(ipv6,
 [AS_HELP_STRING(--disable-ipv6,disable IPv6 support)],
 [
-	DISABLE_IPV6="yes"
+	if test "x$$enableval" = "xno"; then
+		DISABLE_IPV6="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(iconv-cache,
@@ -523,59 +528,76 @@ AC_ARG_ENABLE(iconv-cache,
 AC_ARG_ENABLE(readline,
 [AS_HELP_STRING(--disable-readline,do not use libreadline)],
 [
-	DISABLE_READLINE="yes"
+	if test "x$$enableval" = "xno"; then
+		DISABLE_READLINE="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
-	DISABLE_ENCRYPTION="yes"
-	XMPP_SUPPORT="no"
+	if test "x$$enableval" = "xno"; then
+		DISABLE_ENCRYPTION="yes"
+		XMPP_SUPPORT="no"
+	fi
 ])
 
 AC_ARG_ENABLE(lmsensors,
 [AS_HELP_STRING(--disable-lmsensors,disable lmsensors support)],
 [
-	DISABLE_LMSENSORS="yes"
+	if test "x$$enableval" = "xno"; then
+		DISABLE_LMSENSORS="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(xmpp,
 [AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
 [
-	XMPP_SUPPORT="no"
+	if test "x$$enableval" = "xno"; then
+		XMPP_SUPPORT="no"
+	fi
 ])
 
 AC_ARG_ENABLE(ldap,
 [AS_HELP_STRING(--disable-ldap,disable LDAP support)],
 [
-	LDAP_SUPPORT="no"
+	if test "x$$enableval" = "xno"; then
+		LDAP_SUPPORT="no"
+	fi
 ])
 
 AC_ARG_ENABLE(unicode,
-[AS_HELP_STRING(--enable-unicode,enable UNICODE build)],
+[AS_HELP_STRING(--disable-unicode,disable UNICODE build)],
 [
-	BUILD_UNICODE="yes"
-	CPPFLAGS="$CPPFLAGS -DUNICODE"
-	FORCE_INTERNAL_LIBTRE="yes"
-	DISABLE_READLINE="yes"
+	if test "x$enableval" = "xno"; then
+		BUILD_UNICODE="no"
+		FORCE_INTERNAL_LIBTRE="no"
+		DISABLE_READLINE="no"
+	fi
 ])
 
 AC_ARG_ENABLE(debug,
 [AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
 [
-	ENABLE_DEBUG="yes"
+	if test "x$enableval" = "xyes"; then
+		ENABLE_DEBUG="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(werror,
 [AS_HELP_STRING(--enable-werror,threat all warnings as errors)],
 [
-	ENABLE_WERROR="yes"
+	if test "x$enableval" = "xyes"; then
+		ENABLE_WERROR="yes"
+	fi
 ])
 
 AC_ARG_ENABLE(64bit,
 [AS_HELP_STRING(--disable-64bit,disable 64bit build (force 32bit build on 64bit machine))],
 [
-	FORCE_32BIT_BUILD="yes"
+	if test "x$enableval" = "xno"; then
+		FORCE_32BIT_BUILD="yes"
+	fi
 ])
 
 AC_ARG_WITH(dist,
@@ -2237,6 +2259,10 @@ fi
 #--------------------------------------------------------------------
 # Check for UNICODE stuff
 #--------------------------------------------------------------------
+
+if test "x$BUILD_UNICODE" = "xyes"; then
+	CPPFLAGS="$CPPFLAGS -DUNICODE"
+fi
 
 AC_CHECK_HEADERS([wchar.h wctype.h iconv.h widec.h])
 AC_CHECK_TYPES([wchar_t, wint_t],,,[
