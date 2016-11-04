@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** SMS driver for Nexmo gateway
+** SMS driver for MyMobileAPI gateway
 ** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -154,6 +154,7 @@ static bool ParseResponse(const char *response)
                   if(json_string_value(error) != NULL && json_string_value(error) != NULL)
                      nxlog_debug(4, _T("Mymobile: sending error details %s"), json_string_value(error));
                }
+               free(tmp);
             }
             else
             {
@@ -217,11 +218,10 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 
       char url[4096];
       snprintf(url, 4096, "http://www.mymobileapi.com/api5/http5.aspx?Type=sendparam&username=%s&password=%s&numto=%s&data1=%s",
-               s_username, s_password, mbphone, msg);
+               s_username, s_password, phone, msg);
       nxlog_debug(7, _T("Mymobile: URL set to \"%hs\""), url);
 
       curl_free(phone);
-      curl_free(from);
       curl_free(msg);
 
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
