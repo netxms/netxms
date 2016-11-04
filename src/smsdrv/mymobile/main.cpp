@@ -142,7 +142,7 @@ static bool ParseResponse(const char *response)
          {
             if(json_string_value(result) != NULL)
             {
-               char *tmp = strlwr(json_string_value(result));
+               char *tmp = strlwr(strdup(json_string_value(result)));
                if(strcmp(tmp, "true"))
                {
                   success = true;
