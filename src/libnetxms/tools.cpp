@@ -2318,6 +2318,27 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 #endif
 }
 
+#if !HAVE_STRLWR && !defined(_WIN32)
+
+/**
+ * Convert UNICODE string to lowercase
+ */
+char LIBNETXMS_EXPORTABLE *strlwr(char *str)
+{
+   for(char *p = str; *p != 0; p++)
+   {
+#if HAVE_TOLOWER
+      *p = tolower(*p);
+#else
+      if ((*p >= 'a') && (*p <= 'z'))
+         *p = *p - ('a' - 'A');
+#endif
+   }
+   return str;
+}
+
+#endif
+
 #if !HAVE_WCSLWR && !defined(_WIN32)
 
 /**
