@@ -23,7 +23,7 @@
 /**
  * Driver handle
  */
-DB_DRIVER g_driverHandle = NULL;
+DB_DRIVER g_oracleDriver = NULL;
 
 /**
  * Polling queries
@@ -346,8 +346,8 @@ static BOOL SubAgentInit(Config *config)
    int i;
 
 	// Init db driver
-	g_driverHandle = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
-	if (g_driverHandle == NULL)
+   g_oracleDriver = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
+	if (g_oracleDriver == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
 		return FALSE;
@@ -417,6 +417,7 @@ static void SubAgentShutdown()
    for(int i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->stop();
    delete s_instances;
+   DBUnloadDriver(g_oracleDriver);
 	AgentWriteDebugLog(1, _T("ORACLE: stopped"));
 }
 

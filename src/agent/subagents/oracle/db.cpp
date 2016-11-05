@@ -114,7 +114,7 @@ reconnect:
       MutexLock(m_sessionLock);
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_driverHandle, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
+      m_session = DBConnect(g_oracleDriver, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
       if (m_session == NULL)
       {
          MutexUnlock(m_sessionLock);
