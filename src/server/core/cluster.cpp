@@ -198,125 +198,169 @@ bool Cluster::showThresholdSummary()
  */
 BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR szQuery[4096], szIpAddr[64];
-   BOOL bResult;
-
-   // Lock object's access
    lockProperties();
+   bool success = saveCommonProperties(hdb);
+   if (!success)
+   {
+      unlockProperties();
+      return false;
+   }
 
-   saveCommonProperties(hdb);
-
+   DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))
-      _sntprintf(szQuery, 4096,
-                 _T("UPDATE clusters SET cluster_type=%d,zone_guid=%d WHERE id=%d"),
-                 (int)m_dwClusterType, (int)m_zoneId, (int)m_id);
+      hStmt = DBPrepare(hdb, _T("UPDATE clusters SET cluster_type=?,zone_guid=? WHERE id=?"));
 	else
-      _sntprintf(szQuery, 4096,
-                 _T("INSERT INTO clusters (id,cluster_type,zone_guid) VALUES (%d,%d,%d)"),
-                 (int)m_id, (int)m_dwClusterType, (int)m_zoneId);
-   bResult = DBQuery(hdb, szQuery);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO clusters (cluster_type,zone_guid,id) VALUES (?,?,?)"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneId);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      success = false;
+   }
 
-   // Save data collection items
-   if (bResult)
+   if (success)
+   {
+      success = saveACLToDB(hdb);
+   }
+   unlockProperties();
+
+   if (success)
    {
 		lockDciAccess(false);
-      for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDatabase(hdb);
+      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
+         success = m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
+   }
 
+   if (success)
+   {
 		// Save cluster members list
-		if (DBBegin(hdb))
-		{
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_id);
-			DBQuery(hdb, szQuery);
-			lockChildList(false);
-			for(int i = 0; i < m_childList->size(); i++)
-			{
-				if (m_childList->get(i)->getObjectClass() == OBJECT_NODE)
-				{
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (%d,%d)"),
-								 m_id, m_childList->get(i)->getId());
-					bResult = DBQuery(hdb, szQuery);
-					if (!bResult)
-						break;
-				}
-			}
-			unlockChildList();
-			if (bResult)
-				DBCommit(hdb);
-			else
-				DBRollback(hdb);
-		}
-		else
-		{
-			bResult = FALSE;
-		}
+      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_members WHERE cluster_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
 
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            lockChildList(false);
+            for(int i = 0; (i < m_childList->size()) && success; i++)
+            {
+               if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
+                  continue;
+
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            unlockChildList();
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+		}
+   }
+
+   if (success)
+   {
 		// Save sync net list
-		if (bResult)
-		{
-			if (DBBegin(hdb))
-			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
-				DBQuery(hdb, szQuery);
-				for(int i = 0; i < m_syncNetworks->size(); i++)
-				{
-               InetAddress *net = m_syncNetworks->get(i);
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s',%d)"),
-                          (int)m_id, net->toString(szIpAddr), net->getMaskBits());
-					bResult = DBQuery(hdb, szQuery);
-					if (!bResult)
-						break;
-				}
-				if (bResult)
-					DBCommit(hdb);
-				else
-					DBRollback(hdb);
-			}
-			else
-			{
-				bResult = FALSE;
-			}
-		}
+      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
 
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (?,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            lockProperties();
+            for(int i = 0; (i < m_syncNetworks->size()) && success; i++)
+            {
+               const InetAddress *net = m_syncNetworks->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, net->toString(), DB_BIND_TRANSIENT);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, net->getMaskBits());
+               success = DBExecute(hStmt);
+            }
+            unlockProperties();
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+		}
+   }
+
+   if (success)
+   {
 		// Save resource list
-		if (bResult)
-		{
-			if (DBBegin(hdb))
-			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_id);
-				DBQuery(hdb, szQuery);
-				for(UINT32 i = 0; i < m_dwNumResources; i++)
+      hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_resources WHERE cluster_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (?,?,?,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            lockProperties();
+				for(UINT32 i = 0; (i < m_dwNumResources) && success; i++)
 				{
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,%s,'%s',%d)"),
-					           m_id, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
-								  m_pResourceList[i].ipAddr.toString(szIpAddr),
-								  m_pResourceList[i].dwCurrOwner);
-					bResult = DBQuery(hdb, szQuery);
-					if (!bResult)
-						break;
+		         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pResourceList[i].szName, DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_pResourceList[i].ipAddr.toString(), DB_BIND_TRANSIENT);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_pResourceList[i].dwCurrOwner);
+               success = DBExecute(hStmt);
 				}
-				if (bResult)
-					DBCommit(hdb);
-				else
-					DBRollback(hdb);
+				unlockProperties();
+				DBFreeStatement(hStmt);
 			}
 			else
 			{
-				bResult = FALSE;
+	         success = false;
 			}
 		}
    }
 
-   // Save access list
-   saveACLToDB(hdb);
-
-   // Clear modifications flag and unlock object
-	if (bResult)
-		m_isModified = false;
+   // Clear modifications flag
+   lockProperties();
+   m_isModified = false;
    unlockProperties();
-
-   return bResult;
+   return success;
 }
 
 /**
@@ -613,7 +657,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 			}
 		}
 		unlockProperties();
-		safe_free(pbResourceFound);
+		free(pbResourceFound);
 	}
 
 	// Cleanup
@@ -621,7 +665,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	{
 		ppPollList[i]->decRefCount();
 	}
-	safe_free(ppPollList);
+	free(ppPollList);
 
 	lockProperties();
 	if (bModified)
@@ -679,7 +723,7 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
  */
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
-   lockChildList(true);
+   lockChildList(false);
    ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_childList->size());
    int valueCount = 0;
    for(int i = 0; i < m_childList->size(); i++)
@@ -743,7 +787,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
  */
 UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 {
-   lockChildList(true);
+   lockChildList(false);
    Table **values = (Table **)malloc(sizeof(Table *) * m_childList->size());
    int valueCount = 0;
    for(int i = 0; i < m_childList->size(); i++)
