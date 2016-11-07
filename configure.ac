@@ -604,7 +604,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira"
@@ -681,16 +681,22 @@ if test $? = 0; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/oracle/oracle.la"
 	fi
 
-    check_substr "$STATIC_SUBAGENT_LIST" "informix"
-    if test $? = 0; then
-        COMPONENTS="$COMPONENTS informix"
-        SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
-    fi
+	check_substr "$STATIC_SUBAGENT_LIST" "informix"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS informix"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/informix/informix.la"
+	fi
 	
 	check_substr "$STATIC_SUBAGENT_LIST" "db2"
 	if test $? = 0; then
 		COMPONENTS="$COMPONENTS db2"
-        SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/db2/db2.la"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/db2/db2.la"
+	fi
+
+	check_substr "$STATIC_SUBAGENT_LIST" "mysql"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS mysql"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/mysql/mysql.la"
 	fi
 
 	case "$PLATFORM" in
@@ -832,6 +838,7 @@ fi
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS mysql"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS mysql"
 fi
 
 check_substr "$COMPONENTS" "pgsql"
@@ -3282,6 +3289,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
 	src/agent/subagents/minix/Makefile
+	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/odbcquery/Makefile
