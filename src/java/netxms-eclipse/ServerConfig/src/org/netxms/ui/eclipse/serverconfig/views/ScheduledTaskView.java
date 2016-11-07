@@ -54,7 +54,6 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.RerunTimeDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ScheduledTaskEditor;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryComparator;
@@ -507,7 +506,7 @@ public class ScheduledTaskView extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob(Messages.get().MappingTables_ReloadJobName, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Reloading scheduled task list", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -543,7 +542,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().MappingTables_ReloadJobError;
+            return "Cannot get list of scheduled tasks";
          }
       }.start();
       

@@ -358,6 +358,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    if (!found)
    {
       //check in different queue and if exists - remove from one and add to another
+      ScheduledTask *st = NULL;
       s_oneTimeScheduleLock.lock();
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
@@ -368,20 +369,22 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
                rcc = RCC_ACCESS_DENIED;
                break;
             }
-            ScheduledTask *st = s_oneTimeSchedules.get(i);
+            st = s_oneTimeSchedules.get(i);
             s_oneTimeSchedules.unlink(i);
             s_oneTimeSchedules.sort(ScheduledTaskComparator);
             st->update(task, schedule, params, owner, objectId, flags);
             st->saveToDatabase(false);
-
-            s_cronScheduleLock.unlock();
-            s_cronSchedules.add(st);
-            s_cronScheduleLock.unlock();
-
+            found = true;
             break;
          }
       }
       s_oneTimeScheduleLock.unlock();
+      if(found && st != NULL)
+      {
+         s_cronScheduleLock.lock();
+         s_cronSchedules.add(st);
+         s_cronScheduleLock.unlock();
+      }
    }
 
    return rcc;
@@ -417,6 +420,7 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
    if (!found)
    {
       //check in different queue and if exists - remove from one and add to another
+      ScheduledTask *st = NULL;
       s_cronScheduleLock.lock();
       for (int i = 0; i < s_cronSchedules.size(); i++)
       {
@@ -427,21 +431,24 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
                rcc = RCC_ACCESS_DENIED;
                break;
             }
-            ScheduledTask *st = s_cronSchedules.get(i);
+            st = s_cronSchedules.get(i);
             s_cronSchedules.unlink(i);
             st->update(task, nextExecutionTime, params, owner, objectId, flags);
             st->saveToDatabase(false);
-
-            s_oneTimeScheduleLock.lock();
-            s_oneTimeSchedules.add(st);
-            s_oneTimeSchedules.sort(ScheduledTaskComparator);
-            s_oneTimeScheduleLock.unlock();
-
             found = true;
             break;
          }
       }
       s_cronScheduleLock.unlock();
+
+      if(found && st != NULL)
+      {
+         s_oneTimeScheduleLock.lock();
+         s_oneTimeSchedules.add(st);
+         s_oneTimeSchedules.sort(ScheduledTaskComparator);
+         s_oneTimeScheduleLock.unlock();
+      }
+
    }
 
    if (found)
@@ -523,7 +530,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
 /**
  * Fills message with scheduled tasks list
  */
-void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
+void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
 {
    int scheduleCount = 0;
    int base = VID_SCHEDULE_LIST_BASE;

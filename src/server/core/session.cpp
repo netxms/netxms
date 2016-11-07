@@ -14309,7 +14309,7 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetSheduledTasks(&msg, m_dwUserId, m_dwSystemAccess);
+   GetScheduledTasks(&msg, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
