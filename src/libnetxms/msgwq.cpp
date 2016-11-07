@@ -66,7 +66,8 @@ MsgWaitQueue::MsgWaitQueue()
 
    // register new queue
    m_housekeeperLock.lock();
-   m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
+   if (m_activeQueues != NULL)
+      m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
       m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
@@ -81,7 +82,8 @@ MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
    m_housekeeperLock.lock();
-   m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
+   if (m_activeQueues != NULL)
+      m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
    m_housekeeperLock.unlock();
 
    clear();
@@ -397,8 +399,8 @@ void MsgWaitQueue::shutdown()
    ThreadJoin(m_housekeeperThread);
    m_housekeeperLock.lock();
    m_housekeeperThread = INVALID_THREAD_HANDLE;
+   delete_and_null(m_activeQueues);
    m_housekeeperLock.unlock();
-   delete m_activeQueues;
 }
 
 /**
