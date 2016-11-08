@@ -1651,9 +1651,10 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
  * affect alarm states. Returned array must be destroyed by the caller.
  *
  * @param objectId object ID or 0 to get all alarms
+ * @param recursive if true, will return alarms for child objects
  * @return array of active alarms for given object
  */
-ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId)
+ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
 {
    ObjectArray<Alarm> *result = new ObjectArray<Alarm>(16, 16, true);
 
@@ -1661,7 +1662,8 @@ ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
-      if ((objectId == 0) || (alarm->getSourceObject() == objectId))
+      if ((objectId == 0) || (alarm->getSourceObject() == objectId) ||
+          (recursive && IsParentObject(objectId, alarm->getSourceObject())))
       {
          result->add(new Alarm(alarm, true));
       }

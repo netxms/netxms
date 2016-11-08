@@ -177,22 +177,44 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
 {
    NXSL_Value *value = NULL;
    NetObj *object = (NetObj *)_object->getData();
-   if (!_tcscmp(attr, _T("name")))
+   if (!_tcscmp(attr, _T("alarms")))
    {
-      value = new NXSL_Value(object->getName());
+      ObjectArray<Alarm> *alarms = GetAlarms(object->getId(), true);
+      alarms->setOwner(false);
+      NXSL_Array *array = new NXSL_Array;
+      for(int i = 0; i < alarms->size(); i++)
+         array->add(new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarms->get(i))));
+      value = new NXSL_Value(array);
+      delete alarms;
+   }
+   else if (!_tcscmp(attr, _T("city")))
+   {
+      value = new NXSL_Value(object->getPostalAddress()->getCity());
+   }
+   else if (!_tcscmp(attr, _T("comments")))
+   {
+      value = new NXSL_Value(object->getComments());
+   }
+   else if (!_tcscmp(attr, _T("country")))
+   {
+      value = new NXSL_Value(object->getPostalAddress()->getCountry());
+   }
+   else if (!_tcscmp(attr, _T("customAttributes")))
+   {
+      value = object->getCustomAttributesForNXSL();
+   }
+   else if (!_tcscmp(attr, _T("geolocation")))
+   {
+      value = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
+   }
+   else if (!_tcscmp(attr, _T("guid")))
+   {
+      TCHAR buffer[64];
+      value = new NXSL_Value(object->getGuid().toString(buffer));
    }
    else if (!_tcscmp(attr, _T("id")))
    {
       value = new NXSL_Value(object->getId());
-   }
-   else if (!_tcscmp(attr, _T("guid")))
-   {
-		TCHAR buffer[64];
-      value = new NXSL_Value(object->getGuid().toString(buffer));
-   }
-   else if (!_tcscmp(attr, _T("status")))
-   {
-      value = new NXSL_Value((LONG)object->getStatus());
    }
    else if (!_tcscmp(attr, _T("ipAddr")))
    {
@@ -200,37 +222,25 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
       GetObjectIpAddress(object).toString(buffer);
       value = new NXSL_Value(buffer);
    }
-   else if (!_tcscmp(attr, _T("type")))
+   else if (!_tcscmp(attr, _T("name")))
    {
-      value = new NXSL_Value((LONG)object->getObjectClass());
+      value = new NXSL_Value(object->getName());
    }
-   else if (!_tcscmp(attr, _T("comments")))
+   else if (!_tcscmp(attr, _T("postcode")))
    {
-      value = new NXSL_Value(object->getComments());
+      value = new NXSL_Value(object->getPostalAddress()->getPostCode());
    }
-   else if (!_tcscmp(attr, _T("customAttributes")))
+   else if (!_tcscmp(attr, _T("status")))
    {
-      value = object->getCustomAttributesForNXSL();
-   }
-   else if (!_tcscmp(attr, _T("country")))
-   {
-      value = new NXSL_Value(object->getPostalAddress()->getCountry());
-   }
-   else if (!_tcscmp(attr, _T("city")))
-   {
-      value = new NXSL_Value(object->getPostalAddress()->getCity());
-   }
-   else if (!_tcscmp(attr, _T("geolocation")))
-   {
-      value = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
+      value = new NXSL_Value((LONG)object->getStatus());
    }
    else if (!_tcscmp(attr, _T("streetAddress")))
    {
       value = new NXSL_Value(object->getPostalAddress()->getStreetAddress());
    }
-   else if (!_tcscmp(attr, _T("postcode")))
+   else if (!_tcscmp(attr, _T("type")))
    {
-      value = new NXSL_Value(object->getPostalAddress()->getPostCode());
+      value = new NXSL_Value((LONG)object->getObjectClass());
    }
 	else
 	{

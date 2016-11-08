@@ -2595,6 +2595,7 @@ UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
+bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);

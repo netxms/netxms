@@ -2095,3 +2095,12 @@ bool IsEventSource(int objectClass)
 	       (objectClass == OBJECT_CLUSTER) ||
 			 (objectClass == OBJECT_MOBILEDEVICE);
 }
+
+/**
+ * Check of object1 is parent of object2 (also indirect parent)
+ */
+bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2)
+{
+   NetObj *p = FindObjectById(object1);
+   return (p != NULL) ? p->isChild(object2) : false;
+}
