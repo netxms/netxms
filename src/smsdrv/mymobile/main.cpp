@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** SMS driver for MyMobileAPI gateway
+** SMS driver for MyMobile API gateways
 ** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -126,7 +126,7 @@ static bool ParseResponse(const char *response)
    json_t *root = json_loads(response, 0, &error);
    if (root == NULL)
    {
-      nxlog_debug(4, _T("Mymobile: cannot parse response JSON"));
+      nxlog_debug(4, _T("MyMobile: cannot parse response JSON"));
       return false;
    }
 
@@ -149,31 +149,31 @@ static bool ParseResponse(const char *response)
                }
                else
                {
-                  nxlog_debug(4, _T("Mymobile: sending result: %s"), json_string_value(result));
+                  nxlog_debug(4, _T("MyMobile: sending result: %s"), json_string_value(result));
                   json_t *error = json_object_get(callResult, "error");
                   if(json_string_value(error) != NULL && json_string_value(error) != NULL)
-                     nxlog_debug(4, _T("Mymobile: sending error details %s"), json_string_value(error));
+                     nxlog_debug(4, _T("MyMobile: sending error details %s"), json_string_value(error));
                }
                free(tmp);
             }
             else
             {
-               nxlog_debug(4, _T("Mymobile: invalid response (invalid value in \"result\" part)"));
+               nxlog_debug(4, _T("MyMobile: invalid response (invalid value in \"result\" part)"));
             }
          }
          else
          {
-            nxlog_debug(4, _T("Mymobile: invalid response (missing \"result\" part)"));
+            nxlog_debug(4, _T("MyMobile: invalid response (missing \"result\" part)"));
          }
       }
       else
       {
-         nxlog_debug(4, _T("Mymobile: invalid response (missing \"call_result\" part)"));
+         nxlog_debug(4, _T("MyMobile: invalid response (missing \"call_result\" part)"));
       }
    }
    else
    {
-      nxlog_debug(4, _T("Mymobile: invalid response (missing \"api_result\" part)"));
+      nxlog_debug(4, _T("MyMobile: invalid response (missing \"api_result\" part)"));
    }
 
    json_decref(root);
@@ -187,7 +187,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 {
    bool success = false;
 
-   nxlog_debug(4, _T("Mymobile: phone=\"%s\", text=\"%s\""), phoneNumber, text);
+   nxlog_debug(4, _T("MyMobile: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 
    CURL *curl = curl_easy_init();
    if (curl != NULL)
@@ -219,7 +219,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       char url[4096];
       snprintf(url, 4096, "http://www.mymobileapi.com/api5/http5.aspx?Type=sendparam&username=%s&password=%s&numto=%s&data1=%s",
                s_username, s_password, phone, msg);
-      nxlog_debug(7, _T("Mymobile: URL set to \"%hs\""), url);
+      nxlog_debug(7, _T("MyMobile: URL set to \"%hs\""), url);
 
       curl_free(phone);
       curl_free(msg);
@@ -228,13 +228,13 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            nxlog_debug(4, _T("Mymobile: %d bytes received"), data->size);
+            nxlog_debug(4, _T("MyMobile: %d bytes received"), data->size);
             if (data->allocated > 0)
                data->data[data->size] = 0;
 
             long response = 500;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
-            nxlog_debug(4, _T("Mymobile: response code %03d"), (int)response);
+            nxlog_debug(4, _T("MyMobile: response code %03d"), (int)response);
             if (response == 200)
             {
                success = ParseResponse(data->data);
@@ -242,12 +242,12 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
          }
          else
          {
-         	nxlog_debug(4, _T("Mymobile: call to curl_easy_perform() failed"));
+         	nxlog_debug(4, _T("MyMobile: call to curl_easy_perform() failed"));
          }
       }
       else
       {
-      	nxlog_debug(4, _T("Mymobile: call to curl_easy_setopt(CURLOPT_URL) failed"));
+      	nxlog_debug(4, _T("MyMobile: call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
       safe_free(data->data);
       free(data);
@@ -255,7 +255,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
    }
    else
    {
-   	nxlog_debug(4, _T("Mymobile: call to curl_easy_init() failed"));
+   	nxlog_debug(4, _T("MyMobile: call to curl_easy_init() failed"));
    }
 
    return success;

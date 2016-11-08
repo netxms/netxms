@@ -252,6 +252,7 @@ typedef int bool;
 #define pclose       _pclose
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
+#define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
 #define getpid       _getpid
 #define putenv(s)    _putenv(s)
