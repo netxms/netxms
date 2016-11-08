@@ -114,6 +114,8 @@ static BOOL SubAgentInit(Config *config)
 	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
 	s_dbInfo.connectionTTL = 3600;
 	_tcscpy(s_dbInfo.id, _T("localdb"));
+   _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
+   _tcscpy(s_dbInfo.name, _T("information_schema"));
 	if (config->parseTemplate(_T("MYSQL"), s_configTemplate))
 	{
 		if (s_dbInfo.name[0] != 0)
@@ -132,8 +134,8 @@ static BOOL SubAgentInit(Config *config)
 		TCHAR section[MAX_DB_STRING];
 		memset(&s_dbInfo, 0, sizeof(s_dbInfo));
 		s_dbInfo.connectionTTL = 3600;
+	   _tcscpy(s_dbInfo.name, _T("information_schema"));
 		_sntprintf(section, MAX_DB_STRING, _T("mysql/databases/database#%d"), i);
-
 		if (!config->parseTemplate(section, s_configTemplate))
 		{
 			AgentWriteLog(NXLOG_WARNING, _T("MYSQL: error parsing configuration template %d"), i);
