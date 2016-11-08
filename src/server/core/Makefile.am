@@ -24,7 +24,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
 			modules.cpp mt.cpp ndd.cpp ndp.cpp \
 			netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
-			node.cpp nodelink.cpp np.cpp nxsl_classes.cpp \
+			node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp poll.cpp rack.cpp radius.cpp \
 			reporting.cpp rootobj.cpp schedule.cpp script.cpp \

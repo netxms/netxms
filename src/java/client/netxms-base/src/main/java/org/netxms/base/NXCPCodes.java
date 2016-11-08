@@ -482,7 +482,7 @@ public class NXCPCodes
 	public static final long VID_ACTION_DATA = 100;
 	public static final long VID_EMAIL_SUBJECT = 101;
 	public static final long VID_RCPT_ADDR = 102;
-//	public static final long VID_CATEGORY_NAME = 103;
+	public static final long VID_NPE_NAME = 103;
 	public static final long VID_CATEGORY_ID = 104;
 	public static final long VID_DCI_DELTA_CALCULATION = 105;
 	public static final long VID_TRANSFORMATION_SCRIPT = 106;

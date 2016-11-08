@@ -78,6 +78,7 @@ public class DataCollectionItem extends DataCollectionObject
 	private int instanceDiscoveryMethod;
 	private String instanceDiscoveryData;
 	private String instanceDiscoveryFilter;
+	private String predictionEngine;
 	
 	/**
 	 * Create data collection item object from NXCP message
@@ -100,6 +101,7 @@ public class DataCollectionItem extends DataCollectionObject
 		instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
 		instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
 		instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);
+		predictionEngine = msg.getFieldAsString(NXCPCodes.VID_NPE_NAME);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -128,6 +130,7 @@ public class DataCollectionItem extends DataCollectionObject
 		multiplier = 0;
 		customUnitName = null;
 		snmpRawValueType = SNMP_RAWTYPE_NONE;
+		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
 	
@@ -146,6 +149,7 @@ public class DataCollectionItem extends DataCollectionObject
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setField(NXCPCodes.VID_INSTANCE, instance);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
+		msg.setField(NXCPCodes.VID_NPE_NAME, predictionEngine);
 		msg.setFieldInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
 		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (customUnitName != null)
@@ -462,5 +466,21 @@ public class DataCollectionItem extends DataCollectionObject
          flags |= DCF_CALCULATE_NODE_STATUS;
       else
          flags &= ~DCF_CALCULATE_NODE_STATUS;
+   }
+
+   /**
+    * @return the predictionEngine
+    */
+   public String getPredictionEngine()
+   {
+      return predictionEngine;
+   }
+
+   /**
+    * @param predictionEngine the predictionEngine to set
+    */
+   public void setPredictionEngine(String predictionEngine)
+   {
+      this.predictionEngine = predictionEngine;
    }
 }

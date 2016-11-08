@@ -694,7 +694,7 @@ typedef struct
 #define VID_ACTION_DATA             ((UINT32)100)
 #define VID_EMAIL_SUBJECT           ((UINT32)101)
 #define VID_RCPT_ADDR               ((UINT32)102)
-//#define VID_CATEGORY_NAME           ((UINT32)103)
+#define VID_NPE_NAME                ((UINT32)103)
 #define VID_CATEGORY_ID             ((UINT32)104)
 #define VID_DCI_DELTA_CALCULATION   ((UINT32)105)
 #define VID_TRANSFORMATION_SCRIPT   ((UINT32)106)

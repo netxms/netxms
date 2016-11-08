@@ -37,6 +37,7 @@ class NetObj;
 class PollerInfo;
 class NXSL_Environment;
 class NXSL_VM;
+class PredictionEngine;
 struct NXCORE_LOG;
 
 /**
@@ -95,7 +96,8 @@ typedef struct
    void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
    BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
-   void (* pfHousekeeperHook) ();
+   void (* pfHousekeeperHook)();
+   ObjectArray<PredictionEngine> *(* pfGetPredictionEngines)();
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

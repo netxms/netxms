@@ -340,6 +340,7 @@ protected:
 	TCHAR *m_instanceDiscoveryData;
 	TCHAR *m_instanceFilterSource;
 	NXSL_Program *m_instanceFilter;
+	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);

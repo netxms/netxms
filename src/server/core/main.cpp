@@ -74,6 +74,7 @@ void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
 void ImportLocalConfiguration();
+void RegisterPredictionEngines();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -828,6 +829,7 @@ retry_db_lock:
 	// Load modules
 	if (!LoadNetXMSModules())
 		return FALSE;	// Mandatory module not loaded
+	RegisterPredictionEngines();
 
 	// Initialize mailer and SMS sender
 	InitMailer();

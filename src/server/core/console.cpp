@@ -33,6 +33,8 @@ extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 
+void ShowPredictionEngines(CONSOLE_CTX console);
+
 /**
  * Format string to show value of global flag
  */
@@ -631,7 +633,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          StrStrip(szBuffer);
          DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : NULL);
       }
-      else if (IsCommand(_T("POLLERS"), szBuffer, 1))
+      else if (IsCommand(_T("PE"), szBuffer, 2))
+      {
+         ShowPredictionEngines(pCtx);
+      }
+      else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
          ShowPollers(pCtx);
       }
@@ -1022,6 +1028,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show modules              - Show loaded server modules\n")
             _T("   show msgwq                - Show message wait queues information\n")
             _T("   show objects [<filter>]   - Dump network objects to screen\n")
+            _T("   show pe                   - Show registered prediction engines\n")
             _T("   show pollers              - Show poller threads state information\n")
             _T("   show queues               - Show internal queues statistics\n")
             _T("   show routing-table <node> - Show cached routing table for node\n")

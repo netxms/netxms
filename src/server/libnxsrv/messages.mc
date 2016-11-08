@@ -1028,4 +1028,16 @@ Language=English
 Failed to load chassis object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_NPE_REGISTERED
+Language=English
+Prediction engine %1 version %2 registered
+.
+
+MessageId=
+SymbolicName=MSG_NPE_INIT_FAILED
+Language=English
+Initialization of prediction engine %1 version %2 failed
+.
+
 ;#endif

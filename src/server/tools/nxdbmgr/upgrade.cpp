@@ -722,12 +722,22 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+*  Upgrade from V418 to V419
+*/
+static BOOL H_UpgradeFromV418(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD npe_name varchar(15)")));
+   CHK_EXEC(SetSchemaVersion(419));
+   return TRUE;
+}
+
+/**
 *  Upgrade from V417 to V418
 */
 static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
 {
-   //Update in object tools objectToolFilter objectMenuFilter
-   //move object tool flags to filter structure
+   // Update in object tools objectToolFilter objectMenuFilter
+   // move object tool flags to filter structure
    DB_RESULT hResult = SQLSelect(_T("SELECT tool_id,flags,tool_filter FROM object_tools"));
    if (hResult != NULL)
    {
@@ -10742,6 +10752,7 @@ static struct
    { 415, 416, H_UpgradeFromV415 },
    { 416, 417, H_UpgradeFromV416 },
    { 417, 418, H_UpgradeFromV417 },
+   { 418, 419, H_UpgradeFromV418 },
    { 0, 0, NULL }
 };
 

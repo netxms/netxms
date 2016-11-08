@@ -60,6 +60,7 @@ DCItem::DCItem() : DCObject()
 	m_instanceDiscoveryData = NULL;
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
+	m_predictionEngine[0] = 0;
 }
 
 /**
@@ -85,6 +86,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
    setInstanceFilter(pSrc->m_instanceFilterSource);
+   _tcscpy(m_predictionEngine, pSrc->m_predictionEngine);
 
    // Copy thresholds
 	if (pSrc->getThresholdCount() > 0)
@@ -110,7 +112,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
- *    instd_method,instd_data,instd_filter,samples,comments,guid
+ *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -156,6 +158,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
 	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
    m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
    m_guid = DBGetFieldGUID(hResult, iRow, 28);
+   DBGetField(hResult, iRow, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -202,6 +205,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_instanceDiscoveryData = NULL;
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
+	m_predictionEngine[0] = 0;
 
    updateCacheSizeInternal();
 }
@@ -230,6 +234,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
 	setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   nx_strncpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("allThresholds")))
@@ -262,11 +267,10 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-
-	safe_free(m_instanceDiscoveryData);
-	safe_free(m_instanceFilterSource);
+	free(m_instanceDiscoveryData);
+	free(m_instanceFilterSource);
 	delete m_instanceFilter;
-	safe_free(m_customUnitName);
+	free(m_customUnitName);
    clearCache();
 }
 
@@ -285,11 +289,9 @@ void DCItem::deleteAllThresholds()
  */
 void DCItem::clearCache()
 {
-   UINT32 i;
-
-   for(i = 0; i < m_cacheSize; i++)
+   for(UINT32 i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
-   safe_free(m_ppValueCache);
+   free(m_ppValueCache);
    m_ppValueCache = NULL;
    m_cacheSize = 0;
 }
@@ -346,7 +348,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
 	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
 					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,")
-					  _T("comments=?,guid=? WHERE item_id=?"));
+					  _T("comments=?,guid=?,npe_name=? WHERE item_id=?"));
 	}
    else
 	{
@@ -356,8 +358,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
                  _T("transformation,description,instance,template_item_id,flags,")
                  _T("resource_id,proxy_node,base_units,unit_multiplier,")
 		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,item_id) VALUES ")
-		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,item_id) VALUES ")
+		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -393,7 +395,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
    DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
-	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -534,6 +537,7 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_BASE_UNITS, (WORD)m_nBaseUnits);
 	pMsg->setField(VID_MULTIPLIER, (UINT32)m_nMultiplier);
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
+	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
 	pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
 	if (m_instanceDiscoveryData != NULL)
 		pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
@@ -593,6 +597,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	safe_free(m_customUnitName);
 	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
+   pMsg->getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 	m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
 
 	safe_free(m_instanceDiscoveryData);
@@ -748,6 +753,14 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, pValue->getString());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
+
+   // Update prediction engine
+   if (m_predictionEngine[0] != 0)
+   {
+      PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
+      if (engine != NULL)
+         engine->update(m_id, tmTimeStamp, pValue->getDouble());
+   }
 
    // Check thresholds and add value to cache
    if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) &&
