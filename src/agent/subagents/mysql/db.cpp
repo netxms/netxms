@@ -145,7 +145,7 @@ static bool A_myISAMKeyCacheReadHitRate(const StringMap *attributes, TCHAR *valu
    INT64 myISAMKeyReadRequests = attributes->getInt64(_T("myISAMKeyReadRequests"), -1);
    if ((myISAMKeyDiskReads < 0) || (myISAMKeyReadRequests < 0))
       return false;
-   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (myISAMKeyReadRequests > 0) ? (double)myISAMKeyDiskReads / (double)myISAMKeyReadRequests * 100.0 : (double)0);
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((myISAMKeyReadRequests > 0) ? (double)myISAMKeyDiskReads / (double)myISAMKeyReadRequests * 100.0 : (double)0));
    return true;
 }
 
@@ -291,7 +291,7 @@ static bool A_threadCacheHitRate(const StringMap *attributes, TCHAR *value)
    INT64 threadsCreated = attributes->getInt64(_T("threadsCreated"), -1);
    if ((connectionsTotal < 0) || (threadsCreated < 0))
       return false;
-   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (connectionsTotal > 0) ? (double)threadsCreated / (double)connectionsTotal * 100.0 : (double)0);
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((connectionsTotal > 0) ? (double)threadsCreated / (double)connectionsTotal * 100.0 : (double)0));
    return true;
 }
 
