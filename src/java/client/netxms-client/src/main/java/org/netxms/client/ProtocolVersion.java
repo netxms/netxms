@@ -28,12 +28,12 @@ import org.netxms.base.NXCPMessage;
 public final class ProtocolVersion
 {
    // Versions
-   public static final int BASE = 47;
-   public static final int ALARMS = 1;
+   public static final int BASE = 48;
+   public static final int ALARMS = 2;
    public static final int PUSH = 1;
    public static final int TRAP = 1;
    public static final int MOBILE = 1;
-   public static final int FULL = 5;
+   public static final int FULL = 6;
    
    // Indexes
    public static final int INDEX_BASE = 0;
