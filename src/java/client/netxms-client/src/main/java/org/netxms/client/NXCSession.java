@@ -652,8 +652,8 @@ public class NXCSession
             case SessionNotification.SESSION_KILLED:
             case SessionNotification.SERVER_SHUTDOWN:
             case SessionNotification.CONNECTION_BROKEN:
-               backgroundDisconnect();
-               break;
+               backgroundDisconnect(code);
+               return;  // backgroundDisconnect will send disconnect notification
          }
          
          sendNotification(new SessionNotification(code, data));
@@ -1030,7 +1030,7 @@ public class NXCSession
    {
       try
       {
-         disconnect();
+         disconnect(SessionNotification.CONNECTION_BROKEN);
       }
       finally
       {
@@ -1781,7 +1781,7 @@ public class NXCSession
       finally
       {
          if (!isConnected) 
-            disconnect();
+            disconnect(SessionNotification.USER_DISCONNECT);
       }
    }
    
@@ -1914,14 +1914,16 @@ public class NXCSession
    
    /**
     * Disconect session in background
+    * 
+    * @param reason disconnect reason (appropriate session notification code)
     */
-   private void backgroundDisconnect()
+   private void backgroundDisconnect(final int reason)
    {
       Thread t = new Thread(new Runnable() {
          @Override
          public void run()
          {
-            disconnect();
+            disconnect(reason);
          }
       }, "NXCSession disconnect");
       t.setDaemon(true);
@@ -1930,8 +1932,10 @@ public class NXCSession
 
    /**
     * Disconnect from server.
+    * 
+    * @param reason disconnect reason (appropriate session notification code)
     */
-   synchronized public void disconnect()
+   synchronized private void disconnect(int reason)
    {
       if (isDisconnected)
          return;
@@ -1959,6 +1963,8 @@ public class NXCSession
       
       // cause notification processing thread to stop
       notificationQueue.clear();
+      if (reason != SessionNotification.USER_DISCONNECT)
+         notificationQueue.offer(new SessionNotification(reason));
       notificationQueue.offer(new SessionNotification(SessionNotification.STOP_PROCESSING_THREAD));
 
       if (recvThread != null)
@@ -2009,6 +2015,14 @@ public class NXCSession
       objectList.clear();
       eventTemplates.clear();
       userDB.clear();
+   }
+   
+   /**
+    * Disconnect from server.
+    */
+   public void disconnect()
+   {
+      disconnect(SessionNotification.USER_DISCONNECT);
    }
 
    /**
