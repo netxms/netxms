@@ -410,11 +410,13 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
       value->set(13, 0);
    }
 
+#if HAVE_VIRDOMAINGETTIME
    INT64 seconds;
    UINT32 nsec;
    if(virDomainGetTime(*vm, &seconds, &nsec, 0) == 0)
       value->set(14, seconds);
    else
+#endif
       value->set(14, 0);
 
    int pers = virDomainIsPersistent(*vm);

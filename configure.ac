@@ -3038,6 +3038,8 @@ if test $? = 0; then
 	AC_CHECK_LIB(virt, virConnectGetLibVersion, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
 	LIBS="$LIBS $VMGR_LIBS"
 
+	AC_CHECK_FUNCS([virDomainGetTime])
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
