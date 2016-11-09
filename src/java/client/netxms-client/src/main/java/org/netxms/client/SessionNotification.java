@@ -83,6 +83,7 @@ public class SessionNotification
 	
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;
+   public static final int USER_DISCONNECT = 2002;
 	
    // Reporting server notification
    public static final int RS_SCHEDULES_MODIFIED = 3000;
