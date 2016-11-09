@@ -12,6 +12,7 @@ serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
 	hdlink.h \
 	local_admin.h \
+	nddrv.h \
 	netxms_mt.h \
 	nms_actions.h \
 	nms_alarm.h \
@@ -24,6 +25,7 @@ serverinclude_HEADERS = \
 	nms_script.h \
 	nms_topo.h \
 	nms_users.h \
+	npe.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \
@@ -32,6 +34,5 @@ serverinclude_HEADERS = \
 	nxcore_winperf.h \
 	nxmodule.h \
 	nxsrvapi.h \
-	nddrv.h \
 	pdsdrv.h \
 	zeromq.h
