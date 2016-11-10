@@ -143,7 +143,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
 
    // Resolve hostname
 	InetAddress addr = InetAddress::resolveHostName(m_szSmtpServer);
-   if (!addr.isValidUnicast())
+   if (!addr.isValid() || addr.isBroadcast() || addr.isMulticast())
       return SMTP_ERR_BAD_SERVER_NAME;
 
    // Create socket
