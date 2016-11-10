@@ -160,7 +160,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
 	}
 	else
 	{
-      m_localStorage = new NXSL_Storage;
+      m_localStorage = new NXSL_LocalStorage();
       m_storage = m_localStorage;
 	}
 }
@@ -2235,7 +2235,7 @@ void NXSL_VM::setStorage(NXSL_Storage *storage)
    else
    {
       if (m_localStorage == NULL)
-         m_localStorage = new NXSL_Storage();
+         m_localStorage = new NXSL_LocalStorage();
       m_storage = m_localStorage;
    }
 }

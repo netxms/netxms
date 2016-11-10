@@ -697,12 +697,33 @@ struct NXSL_CatchPoint
  */
 class LIBNXSL_EXPORTABLE NXSL_Storage
 {
+public:
+   NXSL_Storage();
+   virtual ~NXSL_Storage();
+
+   /**
+    * Write to storage. Storage becomes owner of provided value.
+    * Passing NULL value will effectively remove value from storage.
+    */
+   virtual void write(const TCHAR *name, NXSL_Value *value) = 0;
+
+   /**
+    * Read from storage. Returns new value owned by caller. Returns NXSL NULL if there are no value with given name.
+    */
+   virtual NXSL_Value *read(const TCHAR *name) = 0;
+};
+
+/**
+ * NXSL storage local implementation
+ */
+class LIBNXSL_EXPORTABLE NXSL_LocalStorage : public NXSL_Storage
+{
 protected:
    StringObjectMap<NXSL_Value> *m_values;
 
 public:
-   NXSL_Storage();
-   virtual ~NXSL_Storage();
+   NXSL_LocalStorage();
+   virtual ~NXSL_LocalStorage();
 
    virtual void write(const TCHAR *name, NXSL_Value *value);
    virtual NXSL_Value *read(const TCHAR *name);
