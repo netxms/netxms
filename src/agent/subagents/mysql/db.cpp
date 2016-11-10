@@ -85,15 +85,15 @@ static bool A_innodbBufferPoolFreePerc(const StringMap *attributes, TCHAR *value
 }
 
 /**
- * Attribute calculator: innodbReadCacheHitRate
+ * Attribute calculator: innodbReadCacheHitRatio
  */
-static bool A_innodbReadCacheHitRate(const StringMap *attributes, TCHAR *value)
+static bool A_innodbReadCacheHitRatio(const StringMap *attributes, TCHAR *value)
 {
    INT64 innodbDiskReads = attributes->getInt64(_T("innodbDiskReads"), -1);
    INT64 innodbReadRequests = attributes->getInt64(_T("innodbReadRequests"), -1);
    if ((innodbDiskReads < 0) || (innodbReadRequests < 0))
       return false;
-   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), (innodbReadRequests > 0) ? (double)innodbDiskReads / (double)innodbReadRequests * 100.0 : (double)0);
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%1.2f"), 100.0 - ((innodbReadRequests > 0) ? (double)innodbDiskReads / (double)innodbReadRequests * 100.0 : (double)0));
    return true;
 }
 
@@ -137,9 +137,9 @@ static bool A_myISAMKeyCacheFreePerc(const StringMap *attributes, TCHAR *value)
 }
 
 /**
- * Attribute calculator: myISAMKeyCacheReadHitRate
+ * Attribute calculator: myISAMKeyCacheReadHitRatio
  */
-static bool A_myISAMKeyCacheReadHitRate(const StringMap *attributes, TCHAR *value)
+static bool A_myISAMKeyCacheReadHitRatio(const StringMap *attributes, TCHAR *value)
 {
    INT64 myISAMKeyDiskReads = attributes->getInt64(_T("myISAMKeyDiskReads"), -1);
    INT64 myISAMKeyReadRequests = attributes->getInt64(_T("myISAMKeyReadRequests"), -1);
@@ -176,9 +176,9 @@ static bool A_myISAMKeyCacheUsedPerc(const StringMap *attributes, TCHAR *value)
 }
 
 /**
- * Attribute calculator: myISAMKeyCacheWriteHitRate
+ * Attribute calculator: myISAMKeyCacheWriteHitRatio
  */
-static bool A_myISAMKeyCacheWriteHitRate(const StringMap *attributes, TCHAR *value)
+static bool A_myISAMKeyCacheWriteHitRatio(const StringMap *attributes, TCHAR *value)
 {
    INT64 myISAMKeyDiskWrites = attributes->getInt64(_T("myISAMKeyDiskWrites"), -1);
    INT64 myISAMKeyWriteRequests = attributes->getInt64(_T("myISAMKeyWriteRequests"), -1);
@@ -283,9 +283,9 @@ static bool A_tempTablesCreatedOnDiskPerc(const StringMap *attributes, TCHAR *va
 }
 
 /**
- * Attribute calculator: threadCacheHitRate
+ * Attribute calculator: threadCacheHitRatio
  */
-static bool A_threadCacheHitRate(const StringMap *attributes, TCHAR *value)
+static bool A_threadCacheHitRatio(const StringMap *attributes, TCHAR *value)
 {
    INT64 connectionsTotal = attributes->getInt64(_T("connectionsTotal"), -1);
    INT64 threadsCreated = attributes->getInt64(_T("threadsCreated"), -1);
@@ -366,14 +366,14 @@ static GlobalData s_globalData[] =
    { _T("innodbBufferPoolDirtyPerc"), NULL, NULL, NULL, A_innodbBufferPoolDirtyPerc },
    { _T("innodbBufferPoolFree"), NULL, NULL, NULL, A_innodbBufferPoolFree },
    { _T("innodbBufferPoolFreePerc"), NULL, NULL, NULL, A_innodbBufferPoolFreePerc },
-   { _T("innodbReadCacheHitRate"), NULL, NULL, NULL, A_innodbReadCacheHitRate },
+   { _T("innodbReadCacheHitRatio"), NULL, NULL, NULL, A_innodbReadCacheHitRatio },
    { _T("maxUsedConnectionsPerc"), NULL, NULL, NULL, A_maxUsedConnectionsPerc },
    { _T("myISAMKeyCacheFree"), NULL, NULL, NULL, A_myISAMKeyCacheFree },
    { _T("myISAMKeyCacheFreePerc"), NULL, NULL, NULL, A_myISAMKeyCacheFreePerc },
-   { _T("myISAMKeyCacheReadHitRate"), NULL, NULL, NULL, A_myISAMKeyCacheReadHitRate },
+   { _T("myISAMKeyCacheReadHitRatio"), NULL, NULL, NULL, A_myISAMKeyCacheReadHitRatio },
    { _T("myISAMKeyCacheUsed"), NULL, NULL, NULL, A_myISAMKeyCacheUsed },
    { _T("myISAMKeyCacheUsedPerc"), NULL, NULL, NULL, A_myISAMKeyCacheUsedPerc },
-   { _T("myISAMKeyCacheWriteHitRate"), NULL, NULL, NULL, A_myISAMKeyCacheWriteHitRate },
+   { _T("myISAMKeyCacheWriteHitRatio"), NULL, NULL, NULL, A_myISAMKeyCacheWriteHitRatio },
    { _T("openFilesPerc"), NULL, NULL, NULL, A_openFilesPerc },
    { _T("openTablesPerc"), NULL, NULL, NULL, A_openTablesPerc },
    { _T("qcacheHitRatio"), NULL, NULL, NULL, A_qcacheHitRatio },
@@ -381,7 +381,7 @@ static GlobalData s_globalData[] =
    { _T("slowQueriesPerc"), NULL, NULL, NULL, A_slowQueriesPerc },
    { _T("sortMergeRatio"), NULL, NULL, NULL, A_sortMergeRatio },
    { _T("tempTablesCreatedOnDiskPerc"), NULL, NULL, NULL, A_tempTablesCreatedOnDiskPerc },
-   { _T("threadCacheHitRate"), NULL, NULL, NULL, A_threadCacheHitRate },
+   { _T("threadCacheHitRatio"), NULL, NULL, NULL, A_threadCacheHitRatio },
    { _T("threadsConnectedPerc"), NULL, NULL, NULL, A_threadsConnectedPerc },
    { NULL, NULL, NULL, NULL, NULL }
 };

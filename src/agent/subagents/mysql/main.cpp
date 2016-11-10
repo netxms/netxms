@@ -142,7 +142,7 @@ static BOOL SubAgentInit(Config *config)
          continue;
 		}
 
-		if (s_dbInfo.name[0] == 0)
+		if (s_dbInfo.id[0] == 0)
 			continue;
 
       DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
@@ -200,17 +200,17 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("MySQL.InnoDB.BufferPool.Used(*)"), H_GlobalParameter, _T("innodbBufferPoolData"), DCI_DT_UINT64, _T("MySQL: InnoDB used buffer pool space") },
    { _T("MySQL.InnoDB.BufferPool.UsedPerc(*)"), H_GlobalParameter, _T("innodbBufferPoolDataPerc"), DCI_DT_FLOAT, _T("MySQL: InnoDB used buffer pool space (%)") },
    { _T("MySQL.InnoDB.DiskReads(*)"), H_GlobalParameter, _T("innodbDiskReads"), DCI_DT_UINT64, _T("MySQL: InnoDB disk reads") },
-   { _T("MySQL.InnoDB.ReadCacheHitRatio(*)"), H_GlobalParameter, _T("innodbReadCacheHitRate"), DCI_DT_FLOAT, _T("MySQL: InnoDB read cache hit ratio (%)") },
+   { _T("MySQL.InnoDB.ReadCacheHitRatio(*)"), H_GlobalParameter, _T("innodbReadCacheHitRatio"), DCI_DT_FLOAT, _T("MySQL: InnoDB read cache hit ratio (%)") },
    { _T("MySQL.InnoDB.ReadRequest(*)"), H_GlobalParameter, _T("innodbReadRequests"), DCI_DT_UINT64, _T("MySQL: InnoDB read requests") },
    { _T("MySQL.InnoDB.WriteRequest(*)"), H_GlobalParameter, _T("innodbWriteRequests"), DCI_DT_UINT64, _T("MySQL: InnoDB write requests") },
    { _T("MySQL.IsReachable(*)"), H_DatabaseConnectionStatus, NULL, DCI_DT_STRING, _T("MySQL: is database reachable") },
    { _T("MySQL.MyISAM.KeyCacheFree(*)"), H_GlobalParameter, _T("myISAMKeyCacheFree"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache free space") },
    { _T("MySQL.MyISAM.KeyCacheFreePerc(*)"), H_GlobalParameter, _T("myISAMKeyCacheFreePerc"), DCI_DT_FLOAT, _T("MySQL: MyISAM key cache free space (%)") },
-   { _T("MySQL.MyISAM.KeyCacheReadHitRatio(*)"), H_GlobalParameter, _T("myISAMKeyCacheReadHitRate"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache read hit ratio (%)") },
+   { _T("MySQL.MyISAM.KeyCacheReadHitRatio(*)"), H_GlobalParameter, _T("myISAMKeyCacheReadHitRatio"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache read hit ratio (%)") },
    { _T("MySQL.MyISAM.KeyCacheSize(*)"), H_GlobalParameter, _T("myISAMKeyCacheSize"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache size") },
    { _T("MySQL.MyISAM.KeyCacheUsed(*)"), H_GlobalParameter, _T("myISAMKeyCacheUsed"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache used space") },
    { _T("MySQL.MyISAM.KeyCacheUsedPerc(*)"), H_GlobalParameter, _T("myISAMKeyCacheUsedPerc"), DCI_DT_FLOAT, _T("MySQL: MyISAM key cache used space (%)") },
-   { _T("MySQL.MyISAM.KeyCacheWriteHitRatio(*)"), H_GlobalParameter, _T("myISAMKeyCacheWriteHitRate"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache write hit ratio (%)") },
+   { _T("MySQL.MyISAM.KeyCacheWriteHitRatio(*)"), H_GlobalParameter, _T("myISAMKeyCacheWriteHitRatio"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache write hit ratio (%)") },
    { _T("MySQL.MyISAM.KeyDiskReads(*)"), H_GlobalParameter, _T("myISAMKeyDiskReads"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache disk reads") },
    { _T("MySQL.MyISAM.KeyDiskWrites(*)"), H_GlobalParameter, _T("myISAMKeyDiskWrites"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache disk writes") },
    { _T("MySQL.MyISAM.KeyReadRequests(*)"), H_GlobalParameter, _T("myISAMKeyReadRequests"), DCI_DT_UINT64, _T("MySQL: MyISAM key cache read requests") },
@@ -244,7 +244,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("MySQL.TempTables.Created(*)"), H_GlobalParameter, _T("tempTablesCreated"), DCI_DT_UINT64, _T("MySQL: temporary tables created") },
    { _T("MySQL.TempTables.CreatedOnDisk(*)"), H_GlobalParameter, _T("tempTablesCreatedOnDisk"), DCI_DT_UINT64, _T("MySQL: temporary tables created on disk") },
    { _T("MySQL.TempTables.CreatedOnDiskPerc(*)"), H_GlobalParameter, _T("tempTablesCreatedOnDiskPerc"), DCI_DT_FLOAT, _T("MySQL: temporary tables created on disk (%)") },
-   { _T("MySQL.Threads.CacheHitRatio(*)"), H_GlobalParameter, _T("threadCacheHitRate"), DCI_DT_FLOAT, _T("MySQL: thread cache hit ratio (%)") },
+   { _T("MySQL.Threads.CacheHitRatio(*)"), H_GlobalParameter, _T("threadCacheHitRatio"), DCI_DT_FLOAT, _T("MySQL: thread cache hit ratio (%)") },
    { _T("MySQL.Threads.CacheSize(*)"), H_GlobalParameter, _T("threadCacheSize"), DCI_DT_UINT64, _T("MySQL: thread cache size") },
    { _T("MySQL.Threads.Created(*)"), H_GlobalParameter, _T("threadsCreated"), DCI_DT_UINT64, _T("MySQL: threads created") },
    { _T("MySQL.Threads.Running(*)"), H_GlobalParameter, _T("threadsRunning"), DCI_DT_UINT64, _T("MySQL: threads running") }
