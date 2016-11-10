@@ -73,6 +73,8 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(NXCPMessage *msg);
 void FillComponentsMessage(NXCPMessage *msg);
+void GetPredictionEngines(NXCPMessage *msg);
+bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
 
 /**
  * Node poller start data
@@ -168,6 +170,7 @@ DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getLocationHistory)
 DEFINE_THREAD_STARTER(getNetworkPath)
+DEFINE_THREAD_STARTER(getPredictedData)
 DEFINE_THREAD_STARTER(getRoutingTable)
 DEFINE_THREAD_STARTER(getServerFile)
 DEFINE_THREAD_STARTER(getServerLogQueryData)
@@ -1487,6 +1490,12 @@ void ClientSession::processingThread()
             break;
          case CMD_DELETE_REPOSITORY:
             CALL_IN_NEW_THREAD(deleteRepository, pMsg);
+            break;
+         case CMD_GET_PREDICTION_ENGINES:
+            getPredictionEngines(pMsg);
+            break;
+         case CMD_GET_PREDICTED_DATA:
+            CALL_IN_NEW_THREAD(getPredictedData, pMsg);
             break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -14351,6 +14360,67 @@ void ClientSession::removeScheduledTask(NXCPMessage *request)
    UINT32 result = RemoveScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
+}
+
+/**
+ * Get list of registered prediction engines
+ */
+void ClientSession::getPredictionEngines(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   GetPredictionEngines(&msg);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Get predicted data
+ */
+void ClientSession::getPredictedData(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   bool success = false;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->isDataCollectionTarget())
+         {
+            if (!(g_flags & AF_DB_CONNECTION_LOST))
+            {
+               success = GetPredictedData(this, request, &msg, (DataCollectionTarget *)object);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
+            }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   if (!success)
+      sendMessage(&msg);
 }
 
 #ifdef WITH_ZMQ

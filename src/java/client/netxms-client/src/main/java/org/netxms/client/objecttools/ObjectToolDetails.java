@@ -23,12 +23,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.objects.MenuFiltringObj;
 
 /**
  * Detailed information about object tool

@@ -109,8 +109,8 @@ public class NXCPCodes
 	public static final int CMD_ACTION_DATA = 0x0053;
 	public static final int CMD_GET_CONTAINER_CAT_LIST = 0x0054;
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
-	// UNUSED: public static final int CMD_DELETE_CONTAINER_CAT = 0x0056;
-	// UNUSED: public static final int CMD_CREATE_CONTAINER_CAT = 0x0057;
+	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
+	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
 	// UNUSED: public static final int CMD_MODIFY_CONTAINER_CAT = 0x0058;
 	public static final int CMD_POLL_NODE = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;

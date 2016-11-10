@@ -42,14 +42,57 @@ public:
    PredictionEngine();
    virtual ~PredictionEngine();
 
+   /**
+    * Get engine name (must not be longer than 15 characters)
+    */
    virtual const TCHAR *getName() const = 0;
+
+   /**
+    * Get engine description
+    */
    virtual const TCHAR *getDescription() const = 0;
+
+   /**
+    * Get engine version
+    */
    virtual const TCHAR *getVersion() const = 0;
+
+   /**
+    * Get engine vendor
+    */
    virtual const TCHAR *getVendor() const = 0;
 
+   /**
+    * Initialize engine
+    *
+    * @param errorMessage buffer for error message in case of failure
+    * @return true on success
+    */
    virtual bool initialize(TCHAR *errorMessage);
 
+   /**
+    * Update internal model for given DCI
+    *
+    * @param dciId DCI ID
+    * @param timestamp timestamp of new value
+    * @param value new value
+    */
    virtual void update(UINT32 dciId, time_t timestamp, double value) = 0;
+
+   /**
+    * Reset internal model for given DCI
+    *
+    * @param dciId DCI ID
+    */
+   virtual void reset(UINT32 dciId) = 0;
+
+   /**
+    * Get predicted value for given DCI and time
+    *
+    * @param dciId DCI ID
+    * @param timestamp timestamp of interest
+    * @return predicted value
+    */
    virtual double getPredictedValue(UINT32 dciId, time_t timestamp) = 0;
 };
 

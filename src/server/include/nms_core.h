@@ -476,6 +476,7 @@ private:
    DECLARE_THREAD_STARTER(getAlarmEvents)
    DECLARE_THREAD_STARTER(getAlarms)
    DECLARE_THREAD_STARTER(getCollectedData)
+   DECLARE_THREAD_STARTER(getPredictedData)
    DECLARE_THREAD_STARTER(getLocationHistory)
    DECLARE_THREAD_STARTER(getNetworkPath)
    DECLARE_THREAD_STARTER(getRoutingTable)
@@ -735,6 +736,8 @@ private:
    void addRepository(NXCPMessage *request);
    void modifyRepository(NXCPMessage *request);
    void deleteRepository(NXCPMessage *request);
+   void getPredictionEngines(NXCPMessage *request);
+   void getPredictedData(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

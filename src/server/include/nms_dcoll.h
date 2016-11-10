@@ -373,15 +373,16 @@ public:
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(conditionId); unlock(); }
    void reloadCache();
 
-   int getDataType() { return m_dataType; }
-	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
-	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
+   int getDataType() const { return m_dataType; }
+	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
+	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
    int getThresholdSeverity();
-	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
-	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
-	const TCHAR *getInstance() { return m_instance; }
-	int getSampleCount() { return m_sampleCount; }
+	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
+	const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
+	const TCHAR *getInstance() const { return m_instance; }
+	int getSampleCount() const { return m_sampleCount; }
+	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
 	void filterInstanceList(StringMap *instances);
 	void expandInstance();
