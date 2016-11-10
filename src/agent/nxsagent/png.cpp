@@ -86,7 +86,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
       width,
       height,
       depth,
-      PNG_COLOR_TYPE_RGB_ALPHA,
+      PNG_COLOR_TYPE_RGB,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT,
       PNG_FILTER_TYPE_DEFAULT);
@@ -96,13 +96,15 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
       png_byte *row = (png_byte *)&buffer[y * bitmap.bmWidth * 4];
       row_pointers[height - y - 1] = row;
       
-      // Convert RGBA to BGRA
-      for(int i = 0; i < width * 4; i += 4)
+      // Convert RGBA to BGR
+      for(int i = 0, j = 0; i < width * 4; i++)
       {
-         png_byte r = row[i];
-         row[i] = row[i + 2];
-         row[i + 2] = r;
-         row[i + 3] = 255;  // force set non-transparent
+         png_byte r = row[i++];
+         png_byte g = row[i++];
+         png_byte b = row[i++];
+         row[j++] = b;
+         row[j++] = g;
+         row[j++] = r;
       }
    }
    png_init_io(png_ptr, fp);
