@@ -341,6 +341,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
                               proxyNode->getAgentAuthMethod(), proxyNode->getSharedSecret());
       }
 	}
+	pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    UINT32 rcc;
    if (!pAgentConn->connect(g_pServerKey, FALSE, &rcc))
    {

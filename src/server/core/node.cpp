@@ -2306,6 +2306,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
    sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
    AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(pAgentConn);
+   pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
@@ -3731,11 +3732,11 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    m_agentConnection->setPort(m_agentPort);
    m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_agentConnection);
+   m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_pServerKey, FALSE, error, socketError, g_serverId);
    if (success)
    {
-      m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
       UINT32 rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
@@ -5287,16 +5288,15 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
  */
 AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
 {
-   AgentConnectionEx *conn;
-
    if ((!(m_flags & NF_IS_NATIVE_AGENT)) ||
        (m_flags & NF_DISABLE_NXCP) ||
        (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   AgentConnectionEx *conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
+   conn->setCommandTimeout(g_agentCommandTimeout);
    if (!conn->connect(g_pServerKey, FALSE, NULL, NULL, sendServerId ? g_serverId : 0))
    {
       conn->decRefCount();

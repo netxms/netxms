@@ -180,7 +180,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    int i, nLen, nState, nCount = 0;
    TCHAR *pCmd[128], *pTmp;
 
-   if(pszTarget[0] == '@')
+   if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name shuld be in @name format.
       Node *node = (Node *)FindObjectByName(pszTarget+1, OBJECT_NODE);
@@ -208,6 +208,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
       {
          // Target node is not in our database, try default communication settings
          pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+         pConn->setCommandTimeout(g_agentCommandTimeout);
          if (!pConn->connect(g_pServerKey))
          {
             pConn->decRefCount();

@@ -104,6 +104,8 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
          return RCC_COMM_FAILURE;
       case ERR_NO_SUCH_INSTANCE:
          return RCC_NO_SUCH_INSTANCE;
+      case ERR_REQUEST_TIMEOUT:
+         return RCC_TIMEOUT;
    }
    return RCC_AGENT_ERROR;
 }

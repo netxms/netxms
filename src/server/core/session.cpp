@@ -14131,7 +14131,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, AgentErrorToRCC(dwError));
                }
-               safe_free(data);
+               free(data);
                conn->decRefCount();
             }
             else
