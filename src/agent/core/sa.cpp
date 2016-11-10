@@ -245,7 +245,7 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
       size_t imageSize;
       const BYTE *image = response->getBinaryFieldPtr(VID_FILE_DATA, &imageSize);
       if (image != NULL)
-         masterResponse->setField(VID_FILE_DATA, image, (UINT32)imageSize);
+         masterResponse->setField(VID_FILE_DATA, image, imageSize);
    }
    else
    {

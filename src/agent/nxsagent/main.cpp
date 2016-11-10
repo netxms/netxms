@@ -201,7 +201,7 @@ static void ProcessMessages()
    RecvNXCPMessage(0, NULL, &s_msgBuffer, 0, NULL, NULL, 0);
    UINT32 rawMsgSize = 65536;
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
-   while(1)
+   while(true)
    {
       int err = RecvNXCPMessageEx(s_socket, &rawMsg, &s_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 900000, 4 * 1024 * 1024);
       if (err <= 0)
