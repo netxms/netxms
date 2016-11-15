@@ -686,7 +686,7 @@ Config::~Config()
  */
 void Config::onError(const TCHAR *errorMessage)
 {
-   _ftprintf(stderr, _T("%s\n"), errorMessage);
+   nxlog_debug(1, _T("Configuration loading error: %s\n"), errorMessage);
 }
 
 /**
