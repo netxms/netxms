@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 						 "   %%%% Percent sign\n"
                    "Default format is %%I %%S %%H %%m\n"
                    "\n");
-            return 1;
+            return 0;
 #ifndef _WIN32
          case 'c':
             SetDefaultCodepage(optarg);
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
             break;
          case 'v':
             _tprintf(_T("NetXMS Alarm Control  Version ") NETXMS_VERSION_STRING _T("\n"));
-            return 1;
+            return 0;
          case '?':
             return 1;
          default:

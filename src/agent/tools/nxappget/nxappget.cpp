@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'h': // help
 			usage(argv[0]);
-			exit(1);
+			exit(0);
 			break;
 		case 'v': // verbose
 			optVerbose++;
@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			_tprintf(_T("ERROR: agent error %d\n"), rcc);
+			ret = 1;
 		}
 		AppAgentDisconnect(hPipe);
 	}

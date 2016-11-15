@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
 			   break;
 		   case 'h': // help
 			   usage(argv[0]);
-			   exit(1);
+			   exit(0);
 			   break;
 		   case 'H': // host
 			   s_optHost = optarg;
@@ -557,6 +557,7 @@ int main(int argc, char *argv[])
 					if (s_optVerbose > 0)
 					{
 						_tprintf(_T("Cannot open \"%hs\": %s\n"), p + 1, _tcserror(errno));
+						ret = 1;
 					}
 				}
 			}

@@ -150,6 +150,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("Error: cannot load input file \"%s\"\n", argv[optind]);
+		return 1;
 	}
    return 0;
 }

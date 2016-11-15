@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
    NXSL_ExtFunction func;
    int i, ch;
    bool dump = false, printResult = false, compileOnly = false, binary = false;
-   int runCount = 1;
+   int runCount = 1, rc = 0;
 
    InitNetXMSProcess();
 
@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
          else
          {
             _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), outFile, _tcserror(errno));
+            rc = 1;
          }
       }
 
@@ -223,6 +224,7 @@ int main(int argc, char *argv[])
 		         else
 		         {
 			         WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
+                           rc = 1;
 		         }
 		         safe_free(ppArgs);
             }
@@ -230,6 +232,7 @@ int main(int argc, char *argv[])
          else
          {
             WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
+            rc = 1;
          }
          delete vm;
       }
@@ -238,6 +241,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		WriteToTerminalEx(_T("%s\n"), szError);
+            rc = 1;
 	}
-   return 0;
+   return rc;
 }

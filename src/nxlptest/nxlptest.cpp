@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			_tprintf(_T("ERROR: invalid parser definition file (%s)\n"), errorText);
+			rc = 1;
 		}
 		delete parser;
 		free(xml);

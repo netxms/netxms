@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 		{
 		   case 'h': // help
 			   usage(argv[0]);
-			   exit(1);
+			   exit(0);
 			   break;
 		   case 'o': // object ID
 			   s_optObjectId = strtoul(optarg, NULL, 0);

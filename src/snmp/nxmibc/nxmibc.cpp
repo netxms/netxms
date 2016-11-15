@@ -224,7 +224,10 @@ int main(int argc, char *argv[])
 #endif
          delete pRoot;
          if (dwRet != SNMP_ERR_SUCCESS)
+         {
             _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SNMPGetErrorText(dwRet));
+            rc = 1;
+         }
       }
    }
    else
