@@ -14,6 +14,7 @@
 - H3C driver correctly reads IPv6 addresses on interfaces
 - SMS driver for Nexmo service
 - SMS driver for SMSEagle gateway
+- SMS driver for MyMobile service
 - Fixed FDB handling on Cisco switches
 - Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
 - MySQL monitoring subagent
