@@ -867,7 +867,9 @@ stop_search:
 #else
 			char *sourceConfig = argv[optind + 1];
 #endif
-         MigrateDatabase(sourceConfig);
+			TCHAR destConfFields[2048];
+			_sntprintf(destConfFields, 2048, _T("\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbName, s_dbServer, s_dbLogin);
+         MigrateDatabase(sourceConfig, destConfFields);
 #ifdef UNICODE
 			free(sourceConfig);
 #endif

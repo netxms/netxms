@@ -55,7 +55,7 @@ void InitDatabase(const char *pszInitFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(const char *file);
 void ImportDatabase(const char *file);
-void MigrateDatabase(const TCHAR *sourceConfig);
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields);
 void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();

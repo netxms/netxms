@@ -254,7 +254,7 @@ static bool MigrateDataTables()
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig)
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields)
 {
    bool success = false;
 
@@ -265,6 +265,13 @@ void MigrateDatabase(const TCHAR *sourceConfig)
       _tprintf(_T("Error loading source configuration from %s\n"), sourceConfig);
       goto cleanup;
    }
+
+	TCHAR sourceConfFields[2048];
+	_sntprintf(sourceConfFields, 2048, _T("\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbName, s_dbServer, s_dbLogin);
+	if (!GetYesNo(_T("Source: \n%s \nCurrent: \n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields))
+	{
+	   goto cleanup;
+	}
 
 	// Decrypt password
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
