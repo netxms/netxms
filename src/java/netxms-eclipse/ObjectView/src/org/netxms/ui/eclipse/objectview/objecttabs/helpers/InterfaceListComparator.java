@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
 import org.netxms.ui.eclipse.tools.ComparatorHelper;
+import org.netxms.ui.eclipse.tools.NaturalOrderComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -54,10 +55,10 @@ public class InterfaceListComparator extends ViewerComparator
 				result = iface1.getAdminState() - iface2.getAdminState();
 				break;
          case InterfacesTab.COLUMN_ALIAS:
-            result = iface1.getAlias().compareToIgnoreCase(iface2.getAlias());
+            result = NaturalOrderComparator.compare(iface1.getAlias(), iface2.getAlias());
             break;
 			case InterfacesTab.COLUMN_DESCRIPTION:
-				result = iface1.getDescription().compareToIgnoreCase(iface2.getDescription());
+				result = NaturalOrderComparator.compare(iface1.getDescription(), iface2.getDescription());
 				break;
 			case InterfacesTab.COLUMN_EXPECTED_STATE:
 				result = iface1.getExpectedState() - iface2.getExpectedState();
@@ -72,7 +73,7 @@ public class InterfaceListComparator extends ViewerComparator
             result = iface1.getMtu() - iface2.getMtu();
             break;
 			case InterfacesTab.COLUMN_NAME:
-				result = iface1.getObjectName().compareToIgnoreCase(iface2.getObjectName());
+				result = NaturalOrderComparator.compare(iface1.getObjectName(), iface2.getObjectName());
 				break;
 			case InterfacesTab.COLUMN_OPER_STATE:
 				result = iface1.getOperState() - iface2.getOperState();
