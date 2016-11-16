@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 2.0.6
-AppVersion=2.0.6
+AppVerName=NetXMS 2.0.7
+AppVersion=2.0.7
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org

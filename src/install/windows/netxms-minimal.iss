@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x86
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.0.6-minimal
+OutputBaseFilename=netxms-2.0.7-minimal
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
@@ -81,6 +81,8 @@ Source: "..\..\..\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\..\Release\generic.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\kannel.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\kannel.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\mymobile.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\mymobile.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\nexmo.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\nexmo.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\nxagent.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server

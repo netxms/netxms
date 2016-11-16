@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.0.6-x64-minimal
+OutputBaseFilename=netxms-2.0.7-x64-minimal
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -83,6 +83,8 @@ Source: "..\..\..\x64\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\generic.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\kannel.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\mymobile.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\x64\Release\mymobile.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nexmo.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\x64\Release\nexmo.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nxagent.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server

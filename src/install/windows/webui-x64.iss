@@ -2,7 +2,7 @@
 
 #include "setup-webui.iss"
 
-OutputBaseFilename=netxms-webui-2.0.6-x64
+OutputBaseFilename=netxms-webui-2.0.7-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
