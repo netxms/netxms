@@ -1,4 +1,24 @@
 *
+* 2.0.7
+*
+
+- Number of polls can be set for "diff" type thresholds
+- New method "enableDiscoveryPolling" in NXSL class "Node"
+- New NXSL functions: AgentExecuteAction, GetAllNodes
+- NXSL functions GetNodeInterfaces, GetNodeTemplates, GetNodeParents, GetObjectChildren returns correct object classes
+- Instance discovery scripts can return instances as map instance/instance name
+- SMS driver for Nexmo service
+- SMS driver for SMSEagle gateway
+- SMS driver for MyMobile service
+- H3C driver correctly reads IPv6 addresses on interfaces
+- Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
+- Fixed excessive memory consumption by web UI in some situations
+- Fixed server crash when changing scheduled tasks
+- Fixed various minor UI glitches
+- Fixed issues: #1090
+
+
+*
 * 2.0.6
 *
 
