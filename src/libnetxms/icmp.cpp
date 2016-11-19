@@ -134,10 +134,6 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
 
 #else	/* not _WIN32 */
 
-#if HAVE_POLL_H
-#include <poll.h>
-#endif
-
 /**
  * ICMP echo request structure
  */
