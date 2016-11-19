@@ -33,11 +33,14 @@
 #define LIBNETXMS_EXPORTABLE
 #endif
 
-
 #include <nms_common.h>
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
 
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -1534,6 +1537,38 @@ public:
    void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }
    void setStreetAddress(const TCHAR *streetAddress) { safe_free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
    void setPostCode(const TCHAR *postcode) { safe_free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
+};
+
+/**
+ * Max number of polled sockets
+ */
+#define SOCKET_POLLER_MAX_SOCKETS    16
+
+/**
+ * Socket poller
+ */
+class LIBNETXMS_EXPORTABLE SocketPoller
+{
+private:
+   bool m_write;
+   int m_count;
+#if USE_KQUEUE
+   int m_queue;
+   struct kevent m_sockets[SOCKET_POLLER_MAX_SOCKETS];
+#elif HAVE_POLL
+   struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
+#else
+   fd_set m_sockets;
+   SOCKET m_maxfd;
+#endif
+
+public:
+   SocketPoller(bool write = false);
+   ~SocketPoller();
+
+   bool add(SOCKET s);
+   int poll(UINT32 timeout);
+   bool isSet(SOCKET s);
 };
 
 #endif   /* __cplusplus */
