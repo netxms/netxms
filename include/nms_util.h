@@ -1368,7 +1368,9 @@ private:
    struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
 #else
    fd_set m_sockets;
+#ifndef _WIN32
    SOCKET m_maxfd;
+#endif
 #endif
 
 public:
@@ -1378,6 +1380,7 @@ public:
    bool add(SOCKET s);
    int poll(UINT32 timeout);
    bool isSet(SOCKET s);
+   void reset();
 };
 
 #endif   /* __cplusplus */

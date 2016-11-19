@@ -36,8 +36,10 @@ SocketPoller::SocketPoller(bool write)
 #elif HAVE_POLL
    memset(m_sockets, 0, sizeof(m_sockets));
 #else
-   FD_ZERO(&m_sockets);
+   FD_ZERO(m_sockets);
+#ifndef _WIN32
    m_maxfd = 0;
+#endif
 #endif
 }
 
@@ -70,8 +72,10 @@ bool SocketPoller::add(SOCKET s)
       return false;
 #endif
    FD_SET(s, &m_sockets);
+#ifndef _WIN32
    if (s > m_maxfd)
       m_maxfd = s;
+#endif
 #endif
 
    m_count++;
@@ -154,5 +158,23 @@ bool SocketPoller::isSet(SOCKET s)
    return false;
 #else
    return FD_ISSET(s, m_sockets) ? true : false;
+#endif
+}
+
+/**
+ * Reset poller (remove all added sockets)
+ */
+void SocketPoller::reset()
+{
+   m_count = 0;
+#if USE_KQUEUE
+   memset(m_sockets, 0, sizeof(m_sockets));
+#elif HAVE_POLL
+   memset(m_sockets, 0, sizeof(m_sockets));
+#else
+   FD_ZERO(m_sockets);
+#ifndef _WIN32
+   m_maxfd = 0;
+#endif
 #endif
 }
