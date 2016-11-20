@@ -662,7 +662,7 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
    memset(tmp, 0, 1024);
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
    int i,pos;
-   for(i = 0, pos = 0; i < ldap_count_values_len(values); i++)
+   for(i = 0, pos = 0; i < (int)ldap_count_values_len(values); i++)
    {
       if(pos+values[i]->bv_len > 1024)
          break;

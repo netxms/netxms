@@ -390,7 +390,6 @@ bool EPRule::matchScript(Event *pEvent)
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
-   UINT32 i;
 	NetObj *pObject;
 
    if (m_pScript == NULL)
@@ -400,7 +399,7 @@ bool EPRule::matchScript(Event *pEvent)
    // other information as variables
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
    memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
-   for(i = 0; i < pEvent->getParametersCount(); i++)
+   for(int i = 0; i < pEvent->getParametersCount(); i++)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    pLocals = new NXSL_VariableSystem;
