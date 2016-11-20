@@ -749,6 +749,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\npe.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\nxsl_classes.cpp"
 				>
 			</File>
