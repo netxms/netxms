@@ -617,41 +617,29 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SNMP_Transport *snmp6 = CreateTransport(hSocket6);
 #endif
 
+   SocketPoller sp;
+
    DbgPrintf(1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
 
    // Wait for packets
    while(!IsShutdownInProgress())
    {
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      fd_set rdfs;
-      FD_ZERO(&rdfs);
+      sp.reset();
       if (hSocket != INVALID_SOCKET)
-         FD_SET(hSocket, &rdfs);
+         sp.add(hSocket);
 #ifdef WITH_IPV6
       if (hSocket6 != INVALID_SOCKET)
-         FD_SET(hSocket6, &rdfs);
+         sp.add(hSocket6);
 #endif
 
-#if defined(WITH_IPV6) && !defined(_WIN32)
-      SOCKET nfds = 0;
-      if (hSocket != INVALID_SOCKET)
-         nfds = hSocket;
-      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
-         nfds = hSocket6;
-      int rc = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
-#else
-      int rc = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-#endif
+      int rc = sp.poll(1000);
       if ((rc > 0) && !IsShutdownInProgress())
       {
          SockAddrBuffer addr;
          socklen_t addrLen = sizeof(SockAddrBuffer);
          SNMP_PDU *pdu;
 #ifdef WITH_IPV6
-         SNMP_Transport *transport = FD_ISSET(hSocket, &rdfs) ? snmp : snmp6;
+         SNMP_Transport *transport = sp.isSet(hSocket) ? snmp : snmp6;
 #else
          SNMP_Transport *transport = snmp;
 #endif

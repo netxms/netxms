@@ -261,16 +261,12 @@ void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
 static THREAD_RESULT THREAD_CALL ClusterListenerThread(void *arg)
 {
    SOCKET s = CAST_FROM_POINTER(arg, SOCKET);
+   SocketPoller p;
    while(!g_nxccShutdown)
    {
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      fd_set rdfs;
-      FD_ZERO(&rdfs);
-      FD_SET(s, &rdfs);
-      int rc = select(SELECT_NFDS(s + 1), &rdfs, NULL, NULL, &tv);
+      p.reset();
+      p.add(s);
+      int rc = p.poll(1000);
       if ((rc > 0) && !g_nxccShutdown)
       {
          char clientAddr[128];

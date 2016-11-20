@@ -265,8 +265,6 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    int iNumErrors = 0, nRet;
    socklen_t iSize;
    TCHAR szBuffer[256];
-   struct timeval tv;
-   fd_set rdfs;
    UINT32 id = 1;
 
    // Create socket
@@ -303,13 +301,12 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
 
    // Wait for connection requests
+   SocketPoller sp;
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-      FD_ZERO(&rdfs);
-      FD_SET(hSocket, &rdfs);
-      nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
+      sp.reset();
+      sp.add(hSocket);
+      nRet = sp.poll(1000);
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
          iSize = sizeof(struct sockaddr_in);

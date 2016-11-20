@@ -275,38 +275,25 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
    nxlog_debug(1, _T("Syslog receiver thread started"));
 
    // Wait for packets
+   SocketPoller sp;
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      fd_set rdfs;
-      FD_ZERO(&rdfs);
+      sp.reset();
       if (hSocket != INVALID_SOCKET)
-         FD_SET(hSocket, &rdfs);
+         sp.add(hSocket);
 #ifdef WITH_IPV6
       if (hSocket6 != INVALID_SOCKET)
-         FD_SET(hSocket6, &rdfs);
+         sp.add(hSocket6);
 #endif
 
-#if defined(WITH_IPV6) && !defined(_WIN32)
-      SOCKET nfds = 0;
-      if (hSocket != INVALID_SOCKET)
-         nfds = hSocket;
-      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
-         nfds = hSocket6;
-      int rc = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
-#else
-      int rc = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-#endif
+      int rc = sp.poll(1000);
       if (rc > 0)
       {
          char syslogMessage[MAX_SYSLOG_MSG_LEN + 1];
          SockAddrBuffer addr;
          socklen_t addrLen = sizeof(SockAddrBuffer);
 #ifdef WITH_IPV6
-         SOCKET s = FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6;
+         SOCKET s = sp.isSet(hSocket) ? hSocket : hSocket6;
 #else
          SOCKET s = hSocket;
 #endif

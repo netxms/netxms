@@ -1075,14 +1075,9 @@ retry:
 			   )
 			{
 				// Wait until socket becomes available for writing
-				struct timeval tv;
-				fd_set wfds;
-
-				tv.tv_sec = 60;
-				tv.tv_usec = 0;
-				FD_ZERO(&wfds);
-				FD_SET(hSocket, &wfds);
-				nRet = select(SELECT_NFDS(hSocket + 1), NULL, &wfds, NULL, &tv);
+			   SocketPoller p(true);
+			   p.add(hSocket);
+				nRet = p.poll(60000);
 				if ((nRet > 0) || ((nRet == -1) && (errno == EINTR)))
 					goto retry;
 			}
@@ -1109,88 +1104,43 @@ retry:
  */
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout)
 {
-   int iErr;
-#if HAVE_POLL
-   struct pollfd fds;
-#else
-   struct timeval tv;
-   fd_set rdfs;
-#endif
-#ifndef _WIN32
-   QWORD qwStartTime;
-   UINT32 dwElapsed;
-#endif
-
-	// I've seen on Linux that poll() may hang if fds.fd == -1,
-	// so we check this ourselves
 	if (hSocket == INVALID_SOCKET)
 		return -1;
 
+	int rc;
    if (timeout != INFINITE)
    {
-#if HAVE_POLL
-      fds.fd = hSocket;
-      fds.events = POLLIN;
-      fds.revents = POLLIN;
-      do
-      {
-         qwStartTime = GetCurrentTimeMs();
-	      iErr = poll(&fds, 1, timeout);
-         if ((iErr != -1) || (errno != EINTR))
-            break;
-         dwElapsed = GetCurrentTimeMs() - qwStartTime;
-         timeout -= min(timeout, dwElapsed);
-      } while(timeout > 0);
-#else
-	   FD_ZERO(&rdfs);
-	   FD_SET(hSocket, &rdfs);
-#ifdef _WIN32
-      tv.tv_sec = timeout / 1000;
-      tv.tv_usec = (timeout % 1000) * 1000;
-      iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-#else
-      do
-      {
-         tv.tv_sec = timeout / 1000;
-         tv.tv_usec = (timeout % 1000) * 1000;
-         qwStartTime = GetCurrentTimeMs();
-         iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-         if ((iErr != -1) || (errno != EINTR))
-            break;
-         dwElapsed = GetCurrentTimeMs() - qwStartTime;
-         timeout -= min(timeout, dwElapsed);
-      } while(timeout > 0);
-#endif
-#endif
-      if (iErr > 0)
+      SocketPoller sp;
+      sp.add(hSocket);
+      rc = sp.poll(timeout);
+      if (rc > 0)
       {
 #ifdef _WIN32
-         iErr = recv(hSocket, (char *)data, (int)len, flags);
+         rc = recv(hSocket, (char *)data, (int)len, flags);
 #else
          do
          {
-            iErr = recv(hSocket, (char *)data, len, flags);
-         } while((iErr == -1) && (errno == EINTR));
+            rc = recv(hSocket, (char *)data, len, flags);
+         } while((rc == -1) && (errno == EINTR));
 #endif
       }
       else
       {
-         iErr = -2;
+         rc = -2;
       }
    }
    else
    {
 #ifdef _WIN32
-      iErr = recv(hSocket, (char *)data, (int)len, flags);
+      rc = recv(hSocket, (char *)data, (int)len, flags);
 #else
       do
       {
-         iErr = recv(hSocket, (char *)data, (int)len, flags);
-      } while((iErr == -1) && (errno == EINTR));
+         rc = recv(hSocket, (char *)data, (int)len, flags);
+      } while((rc == -1) && (errno == EINTR));
 #endif
    }
-
-   return iErr;
+   return rc;
 }
 
 /**
@@ -1224,25 +1174,19 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 	{
 		if ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
 		{
-#ifndef _WIN32
-			QWORD qwStartTime;
-			UINT32 dwElapsed;
-#endif
-
 #if HAVE_POLL
 		   struct pollfd fds;
-
 			fds.fd = s;
 			fds.events = POLLOUT;
 			fds.revents = POLLOUT;
 			do
 			{
-				qwStartTime = GetCurrentTimeMs();
+				INT64 startTime = GetCurrentTimeMs();
 				rc = poll(&fds, 1, timeout);
 				if ((rc != -1) || (errno != EINTR))
 					break;
-				dwElapsed = GetCurrentTimeMs() - qwStartTime;
-				timeout -= min(timeout, dwElapsed);
+				UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+				timeout -= min(timeout, elapsed);
 			} while(timeout > 0);
 
 			if (rc > 0)
@@ -1279,12 +1223,12 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 			{
 				tv.tv_sec = timeout / 1000;
 				tv.tv_usec = (timeout % 1000) * 1000;
-				qwStartTime = GetCurrentTimeMs();
+				INT64 startTime = GetCurrentTimeMs();
 				rc = select(SELECT_NFDS(s + 1), NULL, &wrfs, &exfs, &tv);
 				if ((rc != -1) || (errno != EINTR))
 					break;
-				dwElapsed = GetCurrentTimeMs() - qwStartTime;
-				timeout -= min(timeout, dwElapsed);
+				UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+				timeout -= min(timeout, elapsed);
 			} while(timeout > 0);
 #endif
 			if (rc > 0)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -351,38 +351,25 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
    // Wait for connection requests
+   SocketPoller sp;
    int errorCount = 0;
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      fd_set rdfs;
-      FD_ZERO(&rdfs);
+      sp.reset();
       if (hSocket != INVALID_SOCKET)
-         FD_SET(hSocket, &rdfs);
+         sp.add(hSocket);
 #ifdef WITH_IPV6
       if (hSocket6 != INVALID_SOCKET)
-         FD_SET(hSocket6, &rdfs);
+         sp.add(hSocket6);
 #endif
 
-#if defined(WITH_IPV6) && !defined(_WIN32)
-      SOCKET nfds = 0;
-      if (hSocket != INVALID_SOCKET)
-         nfds = hSocket;
-      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
-         nfds = hSocket6;
-      int nRet = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
-#else
-      int nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-#endif
+      int nRet = sp.poll(1000);
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
          char clientAddr[128];
          socklen_t size = 128;
 #ifdef WITH_IPV6
-         SOCKET hClientSocket = accept(FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
+         SOCKET hClientSocket = accept(sp.isSet(hSocket) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
 #else
          SOCKET hClientSocket = accept(hSocket, (struct sockaddr *)clientAddr, &size);
 #endif
