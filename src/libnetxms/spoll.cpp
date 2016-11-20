@@ -36,7 +36,7 @@ SocketPoller::SocketPoller(bool write)
 #elif HAVE_POLL
    memset(m_sockets, 0, sizeof(m_sockets));
 #else
-   FD_ZERO(m_sockets);
+   FD_ZERO(&m_sockets);
 #ifndef _WIN32
    m_maxfd = 0;
 #endif
@@ -114,7 +114,11 @@ int SocketPoller::poll(UINT32 timeout)
 #else
    if (timeout == INFINITE)
    {
-      return select(SELECT_NFDS(m_maxfd + 1), m_write ? NULL : m_sockets, m_write ? m_sockets : NULL, NULL, NULL);
+#ifdef _WIN32
+      return select(0, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, NULL);
+#else
+      return select(SELECT_NFDS(m_maxfd + 1), m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, NULL);
+#endif
    }
    else
    {
@@ -122,7 +126,7 @@ int SocketPoller::poll(UINT32 timeout)
 #ifdef _WIN32
       tv.tv_sec = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
-      return select(0, m_write ? NULL : m_sockets, m_write ? m_sockets : NULL, NULL, (timeout != INFINITE) ? &tv : NULL);
+      return select(0, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, (timeout != INFINITE) ? &tv : NULL);
 #else
       int rc;
       do
@@ -130,15 +134,15 @@ int SocketPoller::poll(UINT32 timeout)
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
          INT64 startTime = GetCurrentTimeMs();
-         int rc = select(m_maxfd + 1, m_write ? NULL : m_sockets, m_write ? m_sockets : NULL, NULL, &tv);
+         int rc = select(m_maxfd + 1, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
          UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
          timeout -= min(timeout, elapsed);
       } while(timeout > 0);
       return rc;
-   }
 #endif
+   }
 #endif
 }
 
@@ -157,7 +161,7 @@ bool SocketPoller::isSet(SOCKET s)
    }
    return false;
 #else
-   return FD_ISSET(s, m_sockets) ? true : false;
+   return FD_ISSET(s, &m_sockets) ? true : false;
 #endif
 }
 
@@ -172,7 +176,7 @@ void SocketPoller::reset()
 #elif HAVE_POLL
    memset(m_sockets, 0, sizeof(m_sockets));
 #else
-   FD_ZERO(m_sockets);
+   FD_ZERO(&m_sockets);
 #ifndef _WIN32
    m_maxfd = 0;
 #endif
