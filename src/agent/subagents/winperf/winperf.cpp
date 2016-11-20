@@ -420,14 +420,9 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
  */
 static void AddPredefinedCounters()
 {
-   DWORD i;
-   WINPERF_COUNTER *pCnt;
-   SYSTEM_INFO sysInfo;
-   TCHAR szBuffer[MAX_PATH];
-
-   for(i = 0; m_counterList[i].pszParamName != NULL; i++)
+   for(int i = 0; m_counterList[i].pszParamName != NULL; i++)
    {
-      pCnt = AddCounter(m_counterList[i].pszCounterName, m_counterList[i].iClass,
+      WINPERF_COUNTER *pCnt = AddCounter(m_counterList[i].pszCounterName, m_counterList[i].iClass,
                         m_counterList[i].iNumSamples, m_counterList[i].iDataType);
       if (pCnt != NULL)
          AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData,

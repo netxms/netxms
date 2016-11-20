@@ -221,7 +221,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
  */
 static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-	TCHAR szBuffer[MAX_DB_STRING + 128], szIpAddr[64];
+	TCHAR szBuffer[MAX_DB_STRING + 128];
 
 	for(int i = 0; i < s_targets.size(); i++)
 	{
