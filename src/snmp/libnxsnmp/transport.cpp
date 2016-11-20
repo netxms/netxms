@@ -373,7 +373,6 @@ void SNMP_UDPTransport::clearBuffer()
  */
 int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
-   struct timeval tv;
    SockAddrBuffer srcAddrBuffer;
 
 retry_wait:
