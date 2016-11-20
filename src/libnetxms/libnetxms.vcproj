@@ -486,6 +486,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\spoll.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StackWalker.cpp"
 				>
 			</File>
