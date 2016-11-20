@@ -373,40 +373,16 @@ void SNMP_UDPTransport::clearBuffer()
  */
 int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
-   fd_set rdfs;
    struct timeval tv;
    SockAddrBuffer srcAddrBuffer;
 
 retry_wait:
    if (dwTimeout != INFINITE)
    {
-#ifndef _WIN32
-      int iErr;
-      QWORD qwTime;
-
-      do
-      {
-#endif
-         FD_ZERO(&rdfs);
-         FD_SET(m_hSocket, &rdfs);
-         tv.tv_sec = dwTimeout / 1000;
-         tv.tv_usec = (dwTimeout % 1000) * 1000;
-#ifdef _WIN32
-         if (select(1, &rdfs, NULL, NULL, &tv) <= 0)
-            return 0;
-#else
-         qwTime = GetCurrentTimeMs();
-         if ((iErr = select(m_hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
-         {
-            if (((iErr == -1) && (errno != EINTR)) || (iErr == 0))
-            {
-               return 0;
-            }
-         }
-         qwTime = GetCurrentTimeMs() - qwTime;  // Elapsed time
-         dwTimeout -= min(((UINT32)qwTime), dwTimeout);
-      } while(iErr < 0);
-#endif
+      SocketPoller sp;
+      sp.add(m_hSocket);
+      if (sp.poll(dwTimeout) <= 0)
+         return 0;
    }
 
 	struct sockaddr *senderAddr = (pSender != NULL) ? pSender : (struct sockaddr *)&srcAddrBuffer;

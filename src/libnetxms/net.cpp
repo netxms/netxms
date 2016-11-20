@@ -114,21 +114,9 @@ bool SocketConnection::connectTCP(UINT32 ip, WORD port, UINT32 timeout)
  */
 bool SocketConnection::canRead(UINT32 timeout)
 {
-	bool ret = false;
-	struct timeval tv;
-	fd_set readFdSet;
-
-	FD_ZERO(&readFdSet);
-	FD_SET(m_socket, &readFdSet);
-	tv.tv_sec = timeout / 1000;
-	tv.tv_usec = (timeout % 1000) * 1000;
-
-	if (select(SELECT_NFDS(m_socket + 1), &readFdSet, NULL, NULL, &tv) > 0)
-	{
-		ret = true;
-	}
-
-	return ret;
+   SocketPoller p;
+   p.add(m_socket);
+   return p.poll(timeout) > 0;
 }
 
 /**

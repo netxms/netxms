@@ -661,8 +661,6 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
-	struct timeval		tv;
-	fd_set readfds;
 	int port, result = 0, length, i;
 	int nRetries, nTimeout;
 	SOCKET sockfd;
@@ -827,6 +825,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	pairfree(req);
 
 	// Send the request we've built.
+	SocketPoller sp;
 	for(i = 0; i < nRetries; i++)
 	{
 		if (i > 0)
@@ -835,11 +834,9 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 		}
 		sendto(sockfd, (char *)auth, length, 0, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa));
 
-		FD_ZERO(&readfds);
-		FD_SET(sockfd, &readfds);
-		tv.tv_sec = nTimeout;
-		tv.tv_usec = 0;
-		if (select(SELECT_NFDS(sockfd + 1), &readfds, NULL, NULL, &tv) == 0)	
+		sp.reset();
+		sp.add(sockfd);
+		if (sp.poll(nTimeout * 1000) <= 0)
 		{
 			continue;
 		}

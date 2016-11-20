@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,53 +59,20 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 /**
  * Read PDU from network
  */
-static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
+static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 {
-   fd_set rdfs;
-   struct timeval tv;
-	int nBytes;
-#ifndef _WIN32
-   int iErr;
-	UINT32 dwTimeout = g_dwSNMPTimeout;
-   QWORD qwTime;
+	SocketPoller sp;
+	sp.add(hSocket);
+	if (sp.poll(g_dwSNMPTimeout) <= 0)
+	   return false;
 
-   do
-   {
-#endif
-      FD_ZERO(&rdfs);
-      FD_SET(hSocket, &rdfs);
-#ifdef _WIN32
-      tv.tv_sec = g_dwSNMPTimeout / 1000;
-      tv.tv_usec = (g_dwSNMPTimeout % 1000) * 1000;
-#else
-      tv.tv_sec = dwTimeout / 1000;
-      tv.tv_usec = (dwTimeout % 1000) * 1000;
-#endif
-#ifdef _WIN32
-      if (select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv) <= 0)
-         return FALSE;
-#else
-      qwTime = GetCurrentTimeMs();
-      if ((iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv)) <= 0)
-      {
-         if (((iErr == -1) && (errno != EINTR)) ||
-             (iErr == 0))
-         {
-            return FALSE;
-         }
-      }
-      qwTime = GetCurrentTimeMs() - qwTime;  // Elapsed time
-      dwTimeout -= min(((UINT32)qwTime), dwTimeout);
-   } while(iErr < 0);
-#endif
-
-	nBytes = recv(hSocket, (char *)pdu, SNMP_BUFFER_SIZE, 0);
-	if (nBytes >= 0)
+	int bytes = recv(hSocket, (char *)pdu, SNMP_BUFFER_SIZE, 0);
+	if (bytes >= 0)
 	{
-		*pdwSize = nBytes;
-		return TRUE;
+		*pdwSize = bytes;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 /**

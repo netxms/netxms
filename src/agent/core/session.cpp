@@ -406,15 +406,9 @@ void CommSession::readThread()
       }
       else  // m_proxyConnection
       {
-         fd_set rdfs;
-         struct timeval tv;
-         char buffer[32768];
-
-         FD_ZERO(&rdfs);
-         FD_SET(m_hSocket, &rdfs);
-         tv.tv_sec = g_dwIdleTimeout + 1;
-         tv.tv_usec = 0;
-         int rc = select(SELECT_NFDS(m_hSocket + 1), &rdfs, NULL, NULL, &tv);
+         SocketPoller sp;
+         sp.add(m_hSocket);
+         int rc = sp.poll((g_dwIdleTimeout + 1) * 1000);
          if (rc <= 0)
             break;
          if (rc > 0)
@@ -422,6 +416,7 @@ void CommSession::readThread()
             // Update activity timestamp
             m_ts = time(NULL);
 
+            char buffer[32768];
             rc = recv(m_hSocket, buffer, 32768, 0);
             if (rc <= 0)
                break;
@@ -1113,26 +1108,21 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
  */
 void CommSession::proxyReadThread()
 {
-   fd_set rdfs;
-   struct timeval tv;
-   char buffer[32768];
-   int nRet;
-
-   while(1)
+   SocketPoller sp;
+   while(true)
    {
-      FD_ZERO(&rdfs);
-      FD_SET(m_hProxySocket, &rdfs);
-      tv.tv_sec = 0;
-      tv.tv_usec = 5000000;   // Half-second timeout
-      nRet = select(SELECT_NFDS(m_hProxySocket + 1), &rdfs, NULL, NULL, &tv);
-      if (nRet < 0)
+      sp.reset();
+      sp.add(m_hProxySocket);
+      int rc = sp.poll(500);   // Half-second timeout
+      if (rc < 0)
          break;
-      if (nRet > 0)
+      if (rc > 0)
       {
-         nRet = recv(m_hProxySocket, buffer, 32768, 0);
-         if (nRet <= 0)
+         char buffer[32768];
+         rc = recv(m_hProxySocket, buffer, 32768, 0);
+         if (rc <= 0)
             break;
-         SendEx(m_hSocket, buffer, nRet, 0, m_socketWriteMutex);
+         SendEx(m_hSocket, buffer, rc, 0, m_socketWriteMutex);
       }
    }
    disconnect();
