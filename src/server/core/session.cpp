@@ -10293,6 +10293,10 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
 			{
 				msg.setField(VID_RCC, ((Node *)object)->getPerfTabDCIList(&msg));
 			}
+			else if (object->getObjectClass() == OBJECT_CLUSTER)
+			{
+				msg.setField(VID_RCC, ((Cluster *)object)->getPerfTabDCIList(&msg));
+			}
 			else
 			{
 				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);

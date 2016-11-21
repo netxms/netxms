@@ -44,6 +44,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -266,7 +267,7 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return object instanceof AbstractNode;
+		return (object instanceof AbstractNode || object instanceof Cluster);
 	}
 
    /* (non-Javadoc)
