@@ -549,6 +549,45 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    return THREAD_OK;
 }
 
+static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folderSize)
+{
+   _TDIR *dir = _topendir(folder);
+   if (dir != NULL)
+   {
+      NX_STAT_STRUCT st;
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != NULL)
+      {
+         if (sizeof(folder) >= MAX_PATH)
+            return;
+
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         {
+            continue;
+         }
+
+         TCHAR fullName[MAX_PATH];
+         _tcscpy(fullName, folder);
+         _tcscat(fullName, FS_PATH_SEPARATOR);
+         _tcscat(fullName, d->d_name);
+
+         if (CALL_STAT(fullName, &st) == 0)
+         {
+            if (S_ISDIR(st.st_mode))
+            {
+               GetFolderInfo(fullName, fileCount, folderSize);
+            }
+            else
+            {
+               *folderSize += st.st_size;
+               (*fileCount)++;
+            }
+         }
+      }
+      _tclosedir(dir);
+   }
+}
+
 /**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
@@ -556,6 +595,35 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 {
    switch(command)
    {
+   	case CMD_GET_FOLDER_SIZE:
+   	{
+   	   TCHAR directory[MAX_PATH];
+   	   request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
+   	   response->setId(request->getId());
+   	   if (directory[0] == 0)
+         {
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
+            return TRUE;
+         }
+         ConvertPathToHost(file);
+
+         if (CheckFullPath(directory, false) && session->isMasterServer())
+         {
+            UINT64 fileCount = 0, fileSize = 0;
+            GetFolderInfo(directory, &fileCount, &fileSize);
+            response->setField(VID_RCC, ERR_SUCCESS);
+            response->setField(VID_FOLDER_SIZE, fileSize);
+            response->setField(VID_FILE_COUNT, fileCount);
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
+            response->setField(VID_RCC, ERR_ACCESS_DENIED);
+         }
+
+         return TRUE;
+   	}
       case CMD_GET_FOLDER_CONTENT:
       {
          TCHAR directory[MAX_PATH];

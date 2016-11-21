@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.ui.eclipse.filemanager.Activator;
@@ -198,14 +199,26 @@ public class DynamicFileViewer extends BaseFileViewer
          }
 
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
             // Try to reconnect in every 20 seconds
             while(running)
             {
                try
                {
-                  final AgentFileData file = session.downloadFileFromAgent(nodeId, remoteFileName, 1024, true);
+                  final AgentFileData file = session.downloadFileFromAgent(nodeId, remoteFileName, 1024, true, new ProgressListener() {
+                     @Override
+                     public void setTotalWorkAmount(long workTotal)
+                     {
+                        monitor.beginTask("Download file " + remoteFileName, (int)workTotal);
+                     }
+
+                     @Override
+                     public void markProgress(long workDone)
+                     {
+                        monitor.worked((int)workDone);
+                     }
+                  });
 
                   // When successfully connected - display notification to client.
                   runInUIThread(new Runnable() {

@@ -66,7 +66,14 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 			case AgentFileManager.COLUMN_TYPE:
 				return ((AgentFile)element).getExtension();
 			case AgentFileManager.COLUMN_SIZE:
-				return (((AgentFile)element).isDirectory() || ((AgentFile)element).isPlaceholder()) ? "" : Long.toString(((AgentFile)element).getSize()); //$NON-NLS-1$
+			   if (((AgentFile)element).isDirectory())
+			   {
+			      if (((AgentFile)element).getFileInfo() != null)
+			         return getValue(((AgentFile)element).getFileInfo().getSize()) + "(" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
+			      else
+			         return "";
+			   }			      
+				return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
 			case AgentFileManager.COLUMN_MODIFYED:
 				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
 			case AgentFileManager.COLUMN_OWNER:
@@ -125,5 +132,32 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
    public Color getBackground(Object element)
    {
       return null;
+   }
+   
+   /**
+    * @param element
+    * @return
+    */
+   private String getValue(long size)
+   {
+
+      if ((size >= 10000000000000L) || (size <= -10000000000000L))
+      {
+         return String.format("%.1fT", (size / 1000000000000.0));
+      }
+      if ((size >= 10000000000L) || (size <= -10000000000L))
+      {
+         return String.format("%.1fG", (size / 1000000000.0));
+      }
+      if ((size >= 10000000) || (size <= -10000000))
+      {
+         return String.format("%.1fM", (size / 1000000.0));
+      }
+      if ((size >= 10000) || (size <= -10000))
+      {
+         return String.format("%.1fK", (size / 1000.0));
+      }
+
+      return Double.toString(size) + "B";
    }
 }

@@ -577,6 +577,7 @@ typedef struct
 #define CMD_BULK_TERMINATE_ALARMS      0x0157
 #define CMD_BULK_RESOLVE_ALARMS        0x0158
 #define CMD_BULK_ALARM_STATE_CHANGE    0x0159
+#define CMD_GET_FOLDER_SIZE 		   0x015A
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1145,9 +1146,9 @@ typedef struct
 #define VID_LDAP_DN                 ((UINT32)551)
 #define VID_LDAP_ID                 ((UINT32)552)
 #define VID_FAIL_CODE_LIST          ((UINT32)553)
-//#define VID_CATEGORY_DESCRIPTION    ((UINT32)554)
+#define VID_FOLDER_SIZE             ((UINT32)554)
 #define VID_ALARM_CATEGORY_ID       ((UINT32)555)
-//#define VID_NUM_ALARM_CATEGORIES    ((UINT32)556)
+#define VID_FILE_COUNT              ((UINT32)556)
 #define VID_ALARM_CATEGORY_ACL      ((UINT32)557)
 //#define VID_NUM_ALARM_CATEGORY_ACL  ((UINT32)558)
 #define VID_ALARM_ID_LIST           ((UINT32)559)

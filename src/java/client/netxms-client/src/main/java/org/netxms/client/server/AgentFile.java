@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.AgentFileInfo;
 
 /**
  * Represents information about file in server's file store
@@ -31,6 +32,7 @@ public class AgentFile
    private List<AgentFile> children;
    private AgentFile parent;
    private long nodeId;
+   private AgentFileInfo info;
    
    /**
     * Create server file object from NXCP message.
@@ -287,5 +289,21 @@ public class AgentFile
    public void setAccessRights(String accessRights)
    {
       this.accessRights = accessRights;
+   }
+   
+   /**
+    * @param Set agent file info
+    */
+   public void setFileInfo(AgentFileInfo info)
+   {
+      this.info = info;
+   }
+   
+   /**
+    * @return Agent File Info
+    */
+   public AgentFileInfo getFileInfo()
+   {
+      return info;
    }
 }

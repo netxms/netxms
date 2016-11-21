@@ -35,77 +35,84 @@ import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
  */
 public class AgentFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private WorkbenchLabelProvider wbLabelProvider;
-	
-	public AgentFileLabelProvider()
-	{
-		wbLabelProvider = new WorkbenchLabelProvider();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
-		if (columnIndex == 0)
-			return getImage(element);
-		return null;
-	}
+   private WorkbenchLabelProvider wbLabelProvider;
+   
+   public AgentFileLabelProvider()
+   {
+      wbLabelProvider = new WorkbenchLabelProvider();
+   }
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      if (columnIndex == 0)
+         return getImage(element);
+      return null;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
-	@Override
-	public String getColumnText(Object element, int columnIndex)
-	{
-		switch(columnIndex)
-		{
-			case AgentFileManager.COLUMN_NAME:
-				return getText(element);
-			case AgentFileManager.COLUMN_TYPE:
-				return ((AgentFile)element).getExtension();
-			case AgentFileManager.COLUMN_SIZE:
-				return (((AgentFile)element).isDirectory() || ((AgentFile)element).isPlaceholder()) ? "" : Long.toString(((AgentFile)element).getSize()); //$NON-NLS-1$
-			case AgentFileManager.COLUMN_MODIFYED:
-				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
-			case AgentFileManager.COLUMN_OWNER:
-			   return ((AgentFile)element).getOwner();
-			case AgentFileManager.COLUMN_GROUP:
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {
+      switch(columnIndex)
+      {
+         case AgentFileManager.COLUMN_NAME:
+            return getText(element);
+         case AgentFileManager.COLUMN_TYPE:
+            return ((AgentFile)element).getExtension();
+         case AgentFileManager.COLUMN_SIZE:
+            if (((AgentFile)element).isDirectory())
+            {
+               if (((AgentFile)element).getFileInfo() != null)
+                  return getValue(((AgentFile)element).getFileInfo().getSize()) + "(" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
+               else
+                  return "";
+            }              
+            return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
+         case AgentFileManager.COLUMN_MODIFYED:
+            return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
+         case AgentFileManager.COLUMN_OWNER:
+            return ((AgentFile)element).getOwner();
+         case AgentFileManager.COLUMN_GROUP:
             return ((AgentFile)element).getGroup();
-			case AgentFileManager.COLUMN_ACCESS_RIGHTS:
+         case AgentFileManager.COLUMN_ACCESS_RIGHTS:
             return ((AgentFile)element).getAccessRights();
-		}
-		return null;
-	}
+      }
+      return null;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-	 */
-	@Override
-	public Image getImage(Object element)
-	{
-		return wbLabelProvider.getImage(element);
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+    */
+   @Override
+   public Image getImage(Object element)
+   {
+      return wbLabelProvider.getImage(element);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
-	@Override
-	public String getText(Object element)
-	{
-		return wbLabelProvider.getText(element);
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
+   @Override
+   public String getText(Object element)
+   {
+      return wbLabelProvider.getText(element);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		wbLabelProvider.dispose();
-		super.dispose();
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      wbLabelProvider.dispose();
+      super.dispose();
+   }
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
@@ -125,5 +132,32 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
    public Color getBackground(Object element)
    {
       return null;
+   }
+   
+   /**
+    * @param element
+    * @return
+    */
+   private String getValue(long size)
+   {
+
+      if ((size >= 10000000000000L) || (size <= -10000000000000L))
+      {
+         return String.format("%.1fT", (size / 1000000000000.0));
+      }
+      if ((size >= 10000000000L) || (size <= -10000000000L))
+      {
+         return String.format("%.1fG", (size / 1000000000.0));
+      }
+      if ((size >= 10000000) || (size <= -10000000))
+      {
+         return String.format("%.1fM", (size / 1000000.0));
+      }
+      if ((size >= 10000) || (size <= -10000))
+      {
+         return String.format("%.1fK", (size / 1000.0));
+      }
+
+      return Double.toString(size) + "B";
    }
 }

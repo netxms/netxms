@@ -34,13 +34,12 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.netxms.base.NXCommon;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
 import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -539,9 +538,21 @@ public final class ObjectToolExecutor
          }
 
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow);
+            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow, new ProgressListener() {
+               @Override
+               public void setTotalWorkAmount(long workTotal)
+               {
+                  monitor.beginTask("Download file " + fileName, (int)workTotal);
+               }
+
+               @Override
+               public void markProgress(long workDone)
+               {
+                  monitor.worked((int)workDone);
+               }
+            });
             runInUIThread(new Runnable() {
                @Override
                public void run()

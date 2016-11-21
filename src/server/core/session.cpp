@@ -1433,6 +1433,7 @@ void ClientSession::processingThread()
          case CMD_GET_EFFECTIVE_RIGHTS:
             getEffectiveRights(pMsg);
             break;
+         case CMD_GET_FOLDER_SIZE:
          case CMD_GET_FOLDER_CONTENT:
          case CMD_FILEMGR_DELETE_FILE:
          case CMD_FILEMGR_RENAME_FILE:
@@ -13697,7 +13698,8 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 	if (object != NULL)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES) ||
-         (request->getCode() == CMD_GET_FOLDER_CONTENT && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
+         (request->getCode() == CMD_GET_FOLDER_CONTENT && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) ||
+		 (request->getCode() == CMD_GET_FOLDER_SIZE && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
@@ -13720,6 +13722,10 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                      //Add line in audit log
                      switch(request->getCode())
                      {
+                        case CMD_GET_FOLDER_SIZE:
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
+                           _T("Get size of agents folder \"%s\""), fileName);
+                           break;
                         case CMD_GET_FOLDER_CONTENT:
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                               _T("Get content of agents folder \"%s\""), fileName);

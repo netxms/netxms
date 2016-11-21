@@ -76,6 +76,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentFileData;
+import org.netxms.client.AgentFileInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
@@ -136,6 +137,7 @@ public class AgentFileManager extends ViewPart
    private Action actionTailFile;
    private Action actionShowFile;
    private Action actionCreateDirectory;
+   private Action actionShowFileSize;
    private long objectId = 0;
 
    /*
@@ -215,6 +217,7 @@ public class AgentFileManager extends ViewPart
             if (selection != null)
             {
                actionDelete.setEnabled(selection.size() > 0);
+               actionShowFileSize.setEnabled(selection.size() > 0);
             }
          }
       });
@@ -551,6 +554,14 @@ public class AgentFileManager extends ViewPart
       };
       actionCreateDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.newFolder"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreateDirectory.getActionDefinitionId(), new ActionHandler(actionCreateDirectory));
+      
+      actionShowFileSize = new Action("Show file size") {
+         @Override
+         public void run()
+         {
+            showFileSize();
+         }
+      };
    }
 
    /**
@@ -643,6 +654,7 @@ public class AgentFileManager extends ViewPart
          }
          mgr.add(actionRename);
       }
+      mgr.add(actionShowFileSize);
       mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -942,9 +954,9 @@ public class AgentFileManager extends ViewPart
          }
 
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, followChanges);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, followChanges, null);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -978,44 +990,49 @@ public class AgentFileManager extends ViewPart
 
       final AgentFile sf = (AgentFile)selection.getFirstElement();
 
-      String selected;
-      do
-      {
-         FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-         fd.setText(Messages.get().AgentFileManager_StartDownloadDialogTitle);
-         String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
-         fd.setFilterExtensions(filterExtensions);
-         String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
-         fd.setFilterNames(filterNames);
-         fd.setFileName(sf.getName());
-         selected = fd.open();
+      FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+      fd.setText(Messages.get().AgentFileManager_StartDownloadDialogTitle);
+      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
+      fd.setFilterNames(filterNames);
+      fd.setFileName(sf.getName());
+      final String selected = fd.open();
 
-         if (selected == null)
-            return;
-      } while(selected.isEmpty());
+      if (selected == null)
+         return;
       
-      if (!sf.isDirectory())
-         downloadFile(selected, sf.getFullName());
-
-      final String name = selected;
-      if (sf.isDirectory())
-      {
-         ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
+      ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if (!sf.isDirectory())
             {
-               downloadDir(sf, name);
+               downloadFile(selected, sf.getFullName(), monitor, false);
             }
-
-            @Override
-            protected String getErrorMessage()
+            else
             {
-               return Messages.get().AgentFileManager_DirectoryReadError;
+               long dirSize = -1;
+               try
+               {
+                  dirSize = session.getAgentFileInfo(sf).getSize();
+               }
+               catch(Exception e)
+               {
+               }
+               monitor.beginTask(String.format("Compressing directory %s", sf.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
+               downloadDir(sf, selected, monitor);
             }
-         };
-         job.setUser(false);
-         job.start();
-      }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AgentFileManager_DirectoryReadError;
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
    
    /**
@@ -1026,7 +1043,7 @@ public class AgentFileManager extends ViewPart
     * @throws IOException 
     * @throws NXCException 
     */
-   private void downloadDir(final AgentFile sf, String localFileName) throws NXCException, IOException
+   private void downloadDir(final AgentFile sf, String localFileName, final IProgressMonitor monitor) throws NXCException, IOException
    {
       File dir = new File(localFileName);
       dir.mkdir();
@@ -1037,48 +1054,52 @@ public class AgentFileManager extends ViewPart
       }
       for(int i = 0; i < files.length; i++)
       {
-         if(files[i].isDirectory())
+         if (files[i].isDirectory())
          {
-            downloadDir(files[i], localFileName + "/" + sf.getName()); //$NON-NLS-1$
+            downloadDir(files[i], localFileName + "/" + files[i].getName(), monitor); //$NON-NLS-1$
          }
          else
          {
-            downloadFile(localFileName + "/" + files[i].getName(), files[i].getFullName()); //$NON-NLS-1$
+            downloadFile(localFileName + "/" + files[i].getName(), files[i].getFullName(), monitor, true); //$NON-NLS-1$
          }
       }
    }
    
    /**
     * Downloads file
+    * @throws NXCException 
+    * @throws IOException 
     */
-   private void downloadFile(final String localName, final String remoteName)
+   private void downloadFile(final String localName, final String remoteName, final IProgressMonitor monitor, final boolean subTask) throws IOException, NXCException
    {
-      ConsoleJob job = new ConsoleJob(Messages.get().AgentFileManager_DownloadFileFromAgent, null, Activator.PLUGIN_ID, null) {
+      if (subTask)
+         monitor.subTask(String.format("Download file %s", remoteName));
+      final AgentFileData file = session.downloadFileFromAgent(objectId, remoteName, 0, false, new ProgressListener() {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         public void setTotalWorkAmount(long workTotal)
          {
-            final AgentFileData file = session.downloadFileFromAgent(objectId, remoteName, 0, false);
-            File outputFile = new File(localName);
-            outputFile.createNewFile();
-            InputStream in = new FileInputStream(file.getFile());
-            OutputStream out = new FileOutputStream(outputFile);
-            byte[] buf = new byte[1024];
-            int len;
-            while((len = in.read(buf)) > 0)
-            {
-               out.write(buf, 0, len);
-            }
-            in.close();
-            out.close();
+            if (!subTask)
+               monitor.beginTask(String.format("Download file %s", remoteName), (int)workTotal);
          }
 
          @Override
-         protected String getErrorMessage()
+         public void markProgress(long workDone)
          {
-            return String.format(Messages.get().AgentFileManager_FileDownloadError, remoteName, session.getObjectName(objectId), objectId);
+            monitor.worked((int)workDone);
          }
-      };
-      job.start();
+      });
+      File outputFile = new File(localName);
+      outputFile.createNewFile();
+      InputStream in = new FileInputStream(file.getFile());
+      OutputStream out = new FileOutputStream(outputFile);
+      byte[] buf = new byte[1024];
+      int len;
+      while((len = in.read(buf)) > 0)
+      {
+         out.write(buf, 0, len);
+      }
+      in.close();
+      out.close();
    }
    
    /**
@@ -1166,6 +1187,31 @@ public class AgentFileManager extends ViewPart
             });
          }
       }.start();
+   }
+   
+   /**
+    * Show file size
+    */
+   private void showFileSize()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      
+      @SuppressWarnings("unchecked")
+      List<AgentFile> list = selection.toList();
+      for(AgentFile f : list)
+      {
+         try
+         {
+            AgentFileInfo info = session.getAgentFileInfo(f);
+            f.setFileInfo(info);
+            viewer.update(f, null);
+         }
+         catch (Exception e)
+         {
+         }         
+      }
    }
 
    /*

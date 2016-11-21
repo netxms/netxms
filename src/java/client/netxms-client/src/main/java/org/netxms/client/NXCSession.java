@@ -271,6 +271,7 @@ public class NXCSession
    private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
    private Set<SessionListener> listeners = new HashSet<SessionListener>(0);
    private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
+   private Map<Long, ProgressListener> progressListeners = new HashMap<Long, ProgressListener>(0);
    
    // Message subscriptions
    private Map<MessageSubscription, MessageHandler> messageSubscriptions = new HashMap<MessageSubscription, MessageHandler>(0);
@@ -723,6 +724,7 @@ public class NXCSession
             }
          }
          file.writeData(msg.getBinaryData());
+         notifyProgressListener(id, msg.getBinaryData().length);
          if (msg.isEndOfFile())
          {
             file.close();
@@ -7576,6 +7578,26 @@ public class NXCSession
       }
       return files;
    }
+   
+   /**
+    * Return information about agent file
+    * @param file
+    * @return AgentFileInfo object
+    * @throws IOException
+    * @throws NXCException
+    */
+   public AgentFileInfo getAgentFileInfo(AgentFile file) throws IOException, NXCException
+   {
+      if (!file.isDirectory())
+         return new AgentFileInfo(file.getName(), 0, file.getSize());
+      
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_SIZE);
+      msg.setField(NXCPCodes.VID_FILE_NAME, file.getFullName());
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)(file.getNodeId()));
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new AgentFileInfo(file.getName(), response.getFieldAsInt64(NXCPCodes.VID_FILE_COUNT), response.getFieldAsInt64(NXCPCodes.VID_FOLDER_SIZE));
+   }
 
    /**
     * Start file upload from server's file store to agent. Returns ID of upload
@@ -7668,6 +7690,33 @@ public class NXCSession
    }
 
    /**
+    * Notify progress listener
+    * @param id
+    * @param length
+    */
+   void notifyProgressListener(long id, int length)
+   {
+      synchronized(progressListeners)
+      {
+         ProgressListener listener = progressListeners.get(id);
+         if (listener != null)
+            listener.markProgress(length);
+      }
+   }
+   
+   /**
+    * Remove progress listener when download is done
+    * @param id
+    */
+   void removeProgressListener(long id)
+   {
+      synchronized(progressListeners)
+      {
+         progressListeners.remove(id);
+      }
+   }
+   
+   /**
     * Download file from remote host via agent.
     *
     * @param nodeId node object ID
@@ -7678,7 +7727,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -7689,9 +7738,26 @@ public class NXCSession
 
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
+      if (listener != null)
+      {
+         final long fileSize = waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
+         listener.setTotalWorkAmount(fileSize);
+         synchronized(progressListeners)
+         {
+            progressListeners.put(msg.getMessageId(), listener);
+         }
+      }
       
       AgentFileData file =  new AgentFileData(id, remoteFileName, waitForFile(msg.getMessageId(), 36000000));
-      waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
+      
+      try
+      {
+         waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
+      }
+      finally
+      {
+         removeProgressListener(msg.getMessageId());
+      }
       return file;
    }
    

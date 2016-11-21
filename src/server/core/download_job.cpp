@@ -132,7 +132,13 @@ ServerJobResult FileDownloadJob::run()
 		response = conn->customRequest(&msg);
 		if (response != NULL)
 		{
-         m_fileSize = (INT64)response->getFieldAsUInt64(VID_FILE_SIZE);
+			NXCPMessage notify;
+			m_fileSize = (INT64)response->getFieldAsUInt64(VID_FILE_SIZE);
+			notify.setCode(CMD_REQUEST_COMPLETED);
+			notify.setId(m_requestId);
+			notify.setField(VID_FILE_SIZE, m_fileSize);
+			m_session->sendMessage(&notify);
+
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
 			if (rcc == ERR_SUCCESS)
