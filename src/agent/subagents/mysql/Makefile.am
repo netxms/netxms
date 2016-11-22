@@ -8,7 +8,6 @@ mysql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 if USE_INTERNAL_LIBTRE
 mysql_la_LIBADD += ../../../libtre/libnxtre.la
 endif
-mysql_la_LIBADD += @MYSQL_LIBS@
 
 EXTRA_DIST = mysql.vcproj mysql_subagent.h
 
