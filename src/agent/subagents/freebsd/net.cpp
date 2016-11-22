@@ -596,7 +596,7 @@ static kvm_t *s_kvmd = NULL;
 /**
  * KVM lock
  */
- static Mutex s_kvmLock;
+static MUTEX s_kvmLock = MutexCreate();
 
 #if __FreeBSD__ >= 10
 
@@ -638,7 +638,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		}
 	}
 
-	s_kvmLock.lock();
+	MutexLock(s_kvmLock);
 	if (s_kvmd == NULL)
 	{
 		char errmsg[_POSIX2_LINE_MAX];
@@ -646,7 +646,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		if (s_kvmd == NULL)
 		{
 			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_openfiles failed (%hs)"), errmsg);
-			s_kvmLock.unlock();
+			MutexUnlock(s_kvmLock);
 			return SYSINFO_RC_ERROR;
 		}
 		if (kvm_nlist(s_kvmd, s_nl) < 0)
@@ -654,7 +654,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_nlist failed (%hs)"), kvm_geterr(s_kvmd));
 			kvm_close(s_kvmd);
 			s_kvmd = NULL;
-			s_kvmLock.unlock();
+			MutexUnlock(s_kvmLock);
 			return SYSINFO_RC_UNSUPPORTED;
 		}
 		if (s_nl[0].n_type == 0)
@@ -662,7 +662,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 			nxlog_debug(7, _T("H_NetIfInfoFromKVM: symbol %hs not found in kernel symbol table"), s_nl[0].n_name);
 			kvm_close(s_kvmd);
 			s_kvmd = NULL;
-			s_kvmLock.unlock();
+			MutexUnlock(s_kvmLock);
 			return SYSINFO_RC_UNSUPPORTED;
 		}
 	}
@@ -674,7 +674,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 	if (kvm_read(s_kvmd, curr, &head, sizeof(head)) != sizeof(head))
 	{
 		nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
-		s_kvmLock.unlock();
+		MutexUnlock(s_kvmLock);
 		return SYSINFO_RC_ERROR;
 	}
 	curr = (u_long)TAILQ_FIRST(&head);
@@ -778,7 +778,7 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 			break;
 		}
 	}
-	s_kvmLock.unlock();
+	MutexUnlock(s_kvmLock);
 	return rc;
 }
 
