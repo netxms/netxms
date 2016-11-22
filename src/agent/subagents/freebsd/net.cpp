@@ -2,6 +2,7 @@
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
+** Copyright (C) 2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,15 +61,10 @@ typedef struct t_IfList
 	int index;
 } IFLIST;
 
-struct nlist nl[] = {
-#define N_IFNET 0
-	{ (char *)"_ifnet" },
-	{ NULL },
-};
-
-kvm_t *kvmd = NULL;
-
-LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.IP.Forwarding parameter
+ */
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -91,7 +87,7 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	{
 		if (nVal == 0 || nVal == 1)
 		{
-			ret_int(pValue, nVal);
+			ret_int(value, nVal);
 			nRet = SYSINFO_RC_SUCCESS;
 		}
 	}
@@ -99,7 +95,10 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.Interface.AdminStatus parameter
+ */
+LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -138,12 +137,12 @@ LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 					if ((flags & IFF_UP) == IFF_UP)
 					{
 						// enabled
-						ret_int(pValue, 1);
+						ret_int(value, 1);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 					else
 					{
-						ret_int(pValue, 2);
+						ret_int(value, 2);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
@@ -155,7 +154,10 @@ LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 	return nRet;
 }
 
-LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.Interface.OperStatus parameter
+ */
+LONG H_NetIfOperStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -192,19 +194,19 @@ LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstra
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
 							(ifmr.ifm_status & IFM_ACTIVE) == IFM_ACTIVE)
 					{
-						ret_int(pValue, 1);
+						ret_int(value, 1);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 					else
 					{
-						ret_int(pValue, 0);
+						ret_int(value, 0);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
             else if (errno == EINVAL || errno == ENOTTY)
             {
                // ifmedia not supported, assume the status is NORMAL
-               ret_int(pValue, 1);
+               ret_int(value, 1);
                nRet = SYSINFO_RC_SUCCESS;
             }
 				close(nSocket);
@@ -215,7 +217,10 @@ LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstra
 	return nRet;
 }
 
-LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.ArpCache list
+ */
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -279,16 +284,19 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
 				pSdl->sdl_index);
 
 #ifdef UNICODE
-		pValue->addPreallocated(WideStringFromMBString(szBuff));
+		value->addPreallocated(WideStringFromMBString(szBuff));
 #else
-		pValue->add(szBuff);
+		value->add(szBuff);
 #endif
 	}
 
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.IP.RoutingTable list
+ */
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -397,9 +405,9 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 				strcat(szOut, szTmp);
 
 #ifdef UNICODE
-				pValue->addPreallocated(WideStringFromMBString(szOut));
+				value->addPreallocated(WideStringFromMBString(szOut));
 #else
-				pValue->add(szOut);
+				value->add(szOut);
 #endif
 			}
 		}
@@ -413,7 +421,10 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 	return nRet;
 }
 
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.InterfaceList list
+ */
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -504,9 +515,9 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 							BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 							pList[i].name);
 #ifdef UNICODE
-					pValue->addPreallocated(WideStringFromMBString(szOut));
+					value->addPreallocated(WideStringFromMBString(szOut));
 #else
-					pValue->add(szOut);
+					value->add(szOut);
 #endif
 				}
 				else
@@ -535,9 +546,9 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 									pList[i].name);
 						}
 #ifdef UNICODE
-						pValue->addPreallocated(WideStringFromMBString(szOut));
+						value->addPreallocated(WideStringFromMBString(szOut));
 #else
-						pValue->add(szOut);
+						value->add(szOut);
 #endif
 					}
 				}
@@ -568,94 +579,218 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 	return nRet;
 }
 
-LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * KVM name list
+ */
+struct nlist s_nl[] = 
 {
-	int nRet = SYSINFO_RC_SUCCESS;
-	char szArg[512];
-	u_long ifnetaddr;
-	struct ifnet ifnet;
-	struct ifnethead ifnethead;
-#if __FreeBSD__ < 5
-	char szTName[IFNAMSIZ];
-#endif
-	char szName[IFNAMSIZ];
+	{ (char *)"_ifnet" },
+	{ NULL }
+};
 
-	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+/**
+ * KVM handle
+ */
+static kvm_t *s_kvmd = NULL;
 
-	if (szArg[0] != 0)
+/**
+ * KVM lock
+ */
+ static Mutex s_kvmLock;
+
+#if __FreeBSD__ >= 10
+
+/**
+ * Read kernel counter
+ */
+inline UINT64 ReadKernelCounter64(counter_u64_t cnt)
+{
+	UINT64 value;
+	if (kvm_read(s_kvmd, (u_long)cnt, &value, sizeof(UINT64)) != sizeof(UINT64))
 	{
-		if (szArg[0] >= '0' && szArg[0] <= '9')
-		{
-			// index
-			if (if_indextoname(atoi(szArg), szArg) != szArg)
-			{
-				// not found
-				nRet = SYSINFO_RC_ERROR;
-			}
-		}
+		nxlog_debug(7, _T("ReadKernelCounter64: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+	   return 0;
+	}
+   return value;
+}
 
-		if (nRet == SYSINFO_RC_SUCCESS)
-		{
-			nRet = SYSINFO_RC_ERROR;
-
-			if (kvmd == NULL) {
-				kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-				if (kvmd == NULL)
-					return SYSINFO_RC_ERROR;
-				if (kvm_nlist(kvmd, nl) < 0)
-					return SYSINFO_RC_ERROR;
-				if (nl[0].n_type == 0)
-					return SYSINFO_RC_ERROR;
-			}
-			ifnetaddr = nl[N_IFNET].n_value;
-			if (kvm_read(kvmd, ifnetaddr, &ifnethead, sizeof(ifnethead)) != sizeof(ifnethead))
-				return SYSINFO_RC_ERROR;
-			ifnetaddr = (u_long)TAILQ_FIRST(&ifnethead);
-			while (ifnetaddr) {
-				if (kvm_read(kvmd, ifnetaddr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
-					return SYSINFO_RC_ERROR;
-				ifnetaddr = (u_long)TAILQ_NEXT(&ifnet, if_link);
-#if __FreeBSD__ >= 5
-				strlcpy(szName, ifnet.if_xname, sizeof(szName));
-#else
-				if (kvm_read(kvmd, ifnet.if_name, szTName, sizeof(szTName)) != sizeof(szTName))
-					return SYSINFO_RC_ERROR;
-				szTName[sizeof(szTName) - 1] = '\0';
-				snprintf(szName, sizeof(szName), "%s%d", szTName, ifnet.if_unit);
 #endif
-				if (strcmp(szName, szArg) == 0) {
-					nRet = SYSINFO_RC_SUCCESS;
-					switch((long)pArg)
-					{
-						case IF_INFO_BYTES_IN:
-							ret_uint(pValue, ifnet.if_ibytes);
-							break;
-						case IF_INFO_BYTES_OUT:
-							ret_uint(pValue, ifnet.if_obytes);
-							break;
-						case IF_INFO_IN_ERRORS:
-							ret_uint(pValue, ifnet.if_ierrors);
-							break;
-						case IF_INFO_OUT_ERRORS:
-							ret_uint(pValue, ifnet.if_oerrors);
-							break;
-						case IF_INFO_PACKETS_IN:
-							ret_uint(pValue, ifnet.if_ipackets);
-							break;
-						case IF_INFO_PACKETS_OUT:
-							ret_uint(pValue, ifnet.if_opackets);
-							break;
-						default:
-							nRet = SYSINFO_RC_UNSUPPORTED;
-							break;
-					}
-					break;
-				}
-				else
-					continue;
-			}
+
+/**
+ * Handler for interface statistics parameters
+ */
+LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+	char ifName[256];
+	if (!AgentGetParameterArgA(param, 1, ifName, sizeof(ifName)))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (ifName[0] == 0)		
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if ((ifName[0] >= '0') && (ifName[0] <= '9'))
+	{
+		int ifIndex = atoi(ifName);
+		if (if_indextoname(ifIndex, ifName) != ifName)
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: cannot find interface name for index %d"), ifIndex);
+			return SYSINFO_RC_UNSUPPORTED;
 		}
 	}
 
-	return nRet;
+	s_kvmLock.lock();
+	if (s_kvmd == NULL)
+	{
+		char errmsg[_POSIX2_LINE_MAX];
+		s_kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errmsg);
+		if (s_kvmd == NULL)
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_openfiles failed (%hs)"), errmsg);
+			s_kvmLock.unlock();
+			return SYSINFO_RC_ERROR;
+		}
+		if (kvm_nlist(s_kvmd, s_nl) < 0)
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_nlist failed (%hs)"), kvm_geterr(s_kvmd));
+			kvm_close(s_kvmd);
+			s_kvmd = NULL;
+			s_kvmLock.unlock();
+			return SYSINFO_RC_UNSUPPORTED;
+		}
+		if (s_nl[0].n_type == 0)
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: symbol %hs not found in kernel symbol table"), s_nl[0].n_name);
+			kvm_close(s_kvmd);
+			s_kvmd = NULL;
+			s_kvmLock.unlock();
+			return SYSINFO_RC_UNSUPPORTED;
+		}
+	}
+
+	int rc = SYSINFO_RC_UNSUPPORTED;
+
+	u_long curr = s_nl[0].n_value;
+	struct ifnethead head;
+	if (kvm_read(s_kvmd, curr, &head, sizeof(head)) != sizeof(head))
+	{
+		nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+		s_kvmLock.unlock();
+		return SYSINFO_RC_ERROR;
+	}
+	curr = (u_long)TAILQ_FIRST(&head);
+	while(curr != 0)
+	{
+		struct ifnet ifnet;
+		if (kvm_read(s_kvmd, curr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+			rc = SYSINFO_RC_ERROR;
+			break;
+		}
+		curr = (u_long)TAILQ_NEXT(&ifnet, if_link);
+
+#if __FreeBSD__ >= 5
+		const char *currName = ifnet.if_xname;
+#else
+		char currName[IFNAMSIZ];
+		if (kvm_read(s_kvmd, ifnet.if_name, currName, sizeof(currName)) != sizeof(currName))
+		{
+			nxlog_debug(7, _T("H_NetIfInfoFromKVM: kvm_read failed (%hs)"), kvm_geterr(s_kvmd));
+			rc = SYSINFO_RC_ERROR;
+			break;
+		}
+		currName[sizeof(currName) - 2] = 0;
+		size_t len = strlen(currName); 
+		snprintf(&currName[len], sizeof(currName) - len, "%d", ifnet.if_unit);
+#endif
+		if (!strcmp(currName, ifName))
+		{
+			rc = SYSINFO_RC_SUCCESS;
+#if __FreeBSD__ >= 11
+			switch(CAST_FROM_POINTER(arg, int))
+			{
+				case IF_INFO_BYTES_IN:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IBYTES]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_BYTES_IN_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IBYTES]));
+					break;
+				case IF_INFO_BYTES_OUT:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OBYTES]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_BYTES_OUT_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OBYTES]));
+					break;
+				case IF_INFO_IN_ERRORS:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IERRORS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_IN_ERRORS_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IERRORS]));
+					break;
+				case IF_INFO_OUT_ERRORS:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OERRORS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_OUT_ERRORS_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OERRORS]));
+					break;
+				case IF_INFO_PACKETS_IN:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IPACKETS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_PACKETS_IN_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_IPACKETS]));
+					break;
+				case IF_INFO_PACKETS_OUT:
+					ret_uint(value, (UINT32)(ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OPACKETS]) & _ULL(0xFFFFFFFF)));
+					break;
+				case IF_INFO_PACKETS_OUT_64:
+					ret_uint64(value, ReadKernelCounter64(ifnet.if_counters[IFCOUNTER_OPACKETS]));
+					break;
+				default:
+					rc = SYSINFO_RC_UNSUPPORTED;
+					break;
+			}
+#else
+			switch(CAST_FROM_POINTER(arg, int))
+			{
+				case IF_INFO_BYTES_IN:
+					ret_uint(value, ifnet.if_ibytes);
+					break;
+				case IF_INFO_BYTES_OUT:
+					ret_uint(value, ifnet.if_obytes);
+					break;
+				case IF_INFO_IN_ERRORS:
+					ret_uint(value, ifnet.if_ierrors);
+					break;
+				case IF_INFO_OUT_ERRORS:
+					ret_uint(value, ifnet.if_oerrors);
+					break;
+				case IF_INFO_PACKETS_IN:
+					ret_uint(value, ifnet.if_ipackets);
+					break;
+				case IF_INFO_PACKETS_OUT:
+					ret_uint(value, ifnet.if_opackets);
+					break;
+				default:
+					rc = SYSINFO_RC_UNSUPPORTED;
+					break;
+			}
+#endif
+			break;
+		}
+	}
+	s_kvmLock.unlock();
+	return rc;
 }
+
+/**
+ * Handler for Net.Interface.64BitCounters
+ */
+LONG H_NetInterface64bitSupport(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+#if __FreeBSD__ >= 10
+	ret_int(value, 1);
+#else
+	ret_int(value, 0);
+#endif	
+	return SYSINFO_RC_SUCCESS;
+} 

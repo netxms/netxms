@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2004-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,9 @@
 #include "system.h"
 #include "disk.h"
 
-//
-// Subagent information
-//
-
+/**
+ * Supported parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Disk.Avail(*)"),                H_DiskInfo,        (const TCHAR *)DISK_AVAIL,		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
@@ -47,15 +46,27 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("FileSystem.Used(*)"),           H_DiskInfo,        (const TCHAR *)DISK_USED,         DCI_DT_UINT64,	DCIDESC_FS_USED },
 	{ _T("FileSystem.UsedPerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
 
-	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfAdmStatus,  NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
-	{ _T("Net.Interface.BytesIn(*)"),     H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN,    DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
-	{ _T("Net.Interface.BytesOut(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
-	{ _T("Net.Interface.InErrors(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_INERRORS },
-	{ _T("Net.Interface.Link(*)"),        H_NetIfLink,       NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
-	{ _T("Net.Interface.OperStatus(*)"),  H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
-	{ _T("Net.Interface.OutErrors(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_OUTERRORS },
-	{ _T("Net.Interface.PacketsIn(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
-	{ _T("Net.Interface.PacketsOut(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
+
+	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
+	{ _T("Net.Interface.BytesIn(*)"),     H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN,    DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ _T("Net.Interface.BytesOut(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ _T("Net.Interface.InErrors(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS,   DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+	{ _T("Net.Interface.Link(*)"),        H_NetIfOperStatus, NULL,				DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
+	{ _T("Net.Interface.OperStatus(*)"),  H_NetIfOperStatus, NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_OPERSTATUS },
+	{ _T("Net.Interface.OutErrors(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ _T("Net.Interface.PacketsIn(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN,  DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ _T("Net.Interface.PacketsOut(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+
+#if __FreeBSD__ >= 10
+	{ _T("Net.Interface.BytesIn64(*)"),    H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ _T("Net.Interface.BytesOut64(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_BYTES_OUT_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ _T("Net.Interface.InErrors64(*)"),   H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_IN_ERRORS_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_INERRORS },
+	{ _T("Net.Interface.OutErrors64(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_OUT_ERRORS_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ _T("Net.Interface.PacketsIn64(*)"),  H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ _T("Net.Interface.PacketsOut64(*)"), H_NetIfInfoFromKVM, (const TCHAR *)IF_INFO_PACKETS_OUT_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
+#endif	
+
 	{ _T("Net.IP.Forwarding"),            H_NetIpForwarding, (const TCHAR *)4,			DCI_DT_INT,	DCIDESC_NET_IP_FORWARDING },
 	{ _T("Net.IP6.Forwarding"),           H_NetIpForwarding, (const TCHAR *)6,			DCI_DT_INT,	DCIDESC_NET_IP6_FORWARDING },
 
@@ -101,7 +112,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Agent.SourcePackageSupport"),   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 };
 
-static NETXMS_SUBAGENT_LIST m_enums[] =
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
 	{ _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,       NULL },
@@ -109,6 +123,9 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 	{ _T("System.ProcessList"),           H_ProcessList,     NULL },
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -119,33 +136,33 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	0, NULL,	// tables
 	0, NULL,	// actions
 	0, NULL	// push parameters
 };
 
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// Entry points for server
-//
-
+/**
+ * Entry point for server - get interface list
+ */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
 	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Entry point for server - get ARP cache
+ */
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
 	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
