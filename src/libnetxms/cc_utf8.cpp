@@ -126,7 +126,7 @@ static int __internal_utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, i
    if (size >= dstLen)
       size = dstLen - 1;
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (UCS2CHAR)(*psrc) : '?';
+      *pdst = (((BYTE)*psrc & 0x80) == 0) ? (UCS2CHAR)(*psrc) : '?';
    *pdst = 0;
    return size;
 }
