@@ -272,7 +272,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize)
 		         for(size_t i = 0; i < length; i++)
 		         {
 		            char c = ((char *)m_value)[i];
-			         buffer[i] = ((c > 0) && (c < 128)) ? c : '?';
+			         buffer[i] = (((BYTE)c & 0x80) == 0) ? c : '?';
 		         }
             }
 #else
@@ -334,7 +334,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
                   for(size_t i = 0; i < length; i++)
                   {
                      char c = ((char *)m_value)[i];
-                     buffer[i] = ((c > 0) && (c < 128)) ? c : '?';
+                     buffer[i] = (((BYTE)c & 0x80) == 0) ? c : '?';
                   }
                }
             }
