@@ -880,7 +880,7 @@ public class NXCSession
       private void processAlarmCategoryConfigChange(final NXCPMessage msg)
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
-         long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_CATEGORY_ID);
+         long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_ELEMENT_LIST_BASE);
          AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) : null;
          if (alarmCategoriesNeedSync)
          {
