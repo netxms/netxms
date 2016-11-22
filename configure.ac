@@ -2184,8 +2184,9 @@ fi
 # *BSD specific checks
 #--------------------------------------------------------------------
 
+AC_CHECK_HEADERS([sys/event.h])
 AC_CHECK_LIB(kvm, kvm_open)
-AC_CHECK_FUNCS([kvm_getswapinfo])
+AC_CHECK_FUNCS([kvm_openfiles kvm_getswapinfo kqueue])
 AC_CHECK_TYPES([struct kinfo_proc2],,,[
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
