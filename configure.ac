@@ -905,7 +905,7 @@ if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
 		MODULES="$MODULES appagent libnxmap client libnxmb"
 	else
-		MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv"
+		MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv snmp"
 	fi
 fi
 
@@ -3130,6 +3130,7 @@ AS_IF([test "x$with_dist" = "xyes"],
   SMSDRV_DIRS=`echo $SMSDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 ])
+
 
 #--------------------------------------------------------------------
 # Substitute variables
