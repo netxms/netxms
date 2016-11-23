@@ -5321,10 +5321,15 @@ AgentConnectionEx *Node::acquireSnmpProxyConnection()
    {
       m_snmpProxyConnection->decRefCount();
       m_snmpProxyConnection = NULL;
+      nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): existing agent connection dropped"), m_name, (int)m_id);
    }
 
    if (m_snmpProxyConnection == NULL)
+   {
       m_snmpProxyConnection = createAgentConnection();
+      if (m_snmpProxyConnection != NULL)
+         nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): new agent connection created"), m_name, (int)m_id);
+   }
 
    AgentConnectionEx *conn = m_snmpProxyConnection;
    if (conn != NULL)
