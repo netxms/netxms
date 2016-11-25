@@ -12,6 +12,7 @@
 - SMS driver for MyMobile service
 - H3C driver correctly reads IPv6 addresses on interfaces
 - Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
+- Fixed FreeBSD 11 compatibility issues
 - Fixed excessive memory consumption by web UI in some situations
 - Fixed server crash when changing scheduled tasks
 - Fixed various minor UI glitches
