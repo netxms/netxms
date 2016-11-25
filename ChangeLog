@@ -19,7 +19,7 @@
 - Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
 - MySQL monitoring subagent
 - Fixed FreeBSD 11 compatibility issues
-- Fixed issues: #106, #130, #174, #185, #526, #569, #876, #953, #1031, #1043, #1090, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326, #1338
+- Fixed issues: #106, #130, #174, #185, #526, #569, #876, #953, #1031, #1043, #1090, #1097, #1192, #1205, #1206, #1285, #1312, #1318, #1320, #1323, #1326, #1332, #1338
 
 
 *
