@@ -906,6 +906,7 @@ CREATE TABLE items
   instd_data varchar(255) null,
   instd_filter SQL_TEXT null,
   samples integer not null,
+  npe_name varchar(15) null,
   comments SQL_TEXT null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
