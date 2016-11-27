@@ -22,14 +22,16 @@
 
 #include "nxagentd.h"
 
+/**
+ * Statistics
+ */
+UINT32 g_acceptErrors = 0;
+UINT32 g_acceptedConnections = 0;
+UINT32 g_rejectedConnections = 0;
 
-//
-// Global variables
-//
-
-UINT32 g_dwAcceptErrors = 0;
-UINT32 g_dwAcceptedConnections = 0;
-UINT32 g_dwRejectedConnections = 0;
+/**
+ * Session list
+ */
 CommSession **g_pSessionList = NULL;
 MUTEX g_hSessionListAccess;
 
@@ -118,10 +120,14 @@ static BOOL RegisterSession(CommSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterSession(UINT32 dwIndex)
+void UnregisterSession(UINT32 index, UINT32 id)
 {
    MutexLock(g_hSessionListAccess);
-   g_pSessionList[dwIndex] = NULL;
+   if ((g_pSessionList[index] != NULL) && (g_pSessionList[index]->getId() == id))
+   {
+      g_pSessionList[index]->debugPrintf(4, _T("Session unregistered"));
+      g_pSessionList[index] = NULL;
+   }
    MutexUnlock(g_hSessionListAccess);
 }
 
@@ -286,7 +292,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    int bindFailures = 0;
    if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
-	   DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+	   DebugPrintf(1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
       if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
       {
          nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
@@ -301,7 +307,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #ifdef WITH_IPV6
    if (!(g_dwFlags & AF_DISABLE_IPV6))
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+      DebugPrintf(1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
       if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
       {
          nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
@@ -380,7 +386,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             if (error != WSAEINTR)
                nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             errorCount++;
-            g_dwAcceptErrors++;
+            g_acceptErrors++;
             if (errorCount > 1000)
             {
                nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
@@ -397,13 +403,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
          errorCount = 0;     // Reset consecutive errors counter
          InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
-         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), addr.toString(buffer));
+         DebugPrintf(5, _T("Incoming connection from %s"), addr.toString(buffer));
 
          bool masterServer, controlServer;
          if (IsValidServerAddress(addr, &masterServer, &controlServer))
          {
-            g_dwAcceptedConnections++;
-            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s accepted"), buffer);
+            g_acceptedConnections++;
+            DebugPrintf(5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
             CommSession *session = new CommSession(hClientSocket, addr, masterServer, controlServer);
@@ -414,16 +420,16 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             }
             else
             {
-               DebugPrintf(INVALID_INDEX, 9, _T("Session registered for %s"), buffer);
+               DebugPrintf(9, _T("Session registered for %s"), buffer);
                session->run();
             }
          }
          else     // Unauthorized connection
          {
-            g_dwRejectedConnections++;
+            g_rejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s rejected"), buffer);
+            DebugPrintf(5, _T("Connection from %s rejected"), buffer);
          }
       }
       else if (nRet == -1)
@@ -452,7 +458,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #ifdef WITH_IPV6
    closesocket(hSocket6);
 #endif
-   DebugPrintf(INVALID_INDEX, 1, _T("Listener thread terminated"));
+   DebugPrintf(1, _T("Listener thread terminated"));
    return THREAD_OK;
 }
 
@@ -464,8 +470,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    m_mutexWatchdogActive = MutexCreate();
    MutexLock(m_mutexWatchdogActive);
 
-   ThreadSleep(5);
-   while(!(g_dwFlags & AF_SHUTDOWN))
+   while(!AgentSleepAndCheckForShutdown(5000))
    {
       MutexLock(g_hSessionListAccess);
       time_t now = time(NULL);
@@ -474,12 +479,12 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
 				{
-					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), (UINT64)g_pSessionList[i]->getTimeStamp());
+               g_pSessionList[i]->debugPrintf(4, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), (UINT64)g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
+               g_pSessionList[i] = NULL;
 				}
          }
       MutexUnlock(g_hSessionListAccess);
-      ThreadSleep(5);
    }
 
    // Disconnect all sessions
@@ -491,7 +496,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 
    ThreadSleep(1);
    MutexUnlock(m_mutexWatchdogActive);
-   DebugPrintf(INVALID_INDEX, 1, _T("Session Watchdog thread terminated"));
+   DebugPrintf(1, _T("Session Watchdog thread terminated"));
 
    return THREAD_OK;
 }

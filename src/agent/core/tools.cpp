@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
 /**
  * Print message to the console if allowed to do so
  */
-void ConsolePrintf(const TCHAR *pszFormat, ...)
+void ConsolePrintf(const TCHAR *format, ...)
 {
    if (!(g_dwFlags & AF_DAEMON))
    {
       va_list args;
 
-      va_start(args, pszFormat);
-      _vtprintf(pszFormat, args);
+      va_start(args, format);
+      _vtprintf(format, args);
       va_end(args);
    }
 }
@@ -41,22 +41,19 @@ void ConsolePrintf(const TCHAR *pszFormat, ...)
 /**
  * Print debug messages
  */
-void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
+void DebugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= nxlog_get_debug_level())
-   {
-      va_list args;
-      TCHAR szBuffer[4096];
+   if (level > nxlog_get_debug_level())
+      return;
 
-      va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
-      va_end(args);
+   va_list args;
+   TCHAR buffer[4096];
 
-      if (dwSessionId != INVALID_INDEX)
-         nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "ds", dwSessionId, szBuffer);
-      else
-         nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
-   }
+   va_start(args, format);
+   _vsntprintf(buffer, 4096, format, args);
+   va_end(args);
+
+   nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }
 
 /**
@@ -85,22 +82,23 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
 /**
  * Wait for specific process
  */
-BOOL WaitForProcess(const TCHAR *name)
+bool WaitForProcess(const TCHAR *name)
 {
 	TCHAR param[MAX_PATH], value[MAX_RESULT_LENGTH];
-	BOOL success = FALSE;
+	bool success = false;
+	VirtualSession session(0);
 	UINT32 rc;
 
 	_sntprintf(param, MAX_PATH, _T("Process.Count(%s)"), name);
-	while(1)
+	while(true)
 	{
-		rc = GetParameterValue(INVALID_INDEX, param, value, NULL);
+		rc = GetParameterValue(param, value, &session);
 		switch(rc)
 		{
 			case ERR_SUCCESS:
 				if (_tcstol(value, NULL, 0) > 0)
 				{
-					success = TRUE;
+					success = true;
 					goto done;
 				}
 				break;

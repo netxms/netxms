@@ -120,7 +120,7 @@ UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *se
    for(UINT32 i = 0; i < m_dwNumActions; i++)
       if (!_tcsicmp(m_pActionList[i].szName, action))
       {
-         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d"), action, m_pActionList[i].iType);
+         DebugPrintf(4, _T("Executing action %s of type %d"), action, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:
@@ -185,7 +185,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
    msg.setCode(CMD_COMMAND_OUTPUT);
    msg.deleteAllFields();
 
-   DebugPrintf(INVALID_INDEX, 4, _T("ActionExecutionThread: Expanding command \"%s\""), data->m_cmdLine);
+   DebugPrintf(4, _T("ActionExecutionThread: Expanding command \"%s\""), data->m_cmdLine);
 
    // Substitute $1 .. $9 with actual arguments
    if (data->m_args != NULL)
@@ -218,7 +218,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
       data->m_cmdLine = _tcsdup(cmdLine.getBuffer());
    }
 
-   DebugPrintf(INVALID_INDEX, 4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
+   DebugPrintf(4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
    FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
    if (pipe != NULL)
    {
@@ -238,7 +238,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
    }
    else
    {
-      DebugPrintf(data->m_session->getIndex(), 4, _T("ActionExecutionThread: popen() failed"));
+      data->m_session->debugPrintf(4, _T("ActionExecutionThread: popen() failed"));
 
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("Failed to execute command %s"), data->m_cmdLine);
@@ -263,7 +263,7 @@ UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR 
    {
       if (!_tcsicmp(m_pActionList[i].szName, action))
       {
-         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d with output"), action, m_pActionList[i].iType);
+         session->debugPrintf(4, _T("Executing action %s of type %d with output"), action, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:

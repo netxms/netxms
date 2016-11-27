@@ -211,7 +211,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 		return SYSINFO_RC_UNSUPPORTED;
 
    int mode = CAST_FROM_POINTER(arg, int);
-   DebugPrintf(INVALID_INDEX, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
+   DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
 
    nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
 
@@ -371,7 +371,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 2, _T("uname() failed: %s"), _tcserror(errno));
+      DebugPrintf(2, _T("uname() failed: %s"), _tcserror(errno));
       nResult = SYSINFO_RC_ERROR;
    }
 

@@ -465,7 +465,7 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
  */
 static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 {
-	DebugPrintf(INVALID_INDEX, 1, _T("Shutdown thread started"));
+	DebugPrintf(1, _T("Shutdown thread started"));
    Shutdown();
    ExitProcess(0);
    return THREAD_OK; // Never reached
@@ -479,7 +479,7 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
  */
 static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
-	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
+	DebugPrintf(1, _T("H_RestartAgent() called"));
 
    TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 
@@ -502,7 +502,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  s_debugLevel, szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
+	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
    DWORD dwResult;
    STARTUPINFO si;
@@ -547,7 +547,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  (int)s_debugLevel, szPlatformSuffixOption,
               (unsigned long)s_pid);
-	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
+	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
 }
@@ -745,10 +745,10 @@ BOOL Initialize()
 	if (_tcscmp(g_masterAgent, _T("not_set")))
 	{
 		g_dwFlags |= AF_SUBAGENT_LOADER;
-		DebugPrintf(INVALID_INDEX, 1, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
+		DebugPrintf(1, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
 	}
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Data directory: %s"), g_szDataDirectory);
+   DebugPrintf(1, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
 
 #ifndef _WIN32
@@ -761,9 +761,9 @@ BOOL Initialize()
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
-   DebugPrintf(INVALID_INDEX, 6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
+   DebugPrintf(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
-   DebugPrintf(INVALID_INDEX, 6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
+   DebugPrintf(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
    CreateFolder(g_szFileStore);
 
 #ifdef _WIN32
@@ -780,7 +780,7 @@ BOOL Initialize()
    s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSession,
       SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory);
-   DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
+   DebugPrintf(1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
    if (!InitCryptoLib(s_enabledCiphers))
@@ -844,7 +844,7 @@ BOOL Initialize()
 	// Wait for external process if requested
 	if (s_processToWaitFor[0] != 0)
 	{
-	   DebugPrintf(INVALID_INDEX, 1, _T("Waiting for process %s"), s_processToWaitFor);
+	   DebugPrintf(1, _T("Waiting for process %s"), s_processToWaitFor);
 		if (!WaitForProcess(s_processToWaitFor))
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", s_processToWaitFor);
 	}
@@ -1081,7 +1081,7 @@ BOOL Initialize()
  */
 void Shutdown()
 {
-	DebugPrintf(INVALID_INDEX, 2, _T("Shutdown() called"));
+	DebugPrintf(2, _T("Shutdown() called"));
 	if (g_dwFlags & AF_ENABLE_WATCHDOG)
 		StopWatchdog();
 

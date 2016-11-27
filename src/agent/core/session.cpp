@@ -30,7 +30,7 @@
 /**
  * Externals
  */
-void UnregisterSession(UINT32 dwIndex);
+void UnregisterSession(UINT32 index, UINT32 id);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
@@ -40,6 +40,11 @@ void ClearDataCollectionConfiguration();
  * SNMP proxy thread pool
  */
 ThreadPool *g_snmpProxyThreadPool = NULL;
+
+/**
+ * Next free session ID
+ */
+static VolatileCounter s_sessionId = 0;
 
 /**
  * Agent proxy statistics
@@ -72,11 +77,8 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
 {
    ((CommSession *)pArg)->readThread();
-
-   // When CommSession::ReadThread exits, all other session
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterSession(((CommSession *)pArg)->getIndex());
+   UnregisterSession(((CommSession *)pArg)->getIndex(), ((CommSession *)pArg)->getId());
+   ((CommSession *)pArg)->debugPrintf(6, _T("Receiver thread stopped"));
    ((CommSession *)pArg)->decRefCount();
    return THREAD_OK;
 }
@@ -113,11 +115,12 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
  */
 CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
 {
+   m_id = InterlockedIncrement(&s_sessionId);
+   m_index = INVALID_INDEX;
    m_sendQueue = new Queue;
    m_processingQueue = new Queue;
    m_hSocket = hSocket;
    m_hProxySocket = INVALID_SOCKET;
-   m_dwIndex = INVALID_INDEX;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hProxyReadThread = INVALID_THREAD_HANDLE;
@@ -132,6 +135,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_acceptFileUpdates = false;
    m_ipv6Aware = false;
    m_bulkReconciliationSupported = false;
+   m_disconnected = false;
    m_hCurrFile = -1;
    m_fileRqId = 0;
    m_compressor = NULL;
@@ -176,6 +180,24 @@ CommSession::~CommSession()
 }
 
 /**
+ * Debug print in session context
+ */
+void CommSession::debugPrintf(int level, const TCHAR *format, ...)
+{
+   if (level > nxlog_get_debug_level())
+      return;
+
+   va_list args;
+   TCHAR buffer[8192];
+
+   va_start(args, format);
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+
+   nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "dds", m_index, m_id, buffer);
+}
+
+/**
  * Start all threads
  */
 void CommSession::run()
@@ -190,10 +212,11 @@ void CommSession::run()
  */
 void CommSession::disconnect()
 {
-	DebugPrintf(m_dwIndex, 5, _T("CommSession::disconnect()"));
+	debugPrintf(5, _T("CommSession::disconnect()"));
    shutdown(m_hSocket, SHUT_RDWR);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
+   m_disconnected = true;
 }
 
 /**
@@ -202,7 +225,7 @@ void CommSession::disconnect()
 void CommSession::readThread()
 {
    SocketMessageReceiver receiver(m_hSocket, 4096, MAX_AGENT_MSG_SIZE);
-   while(true)
+   while(!m_disconnected)
    {
       if (!m_proxyConnection)
       {
@@ -212,7 +235,7 @@ void CommSession::readThread()
          // Check for decryption error
          if (result == MSGRECV_DECRYPTION_FAILURE)
          {
-            DebugPrintf(m_dwIndex, 4, _T("Unable to decrypt received message"));
+            debugPrintf(4, _T("Unable to decrypt received message"));
             continue;
          }
 
@@ -221,7 +244,7 @@ void CommSession::readThread()
          {
             if (m_ts < time(NULL) - (time_t)g_dwIdleTimeout)
             {
-               DebugPrintf(m_dwIndex, 5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
+               debugPrintf(5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
                break;
             }
             continue;
@@ -230,7 +253,7 @@ void CommSession::readThread()
          // Receive error
          if (msg == NULL)
          {
-            DebugPrintf(m_dwIndex, 5, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+            debugPrintf(5, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
             break;
          }
 
@@ -240,13 +263,13 @@ void CommSession::readThread()
          if (nxlog_get_debug_level() >= 8)
          {
             String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
-            DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+            debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
          }
 
          if (msg->isBinary())
          {
             TCHAR buffer[64];
-            DebugPrintf(m_dwIndex, 6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
             if (msg->getCode() == CMD_FILE_DATA)
             {
@@ -263,7 +286,7 @@ void CommSession::readThread()
                         m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
                         if (m_compressor == NULL)
                         {
-                           DebugPrintf(m_dwIndex, 5, _T("Unable to create stream compressor for method %d"), (int)method);
+                           debugPrintf(5, _T("Unable to create stream compressor for method %d"), (int)method);
                            data = NULL;
                            dataSize = -1;
                         }
@@ -321,7 +344,7 @@ void CommSession::readThread()
          else if (msg->isControl())
          {
             TCHAR buffer[64];
-            DebugPrintf(m_dwIndex, 6, _T("Received control message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received control message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
             if (msg->getCode() == CMD_GET_NXCP_CAPS)
             {
@@ -338,7 +361,7 @@ void CommSession::readThread()
          else
          {
             TCHAR buffer[64];
-            DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
             UINT32 rcc;
             switch(msg->getCode())
@@ -433,46 +456,71 @@ void CommSession::readThread()
    if (m_proxyConnection)
       ThreadJoin(m_hProxyReadThread);
 
-   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
+   debugPrintf(5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
 }
 
 /**
  * Send prepared raw message over the network and destroy it
  */
-BOOL CommSession::sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx)
+bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
 {
-   BOOL bResult = TRUE;
-   TCHAR szBuffer[128];
+   if (m_disconnected)
+   {
+      free(msg);
+      debugPrintf(6, _T("Aborting sendRawMessage call because session is disconnected"));
+      return false;
+   }
 
-   DebugPrintf(m_dwIndex, 6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(pMsg->code), szBuffer), ntohl(pMsg->size));
+   bool success = true;
+   TCHAR buffer[128];
+   debugPrintf(6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
    if (nxlog_get_debug_level() >= 8)
    {
-      String msgDump = NXCPMessage::dump(pMsg, NXCP_VERSION);
-      DebugPrintf(m_dwIndex, 8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
+      String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
+      debugPrintf(8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
    }
-   if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
+   if ((ctx != NULL) && (ctx != PROXY_ENCRYPTION_CTX))
    {
-      NXCP_ENCRYPTED_MESSAGE *enMsg = pCtx->encryptMessage(pMsg);
+      NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
       if (enMsg != NULL)
       {
          if (SendEx(m_hSocket, (const char *)enMsg, ntohl(enMsg->size), 0, m_socketWriteMutex) <= 0)
          {
-            bResult = FALSE;
+            success = false;
          }
          free(enMsg);
       }
    }
    else
    {
-      if (SendEx(m_hSocket, (const char *)pMsg, ntohl(pMsg->size), 0, m_socketWriteMutex) <= 0)
+      if (SendEx(m_hSocket, (const char *)msg, ntohl(msg->size), 0, m_socketWriteMutex) <= 0)
       {
-         bResult = FALSE;
+         success = false;
       }
    }
-	if (!bResult)
-	   DebugPrintf(m_dwIndex, 6, _T("CommSession::SendRawMessage() for %s (size %d) failed"), NXCPMessageCodeName(ntohs(pMsg->code), szBuffer), ntohl(pMsg->size));
-   free(pMsg);
-   return bResult;
+	if (!success)
+	   debugPrintf(6, _T("CommSession::SendRawMessage() for %s (size %d) failed"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
+   free(msg);
+   return success;
+}
+
+/**
+ * Send message directly to socket
+ */
+bool CommSession::sendMessage(NXCPMessage *msg)
+{
+   if (m_disconnected)
+      return false;
+
+   return sendRawMessage(msg->createMessage(), m_pCtx);
+}
+
+/**
+ * Send raw message directly to socket
+ */
+bool CommSession::sendRawMessage(NXCP_MESSAGE *msg)
+{
+   return sendRawMessage((NXCP_MESSAGE *)nx_memdup(msg, ntohl(msg->size)), m_pCtx);
 }
 
 /**
@@ -480,17 +528,16 @@ BOOL CommSession::sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
  */
 void CommSession::writeThread()
 {
-   NXCP_MESSAGE *pMsg;
-
-   while(1)
+   while(true)
    {
-      pMsg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      NXCP_MESSAGE *msg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
+      if (msg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      if (!sendRawMessage(pMsg, m_pCtx))
+      if (!sendRawMessage(msg, m_pCtx))
          break;
    }
+   debugPrintf(6, _T("writer thread stopped"));
 }
 
 /**
@@ -498,200 +545,197 @@ void CommSession::writeThread()
  */
 void CommSession::processingThread()
 {
-   NXCPMessage *pMsg;
-   NXCPMessage msg;
-   UINT32 dwCommand;
-
-   while(1)
+   NXCPMessage response;
+   while(true)
    {
-      pMsg = (NXCPMessage *)m_processingQueue->getOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      NXCPMessage *request = (NXCPMessage *)m_processingQueue->getOrBlock();
+      if (request == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-      dwCommand = pMsg->getCode();
+      UINT32 command = request->getCode();
 
       // Prepare response message
-      msg.setCode(CMD_REQUEST_COMPLETED);
-      msg.setId(pMsg->getId());
+      response.setCode(CMD_REQUEST_COMPLETED);
+      response.setId(request->getId());
 
       // Check if authentication required
-      if ((!m_authenticated) && (dwCommand != CMD_AUTHENTICATE))
+      if ((!m_authenticated) && (command != CMD_AUTHENTICATE))
       {
-			DebugPrintf(m_dwIndex, 6, _T("Authentication required"));
-         msg.setField(VID_RCC, ERR_AUTH_REQUIRED);
+			debugPrintf(6, _T("Authentication required"));
+			response.setField(VID_RCC, ERR_AUTH_REQUIRED);
       }
       else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_pCtx == NULL))
       {
-			DebugPrintf(m_dwIndex, 6, _T("Encryption required"));
-         msg.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
+			debugPrintf(6, _T("Encryption required"));
+			response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
       }
       else
       {
-         switch(dwCommand)
+         switch(command)
          {
             case CMD_AUTHENTICATE:
-               authenticate(pMsg, &msg);
+               authenticate(request, &response);
                break;
             case CMD_GET_PARAMETER:
-               getParameter(pMsg, &msg);
+               getParameter(request, &response);
                break;
             case CMD_GET_LIST:
-               getList(pMsg, &msg);
+               getList(request, &response);
                break;
             case CMD_GET_TABLE:
-               getTable(pMsg, &msg);
+               getTable(request, &response);
                break;
             case CMD_KEEPALIVE:
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ACTION:
-               action(pMsg, &msg);
+               action(request, &response);
                break;
             case CMD_TRANSFER_FILE:
-               recvFile(pMsg, &msg);
+               recvFile(request, &response);
                break;
             case CMD_UPGRADE_AGENT:
-               msg.setField(VID_RCC, upgrade(pMsg));
+               response.setField(VID_RCC, upgrade(request));
                break;
             case CMD_GET_PARAMETER_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetParameterList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetParameterList(&response);
                break;
             case CMD_GET_ENUM_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetEnumList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetEnumList(&response);
                break;
             case CMD_GET_TABLE_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetTableList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetTableList(&response);
                break;
             case CMD_GET_AGENT_CONFIG:
-               getConfig(&msg);
+               getConfig(&response);
                break;
             case CMD_UPDATE_AGENT_CONFIG:
-               updateConfig(pMsg, &msg);
+               updateConfig(request, &response);
                break;
             case CMD_ENABLE_AGENT_TRAPS:
                if (m_masterServer)
                {
                   m_acceptTraps = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
             case CMD_ENABLE_FILE_UPDATES:
                if (m_masterServer)
                {
                   m_acceptFileUpdates = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
 				case CMD_DEPLOY_AGENT_POLICY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, DeployPolicy(this, pMsg));
+					   response.setField(VID_RCC, DeployPolicy(this, request));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
 				case CMD_UNINSTALL_AGENT_POLICY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, UninstallPolicy(this, pMsg));
+					   response.setField(VID_RCC, UninstallPolicy(this, request));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
 				case CMD_GET_POLICY_INVENTORY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, GetPolicyInventory(this, &msg));
+					   response.setField(VID_RCC, GetPolicyInventory(this, &response));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
             case CMD_TAKE_SCREENSHOT:
 					if (m_controlServer)
 					{
                   TCHAR sessionName[256];
-                  pMsg->getFieldAsString(VID_NAME, sessionName, 256);
-                  DebugPrintf(m_dwIndex, 6, _T("Take screenshot from session \"%s\""), sessionName);
+                  request->getFieldAsString(VID_NAME, sessionName, 256);
+                  debugPrintf(6, _T("Take screenshot from session \"%s\""), sessionName);
                   SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
                   if (conn != NULL)
                   {
-                     DebugPrintf(m_dwIndex, 6, _T("Session agent connector acquired"));
-                     conn->takeScreenshot(&msg);
+                     debugPrintf(6, _T("Session agent connector acquired"));
+                     conn->takeScreenshot(&response);
                      conn->decRefCount();
                   }
                   else
                   {
-                     msg.setField(VID_RCC, ERR_NO_SESSION_AGENT);
+                     response.setField(VID_RCC, ERR_NO_SESSION_AGENT);
                   }
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
             case CMD_SET_SERVER_CAPABILITIES:
                // Servers before 2.0 use VID_ENABLED
-               m_ipv6Aware = pMsg->isFieldExist(VID_IPV6_SUPPORT) ? pMsg->getFieldAsBoolean(VID_IPV6_SUPPORT) : pMsg->getFieldAsBoolean(VID_ENABLED);
-               m_bulkReconciliationSupported = pMsg->getFieldAsBoolean(VID_BULK_RECONCILIATION);
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
+               m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_SET_SERVER_ID:
-               m_serverId = pMsg->getFieldAsUInt64(VID_SERVER_ID);
-               DebugPrintf(m_dwIndex, 1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);
+               debugPrintf(1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_DATA_COLLECTION_CONFIG:
                if (m_serverId != 0)
                {
-                  ConfigureDataCollection(m_serverId, pMsg);
+                  ConfigureDataCollection(m_serverId, request);
                   m_acceptData = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  DebugPrintf(m_dwIndex, 1, _T("Data collection configuration command received but server ID is not set"));
-                  msg.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+                  debugPrintf(1, _T("Data collection configuration command received but server ID is not set"));
+                  response.setField(VID_RCC, ERR_SERVER_ID_UNSET);
                }
                break;
             case CMD_CLEAN_AGENT_DCI_CONF:
                if (m_masterServer)
                {
                   ClearDataCollectionConfiguration();
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
-                  msg.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
+               if (!ProcessCmdBySubAgent(command, request, &response, this))
+                  response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
       }
-      delete pMsg;
+      delete request;
 
       // Send response
-      sendMessage(&msg);
-      msg.deleteAllFields();
+      sendMessage(&response);
+      response.deleteAllFields();
    }
 }
 
@@ -789,7 +833,7 @@ void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
    UINT32 dwErrorCode;
 
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(m_dwIndex, szParameter, szValue, this);
+   dwErrorCode = GetParameterValue(szParameter, szValue, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
       pMsg->setField(VID_VALUE, szValue);
@@ -804,7 +848,7 @@ void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;
-   UINT32 dwErrorCode = GetListValue(m_dwIndex, szParameter, &value, this);
+   UINT32 dwErrorCode = GetListValue(szParameter, &value, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -822,7 +866,7 @@ void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    Table value;
-   UINT32 dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value, this);
+   UINT32 dwErrorCode = GetTableValue(szParameter, &value, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -876,7 +920,7 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 	{
 		szFileName[0] = 0;
 		pRequest->getFieldAsString(VID_FILE_NAME, szFileName, MAX_PATH);
-		DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Preparing for receiving file \"%s\""), szFileName);
+		debugPrintf(5, _T("CommSession::recvFile(): Preparing for receiving file \"%s\""), szFileName);
       BuildFullPath(szFileName, szFullPath);
 
 		// Check if for some reason we have already opened file
@@ -899,11 +943,11 @@ UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
    }
    else
    {
-      DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
+      debugPrintf(5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
       m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
       if (m_hCurrFile == -1)
       {
-         DebugPrintf(m_dwIndex, 2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
+         debugPrintf(2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
          return ERR_IO_FAILURE;
       }
       else
@@ -927,6 +971,8 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
  */
 bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
+   if (m_disconnected)
+      return false;
 	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
@@ -1013,7 +1059,7 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
          }
          else
          {
-				DebugPrintf(m_dwIndex, 2, _T("CommSession::updateConfig(): Error opening file \"%s\" for writing (%s)"),
+				debugPrintf(2, _T("CommSession::updateConfig(): Error opening file \"%s\" for writing (%s)"),
                         g_szConfigFile, _tcserror(errno));
             pMsg->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
          }
@@ -1084,7 +1130,7 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
 				if (pSavedCtx != NULL)
 					pSavedCtx->decRefCount();
 
-            DebugPrintf(m_dwIndex, 5, _T("Established proxy connection to %s:%d"), IpToStr(dwAddr, szBuffer), wPort);
+            debugPrintf(5, _T("Established proxy connection to %s:%d"), IpToStr(dwAddr, szBuffer), wPort);
          }
          else
          {
@@ -1133,7 +1179,9 @@ void CommSession::proxyReadThread()
  */
 UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
 {
-   sendMessage(msg);
+   if (!sendMessage(msg))
+      return ERR_CONNECTION_BROKEN;
+
    NXCPMessage *response = m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
    UINT32 rcc;
    if (response != NULL)
@@ -1153,7 +1201,8 @@ UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
  */
 NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
 {
-   sendMessage(msg);
+   if (!sendMessage(msg))
+      return NULL;
    return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
 }
 
@@ -1163,4 +1212,31 @@ NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
 UINT32 CommSession::generateRequestId()
 {
    return (UINT32)InterlockedIncrement(&m_requestId);
+}
+
+/**
+ * Virtual session constructor
+ */
+VirtualSession::VirtualSession(UINT64 serverId)
+{
+   m_id = InterlockedIncrement(&s_sessionId);
+   m_serverId = serverId;
+}
+
+/**
+ * Debug print in virtual session context
+ */
+void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
+{
+   if (level > nxlog_get_debug_level())
+      return;
+
+   va_list args;
+   TCHAR buffer[8192];
+
+   va_start(args, format);
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+
+   nxlog_write(MSG_DEBUG_VSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
 }

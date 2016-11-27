@@ -103,7 +103,7 @@ void ParamProvider::poll()
 	StringMap *parameters = new StringMap;
 	if ((hPipe = _tpopen(m_command, _T("r"))) != NULL)
 	{
-	   DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
+	   DebugPrintf(8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
 		while(!feof(hPipe))
 		{
 			TCHAR *line = safe_fgetts(buffer, 1024, hPipe);
@@ -111,7 +111,7 @@ void ParamProvider::poll()
 			{
 				if (!feof(hPipe))
 				{
-				   DebugPrintf(INVALID_INDEX, 4, _T("ParamProvider::poll(): pipe read error: %s"), _tcserror(errno));
+				   DebugPrintf(4, _T("ParamProvider::poll(): pipe read error: %s"), _tcserror(errno));
 				}
 				break;
 			}
@@ -129,11 +129,11 @@ void ParamProvider::poll()
 			}
 		}
 		pclose(hPipe);
-		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
+		DebugPrintf(8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
 	}
 	else
 	{
-	   DebugPrintf(INVALID_INDEX, 4, _T("ParamProvider::poll(): pipe open error: %s"), _tcserror(errno));
+	   DebugPrintf(4, _T("ParamProvider::poll(): pipe open error: %s"), _tcserror(errno));
 	}
 
 	lock();
@@ -235,7 +235,7 @@ void StartParamProvidersPoller()
 	if (s_providers.size() > 0)
 		ThreadCreate(PollerThread, 0, NULL);
 	else
-		DebugPrintf(INVALID_INDEX, 2, _T("External parameters providers poller thread will not start"));
+		DebugPrintf(2, _T("External parameters providers poller thread will not start"));
 }
 
 /**
@@ -258,7 +258,7 @@ bool AddParametersProvider(const TCHAR *line)
 		interval = _tcstol(ptr, &eptr, 0);
 		if ((*eptr != 0) || (interval < 1))
 		{
-			DebugPrintf(INVALID_INDEX, 2, _T("Invalid interval value given for parameters provider"));
+			DebugPrintf(2, _T("Invalid interval value given for parameters provider"));
 			return false;
 		}
 	}

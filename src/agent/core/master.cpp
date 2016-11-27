@@ -27,13 +27,14 @@
  */
 static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
-   UINT32 dwErrorCode;
-
+   TCHAR name[MAX_PARAM_NAME];
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(0, name, value, NULL);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
+
+   TCHAR value[MAX_RESULT_LENGTH];
+   VirtualSession session(0);
+   UINT32 rcc = GetParameterValue(name, value, &session);
+   pMsg->setField(VID_RCC, rcc);
+   if (rcc == ERR_SUCCESS)
       pMsg->setField(VID_VALUE, value);
 }
 
@@ -43,13 +44,13 @@ static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
-	Table value;
-   UINT32 dwErrorCode;
-
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetTableValue(0, name, &value, NULL);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
+
+   Table value;
+   VirtualSession session(0);
+   UINT32 rcc = GetTableValue(name, &value, &session);
+   pMsg->setField(VID_RCC, rcc);
+   if (rcc == ERR_SUCCESS)
 		value.fillMessage(*pMsg, 0, -1);
 }
 
@@ -59,13 +60,13 @@ static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
-	StringList value;
-   UINT32 dwErrorCode;
-
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetListValue(0, name, &value, NULL);
-   pMsg->setField(VID_RCC, dwErrorCode);
-   if (dwErrorCode == ERR_SUCCESS)
+
+   StringList value;
+   VirtualSession session(0);
+   UINT32 rcc = GetListValue(name, &value, &session);
+   pMsg->setField(VID_RCC, rcc);
+   if (rcc == ERR_SUCCESS)
    {
 		pMsg->setField(VID_NUM_STRINGS, (UINT32)value.size());
 		for(int i = 0; i < value.size(); i++)

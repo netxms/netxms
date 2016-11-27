@@ -308,6 +308,8 @@ struct PendingRequest
 class CommSession : public AbstractCommSession
 {
 private:
+   UINT32 m_id;
+   UINT32 m_index;
    SOCKET m_hSocket;
    Queue *m_sendQueue;
    Queue *m_processingQueue;
@@ -316,7 +318,7 @@ private:
    THREAD m_hProxyReadThread;
    UINT64 m_serverId;
    InetAddress m_serverAddr;        // IP address of connected host
-   UINT32 m_dwIndex;
+   bool m_disconnected;
    bool m_authenticated;
    bool m_masterServer;
    bool m_controlServer;
@@ -336,7 +338,7 @@ private:
    VolatileCounter m_requestId;
    MsgWaitQueue *m_responseQueue;
 
-	BOOL sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
+	bool sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx);
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getConfig(NXCPMessage *pMsg);
    void updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg);
@@ -368,33 +370,74 @@ public:
    void run();
    void disconnect();
 
-   virtual void sendMessage(NXCPMessage *msg) { m_sendQueue->put(msg->createMessage()); }
-   virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
+   virtual bool sendMessage(NXCPMessage *msg);
+   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->createMessage()); }
+   virtual bool sendRawMessage(NXCP_MESSAGE *msg);
+   virtual void postRawMessage(NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
    virtual UINT32 generateRequestId();
 
+   virtual UINT32 getId() { return m_id; };
+
    virtual UINT64 getServerId() { return m_serverId; }
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
 
+   virtual bool isMasterServer() { return m_masterServer; }
+   virtual bool isControlServer() { return m_controlServer; }
+   virtual bool canAcceptData() { return m_acceptData; }
+   virtual bool canAcceptTraps() { return m_acceptTraps; }
+   virtual bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
+   virtual bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
    virtual bool isIPv6Aware() { return m_ipv6Aware; }
 
-   UINT32 getIndex() { return m_dwIndex; }
-   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId);
+
+   virtual void debugPrintf(int level, const TCHAR *format, ...);
+
+   UINT32 getIndex() { return m_index; }
+   void setIndex(UINT32 index) { if (m_index == INVALID_INDEX) m_index = index; }
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
+};
 
-   bool canAcceptData() { return m_acceptData; }
-   bool canAcceptTraps() { return m_acceptTraps; }
-   bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
-   bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
+/**
+ * Pseudo-session for cached data collection
+ */
+class VirtualSession : public AbstractCommSession
+{
+private:
+   UINT32 m_id;
+   UINT64 m_serverId;
 
-   virtual bool isMasterServer() { return m_masterServer; }
-   virtual bool isControlServer() { return m_controlServer; }
+public:
+   VirtualSession(UINT64 serverId);
 
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
+   virtual UINT32 getId() { return m_id; }
+
+   virtual UINT64 getServerId() { return m_serverId; };
+   virtual const InetAddress& getServerAddress() { return InetAddress::LOOPBACK; }
+
+   virtual bool isMasterServer() { return false; }
+   virtual bool isControlServer() { return false; }
+   virtual bool canAcceptData() { return true; }
+   virtual bool canAcceptTraps() { return true; }
+   virtual bool canAcceptFileUpdates() { return false; }
+   virtual bool isBulkReconciliationSupported() { return false; }
+   virtual bool isIPv6Aware() { return true; }
+
+   virtual bool sendMessage(NXCPMessage *pMsg) { return false; }
+   virtual void postMessage(NXCPMessage *pMsg) { }
+   virtual bool sendRawMessage(NXCP_MESSAGE *pMsg) { return false; }
+   virtual void postRawMessage(NXCP_MESSAGE *pMsg) { }
+   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
+   virtual UINT32 generateRequestId() { return 0; }
+   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
+   virtual void debugPrintf(int level, const TCHAR *format, ...);
 };
 
 /**
@@ -484,15 +527,15 @@ BOOL Initialize();
 void Shutdown();
 void Main();
 
-void ConsolePrintf(const TCHAR *pszFormat, ...)
+void ConsolePrintf(const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 1, 2)))
 #endif
 ;
 
-void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
+void DebugPrintf(int level, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 3, 4)))
+   __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
 
@@ -510,9 +553,9 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
               const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
               int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
-UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, AbstractCommSession *session);
-UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, AbstractCommSession *session);
-UINT32 GetTableValue(UINT32 sessionId, const TCHAR *pParam, Table *value, AbstractCommSession *session);
+UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
+UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
+UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
@@ -555,7 +598,7 @@ void ShutdownExtSubagents();
 void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);
 
-BOOL WaitForProcess(const TCHAR *name);
+bool WaitForProcess(const TCHAR *name);
 
 UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 
@@ -635,9 +678,9 @@ extern UINT16 g_syslogListenPort;
 
 extern Config *g_config;
 
-extern UINT32 g_dwAcceptErrors;
-extern UINT32 g_dwAcceptedConnections;
-extern UINT32 g_dwRejectedConnections;
+extern UINT32 g_acceptErrors;
+extern UINT32 g_acceptedConnections;
+extern UINT32 g_rejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;

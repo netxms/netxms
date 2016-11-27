@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    }
    delete s_trapQueue;
    s_trapQueue = NULL;
-	DebugPrintf(INVALID_INDEX, 1, _T("Trap sender thread terminated"));
+	DebugPrintf(1, _T("Trap sender thread terminated"));
    return THREAD_OK;
 }
 
@@ -102,7 +102,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
    int i;
    NXCPMessage msg;
 
-	DebugPrintf(INVALID_INDEX, 5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
+	DebugPrintf(5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
 	            dwEventCode, CHECK_NULL(eventName), iNumArgs, 
 					(iNumArgs > 0) ? ppArgList[0] : _T("(null)"),
 					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),

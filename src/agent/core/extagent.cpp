@@ -837,7 +837,7 @@ void ShutdownExtSubagents()
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
-         DebugPrintf(INVALID_INDEX, 1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
+         DebugPrintf(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->shutdown();
 		}
 	}

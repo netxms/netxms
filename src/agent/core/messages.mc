@@ -209,7 +209,7 @@ Process "%1" killed because of execution timeout
 MessageId=
 SymbolicName=MSG_DEBUG_SESSION
 Language=English
-[session:%1] %2
+[CS-%1(%2)] %3
 .
 
 MessageId=
@@ -330,6 +330,12 @@ MessageId=
 SymbolicName=MSG_INVALID_TUNNEL_CONFIG
 Language=English
 Invalid server connection configuration record "%1"
+.
+
+MessageId=
+SymbolicName=MSG_DEBUG_VSESSION
+Language=English
+[VCS-%1] %2
 .
 
 ;#endif

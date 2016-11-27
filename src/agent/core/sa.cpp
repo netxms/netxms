@@ -149,21 +149,21 @@ void SessionAgentConnector::readThread()
       // Check for timeout
       if (err == 3)
       {
-         DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d stopped by timeout"), m_id);
+         DebugPrintf(5, _T("Session agent connector %d stopped by timeout"), m_id);
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(rawMsg->size) != err)
       {
-         DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
+         DebugPrintf(5, _T("Session agent connector %d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
       if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
-         DebugPrintf(INVALID_INDEX, 8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
+         DebugPrintf(8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
       }
 
       UINT16 flags = ntohs(rawMsg->flags);
@@ -183,7 +183,7 @@ void SessionAgentConnector::readThread()
             m_userName = msg->getFieldAsString(VID_USER_NAME);
 
             delete msg;
-            DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
+            DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
          }
          else
          {
@@ -193,7 +193,7 @@ void SessionAgentConnector::readThread()
    }
    free(rawMsg);
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d stopped"), m_id);
+   DebugPrintf(5, _T("Session agent connector %d stopped"), m_id);
 }
 
 /**
@@ -271,7 +271,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
-      DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector terminated (socket error)"));
+      DebugPrintf(1, _T("Session agent connector terminated (socket error)"));
       return THREAD_OK;
    }
 
@@ -288,17 +288,17 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    servAddr.sin_port = htons(g_sessionAgentPort);
 
    // Bind socket
-	DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
+	DebugPrintf(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
-      DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector terminated (socket error)"));
+      DebugPrintf(1, _T("Session agent connector terminated (socket error)"));
       return THREAD_OK;
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-   DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
+   DebugPrintf(1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
 
    // Wait for connection requests
    SocketPoller sp;
@@ -332,7 +332,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(INVALID_INDEX, 5, _T("Incoming session agent connection"));
+         DebugPrintf(5, _T("Incoming session agent connection"));
 
          // Create new session structure and threads
 		   SessionAgentConnector *c = new SessionAgentConnector(id++, hClientSocket);
@@ -357,7 +357,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    }
 
    closesocket(hSocket);
-   DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector thread terminated"));
+   DebugPrintf(1, _T("Session agent connector thread terminated"));
    return THREAD_OK;
 }
 
@@ -375,7 +375,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentWatchdog(void *arg)
          SessionAgentConnector *c = s_agents.get(i);
          if (!c->testConnection())
          {
-            DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d failed connection test"), c->getId());
+            DebugPrintf(5, _T("Session agent connector %d failed connection test"), c->getId());
             c->disconnect();
          }
       }
@@ -399,7 +399,7 @@ void StartSessionAgentConnector()
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Session agent connector disabled"));
+      DebugPrintf(1, _T("Session agent connector disabled"));
    }
 }
 

@@ -143,7 +143,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
    TCHAR *pszCmdLine, *sptr;
    UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(INVALID_INDEX, 4, _T("EXEC: Expanding command \"%s\""), pszCommand);
+   DebugPrintf(4, _T("EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
@@ -188,7 +188,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(INVALID_INDEX, 4, _T("EXEC: Executing \"%s\""), pszCmdLine);
+   DebugPrintf(4, _T("EXEC: Executing \"%s\""), pszCmdLine);
 #if defined(_WIN32)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -327,13 +327,13 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
          {
             if (!feof(hPipe))
             {
-               DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
+               DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read error: %s"), _tcserror(errno));
                data->status = SYSINFO_RC_ERROR;
             }
             break;
          }
 
-         DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
+         DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
          TCHAR *pTmp;
 			if ((pTmp = _tcschr(value, _T('\n'))) != NULL)
 			{
@@ -372,7 +372,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 	const TCHAR *sptr;
 	int i, iSize, iStatus;
 
-   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal called for \"%s\" \"%s\""), pszCmd, pszArg);
+   DebugPrintf(4, _T("RunExternal called for \"%s\" \"%s\""), pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
    iSize = (int)_tcslen(pszArg) * sizeof(TCHAR);  // we don't need _tcslen + 1 because loop starts from &pszArg[1]
@@ -407,7 +407,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
          pszCmdLine[i++] = *sptr;
       }
    pszCmdLine[i] = 0;
-   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal: command line is \"%s\""), pszCmdLine);
+   DebugPrintf(4, _T("RunExternal: command line is \"%s\""), pszCmdLine);
 
 #if defined(_WIN32)
 	if (*pszArg == _T('E'))
@@ -509,7 +509,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			data->finished = ConditionCreate(TRUE);
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
-		   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): worker thread created"));
+		   DebugPrintf(4, _T("RunExternal (shell exec): worker thread created"));
 			if (ConditionWait(data->finished, g_dwExecTimeout))
 			{
 				iStatus = data->status;
@@ -521,11 +521,11 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			else
 			{
 				// Timeout
-			   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): execution timeout"));
+			   DebugPrintf(4, _T("RunExternal (shell exec): execution timeout"));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
-		   DebugPrintf(INVALID_INDEX, 4, _T("RunExternal (shell exec): execution status %d"), iStatus);
+		   DebugPrintf(4, _T("RunExternal (shell exec): execution status %d"), iStatus);
 		}
 
 #ifdef _WIN32
@@ -541,7 +541,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
  */
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, arg);
+   session->debugPrintf(4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
    LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
@@ -556,7 +556,7 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
  */
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalList called for \"%s\" \"%s\""), cmd, arg);
+   session->debugPrintf(4, _T("H_ExternalList called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
    LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
@@ -574,7 +574,7 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
    TCHAR *pszCmdLine, *sptr;
    UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf(INVALID_INDEX, 4, _T("SH_EXEC: Expanding command \"%s\""), pszCommand);
+   DebugPrintf(4, _T("SH_EXEC: Expanding command \"%s\""), pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (args != NULL)
@@ -619,7 +619,7 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf(INVALID_INDEX, 4, _T("SH_EXEC: Executing \"%s\""), pszCmdLine);
+   DebugPrintf(4, _T("SH_EXEC: Executing \"%s\""), pszCmdLine);
 
    if (_tsystem(pszCmdLine) == 0)
       dwRetCode = ERR_SUCCESS;

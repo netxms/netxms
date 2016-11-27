@@ -281,8 +281,8 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 #endif
 
-   { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_dwAcceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
-   { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_dwAcceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
+   { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_acceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
+   { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_acceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
    { _T("Agent.ActiveConnections"), H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
@@ -301,7 +301,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.Proxy.ConnectionRequests"), H_AgentProxyStats, _T("C"), DCI_DT_UINT64, DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS },
    { _T("Agent.Proxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ISENABLED },
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
-   { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_dwRejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },
+   { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },
    { _T("Agent.SentTraps"), H_AgentTraps, _T("S"), DCI_DT_UINT64, DCIDESC_AGENT_SENT_TRAPS },
    { _T("Agent.SNMP.IsProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
    { _T("Agent.SNMP.IsTrapProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_TRAP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
@@ -580,12 +580,12 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to
 /**
  * Get parameter's value
  */
-UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, AbstractCommSession *session)
+UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(sessionId, 5, _T("Requesting parameter \"%s\""), param);
+   session->debugPrintf(5, _T("Requesting parameter \"%s\""), param);
    for(i = 0; i < m_iNumParams; i++)
 	{
       if (MatchString(m_pParamList[i].name, param, FALSE))
@@ -663,7 +663,7 @@ UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, Abs
 		}
    }
 
-	DebugPrintf(sessionId, 7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
+	session->debugPrintf(7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
@@ -671,12 +671,12 @@ UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, Abs
 /**
  * Get list's value
  */
-UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, AbstractCommSession *session)
+UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(sessionId, 5, _T("Requesting list \"%s\""), param);
+   session->debugPrintf(5, _T("Requesting list \"%s\""), param);
    for(i = 0; i < m_iNumEnums; i++)
 	{
       if (MatchString(m_pEnumList[i].name, param, FALSE))
@@ -727,7 +727,7 @@ UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, Abs
 		}
    }
 
-	DebugPrintf(sessionId, 7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
+	session->debugPrintf(7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
@@ -735,12 +735,12 @@ UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, Abs
 /**
  * Get table's value
  */
-UINT32 GetTableValue(UINT32 sessionId, const TCHAR *param, Table *value, AbstractCommSession *session)
+UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(sessionId, 5, _T("Requesting table \"%s\""), param);
+   session->debugPrintf(5, _T("Requesting table \"%s\""), param);
    for(i = 0; i < m_iNumTables; i++)
 	{
       if (MatchString(m_pTableList[i].name, param, FALSE))
@@ -801,7 +801,7 @@ UINT32 GetTableValue(UINT32 sessionId, const TCHAR *param, Table *value, Abstrac
 		}
    }
 
-	DebugPrintf(sessionId, 7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
+	session->debugPrintf(7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }

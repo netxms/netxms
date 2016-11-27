@@ -484,23 +484,29 @@
 class AbstractCommSession : public RefCountObject
 {
 public:
+   virtual UINT32 getId() = 0;
+
+   virtual UINT64 getServerId() = 0;
+   virtual const InetAddress& getServerAddress() = 0;
+
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
    virtual bool canAcceptData() = 0;
    virtual bool canAcceptTraps() = 0;
    virtual bool canAcceptFileUpdates() = 0;
-   virtual UINT64 getServerId() = 0;
-   virtual const InetAddress& getServerAddress() = 0;
-
+   virtual bool isBulkReconciliationSupported() = 0;
    virtual bool isIPv6Aware() = 0;
 
-   virtual void sendMessage(NXCPMessage *msg) = 0;
-   virtual void sendRawMessage(NXCP_MESSAGE *msg) = 0;
+   virtual bool sendMessage(NXCPMessage *msg) = 0;
+   virtual void postMessage(NXCPMessage *msg) = 0;
+   virtual bool sendRawMessage(NXCP_MESSAGE *msg) = 0;
+   virtual void postRawMessage(NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+   virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
 };
 
 /**
@@ -572,7 +578,7 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20150626)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20161127)
 
 class NXCPMessage;
 

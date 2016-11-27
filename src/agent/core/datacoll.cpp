@@ -187,7 +187,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
  */
 void DataCollectionItem::saveToDatabase(bool newObject)
 {
-   DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
+   DebugPrintf(6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
                newObject ? _T("new") : _T("existing"), m_serverId, m_id);
    DB_HANDLE db = GetLocalDatabaseHandle();
    DB_STATEMENT hStmt;
@@ -238,7 +238,7 @@ void DataCollectionItem::deleteFromDatabase()
       _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
       if (DBQuery(db, query))
       {
-         DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
+         DebugPrintf(6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
       }
    }
 }
@@ -510,7 +510,7 @@ static Queue s_databaseWriterQueue;
 static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread started"));
+   DebugPrintf(1, _T("Database writer thread started"));
 
    while(true)
    {
@@ -541,10 +541,10 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
       }
       DBCommit(hdb);
       DBFreeStatement(hStmt);
-      DebugPrintf(INVALID_INDEX, 7, _T("Database writer: %d records inserted"), count);
+      DebugPrintf(7, _T("Database writer: %d records inserted"), count);
    }
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread stopped"));
+   DebugPrintf(1, _T("Database writer thread stopped"));
    return THREAD_OK;
 }
 
@@ -607,7 +607,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (vacuumNeeded)
          {
-            DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: vacuum local database"));
+            DebugPrintf(4, _T("ReconciliationThread: vacuum local database"));
             DBQuery(hdb, _T("VACUUM"));
             vacuumNeeded = false;
          }
@@ -622,7 +622,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
       if (hResult == NULL)
       {
-         DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
+         DebugPrintf(4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
          session->decRefCount();
          continue;
@@ -658,7 +658,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                }
                else
                {
-                  DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+                  DebugPrintf(5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
                   deleteList.add(e);  // record should be deleted
                }
                MutexUnlock(s_serverSyncStatusLock);
@@ -667,7 +667,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (bulkSendList.size() > 0)
          {
-            DebugPrintf(INVALID_INDEX, 6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
+            DebugPrintf(6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
 
             NXCPMessage msg;
             msg.setCode(CMD_DCI_DATA);
@@ -714,13 +714,13 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                }
                else
                {
-                  DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
+                  DebugPrintf(4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
                }
                delete response;
             }
             else
             {
-               DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: timeout on bulk send"));
+               DebugPrintf(4, _T("ReconciliationThread: timeout on bulk send"));
             }
          }
 
@@ -759,7 +759,7 @@ static Queue s_dataSenderQueue;
  */
 static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 {
-   DebugPrintf(INVALID_INDEX, 1, _T("Data sender thread started"));
+   DebugPrintf(1, _T("Data sender thread started"));
    while(true)
    {
       DataElement *e = (DataElement *)s_dataSenderQueue.getOrBlock();
@@ -793,39 +793,9 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 
       delete e;
    }
-   DebugPrintf(INVALID_INDEX, 1, _T("Data sender thread stopped"));
+   DebugPrintf(1, _T("Data sender thread stopped"));
    return THREAD_OK;
 }
-
-/**
- * Pseudo-session for cached data collection
- */
-class VirtualSession : public AbstractCommSession
-{
-private:
-   UINT64 m_serverId;
-
-public:
-   VirtualSession(UINT64 serverId) { m_serverId = serverId; }
-
-   virtual bool isMasterServer() { return false; }
-   virtual bool isControlServer() { return false; }
-   virtual bool canAcceptData() { return true; }
-   virtual bool canAcceptTraps() { return true; }
-   virtual bool canAcceptFileUpdates() { return false; }
-   virtual UINT64 getServerId() { return m_serverId; };
-   virtual const InetAddress& getServerAddress() { return InetAddress::LOOPBACK; }
-
-   virtual bool isIPv6Aware() { return true; }
-
-   virtual void sendMessage(NXCPMessage *pMsg) { }
-   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { }
-   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
-   virtual UINT32 generateRequestId() { return 0; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
-};
 
 /**
  * Collect data from agent
@@ -839,19 +809,19 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
    if (dci->getType() == DCO_TYPE_ITEM)
    {
       TCHAR value[MAX_RESULT_LENGTH];
-      status = GetParameterValue(INVALID_INDEX, dci->getName(), value, &session);
+      status = GetParameterValue(dci->getName(), value, &session);
       e = new DataElement(dci, (status == ERR_SUCCESS) ? value : _T(""), status);
    }
    else if (dci->getType() == DCO_TYPE_LIST)
    {
       StringList *value = new StringList();
-      status = GetListValue(INVALID_INDEX, dci->getName(), value, &session);
+      status = GetListValue(dci->getName(), value, &session);
       e = new DataElement(dci, value, status);
    }
    else if (dci->getType() == DCO_TYPE_TABLE)
    {
       Table *value = new Table();
-      status = GetTableValue(INVALID_INDEX, dci->getName(), value, &session);
+      status = GetTableValue(dci->getName(), value, &session);
       e = new DataElement(dci, value, status);
    }
 
@@ -866,7 +836,7 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
    DataElement *e = NULL;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
-      DebugPrintf(INVALID_INDEX, 8, _T("Read SNMP parameter %s"), dci->getName());
+      DebugPrintf(8, _T("Read SNMP parameter %s"), dci->getName());
 
       TCHAR value[MAX_RESULT_LENGTH];
       UINT32 status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getName(), value, dci->getSnmpRawValueType());
@@ -889,7 +859,7 @@ static void LocalDataCollectionCallback(void *arg)
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      DebugPrintf(6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
    dci->setLastPollTime(time(NULL));
@@ -910,7 +880,7 @@ static void SnmpDataCollectionCallback(void *arg)
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+      DebugPrintf(6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
    dci->setLastPollTime(time(NULL));
@@ -937,7 +907,7 @@ static UINT32 DataCollectionSchedulerRun()
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
-         DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
+         DebugPrintf(7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
 
          if (dci->getOrigin() == DS_NATIVE_AGENT)
          {
@@ -952,7 +922,7 @@ static UINT32 DataCollectionSchedulerRun()
          }
          else
          {
-            DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+            DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
          }
 
          timeToPoll = dci->getPollingInterval();
@@ -970,18 +940,18 @@ static UINT32 DataCollectionSchedulerRun()
  */
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
-   DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread started"));
+   DebugPrintf(1, _T("Data collection scheduler thread started"));
    s_dataCollectorPool = ThreadPoolCreate(1, g_dcMaxCollectorPoolSize, _T("DATACOLL"));
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
    {
       sleepTime = DataCollectionSchedulerRun();
-      DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
+      DebugPrintf(7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
    }
 
    ThreadPoolDestroy(s_dataCollectorPool);
-   DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread stopped"));
+   DebugPrintf(1, _T("Data collection scheduler thread stopped"));
    return THREAD_OK;
 }
 
@@ -992,7 +962,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 {
    if (!s_dataCollectorStarted)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
+      DebugPrintf(1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
       return;
    }
 
@@ -1011,7 +981,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       }
       DBCommit(hdb);
    }
-   DebugPrintf(INVALID_INDEX, 4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
+   DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    ObjectArray<DataCollectionItem> config(32, 32, true);
 
@@ -1022,7 +992,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       config.add(new DataCollectionItem(serverId, msg, fieldId));
       fieldId += 10;
    }
-   DebugPrintf(INVALID_INDEX, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
+   DebugPrintf(4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    bool txnOpen = false;
 
@@ -1088,7 +1058,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 
    MutexUnlock(s_itemLock);
 
-   DebugPrintf(INVALID_INDEX, 4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
+   DebugPrintf(4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
 
 /**
@@ -1130,7 +1100,7 @@ static void LoadState()
          s->queueSize = DBGetFieldLong(hResult, i, 1);
          UINT64 serverId = DBGetFieldUInt64(hResult, i, 0);
          s_serverSyncStatus.set(serverId, s);
-         DebugPrintf(INVALID_INDEX, 2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
+         DebugPrintf(2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
       }
       DBFreeResult(hResult);
    }
@@ -1152,7 +1122,7 @@ void StartLocalDataCollector()
    DB_HANDLE db = GetLocalDatabaseHandle();
    if (db == NULL)
    {
-      DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: local database unavailable"));
+      DebugPrintf(5, _T("StartLocalDataCollector: local database unavailable"));
       return;
    }
 
@@ -1198,22 +1168,22 @@ void ShutdownLocalDataCollector()
 {
    if (!s_dataCollectorStarted)
    {
-      DebugPrintf(INVALID_INDEX, 5, _T("Local data collector was not started"));
+      DebugPrintf(5, _T("Local data collector was not started"));
       return;
    }
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data collector thread termination"));
+   DebugPrintf(5, _T("Waiting for data collector thread termination"));
    ThreadJoin(s_dataCollectionSchedulerThread);
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender thread termination"));
+   DebugPrintf(5, _T("Waiting for data sender thread termination"));
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for database writer thread termination"));
+   DebugPrintf(5, _T("Waiting for database writer thread termination"));
    s_databaseWriterQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_databaseWriterThread);
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconciliation thread termination"));
+   DebugPrintf(5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
 
    MutexDestroy(s_itemLock);

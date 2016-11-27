@@ -60,7 +60,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot create socket (%s)"), _tcserror(errno));
+      DebugPrintf(1, _T("SNMPTrapReceiver: cannot create socket (%s)"), _tcserror(errno));
       return THREAD_OK;
    }
 
@@ -91,13 +91,13 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)) != 0)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
+      DebugPrintf(1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
       closesocket(hSocket);
       return THREAD_OK;
    }
 
    TCHAR ipAddrStr[64];
-   DebugPrintf(INVALID_INDEX, 3, _T("SNMPTrapReceiver: listening on %s:%d"),
+   DebugPrintf(3, _T("SNMPTrapReceiver: listening on %s:%d"),
       IpToStr(ntohl(sa.sin_addr.s_addr), ipAddrStr), (int)ntohs(sa.sin_port));
 
    SNMP_TrapProxyTransport *pTransport = new SNMP_TrapProxyTransport(hSocket);
@@ -117,7 +117,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          message->port = (short)g_dwSNMPTrapPort;
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
-         DebugPrintf(INVALID_INDEX, 6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));
+         DebugPrintf(6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));
          s_snmpTrapQueue.put(message);
       }
       else
@@ -128,7 +128,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
    delete pTransport;
-   DebugPrintf(INVALID_INDEX, 1, _T("SNMP Trap Receiver terminated"));
+   DebugPrintf(1, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }
 
@@ -137,15 +137,15 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
  */
 THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
 {
-	DebugPrintf(INVALID_INDEX, 1, _T("SNMP Trap sender thread started"));
+	DebugPrintf(1, _T("SNMP Trap sender thread started"));
    while(1)
    {
-      DebugPrintf(INVALID_INDEX, 8, _T("SNMPTrapSender: waiting for message"));
+      DebugPrintf(8, _T("SNMPTrapSender: waiting for message"));
       UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.getOrBlock();
       if (pdu == INVALID_POINTER_VALUE)
          break;
 
-      DebugPrintf(INVALID_INDEX, 6, _T("SNMPTrapSender: got trap from queue"));
+      DebugPrintf(6, _T("SNMPTrapSender: got trap from queue"));
       bool sent = false;
 
       NXCPMessage *msg = new NXCPMessage();
@@ -181,17 +181,17 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       delete msg;
       if (!sent)
       {
-         DebugPrintf(INVALID_INDEX, 6, _T("Cannot forward trap to server"));
+         DebugPrintf(6, _T("Cannot forward trap to server"));
          s_snmpTrapQueue.insert(pdu);
 			ThreadSleep(1);
       }
       else
       {
-         DebugPrintf(INVALID_INDEX, 6, _T("Trap successfully forwarded to server"));
+         DebugPrintf(6, _T("Trap successfully forwarded to server"));
          delete pdu;
       }
    }
-	DebugPrintf(INVALID_INDEX, 1, _T("SNMP Trap sender thread terminated"));
+	DebugPrintf(1, _T("SNMP Trap sender thread terminated"));
    return THREAD_OK;
 }
 

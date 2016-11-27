@@ -217,7 +217,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 	registryExists = registry->loadXmlConfig(regPath, "registry");
 	if (!registryExists)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Registry file doesn't exist. No data will be moved from registry to database\n"));
+      DebugPrintf(1, _T("Registry file doesn't exist. No data will be moved from registry to database\n"));
       CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 2));
       return TRUE;
    }
@@ -298,12 +298,12 @@ bool UpgradeDatabase()
 	version = ReadMetadataAsInt(_T("SchemaVersion"));
    if (version == DB_SCHEMA_VERSION)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Database format is up to date"));
+      DebugPrintf(1, _T("Database format is up to date"));
    }
    else if (version > DB_SCHEMA_VERSION)
    {
-        DebugPrintf(INVALID_INDEX, 1, _T("Your database has format version %d, this agent is compiled for version %d.\n"), version, DB_SCHEMA_VERSION);
-         DebugPrintf(INVALID_INDEX, 1, _T("You need to upgrade your agent before using this database.\n"));
+        DebugPrintf(1, _T("Your database has format version %d, this agent is compiled for version %d.\n"), version, DB_SCHEMA_VERSION);
+         DebugPrintf(1, _T("You need to upgrade your agent before using this database.\n"));
 
    }
    else
@@ -317,10 +317,10 @@ bool UpgradeDatabase()
                break;
          if (m_dbUpgradeMap[i].fpProc == NULL)
          {
-            DebugPrintf(INVALID_INDEX, 1, _T("Unable to find upgrade procedure for version %d"), version);
+            DebugPrintf(1, _T("Unable to find upgrade procedure for version %d"), version);
             break;
          }
-         DebugPrintf(INVALID_INDEX, 1, _T("Upgrading from version %d to %d"), version, m_dbUpgradeMap[i].newVersion);
+         DebugPrintf(1, _T("Upgrading from version %d to %d"), version, m_dbUpgradeMap[i].newVersion);
          DBBegin(s_db);
          if (m_dbUpgradeMap[i].fpProc(version, m_dbUpgradeMap[i].newVersion))
          {
@@ -329,13 +329,13 @@ bool UpgradeDatabase()
          }
          else
          {
-            DebugPrintf(INVALID_INDEX, 1, _T("Rolling back last stage due to upgrade errors..."));
+            DebugPrintf(1, _T("Rolling back last stage due to upgrade errors..."));
             DBRollback(s_db);
             break;
          }
       }
 
-      DebugPrintf(INVALID_INDEX, 1, _T("Database upgrade %s"), (version == DB_SCHEMA_VERSION) ? _T("succeeded") : _T("failed"));
+      DebugPrintf(1, _T("Database upgrade %s"), (version == DB_SCHEMA_VERSION) ? _T("succeeded") : _T("failed"));
    }
    return version == DB_SCHEMA_VERSION;
 }

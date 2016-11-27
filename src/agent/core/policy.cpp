@@ -128,7 +128,7 @@ static int GetPolicyType(const uuid& guid)
 /**
  * Deploy configuration file
  */
-static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
+static UINT32 DeployConfig(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	int fh;
@@ -149,7 +149,7 @@ static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
 			if (write(fh, data, size) == size)
 			{
-		      DebugPrintf(session, 3, _T("Configuration file %s saved successfully"), path);
+		      session->debugPrintf(3, _T("Configuration file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
 			}
 			else
@@ -166,7 +166,7 @@ static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 	}
 	else
 	{
-		DebugPrintf(session, 2, _T("DeployConfig(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
+		session->debugPrintf(2, _T("DeployConfig(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
 		rcc = ERR_FILE_OPEN_ERROR;
 	}
 
@@ -176,7 +176,7 @@ static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 /**
  * Deploy log parser policy
  */
-static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg)
+static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg)
 {
    TCHAR path[MAX_PATH], name[64];
 	int fh;
@@ -195,7 +195,7 @@ static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
 			if (write(fh, data, size) == size)
 			{
-		      DebugPrintf(session, 3, _T("Log parser file %s saved successfully"), path);
+		      session->debugPrintf(3, _T("Log parser file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
 			}
 			else
@@ -212,7 +212,7 @@ static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg
 	}
 	else
 	{
-		DebugPrintf(session, 2, _T("DeployLogParser(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
+		session->debugPrintf(2, _T("DeployLogParser(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
 		rcc = ERR_FILE_OPEN_ERROR;
 	}
 
@@ -232,10 +232,10 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	switch(type)
 	{
 		case AGENT_POLICY_CONFIG:
-			rcc = DeployConfig(session->getIndex(), guid, request);
+			rcc = DeployConfig(session, guid, request);
 			break;
 		case AGENT_POLICY_LOG_PARSER:
-			rcc = DeployLogParser(session->getIndex(), guid, request);
+			rcc = DeployLogParser(session, guid, request);
 			break;
 		default:
 			rcc = ERR_BAD_ARGUMENTS;
@@ -245,7 +245,7 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	if (rcc == RCC_SUCCESS)
 		RegisterPolicy(session, type, guid);
 
-	DebugPrintf(session->getIndex(), 3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
+	session->debugPrintf(3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }
 
@@ -325,7 +325,7 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 	if (rcc == RCC_SUCCESS)
 		UnregisterPolicy(guid);
 
-   DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), guid.toString(buffer), type, rcc);
+   session->debugPrintf(3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), guid.toString(buffer), type, rcc);
 	return rcc;
 }
 

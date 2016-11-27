@@ -160,7 +160,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
       MutexUnlock(s_snmpTargetsLock);
 
       TCHAR buffer[64];
-      DebugPrintf(INVALID_INDEX, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+      DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
       return false;
    }
 
