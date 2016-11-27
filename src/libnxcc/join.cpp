@@ -57,6 +57,8 @@ void ClusterNodeJoin(void *arg)
          case CJR_SPLIT_BRAIN:
             g_nxccEventHandler->onSplitBrain();
             break;
+         case CJR_WAIT_FOR_MASTER:
+            break;
       }
       delete response;
    }

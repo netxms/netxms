@@ -7753,7 +7753,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
 const TCHAR *Node::typeName(NodeType type)
 {
    static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller") };
-   return ((type >= 0) && (type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
+   return (((int)type >= 0) && ((int)type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
 }
 
 /**

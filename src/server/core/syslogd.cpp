@@ -606,11 +606,12 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 #ifdef WITH_IPV6
    SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);
 #endif
-   if ((hSocket == INVALID_SOCKET)
+
 #ifdef WITH_IPV6
-       && (hSocket6 == INVALID_SOCKET)
+   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
+#else
+   if (hSocket == INVALID_SOCKET)
 #endif
-      )
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogReceiver"));
       return THREAD_OK;

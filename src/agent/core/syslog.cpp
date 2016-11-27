@@ -158,11 +158,12 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
 #ifdef WITH_IPV6
    SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : socket(AF_INET6, SOCK_DGRAM, 0);
 #endif
-   if ((hSocket == INVALID_SOCKET)
+
 #ifdef WITH_IPV6
-       && (hSocket6 == INVALID_SOCKET)
+   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
+#else
+   if (hSocket == INVALID_SOCKET)
 #endif
-      )
    {
       nxlog_debug(1, _T("SyslogReceiver: cannot create socket"));
       return THREAD_OK;

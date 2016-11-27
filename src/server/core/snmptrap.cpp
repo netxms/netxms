@@ -491,19 +491,19 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
-	static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
-	SNMP_Engine localEngine(engineId, 12);
+   static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
+   SNMP_Engine localEngine(engineId, 12);
 
-   // Create socket(s)
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
    SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);
 #endif
-   if ((hSocket == INVALID_SOCKET)
+
 #ifdef WITH_IPV6
-       && (hSocket6 == INVALID_SOCKET)
+   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
+#else
+   if (hSocket == INVALID_SOCKET)
 #endif
-      )
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SNMPTrapReceiver"));
       return THREAD_OK;
