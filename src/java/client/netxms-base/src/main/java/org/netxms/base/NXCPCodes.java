@@ -768,7 +768,7 @@ public class NXCPCodes
 	public static final long VID_BACKGROUND_LONGITUDE = 386;
 	public static final long VID_BACKGROUND_ZOOM = 387;
 	public static final long VID_BRIDGE_BASE_ADDRESS = 388;
-	public static final long VID_SUBMAP_ID = 389;
+	public static final long VID_DRILL_DOWN_OBJECT_ID = 389;
 	public static final long VID_REPORT_DEFINITION = 390;
 	public static final long VID_SLMCHECK_TYPE = 391;
 	public static final long VID_REASON = 392;

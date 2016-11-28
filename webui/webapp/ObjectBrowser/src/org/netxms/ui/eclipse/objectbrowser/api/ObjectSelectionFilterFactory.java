@@ -242,4 +242,20 @@ public class ObjectSelectionFilterFactory
 		classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
 		return classFilter;
 	}
+	
+	/**
+    * Create filter for dashboard and network map selection
+    * 
+    * @return
+    */
+	public Set<Integer> createDashboardAndNetworkMapSelectionFilter()
+	{
+	   HashSet<Integer> classFilter = new HashSet<Integer>(5);
+	   classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+	   classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+	   classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
+	   classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
+	   classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
+	   return classFilter;
+	}
 }

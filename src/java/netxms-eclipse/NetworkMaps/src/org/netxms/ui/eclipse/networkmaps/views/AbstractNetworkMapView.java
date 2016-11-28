@@ -97,6 +97,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
@@ -167,7 +168,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionAlwaysFitLayout;
 	protected Action actionEnableAutomaticLayout;
 	protected Action actionSaveLayout;
-	protected Action actionOpenSubmap;
+	protected Action actionOpenDrillDownObject;
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
@@ -295,11 +296,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					if (selectionType == SELECTION_OBJECTS)
 					{
 						AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
-						actionOpenSubmap.setEnabled(object.getSubmapId() != 0);
+						actionOpenDrillDownObject.setEnabled(object.getDrillDownObjectId() != 0);
 					}
 					else
 					{
-						actionOpenSubmap.setEnabled(false);
+						actionOpenDrillDownObject.setEnabled(false);
 						if (selectionType == SELECTION_LINKS)
 						{
 							NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();
@@ -313,7 +314,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				}
 				else
 				{
-					actionOpenSubmap.setEnabled(false);
+					actionOpenDrillDownObject.setEnabled(false);
 				}
 
 				if (selectionListeners.isEmpty())
@@ -350,7 +351,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				}
 
 				// Default behavior
-				actionOpenSubmap.run();
+				actionOpenDrillDownObject.run();
 			}
 		});
 
@@ -755,14 +756,14 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionSaveLayout.setImageDescriptor(SharedIcons.SAVE);
 		actionSaveLayout.setEnabled(!automaticLayoutEnabled);
 
-		actionOpenSubmap = new Action(Messages.get().AbstractNetworkMapView_OpenSubmap) {
+		actionOpenDrillDownObject = new Action("Open drill-down object") {
 			@Override
 			public void run()
 			{
-				openSubmap();
+				openDrillDownObject();
 			}
 		};
-		actionOpenSubmap.setEnabled(false);
+		actionOpenDrillDownObject.setEnabled(false);
 
 		actionFiguresIcons = new Action(Messages.get().AbstractNetworkMapView_Icons, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -1049,7 +1050,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected void fillObjectContextMenu(IMenuManager manager)
 	{
-		manager.add(actionOpenSubmap);
+		manager.add(actionOpenDrillDownObject);
 		manager.add(new Separator());
 		ObjectContextMenu.fill(manager, getSite(), this);
 		if (currentSelection.size() == 1)
@@ -1337,9 +1338,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	}
 
 	/**
-	 * Open submap for currently selected object
+	 * Open drill-down object for currently selected object
 	 */
-	private void openSubmap()
+	private void openDrillDownObject()
 	{
 		if (currentSelection == null)
 			return;
@@ -1347,17 +1348,32 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		Object object = currentSelection.getFirstElement();
 		if (object instanceof AbstractObject)
 		{
-			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getSubmapId();
-			if (submapId != 0)
+			long objectId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getDrillDownObjectId();			
+			if (objectId != 0)
 			{
-				try
-				{
-					getSite().getPage().showView(PredefinedMap.ID, Long.toString(submapId), IWorkbenchPage.VIEW_ACTIVATE);
-				}
-				catch(PartInitException e)
-				{
-					MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format(Messages.get().AbstractNetworkMapView_OpenSubmapError, e.getMessage()));
-				}
+			   Object test = session.findObjectById(objectId);
+	         if (test instanceof NetworkMap)
+	         {
+               try
+               {
+                  getSite().getPage().showView(PredefinedMap.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+               }
+               catch(PartInitException e)
+               {
+                  MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
+               }
+            }
+	         if (test instanceof Dashboard)
+	         {
+   				try
+   				{
+   					getSite().getPage().showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+   				}
+   				catch(PartInitException e)
+               {
+                  MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
+               }
+	         }
 			}
 		}
 	}

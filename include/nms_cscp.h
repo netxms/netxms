@@ -981,7 +981,7 @@ typedef struct
 #define VID_BACKGROUND_LONGITUDE    ((UINT32)386)
 #define VID_BACKGROUND_ZOOM         ((UINT32)387)
 #define VID_BRIDGE_BASE_ADDRESS     ((UINT32)388)
-#define VID_SUBMAP_ID               ((UINT32)389)
+#define VID_DRILL_DOWN_OBJECT_ID    ((UINT32)389)
 #define VID_REPORT_DEFINITION       ((UINT32)390)
 #define VID_SLMCHECK_TYPE           ((UINT32)391)
 #define VID_REASON                  ((UINT32)392)

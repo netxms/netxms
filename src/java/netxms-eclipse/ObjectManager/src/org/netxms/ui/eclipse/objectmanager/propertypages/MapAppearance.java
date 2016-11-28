@@ -46,7 +46,7 @@ public class MapAppearance extends PropertyPage
 {
 	private AbstractObject object;
 	private ImageSelector image;
-	private ObjectSelector submap = null;
+	private ObjectSelector drillDownObject = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -78,15 +78,15 @@ public class MapAppearance extends PropertyPage
       // Submap
       if (!(object instanceof NetworkMap))
       {
-	      submap = new ObjectSelector(dialogArea, SWT.NONE, true);
-	      submap.setLabel(Messages.get().MapAppearance_Submap);
-	      submap.setObjectClass(NetworkMap.class);
-	      submap.setObjectId(object.getSubmapId());
-	      submap.setClassFilter(ObjectSelectionDialog.createNetworkMapSelectionFilter());
+         drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
+         drillDownObject.setLabel("Drill-down object");
+         drillDownObject.setObjectClass(AbstractObject.class);
+         drillDownObject.setObjectId(object.getDrillDownObjectId());
+         drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
 	      gd = new GridData();
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
-	      submap.setLayoutData(gd);
+	      drillDownObject.setLayoutData(gd);
       }
 		return dialogArea;
 	}
@@ -103,8 +103,8 @@ public class MapAppearance extends PropertyPage
 		
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setImage(image.getImageGuid());
-		if (submap != null)
-			data.setSubmapId(submap.getObjectId());
+		if (drillDownObject != null)
+			data.setDrillDownObjectId(drillDownObject.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().MapAppearance_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
@@ -164,6 +164,6 @@ public class MapAppearance extends PropertyPage
       super.performDefaults();
       image.setImageGuid(NXCommon.EMPTY_GUID, true);
       if (!(object instanceof NetworkMap))
-         submap.setObjectId(0);
+         drillDownObject.setObjectId(0);
    }
 }

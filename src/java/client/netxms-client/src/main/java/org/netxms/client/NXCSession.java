@@ -4607,9 +4607,9 @@ public class NXCSession
          }
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.SUBMAP_ID))
+      if (data.isFieldSet(NXCObjectModificationData.DRILL_DOWN_OBJECT_ID))
       {
-         msg.setFieldInt32(NXCPCodes.VID_SUBMAP_ID, (int) data.getSubmapId());
+         msg.setFieldInt32(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID, (int) data.getDrillDownObjectId());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.SERVICE_TYPE))

@@ -1020,7 +1020,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
 	pMsg->setField(VID_IMAGE, m_image);
-	pMsg->setField(VID_SUBMAP_ID, m_submapId);
+	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
 	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
@@ -1203,9 +1203,9 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 		addLocationToHistory();
 	}
 
-	if (pRequest->isFieldExist(VID_SUBMAP_ID))
+	if (pRequest->isFieldExist(VID_DRILL_DOWN_OBJECT_ID))
 	{
-		m_submapId = pRequest->getFieldAsUInt32(VID_SUBMAP_ID);
+		m_submapId = pRequest->getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
 	}
 
    if (pRequest->isFieldExist(VID_COUNTRY))

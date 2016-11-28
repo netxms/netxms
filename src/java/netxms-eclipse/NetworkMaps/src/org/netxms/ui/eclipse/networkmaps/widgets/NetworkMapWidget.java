@@ -47,6 +47,9 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -61,9 +64,11 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
@@ -73,6 +78,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Widget for embedding network map into dashboards
@@ -91,16 +97,17 @@ public class NetworkMapWidget extends Composite
    private Stack<Long> history = new Stack<Long>();
    private long currentMapId = 0;
    private LinkDciValueProvider dciValueProvider;
+   private IViewPart viewPart;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public NetworkMapWidget(Composite parent, int style)
+	public NetworkMapWidget(Composite parent, IViewPart viewPart, int style)
 	{
 		super(parent, style);
       dciValueProvider = LinkDciValueProvider.getInstance();
-	
+      this.viewPart = viewPart;
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
 		
@@ -168,34 +175,48 @@ public class NetworkMapWidget extends Composite
             }
 
             // Default behaviour
-            openSubmap(object);
+            openDrillDownObject(object);
          }
       });
 	}
 	
 	/**
-	 * Open submap within same widget
+	 * Open drill-down object for currently selected object
 	 * 
 	 * @param object
 	 */
-	private void openSubmap(AbstractObject object)
+	private void openDrillDownObject(AbstractObject object)
 	{
-      long submapId = (object instanceof NetworkMap) ? object.getObjectId() : object.getSubmapId();
-      if (submapId == 0)
+      long objectId = (object instanceof NetworkMap) ? object.getObjectId() : object.getDrillDownObjectId();
+      if (objectId == 0)
          return;
       
-      NetworkMap map = ConsoleSharedData.getSession().findObjectById(submapId, NetworkMap.class);
-      if (map != null)
+      Object test = ConsoleSharedData.getSession().findObjectById(objectId);
+      if (test instanceof NetworkMap)
       {
-         history.push(currentMapId);
-         setContent(map, false);
-         viewer.showBackButton(new Runnable() {
-            @Override
-            public void run()
-            {
-               goBack();
-            }
-         });
+         if (test != null)
+         {
+            history.push(currentMapId);
+            setContent((NetworkMap)test, false);
+            viewer.showBackButton(new Runnable() {
+               @Override
+               public void run()
+               {
+                  goBack();
+               }
+            });
+         }
+      }
+      if (viewPart != null && test instanceof Dashboard)
+      {
+         try
+         {
+            viewPart.getSite().getPage().showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+         }
+         catch(PartInitException e)
+         {
+            MessageDialogHelper.openError(viewPart.getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
+         }
       }
 	}
 	

@@ -124,7 +124,7 @@ public abstract class AbstractObject
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
 	protected UUID image;
-	protected long submapId;
+	protected long drillDownObjectId;
 	protected final HashSet<Long> trustedNodes = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
@@ -202,7 +202,7 @@ public abstract class AbstractObject
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
 		image = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
-		submapId = msg.getFieldAsInt64(NXCPCodes.VID_SUBMAP_ID);
+		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
 		if (image == null)
 			image = NXCommon.EMPTY_GUID;
 		
@@ -795,9 +795,9 @@ public abstract class AbstractObject
 	/**
 	 * @return the submapId
 	 */
-	public long getSubmapId()
+	public long getDrillDownObjectId()
 	{
-		return submapId;
+		return drillDownObjectId;
 	}
 
 	/**

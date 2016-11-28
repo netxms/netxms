@@ -65,7 +65,7 @@ public class ClusterTab extends ObjectTab
 		layout.marginHeight = 0;
 		content.setLayout(layout);
 		
-		clusterMap = new NetworkMapWidget(content, SWT.NONE);
+		clusterMap = new NetworkMapWidget(content, null, SWT.NONE);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;

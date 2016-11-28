@@ -181,6 +181,16 @@ public class ObjectSelectionDialog extends Dialog
 	}
 	
 	/**
+	 * Create filter for dashboard and network map selection
+	 * 
+	 * @return
+	 */
+	public static Set<Integer> createDashboardAndNetworkMapSelectionFilter()
+	{
+	   return ObjectSelectionFilterFactory.getInstance().createDashboardAndNetworkMapSelectionFilter();
+	}
+	
+	/**
     * Create object selection dialog.
     * 
     * @param parentShell parent shell
