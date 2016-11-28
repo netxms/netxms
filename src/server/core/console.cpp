@@ -70,7 +70,7 @@ static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object,
 /**
  * Dump index (by IP address)
  */
-static void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
+void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
 {
    index->forEach(DumpIndexCallbackByInetAddr, pCtx);
 }
@@ -543,7 +543,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("INDEX"), szBuffer, 1))
       {
          // Get argument
-         ExtractWord(pArg, szBuffer);
+         pArg = ExtractWord(pArg, szBuffer);
 
          if (IsCommand(_T("CONDITION"), szBuffer, 1))
          {
@@ -555,11 +555,53 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
          {
-            DumpIndex(pCtx, &g_idxInterfaceByAddr);
+            pArg = ExtractWord(pArg, szBuffer);
+            if (IsCommand(_T("ZONE"), szBuffer, 1))
+            {
+               ExtractWord(pArg, szBuffer);
+               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               if (zone != NULL)
+               {
+                  zone->dumpInterfaceIndex(pCtx);
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+               }
+            }
+            else if (szBuffer[0] == 0)
+            {
+               DumpIndex(pCtx, &g_idxInterfaceByAddr);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+            }
          }
          else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
          {
-            DumpIndex(pCtx, &g_idxNodeByAddr);
+            pArg = ExtractWord(pArg, szBuffer);
+            if (IsCommand(_T("ZONE"), szBuffer, 1))
+            {
+               ExtractWord(pArg, szBuffer);
+               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               if (zone != NULL)
+               {
+                  zone->dumpNodeIndex(pCtx);
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+               }
+            }
+            else if (szBuffer[0] == 0)
+            {
+               DumpIndex(pCtx, &g_idxNodeByAddr);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+            }
          }
          else if (IsCommand(_T("NODEID"), szBuffer, 5))
          {
@@ -567,7 +609,28 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else if (IsCommand(_T("SUBNET"), szBuffer, 1))
          {
-            DumpIndex(pCtx, &g_idxSubnetByAddr);
+            pArg = ExtractWord(pArg, szBuffer);
+            if (IsCommand(_T("ZONE"), szBuffer, 1))
+            {
+               ExtractWord(pArg, szBuffer);
+               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               if (zone != NULL)
+               {
+                  zone->dumpSubnetIndex(pCtx);
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+               }
+            }
+            else if (szBuffer[0] == 0)
+            {
+               DumpIndex(pCtx, &g_idxSubnetByAddr);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
+            }
          }
          else if (IsCommand(_T("ZONE"), szBuffer, 1))
          {
@@ -576,7 +639,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          else
          {
             if (szBuffer[0] == 0)
-               ConsoleWrite(pCtx, _T("ERROR: Missing index name\n")
+               ConsoleWrite(pCtx, _T("ERROR: Missing parameters\n")
+                                  _T("Syntax:\n   SHOW INDEX name [ZONE id]\n")
                                   _T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
             else
                ConsoleWrite(pCtx, _T("ERROR: Invalid index name\n\n"));

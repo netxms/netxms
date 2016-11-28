@@ -23,6 +23,11 @@
 #include "nxcore.h"
 
 /**
+ * Dump index to console
+ */
+void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index);
+
+/**
  * Zone class default constructor
  */
 Zone::Zone() : NetObj()
@@ -218,4 +223,28 @@ void Zone::removeFromIndex(Interface *iface)
 NXSL_Value *Zone::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, this));
+}
+
+/**
+ * Dump interface index to console
+ */
+void Zone::dumpInterfaceIndex(CONSOLE_CTX console)
+{
+   DumpIndex(console, m_idxInterfaceByAddr);
+}
+
+/**
+ * Dump node index to console
+ */
+void Zone::dumpNodeIndex(CONSOLE_CTX console)
+{
+   DumpIndex(console, m_idxNodeByAddr);
+}
+
+/**
+ * Dump subnet index to console
+ */
+void Zone::dumpSubnetIndex(CONSOLE_CTX console)
+{
+   DumpIndex(console, m_idxSubnetByAddr);
 }

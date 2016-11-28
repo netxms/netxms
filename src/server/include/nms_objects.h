@@ -2027,6 +2027,9 @@ public:
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
    void forEachSubnet(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
    ObjectArray<NetObj> *getSubnets(bool updateRefCount) { return m_idxSubnetByAddr->getObjects(updateRefCount); }
+   void dumpInterfaceIndex(CONSOLE_CTX console);
+   void dumpNodeIndex(CONSOLE_CTX console);
+   void dumpSubnetIndex(CONSOLE_CTX console);
 };
 
 /**
