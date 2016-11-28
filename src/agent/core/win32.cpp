@@ -129,7 +129,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
 				else
 				{
 					TCHAR buffer[1024];
-					DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetVolumeInformation(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
+					DebugPrintf(4, _T("H_FileSystems: Call to GetVolumeInformation(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
 				}
 
 				ULARGE_INTEGER availBytes, freeBytes, totalBytes;
@@ -146,7 +146,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
 				else
 				{
 					TCHAR buffer[1024];
-					DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetDiskFreeSpaceEx(\"%s\".\"%s\") failed (%s)"), volName, mountPoints, GetSystemErrorText(GetLastError(), buffer, 1024));
+					DebugPrintf(4, _T("H_FileSystems: Call to GetDiskFreeSpaceEx(\"%s\".\"%s\") failed (%s)"), volName, mountPoints, GetSystemErrorText(GetLastError(), buffer, 1024));
 
 					table->set(4, (QWORD)0);
 					table->set(5, (QWORD)0);
@@ -160,7 +160,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
 			else
 			{
 				TCHAR buffer[1024];
-				DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
+				DebugPrintf(4, _T("H_FileSystems: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
 			}
 		} while(FindNextVolume(hVol, volName, MAX_PATH));
 		FindVolumeClose(hVol);
@@ -168,7 +168,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
 	else
 	{
 		TCHAR buffer[1024];
-		DebugPrintf(INVALID_INDEX, 4, _T("H_FileSystems: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		DebugPrintf(4, _T("H_FileSystems: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		rc = SYSINFO_RC_ERROR;
 	}
 	return rc;
@@ -199,7 +199,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 			else
 			{
 				TCHAR buffer[1024];
-				DebugPrintf(INVALID_INDEX, 4, _T("H_MountPoints: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
+				DebugPrintf(4, _T("H_MountPoints: Call to GetVolumePathNamesForVolumeName(\"%s\") failed (%s)"), volName, GetSystemErrorText(GetLastError(), buffer, 1024));
 			}
 		} while(FindNextVolume(hVol, volName, MAX_PATH));
 		FindVolumeClose(hVol);
@@ -207,7 +207,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 	else
 	{
 		TCHAR buffer[1024];
-		DebugPrintf(INVALID_INDEX, 4, _T("H_MountPoints: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		DebugPrintf(4, _T("H_MountPoints: Call to FindFirstVolume failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		rc = SYSINFO_RC_ERROR;
 	}
 	return rc;
@@ -268,7 +268,7 @@ LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractC
    {
 		TCHAR error[256];
 
-		DebugPrintf(INVALID_INDEX, 2, _T("%s: GetDiskFreeSpaceEx failed: %s"), pszCmd,
+		DebugPrintf(2, _T("%s: GetDiskFreeSpaceEx failed: %s"), pszCmd,
 		            GetSystemErrorText(GetLastError(), error, 256));
       nRet = SYSINFO_RC_ERROR;
    }

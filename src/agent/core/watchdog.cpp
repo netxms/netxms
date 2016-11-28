@@ -72,7 +72,7 @@ void StartWatchdog()
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(INVALID_INDEX, 1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
+	DebugPrintf(1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));

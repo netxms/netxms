@@ -57,7 +57,7 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          status.dwWaitHint = 4000;
          SetServiceStatus(serviceHandle, &status);
 
-			DebugPrintf(INVALID_INDEX, 1, _T("Service control code %d - calling Shutdown()"), ctrlCode);
+			DebugPrintf(1, _T("Service control code %d - calling Shutdown()"), ctrlCode);
          Shutdown();
 
          status.dwCurrentState = SERVICE_STOPPED;
