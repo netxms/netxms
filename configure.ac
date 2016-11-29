@@ -1551,11 +1551,7 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
-				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
-					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-				else
-					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-				fi	
+				LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 			else
 				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 			fi
