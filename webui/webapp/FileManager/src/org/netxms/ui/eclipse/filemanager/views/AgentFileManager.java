@@ -1031,6 +1031,8 @@ public class AgentFileManager extends ViewPart
                      DownloadServiceHandler.startDownload(zipArchive.getName());
                   }
                });
+               
+               monitor.done();
             }
    
             @Override
@@ -1068,7 +1070,7 @@ public class AgentFileManager extends ViewPart
          }
          else
          {
-            monitor.subTask(String.format("Download file %s", files[i].getFullName()));
+            monitor.subTask(String.format("Compressing file %s", files[i].getFullName()));
             final AgentFileData file = session.downloadFileFromAgent(objectId, files[i].getFullName(), 0, false, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
@@ -1084,14 +1086,12 @@ public class AgentFileManager extends ViewPart
        		FileInputStream fis = new FileInputStream(file.getFile());
        		ZipEntry zipEntry = new ZipEntry(localFileName+"/"+files[i].getName());
        		zos.putNextEntry(zipEntry);
-   
        		byte[] bytes = new byte[1024];
        		int length;
        		while ((length = fis.read(bytes)) >= 0) 
        		{
        			zos.write(bytes, 0, length);
        		}
-   
        		zos.closeEntry();
        		fis.close();
          }
@@ -1111,7 +1111,7 @@ public class AgentFileManager extends ViewPart
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
-                  monitor.beginTask("Download file " + remoteName, (int)workTotal);
+                  monitor.beginTask("Downloading file " + remoteName, (int)workTotal);
                }
 
                @Override
@@ -1120,6 +1120,7 @@ public class AgentFileManager extends ViewPart
                   monitor.worked((int)workDone);
                }
             });
+            
             DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
             runInUIThread(new Runnable() {
                @Override

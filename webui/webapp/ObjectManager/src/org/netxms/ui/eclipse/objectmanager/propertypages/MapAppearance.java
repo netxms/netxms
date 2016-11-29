@@ -104,7 +104,7 @@ public class MapAppearance extends PropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setImage(image.getImageGuid());
 		if (drillDownObject != null)
-			data.setSubmapId(drillDownObject.getObjectId());
+			data.setDrillDownObjectId(drillDownObject.getObjectId());
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().MapAppearance_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override

@@ -1008,7 +1008,7 @@ public class AgentFileManager extends ViewPart
          {
             if (!sf.isDirectory())
             {
-               downloadFile(selected, sf.getFullName(), monitor, false);
+               downloadFile(selected, sf, monitor, false);
             }
             else
             {
@@ -1020,9 +1020,10 @@ public class AgentFileManager extends ViewPart
                catch(Exception e)
                {
                }
-               monitor.beginTask(String.format("Compressing directory %s", sf.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
+               monitor.beginTask(String.format("Downloading directory %s", sf.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
                downloadDir(sf, selected, monitor);
             }
+            monitor.done();
          }
 
          @Override
@@ -1060,9 +1061,10 @@ public class AgentFileManager extends ViewPart
          }
          else
          {
-            downloadFile(localFileName + "/" + files[i].getName(), files[i].getFullName(), monitor, true); //$NON-NLS-1$
+            downloadFile(localFileName + "/" + files[i].getName(), files[i], monitor, true); //$NON-NLS-1$
          }
       }
+      dir.setLastModified(sf.getModifyicationTime().getTime());
    }
    
    /**
@@ -1070,16 +1072,16 @@ public class AgentFileManager extends ViewPart
     * @throws NXCException 
     * @throws IOException 
     */
-   private void downloadFile(final String localName, final String remoteName, final IProgressMonitor monitor, final boolean subTask) throws IOException, NXCException
+   private void downloadFile(final String localName, final AgentFile sf, final IProgressMonitor monitor, final boolean subTask) throws IOException, NXCException
    {
       if (subTask)
-         monitor.subTask(String.format("Download file %s", remoteName));
-      final AgentFileData file = session.downloadFileFromAgent(objectId, remoteName, 0, false, new ProgressListener() {
+         monitor.subTask(String.format("Downloading file %s", sf.getFullName()));
+      final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false, new ProgressListener() {
          @Override
          public void setTotalWorkAmount(long workTotal)
          {
             if (!subTask)
-               monitor.beginTask(String.format("Download file %s", remoteName), (int)workTotal);
+               monitor.beginTask(String.format("Downloading file %s", sf.getFullName()), (int)workTotal);
          }
 
          @Override
@@ -1100,6 +1102,7 @@ public class AgentFileManager extends ViewPart
       }
       in.close();
       out.close();
+      outputFile.setLastModified(sf.getModifyicationTime().getTime());
    }
    
    /**
