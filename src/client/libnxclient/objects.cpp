@@ -171,7 +171,7 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
    m_primaryIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
    m_comments = msg->getFieldAsString(VID_COMMENTS);
    m_geoLocation = GeoLocation(*msg);
-   m_submapId = msg->getFieldAsUInt32(VID_SUBMAP_ID);
+   m_submapId = msg->getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
 
 	// Custom attributes
    int i;
