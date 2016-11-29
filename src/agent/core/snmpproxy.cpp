@@ -63,7 +63,7 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 {
 	SocketPoller sp;
 	sp.add(hSocket);
-	if (sp.poll(g_dwSNMPTimeout) <= 0)
+	if (sp.poll(g_snmpTimeout) <= 0)
 	   return false;
 
 	int bytes = recv(hSocket, (char *)pdu, SNMP_BUFFER_SIZE, 0);

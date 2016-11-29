@@ -163,12 +163,12 @@ TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
-UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
-UINT32 g_dwSNMPTimeout = 1500;
+UINT32 g_execTimeout = 2000;     // External process execution timeout in milliseconds
+UINT32 g_snmpTimeout = 1000;
+UINT32 g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 0;
-UINT32 g_dwSNMPTrapPort = 162;
 UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 15000;
@@ -265,7 +265,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
-   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
+   { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, NULL },
    { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
@@ -292,9 +292,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
-	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
+	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_snmpTimeout, NULL },
 	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, NULL },
-   { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTrapPort, NULL },
+   { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_snmpTrapPort, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, NULL },

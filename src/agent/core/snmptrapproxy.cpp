@@ -86,7 +86,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    		sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
       }
 	}
-   sa.sin_port = htons(g_dwSNMPTrapPort);
+   sa.sin_port = htons(g_snmpTrapPort);
 
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)) != 0)
@@ -114,7 +114,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       {
          UdpMessage *message = new UdpMessage();
          message->ipAddr = ntohl(sa.sin_addr.s_addr);
-         message->port = (short)g_dwSNMPTrapPort;
+         message->port = (short)g_snmpTrapPort;
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
          DebugPrintf(6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));

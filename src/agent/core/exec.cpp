@@ -510,7 +510,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
 		   DebugPrintf(4, _T("RunExternal (shell exec): worker thread created"));
-			if (ConditionWait(data->finished, g_dwExecTimeout))
+			if (ConditionWait(data->finished, g_execTimeout))
 			{
 				iStatus = data->status;
 				if (iStatus == SYSINFO_RC_SUCCESS)
