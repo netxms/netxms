@@ -462,6 +462,48 @@ static void CheckObjectProperties()
    EndStage();
 }
 
+static void CheckContainerMembership()
+{
+   StartStage(_T("Checking container membership..."));
+   DB_RESULT containerList = SQLSelect(_T("SELECT object_id,container_id FROM container_members"));
+   DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
+   if (containerList != NULL && objectList != NULL)
+   {
+      DWORD numContainers = DBGetNumRows(containerList);
+      DWORD numObjects = DBGetNumRows(objectList);
+      bool match = false;
+      TCHAR szQuery[1024];
+
+      for(int i = 0; i < numContainers; i++)
+      {
+         for(int n = 0; n < numObjects; n++)
+         {
+            if (DBGetFieldULong(containerList, i, 0) == DBGetFieldULong(objectList, n, 0))
+            {
+               match = true;
+               break;
+            }
+         }
+         if (!match)
+         {
+            m_iNumErrors++;
+            if (GetYesNo(_T("\rContainer %d contains non-existing child %d. Fix it?"),
+                           DBGetFieldULong(containerList, i, 1), DBGetFieldULong(containerList, i, 0)))
+            {
+               _sntprintf(szQuery, 1024, _T("DELETE FROM container_members WHERE object_id=%d AND container_id=%d"),
+                           DBGetFieldULong(containerList, i, 0), DBGetFieldULong(containerList, i, 1));
+               if (SQLQuery(szQuery))
+                  m_iNumFixes++;
+            }
+         }
+         match = false;
+      }
+      DBFreeResult(containerList);
+      DBFreeResult(objectList);
+   }
+   EndStage();
+}
+
 /**
  * Check cluster objects
  */
@@ -997,6 +1039,7 @@ void CheckDatabase()
 				   CheckClusters();
 				   CheckTemplateNodeMapping();
 				   CheckObjectProperties();
+				   CheckContainerMembership();
 				   CheckEPP();
                CheckMapLinks();
                CheckDataTables();
