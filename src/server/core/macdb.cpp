@@ -69,6 +69,13 @@ void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object)
    }
    else
    {
+      if (entry->object->getId() != object->getId())
+      {
+         TCHAR macAddrStr[32];
+         nxlog_debug(2, _T("MacDbAddObject: MAC address %s already known (%s [%d] -> %s [%d])"),
+                     MACToStr(macAddr, macAddrStr), entry->object->getName(), entry->object->getId(),
+                     object->getName(), object->getId());
+      }
       entry->object->decRefCount();
    }
    entry->object = object;
