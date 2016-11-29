@@ -147,15 +147,15 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
 
       while(1)
       {
-         char line[256];
-         if (fgets(line, 256, in) == NULL)
+         char line[4096];
+         if (fgets(line, 4096, in) == NULL)
             break;
          if (!strncmp(line, "rootfs /", 8))
             continue;
 
          table->addRow();
 
-         char device[256], mountPoint[256], fsType[256];
+         char device[512], mountPoint[512], fsType[256];
          const char *next = ExtractWordA(line, device);
          next = ExtractWordA(next, mountPoint);
          ExtractWordA(next, fsType);
@@ -223,8 +223,8 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
    {
       while(1)
       {
-         char line[256];
-         if (fgets(line, 256, in) == NULL)
+         char line[4096];
+         if (fgets(line, 4096, in) == NULL)
             break;
          if (!strncmp(line, "rootfs /", 8))
             continue;
