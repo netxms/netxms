@@ -150,10 +150,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			@Override
 			public void run()
 			{
-            saveAndApply = false;
 			   doSave(null);
-            actionSave.setEnabled(false);
-            dirty=false;
 			}
 		};
 		actionSave.setText(Messages.get().AgentConfigEditorView_Save);
@@ -207,6 +204,11 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		{
 	      saveData = editor.getText();
 			session.updateAgentConfig(nodeId, saveData, saveAndApply);
+	      actionSave.setEnabled(false);
+	      saveAndApply = false;
+	      dirty = false;
+	      modified = false;
+	      firePropertyChange(PROP_DIRTY);
 		}
 		catch(Exception e)
 		{
