@@ -415,6 +415,10 @@
             class="org.netxms.ui.eclipse.console.LongTapHandlerScript"
             id="org.netxms.ui.eclipse.console.LongTapHandlerScript">
       </resource>
+      <resource
+            class="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript"
+            id="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript">
+      </resource>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

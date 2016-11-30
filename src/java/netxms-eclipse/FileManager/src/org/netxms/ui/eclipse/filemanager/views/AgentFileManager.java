@@ -137,6 +137,8 @@ public class AgentFileManager extends ViewPart
    private Action actionShowFile;
    private Action actionCreateDirectory;
    private Action actionShowFileSize;
+   private Action actionCopyFilePath;
+   private Action actionCopyFileName;
    private long objectId = 0;
 
    /*
@@ -554,13 +556,34 @@ public class AgentFileManager extends ViewPart
       actionCreateDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.newFolder"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreateDirectory.getActionDefinitionId(), new ActionHandler(actionCreateDirectory));
       
-      actionShowFileSize = new Action("Show file size") {
+      actionShowFileSize = new Action("&Show file size") {
          @Override
          public void run()
          {
             showFileSize();
          }
       };
+      
+      actionCopyFileName = new Action("&Copy file name") {
+         @Override
+         public void run()
+         {
+            copyFileName();
+         }
+      };
+      actionCopyFileName.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFileName"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCopyFileName.getActionDefinitionId(), new ActionHandler(actionCopyFileName));
+      
+      actionCopyFilePath = new Action("&Copy file path") {
+         @Override
+         public void run()
+         {
+            copyFilePath();
+         }
+      };
+      actionCopyFilePath.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFilePath"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCopyFilePath.getActionDefinitionId(), new ActionHandler(actionCopyFilePath));
+
    }
 
    /**
@@ -652,6 +675,8 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionCreateDirectory);
          }
          mgr.add(actionRename);
+         mgr.add(actionCopyFileName);
+         mgr.add(actionCopyFilePath);
       }
       mgr.add(actionShowFileSize);
       mgr.add(actionDelete);
@@ -1215,6 +1240,31 @@ public class AgentFileManager extends ViewPart
          {
          }         
       }
+   }
+   
+   /**
+    * Copy name of file to clipboard
+    */
+   private void copyFileName()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getName());
+   }
+   
+   /**
+    * Copy full path to file to clipboard
+    */
+   private void copyFilePath()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+
+      String filePath = ((AgentFile)selection.getFirstElement()).getFullName();
+      WidgetHelper.copyToClipboard(filePath.substring(1, filePath.length())); // Substring is made to remove first "/"
    }
 
    /*

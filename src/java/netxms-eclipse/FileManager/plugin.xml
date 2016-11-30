@@ -189,6 +189,16 @@
             id="org.netxms.ui.eclipse.filemanager.commands.find"
             name="Find">
       </command>
+      <command
+            description="Copy file name"
+            id="org.netxms.ui.eclipse.filemanager.commands.copyFileName"
+            name="Copy file name">
+      </command>
+      <command
+            description="Copy file path"
+            id="org.netxms.ui.eclipse.filemanager.commands.copyFilePath"
+            name="Copy file path">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -295,6 +305,18 @@
             contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.copyFileName"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.copyFilePath"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="SHIFT+M1+C">
       </key>
    </extension>
    <extension

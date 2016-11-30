@@ -49,6 +49,8 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
@@ -135,6 +137,8 @@ public class AgentFileManager extends ViewPart
    private Action actionShowFile;
    private Action actionCreateDirectory;
    private Action actionShowFileSize;
+   private Action actionCopyFilePath;
+   private Action actionCopyFileName;
    private long objectId = 0;
 
    /*
@@ -551,6 +555,26 @@ public class AgentFileManager extends ViewPart
             showFileSize();
          }
       };
+      
+      actionCopyFileName = new Action("&Copy file name") {
+         @Override
+         public void run()
+         {
+            copyFileName();
+         }
+      };
+      actionCopyFileName.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFileName"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCopyFileName.getActionDefinitionId(), new ActionHandler(actionCopyFileName));
+      
+      actionCopyFilePath = new Action("&Copy file path") {
+         @Override
+         public void run()
+         {
+            copyFilePath();
+         }
+      };
+      actionCopyFilePath.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFilePath"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCopyFilePath.getActionDefinitionId(), new ActionHandler(actionCopyFilePath));
    }
 
    /**
@@ -641,6 +665,8 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionCreateDirectory);
          }
          mgr.add(actionRename);
+         mgr.add(actionCopyFileName);
+         mgr.add(actionCopyFilePath);
       }
       mgr.add(actionShowFileSize);
       mgr.add(actionDelete);
@@ -1249,6 +1275,44 @@ public class AgentFileManager extends ViewPart
          catch (Exception e)
          {
          }         
+      }
+   }
+   
+   /**
+    * Copy name of file to clipboard
+    */
+   private void copyFileName()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      String fileName = ((AgentFile)selection.getFirstElement()).getName();
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if( executor != null ) 
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("copyTextToClipboard(\'" + fileName + "\');"); //$NON-NLS-1$
+         executor.execute(js.toString());
+      }
+   }
+   
+   /**
+    * Copy full path to file to clipboard
+    */
+   private void copyFilePath()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      String filePath = ((AgentFile)selection.getFirstElement()).getFullName();
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if( executor != null ) 
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("copyTextToClipboard(\'" + filePath.substring(1, filePath.length()) + "\');"); // Substring is made to remove first "/"
+         executor.execute(js.toString());
       }
    }
 
