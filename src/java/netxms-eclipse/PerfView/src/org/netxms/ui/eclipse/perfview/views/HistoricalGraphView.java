@@ -38,8 +38,11 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
@@ -122,6 +125,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
    private Action actionCopyImage;
+   private Action actionSaveAsImage;
+   
    
    /*
     * (non-Javadoc)
@@ -704,14 +709,25 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       });
       
-      actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
+      if (!System.getProperty("os.name").toLowerCase().contains("linux"))
+      {
+         actionCopyImage = new Action(Messages.get().DataComparisonView_CopyToClipboard, SharedIcons.COPY) {
+            @Override
+            public void run()
+            {
+               Image image = chart.takeSnapshot();
+               ImageTransfer imageTransfer = ImageTransfer.getInstance();
+               final Clipboard clipboard = new Clipboard(getSite().getShell().getDisplay());
+               clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+            }
+         };
+      }
+      
+      actionSaveAsImage = new Action("Copy as image", SharedIcons.SAVE_AS_IMAGE) {
           @Override
           public void run()
           {
-             Image image = chart.takeSnapshot();
-             ImageTransfer imageTransfer = ImageTransfer.getInstance();
-             final Clipboard clipboard = new Clipboard(getSite().getShell().getDisplay());
-             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+             saveAsImage();
           }
        };
    }
@@ -845,7 +861,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAsTemplate);
-      manager.add(actionCopyImage); 
+      if (actionCopyImage != null)
+         manager.add(actionCopyImage);
+      manager.add(actionSaveAsImage); 
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -874,6 +892,31 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       settings.setTimeFrom(new Date(System.currentTimeMillis() - settings.getTimeRangeMillis()));
       settings.setTimeTo(new Date(System.currentTimeMillis()));
       getDataFromServer();
+   }
+   
+   /**
+    * Copy graph as image
+    */
+   private void saveAsImage()
+   {
+      Image image = chart.takeSnapshot();
+      
+      FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+      fd.setText("Save graph as image");
+      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { ".png" };
+      fd.setFilterNames(filterNames);
+      fd.setFileName("graph.png");
+      final String selected = fd.open();
+      if (selected == null)
+         return;
+      
+      ImageLoader saver = new ImageLoader();
+      saver.data = new ImageData[] { image.getImageData() };
+      saver.save(selected, SWT.IMAGE_PNG);
+
+      image.dispose();
    }
 
    /*
