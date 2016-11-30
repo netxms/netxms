@@ -23,6 +23,7 @@
 
 #include "libnetxms.h"
 #include "ice.h"
+#include <nxcpapi.h>
 
 /**
  * Constants
@@ -56,8 +57,9 @@ static UINT32 s_supportedCiphers =
  * Static data
  */
 static WORD s_noEncryptionFlag = 0;
+static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
 
-#ifdef _WITH_ENCRYPTION
+#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
 
 extern "C" typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
@@ -93,7 +95,6 @@ static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
    NULL
 #endif
 };
-static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
 static MUTEX *s_cryptoMutexList = NULL;
 
 /**
@@ -125,7 +126,54 @@ static unsigned long CryptoIdCallback()
 
 #endif
 
+/**
+ * Create RSA key from binary representation
+ */
+RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
+{
+   const BYTE *bp = data;
+   RSA *key = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&bp, (int)size);
+   if ((key != NULL) && withPrivate)
+   {
+      if (d2i_RSAPrivateKey(&key, (OPENSSL_CONST BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t))) == NULL)
+      {
+         RSA_free(key);
+         key = NULL;
+      }
+   }
+   return key;
+}
+
+/**
+ * Destroy RSA key
+ */
+void RSAFree(RSA *key)
+{
+   RSA_free(key);
+}
+
 #endif   /* _WITH_ENCRYPTION */
+
+#if defined(_WITH_ENCRYPTION) && WITH_COMMONCRYPTO
+
+/**
+ * Create RSA key from binary representation
+ */
+RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
+{
+   SecKeyCreateWithData(keyData, keyAttr);
+	return NULL;
+}
+
+/**
+ * Destroy RSA key
+ */
+void RSAFree(RSA *key)
+{
+   free(key);
+}
+
+#endif
 
 /**
  * Initialize OpenSSL library
@@ -134,7 +182,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 {
    s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
 
-#ifdef _WITH_ENCRYPTION
+#if _WITH_ENCRYPTION && WITH_OPENSSL
    BYTE random[8192];
    int i;
 
@@ -175,7 +223,8 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    }
 
    nxlog_debug(1, _T("Crypto library initialized"));
-
+#elif _WITH_ENCRYPTION && WITH_COMMONCRYPTO
+   nxlog_debug(1, _T("Crypto library initialized"));
 #else
    nxlog_debug(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
@@ -272,9 +321,8 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
          if (*ppCtx != NULL)
          {
             // Encrypt key
-            int size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-            pBufPos = ucKeyBuffer;
-            pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
+            size_t size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+            pServerKey = RSAKeyFromData(ucKeyBuffer, size, false);
             if (pServerKey != NULL)
             {
                (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
@@ -376,37 +424,24 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA *pServerKey
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 {
 #ifdef _WITH_ENCRYPTION
-   FILE *fp;
-   BYTE *pKeyBuffer, *pBufPos, hash[SHA1_DIGEST_SIZE];
-   UINT32 dwLen;
    RSA *pKey = NULL;
-
-   fp = _tfopen(pszKeyFile, _T("rb"));
+   FILE *fp = _tfopen(pszKeyFile, _T("rb"));
    if (fp != NULL)
    {
+      UINT32 dwLen;
       if (fread(&dwLen, 1, sizeof(UINT32), fp) == sizeof(UINT32) && dwLen < 10 * 1024)
       {
-         pKeyBuffer = (BYTE *)malloc(dwLen);
-         pBufPos = pKeyBuffer;
+         BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
          if (fread(pKeyBuffer, 1, dwLen, fp) == dwLen)
          {
-            BYTE hash2[SHA1_DIGEST_SIZE];
-
+            BYTE hash[SHA1_DIGEST_SIZE];
             if (fread(hash, 1, SHA1_DIGEST_SIZE, fp) == SHA1_DIGEST_SIZE)
             {
+               BYTE hash2[SHA1_DIGEST_SIZE];
                CalculateSHA1Hash(pKeyBuffer, dwLen, hash2);
                if (!memcmp(hash, hash2, SHA1_DIGEST_SIZE))
                {
-                  pKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, dwLen);
-                  if (pKey != NULL)
-                  {
-                     if (d2i_RSAPrivateKey(&pKey, (OPENSSL_CONST BYTE **)&pBufPos,
-                                           dwLen - CAST_FROM_POINTER((pBufPos - pKeyBuffer), UINT32)) == NULL)
-                     {
-                        RSA_free(pKey);
-                        pKey = NULL;
-                     }
-                  }
+                  pKey = RSAKeyFromData(pKeyBuffer, dwLen, true);
                }
             }
          }
@@ -414,7 +449,6 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
       }
       fclose(fp);
    }
-
    return pKey;
 #else
    return NULL;

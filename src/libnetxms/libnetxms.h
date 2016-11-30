@@ -26,7 +26,6 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nxcpapi.h>
 #include <nxcldefs.h>
 
 #define MAX_CODEPAGE_LEN		64

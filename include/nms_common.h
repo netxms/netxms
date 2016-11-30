@@ -42,7 +42,7 @@
 #include <config-netware.h>
 #else
 #include <config.h>
-#ifdef WITH_OPENSSL
+#if defined(WITH_OPENSSL) || defined(WITH_COMMONCRYPTO)
 #define _WITH_ENCRYPTION   1
 #endif
 #endif
@@ -776,56 +776,6 @@ typedef struct hostent HOSTENT;
 #else
 #define CAST_FROM_POINTER(p, t) ((t)(p))
 #define CAST_TO_POINTER(v, t) ((t)(v))
-#endif
-
-/**
- * OpenSSL
- */
-#if defined(_WITH_ENCRYPTION) && !defined(ORA_PROC)
-
-#include <openssl/crypto.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <openssl/opensslv.h>
-#include <openssl/err.h>
-
-#ifdef NETXMS_NO_AES
-#ifndef OPENSSL_NO_AES
-#define OPENSSL_NO_AES
-#endif
-#endif
-
-#ifdef NETXMS_NO_BF
-#ifndef OPENSSL_NO_BF
-#define OPENSSL_NO_BF
-#endif
-#endif
-
-#ifdef NETXMS_NO_IDEA
-#ifndef OPENSSL_NO_IDEA
-#define OPENSSL_NO_IDEA
-#endif
-#endif
-
-#ifdef NETXMS_NO_DES
-#ifndef OPENSSL_NO_DES
-#define OPENSSL_NO_DES
-#endif
-#endif
-
-#if OPENSSL_VERSION_NUMBER >= 0x00907000
-#define OPENSSL_CONST const
-#else
-#define OPENSSL_CONST
-#endif
-
-#else
-
-// Prevent compilation errors on function prototypes
-#define RSA void
-
 #endif
 
 /**

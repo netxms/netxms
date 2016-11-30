@@ -107,6 +107,8 @@ LIBVIRT_BASE=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
+WITH_ENCRYPTION="no"
+DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 
@@ -481,6 +483,14 @@ AC_ARG_WITH(openssl,
 			LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
 			CPPFLAGS="$CPPFLAGS -I/opt/openssl/include"
 		fi
+	fi
+])
+
+AC_ARG_ENABLE(commoncrypto,
+[AS_HELP_STRING(--disable-commoncrypto,disable CommonCrypto usage on Mac OS X)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_COMMONCRYPTO="yes"
 	fi
 ])
 
@@ -1535,30 +1545,41 @@ fi
 
 
 #--------------------------------------------------------------------
-# Checks for OpenSSL
+# Checks for OpenSSL/CommonCrypto
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
-	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
-		[
-			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
-			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
-							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
-							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
-							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
-							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
-				LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-			else
-				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
-			fi
-		],
-		[
-			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
+	USE_COMMONCRYPTO="no"
+	if test "x$PLATFORM" = "xDarwin" -a "x$DISABLE_COMMONCRYPTO" != "xyes"; then
+		AC_CHECK_FUNC(CC_MD5_Init, [ 
+			AC_DEFINE(WITH_COMMONCRYPTO, 1, Define to 1 if you have CommonCrypto library and headers)
+			USE_COMMONCRYPTO="yes"
+			WITH_ENCRYPTION="yes"
 		])
+	fi
+	if test "x$USE_COMMONCRYPTO" != "xyes"; then
+		AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
+			[
+				AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
+				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
+								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
+								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
+								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
+								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+				if test "x$HAVE_LIBCRYPTO" = "xyes"; then
+					WITH_ENCRYPTION="yes"
+					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
+				else
+					AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
+				fi
+			],
+			[
+				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
+			])
+	fi
 fi
 
 
@@ -3092,7 +3113,7 @@ AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
-AM_CONDITIONAL([USE_ENCRYPTION], [test "x${HAVE_LIBCRYPTO}" = "xyes"])
+AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
@@ -3486,7 +3507,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 else
 	echo "Build Server            : NO"
 fi
-if test "x${HAVE_LIBCRYPTO}" = "xyes"; then
+if test "x${WITH_ENCRYPTION}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
 	echo "Encryption enabled      : NO"
