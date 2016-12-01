@@ -364,6 +364,7 @@ static void QueueItems(NetObj *object, void *data)
    if (IsShutdownInProgress())
       return;
 
+   WatchdogNotify(*((UINT32 *)data));
 	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				 object->getName(), object->getId());
 	((DataCollectionTarget *)object)->queueItemsForPolling(&g_dataCollectionQueue);
@@ -379,7 +380,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
    UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
-   dwWatchdogId = WatchdogAddThread(_T("Item Poller"), 20);
+   UINT32 watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
    memset(dwTimingHistory, 0, sizeof(UINT32) * (60 / ITEM_POLLING_INTERVAL));
 
    while(!IsShutdownInProgress())
@@ -390,10 +391,10 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
       qwStart = GetCurrentTimeMs();
-		g_idxNodeById.forEach(QueueItems, NULL);
-		g_idxClusterById.forEach(QueueItems, NULL);
-		g_idxMobileDeviceById.forEach(QueueItems, NULL);
-      g_idxChassisById.forEach(QueueItems, NULL);
+		g_idxNodeById.forEach(QueueItems, &watchdogId);
+		g_idxClusterById.forEach(QueueItems, &watchdogId);
+		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
+      g_idxChassisById.forEach(QueueItems, &watchdogId);
 
       // Save last poll time
       dwTimingHistory[currPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
