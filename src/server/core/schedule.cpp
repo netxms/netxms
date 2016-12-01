@@ -644,16 +644,19 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
 /**
  * Thread that checks one time schedules and executes them
  */
-static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
+static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 {
    int sleepTime = 1;
-   DbgPrintf(7, _T("OneTimeEventThread: started"));
+   UINT32 watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
+   nxlog_debug(3, _T("Ad hoc scheduler started"));
    while(true)
    {
+      WatchdogStartSleep(watchdogId);
       s_wakeupCondition.wait(sleepTime);
-      if(g_flags & AF_SHUTDOWN)
+      if (g_flags & AF_SHUTDOWN)
          break;
 
+      WatchdogNotify(watchdogId);
       time_t now = time(NULL);
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
@@ -671,7 +674,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
          SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
          if(callback == NULL)
          {
-            DbgPrintf(3, _T("OneTimeEventThread: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+            DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;
          }
 
@@ -681,7 +684,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
          //execute all timmers that is expected to execute now
          if(sh->getExecutionTime() != 0 && now >= sh->getExecutionTime())
          {
-            DbgPrintf(7, _T("OneTimeEventThread: run schedule id=\'%d\', execution time =\'%d\'"), sh->getId(), sh->getExecutionTime());
+            DbgPrintf(7, _T("AdHocScheduler: run schedule id=\'%d\', execution time =\'%d\'"), sh->getId(), sh->getExecutionTime());
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
          else
@@ -706,10 +709,10 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
          break;
       }
 
-      DbgPrintf(7, _T("OneTimeEventThread: thread will sleep for %d"), sleepTime);
       s_oneTimeScheduleLock.unlock();
+      nxlog_debug(6, _T("AdHocScheduler: sleeping for %d"), sleepTime);
    }
-   DbgPrintf(3, _T("OneTimeEventThread: stopped"));
+   nxlog_debug(3, _T("Ad hoc scheduler stopped"));
    return THREAD_OK;
 }
 
@@ -754,10 +757,13 @@ static bool IsTimeToRun(struct tm *currTime, const TCHAR *schedule, time_t currT
 /**
  * Wakes up for execution of one time schedule or for recalculation new wake up timestamp
  */
-static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
+static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
 {
-   DbgPrintf(3, _T("CronCheckThread: started"));
-   do {
+   UINT32 watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
+   nxlog_debug(3, _T("Recurrent scheduler started"));
+   do
+   {
+      WatchdogNotify(watchdogId);
       time_t now = time(NULL);
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
@@ -771,18 +777,19 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
          SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
          if (callback == NULL)
          {
-            DbgPrintf(3, _T("CronCheckThread: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+            DbgPrintf(3, _T("RecurrentScheduler: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;
          }
          if (IsTimeToRun(&currLocal, sh->getSchedule(), now))
          {
-            DbgPrintf(7, _T("CronCheckThread: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
+            DbgPrintf(7, _T("RecurrentScheduler: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
       }
       s_cronScheduleLock.unlock();
+      WatchdogStartSleep(watchdogId);
    } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
-   DbgPrintf(3, _T("CronCheckThread: stopped"));
+   nxlog_debug(3, _T("Recurrent scheduler stopped"));
    return THREAD_OK;
 }
 
@@ -823,8 +830,8 @@ void InitializeTaskScheduler()
    DBConnectionPoolReleaseConnection(hdb);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
 
-   s_oneTimeEventThread = ThreadCreateEx(OneTimeEventThread, 0, NULL);
-   s_cronSchedulerThread = ThreadCreateEx(CronCheckThread, 0, NULL);
+   s_oneTimeEventThread = ThreadCreateEx(AdHocScheduler, 0, NULL);
+   s_cronSchedulerThread = ThreadCreateEx(RecurrentScheduler, 0, NULL);
 }
 
 /**

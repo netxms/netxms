@@ -386,7 +386,7 @@ public:
  * Functions
  */
 BOOL LoadUsers();
-void SaveUsers(DB_HANDLE hdb);
+void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,

@@ -1036,9 +1036,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	}
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	SaveObjects(hdb);
+	SaveObjects(hdb, INVALID_INDEX);
 	nxlog_debug(2, _T("All objects saved to database"));
-	SaveUsers(hdb);
+	SaveUsers(hdb, INVALID_INDEX);
 	nxlog_debug(2, _T("All users saved to database"));
 	DBConnectionPoolReleaseConnection(hdb);
 
@@ -1062,6 +1062,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
    MsgWaitQueue::shutdown();
+   WatchdogShutdown();
 
 	delete g_pScriptLibrary;
 
@@ -1093,9 +1094,9 @@ void NXCORE_EXPORTABLE FastShutdown()
 	ConditionSet(m_condShutdown);
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	SaveObjects(hdb);
+	SaveObjects(hdb, INVALID_INDEX);
 	DbgPrintf(2, _T("All objects saved to database"));
-	SaveUsers(hdb);
+	SaveUsers(hdb, INVALID_INDEX);
 	DbgPrintf(2, _T("All users saved to database"));
 	DBConnectionPoolReleaseConnection(hdb);
 

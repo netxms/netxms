@@ -237,7 +237,7 @@ Unable to load events from database
 .
 
 MessageId=
-SymbolicName=MSG_THREAD_HANGS
+SymbolicName=MSG_THREAD_NOT_RESPONDING
 Language=English
 Thread "%1" does not respond to watchdog thread
 .
@@ -1038,6 +1038,12 @@ MessageId=
 SymbolicName=MSG_NPE_INIT_FAILED
 Language=English
 Initialization of prediction engine %1 version %2 failed
+.
+
+MessageId=
+SymbolicName=MSG_THREAD_RUNNING
+Language=English
+Thread "%1" returned to running state
 .
 
 ;#endif

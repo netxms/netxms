@@ -53,7 +53,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
 /**
  * Save objects to database
  */
-void SaveObjects(DB_HANDLE hdb)
+void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId)
 {
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
@@ -62,6 +62,7 @@ void SaveObjects(DB_HANDLE hdb)
    DbgPrintf(5, _T("Syncer: %d objects to process"), objects->size());
 	for(int i = 0; i < objects->size(); i++)
    {
+	   WatchdogNotify(watchdogId);
    	NetObj *object = objects->get(i);
       if (object->isDeleted())
       {
@@ -113,27 +114,24 @@ void SaveObjects(DB_HANDLE hdb)
  */
 THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
-   int iSyncInterval;
-   UINT32 dwWatchdogId;
+   int syncInterval = ConfigReadInt(_T("SyncInterval"), 60);
+   UINT32 watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
 
-   // Read configuration
-   iSyncInterval = ConfigReadInt(_T("SyncInterval"), 60);
-   DbgPrintf(1, _T("Syncer thread started, sync_interval = %d"), iSyncInterval);
-   dwWatchdogId = WatchdogAddThread(_T("Syncer Thread"), iSyncInterval * 2 + 10);
+   nxlog_debug(1, _T("Syncer thread started, sync_interval = %d"), syncInterval);
 
    // Main syncer loop
-   while(!IsShutdownInProgress())
+   WatchdogStartSleep(watchdogId);
+   while(!SleepAndCheckForShutdown(syncInterval))
    {
-      if (SleepAndCheckForShutdown(iSyncInterval))
-         break;   // Shutdown time has arrived
-      WatchdogNotify(dwWatchdogId);
+      WatchdogNotify(watchdogId);
       if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         SaveObjects(hdb);
-         SaveUsers(hdb);
+         SaveObjects(hdb, watchdogId);
+         SaveUsers(hdb, watchdogId);
          DBConnectionPoolReleaseConnection(hdb);
       }
+      WatchdogStartSleep(watchdogId);
    }
 
    DbgPrintf(1, _T("Syncer thread terminated"));

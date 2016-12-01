@@ -899,6 +899,17 @@ public:
 };
 
 /**
+ * Watchdog thread state codes
+ */
+enum WatchdogState
+{
+   WATCHDOG_UNKNOWN = -1,
+   WATCHDOG_RUNNING = 0,
+   WATCHDOG_SLEEPING = 1,
+   WATCHDOG_NOT_RESPONDING = 2
+};
+
+/**
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
@@ -946,7 +957,7 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 void ConsoleWrite(CONSOLE_CTX pCtx, const TCHAR *text);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
-void SaveObjects(DB_HANDLE hdb);
+void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId);
 void NXCORE_EXPORTABLE ObjectTransactionStart();
 void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
@@ -978,11 +989,6 @@ void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
-
-void WatchdogInit();
-UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
-void WatchdogNotify(UINT32 dwId);
-void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
 Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
@@ -1109,6 +1115,18 @@ const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
 
 void NXCORE_EXPORTABLE RegisterComponent(const TCHAR *id);
 bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id);
+
+/**
+ * Watchdog API
+ */
+void WatchdogInit();
+void WatchdogShutdown();
+UINT32 WatchdogAddThread(const TCHAR *name, time_t notifyInterval);
+void WatchdogNotify(UINT32 id);
+void WatchdogStartSleep(UINT32 id);
+void WatchdogPrintStatus(CONSOLE_CTX console);
+WatchdogState WatchdogGetState(const TCHAR *name);
+void WatchdogGetThreads(StringList *out);
 
 /**
  * Housekeeper control

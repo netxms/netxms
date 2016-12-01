@@ -281,13 +281,14 @@ BOOL LoadUsers()
 /**
  * Save user list to database
  */
-void SaveUsers(DB_HANDLE hdb)
+void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId)
 {
    // Save users
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
    while(it->hasNext())
    {
+      WatchdogNotify(watchdogId);
       UserDatabaseObject *object = it->next();
       if (object->isDeleted())
       {

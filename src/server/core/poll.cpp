@@ -475,6 +475,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
  */
 static void QueueForPolling(NetObj *object, void *data)
 {
+   WatchdogNotify(*((UINT32 *)data));
    if (IsShutdownInProgress())
       return;
 
@@ -569,13 +570,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start active discovery poller
    ThreadCreate(ActiveDiscoveryPoller, 0, NULL);
 
-   UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 60);
+   UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
    int counter = 0;
 
-   while(!IsShutdownInProgress())
+   WatchdogStartSleep(watchdogId);
+   while(!SleepAndCheckForShutdown(5))
    {
-      if (SleepAndCheckForShutdown(5))
-         break;      // Shutdown has arrived
       WatchdogNotify(watchdogId);
 
       // Check for management node every 10 minutes
@@ -588,7 +588,8 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
       // Walk through objects and queue them for status 
       // and/or configuration poll
-		g_idxObjectById.forEach(QueueForPolling, NULL);
+		g_idxObjectById.forEach(QueueForPolling, &watchdogId);
+	   WatchdogStartSleep(watchdogId);
    }
 
    g_nodePollerQueue.clear();
