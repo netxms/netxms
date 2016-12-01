@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxcpapi.h>
 #include <expat.h>
 #include <zlib.h>
 

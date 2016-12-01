@@ -21,6 +21,7 @@
 **
 **/
 #include "libnetxms.h"
+#include <nxcpapi.h>
 #include <uthash.h>
 
 /**

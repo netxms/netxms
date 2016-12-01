@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxcpapi.h>
 #include <nxstat.h>
 
 #ifdef _WIN32

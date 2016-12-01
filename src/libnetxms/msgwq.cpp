@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxcpapi.h>
 
 /** 
  * Interval between checking messages TTL in milliseconds

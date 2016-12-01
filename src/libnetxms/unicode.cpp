@@ -22,6 +22,7 @@
 
 #include "libnetxms.h"
 #include "unicode_cc.h"
+#include <nxcrypto.h>
 
 /**
  * Default codepage
@@ -1152,7 +1153,7 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
    return inet_addr(szBuffer);
 }
 
-#ifdef _WITH_ENCRYPTION
+#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
 
 /**
  * Get OpenSSL error string as UNICODE string

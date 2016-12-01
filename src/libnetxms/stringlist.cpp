@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxcpapi.h>
 
 #define ALLOCATION_STEP		16
 
