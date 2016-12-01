@@ -155,10 +155,17 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT3
 
 	text.appendFormattedStringV(format, args);
 
-	query.appendFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
-      InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_dbDriver, subsys), isSuccess ? 1 : 0,
-		userId, (const TCHAR *)DBPrepareString(g_dbDriver, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_dbDriver, text));
-	QueueSQLRequest(query);
+	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16], _text[text.length()];
+   const TCHAR *values[9] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, _text };
+   _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&m_recordId));
+   _sntprintf(_time, 32, _T("%d"), (UINT32)time(NULL));
+   _sntprintf(success, 2, _T("%d"), isSuccess);
+   _sntprintf(_userId, 16, _T("%d"), userId);
+   _sntprintf(_sessionId, 16, _T("%d"), sessionId);
+   _sntprintf(_objectId, 16, _T("%d"), objectId);
+   _sntprintf(_text, text.length(), _T("%s"), text);
+   static int sqlTypes[9] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT};
+	QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
 
 	msg.setCode(CMD_AUDIT_RECORD);
 	msg.setField(VID_SUBSYSTEM, subsys);
