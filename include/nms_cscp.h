@@ -578,7 +578,6 @@ typedef struct
 #define CMD_BULK_RESOLVE_ALARMS        0x0158
 #define CMD_BULK_ALARM_STATE_CHANGE    0x0159
 #define CMD_GET_FOLDER_SIZE            0x015A
-#define CMD_FOLDER_CONTENT             0x015B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

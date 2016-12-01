@@ -388,11 +388,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_BULK_TERMINATE_ALARMS"),
       _T("CMD_BULK_RESOLVE_ALARMS"),
       _T("CMD_BULK_ALARM_STATE_CHANGE"),
-      _T("CMD_GET_FOLDER_SIZE"),
-      _T("CMD_FOLDER_CONTENT")
+      _T("CMD_GET_FOLDER_SIZE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_FOLDER_CONTENT))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_FOLDER_SIZE))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }
