@@ -366,6 +366,7 @@ public class NXCPCodes
    public static final int CMD_BULK_RESOLVE_ALARMS = 0x0158;
    public static final int CMD_BULK_ALARM_STATE_CHANGE = 0x0159;
    public static final int CMD_GET_FOLDER_SIZE = 0x015A;
+   public static final int CMD_FOLDER_CONTENT = 0x015B;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -937,7 +938,7 @@ public class NXCPCodes
    public static final long VID_ALARM_CATEGORY_ID = 555;
    public static final long VID_FILE_COUNT = 556;
    public static final long VID_ALARM_CATEGORY_ACL = 557;
-//   public static final long VID_NUM_ALARM_CATEGORY_ACL = 558;
+   public static final long VID_ALLOW_MULTIPART = 558;
    public static final long VID_ALARM_ID_LIST = 559;
    public static final long VID_NUM_COMPONENTS = 560;
 

@@ -13709,7 +13709,44 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
             if (conn != NULL)
             {
                request->setId(conn->generateRequestId());
-               response = conn->customRequest(request);
+               if ((request->getCode() == CMD_GET_FOLDER_CONTENT) && request->getFieldAsBoolean(VID_ALLOW_MULTIPART))
+               {
+                  debugPrintf(5, _T("Processing multipart agent folder content request"));
+                  if (conn->sendMessage(request))
+                  {
+                     while(true)
+                     {
+                        response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), g_agentCommandTimeout);
+                        // old agent versions do not support multipart messages for folder content
+                        // and will return single request completion message without VID_ALLOW_MULTIPART set
+                        if ((response == NULL) || !response->getFieldAsBoolean(VID_ALLOW_MULTIPART))
+                        {
+                           if (response != NULL)
+                              debugPrintf(5, _T("Received agent response without multipart flag set"));
+                           break;
+                        }
+                        response->setId(msg.getId());
+                        sendMessage(response);
+                        if (response->isEndOfSequence())
+                        {
+                           delete response;
+                           response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), g_agentCommandTimeout);
+                           break;
+                        }
+                        delete response;
+                     }
+                  }
+                  else
+                  {
+                     response = new NXCPMessage();
+                     response->setField(VID_RCC, ERR_CONNECTION_BROKEN);
+                  }
+               }
+               else
+               {
+                  response = conn->customRequest(request);
+               }
+
                if (response != NULL)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
@@ -13719,27 +13756,27 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                      response->setCode(CMD_REQUEST_COMPLETED);
                      responseMessage = response;
 
-                     //Add line in audit log
+                     // Add line in audit log
                      switch(request->getCode())
                      {
                         case CMD_GET_FOLDER_SIZE:
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                           _T("Get size of agents folder \"%s\""), fileName);
+                                         _T("Get size of agents folder \"%s\""), fileName);
                            break;
                         case CMD_GET_FOLDER_CONTENT:
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                              _T("Get content of agents folder \"%s\""), fileName);
+                                         _T("Get content of agents folder \"%s\""), fileName);
                            break;
                         case CMD_FILEMGR_DELETE_FILE:
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                              _T("Delete agents file/folder \"%s\""), fileName);
+                                         _T("Delete agents file/folder \"%s\""), fileName);
                            break;
                         case CMD_FILEMGR_RENAME_FILE:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                              _T("Rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
+                                         _T("Rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
                            break;
                         }
                         case CMD_FILEMGR_MOVE_FILE:
@@ -13747,7 +13784,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                              _T("Move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+                                         _T("Move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
                            break;
                         }
                         case CMD_FILEMGR_CREATE_FOLDER:
@@ -13755,7 +13792,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                            TCHAR newFileName[MAX_PATH];
                            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
                            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
-                              _T("Create folder \"%s\""), fileName);
+                                         _T("Create folder \"%s\""), fileName);
                            break;
                         }
                      }
@@ -13832,8 +13869,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 	}
 
    sendMessage(responseMessage);
-   if(response != NULL)
-      delete response;
+   delete response;
 }
 
 /**

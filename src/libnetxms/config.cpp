@@ -1453,10 +1453,9 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool 
    return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection, ignoreErrors);
 }
 
-/*
+/**
  * Load all files in given directory
  */
-
 bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
    _TDIR *dir;

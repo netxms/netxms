@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014 Raden Solutions
+ ** Copyright (C) 2014-2016 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ static void SubagentShutdown()
 /**
  * Converts path to absolute removing "//", "../", "./" ...
  */
-static TCHAR *getLinuxRealPath(TCHAR *path)
+static TCHAR *GetRealPath(TCHAR *path)
 {
    if(path == NULL || path[0] == 0)
       return NULL;
@@ -111,59 +111,60 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
    _tcscpy(result,path);
    TCHAR *current = result;
 
-   //just remove all dots before path
-   if(!_tcsncmp(current,_T("../"),3))
-      memmove(current,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
+   // just remove all dots before path
+   if (!_tcsncmp(current, _T("../"), 3))
+      memmove(current, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
 
-   if(!_tcsncmp(current,_T("./"),2))
-      memmove(current,current+2,(_tcslen(current+2) + 1) * sizeof(TCHAR));
+   if (!_tcsncmp(current, _T("./"), 2))
+      memmove(current, current + 2, (_tcslen(current+2) + 1) * sizeof(TCHAR));
 
-   while(current[0] != 0)
+   while(*current != 0)
    {
-      if(current[0] == '/')
+      if (current[0] == '/')
       {
-         if(current[1] != 0)
+         switch(current[1])
          {
-            switch(current[1])
-            {
-               case '/':
-                  memmove(current,current+1,(_tcslen(current+1) + 1) * sizeof(TCHAR));
-                  break;
-               case '.':
-                  if(current[2] != 0)
+            case '/':
+               memmove(current, current + 1, _tcslen(current) * sizeof(TCHAR));
+               break;
+            case '.':
+               if (current[2] != 0)
+               {
+                  if (current[2] == '.' && (current[3] == 0 || current[3] == '/'))
                   {
-                     if(current[2] == '.' && (current[3] == 0 || current[3] == '/'))
+                     if (current == result)
                      {
-                        if(current == result)
+                        memmove(current, current + 3, (_tcslen(current + 3) + 1) * sizeof(TCHAR));
+                     }
+                     else
+                     {
+                        TCHAR *tmp = current;
+                        do
                         {
-                           memmove(current,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
-                        }
-                        else
-                        {
-                           TCHAR *tmp = current;
-                           do
+                           tmp--;
+                           if (tmp[0] == '/')
                            {
-                              tmp--;
-                              if(tmp[0] == '/')
-                              {
-                                 break;
-                              }
-                           } while(result != tmp);
-                           memmove(tmp,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
-                        }
+                              break;
+                           }
+                        } while(result != tmp);
+                        memmove(tmp, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
                      }
                   }
                   else
                   {
-                     memmove(current,current+2,(_tcslen(current+2) + 1) * sizeof(TCHAR));
+                     // dot + something, skip both
+                     current += 2;
                   }
-               default:
-                  current++;
-            }
-         }
-         else
-         {
-            current++;
+               }
+               else
+               {
+                  // "/." at the end
+                  *current = 0;
+               }
+               break;
+            default:
+               current++;
+               break;
          }
       }
       else
@@ -182,36 +183,36 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
  * If second parameter is set to true - then request is for getting content and "/" path should be acepted
  * and afterwards treatet as: "give list of all allowd folders".
  */
-static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
+static bool CheckFullPath(TCHAR *folder, bool withHomeDir)
 {
    AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), folder);
    if (withHomeDir && !_tcscmp(folder, FS_PATH_SEPARATOR))
    {
-      return TRUE;
+      return true;
    }
 
 #ifdef _WIN32
    TCHAR *fullPathT = _tfullpath(NULL, folder, MAX_PATH);
 #else
-   TCHAR *fullPathT = getLinuxRealPath(folder);
+   TCHAR *fullPathT = GetRealPath(folder);
 #endif
    AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Full path %s"), fullPathT);
    if (fullPathT != NULL)
    {
       _tcscpy(folder, fullPathT);
-      safe_free(fullPathT);
+      free(fullPathT);
    }
    else
    {
-      return FALSE;
+      return false;
    }
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
       if (!_tcsncmp(g_rootFileManagerFolders->get(i), folder, _tcslen(g_rootFileManagerFolders->get(i))))
-         return TRUE;
+         return true;
    }
 
-   return FALSE;
+   return false;
 }
 
 #define REGULAR_FILE    1
@@ -313,29 +314,52 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
 /**
  * Puts in response list of containing files
  */
-static void GetFolderContent(TCHAR *folder, NXCPMessage *msg, bool rootFolder)
+static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFolder, bool allowMultipart, AbstractCommSession *session)
 {
-   msg->setField(VID_RCC, ERR_SUCCESS);
+   NXCPMessage *msg;
+   if (allowMultipart)
+   {
+      msg = new NXCPMessage();
+      msg->setCode(CMD_REQUEST_COMPLETED);
+      msg->setId(response->getId());
+      msg->setField(VID_ALLOW_MULTIPART, (INT16)1);
+   }
+   else
+   {
+      msg = response;
+   }
+
    UINT32 count = 0;
-   UINT32 varId = VID_INSTANCE_LIST_BASE;
+   UINT32 fieldId = VID_INSTANCE_LIST_BASE;
 
    if (!_tcscmp(folder, FS_PATH_SEPARATOR) && rootFolder)
    {
+      response->setField(VID_RCC, ERR_SUCCESS);
+
       for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
       {
-         if(FillMessageFolderContent(g_rootFileManagerFolders->get(i), g_rootFileManagerFolders->get(i), msg, varId))
+         if (FillMessageFolderContent(g_rootFileManagerFolders->get(i), g_rootFileManagerFolders->get(i), msg, fieldId))
          {
             count++;
-            varId+=10;
+            fieldId+=10;
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
+      if (allowMultipart)
+      {
+         msg->setEndOfSequence();
+         msg->setField(VID_INSTANCE_COUNT, count);
+         session->sendMessage(msg);
+         delete msg;
+      }
       return;
    }
 
    _TDIR *dir = _topendir(folder);
    if (dir != NULL)
    {
+      response->setField(VID_RCC, ERR_SUCCESS);
+
       struct _tdirent *d;
       while((d = _treaddir(dir)) != NULL)
       {
@@ -349,19 +373,38 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *msg, bool rootFolder)
          _tcscat(fullName, FS_PATH_SEPARATOR);
          _tcscat(fullName, d->d_name);
 
-         if(FillMessageFolderContent(fullName, d->d_name, msg, varId))
+         if (FillMessageFolderContent(fullName, d->d_name, msg, fieldId))
          {
             count++;
-            varId+=10;
+            fieldId += 10;
+         }
+         if (allowMultipart && (count == 64))
+         {
+            msg->setField(VID_INSTANCE_COUNT, count);
+            session->sendMessage(msg);
+            msg->deleteAllFields();
+            msg->setField(VID_ALLOW_MULTIPART, (INT16)1);
+            count = 0;
+            fieldId = VID_INSTANCE_LIST_BASE;
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
       _tclosedir(dir);
+
+      if (allowMultipart)
+      {
+         msg->setEndOfSequence();
+         msg->setField(VID_INSTANCE_COUNT, count);
+         session->sendMessage(msg);
+      }
    }
    else
    {
-      msg->setField(VID_RCC, ERR_IO_FAILURE);
+      response->setField(VID_RCC, ERR_IO_FAILURE);
    }
+
+   if (allowMultipart)
+      delete msg;
 }
 
 /**
@@ -640,7 +683,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
          if (CheckFullPath(directory, rootFolder) && session->isMasterServer())
          {
-            GetFolderContent(directory, response, rootFolder);
+            GetFolderContent(directory, response, rootFolder, request->getFieldAsBoolean(VID_ALLOW_MULTIPART), session);
          }
          else
          {

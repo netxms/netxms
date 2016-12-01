@@ -3,8 +3,6 @@
  */
 package org.netxms.client.server;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
@@ -147,24 +145,17 @@ public class AgentFile
    /**
     * @return the children
     */
-   public AgentFile[] getChildren()
+   public List<AgentFile> getChildren()
    {
-      if(children ==  null)
-      {
-         return null;
-      }
-      else
-      { 
-         return children.toArray(new AgentFile[children.size()]);
-      }
+      return children;
    }
 
    /**
     * @param children the children to set
     */
-   public void setChildren(AgentFile[] children)
+   public void setChildren(List<AgentFile> children)
    {
-      this.children = new ArrayList<AgentFile>(Arrays.asList(children));
+      this.children = children;
    }
    
    /**

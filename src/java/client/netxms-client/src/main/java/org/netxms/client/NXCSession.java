@@ -7560,22 +7560,32 @@ public class NXCSession
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFile[] listAgentFiles(AgentFile file, String fullPath, long objectId) throws IOException, NXCException
+   public List<AgentFile> listAgentFiles(AgentFile file, String fullPath, long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_CONTENT);
       msg.setField(NXCPCodes.VID_FILE_NAME, fullPath);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setFieldInt16(NXCPCodes.VID_ROOT, file == null ? 1 : 0);
+      msg.setFieldInt16(NXCPCodes.VID_ALLOW_MULTIPART, 1);
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
-      AgentFile[] files = new AgentFile[count];
-      long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
-      for(int i = 0; i < count; i++)
+ 
+      List<AgentFile> files = new ArrayList<AgentFile>(64);
+      while(true)
       {
-         files[i] = new AgentFile(response, varId, file, objectId);
-         varId += 10;
+         final NXCPMessage response = waitForRCC(msg.getMessageId());
+         int count = response.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
+         long fieldId = NXCPCodes.VID_INSTANCE_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            files.add(new AgentFile(response, fieldId, file, objectId));
+            fieldId += 10;
+         }
+         if (!response.getFieldAsBoolean(NXCPCodes.VID_ALLOW_MULTIPART))
+            return files;  // old version of server or agent without multipart support
+         if (response.isEndOfSequence())
+            break;
       }
+      waitForRCC(msg.getMessageId());
       return files;
    }
    

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Raden Solutions
+ * Copyright (C) 2003-2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
- * Editor for server files
+ * File manager for agent files
  */
 public class AgentFileManager extends ViewPart
 {
@@ -120,7 +120,6 @@ public class AgentFileManager extends ViewPart
 
    private boolean initShowFilter = true;
    private Composite content;
-   private AgentFile[] files;
    private AgentFileFilter filter;
    private FilterText filterText;
    private SortableTreeViewer viewer;
@@ -175,7 +174,7 @@ public class AgentFileManager extends ViewPart
    {
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FormLayout());
-
+      
       // Create filter area
       filterText = new FilterText(content, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
@@ -188,7 +187,7 @@ public class AgentFileManager extends ViewPart
       
       String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
 
-      if(os.contains("Windows"))//if OS is windows don't show group and access rights columns //$NON-NLS-1$
+      if (os.contains("Windows")) //if OS is windows don't show group and access rights columns //$NON-NLS-1$
       {
          final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, Messages.get().AgentFileManager_ColOwner };
          final int[] columnWidths = { 300, 120, 150, 150, 150 };  
@@ -663,7 +662,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            files = session.listAgentFiles(null, "/", objectId); //$NON-NLS-1$
+            final List<AgentFile> files = session.listAgentFiles(null, "/", objectId); //$NON-NLS-1$
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1056,22 +1055,22 @@ public class AgentFileManager extends ViewPart
     */
    private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
    {
-      AgentFile[] files = sf.getChildren();
-      if(files == null)
+      List<AgentFile> files = sf.getChildren();
+      if (files == null)
       {
          files = session.listAgentFiles(sf, sf.getFullName(), sf.getNodeId());
+         sf.setChildren(files);
       }
-      
-      for(int i = 0; i < files.length; i++)
+      for(AgentFile f : files)
       {
-         if(files[i].isDirectory())
+         if (f.isDirectory())
          {
-            downloadDir(files[i], localFileName + "/" + files[i].getName(), zos, monitor);
+            downloadDir(f, localFileName + "/" + f.getName(), zos, monitor);
          }
          else
          {
-            monitor.subTask(String.format("Compressing file %s", files[i].getFullName()));
-            final AgentFileData file = session.downloadFileFromAgent(objectId, files[i].getFullName(), 0, false, new ProgressListener() {
+            monitor.subTask(String.format("Compressing file %s", f.getFullName()));
+            final AgentFileData file = session.downloadFileFromAgent(objectId, f.getFullName(), 0, false, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
@@ -1084,7 +1083,7 @@ public class AgentFileManager extends ViewPart
             });
             
        		FileInputStream fis = new FileInputStream(file.getFile());
-       		ZipEntry zipEntry = new ZipEntry(localFileName+"/"+files[i].getName());
+       		ZipEntry zipEntry = new ZipEntry(localFileName + "/" + f.getName());
        		zos.putNextEntry(zipEntry);
        		byte[] bytes = new byte[1024];
        		int length;
@@ -1227,7 +1226,7 @@ public class AgentFileManager extends ViewPart
          }
       }.start();
    }
-
+   
    /**
     * Show file size
     */
@@ -1252,7 +1251,7 @@ public class AgentFileManager extends ViewPart
          }         
       }
    }
-   
+
    /*
     * (non-Javadoc)
     * 

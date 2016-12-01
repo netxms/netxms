@@ -934,20 +934,18 @@ UINT32 AgentConnection::setServerId(UINT64 serverId)
  */
 UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 {
-   NXCPMessage *pMsg;
-   UINT32 dwRetCode;
-
-   pMsg = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
-   if (pMsg != NULL)
+   UINT32 rcc;
+   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
+   if (response != NULL)
    {
-      dwRetCode = pMsg->getFieldAsUInt32(VID_RCC);
-      delete pMsg;
+      rcc = response->getFieldAsUInt32(VID_RCC);
+      delete response;
    }
    else
    {
-      dwRetCode = ERR_REQUEST_TIMEOUT;
+      rcc = ERR_REQUEST_TIMEOUT;
    }
-   return dwRetCode;
+   return rcc;
 }
 
 /**

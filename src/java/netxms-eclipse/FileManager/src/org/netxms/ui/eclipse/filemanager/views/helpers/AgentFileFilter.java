@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.filemanager.views.helpers;
 
+import java.util.List;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.server.AgentFile;
@@ -41,7 +42,7 @@ public class AgentFileFilter extends ViewerFilter
 		final AgentFile filename = (AgentFile)element;
 		
 		boolean pass = filename.getName().toLowerCase().contains(filterString.toLowerCase());
-		AgentFile[] children = filename.getChildren();
+		List<AgentFile> children = filename.getChildren();
       if (!pass && children != null)
       {
          pass = containString(children);
@@ -53,19 +54,19 @@ public class AgentFileFilter extends ViewerFilter
 	 * @param children
 	 * @return
 	 */
-	private boolean containString(AgentFile[] children)
+	private boolean containString(List<AgentFile> children)
 	{
 	   if (children != null)
       {
-         for(int i = 0; i< children.length ; i++)
+         for(AgentFile f :children)
          {
-            if (children[i].getName().toLowerCase().contains(filterString.toLowerCase()))
+            if (f.getName().toLowerCase().contains(filterString.toLowerCase()))
                return true;
          }
          
-         for(int i = 0; i< children.length ; i++)
+         for(AgentFile f :children)
          {
-            if (containString(children[i].getChildren()))
+            if (containString(f.getChildren()))
                return true;
          }
       }

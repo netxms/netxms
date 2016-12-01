@@ -37,7 +37,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Class[] getAdapterList()
 	{
@@ -47,7 +47,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{

@@ -60,7 +60,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               final AgentFile[] files = session.listAgentFiles(((AgentFile)parentElement), ((AgentFile)parentElement).getFullName(), ((AgentFile)parentElement).getNodeId());
+               final List<AgentFile> files = session.listAgentFiles(((AgentFile)parentElement), ((AgentFile)parentElement).getFullName(), ((AgentFile)parentElement).getNodeId());
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -81,7 +81,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
          job.start();
          return new AgentFile[] { new AgentFile(Messages.get().ViewAgentFilesProvider_Loading, AgentFile.PLACEHOLDER, (AgentFile)parentElement, ((AgentFile)parentElement).getNodeId()) };
 	   }
-		return ((AgentFile)parentElement).getChildren();
+		return ((AgentFile)parentElement).getChildren().toArray();
 	}
 
 	/* (non-Javadoc)
@@ -113,11 +113,12 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	/* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
     */
+   @SuppressWarnings("unchecked")
    @Override
    public Object[] getElements(Object inputElement)
    {
       List<AgentFile> list = new ArrayList<AgentFile>();
-      for(AgentFile e : (AgentFile[])inputElement)
+      for(AgentFile e : (List<AgentFile>)inputElement)
          if (e.getParent() == null)
             list.add(e);      
       return list.toArray();
