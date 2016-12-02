@@ -94,8 +94,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.MibExplorer"; //$NON-NLS-1$
 	
 	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_TYPE = 1;
-	public static final int COLUMN_VALUE = 2;
+	public static final int COLUMN_TEXT = 1;
+	public static final int COLUMN_TYPE = 2;
+	public static final int COLUMN_VALUE = 3;
 	
 	private CLabel header;
 	private Font headerFont;
@@ -526,6 +527,10 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(Messages.get().MibExplorer_OID);
 		tc.setWidth(300);
+		
+		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
+      tc.setText("OID as text");
+      tc.setWidth(300);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(Messages.get().MibExplorer_Type);

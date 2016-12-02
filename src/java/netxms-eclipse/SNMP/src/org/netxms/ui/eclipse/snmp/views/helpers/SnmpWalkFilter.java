@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2003 - 2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@ package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 
 /**
  * Filter for MIB Explorer
@@ -40,12 +42,12 @@ public class SnmpWalkFilter extends ViewerFilter
          return true;
       
       final SnmpValue vl = (SnmpValue)element;
-      if (containsValue(vl)) {
+      if (containsValue(vl))
          return true;
-      }
-      else if (containsOid(vl)) {
+      else if (containsOid(vl))
          return true;
-      }
+      else if (containsOidText(vl))
+         return true;
       return false;
    }
    
@@ -66,6 +68,20 @@ public class SnmpWalkFilter extends ViewerFilter
    {
       if (vl.getObjectId().toString().toLowerCase().contains(filterString.toLowerCase()))
          return true;
+      return false;
+   }
+   
+   /**
+    * Checks if contains SNMP walk OID as text
+    */
+   public boolean containsOidText(SnmpValue vl)
+   {
+      MibObject object = MibCache.findObject(vl.getName(), false);
+      if (object == null)
+         return false;
+      else if (object.getFullName().toLowerCase().contains(filterString.toLowerCase()))
+         return true;
+      
       return false;
    }
    

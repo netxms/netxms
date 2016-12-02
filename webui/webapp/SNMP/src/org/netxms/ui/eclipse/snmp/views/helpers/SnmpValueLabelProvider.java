@@ -21,8 +21,10 @@ package org.netxms.ui.eclipse.snmp.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.ui.eclipse.snmp.SnmpConstants;
+import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.views.MibExplorer;
 
 /**
@@ -51,6 +53,12 @@ public class SnmpValueLabelProvider extends LabelProvider implements ITableLabel
 		{
 			case MibExplorer.COLUMN_NAME:
 				return value.getName();
+			case MibExplorer.COLUMN_TEXT:
+			   MibObject object = MibCache.findObject(value.getName(), false);
+			   if (object == null)
+			      return "";
+			   else			      
+			      return object.getFullName();
 			case MibExplorer.COLUMN_TYPE:
 				if (value.getType() == 0xFFFF)
 					return "Hex-STRING"; //$NON-NLS-1$
