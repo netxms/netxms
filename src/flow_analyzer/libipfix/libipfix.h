@@ -4,6 +4,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <nxcrypto.h>
 
 #ifdef _WIN32
 #define hstrerror strerror

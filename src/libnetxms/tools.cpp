@@ -1078,7 +1078,11 @@ retry:
 			   SocketPoller p(true);
 			   p.add(hSocket);
 				nRet = p.poll(60000);
+#ifdef _WIN32
+				if (nRet > 0)
+#else
 				if ((nRet > 0) || ((nRet == -1) && (errno == EINTR)))
+#endif
 					goto retry;
 			}
 			break;

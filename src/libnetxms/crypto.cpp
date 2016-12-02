@@ -314,7 +314,7 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
       }
       else
       {
-			BYTE *pBufPos, ucKeyBuffer[KEY_BUFFER_SIZE];
+			BYTE ucKeyBuffer[KEY_BUFFER_SIZE];
 			RSA *pServerKey;
 
 			*ppCtx = NXCPEncryptionContext::create(dwCiphers);

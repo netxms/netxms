@@ -440,7 +440,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
 			{
 				// Wait for process termination and close all handles
-				if (WaitForSingleObject(pi.hProcess, g_dwExecTimeout) == WAIT_OBJECT_0)
+				if (WaitForSingleObject(pi.hProcess, g_execTimeout) == WAIT_OBJECT_0)
 				{
 					// Rewind temporary file for reading
 					SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);

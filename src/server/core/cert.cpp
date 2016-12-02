@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcrypto.h>
 
 #ifdef _WITH_ENCRYPTION
 

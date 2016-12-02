@@ -376,7 +376,7 @@ static void QueueItems(NetObj *object, void *data)
  */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
-   UINT32 dwSum, dwWatchdogId, currPos = 0;
+   UINT32 dwSum, currPos = 0;
    UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
@@ -387,7 +387,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
    {
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
-      WatchdogNotify(dwWatchdogId);
+      WatchdogNotify(watchdogId);
 		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
       qwStart = GetCurrentTimeMs();

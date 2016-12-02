@@ -51,6 +51,7 @@
 
 #ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
+#define WITH_OPENSSL       1
 #define WITH_LDAP          1
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
@@ -290,6 +291,14 @@ typedef unsigned __int64 uint64_t;
 #define TIME_T_FMT      _T("%u")
 #define TIME_T_FCAST(x) ((UINT32)(x))
 #endif
+
+#define HAVE_DECL_BSWAP_16 1
+#define HAVE_DECL_BSWAP_32 1
+#define HAVE_DECL_BSWAP_64 1
+
+#define bswap_16  _byteswap_ushort
+#define bswap_32  _byteswap_ulong
+#define bswap_64  _byteswap_uint64
 
 // Socket compatibility
 #define SHUT_RD      0

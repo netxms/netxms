@@ -89,7 +89,7 @@ inline UINT32 bswap_32(UINT32 val)
 {
    UINT32 result;
    BYTE *sptr = (BYTE *)&val;
-   BYTE *dptr = (BYTE *)&result + 7;
+   BYTE *dptr = (BYTE *)&result + 3;
    for(int i = 0; i < 4; i++, sptr++, dptr--)
       *dptr = *sptr;
    return result;
