@@ -33,6 +33,7 @@ if ($update == 1)
 	print OUT "#ifndef _build_tag_h_\n";
 	print OUT "#define _build_tag_h_\n";
 	print OUT "#define NETXMS_BUILD_TAG _T(\"$tag\")\n";
+	print OUT "#define NETXMS_BUILD_TAG_A \"$tag\"\n";
 	print OUT "#endif\n";
 	close OUT;
 
