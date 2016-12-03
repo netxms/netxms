@@ -68,7 +68,7 @@ public class NodeListComparator extends ViewerComparator
 				result = node1.getStatus().compareTo(node2.getStatus());
 				break;
 			case NodesTab.COLUMN_IP_ADDRESS:
-				result = ComparatorHelper.compareInetAddresses(node1.getPrimaryIP(), node2.getPrimaryIP());
+				result = ComparatorHelper.compareInetAddresses(node1.getPrimaryIP().getAddress(), node2.getPrimaryIP().getAddress());
 				break;
          case NodesTab.COLUMN_RACK:
             Rack rack1 = session.findObjectById(node1.getRackId(), Rack.class);

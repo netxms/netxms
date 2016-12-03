@@ -129,7 +129,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	   AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
 		if (peer == null)
 			return null;
-		if (peer.getPrimaryIP().isAnyLocalAddress())
+		if (!peer.getPrimaryIP().isValidUnicastAddress())
 			return null;
 		return peer.getPrimaryIP().getHostAddress();
 	}

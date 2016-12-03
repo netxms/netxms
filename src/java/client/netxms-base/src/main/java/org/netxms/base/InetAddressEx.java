@@ -26,8 +26,8 @@ import java.net.InetAddress;
  */
 public class InetAddressEx
 {
-   public InetAddress address;
-   public int mask;
+   protected InetAddress address;
+   protected int mask;
    
    /**
     * @param address
@@ -86,6 +86,72 @@ public class InetAddressEx
    public boolean isValidAddress()
    {
       return address != null;
+   }
+   
+   /**
+    * Check if address is a valid unicast address
+    * 
+    * @return
+    */
+   public boolean isValidUnicastAddress()
+   {
+      return (address != null) && 
+            !address.isAnyLocalAddress() && 
+            !address.isLinkLocalAddress() && 
+            !address.isLoopbackAddress() && 
+            !address.isMulticastAddress();
+   }
+   
+   /**
+    * Get host address as text (without mask length)
+    * 
+    * @return
+    */
+   public String getHostAddress()
+   {
+      return (address != null) ? address.getHostAddress().replaceFirst("(^|:)(0+(:|$)){2,8}", "::") : "UNSPEC";
+   }
+
+   /**
+    * @return the address
+    */
+   public InetAddress getAddress()
+   {
+      return address;
+   }
+
+   /**
+    * @return the mask
+    */
+   public int getMask()
+   {
+      return mask;
+   }
+   
+   /**
+    * @param address the address to set
+    */
+   public void setAddress(InetAddress address)
+   {
+      this.address = address;
+   }
+
+   /**
+    * @param mask the mask to set
+    */
+   public void setMask(int mask)
+   {
+      this.mask = mask;
+   }
+
+   /**
+    * Get address bytes
+    * 
+    * @return
+    */
+   public byte[] getAddressBytes()
+   {
+      return (address != null) ? address.getAddress() : new byte[0];
    }
 
    /* (non-Javadoc)

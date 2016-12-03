@@ -75,7 +75,7 @@ public class ObjectTooltip extends Figure
 		gd.horizontalAlignment = SWT.RIGHT;
 		setConstraint(status, gd);
 
-		if ((object instanceof Node) && !((Node)object).getPrimaryIP().isAnyLocalAddress())
+		if ((object instanceof Node) && ((Node)object).getPrimaryIP().isValidAddress() && !((Node)object).getPrimaryIP().getAddress().isAnyLocalAddress())
 		{
 			StringBuilder sb = new StringBuilder(((Node)object).getPrimaryIP().getHostAddress());
 			MacAddress mac = ((Node)object).getPrimaryMAC();

@@ -18,9 +18,9 @@
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
 import java.util.Date;
 import java.util.UUID;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
@@ -89,7 +89,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int IFXTABLE_ENABLED = 1;
 	public static final int IFXTABLE_DISABLED = 2;
 	
-	protected InetAddress primaryIP;
+	protected InetAddressEx primaryIP;
 	protected String primaryName;
 	protected int flags;
 	protected int runtimeFlags;
@@ -157,7 +157,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	{
 		super(msg, session);
 
-		primaryIP = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
+		primaryIP = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		runtimeFlags = msg.getFieldAsInt32(NXCPCodes.VID_RUNTIME_FLAGS);
@@ -631,7 +631,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
     * 
     * @return
     */
-   public InetAddress getPrimaryIP()
+   public InetAddressEx getPrimaryIP()
    {
       return primaryIP;
    }

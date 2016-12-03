@@ -50,9 +50,9 @@ public class NetworkListLabelProvider extends LabelProvider implements ITableLab
 		switch(columnIndex)
 		{
 			case ClusterNetworks.COLUMN_ADDRESS:
-				return ((InetAddressEx)element).address.getHostAddress();
+				return ((InetAddressEx)element).getHostAddress();
 			case ClusterNetworks.COLUMN_NETMASK:
-				return Integer.toString(((InetAddressEx)element).mask);
+				return Integer.toString(((InetAddressEx)element).getMask());
 		}
 		return null;
 	}

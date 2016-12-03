@@ -92,7 +92,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
       setConstraint(additionalInfo, gd);
 
       StringBuilder sb = new StringBuilder();
-      if ((object instanceof Node) && !((Node)object).getPrimaryIP().isAnyLocalAddress())
+      if ((object instanceof Node) && ((Node)object).getPrimaryIP().isValidAddress() && !((Node)object).getPrimaryIP().getAddress().isAnyLocalAddress())
       {
          sb.append(((Node)object).getPrimaryIP().getHostAddress());
          MacAddress mac = ((Node)object).getPrimaryMAC();

@@ -99,7 +99,7 @@ public class NetworkServicePolling extends PropertyPage
 		ipAddress = new LabeledText(dialogArea, SWT.NONE);
 		ipAddress.setLabel("IP Address");
 		if (object.getIpAddress().isValidAddress())
-		   ipAddress.setText(object.getIpAddress().address.getHostAddress());
+		   ipAddress.setText(object.getIpAddress().getHostAddress());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

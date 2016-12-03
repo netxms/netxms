@@ -225,11 +225,11 @@ public class ClusterNetworks extends PropertyPage
 			return;
 		
 		InetAddressEx n = (InetAddressEx)selection.getFirstElement();
-		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), n.address, n.maskFromBits());
+		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), n.getAddress(), n.maskFromBits());
 		if (dlg.open() == Window.OK)
 		{
-			n.address = dlg.getAddress();
-			n.mask = InetAddressEx.bitsInMask(dlg.getMask());
+			n.setAddress(dlg.getAddress());
+			n.setMask(InetAddressEx.bitsInMask(dlg.getMask()));
 			viewer.update(n, null);
 			isModified = true;
 		}

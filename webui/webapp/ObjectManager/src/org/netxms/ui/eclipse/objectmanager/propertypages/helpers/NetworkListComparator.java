@@ -43,8 +43,8 @@ public class NetworkListComparator extends ViewerComparator
 		switch(column)
 		{
 			case ClusterNetworks.COLUMN_ADDRESS:
-				byte[] addr1 = ((InetAddressEx)e1).address.getAddress();
-				byte[] addr2 = ((InetAddressEx)e2).address.getAddress();
+				byte[] addr1 = ((InetAddressEx)e1).getAddressBytes();
+				byte[] addr2 = ((InetAddressEx)e2).getAddressBytes();
 
 				result = 0;
 				for(int i = 0; (i < addr1.length) && (result == 0); i++)
@@ -53,7 +53,7 @@ public class NetworkListComparator extends ViewerComparator
 				}
 				break;
 			case ClusterNetworks.COLUMN_NETMASK:
-			   result = ((InetAddressEx)e1).mask - ((InetAddressEx)e2).mask;
+			   result = ((InetAddressEx)e1).getMask() - ((InetAddressEx)e2).getMask();
 				break;
 			default:
 				result = 0;

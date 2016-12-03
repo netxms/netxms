@@ -100,7 +100,7 @@ public class ObjectFilter extends ViewerFilter
             {
                for(InetAddressEx a : ((Interface)object).getIpAddressList())
                {
-                  if (a.address.getHostAddress().startsWith(filterString))
+                  if (a.getHostAddress().startsWith(filterString))
                      return true;
                }
                return false;

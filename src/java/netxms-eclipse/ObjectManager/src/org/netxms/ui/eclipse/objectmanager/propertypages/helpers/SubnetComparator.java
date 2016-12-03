@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 
-import java.net.InetAddress;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -39,10 +38,10 @@ public class SubnetComparator extends ViewerComparator
 		InetAddressEx a1 = (InetAddressEx)e1;
 		InetAddressEx a2 = (InetAddressEx)e2;
 		
-		int rc = compareIpAddresses(a1.address, a2.address);
+		int rc = compareIpAddresses(a1, a2);
 		if (rc == 0)
 		{
-			rc = a1.mask - a2.mask;
+			rc = a1.getMask() - a2.getMask();
 		}
 		
 		int dir = ((TableViewer)viewer).getTable().getSortDirection();
@@ -56,10 +55,10 @@ public class SubnetComparator extends ViewerComparator
 	 * @param a2
 	 * @return
 	 */
-	private int compareIpAddresses(InetAddress a1, InetAddress a2)
+	private int compareIpAddresses(InetAddressEx a1, InetAddressEx a2)
 	{
-		byte[] b1 = a1.getAddress();
-		byte[] b2 = a2.getAddress();
+		byte[] b1 = a1.getAddressBytes();
+		byte[] b2 = a2.getAddressBytes();
 		
 		for(int i = 0; i < b1.length; i++)
 		{

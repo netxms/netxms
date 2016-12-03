@@ -65,7 +65,7 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
 			case NodesTab.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusText(node.getStatus());
 			case NodesTab.COLUMN_IP_ADDRESS:
-				return node.getPrimaryIP().isAnyLocalAddress() ? null : node.getPrimaryIP().getHostAddress();
+				return node.getPrimaryIP().isValidUnicastAddress() ? node.getPrimaryIP().getHostAddress() : null;
          case NodesTab.COLUMN_PLATFORM:
             return node.getPlatformName();
          case NodesTab.COLUMN_AGENT_VERSION:

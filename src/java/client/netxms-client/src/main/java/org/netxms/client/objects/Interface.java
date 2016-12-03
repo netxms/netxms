@@ -775,7 +775,7 @@ public class Interface extends GenericObject
     */
    public boolean hasAddress(InetAddressEx addr)
    {
-      return hasAddress(addr.address);
+      return hasAddress(addr.getAddress());
    }
 
    /**
@@ -787,7 +787,7 @@ public class Interface extends GenericObject
    public boolean hasAddress(InetAddress addr)
    {
       for(InetAddressEx a : ipAddressList)
-         if (a.address.equals(addr))
+         if (a.getAddress().equals(addr))
             return true;
       return false;
    }
@@ -800,7 +800,7 @@ public class Interface extends GenericObject
    public InetAddress getFirstUnicastAddress()
    {
       InetAddressEx a = getFirstUnicastAddressEx();
-      return (a != null) ? a.address : null;
+      return (a != null) ? a.getAddress() : null;
    }
    
    /**
@@ -811,7 +811,7 @@ public class Interface extends GenericObject
    public InetAddressEx getFirstUnicastAddressEx()
    {
       for(InetAddressEx a : ipAddressList)
-         if (!a.address.isAnyLocalAddress() && !a.address.isLinkLocalAddress() && !a.address.isLoopbackAddress() && !a.address.isMulticastAddress())
+         if (!a.getAddress().isAnyLocalAddress() && !a.getAddress().isLinkLocalAddress() && !a.getAddress().isLoopbackAddress() && !a.getAddress().isMulticastAddress())
             return a;
       return null;
    }

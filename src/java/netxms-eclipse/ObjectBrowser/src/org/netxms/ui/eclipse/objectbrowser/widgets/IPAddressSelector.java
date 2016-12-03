@@ -61,8 +61,8 @@ public class IPAddressSelector extends AbstractSelector
 		if (object instanceof AbstractNode)
 		{
 			node = (AbstractNode)object;
-			address = node.getPrimaryIP();
-			setText(address.getHostAddress());
+			address = node.getPrimaryIP().getAddress();
+			setText((address != null) ? address.getHostAddress() : "");
 		}
 		else
 		{
@@ -79,8 +79,8 @@ public class IPAddressSelector extends AbstractSelector
 	public void setNode(AbstractNode node)
 	{
 		this.node = node;
-		address = node.getPrimaryIP();
-		setText(address.getHostAddress());
+		address = node.getPrimaryIP().getAddress();
+		setText((address != null) ? address.getHostAddress() : "");
 	}
 	
 	/* (non-Javadoc)

@@ -130,9 +130,9 @@ public class IPAddressSelectionDialog extends Dialog
 			{
 				for(InetAddressEx a : ((Interface)o).getIpAddressList())
 				{
-   				if (!a.address.isAnyLocalAddress() && !a.address.isLinkLocalAddress() && !a.address.isLoopbackAddress() && !a.address.isMulticastAddress())
+   				if (a.isValidUnicastAddress())
    				{
-   					addrList.add(new AddressListElement((Interface)o, a.address));
+   					addrList.add(new AddressListElement((Interface)o, a.getAddress()));
    				}
 				}
 			}

@@ -56,7 +56,7 @@ public class Subnet extends GenericObject
     */
    public InetAddress getSubnetAddress()
    {
-      return networkAddress.address;
+      return networkAddress.getAddress();
    }
 
    /**
@@ -66,7 +66,7 @@ public class Subnet extends GenericObject
 	 */
 	public int getSubnetMask()
 	{
-	   return networkAddress.mask;
+	   return networkAddress.getMask();
 	}
 	
 	/* (non-Javadoc)

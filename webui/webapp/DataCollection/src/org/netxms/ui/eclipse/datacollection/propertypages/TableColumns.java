@@ -75,6 +75,7 @@ public class TableColumns extends PropertyPage
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
 	private TableViewer columnList;
+   private Button queryButton;
 	private Button addButton;
 	private Button modifyButton;
 	private Button deleteButton;
@@ -196,7 +197,26 @@ public class TableColumns extends PropertyPage
       buttonsLayout.fill = true;
       buttonsLayout.pack = false;
       buttons.setLayout(buttonsLayout);
-      
+
+      queryButton = new Button(buttons, SWT.PUSH);
+      queryButton.setText("&Query...");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      queryButton.setLayoutData(rd);
+      queryButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            queryColumns();
+         }
+      });
+            
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().TableColumns_Add);
       rd = new RowData();
@@ -498,6 +518,14 @@ public class TableColumns extends PropertyPage
 	private void saveSettings()
 	{
 		WidgetHelper.saveColumnSettings(columnList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
+	}
+	
+	/**
+	 * Query columns from agent
+	 */
+	private void queryColumns()
+	{
+	   
 	}
 	
 	/**
