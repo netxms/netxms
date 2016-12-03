@@ -82,7 +82,8 @@ void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
 	int model = _tcstol(&oid[25], NULL, 10);
 	
 	// modular switches
-	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || (model == 27))
+	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || 
+	    (model == 27) || (model == 46) || (model == 47) || (model == 50) || (model == 51))
 	{
 		attributes->set(_T(".procurve.isModular"), _T("1"));
 		attributes->set(_T(".procurve.slotSize"), _T("24"));
