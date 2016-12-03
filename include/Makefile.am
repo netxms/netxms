@@ -36,6 +36,7 @@ include_HEADERS = \
 	nxclobj.h \
 	nxconfig.h \
 	nxcpapi.h \
+	nxcrypto.h \
 	nxdbapi.h \
 	nxevent.h \
 	nxlog.h \
