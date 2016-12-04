@@ -262,7 +262,7 @@ public class TableConditionsEditor extends Composite
 			operation.add(Messages.get().EditThresholdDialog_LIKE);
 			operation.add(Messages.get().EditThresholdDialog_NOTLIKE);
 			
-			value = toolkit.createText(parent, ""); //$NON-NLS-1$
+			value = toolkit.createText(parent, "", SWT.BORDER); //$NON-NLS-1$
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
 			final ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);

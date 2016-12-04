@@ -50,10 +50,14 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
@@ -61,7 +65,9 @@ import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectListener;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -316,7 +322,7 @@ public class TableColumns extends PropertyPage
 			public void onSelectTable(int origin, String name, String description)
 			{
 				if (origin == DataCollectionObject.AGENT)
-					updateColumnsFromAgent(name);
+					updateColumnsFromAgent(name, false, null);
 			}
 		};
 		dialogArea.addDisposeListener(new DisposeListener() {
@@ -525,15 +531,26 @@ public class TableColumns extends PropertyPage
 	 */
 	private void queryColumns()
 	{
+	   if (!MessageDialogHelper.openQuestion(getShell(), "Warning", "Current column definition will be replaced by definition provided by agent. Continue?"))
+	      return;
 	   
+	   AbstractObject object = ConsoleSharedData.getSession().findObjectById(dci.getNodeId());
+	   if ((editor.getSourceNode() == 0) && ((object instanceof Template) || (object instanceof Cluster)))
+	   {
+	      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+	      if (dlg.open() != Window.OK)
+	         return;
+	      object = dlg.getSelectedObjects().get(0);
+	   }
+	   updateColumnsFromAgent(dci.getName(), true, object);
 	}
 	
 	/**
 	 * Update columns from real table
 	 */
-	private void updateColumnsFromAgent(final String name)
+	private void updateColumnsFromAgent(final String name, final boolean interactive, final AbstractObject queryObject)
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		ConsoleJob job = new ConsoleJob(Messages.get().TableColumns_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -547,7 +564,7 @@ public class TableColumns extends PropertyPage
 				   }
 				   else
 				   {
-				      table = session.queryAgentTable(dci.getNodeId(), name);
+				      table = session.queryAgentTable((queryObject != null) ? queryObject.getObjectId() : dci.getNodeId(), name);
 				   }				      
 					runInUIThread(new Runnable() {
 						@Override
@@ -567,8 +584,18 @@ public class TableColumns extends PropertyPage
 				}
 				catch(Exception e)
 				{
-					// TODO: add logging
-					e.printStackTrace();
+				   Activator.logError("Cannot read table column definition from agent", e);
+				   if (interactive)
+				   {
+				      final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : "Internal error";
+				      runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot read table column definition from agent (%s)", msg));
+                     }
+                  });
+				   }
 				}
 			}
 			
