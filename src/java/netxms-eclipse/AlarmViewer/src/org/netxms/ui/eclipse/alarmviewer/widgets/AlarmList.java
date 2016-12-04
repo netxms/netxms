@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ public class AlarmList extends CompositeWithMessageBar
    public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;	
 		
 		// Setup table columns
@@ -647,7 +647,7 @@ public class AlarmList extends CompositeWithMessageBar
 
 		if (selection.size() == 1)
 		{
-			manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
+			manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
 			manager.add(new Separator());
 			manager.add(actionShowObjectDetails);
 			manager.add(new Separator());
@@ -698,7 +698,7 @@ public class AlarmList extends CompositeWithMessageBar
     * 
     * @param array selected objects array
     */
-	private int getSelectionType(Object[] array)
+   private int getSelectionType(Object[] array)
    {
       int type = 0;
       for(int i = 0; i < array.length; i++)

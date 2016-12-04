@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -483,65 +483,65 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-      // Create menu.
-      Menu menu = menuMgr.createContextMenu(alarmViewer.getControl());
-      alarmViewer.getControl().setMenu(menu);
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(alarmViewer.getControl());
+		alarmViewer.getControl().setMenu(menu);
 
-      // Register menu for extension.
-      if (viewPart != null)
-         viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
-   }
-
-   /**
-    * Fill context menu
+		// Register menu for extension.
+		if (viewPart != null)
+			viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
+	}
+	
+	/**
+	 * Fill context menu
     * 
-    * @param mgr Menu manager
-    */
-   protected void fillContextMenu(IMenuManager manager)
-   {
-      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-      if (selection.size() == 0)
-         return;
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager manager)
+	{
+		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+		if (selection.size() == 0)
+			return;
+		
+		int states = getSelectionType(selection.toArray());
+		
+		if (states == 2)
+		{
+   		manager.add(actionAcknowledge);
+		   manager.add(actionStickyAcknowledge);
 
-      int states = getSelectionType(selection.toArray());
-
-      if (states == 2)
-      {
-         manager.add(actionAcknowledge);
-         manager.add(actionStickyAcknowledge);
-
-         if (session.isTimedAlarmAckEnabled())
-         {
-            initializeTimeAcknowledge();
+		   if (session.isTimedAlarmAckEnabled())
+		   {
+      		initializeTimeAcknowledge();
             timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge"); //$NON-NLS-1$
             for(Action act : timeAcknowledge)
             {
                timeAcknowledgeMenu.add(act);
             }
-            timeAcknowledgeMenu.add(new Separator());
+            timeAcknowledgeMenu.add(new Separator());   
             timeAcknowledgeMenu.add(timeAcknowledgeOther);
-            manager.add(timeAcknowledgeMenu);
-         }
-      }
+      		manager.add(timeAcknowledgeMenu);
+		   }
+		}
+		
+		if (states < 4)
+		   manager.add(actionResolve);
+		if (states == 4 || !session.isStrictAlarmStatusFlow())
+		   manager.add(actionTerminate);
+		
+		manager.add(new Separator());
+		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		manager.add(new Separator());
 
-      if (states < 4)
-         manager.add(actionResolve);
-      if (states == 4 || !session.isStrictAlarmStatusFlow())
-         manager.add(actionTerminate);
-
-      manager.add(new Separator());
-      manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-      manager.add(new Separator());
-
-      if (selection.size() == 1)
-      {
-         manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-         manager.add(new Separator());
-         manager.add(actionShowObjectDetails);
-         manager.add(new Separator());
-      }
-
-      manager.add(actionExportToCsv);
+		if (selection.size() == 1)
+		{
+			manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
+			manager.add(new Separator());
+			manager.add(actionShowObjectDetails);
+			manager.add(new Separator());
+		}
+		
+		manager.add(actionExportToCsv);
 
       if (selection.size() == 1)
       {
