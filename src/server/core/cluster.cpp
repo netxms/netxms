@@ -31,7 +31,8 @@ Cluster::Cluster() : DataCollectionTarget()
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
-	m_tmLastPoll = 0;
+	m_lastStatusPoll = 0;
+   m_lastConfigurationPoll = 0;
 	m_zoneId = 0;
 }
 
@@ -44,7 +45,8 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(psz
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
-	m_tmLastPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastConfigurationPoll = 0;
 	m_zoneId = zoneId;
 }
 
@@ -513,6 +515,40 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 }
 
 /**
+ * Entry point for configuration poller thread
+ */
+void Cluster::configurationPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   ObjectTransactionStart();
+   configurationPoll(NULL, 0, poller);
+   ObjectTransactionEnd();
+   delete poller;
+}
+
+/**
+ * Configuration poll
+ */
+void Cluster::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
+{
+   if (IsShutdownInProgress())
+      return;
+
+   DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Applying templates"), m_name);
+   applyUserTemplates();
+
+   DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Updating container bindings"), m_name);
+   updateContainerMembership();
+
+   lockProperties();
+   m_lastConfigurationPoll = time(NULL);
+   m_flags &= ~CLF_QUEUED_FOR_CONFIGURATION_POLL;
+   unlockProperties();
+
+   DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
+}
+
+/**
  * Entry point for status poller thread
  */
 void Cluster::statusPoll(PollerInfo *poller)
@@ -670,7 +706,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	lockProperties();
 	if (bModified)
 		setModified();
-	m_tmLastPoll = time(NULL);
+	m_lastStatusPoll = time(NULL);
 	m_flags &= ~CLF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();
 

@@ -542,6 +542,12 @@ static void QueueForPolling(NetObj *object, void *data)
 					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
                ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, cluster));
 				}
+            if (cluster->isReadyForConfigurationPoll())
+            {
+               cluster->lockForConfigurationPoll();
+               DbgPrintf(6, _T("Cluster %d \"%s\" queued for configuration poll"), (int)cluster->getId(), cluster->getName());
+               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, cluster));
+            }
 			}
 			break;
 		case OBJECT_BUSINESSSERVICE:

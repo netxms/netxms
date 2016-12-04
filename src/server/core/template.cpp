@@ -1182,11 +1182,11 @@ void Template::prepareForDeletion()
 }
 
 /**
- * Check if template should be automatically applied to node
+ * Check if template should be automatically applied to given data collection target
  * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not, 
  * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-AutoBindDecision Template::isApplicable(Node *node)
+AutoBindDecision Template::isApplicable(DataCollectionTarget *target)
 {
 	AutoBindDecision result = AutoBindDecision_Ignore;
 
@@ -1209,7 +1209,9 @@ AutoBindDecision Template::isApplicable(Node *node)
    if (filter == NULL)
       return result;
 
-   filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+   filter->setGlobalVariable(_T("$object"), target->createNXSLObject());
+   if (target->getObjectClass() == OBJECT_NODE)
+      filter->setGlobalVariable(_T("$node"), target->createNXSLObject());
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();

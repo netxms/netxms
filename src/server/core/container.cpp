@@ -308,9 +308,9 @@ void Container::setAutoBindFilter(const TCHAR *script)
 }
 
 /**
- * Check if node should be placed into container
+ * Check if object should be placed into container
  */
-AutoBindDecision Container::isSuitableForNode(Node *node)
+AutoBindDecision Container::isSuitableForObject(NetObj *object)
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 
@@ -333,7 +333,9 @@ AutoBindDecision Container::isSuitableForNode(Node *node)
    if (filter == NULL)
       return result;
 
-   filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+   filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
+   if (object->getObjectClass() == OBJECT_NODE)
+      filter->setGlobalVariable(_T("$node"), object->createNXSLObject());
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();

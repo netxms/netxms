@@ -1102,3 +1102,101 @@ UINT32 DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
 {
    return dco->getSourceNode();
 }
+
+/**
+ * Filter for selecting templates from objects
+ */
+static bool TemplateSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && ((Template *)object)->isAutoApplyEnabled();
+}
+
+/**
+ * Apply user templates
+ */
+void DataCollectionTarget::applyUserTemplates()
+{
+   if (IsShutdownInProgress())
+      return;
+
+   ObjectArray<NetObj> *templates = g_idxObjectById.getObjects(true, TemplateSelectionFilter);
+   for(int i = 0; i < templates->size(); i++)
+   {
+      Template *pTemplate = (Template *)templates->get(i);
+      AutoBindDecision decision = pTemplate->isApplicable(this);
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->applyToTarget(this);
+            PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->deleteChild(this);
+            deleteParent(pTemplate);
+            pTemplate->queueRemoveFromTarget(m_id, true);
+            PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      pTemplate->decRefCount();
+   }
+   delete templates;
+}
+
+/**
+ * Filter for selecting containers from objects
+ */
+static bool ContainerSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+}
+
+/**
+ * Update container membership
+ */
+void DataCollectionTarget::updateContainerMembership()
+{
+   if (IsShutdownInProgress())
+      return;
+
+   ObjectArray<NetObj> *containers = g_idxObjectById.getObjects(true, ContainerSelectionFilter);
+   for(int i = 0; i < containers->size(); i++)
+   {
+      Container *pContainer = (Container *)containers->get(i);
+      AutoBindDecision decision = pContainer->isSuitableForObject(this);
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!pContainer->isChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
+                      m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->addChild(this);
+            addParent(pContainer);
+            PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->calculateCompoundStatus();
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_id))
+         {
+            DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
+                      m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->deleteChild(this);
+            deleteParent(pContainer);
+            PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->calculateCompoundStatus();
+         }
+      }
+      pContainer->decRefCount();
+   }
+   delete containers;
+}

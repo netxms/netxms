@@ -114,8 +114,9 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 /**
  * Cluster runtime flags
  */
-#define CLF_QUEUED_FOR_STATUS_POLL     0x0001
-#define CLF_DOWN                       0x0002
+#define CLF_QUEUED_FOR_STATUS_POLL        0x0001
+#define CLF_DOWN                          0x0002
+#define CLF_QUEUED_FOR_CONFIGURATION_POLL 0x0004
 
 /**
  * Extended agent connection
@@ -753,7 +754,7 @@ public:
    StringSet *getDCIScriptList();
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
-	AutoBindDecision isApplicable(Node *node);
+	AutoBindDecision isApplicable(DataCollectionTarget *object);
 	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
@@ -1006,6 +1007,9 @@ protected:
 
    NetObj *objectFromParameter(const TCHAR *param);
 
+   void applyUserTemplates();
+   void updateContainerMembership();
+
    void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
    virtual void collectProxyInfo(ProxyInfo *info);
@@ -1165,7 +1169,8 @@ protected:
    ObjectArray<InetAddress> *m_syncNetworks;
 	UINT32 m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
-	time_t m_tmLastPoll;
+	time_t m_lastStatusPoll;
+   time_t m_lastConfigurationPoll;
 	UINT32 m_zoneId;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
@@ -1204,7 +1209,18 @@ public:
    {
       return ((m_status != STATUS_UNMANAGED) && (!m_isDeleted) &&
               (!(m_flags & CLF_QUEUED_FOR_STATUS_POLL)) &&
-              ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwStatusPollingInterval))
+              ((UINT32)time(NULL) - (UINT32)m_lastStatusPoll > g_dwStatusPollingInterval))
+                  ? true : false;
+   }
+
+   void configurationPoll(PollerInfo *poller);
+   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
+   void lockForConfigurationPoll() { m_flags |= CLF_QUEUED_FOR_CONFIGURATION_POLL; }
+   bool isReadyForConfigurationPoll()
+   {
+      return ((m_status != STATUS_UNMANAGED) && (!m_isDeleted) &&
+              (!(m_flags & CLF_QUEUED_FOR_CONFIGURATION_POLL)) &&
+              ((UINT32)time(NULL) - (UINT32)m_lastConfigurationPoll > g_dwConfigurationPollingInterval))
                   ? true : false;
    }
 
@@ -1423,13 +1439,11 @@ protected:
 	bool checkNetworkPath(UINT32 dwRqId);
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId);
 
-	void applyUserTemplates();
 	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
 	bool updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
-	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
@@ -1928,7 +1942,7 @@ public:
 
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
-   AutoBindDecision isSuitableForNode(Node *node);
+   AutoBindDecision isSuitableForObject(NetObj *object);
 	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
 	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_BIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
 
