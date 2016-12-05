@@ -111,7 +111,7 @@ public class GraphBrowser extends AbstractClientActivity
 			ChartConfig config;
 			try
 			{
-				config = ChartConfig.createFromXml(gs.getConfig());
+				config = ChartConfig.createFromXml(gs.getFiltersAsXML());
 			}
 			catch (Exception e)
 			{

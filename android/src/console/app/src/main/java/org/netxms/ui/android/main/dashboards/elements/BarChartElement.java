@@ -5,51 +5,54 @@ package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
-import org.achartengine.model.CategorySeries;
-import org.achartengine.renderer.DefaultRenderer;
+import org.achartengine.chart.BarChart;
+import org.achartengine.chart.BarChart.Type;
+import org.achartengine.model.XYMultipleSeriesDataset;
+import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.SimpleSeriesRenderer;
+import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
-import org.netxms.ui.android.main.dashboards.configs.PieChartConfig;
+import org.netxms.ui.android.main.dashboards.configs.BarChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.Context;
+import android.graphics.Paint.Align;
 import android.util.Log;
 
 /**
- * Pie chart element
+ * Bar chart element
  */
-public class PieChartElement extends AbstractDashboardElement
+public class BarChartElement extends AbstractDashboardElement
 {
-	private static final String TAG = "nxclient/PieChartElement";
+	private static final String TAG = "nxclient/BarChartElement";
 
-	private PieChartConfig config;
-	private final CategorySeries dataset;
+	private BarChartConfig config;
+	private final BarChart chart;
 	private final GraphicalView chartView;
 
 	/**
 	 * @param context
 	 * @param xmlConfig
 	 */
-	public PieChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
+	public BarChartElement(Context context, String xmlConfig, ClientConnectorService service, ScheduledExecutorService scheduleTaskExecutor)
 	{
 		super(context, xmlConfig, service, scheduleTaskExecutor);
 		try
 		{
-			config = PieChartConfig.createFromXml(xmlConfig);
+			config = BarChartConfig.createFromXml(xmlConfig);
 		}
 		catch (Exception e)
 		{
 			Log.e(TAG, "Error parsing element config", e);
-			config = new PieChartConfig();
+			config = new BarChartConfig();
 		}
 
-		dataset = buildDataset();
-		chartView = ChartFactory.getPieChartView(context, dataset, buildRenderer());
-		addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		chart = new BarChart(buildDataset(), buildRenderer(), Type.STACKED);
+		chartView = new GraphicalView(context, chart);
+		addView(chartView);
 	}
 
 	/* (non-Javadoc)
@@ -65,37 +68,51 @@ public class PieChartElement extends AbstractDashboardElement
 	/**
 	 * @return
 	 */
-	private CategorySeries buildDataset()
+	private XYMultipleSeriesDataset buildDataset()
 	{
-		CategorySeries series = new CategorySeries(config.getTitle());
+		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
+
 		ChartDciConfig[] items = config.getDciList();
 		for (int i = 0; i < items.length; i++)
 		{
-			series.add(items[i].getName(), 0);
+			XYSeries series = new XYSeries(items[i].getName());
+			for (int j = 0; j < items.length; j++)
+			{
+				series.add(j + 1, 0);
+			}
+			dataset.addSeries(series);
 		}
 
-		return series;
+		return dataset;
 	}
 
 	/**
 	 * @return
 	 */
-	private DefaultRenderer buildRenderer()
+	private XYMultipleSeriesRenderer buildRenderer()
 	{
-		DefaultRenderer renderer = new DefaultRenderer();
+		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
+		renderer.setAxisTitleTextSize(16);
+		renderer.setChartTitleTextSize(20);
 		renderer.setLabelsTextSize(15);
 		renderer.setLegendTextSize(15);
+		renderer.setFitLegend(true);
 		renderer.setShowLegend(config.isShowLegend());
-		renderer.setMargins(new int[] { 20, 30, 15, 0 });
-		renderer.setPanEnabled(false);
-		renderer.setZoomEnabled(false);
-		renderer.setAntialiasing(true);
 		renderer.setChartTitle(config.getTitle());
+		renderer.setBarSpacing(0.4f);
+		renderer.setShowGrid(false);
+		renderer.setPanEnabled(false, false);
+		renderer.setZoomEnabled(false, false);
+		renderer.setAntialiasing(true);
 
 		renderer.setApplyBackgroundColor(true);
+		renderer.setMarginsColor(Colors.BACKGROUND_COLOR);
 		renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
 		renderer.setAxesColor(Colors.LABEL_COLOR);
+		renderer.setGridColor(Colors.GRID_COLOR);
 		renderer.setLabelsColor(Colors.LABEL_COLOR);
+		renderer.setXLabelsColor(Colors.LABEL_COLOR);
+		renderer.setYLabelsColor(0, Colors.LABEL_COLOR);
 
 		ChartDciConfig[] items = config.getDciList();
 		for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
@@ -108,8 +125,13 @@ public class PieChartElement extends AbstractDashboardElement
 				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
-			r.setDisplayChartValues(true);
+//			r.setDisplayChartValues(false);
 		}
+
+		renderer.setXAxisMin(0.5);
+		renderer.setXAxisMax(items.length + 0.5);
+		renderer.setXLabelsColor(Colors.BACKGROUND_COLOR);
+		renderer.setYLabelsAlign(Align.RIGHT);
 
 		return renderer;
 	}
@@ -138,9 +160,16 @@ public class PieChartElement extends AbstractDashboardElement
 				@Override
 				public void run()
 				{
+					XYMultipleSeriesDataset dataset = chart.getDataset();
 					for (int i = 0; i < dciData.length; i++)
 					{
-						dataset.set(i, items[i].getName(), dciData[i].getLastValue().getValueAsDouble());
+						dataset.removeSeries(i);
+						XYSeries series = new XYSeries(items[i].getName());
+						for (int j = 0; j < items.length; j++)
+						{
+							series.add(j + 1, (i == j) ? dciData[i].getLastValue().getValueAsDouble() : 0);
+						}
+						dataset.addSeries(i, series);
 					}
 					chartView.repaint();
 				}

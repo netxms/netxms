@@ -1,0 +1,2 @@
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses

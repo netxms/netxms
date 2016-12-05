@@ -47,9 +47,10 @@ target
 /aclocal.m4
 /android/src/agent/bin
 /android/src/agent/gen
-/android/src/console/bin
-/android/src/console/dist
-/android/src/console/gen
+/android/src/console/local.properties
+/android/src/console/.gradle
+/android/src/console/build
+/android/src/console/app/build
 /autom4te.cache
 /bin64
 /config

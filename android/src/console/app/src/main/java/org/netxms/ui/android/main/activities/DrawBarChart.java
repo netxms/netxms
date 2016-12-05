@@ -8,8 +8,9 @@ import org.achartengine.GraphicalView;
 import org.achartengine.chart.BarChart.Type;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
-import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
+
 import android.graphics.Paint.Align;
 
 
@@ -65,8 +66,8 @@ public class DrawBarChart extends AbstractComparisonChart
 		
 		for(int color : colorList)
 		{
-			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
-			r.setColor(color | 0xFF000000);
+            XYSeriesRenderer r = new XYSeriesRenderer();
+            r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(false);
 		}
