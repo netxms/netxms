@@ -163,7 +163,8 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT3
    _sntprintf(_userId, 16, _T("%d"), userId);
    _sntprintf(_sessionId, 16, _T("%d"), sessionId);
    _sntprintf(_objectId, 16, _T("%d"), objectId);
-   _sntprintf(_text, text.length(), _T("%s"), text);
+   text.substring(0, text.length(), _text);
+
    static int sqlTypes[9] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT};
 	QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
 
