@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.actions;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -68,12 +70,6 @@ public class ExportDashboard implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		if (dashboard == null)
-			return;
-		
-		FileDialog dlg = new FileDialog(wbPart.getSite().getShell(), SWT.SAVE);
-		dlg.setText(Messages.get().ExportDashboard_SelectFile);
-		final String fileName = dlg.open();
-		if (fileName == null)
 			return;
 		
 		final Set<Long> objects = new HashSet<Long>();
@@ -151,7 +147,7 @@ public class ExportDashboard implements IObjectActionDelegate
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
 				
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
+				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboard.getObjectName() + ".xml"), "UTF-8"); //$NON-NLS-1$
 				try
 				{
 					out.write(xml.toString());
@@ -159,7 +155,19 @@ public class ExportDashboard implements IObjectActionDelegate
 				finally
 				{
 					out.close();
-				}
+					final File dashboardFile = new File(dashboard.getObjectName() + ".xml");
+					if (dashboardFile.length() > 0)
+					{
+   	            DownloadServiceHandler.addDownload(dashboardFile.getName(), dashboardFile.getName(), dashboardFile, "application/octet-stream");
+   	            runInUIThread(new Runnable() {
+   	               @Override
+   	               public void run()
+   	               {
+   	                  DownloadServiceHandler.startDownload(dashboardFile.getName());
+   	               }
+   	            });
+					}
+				}				
 			}
 			
 			@Override

@@ -72,11 +72,13 @@ public class ExportDashboard implements IObjectActionDelegate
 		
 		FileDialog dlg = new FileDialog(wbPart.getSite().getShell(), SWT.SAVE);
 		dlg.setText(Messages.get().ExportDashboard_SelectFile);
+		dlg.setFileName(dashboard.getObjectName() + ".xml");
 		dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
 		dlg.setFilterNames(new String[] { Messages.get().ExportDashboard_XMLFiles, Messages.get().ExportDashboard_AllFiles });
 		final String fileName = dlg.open();
+		
 		if (fileName == null)
-			return;
+		   return;
 		
 		final Set<Long> objects = new HashSet<Long>();
 		final Map<Long, Long> items = new HashMap<Long, Long>();
