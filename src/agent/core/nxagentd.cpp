@@ -576,8 +576,6 @@ static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 {
 	sigset_t signals;
-	int nSignal;
-
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
@@ -589,10 +587,9 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 	sigaddset(&signals, SIGPIPE);
 #endif
 
-	sigprocmask(SIG_BLOCK, &signals, NULL);
-
-	while(1)
+	while(true)
 	{
+		int nSignal;
 		if (sigwait(&signals, &nSignal) == 0)
 		{
 			switch(nSignal)
@@ -1392,14 +1389,6 @@ int main(int argc, char *argv[])
 #endif
 
    InitNetXMSProcess();
-
-#if defined(__sun) || defined(_AIX) || defined(__hpux)
-   signal(SIGPIPE, SIG_IGN);
-   signal(SIGHUP, SIG_IGN);
-   signal(SIGQUIT, SIG_IGN);
-   signal(SIGUSR1, SIG_IGN);
-   signal(SIGUSR2, SIG_IGN);
-#endif
 
    // Check for alternate config file location
 #ifdef _WIN32

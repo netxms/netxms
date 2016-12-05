@@ -2210,6 +2210,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
+void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif
 

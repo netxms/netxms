@@ -173,6 +173,29 @@ Condition& Condition::operator =(const Condition& src)
 #endif
 
 /**
+ * Block all signals on a thread
+ */
+void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide)
+{
+   sigset_t signals;
+   sigemptyset(&signals);
+   sigaddset(&signals, SIGTERM);
+   sigaddset(&signals, SIGINT);
+   sigaddset(&signals, SIGSEGV);
+   sigaddset(&signals, SIGCHLD);
+   sigaddset(&signals, SIGHUP);
+   sigaddset(&signals, SIGUSR1);
+   sigaddset(&signals, SIGUSR2);
+#if !defined(__sun) && !defined(_AIX) && !defined(__hpux)
+   sigaddset(&signals, SIGPIPE);
+#endif
+   if (processWide)
+      sigprocmask(SIG_BLOCK, &signals, NULL);
+   else
+      pthread_sigmask(SIG_BLOCK, &signals, NULL);
+}
+
+/**
  * Start main loop and signal handler for daemon
  */
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain)
@@ -180,19 +203,6 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
    THREAD hThread;
    struct utsname un;
    int nModel = 0;
-   sigset_t signals;
-
-   // Block signals
-   sigemptyset(&signals);
-   sigaddset(&signals, SIGTERM);
-   sigaddset(&signals, SIGINT);
-   sigaddset(&signals, SIGPIPE);
-   sigaddset(&signals, SIGSEGV);
-   sigaddset(&signals, SIGCHLD);
-   sigaddset(&signals, SIGHUP);
-   sigaddset(&signals, SIGUSR1);
-   sigaddset(&signals, SIGUSR2);
-   sigprocmask(SIG_BLOCK, &signals, NULL);
 
    if (uname(&un) != -1)
    {

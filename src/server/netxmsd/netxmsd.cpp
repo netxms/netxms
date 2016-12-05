@@ -31,10 +31,6 @@
 #include <dbghelp.h>
 #endif
 
-#ifndef _WIN32
-#include <signal.h>
-#endif
-
 #if defined(_WITH_ENCRYPTION) && defined(_WIN32)
 #include <openssl/applink.c>
 #endif
@@ -332,14 +328,6 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 int main(int argc, char* argv[])
 {
    InitNetXMSProcess();
-
-#ifndef _WIN32
-   signal(SIGPIPE, SIG_IGN);
-   signal(SIGHUP, SIG_IGN);
-   signal(SIGQUIT, SIG_IGN);
-   signal(SIGUSR1, SIG_IGN);
-   signal(SIGUSR2, SIG_IGN);
-#endif
 
    // Check for alternate config file location
 #ifdef _WIN32
