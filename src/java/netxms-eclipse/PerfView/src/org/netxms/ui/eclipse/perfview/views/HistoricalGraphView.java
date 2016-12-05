@@ -711,7 +711,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       
       if (!System.getProperty("os.name").toLowerCase().contains("linux"))
       {
-         actionCopyImage = new Action(Messages.get().DataComparisonView_CopyToClipboard, SharedIcons.COPY) {
+         actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
             @Override
             public void run()
             {
