@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -77,7 +78,6 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentFileData;
-import org.netxms.client.AgentFileInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
@@ -1284,20 +1284,33 @@ public class AgentFileManager extends ViewPart
       if (selection.isEmpty())
          return;
       
-      @SuppressWarnings("unchecked")
-      List<AgentFile> list = selection.toList();
-      for(AgentFile f : list)
-      {
-         try
+      final List<AgentFile> files = new ArrayList<AgentFile>(selection.size());
+      for(Object o : selection.toList())
+         files.add((AgentFile)o);
+      
+      new ConsoleJob("Calculate folder size", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            AgentFileInfo info = session.getAgentFileInfo(f);
-            f.setFileInfo(info);
-            viewer.update(f, null);
+            for(AgentFile f : files)
+            {
+               f.setFileInfo(session.getAgentFileInfo(f));
+            }
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.update(files.toArray(), null);
+               }
+            });
          }
-         catch (Exception e)
+         
+         @Override
+         protected String getErrorMessage()
          {
-         }         
-      }
+            return "Cannot calculate folder size";
+         }
+      }.start();
    }
    
    /**
