@@ -35,23 +35,23 @@ import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
  */
 public class AgentFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private WorkbenchLabelProvider wbLabelProvider;
-	
-	public AgentFileLabelProvider()
-	{
-		wbLabelProvider = new WorkbenchLabelProvider();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
-		if (columnIndex == 0)
-			return getImage(element);
-		return null;
-	}
+   private WorkbenchLabelProvider wbLabelProvider;
+   
+   public AgentFileLabelProvider()
+   {
+      wbLabelProvider = new WorkbenchLabelProvider();
+   }
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      if (columnIndex == 0)
+         return getImage(element);
+      return null;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
@@ -69,7 +69,7 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 			   if (((AgentFile)element).isDirectory())
 			   {
 			      if (((AgentFile)element).getFileInfo() != null)
-			         return getValue(((AgentFile)element).getFileInfo().getSize()) + "(" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
+			         return getValue(((AgentFile)element).getFileInfo().getSize()) + " (" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
 			      else
 			         return "";
 			   }			      
@@ -86,33 +86,33 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-	 */
-	@Override
-	public Image getImage(Object element)
-	{
-		return wbLabelProvider.getImage(element);
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+    */
+   @Override
+   public Image getImage(Object element)
+   {
+      return wbLabelProvider.getImage(element);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
-	@Override
-	public String getText(Object element)
-	{
-		return wbLabelProvider.getText(element);
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+    */
+   @Override
+   public String getText(Object element)
+   {
+      return wbLabelProvider.getText(element);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		wbLabelProvider.dispose();
-		super.dispose();
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      wbLabelProvider.dispose();
+      super.dispose();
+   }
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
@@ -140,24 +140,22 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
     */
    private String getValue(long size)
    {
-
-      if ((size >= 10000000000000L) || (size <= -10000000000000L))
+      if (size >= 10995116277760L)
       {
-         return String.format("%.1fT", (size / 1000000000000.0));
+         return String.format("%.1f TB", (size / 1099511627776.0));
       }
-      if ((size >= 10000000000L) || (size <= -10000000000L))
+      if (size >= 10737418240L)
       {
-         return String.format("%.1fG", (size / 1000000000.0));
+         return String.format("%.1f GB", (size / 1073741824.0));
       }
-      if ((size >= 10000000) || (size <= -10000000))
+      if (size >= 10485760)
       {
-         return String.format("%.1fM", (size / 1000000.0));
+         return String.format("%.1f MB", (size / 1048576.0));
       }
-      if ((size >= 10000) || (size <= -10000))
+      if (size >= 10240)
       {
-         return String.format("%.1fK", (size / 1000.0));
+         return String.format("%.1f KB", (size / 1024.0));
       }
-
-      return Double.toString(size) + "B";
+      return Long.toString(size);
    }
 }

@@ -53,38 +53,38 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
       return null;
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-    */
-   @Override
-   public String getColumnText(Object element, int columnIndex)
-   {
-      switch(columnIndex)
-      {
-         case AgentFileManager.COLUMN_NAME:
-            return getText(element);
-         case AgentFileManager.COLUMN_TYPE:
-            return ((AgentFile)element).getExtension();
-         case AgentFileManager.COLUMN_SIZE:
-            if (((AgentFile)element).isDirectory())
-            {
-               if (((AgentFile)element).getFileInfo() != null)
-                  return getValue(((AgentFile)element).getFileInfo().getSize()) + "(" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
-               else
-                  return "";
-            }              
-            return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
-         case AgentFileManager.COLUMN_MODIFYED:
-            return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
-         case AgentFileManager.COLUMN_OWNER:
-            return ((AgentFile)element).getOwner();
-         case AgentFileManager.COLUMN_GROUP:
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+	 */
+	@Override
+	public String getColumnText(Object element, int columnIndex)
+	{
+		switch(columnIndex)
+		{
+			case AgentFileManager.COLUMN_NAME:
+				return getText(element);
+			case AgentFileManager.COLUMN_TYPE:
+				return ((AgentFile)element).getExtension();
+			case AgentFileManager.COLUMN_SIZE:
+			   if (((AgentFile)element).isDirectory())
+			   {
+			      if (((AgentFile)element).getFileInfo() != null)
+			         return getValue(((AgentFile)element).getFileInfo().getSize()) + " (" + ((AgentFile)element).getFileInfo().getItemCount() + " files)";
+			      else
+			         return "";
+			   }			      
+				return (((AgentFile)element).isPlaceholder()) ? "" : getValue(((AgentFile)element).getSize()); //$NON-NLS-1$
+			case AgentFileManager.COLUMN_MODIFYED:
+				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
+			case AgentFileManager.COLUMN_OWNER:
+			   return ((AgentFile)element).getOwner();
+			case AgentFileManager.COLUMN_GROUP:
             return ((AgentFile)element).getGroup();
-         case AgentFileManager.COLUMN_ACCESS_RIGHTS:
+			case AgentFileManager.COLUMN_ACCESS_RIGHTS:
             return ((AgentFile)element).getAccessRights();
-      }
-      return null;
-   }
+		}
+		return null;
+	}
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
@@ -140,24 +140,22 @@ public class AgentFileLabelProvider extends LabelProvider implements ITableLabel
     */
    private String getValue(long size)
    {
-
-      if ((size >= 10000000000000L) || (size <= -10000000000000L))
+      if (size >= 10995116277760L)
       {
-         return String.format("%.1fT", (size / 1000000000000.0));
+         return String.format("%.1f TB", (size / 1099511627776.0));
       }
-      if ((size >= 10000000000L) || (size <= -10000000000L))
+      if (size >= 10737418240L)
       {
-         return String.format("%.1fG", (size / 1000000000.0));
+         return String.format("%.1f GB", (size / 1073741824.0));
       }
-      if ((size >= 10000000) || (size <= -10000000))
+      if (size >= 10485760)
       {
-         return String.format("%.1fM", (size / 1000000.0));
+         return String.format("%.1f MB", (size / 1048576.0));
       }
-      if ((size >= 10000) || (size <= -10000))
+      if (size >= 10240)
       {
-         return String.format("%.1fK", (size / 1000.0));
+         return String.format("%.1f KB", (size / 1024.0));
       }
-
-      return Double.toString(size) + "B";
+      return Long.toString(size);
    }
 }

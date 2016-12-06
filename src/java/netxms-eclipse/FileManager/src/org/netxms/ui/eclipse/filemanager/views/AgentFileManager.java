@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -63,6 +64,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
@@ -136,7 +138,7 @@ public class AgentFileManager extends ViewPart
    private Action actionTailFile;
    private Action actionShowFile;
    private Action actionCreateDirectory;
-   private Action actionShowFileSize;
+   private Action actionCalculateFolderSize;
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
    private long objectId = 0;
@@ -218,7 +220,7 @@ public class AgentFileManager extends ViewPart
             if (selection != null)
             {
                actionDelete.setEnabled(selection.size() > 0);
-               actionShowFileSize.setEnabled(selection.size() > 0);
+               actionCalculateFolderSize.setEnabled(selection.size() > 0);
             }
          }
       });
@@ -556,15 +558,17 @@ public class AgentFileManager extends ViewPart
       actionCreateDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.newFolder"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreateDirectory.getActionDefinitionId(), new ActionHandler(actionCreateDirectory));
       
-      actionShowFileSize = new Action("&Show file size") {
+      actionCalculateFolderSize = new Action("Calculate folder &size") {
          @Override
          public void run()
          {
-            showFileSize();
+            calculateFolderSize();
          }
       };
+      actionCalculateFolderSize.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.calculateFolderSize"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCalculateFolderSize.getActionDefinitionId(), new ActionHandler(actionCalculateFolderSize));
       
-      actionCopyFileName = new Action("&Copy file name") {
+      actionCopyFileName = new Action("Copy file &name") {
          @Override
          public void run()
          {
@@ -574,7 +578,7 @@ public class AgentFileManager extends ViewPart
       actionCopyFileName.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFileName"); //$NON-NLS-1$
       handlerService.activateHandler(actionCopyFileName.getActionDefinitionId(), new ActionHandler(actionCopyFileName));
       
-      actionCopyFilePath = new Action("&Copy file path") {
+      actionCopyFilePath = new Action("Copy file &path") {
          @Override
          public void run()
          {
@@ -583,7 +587,6 @@ public class AgentFileManager extends ViewPart
       };
       actionCopyFilePath.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFilePath"); //$NON-NLS-1$
       handlerService.activateHandler(actionCopyFilePath.getActionDefinitionId(), new ActionHandler(actionCopyFilePath));
-
    }
 
    /**
@@ -664,9 +667,13 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionTailFile);
             mgr.add(actionShowFile);
          }
-         mgr.add(actionDownloadFile);
-         mgr.add(new Separator());
       }
+
+      mgr.add(actionDownloadFile);
+      
+      if (isFolderOnlySelection(selection))
+         mgr.add(actionCalculateFolderSize);
+      mgr.add(new Separator());
       
       if (selection.size() == 1)
       {
@@ -675,11 +682,14 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionCreateDirectory);
          }
          mgr.add(actionRename);
+      }
+      mgr.add(actionDelete);
+      mgr.add(new Separator());
+      if (selection.size() == 1)
+      {
          mgr.add(actionCopyFileName);
          mgr.add(actionCopyFilePath);
       }
-      mgr.add(actionShowFileSize);
-      mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       if ((selection.size() == 1) && ((AgentFile)selection.getFirstElement()).isDirectory())
@@ -687,6 +697,20 @@ public class AgentFileManager extends ViewPart
          mgr.add(new Separator());
          mgr.add(actionRefreshDirectory);
       }
+   }
+   
+   /**
+    * Check if given selection contains only folders
+    * 
+    * @param selection
+    * @return
+    */
+   private boolean isFolderOnlySelection(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+         if (!((AgentFile)o).isDirectory())
+            return false;
+      return true;
    }
 
    /**
@@ -1009,45 +1033,97 @@ public class AgentFileManager extends ViewPart
    private void startDownload()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
+      if (selection.isEmpty())
          return;
 
-      final AgentFile sf = (AgentFile)selection.getFirstElement();
+      AgentFile sf = (AgentFile)selection.getFirstElement();
+      
+      final String target;
+      if (!sf.isDirectory() && (selection.size() == 1))
+      {
+         FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
+         dlg.setText(Messages.get().AgentFileManager_StartDownloadDialogTitle);
+         String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+         dlg.setFilterExtensions(filterExtensions);
+         String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
+         dlg.setFilterNames(filterNames);
+         dlg.setFileName(sf.getName());
+         target = dlg.open();
+      }
+      else
+      {
+         DirectoryDialog dlg = new DirectoryDialog(getSite().getShell());
+         target = dlg.open();
+      }
 
-      FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-      fd.setText(Messages.get().AgentFileManager_StartDownloadDialogTitle);
-      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
-      fd.setFilterExtensions(filterExtensions);
-      String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
-      fd.setFilterNames(filterNames);
-      fd.setFileName(sf.getName());
-      final String selected = fd.open();
-
-      if (selected == null)
+      if (target == null)
          return;
       
-      ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+      final List<AgentFile> files = new ArrayList<AgentFile>(selection.size());
+      for(Object o : selection.toList())
+         files.add((AgentFile)o);
+      
+      ConsoleJob job = new ConsoleJob("Download from agent", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (!sf.isDirectory())
+            if (files.size() == 1)
             {
-               downloadFile(selected, sf, monitor, false);
+               AgentFile f = files.get(0);
+               if (f.isDirectory())
+               {
+                  long dirSize = -1;
+                  try
+                  {
+                     dirSize = session.getAgentFileInfo(f).getSize();
+                  }
+                  catch(Exception e)
+                  {
+                  }
+                  monitor.beginTask(String.format("Downloading directory %s", f.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
+                  downloadDir(f, target, monitor);
+                  monitor.done();
+               }
+               else
+               {
+                  downloadFile(f, target, monitor, false);
+               }
             }
             else
             {
-               long dirSize = -1;
-               try
+               long total = 0;
+               for(AgentFile f : files)
                {
-                  dirSize = session.getAgentFileInfo(sf).getSize();
+                  if (f.isDirectory() && (f.getSize() < 0))
+                  {
+                     try
+                     {
+                        total += session.getAgentFileInfo(f).getSize();
+                     }
+                     catch(Exception e)
+                     {
+                     }
+                  }
+                  else
+                  {
+                     total += f.getSize();
+                  }
                }
-               catch(Exception e)
+               
+               monitor.beginTask("Downloading files", (int)total);
+               for(AgentFile f : files)
                {
+                  if (f.isDirectory())
+                  {
+                     downloadDir(f, target + "/" + f.getName(), monitor);
+                  }
+                  else
+                  {
+                     downloadFile(f, target + "/" + f.getName(), monitor, true);
+                  }
                }
-               monitor.beginTask(String.format("Downloading directory %s", sf.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
-               downloadDir(sf, selected, monitor);
+               monitor.done();
             }
-            monitor.done();
          }
 
          @Override
@@ -1056,7 +1132,6 @@ public class AgentFileManager extends ViewPart
             return Messages.get().AgentFileManager_DirectoryReadError;
          }
       };
-      job.setUser(false);
       job.start();
    }
    
@@ -1086,7 +1161,7 @@ public class AgentFileManager extends ViewPart
          }
          else
          {
-            downloadFile(localFileName + "/" + f.getName(), f, monitor, true); //$NON-NLS-1$
+            downloadFile(f, localFileName + "/" + f.getName(), monitor, true); //$NON-NLS-1$
          }
       }
       dir.setLastModified(sf.getModifyicationTime().getTime());
@@ -1097,7 +1172,7 @@ public class AgentFileManager extends ViewPart
     * @throws NXCException 
     * @throws IOException 
     */
-   private void downloadFile(final String localName, final AgentFile sf, final IProgressMonitor monitor, final boolean subTask) throws IOException, NXCException
+   private void downloadFile(final AgentFile sf, final String localName, final IProgressMonitor monitor, final boolean subTask) throws IOException, NXCException
    {
       if (subTask)
          monitor.subTask(String.format("Downloading file %s", sf.getFullName()));
@@ -1220,7 +1295,7 @@ public class AgentFileManager extends ViewPart
    /**
     * Show file size
     */
-   private void showFileSize()
+   private void calculateFolderSize()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())

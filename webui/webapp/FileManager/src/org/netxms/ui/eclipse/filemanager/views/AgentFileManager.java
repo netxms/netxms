@@ -136,7 +136,7 @@ public class AgentFileManager extends ViewPart
    private Action actionTailFile;
    private Action actionShowFile;
    private Action actionCreateDirectory;
-   private Action actionShowFileSize;
+   private Action actionCalculateFolderSize;
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
    private long objectId = 0;
@@ -218,7 +218,7 @@ public class AgentFileManager extends ViewPart
             if (selection != null)
             {
                actionDelete.setEnabled(selection.size() > 0);
-               actionShowFileSize.setEnabled(selection.size() > 0);
+               actionCalculateFolderSize.setEnabled(selection.size() > 0);
             }
          }
       });
@@ -548,15 +548,17 @@ public class AgentFileManager extends ViewPart
       actionCreateDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.newFolder"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreateDirectory.getActionDefinitionId(), new ActionHandler(actionCreateDirectory));
       
-      actionShowFileSize = new Action("Show file size") {
+      actionCalculateFolderSize = new Action("Calculate folder &size") {
          @Override
          public void run()
          {
-            showFileSize();
+            calculateFolderSize();
          }
       };
+      actionCalculateFolderSize.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.calculateFolderSize"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCalculateFolderSize.getActionDefinitionId(), new ActionHandler(actionCalculateFolderSize));
       
-      actionCopyFileName = new Action("&Copy file name") {
+      actionCopyFileName = new Action("Copy file &name") {
          @Override
          public void run()
          {
@@ -566,7 +568,7 @@ public class AgentFileManager extends ViewPart
       actionCopyFileName.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copyFileName"); //$NON-NLS-1$
       handlerService.activateHandler(actionCopyFileName.getActionDefinitionId(), new ActionHandler(actionCopyFileName));
       
-      actionCopyFilePath = new Action("&Copy file path") {
+      actionCopyFilePath = new Action("Copy file &path") {
          @Override
          public void run()
          {
@@ -654,9 +656,13 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionTailFile);
             mgr.add(actionShowFile);
          }
-         mgr.add(actionDownloadFile);
-         mgr.add(new Separator());
       }
+
+      mgr.add(actionDownloadFile);
+      
+      if (isFolderOnlySelection(selection))
+         mgr.add(actionCalculateFolderSize);
+      mgr.add(new Separator());
       
       if (selection.size() == 1)
       {
@@ -665,11 +671,14 @@ public class AgentFileManager extends ViewPart
             mgr.add(actionCreateDirectory);
          }
          mgr.add(actionRename);
+      }
+      mgr.add(actionDelete);
+      mgr.add(new Separator());
+      if (selection.size() == 1)
+      {
          mgr.add(actionCopyFileName);
          mgr.add(actionCopyFilePath);
       }
-      mgr.add(actionShowFileSize);
-      mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       if ((selection.size() == 1) && ((AgentFile)selection.getFirstElement()).isDirectory())
@@ -677,6 +686,20 @@ public class AgentFileManager extends ViewPart
          mgr.add(new Separator());
          mgr.add(actionRefreshDirectory);
       }
+   }
+   
+   /**
+    * Check if given selection contains only folders
+    * 
+    * @param selection
+    * @return
+    */
+   private boolean isFolderOnlySelection(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+         if (!((AgentFile)o).isDirectory())
+            return false;
+      return true;
    }
 
    /**
@@ -1018,15 +1041,13 @@ public class AgentFileManager extends ViewPart
          return;
 
       final AgentFile sf = (AgentFile)selection.getFirstElement();
-      
-         
       if (!sf.isDirectory())
       {
          downloadFile(sf.getFullName());
       }
       else
       {      
-         ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+         ConsoleJob job = new ConsoleJob("Download from agent", null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
@@ -1040,20 +1061,20 @@ public class AgentFileManager extends ViewPart
                {
                }
                monitor.beginTask(String.format("Downloading directory %s", sf.getName()), (int)dirSize);
-   				FileOutputStream fos = new FileOutputStream(sf.getFullName() + ".zip");
+               
+               final File zipFile = File.createTempFile("download_", ".zip");
+   				FileOutputStream fos = new FileOutputStream(zipFile);
    				ZipOutputStream zos = new ZipOutputStream(fos);
    				downloadDir(sf, sf.getName(), zos, monitor);
-   				
    				zos.close();
    				fos.close();
    				
-   				final File zipArchive = new File(sf.getFullName() + ".zip");
-               DownloadServiceHandler.addDownload(zipArchive.getName(), zipArchive.getName(), zipArchive, "application/octet-stream");
+               DownloadServiceHandler.addDownload(zipFile.getName(), sf.getName() + ".zip", zipFile, "application/octet-stream");
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     DownloadServiceHandler.startDownload(zipArchive.getName());
+                     DownloadServiceHandler.startDownload(zipFile.getName());
                   }
                });
                
@@ -1066,7 +1087,6 @@ public class AgentFileManager extends ViewPart
                return Messages.get().AgentFileManager_DirectoryReadError;
             }
          };
-         job.setUser(false);
          job.start();
       }
    }
@@ -1125,6 +1145,8 @@ public class AgentFileManager extends ViewPart
    
    /**
     * Downloads file
+    * @throws NXCException 
+    * @throws IOException 
     */
    private void downloadFile(final String remoteName)
    {
@@ -1256,7 +1278,7 @@ public class AgentFileManager extends ViewPart
    /**
     * Show file size
     */
-   private void showFileSize()
+   private void calculateFolderSize()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())

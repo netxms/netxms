@@ -199,6 +199,10 @@
             id="org.netxms.ui.eclipse.filemanager.commands.copyFilePath"
             name="Copy file path">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.calculateFolderSize"
+            name="Calculate folder size">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -317,6 +321,12 @@
             contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="SHIFT+M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.calculateFolderSize"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+S">
       </key>
    </extension>
    <extension
