@@ -39,17 +39,17 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "hK:vaz")) != -1)
+   while((ch = getopt(argc, argv, "ahvz")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxencpasswd [<options>] <login> <password>\n"
-                   "       nxencpasswd [<options>] -s <password>\n"
+                   "       nxencpasswd [<options>] -a <password>\n"
                    "Valid options are:\n"
+                   "   -a           : Encrypt agent's secret.\n"
                    "   -h           : Display help and exit.\n"
                    "   -v           : Display version and exit.\n"
-                   "   -a           : Encrypt agent's secret.\n"
                    "\n");
 				return 0;
          case 'v':   // Print version and exit
@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-   if (decrypt) {
+   if (decrypt)
+   {
 #if UNICODE
       TCHAR login[128], password[256];
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, login, 128);
