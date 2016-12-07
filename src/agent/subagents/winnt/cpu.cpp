@@ -28,7 +28,8 @@ static SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *s_cpuTimes = NULL;
 static UINT32 *s_usage = NULL;
 static UINT32 *s_idle = NULL;
 static UINT32 *s_kernel = NULL;
-static UINT32 *s_user = NULL;
+static UINT64 *s_user = NULL;
+static UINT64 s_intr, s_ctxt;
 static int s_bpos = 0;
 static CRITICAL_SECTION s_lock;
 
@@ -43,6 +44,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *curr = &s_cpuTimes[s_cpuCount];
 
    ULONG cpuTimesLen = sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * s_cpuCount;
+   ULONG cpuCtxtLen = sizeof(SYSTEM_INTERRUPT_INFORMATION) * s_cpuCount;
    ULONG size;
    NtQuerySystemInformation(SystemProcessorPerformanceInformation, s_cpuTimes, cpuTimesLen, &size);
 
@@ -52,10 +54,14 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       {
          memcpy(curr, prev, cpuTimesLen);
       }
+      SYSTEM_INTERRUPT_INFORMATION ctxt
+      NtQuerySystemInformation(SystemInterruptInformation, &ctxt, cpuCtxtLen, &size);
 
       UINT64 sysIdle = 0;
       UINT64 sysKernel = 0;
       UINT64 sysUser = 0;
+      UINT64 intr = 0;
+      UINT64 ctxt = 0;
 
       EnterCriticalSection(&s_lock);
 
@@ -66,6 +72,8 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          UINT64 kernel = curr[i].KernelTime.QuadPart - prev[i].KernelTime.QuadPart;
          UINT64 user = curr[i].UserTime.QuadPart - prev[i].UserTime.QuadPart;
          UINT64 total = kernel + user;  // kernel time includes idle time
+         intr += curr[i].InterruptCount;
+         ctxt += ctxt[i].ContextSwitches;
 
          sysIdle += idle;
          sysKernel += kernel;
@@ -86,6 +94,9 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
             s_user[idx] = 0;
          }
       }
+
+      s_intr = intr;
+      s_ctxt = ctxt;
 
       UINT64 sysTotal = sysKernel + sysUser;
       if (sysTotal > 0)
@@ -234,5 +245,23 @@ LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 
    usage /= count;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), usage / 100, usage % 100);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/*
+ * Handler for CPU Context Switch parameter
+ */
+LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_uint(value, s_ctxt);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/*
+ * Handler for CPU Interrupts parameter
+ */
+LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_uint(value, s_intr);
    return SYSINFO_RC_SUCCESS;
 }

@@ -179,6 +179,8 @@ enum
 	CPU_USAGE_SOFTIRQ,
 	CPU_USAGE_STEAL,
 	CPU_USAGE_GUEST,
+	CPU_INTERRUPTS,
+	CPU_CONTEXT_SWITCHES,
 };
 
 #define MAKE_CPU_USAGE_PARAM(interval, source)	(const TCHAR *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
@@ -226,6 +228,8 @@ LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

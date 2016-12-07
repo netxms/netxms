@@ -20,30 +20,7 @@
 
 #undef _XOPEN_SOURCE
 
-#if __FreeBSD__ < 8
-#define _SYS_LOCK_PROFILE_H_	/* prevent include of sys/lock_profile.h which can be C++ incompatible) */
-#endif
-
-#include <nms_common.h>
-#include <nms_agent.h>
-
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/utsname.h>
-#include <sys/param.h>
-
-#if __FreeBSD__ < 5
-#include <sys/proc.h>
-#endif
-
-#include <sys/user.h>
-#include <fcntl.h>
-#include <kvm.h>
-#include <paths.h>
-
-
-#include "system.h"
+#include "freebsd_subagent.h"
 
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
@@ -107,63 +84,6 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	}
 
    return nRet;
-}
-
-LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-	int nRet = SYSINFO_RC_ERROR;
-   char szArg[128] = {0};
-	FILE *hFile;
-	double dLoad[3];
-
-	// get processor
-	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-
-	if (getloadavg(dLoad, 3) == 3)
-	{
-		switch (pszParam[18])
-		{
-		case '1': // 15 min
-			ret_double(pValue, dLoad[2]);
-			break;
-		case '5': // 5 min
-			ret_double(pValue, dLoad[1]);
-			break;
-		default: // 1 min
-			ret_double(pValue, dLoad[0]);
-			break;
-		}
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
-
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-	return SYSINFO_RC_UNSUPPORTED;
-}
-
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	int mib[2];
-	size_t nSize = sizeof(mib), nValSize;
-	int nVal;
-
-	if (sysctlnametomib("hw.ncpu", mib, &nSize) != 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
-	nValSize = sizeof(nVal);
-	if (sysctl(mib, nSize, &nVal, &nValSize, NULL, 0) == 0)
-	{
-   	ret_int(pValue, nVal);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
 }
 
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
@@ -304,7 +224,6 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 
 	return nRet;
 }
-
 
 //
 // stub

@@ -249,6 +249,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.PhysicalId(*)"), H_CpuInfo, _T("P"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_PHYSICAL_ID },
 
 	/**************************************************************/
+
+   { _T("System.CPU.Interrupts"), H_CpuInterrupts,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_INTERRUPTS),
+            DCI_DT_UINT,  DCIDESC_SYSTEM_CPU_INTERRUPTS },
+   { _T("System.CPU.ContextSwitches"), H_CpuCswitch,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_CONTEXT_SWITCHES),
+            DCI_DT_UINT,  DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
+
 	/* usage */
 	{ _T("System.CPU.Usage"),             H_CpuUsage,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },

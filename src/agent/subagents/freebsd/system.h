@@ -62,7 +62,7 @@ LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

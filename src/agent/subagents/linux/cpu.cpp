@@ -36,6 +36,8 @@ static UINT64 m_irq[MAX_CPU];
 static UINT64 m_softirq[MAX_CPU];
 static UINT64 m_steal[MAX_CPU];
 static UINT64 m_guest[MAX_CPU];
+static UINT64 m_cpuInterrupts;
+static UINT64 m_cpuContextSwitches;
 static float *m_cpuUsage;
 static float *m_cpuUsageUser;
 static float *m_cpuUsageNice;
@@ -82,23 +84,33 @@ static void CpuUsageCollector()
 		if (fgets(buffer, sizeof(buffer), hStat) == NULL)
 			break;
 
-		if (buffer[0] != 'c' || buffer[1] != 'p' || buffer[2] != 'u')
-			continue;
-
 		int ret;
-		if (buffer[3] == ' ')
+		if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u')
 		{
-			// "cpu ..." - Overal
-			cpu = 0;
-			ret = sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-					&user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
+         if (buffer[3] == ' ')
+         {
+            // "cpu ..." - Overal
+            cpu = 0;
+            ret = sscanf(buffer, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+                  &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
+         }
+         else
+         {
+            ret = sscanf(buffer, "cpu%u %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+                  &cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
+            cpu++;
+         }
 		}
+		else if (buffer[0] == 'i' && buffer[1] == 'n' && buffer[2] == 't' && buffer[3] == 'r')
+		{
+         sscanf(buffer, "intr %llu", &m_cpuInterrupts);
+		}
+		else if (buffer[0] == 'c' && buffer[1] == 't' && buffer[2] == 'x' && buffer[3] == 't')
+      {
+         sscanf(buffer, "ctxt %llu", &m_cpuContextSwitches);
+      }
 		else
-		{
-			ret = sscanf(buffer, "cpu%u %llu %llu %llu %llu %llu %llu %llu %llu %llu",
-					&cpu, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest);
-			cpu++;
-		}
+		   continue;
 
 		if (ret < 4)
 			continue;
@@ -313,26 +325,25 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 			table = (float *)m_cpuUsage;
 	}
 
-	table += cpu * CPU_USAGE_SLOTS;
+   table += cpu * CPU_USAGE_SLOTS;
+   float usage = 0;
+   MutexLock(m_cpuUsageMutex);
 
-	float usage = 0;
-
-	MutexLock(m_cpuUsageMutex);
-
-	float *p = table + m_currentSlot - 1;
-	for (int i = 0; i < count; i++) 
+   float *p = table + m_currentSlot - 1;
+   for (int i = 0; i < count; i++)
    {
-		usage += *p;
-		if (p == table) 
+      usage += *p;
+      if (p == table)
       {
-			p += CPU_USAGE_SLOTS;
-		}
-		p--;
-	}
+         p += CPU_USAGE_SLOTS;
+      }
+      p--;
+   }
 
-	MutexUnlock(m_cpuUsageMutex);
+   MutexUnlock(m_cpuUsageMutex);
 
-	usage /= count;
+   usage /= count;
+
 	ret_double(value, usage);
 }
 
@@ -531,5 +542,23 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
          return SYSINFO_RC_UNSUPPORTED;
    }
 
+   return SYSINFO_RC_SUCCESS;
+}
+
+/*
+ * Handler for CPU Context Switch parameter
+ */
+LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_uint(value, m_cpuContextSwitches);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/*
+ * Handler for CPU Interrupts parameter
+ */
+LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_uint(value, m_cpuInterrupts);
    return SYSINFO_RC_SUCCESS;
 }

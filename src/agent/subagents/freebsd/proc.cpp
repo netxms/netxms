@@ -41,7 +41,7 @@
 #include <sys/user.h>
 #include <kvm.h>
 
-#include "system.h"
+#include "freebsd_subagent.h"
 
 #ifndef KERN_PROC_PROC
 #define KERN_PROC_PROC KERN_PROC_ALL

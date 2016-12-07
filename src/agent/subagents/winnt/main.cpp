@@ -53,6 +53,8 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 void StartCPUStatCollector();
 void StopCPUStatCollector();
@@ -219,6 +221,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
 	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
+
+	{ _T("System.CPU.Interrupts"), H_CpuInterrupts, _T("T0i"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
+	{ _T("System.CPU.ContextSwitches"), H_CpuCswitch, _T("T0C"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
    
    { _T("System.CPU.CurrentUsage"), H_CPUUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR },
    { _T("System.CPU.CurrentUsage.Idle"), H_CPUUsage, _T("T0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IDLE },
