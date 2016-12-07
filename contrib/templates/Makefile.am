@@ -15,6 +15,7 @@ templates_DATA = \
 	generic_unix.xml \
 	hpux.xml \
 	linux.xml \
-	netxms_server.xml
+	netxms_server.xml \
+	windows.xml
 
 EXTRA_DIST = $(templates_DATA)
