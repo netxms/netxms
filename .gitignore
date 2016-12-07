@@ -45,8 +45,10 @@ target
 /runtime-nxmc.*
 
 /aclocal.m4
-/android/src/agent/bin
-/android/src/agent/gen
+/android/src/agent/local.properties
+/android/src/agent/.gradle
+/android/src/agent/build
+/android/src/agent/app/build
 /android/src/console/local.properties
 /android/src/console/.gradle
 /android/src/console/build
