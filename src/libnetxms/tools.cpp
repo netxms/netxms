@@ -102,7 +102,9 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess()
    signal(SIGUSR2, SIG_IGN);
 #endif
 
+#ifndef _WIN32
    BlockAllSignals(true);
+#endif
 }
 
 /**
