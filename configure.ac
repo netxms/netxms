@@ -1594,7 +1594,7 @@ AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
-AC_CHECK_HEADERS([grp.h pwd.h malloc.h])
+AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -1916,7 +1916,14 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t, bool])
+AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t, bool],,,[
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+])
 AC_CHECK_TYPES([mode_t, off_t, socklen_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
