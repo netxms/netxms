@@ -149,7 +149,7 @@
 /**
  * Compatibility defines for C sources
  */
-#if !defined(__cplusplus) && !defined(CORTEX)
+#if !defined(__cplusplus) && !defined(CORTEX) && !HAVE_BOOL
 typedef int bool;
 #endif
 

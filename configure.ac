@@ -1916,7 +1916,7 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t])
+AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t, bool])
 AC_CHECK_TYPES([mode_t, off_t, socklen_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
