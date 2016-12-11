@@ -42,10 +42,6 @@
 #include <poll.h>
 #endif
 
-#if HAVE_SYS_EVENT_H
-#include <sys/event.h>
-#endif
-
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
@@ -1556,12 +1552,7 @@ class LIBNETXMS_EXPORTABLE SocketPoller
 private:
    bool m_write;
    int m_count;
-#if HAVE_KQUEUE
-   int m_queue;
-   struct kevent m_sockets[SOCKET_POLLER_MAX_SOCKETS];
-   int m_numEvents;
-   struct kevent m_events[SOCKET_POLLER_MAX_SOCKETS];
-#elif HAVE_POLL
+#if HAVE_POLL
    struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
 #else
    fd_set m_sockets;

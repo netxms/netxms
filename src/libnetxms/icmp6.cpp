@@ -169,61 +169,19 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
    char *buffer = (char *)malloc(MAX_PACKET_SIZE);
 #endif
 
-#ifdef USE_KQUEUE
-   int kq;
-   struct kevent ke;
-   struct timespec ts;
-   socklen_t iAddrLen;
-   struct sockaddr_in6 saSrc;
-
-   kq = kqueue();
-   EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 5, NULL);
-   kevent(kq, &ke, 1, NULL, 0, NULL);
-
-   // Wait for response
-   for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
-   {
-      UINT64 qwStartTime = GetCurrentTimeMs();
-
-      ts.tv_sec = dwTimeLeft / 1000;
-      ts.tv_nsec = (dwTimeLeft % 1000) * 1000 * 1000;
-
-      memset(&ke, 0, sizeof(ke));
-      if (kevent(kq, NULL, 0, &ke, 1, &ts) > 0)
-#else    /* not USE_KQUEUE */
-
-#if HAVE_POLL
-   struct pollfd fds;
-#else
-   struct timeval timeout;
-   fd_set rdfs;
-#endif
+   SocketPoller sp;
    socklen_t iAddrLen;
    struct sockaddr_in6 saSrc;
 
    // Wait for response
    for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
    {
-#if HAVE_POLL
-      fds.fd = sock;
-      fds.events = POLLIN;
-      fds.revents = POLLIN;
-#else
-      FD_ZERO(&rdfs);
-      FD_SET(sock, &rdfs);
-      timeout.tv_sec = dwTimeLeft / 1000;
-      timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
-#endif
+      sp.reset();
+      sp.add(sock);
 
       UINT64 qwStartTime = GetCurrentTimeMs();
 
-#if HAVE_POLL
-      if (poll(&fds, 1, dwTimeLeft) > 0)
-#else
-      if (select(SELECT_NFDS(sock + 1), &rdfs, NULL, NULL, &timeout) > 0)
-#endif
-
-#endif   /* USE_KQUEUE else */
+      if (sp.poll(dwTimeLeft) > 0)
       {
          dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
          dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
@@ -260,9 +218,6 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
          dwTimeLeft = 0;
       }
    }
-#ifdef USE_KQUEUE
-   close(kq);
-#endif
 #if !HAVE_ALLOCA
    free(buffer);
 #endif
