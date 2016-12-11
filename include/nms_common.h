@@ -296,9 +296,9 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_DECL_BSWAP_32 1
 #define HAVE_DECL_BSWAP_64 1
 
-#define bswap_16  _byteswap_ushort
-#define bswap_32  _byteswap_ulong
-#define bswap_64  _byteswap_uint64
+#define bswap_16(n)  _byteswap_ushort(n)
+#define bswap_32(n)  _byteswap_ulong(n)
+#define bswap_64(n)  _byteswap_uint64(n)
 
 // Socket compatibility
 #define SHUT_RD      0
