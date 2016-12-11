@@ -30,12 +30,7 @@ SocketPoller::SocketPoller(bool write)
 {
    m_write = write;
    m_count = 0;
-#if HAVE_KQUEUE
-   m_queue = kqueue();
-   memset(m_sockets, 0, sizeof(m_sockets));
-   memset(m_events, 0, sizeof(m_events));
-   m_numEvents = 0;
-#elif HAVE_POLL
+#if HAVE_POLL
    memset(m_sockets, 0, sizeof(m_sockets));
 #else
    FD_ZERO(&m_sockets);
@@ -50,9 +45,6 @@ SocketPoller::SocketPoller(bool write)
  */
 SocketPoller::~SocketPoller()
 {
-#if HAVE_KQUEUE
-   close(m_queue);
-#endif
 }
 
 /**
@@ -63,9 +55,7 @@ bool SocketPoller::add(SOCKET s)
    if ((s == INVALID_SOCKET) || (m_count == SOCKET_POLLER_MAX_SOCKETS))
       return false;
 
-#if HAVE_KQUEUE
-   EV_SET(&m_sockets[m_count], s, m_write ? EVFILT_WRITE : EVFILT_READ, EV_ADD, 0, 0, NULL);
-#elif HAVE_POLL
+#if HAVE_POLL
    m_sockets[m_count].fd = s;
    m_sockets[m_count].events = m_write ? POLLOUT : POLLIN;
 #else
@@ -92,29 +82,7 @@ int SocketPoller::poll(UINT32 timeout)
    if (m_count == 0)
       return -1;
 
-#if HAVE_KQUEUE
-   if (timeout == INFINITE)
-   {
-      m_numEvents = kevent(m_queue, m_sockets, m_count, m_events, m_count, NULL);
-      return m_numEvents;
-   }
-   else
-   {
-      struct timespec tv;
-      do
-      {
-         tv.tv_sec = timeout / 1000;
-         tv.tv_nsec = (timeout % 1000) * 1000000;
-         INT64 startTime = GetCurrentTimeMs();
-         m_numEvents = kevent(m_queue, m_sockets, m_count, m_sockets, m_count, &tv);
-         if ((m_numEvents != -1) || (errno != EINTR))
-            break;
-         UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
-         timeout -= min(timeout, elapsed);
-      } while(timeout > 0);
-      return m_numEvents;
-   }
-#elif HAVE_POLL
+#if HAVE_POLL
    if (timeout == INFINITE)
    {
       return ::poll(m_sockets, m_count, -1);
@@ -173,14 +141,7 @@ int SocketPoller::poll(UINT32 timeout)
  */
 bool SocketPoller::isSet(SOCKET s)
 {
-#if HAVE_KQUEUE
-   for(int i = 0; i < m_numEvents; i++)
-   {
-      if (s == m_events[i].ident)
-         return true;
-   }
-   return false;
-#elif HAVE_POLL
+#if HAVE_POLL
    for(int i = 0; i < SOCKET_POLLER_MAX_SOCKETS; i++)
    {
       if (s == m_sockets[i].fd)
@@ -198,11 +159,7 @@ bool SocketPoller::isSet(SOCKET s)
 void SocketPoller::reset()
 {
    m_count = 0;
-#if HAVE_KQUEUE
-   memset(m_sockets, 0, sizeof(m_sockets));
-   memset(m_events, 0, sizeof(m_events));
-   m_numEvents = 0;
-#elif HAVE_POLL
+#if HAVE_POLL
    memset(m_sockets, 0, sizeof(m_sockets));
 #else
    FD_ZERO(&m_sockets);
