@@ -16,18 +16,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.actions;
+package org.netxms.ui.eclipse.serverconfig.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.epp.Messages;
-import org.netxms.ui.eclipse.epp.views.SituationsManager;
+import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.serverconfig.views.PersistentStorageView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
-public class OpenSituationsManager implements IWorkbenchWindowActionDelegate
+/**
+ * Open server configuration view
+ */
+public class OpenPersistentStorage implements IWorkbenchWindowActionDelegate
 {
 	private IWorkbenchWindow window;
 	
@@ -58,11 +61,11 @@ public class OpenSituationsManager implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(SituationsManager.ID);
+				window.getActivePage().showView(PersistentStorageView.ID);
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSituationsManager_Error, Messages.get().OpenSituationsManager_ErrorText + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenServerConfig_Error, Messages.get().OpenServerConfig_ErrorOpeningView + e.getMessage());
 			}
 		}
 	}

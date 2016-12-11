@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.dialogs.helpers;
+package org.netxms.ui.eclipse.widgets.helpers;
+
+import java.util.Map.Entry;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.situations.Situation;
 
 /**
- * Label provider for situation list
- *
+ * Label provider for attribute name/value pairs
  */
-public class SituationLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AttributeLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -41,12 +41,19 @@ public class SituationLabelProvider extends LabelProvider implements ITableLabel
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		if (columnIndex == 0)
-			return getText(element);
-		return null;
+		switch(columnIndex)
+		{
+			case 0:
+				return ((Entry<String, String>)element).getKey();
+			case 1:
+				return ((Entry<String, String>)element).getValue();
+			default:
+				return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -55,6 +62,6 @@ public class SituationLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public String getText(Object element)
 	{
-		return ((Situation)element).getName();
+		return getColumnText(element, 0);
 	}
 }

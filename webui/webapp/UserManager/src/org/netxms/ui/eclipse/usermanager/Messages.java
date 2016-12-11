@@ -96,7 +96,6 @@ public class Messages extends NLS
 	public String SystemRights_ConfigureActions;
 	public String SystemRights_ConfigureEvents;
 	public String SystemRights_ConfigureObjTools;
-	public String SystemRights_ConfigureSituations;
 	public String SystemRights_ConfigureTraps;
 	public String SystemRights_ControlSessions;
 	public String SystemRights_DeleteAlarms;

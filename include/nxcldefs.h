@@ -359,7 +359,7 @@ enum
 #define NXC_EVENT_DEPLOYMENT_STATUS    6
 #define NXC_EVENT_NEW_SYSLOG_RECORD    7
 #define NXC_EVENT_NEW_SNMP_TRAP        8
-#define NXC_EVENT_SITUATION_UPDATE     9
+//#define NXC_EVENT_SITUATION_UPDATE     9
 #define NXC_EVENT_JOB_CHANGE           10
 
 /**
@@ -491,7 +491,7 @@ enum SessionState
 #define RCC_INVALID_CERT_ID          ((UINT32)74)
 #define RCC_SNMP_FAILURE             ((UINT32)75)
 #define RCC_NO_L2_TOPOLOGY_SUPPORT	 ((UINT32)76)
-#define RCC_INVALID_SITUATION_ID     ((UINT32)77)
+#define RCC_INVALID_PSTORAGE_KEY     ((UINT32)77)
 #define RCC_NO_SUCH_INSTANCE         ((UINT32)78)
 #define RCC_INVALID_EVENT_ID         ((UINT32)79)
 #define RCC_AGENT_ERROR              ((UINT32)80)
@@ -611,7 +611,7 @@ enum SessionState
 #define SYSTEM_ACCESS_VIEW_TRAP_LOG           _ULL(0x000000002000)
 #define SYSTEM_ACCESS_VIEW_AUDIT_LOG          _ULL(0x000000004000)
 #define SYSTEM_ACCESS_MANAGE_AGENT_CFG        _ULL(0x000000008000)
-#define SYSTEM_ACCESS_MANAGE_SITUATIONS       _ULL(0x000000010000)
+#define SYSTEM_ACCESS_PERSISTENT_STORAGE      _ULL(0x000000010000) //Tatjana
 #define SYSTEM_ACCESS_SEND_SMS                _ULL(0x000000020000)
 #define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     _ULL(0x000000040000)
 #define SYSTEM_ACCESS_REGISTER_AGENTS         _ULL(0x000000080000)
@@ -709,15 +709,6 @@ enum SessionState
 #define USER_DB_CREATE              0
 #define USER_DB_DELETE              1
 #define USER_DB_MODIFY              2
-
-/**
- * Situation change notification types
- */
-#define SITUATION_CREATE            1
-#define SITUATION_DELETE            2
-#define SITUATION_UPDATE            3
-#define SITUATION_INSTANCE_UPDATE   4
-#define SITUATION_INSTANCE_DELETE   5
 
 /**
  * Data collection object types
@@ -963,7 +954,6 @@ enum AggregationFunction
 #define NXC_CHANNEL_OBJECTS      _T("Core.Objects")
 #define NXC_CHANNEL_SNMP_TRAPS   _T("Core.SNMP.Traps")
 #define NXC_CHANNEL_AUDIT_LOG    _T("Core.Audit")
-#define NXC_CHANNEL_SITUATIONS   _T("Core.Situations")
 #define NXC_CHANNEL_USERDB       _T("Core.UserDB")
 
 /**

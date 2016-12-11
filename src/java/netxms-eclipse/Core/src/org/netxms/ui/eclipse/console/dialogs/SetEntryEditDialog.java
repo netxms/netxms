@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.dialogs;
+package org.netxms.ui.eclipse.console.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -25,7 +25,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -33,21 +32,25 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  * Add/edit attribute
  *
  */
-public class AttributeEditDialog extends Dialog
+public class SetEntryEditDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textValue;
-	private String attrName;
-	private String attrValue;
+	private String pStorageKey;
+	private String pStorageValue;
+	private boolean isSet;
+   private boolean isNew;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AttributeEditDialog(Shell parentShell, String attrName, String attrValue)
+	public SetEntryEditDialog(Shell parentShell, String key, String value, boolean isSet, boolean isNew)
 	{
 		super(parentShell);
-		this.attrName = attrName;
-		this.attrValue = attrValue;
+		pStorageKey = key;
+		pStorageValue = value;
+		this.isSet = isSet;
+		this.isNew = isNew;
 	}
 
 	/* (non-Javadoc)
@@ -65,30 +68,33 @@ public class AttributeEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel(Messages.get().AttributeEditDialog_Name);
-      textName.getTextControl().setTextLimit(63);
-      if (attrName != null)
+      textName.setLabel("Key");
+      textName.getTextControl().setTextLimit(256);
+      if (pStorageKey != null)
       {
-      	textName.setText(attrName);
-      	textName.getTextControl().setEditable(false);
+      	textName.setText(pStorageKey);
       }
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
       textName.setLayoutData(gd);
+      textName.setEditable(!isSet || isNew);
       
-      textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel(Messages.get().AttributeEditDialog_Value);
-      if (attrValue != null)
-      	textValue.setText(attrValue);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      textValue.setLayoutData(gd);
+      if(isSet)
+      {
+         textValue = new LabeledText(dialogArea, SWT.NONE);
+         textValue.setLabel("Value");
+         if (pStorageValue != null)
+         	textValue.setText(pStorageValue);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         textValue.setLayoutData(gd);
       
-      if (attrName != null)
-      	textValue.setFocus();
+         if (pStorageKey != null)
+         	textValue.setFocus();
+      }
       
 		return dialogArea;
 	}
@@ -100,7 +106,7 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? Messages.get().AttributeEditDialog_TitleAdd : Messages.get().AttributeEditDialog_TitleEdit);
+		newShell.setText("Set persistent storage value");
 	}
 	
 	/**
@@ -109,7 +115,7 @@ public class AttributeEditDialog extends Dialog
 	 */
 	public String getAtributeName()
 	{
-		return attrName;
+		return pStorageKey;
 	}
 	
 	/**
@@ -118,7 +124,7 @@ public class AttributeEditDialog extends Dialog
 	 */
 	public String getAttributeValue()
 	{
-		return attrValue;
+		return pStorageValue;
 	}
 
 	/* (non-Javadoc)
@@ -127,8 +133,9 @@ public class AttributeEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		attrName = textName.getText();
-		attrValue = textValue.getText();
+		pStorageKey = textName.getText();
+		if(isSet)
+		   pStorageValue = textValue.getText();
 		super.okPressed();
 	}
 }

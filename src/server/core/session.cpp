@@ -257,7 +257,6 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
    m_mutexSendAuditLog = MutexCreate();
-   m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreate();
    m_subscriptions = new StringObjectMap<UINT32>(true);
@@ -315,7 +314,6 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
    MutexDestroy(m_mutexSendAuditLog);
-   MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
    delete m_subscriptions;
@@ -726,12 +724,6 @@ void ClientSession::updateThread()
             MutexUnlock(m_mutexSendActions);
             msg.deleteAllFields();
             free(pUpdate->pData);
-            break;
-         case INFO_CAT_SITUATION:
-            MutexLock(m_mutexSendSituations);
-            sendMessage((NXCPMessage *)pUpdate->pData);
-            MutexUnlock(m_mutexSendSituations);
-            delete (NXCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_LIBRARY_IMAGE:
             {
@@ -1259,20 +1251,14 @@ void ClientSession::processingThread()
 			case CMD_UPDATE_USM_CREDENTIALS:
 				updateUsmCredentials(pMsg);
 				break;
-			case CMD_GET_SITUATION_LIST:
-				getSituationList(pMsg->getId());
+			case CMD_GET_PERSISTENT_STORAGE:
+				getPersistantStorage(pMsg->getId());
 				break;
-			case CMD_CREATE_SITUATION:
-				createSituation(pMsg);
+			case CMD_SET_PSTORAGE_VALUE:
+				setPstorageValue(pMsg);
 				break;
-			case CMD_UPDATE_SITUATION:
-				updateSituation(pMsg);
-				break;
-			case CMD_DELETE_SITUATION:
-				deleteSituation(pMsg);
-				break;
-			case CMD_DEL_SITUATION_INSTANCE:
-				deleteSituationInstance(pMsg);
+			case CMD_DELETE_PSTORAGE_VALUE:
+				deletePstorageValue(pMsg);
 				break;
 			case CMD_REGISTER_AGENT:
 				registerAgent(pMsg);
@@ -4892,7 +4878,10 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
          if (m_dwNumRecordsToUpload == 0)
          {
             g_pEventPolicy->replacePolicy(0, NULL);
-            g_pEventPolicy->saveToDB();
+            if(!g_pEventPolicy->saveToDB())
+            {
+               msg.setField(VID_RCC, RCC_DB_FAILURE);
+            }
          }
          else
          {
@@ -4946,13 +4935,13 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
             debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
-            g_pEventPolicy->saveToDB();
+            bool success = g_pEventPolicy->saveToDB();
             m_ppEPPRuleList = NULL;
 
             // ... and send final confirmation
             msg.setCode(CMD_REQUEST_COMPLETED);
             msg.setId(pRequest->getId());
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
             sendMessage(&msg);
 
             m_dwFlags &= ~CSF_EPP_UPLOAD;
@@ -10778,53 +10767,44 @@ void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
 }
 
 /**
- * Send situation list to client
+ * Send Persistant Storage list to client
  */
-void ClientSession::getSituationList(UINT32 dwRqId)
+void ClientSession::getPersistantStorage(UINT32 dwRqId)
 {
    NXCPMessage msg;
 
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-		MutexLock(m_mutexSendSituations);
-		SendSituationListToClient(this, &msg);
-		MutexUnlock(m_mutexSendSituations);
+		GetPersistentStorageList(&msg);
 	}
 	else
 	{
 		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-		sendMessage(&msg);
 	}
+   sendMessage(&msg);
 }
 
 /**
- * Create new situation
+ * Set persistent storage value
  */
-void ClientSession::createSituation(NXCPMessage *pRequest)
+void ClientSession::setPstorageValue(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   Situation *st;
-   TCHAR name[MAX_DB_STRING];
 
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-		pRequest->getFieldAsString(VID_NAME, name, MAX_DB_STRING);
-		st = ::CreateSituation(name);
-		if (st != NULL)
-		{
-			msg.setField(VID_RCC, RCC_SUCCESS);
-			msg.setField(VID_SITUATION_ID, st->getId());
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-		}
+      TCHAR key[256], *value;
+		pRequest->getFieldAsString(VID_PSTORAGE_KEY, key, 256);
+		value = pRequest->getFieldAsString(VID_PSTORAGE_VALUE);
+		SetPersistentStorageValue(key, value);
+		free(value);
+      msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
@@ -10835,28 +10815,22 @@ void ClientSession::createSituation(NXCPMessage *pRequest)
 }
 
 /**
- * Update situation
+ * Delete persistent storage value
  */
-void ClientSession::updateSituation(NXCPMessage *pRequest)
+void ClientSession::deletePstorageValue(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   Situation *st;
 
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-		st = FindSituationById(pRequest->getFieldAsUInt32(VID_SITUATION_ID));
-		if (st != NULL)
-		{
-			st->UpdateFromMessage(pRequest);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_INVALID_SITUATION_ID);
-		}
+      TCHAR key[256];
+      //key[0]=0;
+		pRequest->getFieldAsString(VID_PSTORAGE_KEY, key, 256);
+		bool success = DeletePersistentStorageValue(key);
+		msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_PSTORAGE_KEY);
 	}
 	else
 	{
@@ -10864,78 +10838,6 @@ void ClientSession::updateSituation(NXCPMessage *pRequest)
 	}
 
 	sendMessage(&msg);
-}
-
-/**
- * Delete situation
- */
-void ClientSession::deleteSituation(NXCPMessage *pRequest)
-{
-   NXCPMessage msg;
-
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
-	{
-		msg.setField(VID_RCC, ::DeleteSituation(pRequest->getFieldAsUInt32(VID_SITUATION_ID)));
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-
-	sendMessage(&msg);
-}
-
-/**
- * Delete situation instance
- */
-void ClientSession::deleteSituationInstance(NXCPMessage *pRequest)
-{
-   NXCPMessage msg;
-   Situation *st;
-
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
-	{
-		st = FindSituationById(pRequest->getFieldAsUInt32(VID_SITUATION_ID));
-		if (st != NULL)
-		{
-			TCHAR instance[MAX_DB_STRING];
-
-			pRequest->getFieldAsString(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
-			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_NO_SUCH_INSTANCE);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_INVALID_SITUATION_ID);
-		}
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-
-	sendMessage(&msg);
-}
-
-/**
- * Handler for situation chage
- */
-void ClientSession::onSituationChange(NXCPMessage *msg)
-{
-   UPDATE_INFO *pUpdate;
-
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SITUATIONS))
-   {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_SITUATION;
-      pUpdate->pData = new NXCPMessage(msg);
-      m_pUpdateQueue->put(pUpdate);
-   }
 }
 
 /**

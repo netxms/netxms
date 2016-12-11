@@ -69,12 +69,10 @@ import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.epp.Messages;
-import org.netxms.ui.eclipse.epp.SituationCache;
 import org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -757,22 +755,31 @@ public class RuleEditor extends Composite
          }
       }
 
-      /* situation */
-      if (rule.getSituationId() != 0)
+      /* persistent storage */
+      if (rule.getPStorageSet().size() != 0 || rule.getPStorageDelete().size() != 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"); //$NON-NLS-1$
-         addActionGroupLabel(clientArea, Messages.get().RuleEditor_UpdateSituation, editor.getImageSituation(), listener);
-         Situation s = SituationCache.findSituation(rule.getSituationId());
-         createLabel(
-               clientArea,
-               1,
-               false,
-               "\""  + ((s != null) ? s.getName() : Messages.get().RuleEditor_Unknown) + Messages.get().RuleEditor_Instance + rule.getSituationInstance() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
-         createLabel(clientArea, 1, false, Messages.get().RuleEditor_Attributes, listener);
-         for(Entry<String, String> e : rule.getSituationAttributes().entrySet())
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RulePStorage#20"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, "Update persistent storage entries", editor.getImageSituation(), listener);
+
+         if(rule.getPStorageSet().size() != 0)
          {
-            createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            createLabel(clientArea, 1, false, "Set Persistent storage values", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            for(Entry<String, String> e : rule.getPStorageSet().entrySet())
+            {
+               createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            }
          }
+
+         if(rule.getPStorageDelete().size() != 0)
+         {
+            createLabel(clientArea, 1, false, "Delete persistent storage values", listener);
+            List<String> pStorageList = rule.getPStorageDelete();
+            for(int i = 0; i < pStorageList.size(); i++)
+            {
+               createLabel(clientArea, 2, false, pStorageList.get(i), listener);
+            }
+         }
+         
       }
 
       /* actions */
@@ -985,11 +992,17 @@ public class RuleEditor extends Composite
       return rule;
    }
    
+   /**
+    * @return isDragged flag
+    */
    public boolean isDragged()
    {
       return isDragged;
    }
    
+   /**
+    * set Dragged flag
+    */
    public void setDragged(boolean isDragged)
    {
       this.isDragged = isDragged;

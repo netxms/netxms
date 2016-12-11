@@ -234,13 +234,13 @@ public class NXCPCodes
 	public static final int CMD_SEND_SMS = 0x00D0;
 	public static final int CMD_GET_COMMUNITY_LIST = 0x00D1;
 	public static final int CMD_UPDATE_COMMUNITY_LIST = 0x00D2;
-	public static final int CMD_GET_SITUATION_LIST = 0x00D3;
-	public static final int CMD_DELETE_SITUATION = 0x00D4;
-	public static final int CMD_CREATE_SITUATION = 0x00D5;
-	public static final int CMD_DEL_SITUATION_INSTANCE = 0x00D6;
-	public static final int CMD_UPDATE_SITUATION = 0x00D7;
-	public static final int CMD_SITUATION_DATA = 0x00D8;
-	public static final int CMD_SITUATION_CHANGE = 0x00D9;
+	public static final int CMD_GET_PERSISTENT_STORAGE = 0x00D3;
+	public static final int CMD_DELETE_PSTORAGE_VALUE = 0x00D4;
+	public static final int CMD_SET_PSTORAGE_VALUE = 0x00D5;
+//	public static final int CMD_DEL_SITUATION_INSTANCE = 0x00D6;
+//	public static final int CMD_UPDATE_SITUATION = 0x00D7;
+//	public static final int CMD_SITUATION_DATA = 0x00D8;
+//	public static final int CMD_SITUATION_CHANGE = 0x00D9;
 	public static final int CMD_CREATE_MAP = 0x00DA;
 	public static final int CMD_UPLOAD_FILE = 0x00DB;
 	public static final int CMD_DELETE_FILE = 0x00DC;
@@ -681,11 +681,11 @@ public class NXCPCodes
 	public static final long VID_USER_TAG = 298;
 	public static final long VID_REQUIRED_POLLS = 299;
 	public static final long VID_SYS_DESCRIPTION = 300;
-	public static final long VID_SITUATION_ID = 301;
-	public static final long VID_SITUATION_INSTANCE = 302;
-	public static final long VID_SITUATION_NUM_ATTRS = 303;
+	public static final long VID_PSTORAGE_KEY = 301;
+	public static final long VID_PSTORAGE_VALUE = 302;
+	public static final long VID_NUM_DELETE_PSTORAGE = 303;
 	public static final long VID_INSTANCE_COUNT = 304;
-	public static final long VID_SITUATION_COUNT = 305;
+	public static final long VID_NUM_SET_PSTORAGE = 305;
 	public static final long VID_NUM_TRUSTED_NODES = 306;
 	public static final long VID_TRUSTED_NODES = 307;
 	public static final long VID_TIMEZONE = 308;
@@ -947,6 +947,7 @@ public class NXCPCodes
    public static final long VID_PORT_ROW_COUNT = 564;
    public static final long VID_PORT_NUMBERING_SCHEME = 565;
    public static final long VID_NUM_VALUES = 566;
+	public static final long VID_NUM_PSTORAGE = 567;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1018,7 +1019,9 @@ public class NXCPCodes
 	public static final long VID_SYSDCI_LIST_BASE = 0x10000000L;
 	public static final long VID_CERT_LIST_BASE = 0x10000000L;
 	public static final long VID_STRING_LIST_BASE = 0x10000000L;
-	public static final long VID_SITUATION_ATTR_LIST_BASE = 0x10000000L;
+   public static final long VID_PSTORAGE_SET_LIST_BASE = 0x10000000L;
+   public static final long VID_PSTORAGE_DELETE_LIST_BASE = 0x20000000L;   
+	public static final long VID_PSTORAGE_LIST_BASE = 0x10000000L;	
 	public static final long VID_INSTANCE_LIST_BASE = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE = 0x10000000L;
 	public static final long VID_SUBMAP_LINK_NAMES_BASE = 0x20000000L;

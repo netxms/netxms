@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
@@ -129,6 +129,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          SaveObjects(hdb, watchdogId);
          SaveUsers(hdb, watchdogId);
+         UpdatePStorageDatabase(hdb);
          DBConnectionPoolReleaseConnection(hdb);
       }
       WatchdogStartSleep(watchdogId);

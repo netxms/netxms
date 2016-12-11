@@ -1554,6 +1554,7 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
  */
 void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
 {
+   vm->setStorage(&g_nxslPstorage);
    CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
 }
 

@@ -79,7 +79,7 @@ public final class RCC extends CommonRCC
 	public static final int INVALID_GRAPH_ID = 70;
 	public static final int SNMP_FAILURE = 75;
 	public static final int NO_L2_TOPOLOGY_SUPPORT = 76;
-	public static final int INVALID_SITUATION_ID = 77;
+	public static final int RCC_INVALID_PSTORAGE_KEY = 77;
 	public static final int NO_SUCH_INSTANCE = 78;
 	public static final int INVALID_EVENT_ID = 79;
 	public static final int AGENT_ERROR = 80;

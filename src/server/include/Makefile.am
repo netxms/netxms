@@ -29,7 +29,7 @@ serverinclude_HEADERS = \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \
-	nxcore_situations.h \
+	nxcore_ps.h \
 	nxcore_smclp.h \
 	nxcore_winperf.h \
 	nxmodule.h \

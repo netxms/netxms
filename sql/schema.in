@@ -1296,8 +1296,6 @@ CREATE TABLE event_policy
   alarm_key varchar(255) null,    // Alarm key (used for auto termination)
   alarm_timeout integer not null, // Timeout before sending event
   alarm_timeout_event integer not null,  // Event to be sent on timeout
-  situation_id integer not null,  // Situation to update
-  situation_instance varchar(255) null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1312,8 +1310,6 @@ COMMENT_COLUMN(event_policy.alarm_severity, '')
 COMMENT_COLUMN(event_policy.alarm_key, '')
 COMMENT_COLUMN(event_policy.alarm_timeout, '')
 COMMENT_COLUMN(event_policy.alarm_timeout_event, '')
-COMMENT_COLUMN(event_policy.situation_id, '')
-COMMENT_COLUMN(event_policy.situation_instance, '')
 
 /**
  *
@@ -1360,20 +1356,20 @@ COMMENT_COLUMN(policy_action_list.action_id, '')
 /**
  *
  */
-CREATE TABLE policy_situation_attr_list
+CREATE TABLE policy_pstorage_actions
 (
   rule_id integer not null,
-  situation_id integer not null,
-  attr_name varchar(255) not null,
-  attr_value varchar(255) null,
-  PRIMARY KEY(rule_id,situation_id,attr_name)
+  ps_key varchar(255) not null,
+  value varchar(2000) null,
+  action integer not null,
+  PRIMARY KEY(rule_id,ps_key,action)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(policy_situation_attr_list, '')
-COMMENT_COLUMN(policy_situation_attr_list.rule_id, '')
-COMMENT_COLUMN(policy_situation_attr_list.situation_id, '')
-COMMENT_COLUMN(policy_situation_attr_list.attr_name, '')
-COMMENT_COLUMN(policy_situation_attr_list.attr_value, '')
+COMMENT_TABLE(policy_pstorage_actions, 'Table that links epp with persistent storage')
+COMMENT_COLUMN(policy_pstorage_actions.rule_id, 'Foreign key from event_policy table')
+COMMENT_COLUMN(policy_pstorage_actions.ps_key, 'Foreign key for persistent_storage table')
+COMMENT_COLUMN(policy_pstorage_actions.ps_key, 'Value that should be set for persistent storage entry')
+COMMENT_COLUMN(policy_pstorage_actions.action, 'Action that should be done on persistent storage entry set/delete')
 
 /*
 ** Threshold checking rules
@@ -1922,20 +1918,18 @@ COMMENT_COLUMN(audit_log.object_id, '')
 COMMENT_COLUMN(audit_log.message, '')
 
 /*
-** Situations
+** Persistent storage
 */
-CREATE TABLE situations
+CREATE TABLE persistent_storage
 (
-  id integer not null,
-  name varchar(127) not null,
-  comments SQL_TEXT not null,
-  PRIMARY KEY(id)
+  entry_key varchar(255) not null,
+  value varchar(2000) null,
+  PRIMARY KEY(entry_key)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(situations, '')
-COMMENT_COLUMN(situations.id, '')
-COMMENT_COLUMN(situations.name, '')
-COMMENT_COLUMN(situations.comments, '')
+COMMENT_TABLE(persistent_storage, 'Persistent storage table accessible form EPP and any script')
+COMMENT_COLUMN(persistent_storage.entry_key, 'Unique string key')
+COMMENT_COLUMN(persistent_storage.value, 'Value')
 
 /*
 ** List of possible community strings

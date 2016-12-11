@@ -81,88 +81,90 @@ import org.netxms.ui.eclipse.widgets.FilterText;
  */
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
-	public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
+   public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
 
-	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 
-	private NXCSession session;
-	private boolean policyLocked = false;
-	private EventProcessingPolicy policy;
-	private SessionListener sessionListener;
-	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-	private FilterText filterControl;
-	private String filterText = null;
-	private ScrolledComposite scroller;
-	private Composite dataArea;
-	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
-	private boolean verticalLayout = false;
-	private boolean filterEnabled = true;
-	private boolean modified = false;
-	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
-	private int lastSelectedRule = -1;
-	private RuleClipboard clipboard = new RuleClipboard();
+   private NXCSession session;
+   private boolean policyLocked = false;
+   private EventProcessingPolicy policy;
+   private SessionListener sessionListener;
+   private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+   private FilterText filterControl;
+   private String filterText = null;
+   private ScrolledComposite scroller;
+   private Composite dataArea;
+   private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
+   private boolean verticalLayout = false;
+   private boolean filterEnabled = true;
+   private boolean modified = false;
+   private Set<RuleEditor> selection = new HashSet<RuleEditor>();
+   private int lastSelectedRule = -1;
+   private RuleClipboard clipboard = new RuleClipboard();
 
-	private Font normalFont;
-	private Font boldFont;
+   private Font normalFont;
+   private Font boldFont;
 
-	private Image imageAlarm;
-	private Image imageSituation;
-	private Image imageExecute;
-	private Image imageTerminate;
-	private Image imageStop;
-	private Image imageCollapse;
-	private Image imageExpand;
-	private Image imageEdit;
+   private Image imageAlarm;
+   private Image imageSituation;
+   private Image imageExecute;
+   private Image imageTerminate;
+   private Image imageStop;
+   private Image imageCollapse;
+   private Image imageExpand;
+   private Image imageEdit;
 
-	private Action actionHorizontal;
-	private Action actionVertical;
-	private Action actionSave;
-	private Action actionCollapseAll;
-	private Action actionExpandAll;
-	private Action actionInsertBefore;
-	private Action actionInsertAfter;
-	private Action actionCut;
-	private Action actionCopy;
-	private Action actionPaste;
-	private Action actionDelete;
-	private Action actionEnableRule;
-	private Action actionDisableRule;
-	private Action actionShowFilter;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createPartControl(Composite parent)
-	{
-		session = (NXCSession)ConsoleSharedData.getSession();
-		
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled"); //$NON-NLS-1$
+   private Action actionHorizontal;
+   private Action actionVertical;
+   private Action actionSave;
+   private Action actionCollapseAll;
+   private Action actionExpandAll;
+   private Action actionInsertBefore;
+   private Action actionInsertAfter;
+   private Action actionCut;
+   private Action actionCopy;
+   private Action actionPaste;
+   private Action actionDelete;
+   private Action actionEnableRule;
+   private Action actionDisableRule;
+   private Action actionShowFilter;
 
-		// Initiate loading of required plugins if they was not loaded yet
-		try
-		{
-			Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-			Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-			Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		}
-		catch(Exception e)
-		{
-		}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createPartControl(Composite parent)
+   {
+      session = (NXCSession)ConsoleSharedData.getSession();
 
-		imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
-		imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
-		imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
-		imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
-		imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
-		imageCollapse = SharedIcons.COLLAPSE.createImage();
-		imageExpand = SharedIcons.EXPAND.createImage();
-		imageEdit = SharedIcons.EDIT.createImage();
-		
-		parent.setLayout(new FormLayout());
-		
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled"); //$NON-NLS-1$
+
+      // Initiate loading of required plugins if they was not loaded yet
+      try
+      {
+         Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+         Platform.getAdapterManager().loadAdapter(new ServerAction(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+         Platform.getAdapterManager().loadAdapter(session.getTopLevelObjects()[0], "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
+      }
+      catch(Exception e)
+      {
+      }
+
+      imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+      imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
+      imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
+      imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
+      imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
+      imageCollapse = SharedIcons.COLLAPSE.createImage();
+      imageExpand = SharedIcons.EXPAND.createImage();
+      imageEdit = SharedIcons.EDIT.createImage();
+
+      parent.setLayout(new FormLayout());
+
       // Create filter area
       filterControl = new FilterText(parent, SWT.NONE);
       filterControl.addModifyListener(new ModifyListener() {

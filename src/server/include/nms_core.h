@@ -104,7 +104,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_pkg.h"
 #include "nms_topo.h"
 #include "nms_script.h"
-#include "nxcore_situations.h"
+#include "nxcore_ps.h"
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 #include "nxcore_schedule.h"
@@ -156,12 +156,11 @@ typedef void * HSNMPSESSION;
 #define IDG_AGENT_CONFIG      16
 #define IDG_GRAPH					17
 #define IDG_CERTIFICATE			18
-#define IDG_SITUATION         19
-#define IDG_DCT_COLUMN        20
-#define IDG_MAPPING_TABLE     21
-#define IDG_DCI_SUMMARY_TABLE 22
-#define IDG_SCHEDULED_TASK    23
-#define IDG_ALARM_CATEGORY    24
+#define IDG_DCT_COLUMN        19
+#define IDG_MAPPING_TABLE     20
+#define IDG_DCI_SUMMARY_TABLE 21
+#define IDG_SCHEDULED_TASK    22
+#define IDG_ALARM_CATEGORY    23
 
 /**
  * Exit codes for console commands
@@ -215,7 +214,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_SYSLOG_MSG      5
 #define INFO_CAT_SNMP_TRAP       6
 #define INFO_CAT_AUDIT_RECORD    7
-#define INFO_CAT_SITUATION       8
+//#define INFO_CAT_SITUATION       8
 #define INFO_CAT_LIBRARY_IMAGE   9
 
 /**
@@ -423,7 +422,6 @@ private:
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
 	MUTEX m_mutexSendAuditLog;
-	MUTEX m_mutexSendSituations;
    MUTEX m_mutexPollerInit;
 	struct sockaddr *m_clientAddr;
 	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
@@ -655,11 +653,9 @@ private:
 	void sendSMS(NXCPMessage *pRequest);
 	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(NXCPMessage *pRequest);
-	void getSituationList(UINT32 dwRqId);
-	void createSituation(NXCPMessage *pRequest);
-	void updateSituation(NXCPMessage *pRequest);
-	void deleteSituation(NXCPMessage *pRequest);
-	void deleteSituationInstance(NXCPMessage *pRequest);
+	void getPersistantStorage(UINT32 dwRqId);
+	void setPstorageValue(NXCPMessage *pRequest);
+	void deletePstorageValue(NXCPMessage *pRequest);
 	void setConfigCLOB(NXCPMessage *pRequest);
 	void getConfigCLOB(NXCPMessage *pRequest);
 	void registerAgent(NXCPMessage *pRequest);
@@ -805,7 +801,6 @@ public:
    void onObjectChange(NetObj *pObject);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
-   void onSituationChange(NXCPMessage *msg);
    void onLibraryImageChange(uuid_t *guid, bool removed = false);
 };
 

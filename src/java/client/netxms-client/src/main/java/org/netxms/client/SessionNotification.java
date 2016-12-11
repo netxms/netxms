@@ -35,12 +35,12 @@ public class SessionNotification
    public static final int IMAGE_LIBRARY_CHANGED = 11;
    public static final int OBJECT_DELETED = 99;
 
-   public static final int SITUATION_BASE = 100;
-   public static final int SITUATION_CREATED = 101;
-   public static final int SITUATION_DELETED = 102;
-   public static final int SITUATION_UPDATED = 103;
-   public static final int SITUATION_INSTANCE_UPDATED = 104;
-   public static final int SITUATION_INSTANCE_DELETED = 105;
+//   public static final int SITUATION_BASE = 100;
+//   public static final int SITUATION_CREATED = 101;
+//   public static final int SITUATION_DELETED = 102;
+//   public static final int SITUATION_UPDATED = 103;
+//   public static final int SITUATION_INSTANCE_UPDATED = 104;
+//   public static final int SITUATION_INSTANCE_DELETED = 105;
    
    public static final int IMAGE_UPDATED = 201;
    public static final int IMAGE_DELETED = 202;

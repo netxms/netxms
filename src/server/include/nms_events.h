@@ -134,6 +134,12 @@ public:
 };
 
 /**
+ * Defines for type of persistent storage action
+ */
+ #define PSTORAGE_SET      1
+ #define PSTORAGE_DELETE   2
+
+/**
  * Event policy rule
  */
 class EPRule
@@ -158,10 +164,8 @@ private:
 	UINT32 m_dwAlarmTimeout;
 	UINT32 m_dwAlarmTimeoutEvent;
 	IntegerArray<UINT32> *m_alarmCategoryList;
-
-	UINT32 m_dwSituationId;
-	TCHAR m_szSituationInstance[MAX_DB_STRING];
-	StringMap m_situationAttrList;
+	StringMap m_pstorageSetActions;
+	StringList m_pstorageDeleteActions;
 
    bool matchSource(UINT32 dwObjectId);
    bool matchEvent(UINT32 eventCode);
@@ -181,7 +185,7 @@ public:
    const uuid& getGuid() const { return m_guid; }
    void setId(UINT32 dwNewId) { m_id = dwNewId; }
    bool loadFromDB(DB_HANDLE hdb);
-	void saveToDB(DB_HANDLE hdb);
+	bool saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(NXCPMessage *pMsg);
    void createNXMPRecord(String &str);
@@ -211,7 +215,7 @@ public:
 
    UINT32 getNumRules() { return m_dwNumRules; }
    bool loadFromDB();
-   void saveToDB();
+   bool saveToDB();
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);

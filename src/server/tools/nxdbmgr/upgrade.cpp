@@ -725,6 +725,92 @@ static bool SetSchemaVersion(int version)
    return SQLQuery(query);
 }
 
+
+
+/*
+ *  Upgrade from V429 to V430
+ */
+static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE policy_pstorage_actions (")
+            _T("rule_id integer not null,")
+            _T("ps_key varchar(255) not null,")
+            _T("value varchar(2000) null,")
+            _T("action integer not null,")
+            _T("PRIMARY KEY(rule_id,ps_key,action))")));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE persistent_storage (")
+            _T("entry_key varchar(256) not null,")
+            _T("value varchar(2000) null,")
+            _T("PRIMARY KEY(entry_key))")));
+
+
+
+   //Move previous attrs form situations to pstorage
+   DB_RESULT hResult = SQLSelect(_T("SELECT event_policy.rule_id,situations.name,event_policy.situation_instance,")
+                                 _T("policy_situation_attr_list.attr_name,policy_situation_attr_list.attr_value ")
+                                 _T("FROM event_policy,situations,policy_situation_attr_list ")
+                                 _T("WHERE event_policy.rule_id=policy_situation_attr_list.rule_id ")
+                                 _T("AND situations.id=policy_situation_attr_list.situation_id"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO policy_pstorage_actions (rule_id,ps_key,value,action) VALUES (?,?,?,1)"));
+      if (hStmt != NULL)
+      {
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR key[512];
+            TCHAR tmp[256];
+            DBGetField(hResult, i, 1, tmp, 256);
+            _tcscpy(key, tmp);
+            DBGetField(hResult, i, 2, tmp, 256);
+            _tcscat(key, _T("."));
+            _tcscat(key, tmp);
+            DBGetField(hResult, i, 3, tmp, 256);
+            _tcscat(key, _T("."));
+            _tcscat(key, tmp);
+            DBGetField(hResult, i, 4, tmp, 256);
+
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 0));
+            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, key, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
+            if (!SQLExecute(hStmt))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+            }
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_bIgnoreErrors)
+      {
+         DBFreeStatement(hStmt);
+         DBFreeResult(hResult);
+         return FALSE;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SQLQuery(_T("DROP TABLE situations")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE policy_situation_attr_list")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy DROP COLUMN situation_id")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy DROP COLUMN situation_instance")));
+   CHK_EXEC(SetSchemaVersion(430));
+   return TRUE;
+}
+
 /**
  *  Upgrade from V428 to V429
  */
@@ -11155,6 +11241,7 @@ static struct
    { 426, 427, H_UpgradeFromV426 },
    { 427, 428, H_UpgradeFromV427 },
    { 428, 429, H_UpgradeFromV428 },
+   { 429, 430, H_UpgradeFromV429 },
    { 0, 0, NULL }
 };
 

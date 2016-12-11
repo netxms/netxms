@@ -34,15 +34,14 @@ static MUTEX s_mutexTableAccess;
 static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] = { 100, FIRST_USER_EVENT_ID, 1, 1,
                                                    1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1, 1, 1, 1, 1, 1, 1
+                                                   10000, 10000, 1, 1, 1, 1, 1, 1, 1
                                                  };
 static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF,
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-																0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-																0xFFFFFFFE
+                                                0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static UINT64 m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -66,7 +65,6 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Agent Configs"),
 	_T("Graphs"),
 	_T("Certificates"),
-	_T("Situations"),
 	_T("Table Columns"),
 	_T("Mapping Tables"),
    _T("DCI Summary Tables"),
@@ -403,16 +401,6 @@ BOOL InitIdTable()
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_CERTIFICATE] = max(s_freeIdTable[IDG_CERTIFICATE],
                                                 DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available situation id
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM situations"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SITUATION] = max(s_freeIdTable[IDG_SITUATION],
-                                              DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

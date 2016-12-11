@@ -45,8 +45,6 @@ EPRule::EPRule(UINT32 id)
 	m_dwAlarmTimeout = 0;
 	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
-	m_dwSituationId = 0;
-	m_szSituationInstance[0] = 0;
 }
 
 /**
@@ -89,8 +87,29 @@ EPRule::EPRule(ConfigEntry *config)
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
 
-   m_dwSituationId = 0;
-	m_szSituationInstance[0] = 0;
+   ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
+   if (pStorageEntry != NULL)
+   {
+      ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("setValue"));
+      if(tmp->size() > 0)
+      {
+         tmp = tmp->get(0)->getSubEntries(_T("value"));
+         for(int i = 0; i < tmp->size(); i++)
+         {
+            m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
+         }
+      }
+      tmp = pStorageEntry->getSubEntries(_T("deleteValue"));
+      if(tmp->size() > 0)
+      {
+         tmp = tmp->get(0)->getSubEntries(_T("value"));
+         for(int i = 0; i < tmp->size(); i++)
+         {
+            m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
+         }
+
+      }
+   }
 
    m_pszScript = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
@@ -117,7 +136,7 @@ EPRule::EPRule(ConfigEntry *config)
  * Construct event policy rule from database record
  * Assuming the following field order:
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
- * alarm_timeout,alarm_timeout_event,situation_id,situation_instance
+ * alarm_timeout,alarm_timeout_event
  */
 EPRule::EPRule(DB_RESULT hResult, int row)
 {
@@ -151,8 +170,6 @@ EPRule::EPRule(DB_RESULT hResult, int row)
 	m_dwAlarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
-	m_dwSituationId = DBGetFieldULong(hResult, row, 10);
-   DBGetField(hResult, row, 11, m_szSituationInstance, MAX_DB_STRING);
    m_dwNumActions = 0;
    m_pdwActionList = NULL;
    m_dwNumEvents = 0;
@@ -166,7 +183,7 @@ EPRule::EPRule(DB_RESULT hResult, int row)
  */
 EPRule::EPRule(NXCPMessage *msg)
 {
-	UINT32 i, id, count;
+	UINT32 i, id;
 	TCHAR *name, *value;
 
    m_dwFlags = msg->getFieldAsUInt32(VID_FLAGS);
@@ -195,14 +212,18 @@ EPRule::EPRule(NXCPMessage *msg)
    m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
 
-	m_dwSituationId = msg->getFieldAsUInt32(VID_SITUATION_ID);
-   msg->getFieldAsString(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
-   count = msg->getFieldAsUInt32(VID_SITUATION_NUM_ATTRS);
-   for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < count; i++)
+   int count = msg->getFieldAsUInt32(VID_NUM_SET_PSTORAGE);
+   int base = VID_PSTORAGE_SET_LIST_BASE;
+   for(int i = 0; i < count; i++, base+=2)
    {
-   	name = msg->getFieldAsString(id++);
-   	value = msg->getFieldAsString(id++);
-   	m_situationAttrList.setPreallocated(name, value);
+      m_pstorageSetActions.setPreallocated(msg->getFieldAsString(base), msg->getFieldAsString(base+1));
+   }
+
+   count = msg->getFieldAsUInt32(VID_NUM_DELETE_PSTORAGE);
+   base = VID_PSTORAGE_DELETE_LIST_BASE;
+   for(int i = 0; i < count; i++, base++)
+   {
+      m_pstorageDeleteActions.addPreallocated(msg->getFieldAsString(base));
    }
 
    m_pszScript = msg->getFieldAsString(VID_SCRIPT);
@@ -241,6 +262,16 @@ EPRule::~EPRule()
 }
 
 /**
+ * Callback for filling export XML with set persistent storage actions
+ */
+static EnumerationCallbackResult AddPSSetActionsToSML(const TCHAR *key, const void *value, void *data)
+{
+   String *str = (String *)data;
+   str->appendFormattedString(_T("\t\t\t\t\t<value key=\"%d\">%s</value>\n"), key, value);
+   return _CONTINUE;
+}
+
+/**
  * Create management pack record
  */
 void EPRule::createNXMPRecord(String &str)
@@ -261,11 +292,7 @@ void EPRule::createNXMPRecord(String &str)
    str.append(m_dwAlarmTimeout);
    str.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
    str.append(m_dwAlarmTimeoutEvent);
-   str.append(_T("</alarmTimeoutEvent>\n\t\t\t<situation>"));
-   str.append(m_dwSituationId);
-   str.append(_T("</situation>\n\t\t\t<situationInstance>"));
-   str.append(EscapeStringForXML2(m_szSituationInstance));
-   str.append(_T("</situationInstance>\n\t\t\t<script>"));
+   str.append(_T("</alarmTimeoutEvent>\n\t\t\t<script>"));
    str.append(EscapeStringForXML2(m_pszScript));
    str.append(_T("</script>\n\t\t\t<comments>"));
    str.append(EscapeStringForXML2(m_pszComment));
@@ -309,7 +336,12 @@ void EPRule::createNXMPRecord(String &str)
                              m_pdwActionList[i]);
    }
 
-   str += _T("\t\t\t</actions>\n\t\t</rule>\n");
+   str += _T("\t\t\t</actions>\n\t\t\t<pStorageActions>\n\t\t\t\t<setValue>\n");
+   m_pstorageSetActions.forEach(AddPSSetActionsToSML, &str);
+   str += _T("\t\t\t\t</setValue>\n\t\t\t\t<deleteValue>\n");
+   for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
+      str.appendFormattedString(_T("\t\t\t\t\t<value key=\"%s\">\n"), m_pstorageDeleteActions.get(i));
+   str += _T("\t\t\t\t</deleteValue>\n\t\t\t</pStorageActions>\n\t\t</rule>\n");
 }
 
 /**
@@ -458,26 +490,19 @@ bool EPRule::matchScript(Event *pEvent)
    return bRet;
 }
 
-/**
- * Situation update callback data
- */
-struct SituationUpdateCallbackData
-{
-   Situation *s;
-   TCHAR *text;
-   Event *evt;
-};
+
 
 /**
- * Situation update callback
+ * Callback for execution set action on persistent storage
  */
-static EnumerationCallbackResult SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult ExecutePstorageSetAct(const TCHAR *key, const void *value, void *data)
 {
-	TCHAR *attrName = ((SituationUpdateCallbackData *)data)->evt->expandText(key);
-	TCHAR *attrValue = ((SituationUpdateCallbackData *)data)->evt->expandText((const TCHAR *)value);
-	((SituationUpdateCallbackData *)data)->s->UpdateSituation(((SituationUpdateCallbackData *)data)->text, attrName, attrValue);
-	free(attrName);
-	free(attrValue);
+   Event *pEvent = (Event *)data;
+   TCHAR *psValue = pEvent->expandText(key);
+   TCHAR *psKey = pEvent->expandText((TCHAR *)value);
+   SetPersistentStorageValue(psValue, psKey);
+   free(psValue);
+   free(psKey);
    return _CONTINUE;
 }
 
@@ -513,24 +538,15 @@ bool EPRule::processEvent(Event *pEvent)
             free(alarmKey);
          }
 
-			// Update situation of needed
-			if (m_dwSituationId != 0)
-			{
-				Situation *pSituation = FindSituationById(m_dwSituationId);
-				if (pSituation != NULL)
-				{
-               SituationUpdateCallbackData data;
-					data.text = pEvent->expandText(m_szSituationInstance);
-               data.s = pSituation;
-               data.evt = pEvent;
-               m_situationAttrList.forEach(SituationUpdateCallback, &data);
-					free(data.text);
-				}
-				else
-				{
-					DbgPrintf(3, _T("Event Policy: unable to find situation with ID=%d"), m_dwSituationId);
-				}
-			}
+			// Update persistent storage if needed
+			if(m_pstorageSetActions.size() > 0)
+            m_pstorageSetActions.forEach(ExecutePstorageSetAct, pEvent);
+			for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
+         {
+            TCHAR *psKey = pEvent->expandText(m_pstorageDeleteActions.get(i));
+            DeletePersistentStorageValue(psKey);
+            free(psKey);
+         }
 
 			bStopProcessing = (m_dwFlags & RF_STOP_PROCESSING) ? true : false;
       }
@@ -566,7 +582,7 @@ void EPRule::generateAlarm(Event *pEvent)
 bool EPRule::loadFromDB(DB_HANDLE hdb)
 {
    DB_RESULT hResult;
-   TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
+   TCHAR szQuery[256];
    bool bSuccess = true;
    UINT32 i, count;
 
@@ -618,17 +634,24 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       bSuccess = false;
    }
 
-   // Load situation attributes
-   _sntprintf(szQuery, 256, _T("SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d"), m_id);
+   // Load pstorage actions
+   _sntprintf(szQuery, 256, _T("SELECT ps_key,action,value FROM policy_pstorage_actions WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
+      TCHAR key[MAX_DB_STRING];
       count = DBGetNumRows(hResult);
       for(i = 0; i < count; i++)
       {
-         DBGetField(hResult, i, 0, name, MAX_DB_STRING);
-         DBGetField(hResult, i, 1, value, MAX_DB_STRING);
-         m_situationAttrList.set(name, value);
+         DBGetField(hResult, i, 0, key, MAX_DB_STRING);
+         if(DBGetFieldULong(hResult, i, 1) == PSTORAGE_SET)
+         {
+            m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, NULL, 0));
+         }
+         if(DBGetFieldULong(hResult, i, 1) == PSTORAGE_DELETE)
+         {
+            m_pstorageDeleteActions.add(key);
+         }
       }
       DBFreeResult(hResult);
    }
@@ -658,94 +681,134 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
 }
 
 /**
- * Callback for saving situation attributes
+ * Callback for persistent storage set actions
  */
-static EnumerationCallbackResult SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SavePstorageSetActions(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
-   DBExecute(hStmt);
-   return _CONTINUE;
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (TCHAR *)value, DB_BIND_STATIC);
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
  * Save rule to database
  */
-void EPRule::saveToDB(DB_HANDLE hdb)
+bool EPRule::saveToDB(DB_HANDLE hdb)
 {
-	UINT32 len = (UINT32)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
-   TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
-   DB_STATEMENT hStmt;
-
-   // General attributes
-   TCHAR guidText[128];
-   _sntprintf(pszQuery, len, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,")
-                       _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
-							  _T("situation_id,situation_instance) ")
-                       _T("VALUES (%d,'%s',%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
-              m_id, m_guid.toString(guidText), m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
-				  (const TCHAR *)DBPrepareString(hdb, m_szAlarmMessage), m_iAlarmSeverity,
-	           (const TCHAR *)DBPrepareString(hdb, m_szAlarmKey),
-	           (const TCHAR *)DBPrepareString(hdb, m_pszScript), m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
-	           m_dwSituationId, (const TCHAR *)DBPrepareString(hdb, m_szSituationInstance));
-   DBQuery(hdb, pszQuery);
-
-   // Actions
+   bool success;
 	int i;
-   for(i = 0; i < (int)m_dwNumActions; i++)
+	TCHAR pszQuery[1024];
+   // General attributes
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,")
+                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?)"));
+   if(hStmt != NULL)
    {
-      _sntprintf(pszQuery, len, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
-                m_id, m_pdwActionList[i]);
-      DBQuery(hdb, pszQuery);
+      TCHAR guidText[128];
+      DBBind(hStmt, 1, DB_CTYPE_INT32, m_id);
+      DBBind(hStmt, 2, DB_CTYPE_STRING, m_guid.toString(guidText), DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_CTYPE_INT32, m_dwFlags);
+      DBBind(hStmt, 4, DB_CTYPE_STRING,  m_pszComment, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_CTYPE_STRING, m_szAlarmMessage, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_CTYPE_INT32, m_iAlarmSeverity);
+      DBBind(hStmt, 7, DB_CTYPE_STRING, m_szAlarmKey, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_CTYPE_STRING, m_pszScript, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_CTYPE_INT32, m_dwAlarmTimeout);
+      DBBind(hStmt, 10, DB_CTYPE_INT32, m_dwAlarmTimeoutEvent);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      success = false;
+   }
+   // Actions
+   if(success)
+   {
+      for(i = 0; i < (int)m_dwNumActions && success; i++)
+      {
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
+                   m_id, m_pdwActionList[i]);
+         success = DBQuery(hdb, pszQuery);
+      }
    }
 
    // Events
-   for(i = 0; i < (int)m_dwNumEvents; i++)
+   if(success)
    {
-      _sntprintf(pszQuery, len, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
-                m_id, m_pdwEventList[i]);
-      DBQuery(hdb, pszQuery);
+      for(i = 0; i < (int)m_dwNumEvents && success; i++)
+      {
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
+                   m_id, m_pdwEventList[i]);
+         success = DBQuery(hdb, pszQuery);
+      }
    }
 
    // Sources
-   for(i = 0; i < (int)m_dwNumSources; i++)
+   if(success)
    {
-      _sntprintf(pszQuery, len, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
-                m_id, m_pdwSourceList[i]);
-      DBQuery(hdb, pszQuery);
+      for(i = 0; i < (int)m_dwNumSources && success; i++)
+      {
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
+                   m_id, m_pdwSourceList[i]);
+         success = DBQuery(hdb, pszQuery);
+      }
    }
 
-	// Situation attributes
-   if (m_situationAttrList.size() > 0)
+	// Persistent storage actions
+   if(success)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (?,?,?,?)"));
-      if (hStmt != NULL)
+      if (m_pstorageSetActions.size() > 0)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwSituationId);
-         m_situationAttrList.forEach(SaveSituationAttribute, hStmt);
-         DBFreeStatement(hStmt);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value) VALUES (?,1,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            success = _STOP != m_pstorageSetActions.forEach(SavePstorageSetActions, hStmt);
+            DBFreeStatement(hStmt);
+         }
+      }
+   }
+
+   if(success)
+   {
+      if(m_pstorageDeleteActions.size() > 0)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key) VALUES (?,2,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; i < m_pstorageDeleteActions.size() && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pstorageDeleteActions.get(i), DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
       }
    }
 
    // Alarm categories
-   if (m_alarmCategoryList->size() > 0)
+   if(success)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (alarm_id,category_id) VALUES (?,?)"));
-      if (hStmt != NULL)
+      if (m_alarmCategoryList->size() > 0)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for (i = 0; i < m_alarmCategoryList->size(); i++)
+         hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (alarm_id,category_id) VALUES (?,?)"));
+         if (hStmt != NULL)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList->get(i));
-            DBExecute(hStmt);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER && success, m_id);
+            for (i = 0; i < m_alarmCategoryList->size(); i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
          }
-         DBFreeStatement(hStmt);
       }
    }
 
-   free(pszQuery);
+   return success;
 }
 
 /**
@@ -770,9 +833,8 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setField(VID_NUM_SOURCES, m_dwNumSources);
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
-	msg->setField(VID_SITUATION_ID, m_dwSituationId);
-	msg->setField(VID_SITUATION_INSTANCE, m_szSituationInstance);
-   m_situationAttrList.fillMessage(msg, VID_SITUATION_NUM_ATTRS, VID_SITUATION_ATTR_LIST_BASE);
+   m_pstorageSetActions.fillMessage(msg, VID_NUM_SET_PSTORAGE, VID_PSTORAGE_SET_LIST_BASE);
+   m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
 }
 
 /**
@@ -830,8 +892,7 @@ bool EventPolicy::loadFromDB()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
-	                        _T("situation_id,situation_instance ")
+                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event ")
                            _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
@@ -855,25 +916,32 @@ bool EventPolicy::loadFromDB()
 /**
  * Save event processing policy to database
  */
-void EventPolicy::saveToDB()
+bool EventPolicy::saveToDB()
 {
-   UINT32 i;
+   int i;
+   bool success = false;
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    readLock();
-   DBBegin(hdb);
-   DBQuery(hdb, _T("DELETE FROM event_policy"));
-   DBQuery(hdb, _T("DELETE FROM policy_action_list"));
-   DBQuery(hdb, _T("DELETE FROM policy_event_list"));
-   DBQuery(hdb, _T("DELETE FROM policy_source_list"));
-   DBQuery(hdb, _T("DELETE FROM policy_situation_attr_list"));
-   DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
-   for(i = 0; i < m_dwNumRules; i++)
-      m_ppRuleList[i]->saveToDB(hdb);
-   DBCommit(hdb);
+   if(DBBegin(hdb))
+   {
+      success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
+                DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
+      for(i = 0; i < m_dwNumRules && success; i++)
+         success = m_ppRuleList[i]->saveToDB(hdb);
+      if(success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
    unlock();
 	DBConnectionPoolReleaseConnection(hdb);
+	return success;
 }
 
 /**

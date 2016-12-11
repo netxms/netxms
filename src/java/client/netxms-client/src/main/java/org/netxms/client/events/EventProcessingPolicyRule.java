@@ -62,9 +62,8 @@ public class EventProcessingPolicyRule
 	private long alarmTimeoutEvent;
 	private List<Long>  alarmCategoryIds;
 	private List<Long> actions;
-	private long situationId;
-	private String situationInstance;
-	private Map<String, String> situationAttributes;
+	private Map<String, String> persistentStorageSet;
+	private List<String> persistentStorageDelete;
 	private String comments;
 	
 	/**
@@ -84,9 +83,8 @@ public class EventProcessingPolicyRule
 		alarmTimeoutEvent = 43;
 		alarmCategoryIds = new ArrayList<Long>(0);
 		actions = new ArrayList<Long>(0);
-		situationId = 0;
-		situationInstance = "";
-		situationAttributes = new HashMap<String, String>(0);
+		persistentStorageSet = new HashMap<String, String>(0);
+		persistentStorageDelete = new ArrayList<String>(0);
 		comments = "";
 	}
 	
@@ -107,9 +105,8 @@ public class EventProcessingPolicyRule
 		alarmTimeoutEvent = src.alarmTimeoutEvent;
 		alarmCategoryIds = src.alarmCategoryIds;
 		actions = new ArrayList<Long>(src.actions);
-		situationId = src.situationId;
-		situationInstance = src.situationInstance;
-		situationAttributes = new HashMap<String, String>(src.situationAttributes);
+		persistentStorageSet = new HashMap<String, String>(src.persistentStorageSet);
+		persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
 		comments = src.comments;
 	}
 	
@@ -132,19 +129,26 @@ public class EventProcessingPolicyRule
 		alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
 		alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
 		actions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
-		situationId = msg.getFieldAsInt64(NXCPCodes.VID_SITUATION_ID);
-		situationInstance = msg.getFieldAsString(NXCPCodes.VID_SITUATION_INSTANCE);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		
-		int numAttrs = msg.getFieldAsInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS);
-		situationAttributes = new HashMap<String, String>(numAttrs);
-		long varId = NXCPCodes.VID_SITUATION_ATTR_LIST_BASE;
-		for(int i = 0; i < numAttrs; i++)
-		{
-			final String attr = msg.getFieldAsString(varId++); 
-			final String value = msg.getFieldAsString(varId++);
-			situationAttributes.put(attr, value);
-		}
+		int numSetVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SET_PSTORAGE);
+		persistentStorageSet = new HashMap<String, String>(numSetVar);
+      long varId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
+      for(int i = 0; i < numSetVar; i++)
+      {
+         final String key = msg.getFieldAsString(varId++); 
+         final String value = msg.getFieldAsString(varId++);
+         persistentStorageSet.put(key, value);
+      }
+		
+		int numDeleteVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE);
+		persistentStorageDelete = new ArrayList<String>(numDeleteVar);
+      varId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
+      for(int i = 0; i < numDeleteVar; i++)
+      {
+         final String key = msg.getFieldAsString(varId++); 
+         persistentStorageDelete.add(key);
+      }
 	}
 	
 	/**
@@ -176,15 +180,20 @@ public class EventProcessingPolicyRule
 		
 		msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
 
-		msg.setFieldInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);
-		msg.setField(NXCPCodes.VID_SITUATION_INSTANCE, situationInstance);
-		msg.setFieldInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS, situationAttributes.size());
-		long varId = NXCPCodes.VID_SITUATION_ATTR_LIST_BASE;
-		for(Entry<String, String> e : situationAttributes.entrySet())
+		msg.setFieldInt32(NXCPCodes.VID_NUM_SET_PSTORAGE, persistentStorageSet.size());
+		long varId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
+		for(Entry<String, String> e : persistentStorageSet.entrySet())
 		{
 			msg.setField(varId++, e.getKey());
 			msg.setField(varId++, e.getValue());
 		}
+
+      msg.setFieldInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE, persistentStorageDelete.size());
+      varId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
+      for(int i = 0; i < persistentStorageDelete.size(); i++)
+      {
+         msg.setField(varId++, persistentStorageDelete.get(i));
+      }
 	}
 
 	/**
@@ -347,38 +356,6 @@ public class EventProcessingPolicyRule
 	   }
 	      
 	}
-	
-	/**
-	 * @return the situationId
-	 */
-	public long getSituationId()
-	{
-		return situationId;
-	}
-
-	/**
-	 * @param situationId the situationId to set
-	 */
-	public void setSituationId(long situationId)
-	{
-		this.situationId = situationId;
-	}
-
-	/**
-	 * @return the situationInstance
-	 */
-	public String getSituationInstance()
-	{
-		return situationInstance;
-	}
-
-	/**
-	 * @param situationInstance the situationInstance to set
-	 */
-	public void setSituationInstance(String situationInstance)
-	{
-		this.situationInstance = situationInstance;
-	}
 
 	/**
 	 * @return the sources
@@ -405,12 +382,20 @@ public class EventProcessingPolicyRule
 	}
 
 	/**
-	 * @return the situationAttributes
+	 * @return the persistentStorageSet
 	 */
-	public Map<String, String> getSituationAttributes()
+	public Map<String, String> getPStorageSet()
 	{
-		return situationAttributes;
+		return persistentStorageSet;
 	}
+
+   /**
+    * @return the persistentStorageDelete
+    */
+   public List<String> getPStorageDelete()
+   {
+      return persistentStorageDelete;
+   }
 
 	/**
 	 * @param sources the sources to set
@@ -437,12 +422,20 @@ public class EventProcessingPolicyRule
 	}
 
 	/**
-	 * @param situationAttributes the situationAttributes to set
+	 * @param persistentStorageSet the persistentStorageSet to set
 	 */
-	public void setSituationAttributes(Map<String, String> situationAttributes)
+	public void setPStorageSet(Map<String, String> persistentStorageSet)
 	{
-		this.situationAttributes = situationAttributes;
+		this.persistentStorageSet = persistentStorageSet;
 	}
+
+   /**
+    * @param persistentStorageDelete the persistentStorageDelete to set
+    */
+   public void setPStorageDelete(List<String> persistentStorageDelete)
+   {
+      this.persistentStorageDelete = persistentStorageDelete;
+   }
 	
 	/**
 	 * Check rule's DISABLED flag

@@ -93,7 +93,6 @@ public class Messages extends NLS
 	public static String SystemRights_ConfigureActions;
 	public static String SystemRights_ConfigureEvents;
 	public static String SystemRights_ConfigureObjTools;
-	public static String SystemRights_ConfigureSituations;
 	public static String SystemRights_ConfigureTraps;
 	public static String SystemRights_ControlSessions;
 	public static String SystemRights_DeleteAlarms;

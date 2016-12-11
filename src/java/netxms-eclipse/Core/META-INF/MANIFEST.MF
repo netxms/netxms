@@ -21,6 +21,7 @@ Bundle-ClassPath: .
 Export-Package: org.netxms.ui.eclipse.actions,
  org.netxms.ui.eclipse.console,
  org.netxms.ui.eclipse.console.api,
+ org.netxms.ui.eclipse.console.dialogs,
  org.netxms.ui.eclipse.console.resources,
  org.netxms.ui.eclipse.jobs,
  org.netxms.ui.eclipse.objects,

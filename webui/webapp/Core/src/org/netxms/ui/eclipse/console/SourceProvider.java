@@ -43,7 +43,7 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_MANAGE_PACKAGES       = "org.netxms.access.ManagePackages"; //$NON-NLS-1$
    public static final String UA_MANAGE_SCRIPTS        = "org.netxms.access.ManageScripts"; //$NON-NLS-1$
    public static final String UA_MANAGE_SESSIONS       = "org.netxms.access.ManageSessions"; //$NON-NLS-1$
-   public static final String UA_MANAGE_SITUATIONS     = "org.netxms.access.ManageSituations"; //$NON-NLS-1$
+   public static final String UA_MANAGE_PSTORAGE       = "org.netxms.access.ManagePStorage"; //$NON-NLS-1$
    public static final String UA_MANAGE_SUMMARY_TBLS   = "org.netxms.access.ManageSummaryTables"; //$NON-NLS-1$
    public static final String UA_MANAGE_TOOLS          = "org.netxms.access.ManageTools"; //$NON-NLS-1$
 	public static final String UA_MANAGE_USERS          = "org.netxms.access.ManageUsers"; //$NON-NLS-1$
@@ -82,7 +82,7 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_MANAGE_PACKAGES,
    	   UA_MANAGE_SCRIPTS,
    	   UA_MANAGE_SESSIONS,
-   	   UA_MANAGE_SITUATIONS,
+   	   UA_MANAGE_PSTORAGE,
    	   UA_MANAGE_SUMMARY_TBLS,
    	   UA_MANAGE_TOOLS,
    	   UA_MANAGE_USERS,
@@ -177,7 +177,7 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, UA_MANAGE_SCRIPTS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, UA_MANAGE_SERVER_FILES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, UA_MANAGE_SESSIONS);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, UA_MANAGE_SITUATIONS);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, UA_MANAGE_PSTORAGE);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, UA_MANAGE_SUMMARY_TBLS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, UA_MANAGE_TOOLS);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, UA_MANAGE_USERS);

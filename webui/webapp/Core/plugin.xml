@@ -260,7 +260,7 @@
                priorityLevel="workbench">
          </variable>
          <variable
-               name="org.netxms.access.ManageSituations"
+               name="org.netxms.access.ManagePStorage"
                priorityLevel="workbench">
          </variable>
          <variable

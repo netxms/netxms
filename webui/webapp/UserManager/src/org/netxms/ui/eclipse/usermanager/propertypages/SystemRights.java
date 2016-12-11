@@ -67,7 +67,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, "View alarm all alarms");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, Messages.get().SystemRights_ConfigureSituations);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, "Manage persistent storage");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, Messages.get().SystemRights_ManageScripts);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, Messages.get().SystemRights_ConfigureObjTools);

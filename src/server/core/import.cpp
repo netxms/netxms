@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
@@ -122,7 +122,7 @@ static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText
 	   }
 	   delete dctables;
    }
-   
+
    return success;
 }
 
@@ -147,7 +147,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 		{
 			ConfigEntry *event = events->get(i);
 			DbgPrintf(6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
-		
+
 			UINT32 code = event->getSubEntryValueAsUInt(_T("code"));
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
@@ -506,7 +506,12 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             EPRule *rule = new EPRule(rules->get(i));
             g_pEventPolicy->importRule(rule);
          }
-         g_pEventPolicy->saveToDB();
+         if(!g_pEventPolicy->saveToDB())
+         {
+            DbgPrintf(5, _T("ImportConfig(): unable to import event processing policy rules"));
+            rcc = RCC_DB_FAILURE;
+            goto stop_processing;
+         }
 		}
 		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));
 	}

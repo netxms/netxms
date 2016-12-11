@@ -10,15 +10,6 @@
             class="org.netxms.ui.eclipse.epp.views.EventProcessingPolicyEditor"
             id="org.netxms.ui.eclipse.epp.view.policy_editor">
       </view>
-      <view
-            allowMultiple="false"
-            category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.epp.views.SituationsManager"
-            icon="icons/situation.gif"
-            id="org.netxms.ui.eclipse.epp.views.SituationsManager"
-            name="%view.name.Situations"
-            restorable="true">
-      </view>
    </extension>
 
    <extension
@@ -28,12 +19,6 @@
             description="%command.description.OpenEPP"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
-      </command>
-      <command
-            categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="%command.description.OpenSituations"
-            id="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
-            name="%command.name.OpenSituations">
       </command>
       <command
             id="org.netxms.ui.eclipse.epp.commands.show_rule_filter"
@@ -54,20 +39,6 @@
 			   definitionId="org.netxms.ui.eclipse.epp.commands.open_policy_editor">
 		   </action>
 	   </actionSet>
-    <actionSet
-          id="org.netxms.ui.eclipse.action_set.situations_manager"
-          label="%actionSet.label.Situations"
-          visible="true">
-       <action
-             class="org.netxms.ui.eclipse.epp.actions.OpenSituationsManager"
-             definitionId="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
-             icon="icons/situation.gif"
-             id="org.netxms.ui.eclipse.epp.actions.open_situations_manager"
-             label="%action.label.Situations"
-             menubarPath="config/additions"
-             tooltip="%action.tooltip.Situations">
-       </action>
-    </actionSet>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -183,21 +154,15 @@
       </page>
       <page
             category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
-            class="org.netxms.ui.eclipse.epp.propertypages.RuleSituation"
-            id="org.netxms.ui.eclipse.epp.propertypages.RuleSituation#20"
-            name="%page.name.Situation">
+            class="org.netxms.ui.eclipse.epp.propertypages.RulePStorage"
+            id="org.netxms.ui.eclipse.epp.propertypages.RulePStorage#20"
+            name="Persistent Storage">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
             </instanceof>
          </enabledWhen>
       </page>
-   </extension>
-   <extension
-         point="org.netxms.ui.eclipse.loginlisteners">
-      <loginlistener
-            class="org.netxms.ui.eclipse.epp.LoginListener">
-      </loginlistener>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

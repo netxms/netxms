@@ -103,7 +103,7 @@ public class MobileAgentException extends Exception
 		"Invalid certificate ID",
 		"SNMP failure",
 		"Node has no support for layer 2 topology discovery",
-		"Invalid situation ID",
+		"Invalid persistent storage key",
 		"Named instance not found",
 		"Invalid event ID",
 		"Operation cannot be completed due to agent error",

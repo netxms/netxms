@@ -823,6 +823,9 @@ retry_db_lock:
 	// Load and compile scripts
 	LoadScripts();
 
+	// Initialize persistent storage
+	PersistentStorageInit();
+
 	// Initialize watchdog
 	WatchdogInit();
 
@@ -862,11 +865,6 @@ retry_db_lock:
 	if (!LoadObjects())
 		return FALSE;
 	nxlog_debug(1, _T("Objects loaded and initialized"));
-
-	// Initialize situations
-	if (!SituationsInit())
-		return FALSE;
-	nxlog_debug(1, _T("Situations loaded and initialized"));
 
 	// Initialize and load event actions
 	if (!InitActions())
@@ -1029,6 +1027,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	StopSyslogServer();
 	StopHouseKeeper();
+	PersistentStorageDestroy();
 
 	// Wait for critical threads
 	ThreadJoin(m_thPollManager);

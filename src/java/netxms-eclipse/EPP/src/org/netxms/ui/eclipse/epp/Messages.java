@@ -35,8 +35,6 @@ public class Messages extends NLS
    public static String EventProcessingPolicyEditor_ShowFilter;
 	public static String OpenPolicyEditor_Error;
 	public static String OpenPolicyEditor_ErrorText;
-	public static String OpenSituationsManager_Error;
-	public static String OpenSituationsManager_ErrorText;
 	public static String RuleAction_StopProcessing;
 	public static String RuleAlarm_CreateNew;
 	public static String RuleAlarm_DoNotChange;
@@ -68,7 +66,6 @@ public class Messages extends NLS
 	public static String RuleEditor_GenerateAlarm;
 	public static String RuleEditor_IF;
 	public static String RuleEditor_IF_NOT;
-	public static String RuleEditor_Instance;
 	public static String RuleEditor_ResolveAlarms;
 	public static String RuleEditor_Rule;
 	public static String RuleEditor_ScriptIs;
@@ -80,7 +77,6 @@ public class Messages extends NLS
 	public static String RuleEditor_Tooltip_EditRule;
 	public static String RuleEditor_Tooltip_ExpandRule;
 	public static String RuleEditor_Unknown;
-	public static String RuleEditor_UpdateSituation;
 	public static String RuleEditor_UseRegexpForResolve;
 	public static String RuleEditor_UserRegexpForTerminate;
 	public static String RuleEditor_WithKey;
@@ -94,40 +90,10 @@ public class Messages extends NLS
    public static String RuleServerActions_Action;
 	public static String RuleServerActions_Add;
 	public static String RuleServerActions_Delete;
-	public static String RuleSituation_Add;
-	public static String RuleSituation_Attributes;
-	public static String RuleSituation_Delete;
-	public static String RuleSituation_Edit;
-	public static String RuleSituation_Instance;
-	public static String RuleSituation_Name;
-	public static String RuleSituation_SituationObject;
-	public static String RuleSituation_Value;
 	public static String RuleSourceObjects_Add;
 	public static String RuleSourceObjects_Delete;
 	public static String RuleSourceObjects_InvertRule;
 	public static String RuleSourceObjects_Object;
-	public static String SituationCache_Error;
-	public static String SituationCache_ErrorText;
-	public static String SituationCache_JobTitle;
-	public static String SituationSelectionDialog_Filter;
-	public static String SituationSelectionDialog_Title;
-	public static String SituationSelector_None;
-	public static String SituationSelector_Tooltip;
-	public static String SituationSelector_Unknown;
-	public static String SituationsManager_ColAttribute;
-	public static String SituationsManager_ColValue;
-	public static String SituationsManager_Create;
-	public static String SituationsManager_CreateDlg_Text;
-	public static String SituationsManager_CreateDlg_Title;
-	public static String SituationsManager_CreateJob_Error;
-	public static String SituationsManager_CreateJob_Title;
-	public static String SituationsManager_Delete;
-	public static String SituationsManager_DeleteJob_Error;
-	public static String SituationsManager_DeleteJob_Title;
-	public static String SituationsManager_EmptyNameError;
-	public static String SituationsManager_LoadJob_Error;
-	public static String SituationsManager_LoadJob_Title;
-	public static String SituationTreeContentProvider_Root;
 	static
 	{
 		// initialize resource bundle
