@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,13 +69,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Viewer for last values of given object
  */
-public class LastValuesWidget extends Composite
+public class LastValuesWidget extends CompositeWithMessageBar
 {
 	public static final String JOB_FAMILY = "LastValuesViewJob"; //$NON-NLS-1$
 	
@@ -145,10 +146,10 @@ public class LastValuesWidget extends Composite
          }
       });
 		
-		setLayout(new FormLayout());
+		getContent().setLayout(new FormLayout());
 		
 		// Create filter area
-		filterText = new FilterText(this, SWT.NONE);
+		filterText = new FilterText(getContent(), SWT.NONE);
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -167,7 +168,7 @@ public class LastValuesWidget extends Composite
 		// Setup table columns
 		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold };
 		final int[] widths = { 70, 250, 150, 120, 150 };
-		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		dataViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		labelProvider = new LastValuesLabelProvider();
 		comparator = new LastValuesComparator();
@@ -261,16 +262,16 @@ public class LastValuesWidget extends Composite
 			enableFilter(false);	// Will hide filter area correctly
 		
 		clientListener = new SessionListener()
-      {
+		{
          @Override
          public void notificationHandler(SessionNotification n)
          {
             if (n.getCode() == SessionNotification.FORCE_DCI_POLL && n.getSubCode() == dcTarget.getObjectId())
                refresh();
-         }         
-      };
-      
-      session.addListener(clientListener);
+         }		   
+		};
+		
+		session.addListener(clientListener);
 	}
 	
 	/**
@@ -374,21 +375,40 @@ public class LastValuesWidget extends Composite
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().LastValuesWidget_JobError + dcTarget.getObjectName();
+				return String.format(Messages.get().LastValuesWidget_JobError, (dcTarget != null) ? dcTarget.getObjectName() : null);
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final DciValue[] data = session.getLastValues(dcTarget.getObjectId());
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!isDisposed())
-							dataViewer.setInput(data);
-					}
-				});
+			   try
+			   {
+   				final DciValue[] data = session.getLastValues(dcTarget.getObjectId());
+   				runInUIThread(new Runnable() {
+   					@Override
+   					public void run()
+   					{
+   						if (!isDisposed())
+   						{
+   							dataViewer.setInput(data);
+   							hideMessage();
+   						}
+   					}
+   				});
+			   }
+			   catch(final Exception e)
+			   {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!isDisposed())
+                     {
+                        showMessage(ERROR, String.format("Cannot read data from server: %s", e.getLocalizedMessage()));
+                     }
+                  }
+               });
+			   }
 			}
 		};
 		job.setUser(false);
@@ -480,7 +500,7 @@ public class LastValuesWidget extends Composite
 		filterText.setVisible(filterEnabled);
 		FormData fd = (FormData)dataViewer.getTable().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-		layout();
+		getContent().layout();
 		if (enable)
 			filterText.setFocus();
 		else
