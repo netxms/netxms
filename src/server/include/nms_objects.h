@@ -749,8 +749,8 @@ public:
    bool unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_dciListModified = true; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
-   BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
-   UINT32 *getDCIEventsList(UINT32 *pdwCount);
+   bool isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
+   IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
 
    BOOL applyToTarget(DataCollectionTarget *pNode);

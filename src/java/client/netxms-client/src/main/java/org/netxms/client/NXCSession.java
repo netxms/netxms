@@ -6308,10 +6308,11 @@ public class NXCSession
    public long[] getDataCollectionEvents(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_EVENTS_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      if (response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS) == 0) return new long[0];
+      if (response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS) == 0) 
+         return new long[0];
       return response.getFieldAsUInt32Array(NXCPCodes.VID_EVENT_LIST);
    }
 

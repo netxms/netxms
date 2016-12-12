@@ -1079,3 +1079,20 @@ bool DCTable::hasValue()
       return isAggregateOnCluster();
    return true;
 }
+
+/**
+ * Get list of used events
+ */
+void DCTable::getEventList(IntegerArray<UINT32> *eventList)
+{
+   lock();
+   if (m_thresholds != NULL)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         eventList->add(m_thresholds->get(i)->getActivationEvent());
+         eventList->add(m_thresholds->get(i)->getDeactivationEvent());
+      }
+   }
+   unlock();
+}

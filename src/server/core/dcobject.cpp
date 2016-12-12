@@ -743,22 +743,6 @@ void DCObject::deleteFromDatabase()
 }
 
 /**
- * Get list of used events
- */
-void DCObject::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
-{
-	*ppdwList = NULL;
-	*pdwSize = 0;
-}
-
-/**
- * Create management pack record
- */
-void DCObject::createExportRecord(String &str)
-{
-}
-
-/**
  * Load data collection object thresholds from database
  */
 bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb)

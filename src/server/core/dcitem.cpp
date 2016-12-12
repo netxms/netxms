@@ -1570,22 +1570,17 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
 /**
  * Get list of used events
  */
-void DCItem::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
+void DCItem::getEventList(IntegerArray<UINT32> *eventList)
 {
    lock();
-
-   if (getThresholdCount() > 0)
+   if (m_thresholds != NULL)
    {
-      *ppdwList = (UINT32 *)realloc(*ppdwList, sizeof(UINT32) * (*pdwSize + m_thresholds->size() * 2));
-      UINT32 j = *pdwSize;
-      *pdwSize += m_thresholds->size() * 2;
       for(int i = 0; i < m_thresholds->size(); i++)
       {
-         (*ppdwList)[j++] = m_thresholds->get(i)->getEventCode();
-			(*ppdwList)[j++] = m_thresholds->get(i)->getRearmEventCode();
+         eventList->add(m_thresholds->get(i)->getEventCode());
+         eventList->add(m_thresholds->get(i)->getRearmEventCode());
       }
    }
-
    unlock();
 }
 

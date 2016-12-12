@@ -293,8 +293,8 @@ public:
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
-   virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
-   virtual void createExportRecord(String &str);
+   virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
+   virtual void createExportRecord(String &str) = 0;
 
    NXSL_Value *createNXSLObject();
 
@@ -408,7 +408,7 @@ public:
    virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
-   virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
+   virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);
 
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
@@ -539,9 +539,9 @@ public:
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
    void createNXMPRecord(String &str, int id);
 
-   UINT32 getId() { return m_id; }
-   UINT32 getActivationEvent() { return m_activationEvent; }
-   UINT32 getDeactivationEvent() { return m_deactivationEvent; }
+   UINT32 getId() const { return m_id; }
+   UINT32 getActivationEvent() const { return m_activationEvent; }
+   UINT32 getDeactivationEvent() const { return m_deactivationEvent; }
 };
 
 /**
@@ -593,6 +593,7 @@ public:
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
+   virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);
 
 	void fillLastValueMessage(NXCPMessage *msg);

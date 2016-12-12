@@ -1019,35 +1019,30 @@ void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 /**
  * Get list of events used by DCIs
  */
-UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
+IntegerArray<UINT32> *Template::getDCIEventsList()
 {
-   UINT32 i, j, *pdwList;
-
-   pdwList = NULL;
-   *pdwCount = 0;
-
+   IntegerArray<UINT32> *eventList = new IntegerArray<UINT32>(64);
    lockDciAccess(false);
-   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects->size(); i++)
    {
-      m_dcObjects->get(i)->getEventList(&pdwList, pdwCount);
+      m_dcObjects->get(i)->getEventList(eventList);
    }
    unlockDciAccess();
 
    // Clean list from duplicates
-   for(i = 0; i < *pdwCount; i++)
+   for(int i = 0; i < eventList->size(); i++)
    {
-      for(j = i + 1; j < *pdwCount; j++)
+      for(int j = i + 1; j < eventList->size(); j++)
       {
-         if (pdwList[i] == pdwList[j])
+         if (eventList->get(i) == eventList->get(j))
          {
-            (*pdwCount)--;
-            memmove(&pdwList[j], &pdwList[j + 1], sizeof(UINT32) * (*pdwCount - j));
+            eventList->remove(j);
             j--;
          }
       }
    }
 
-   return pdwList;
+   return eventList;
 }
 
 /**

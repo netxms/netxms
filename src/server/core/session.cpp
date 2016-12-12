@@ -9855,30 +9855,20 @@ void ClientSession::resetComponent(NXCPMessage *pRequest)
 void ClientSession::getDCIEventList(NXCPMessage *request)
 {
    NXCPMessage msg;
-   NetObj *object;
-   UINT32 *pdwEventList, count;
-
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            pdwEventList = ((Template *)object)->getDCIEventsList(&count);
-            if (pdwEventList != NULL)
-            {
-               msg.setField(VID_NUM_EVENTS, count);
-               msg.setFieldFromInt32Array(VID_EVENT_LIST, count, pdwEventList);
-               free(pdwEventList);
-            }
-            else
-            {
-               msg.setField(VID_NUM_EVENTS, (UINT32)0);
-            }
+            IntegerArray<UINT32> *eventList = ((Template *)object)->getDCIEventsList();
+            msg.setField(VID_NUM_EVENTS, (UINT32)eventList->size());
+            msg.setFieldFromInt32Array(VID_EVENT_LIST, eventList);
+            delete eventList;
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
