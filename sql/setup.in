@@ -57,6 +57,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableAgentRegistration','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableAuditLog','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableCheckPointSNMP','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableReportingServer','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableEventStormDetection','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableISCListener','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableNXSLContainerFunctions','1',1,1);
@@ -135,6 +136,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSServer','none',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSTimeout','3',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ReceiveForwardedEvents','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ReportingServerHostname','localhost',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ReportingServerPort','4710',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ResolveDNSToIPOnStatusPoll','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ResolveNodeNames','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RoutingTableUpdateInterval','300',1,1);

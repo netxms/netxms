@@ -722,9 +722,9 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
-*  Upgrade from V419 to V420
+*  Upgrade from V420 to V421
 */
-static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
 {
    DB_RESULT hResult = SQLSelect(_T("SELECT access_rights,user_id,object_id FROM acl"));
    DB_STATEMENT hStmt;
@@ -754,6 +754,18 @@ static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
    else
       return FALSE;
 
+   CHK_EXEC(SetSchemaVersion(421));
+   return TRUE;
+}
+
+/*
+ * Upgrade from V419 to V420
+ */
+static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("EnableReportingServer"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerHostname"), _T("localhost"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerPort"), _T("4710"), 1, 1));
    CHK_EXEC(SetSchemaVersion(420));
    return TRUE;
 }
@@ -10791,6 +10803,7 @@ static struct
    { 417, 418, H_UpgradeFromV417 },
    { 418, 419, H_UpgradeFromV418 },
    { 419, 420, H_UpgradeFromV419 },
+   { 420, 421, H_UpgradeFromV420 },
    { 0, 0, NULL }
 };
 
