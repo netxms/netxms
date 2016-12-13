@@ -767,7 +767,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, "PLAIN");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("PLAIN"));
                pMsg->setField(VID_RCC, ERR_AUTH_FAILED);
             }
             break;

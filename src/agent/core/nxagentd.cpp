@@ -683,22 +683,6 @@ BOOL Initialize()
    if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
 
-   if (!_tcscmp(g_szDataDirectory, _T("{default}")))
-   {
-      GetNetXMSDirectory(nxDirData, g_szDataDirectory);
-   }
-
-   //Initialize config policy folder
-   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
-	_sntprintf(g_szConfigPolicyDir, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              CONFIG_AP_FOLDER FS_PATH_SEPARATOR);
-	CreateFolder(g_szConfigPolicyDir);
-
-	// Load configuration
-   g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
-	g_config->parseTemplate(_T("agent"), m_cfgTemplate);
-
    // Open log file
    if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
 	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
@@ -748,20 +732,23 @@ BOOL Initialize()
    DebugPrintf(1, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
 
+   DebugPrintf(1, _T("File store: %s"), g_szFileStore);
+   CreateFolder(g_szFileStore);
+
 #ifndef _WIN32
    nxlog_debug(2, _T("Effective user ID %d"), (int)geteuid());
    nxlog_debug(2, _T("Effective group ID %d"), (int)getegid());
 #endif
 
    //Initialize log parser policy folder
-   tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
+   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
    DebugPrintf(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
+
    DebugPrintf(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
-   CreateFolder(g_szFileStore);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -1668,6 +1655,18 @@ int main(int argc, char *argv[])
    }
 #endif
 
+   if (!_tcscmp(g_szDataDirectory, _T("{default}")))
+   {
+      GetNetXMSDirectory(nxDirData, g_szDataDirectory);
+   }
+
+   // Initialize config policy folder and load policy based configs
+   nx_strncpy(g_szConfigPolicyDir, g_szDataDirectory, MAX_PATH - 16);
+   if (g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
+      _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
+   _tcscat(g_szConfigPolicyDir, CONFIG_AP_FOLDER FS_PATH_SEPARATOR);
+   CreateFolder(g_szConfigPolicyDir);
+
    if (bRestart)
       DoRestartActions(dwOldPID);
 
@@ -1714,6 +1713,9 @@ int main(int argc, char *argv[])
 				if (dir != NULL)
 					nx_strncpy(g_szConfigIncludeDir, dir, MAX_PATH);
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
+
+			   g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
+
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
                DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
@@ -1893,6 +1895,15 @@ int main(int argc, char *argv[])
                   {
                      ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
                   }
+               }
+            }
+
+            if (validConfig)
+            {
+               validConfig = g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
+               if (!validConfig)
+               {
+                  ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigPolicyDir);
                }
             }
 
