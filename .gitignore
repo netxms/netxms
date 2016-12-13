@@ -250,3 +250,4 @@ target
 # IntelliJ IDEA
 *.iml
 .idea/*
+.autoenv.zsh
