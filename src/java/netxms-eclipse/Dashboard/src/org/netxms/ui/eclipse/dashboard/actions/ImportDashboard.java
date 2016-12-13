@@ -135,10 +135,6 @@ public class ImportDashboard implements IObjectActionDelegate
 				Document dom = db.parse(dlg.getImportFile());
 				
 				Element root = dom.getDocumentElement();
-				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
-					throw new Exception(Messages.get().ImportDashboard_InvalidFile);
-				
-				root.normalize();
 				
 				List<DashboardElement> dashboardElements = new ArrayList<DashboardElement>(); 
 				
@@ -157,17 +153,10 @@ public class ImportDashboard implements IObjectActionDelegate
 						dashboardElements.add(de);
 					}
 				}
-				//
+
 				root.normalize();
-				if (dlg.getObjectName().isEmpty())
-		      {
-		         if (dlg.getImportFile().getName().endsWith(".xml")) {
-		            int index = dlg.getImportFile().getName().indexOf(".xml");
-		            objectName = dlg.getImportFile().getName().substring(0, index);
-		         } else {
-		            objectName = dlg.getImportFile().getName();
-		         }
-		      }
+				
+				objectName = dlg.getObjectName();
 				
 				if (doIdMapping(display, session, dashboardElements, root))
 				{

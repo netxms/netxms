@@ -157,17 +157,10 @@ public class ImportDashboard implements IObjectActionDelegate
 						dashboardElements.add(de);
 					}
 				}
-				//
+
 				root.normalize();
-				if (dlg.getObjectName().isEmpty())
-		      {
-		         if (dlg.getImportFile().getName().endsWith(".xml")) {
-		            int index = dlg.getImportFile().getName().indexOf(".xml");
-		            objectName = dlg.getImportFile().getName().substring(0, index);
-		         } else {
-		            objectName = dlg.getImportFile().getName();
-		         }
-		      }
+				
+				objectName = dlg.getObjectName();
 				
 				if (doIdMapping(display, session, dashboardElements, root))
 				{

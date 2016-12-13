@@ -19,8 +19,14 @@
 package org.netxms.ui.eclipse.dashboard.dialogs;
 
 import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -31,6 +37,10 @@ import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * "Import Dashboard" dialog
@@ -88,6 +98,40 @@ public class ImportDashboardDialog extends Dialog
       importFileSelector.setLabel(Messages.get().ImportDashboardDialog_ImportFile);
       importFileSelector.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
       importFileSelector.setFilterNames(new String[] { Messages.get().ImportDashboardDialog_XMLFiles, Messages.get().ImportDashboardDialog_AllFiles });
+      importFileSelector.addModifyListener(new ModifyListener() {
+         
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            Element root = null;
+            try
+            {
+               DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+               DocumentBuilder db = dbf.newDocumentBuilder();
+               Document dom = db.parse(importFileSelector.getFile());
+               
+               root = dom.getDocumentElement();
+               if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
+                  throw new Exception(Messages.get().ImportDashboard_InvalidFile);               
+
+               root.normalize();
+            }
+            catch(Exception e1)
+            {
+               MessageDialogHelper.openError(getShell(), "Error", "Unable to open the document");
+            }
+            finally
+            {
+               if (root == null)
+                  return;
+               
+               NodeList nameRoot = root.getElementsByTagName("name");
+               textName.setText(nameRoot.item(0).getTextContent());
+               
+               root.normalize();
+            }
+        }
+      });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -103,7 +147,7 @@ public class ImportDashboardDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		objectName = textName.getText().trim();
+	   objectName = textName.getText();
 		importFile = importFileSelector.getFile();
 		
 		if (importFile == null)
@@ -111,6 +155,7 @@ public class ImportDashboardDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().ImportDashboardDialog_Warning, Messages.get().ImportDashboardDialog_WarningSelectFile);
 			return;
 		}
+		
 		super.okPressed();
 	}
 
