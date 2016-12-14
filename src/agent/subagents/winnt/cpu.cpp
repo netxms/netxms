@@ -28,8 +28,9 @@ static SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *s_cpuTimes = NULL;
 static UINT32 *s_usage = NULL;
 static UINT32 *s_idle = NULL;
 static UINT32 *s_kernel = NULL;
-static UINT64 *s_user = NULL;
-static UINT64 s_intr, s_ctxt;
+static UINT32 *s_user = NULL;
+static UINT32 *s_interrupt = NULL;
+static UINT32 *s_interruptCount = NULL;
 static int s_bpos = 0;
 static CRITICAL_SECTION s_lock;
 
@@ -44,7 +45,6 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *curr = &s_cpuTimes[s_cpuCount];
 
    ULONG cpuTimesLen = sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * s_cpuCount;
-   ULONG cpuCtxtLen = sizeof(SYSTEM_INTERRUPT_INFORMATION) * s_cpuCount;
    ULONG size;
    NtQuerySystemInformation(SystemProcessorPerformanceInformation, s_cpuTimes, cpuTimesLen, &size);
 
@@ -54,16 +54,15 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       {
          memcpy(curr, prev, cpuTimesLen);
       }
-      SYSTEM_INTERRUPT_INFORMATION ctxt
-      NtQuerySystemInformation(SystemInterruptInformation, &ctxt, cpuCtxtLen, &size);
 
       UINT64 sysIdle = 0;
       UINT64 sysKernel = 0;
       UINT64 sysUser = 0;
-      UINT64 intr = 0;
-      UINT64 ctxt = 0;
+      UINT64 sysInterrupt = 0;
 
       EnterCriticalSection(&s_lock);
+
+      s_interruptCount[s_cpuCount] = 0;
 
       int idx = s_bpos;
       for(int i = 0; i < s_cpuCount; i++, idx++)
@@ -71,13 +70,16 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          UINT64 idle = curr[i].IdleTime.QuadPart - prev[i].IdleTime.QuadPart;
          UINT64 kernel = curr[i].KernelTime.QuadPart - prev[i].KernelTime.QuadPart;
          UINT64 user = curr[i].UserTime.QuadPart - prev[i].UserTime.QuadPart;
+         UINT64 interrupt = curr[i].Reserved1[1].QuadPart - prev[i].Reserved1[1].QuadPart;
          UINT64 total = kernel + user;  // kernel time includes idle time
-         intr += curr[i].InterruptCount;
-         ctxt += ctxt[i].ContextSwitches;
+
+         s_interruptCount[i] = curr[i].Reserved2;
+         s_interruptCount[s_cpuCount] += curr[i].Reserved2;
 
          sysIdle += idle;
          sysKernel += kernel;
          sysUser += user;
+         sysInterrupt += interrupt;
 
          if (total > 0)
          {
@@ -85,6 +87,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
             s_idle[idx] = (UINT32)(idle * 10000 / total);
             s_kernel[idx] = (UINT32)((kernel - idle) * 10000 / total);
             s_user[idx] = (UINT32)(user * 10000 / total);
+            s_interrupt[idx] = (UINT32)(interrupt * 10000 / total);
          }
          else
          {
@@ -92,11 +95,9 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
             s_idle[idx] = 0;
             s_kernel[idx] = 0;
             s_user[idx] = 0;
+            s_interrupt[idx] = 0;
          }
       }
-
-      s_intr = intr;
-      s_ctxt = ctxt;
 
       UINT64 sysTotal = sysKernel + sysUser;
       if (sysTotal > 0)
@@ -105,6 +106,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          s_idle[idx] = (UINT32)(sysIdle * 10000 / sysTotal);
          s_kernel[idx] = (UINT32)((sysKernel - sysIdle) * 10000 / sysTotal);
          s_user[idx] = (UINT32)(sysUser * 10000 / sysTotal);
+         s_interrupt[idx] = (UINT32)(sysInterrupt * 10000 / sysTotal);
       }
       else
       {
@@ -112,6 +114,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          s_idle[idx] = 0;
          s_kernel[idx] = 0;
          s_user[idx] = 0;
+         s_interrupt[idx] = 0;
       }
 
       s_bpos += s_cpuCount + 1;
@@ -154,6 +157,8 @@ void StartCPUStatCollector()
    s_idle = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
    s_kernel = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
    s_user = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
+   s_interrupt = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
+   s_interruptCount = (UINT32 *)calloc(sizeof(UINT32), s_cpuCount + 1);
    InitializeCriticalSectionAndSpinCount(&s_lock, 1000);
    s_collectorThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 }
@@ -175,7 +180,7 @@ void StopCPUStatCollector()
 /**
  * Handler for System.CPU.Usage parameters
  */
-LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int cpuIndex;
    if (arg[0] == 'T')   // Total
@@ -223,6 +228,9 @@ LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
       case 'I':
          data = s_idle;
          break;
+      case 'q':
+         data = s_interrupt;
+         break;
       case 's':
          data = s_kernel;
          break;
@@ -249,19 +257,44 @@ LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 }
 
 /*
- * Handler for CPU Context Switch parameter
+ * Handler for System.CPU.ContextSwitches parameter
  */
-LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_CpuContextSwitches(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, s_ctxt);
+   SYSTEM_INTERRUPT_INFORMATION interrupts;
+   ULONG size;
+   if (NtQuerySystemInformation(SystemInterruptInformation, &interrupts, sizeof(SYSTEM_INTERRUPT_INFORMATION), &size) != 0)
+      return SYSINFO_RC_ERROR;
+
+   // First 4 bytes in SYSTEM_INTERRUPT_INFORMATION is context switch count
+   // (according to http://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/interrupt.htm)
+   ret_uint(value, *((UINT32 *)interrupts.Reserved1));
    return SYSINFO_RC_SUCCESS;
 }
 
 /*
- * Handler for CPU Interrupts parameter
+ * Handler for System.CPU.Interrupts parameters
  */
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, s_intr);
+   int cpuIndex;
+   if (arg[0] == 'T')   // Total
+   {
+      cpuIndex = s_cpuCount;
+   }
+   else
+   {
+      TCHAR buffer[64];
+      if (!AgentGetParameterArg(param, 1, buffer, 64))
+         return SYSINFO_RC_UNSUPPORTED;
+      cpuIndex = _tcstol(buffer, NULL, 10);
+      if ((cpuIndex < 0) || (cpuIndex >= s_cpuCount))
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   EnterCriticalSection(&s_lock);
+   ret_uint(value, s_interruptCount[cpuIndex]);
+   LeaveCriticalSection(&s_lock);
+
    return SYSINFO_RC_SUCCESS;
 }

@@ -328,11 +328,14 @@
 #define DCIDESC_PDH_COUNTERVALUE                  _T("Value of PDH counter {instance}")
 #define DCIDESC_PDH_VERSION                       _T("Version of PDH.DLL")
 #define DCIDESC_SYSTEM_UPTIME                     _T("System uptime")
+
 #define DCIDESC_SYSTEM_CPU_LOADAVG                _T("Average CPU load for last minute")
 #define DCIDESC_SYSTEM_CPU_LOADAVG5               _T("Average CPU load for last 5 minutes")
 #define DCIDESC_SYSTEM_CPU_LOADAVG15              _T("Average CPU load for last 15 minutes")
-#define DCIDESC_SYSTEM_CPU_INTERRUPTS             _T("Total CPU interrupts")
-#define DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES       _T("Total CPU context switches")
+
+#define DCIDESC_SYSTEM_CPU_INTERRUPTS             _T("CPU interrupt count")
+#define DCIDESC_SYSTEM_CPU_INTERRUPTS_EX          _T("CPU {instance} interrupt count")
+#define DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES       _T("CPU context switch count")
 
 #define DCIDESC_SYSTEM_CPU_USAGE_EX               _T("Average CPU {instance} utilization for last minute")
 #define DCIDESC_SYSTEM_CPU_USAGE5_EX              _T("Average CPU {instance} utilization for last 5 minutes")
