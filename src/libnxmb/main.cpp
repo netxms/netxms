@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus Library
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,13 +23,11 @@
 
 #include "libnxmb.h"
 
-
-//
-// DLL entry point
-//
-
 #if defined(_WIN32) && !defined(UNDER_CE)
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
