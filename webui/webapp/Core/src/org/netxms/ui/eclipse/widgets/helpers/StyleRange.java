@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.widgets.helpers;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 
 /**
@@ -28,12 +29,48 @@ public class StyleRange
    public int start;
    public int length;
    public Color foreground;
+   public Color background;
+   public int fontStyle = SWT.NORMAL;
 
    /**
     * New style range
     */
    public StyleRange()
    {
+      this.start = 0;
+      this.length = 0;
+      this.foreground = null;
+      this.background = null;
    }
 
+   /** 
+    * Create a new style range.
+    *
+    * @param start start offset of the style
+    * @param length length of the style 
+    * @param foreground foreground color of the style, null if none 
+    * @param background background color of the style, null if none
+    */
+   public StyleRange(int start, int length, Color foreground, Color background) 
+   {
+      this.start = start;
+      this.length = length;
+      this.foreground = foreground;
+      this.background = background;
+   }
+
+   /** 
+    * Create a new style range.
+    *
+    * @param start start offset of the style
+    * @param length length of the style 
+    * @param foreground foreground color of the style, null if none 
+    * @param background background color of the style, null if none
+    * @param fontStyle font style of the style, may be SWT.NORMAL, SWT.ITALIC or SWT.BOLD
+    */
+   public StyleRange(int start, int length, Color foreground, Color background, int fontStyle) 
+   {
+      this(start, length, foreground, background);
+      this.fontStyle = fontStyle;
+   }
 }

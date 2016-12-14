@@ -33,7 +33,6 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -53,6 +52,10 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.widgets.StyledText;
+import org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent;
+import org.netxms.ui.eclipse.widgets.helpers.LineStyleListener;
+import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
 
 /**
  * Base file viewer widget
@@ -66,7 +69,7 @@ public class BaseFileViewer extends Composite
    public static final long MAX_FILE_SIZE = 8192000;
    
    protected IViewPart viewPart;
-   protected Text text;
+   protected StyledText text;
    protected Composite messageBar;
    protected CLabel messageBarLabel;
    protected Label messageCloseButton;
@@ -157,8 +160,7 @@ public class BaseFileViewer extends Composite
       messageBar.setLayoutData(fd);
 
       /*** Text area ***/
-      text = new Text(this, SWT.H_SCROLL | SWT.V_SCROLL);
-      text.setEditable(false);
+      text = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
       text.setFont(JFaceResources.getTextFont());
       fd = new FormData();
       fd.top = new FormAttachment(0, 0);
@@ -166,6 +168,26 @@ public class BaseFileViewer extends Composite
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       text.setLayoutData(fd);
+      
+      text.addLineStyleListener(new LineStyleListener() {
+         @Override
+         public void lineGetStyle(LineStyleEvent event)
+         {
+            try
+            {
+               event.styles = styleLine(event.lineText);
+               if (event.styles != null)
+               {
+                  for(StyleRange r : event.styles)
+                     r.start += event.lineOffset;
+               }
+            }
+            catch(Exception e)
+            {
+               // TODO: log
+            }
+         }
+      });
       
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
@@ -408,7 +430,6 @@ public class BaseFileViewer extends Composite
     */
    public void selectAll()
    {
-      text.selectAll();
    }
    
    /**
@@ -425,7 +446,7 @@ public class BaseFileViewer extends Composite
     */
    public boolean canCopy()
    {
-      return text.getSelectionCount() > 0;
+      return false;
    }
 
    /**
@@ -459,7 +480,6 @@ public class BaseFileViewer extends Composite
     */
    public void addSelectionListener(SelectionListener listener)
    {
-      text.addSelectionListener(listener);
    }
    
    /**
@@ -469,7 +489,6 @@ public class BaseFileViewer extends Composite
     */
    public void removeSelectionListener(SelectionListener listener)
    {
-      text.removeSelectionListener(listener);
    }
    
    /**
@@ -527,6 +546,7 @@ public class BaseFileViewer extends Composite
     */
    private void doSearch(boolean typing)
    {
+      /*
       String searchString = searchBarText.getText().toLowerCase();
       if (searchString.length() == 0)
          return;
@@ -551,6 +571,7 @@ public class BaseFileViewer extends Composite
       {
          searchBarText.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, text.getDisplay()));
       }
+      */
    }
    
    /**
@@ -558,6 +579,7 @@ public class BaseFileViewer extends Composite
     */
    private void doReverseSearch()
    {
+      /*
       String searchString = searchBarText.getText().toLowerCase();
       if (searchString.length() == 0)
          return;
@@ -583,6 +605,7 @@ public class BaseFileViewer extends Composite
       {
          searchBarText.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, text.getDisplay()));
       }
+      */
    }
    
    /**
@@ -680,10 +703,5 @@ public class BaseFileViewer extends Composite
    public interface LineStyler
    {
       public StyleRange[] styleLine(String line);
-   }
-
-   // FIXME: temporary workaround
-   public interface StyleRange
-   {
    }
 }

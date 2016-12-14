@@ -19,7 +19,9 @@
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.graphics.Color;
@@ -39,10 +41,10 @@ public class StyledText extends Composite
 {
    private final Browser textArea;
    private final RefreshTimer refreshTimer;
-   private String textBuffer = "";
-   private String largeTextBuffer = "";
-   private boolean resetBuffer = true;
-   private boolean setText = false;
+   private StringBuilder content = new StringBuilder();
+   private Map<Integer, StyleRange> styleRanges = new TreeMap<Integer, StyleRange>(); 
+   private int writePosition = 0;
+   private boolean refreshContent = false;
    private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0); 
 
    /**
@@ -58,13 +60,12 @@ public class StyledText extends Composite
       textArea = new Browser(this, SWT.NONE);
       textArea.setText("<pre id=\"textArea\"></pre>");
 
-      refreshTimer = new RefreshTimer(200, this, new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          refresh();
-        }
+      refreshTimer = new RefreshTimer(200, this, new Runnable() {
+         @Override
+         public void run()
+         {
+            refresh();
+         }
       });
    }
    
@@ -72,29 +73,23 @@ public class StyledText extends Composite
     * Set widget text
     * @param text
     */
-   public void setText(String string)
+   public void setText(String text)
    {
-      if (!fireLineStyleListener(string))
-      {
-         setText = true;
-         textBuffer = "";
-         largeTextBuffer = "";
-         append(string);
-      }
+      styleRanges.clear();
+      content = new StringBuilder(text);
+      writePosition = 0;
+      fireLineStyleListeners(0);
+      refreshTimer.execute();
    }
 
    /**
     * Append string to widget
-    * @param string
+    * @param text
     */
-   public void append(String string)
+   public void append(String text)
    {
-      if (!fireLineStyleListener(string))
-      {
-         textBuffer += string;
-         largeTextBuffer += string;
-         refreshTimer.execute();
-      }
+      content.append(text);
+      refreshTimer.execute();
    }
 
    /** Set style for specific range of text
@@ -102,71 +97,26 @@ public class StyledText extends Composite
     */
    public void setStyleRange(StyleRange range)
    {
-      int red = range.foreground.getRed();
-      int green = range.foreground.getGreen();
-      int blue = range.foreground.getBlue();
-
-      StringBuilder sb = new StringBuilder();
-      sb.append(largeTextBuffer.substring(0, (range.start)));
-      sb.append("<span style=\"color:rgb(" + red + "," + green + "," + blue +
-                ")\">" + largeTextBuffer.substring(range.start, (range.start + range.length)) + "</span>");
-      
-      largeTextBuffer = sb.toString();
-      textBuffer = largeTextBuffer;
-      
-      setText = true;
-      refreshTimer.execute();
-   }
-   
-   /** Set style for specific range of text from event
-    * @param event
-    */
-   public void setStyleFromEvent(LineStyleEvent e, String text)
-   {
-      if (e.styles == null)
+      if ((range.start < 0) || (range.start >= content.length()) || (range.length == 0))
          return;
-      
-      StringBuilder sb = new StringBuilder();
-      int startOffset = 0;
-      for(StyleRange range : e.styles)
-      {
-         int red = range.foreground.getRed();
-         int green = range.foreground.getGreen();
-         int blue = range.foreground.getBlue();
-   
-         sb.append(largeTextBuffer.substring(0, (range.start + startOffset)));
-         sb.append("<span style=\"color:rgb(" + String.format("%03d", red) + "," + String.format("%03d", green) + "," + String.format("%03d", blue) +
-                   ")\">" + largeTextBuffer.substring((range.start + startOffset), ((range.start + startOffset) + range.length)) + "</span>");
-         
-         startOffset += 47;
-      }
-      largeTextBuffer = sb.toString();
-      textBuffer = largeTextBuffer;
-      
-      setText = true;
+      styleRanges.put(range.start, range);
+      if (range.start <= writePosition)
+         refreshContent = true;
       refreshTimer.execute();
    }
-
+   
    /**
     * @return Char count of text
     */
    public int getCharCount()
    {
-      return largeTextBuffer.length();
+      return content.length();
    }
 
    /**
    * @return
    */
-  public Control getControl()
-   {
-     return textArea;
-   }
-
-  /**
-   * @return
-   */
-  public Composite getComposite()
+   public Control getControl()
    {
      return textArea;
    }
@@ -188,36 +138,93 @@ public class StyledText extends Composite
       return textArea.setFocus();
    }
    
+   /** 
+    * Apply style range
+    * 
+    * @param range
+    * @param text
+    */
+   private String applyStyleRange(StyleRange range, String text)
+   {
+      StringBuilder sb = new StringBuilder();
+      sb.append("<span style=\"");
+      if (range.foreground != null)
+      {
+         sb.append("color:rgb(");
+         sb.append(range.foreground.getRed());
+         sb.append(',');
+         sb.append(range.foreground.getGreen());
+         sb.append(',');
+         sb.append(range.foreground.getBlue());
+         sb.append(");");
+      }
+      if (range.fontStyle == SWT.BOLD)
+      {
+         sb.append("font:bold;");
+      }
+      sb.append("\">");
+      sb.append(text);
+      sb.append("</span>");
+      return sb.toString();
+   }
+   
+   /**
+    * Apply style ranges starting at given position
+    * 
+    * @param startPos
+    * @return
+    */
+   private String applyStyleRanges(int startPos)
+   {
+      StringBuilder result = new StringBuilder();
+      int currPos = startPos;
+      for(StyleRange r : styleRanges.values())
+      {
+         if (r.start + r.length <= currPos)
+            continue;
+         
+         if (currPos < r.start)
+            result.append(WidgetHelper.escapeText(content.substring(currPos, r.start), true, true));
+         result.append(applyStyleRange(r, WidgetHelper.escapeText(content.substring(r.start, r.start + r.length), true, true)));
+         currPos = r.start + r.length;
+      }
+      result.append(WidgetHelper.escapeText(content.substring(currPos), true, true));
+      return result.toString();
+   }
+   
    /**
     * refresh widget
     */
    public void refresh()
    {
+      boolean success;
       try
       {
-         String ptext = WidgetHelper.escapeText(textBuffer, true, true);
-         if (setText)
+         if (refreshContent)
          {
-            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML = '" + ptext + "';" + "window.scrollTo(0, document.body.scrollHeight);");
-            setText = false;
+            String html = applyStyleRanges(0);
+            success = textArea.execute("document.getElementById(\"textArea\").innerHTML = '" + html + "';" + "window.scrollTo(0, document.body.scrollHeight);");
          }
          else
          {
-            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML += '" + ptext + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+            String html = applyStyleRanges(writePosition);
+            success = textArea.execute("document.getElementById(\"textArea\").innerHTML += '" + html + "';" + "window.scrollTo(0, document.body.scrollHeight);");
          }
       }
       catch (Exception e)
       {
-         resetBuffer = false;
+         success = false;
       }
       
-      if (resetBuffer)
+      if (success)
       {
-         textBuffer = "";
-         resetBuffer = true;
+         writePosition = content.length();
+         refreshContent = false;
       }
       else
+      {
          refreshTimer.execute();
+      }
    }
    
    /**
@@ -239,19 +246,36 @@ public class StyledText extends Composite
    /**
     * Call all registered line style listeners
     */
-   protected boolean fireLineStyleListener(String string)
+   protected void fireLineStyleListeners(int startPos)
    {
       if (lineStyleListeners.isEmpty())
-         return false;
+         return;
       
-      LineStyleEvent e = new LineStyleEvent();
-      e.lineText = string;
-      
-      for(LineStyleListener l : lineStyleListeners)
-         l.lineGetStyle(e);
-      
-      setStyleFromEvent(e, string);
-      
-      return true;
+      StringBuilder line = new StringBuilder();
+      int lineStartPos = startPos;
+      char[] text = content.substring(startPos).toCharArray();
+      for(int i = 0; i < text.length; i++)
+      {
+         if (text[i] == '\n')
+         {
+            LineStyleEvent e = new LineStyleEvent();
+            e.lineText = line.toString();
+            for(LineStyleListener l : lineStyleListeners)
+               l.lineGetStyle(e);
+            if (e.styles != null)
+            {
+               for(StyleRange r : e.styles)
+               {
+                  r.start += lineStartPos;
+                  styleRanges.put(r.start, r);
+               }
+            }
+            lineStartPos = startPos + i + 1;
+         }
+         else if (text[i] != '\r')
+         {
+            line.append(text[i]);
+         }
+      }
    }
 }
