@@ -294,8 +294,6 @@ void LDAPConnection::getAllSyncParameters()
    m_pageSize = ConfigReadInt(_T("LdapPageSize"), 1000); //default value - 1000
 }
 
-
-
 /**
  * Get users, according to search line & insetr in netxms DB missing
  */
