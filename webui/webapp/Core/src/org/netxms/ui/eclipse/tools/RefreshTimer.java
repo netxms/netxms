@@ -93,9 +93,9 @@ public class RefreshTimer
                   @Override
                   public void run()
                   {
+                     onTimer();
                      if (!control.isDisposed())
                         callback.run();
-                     onTimer();
                   }
                });
             }
