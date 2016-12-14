@@ -111,6 +111,7 @@ public class NodePollerView extends ViewPart
    {
       textArea = new StyledText(parent, SWT.MULTI | SWT.V_SCROLL);
       textArea.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
+      textArea.setScrollOnAppend(true);
       
       createActions();
       contributeToActionBars();

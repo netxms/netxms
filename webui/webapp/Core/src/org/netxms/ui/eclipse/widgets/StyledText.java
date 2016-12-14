@@ -45,7 +45,8 @@ public class StyledText extends Composite
    private Map<Integer, StyleRange> styleRanges = new TreeMap<Integer, StyleRange>(); 
    private int writePosition = 0;
    private boolean refreshContent = false;
-   private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0); 
+   private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0);
+   private boolean scrollOnAppend = false;
 
    /**
     * @param parent
@@ -78,6 +79,7 @@ public class StyledText extends Composite
       styleRanges.clear();
       content = new StringBuilder(text);
       writePosition = 0;
+      refreshContent = true;
       fireLineStyleListeners(0);
       refreshTimer.execute();
    }
@@ -88,7 +90,9 @@ public class StyledText extends Composite
     */
    public void append(String text)
    {
+      int pos = content.length();
       content.append(text);
+      fireLineStyleListeners(pos);
       refreshTimer.execute();
    }
 
@@ -138,6 +142,22 @@ public class StyledText extends Composite
       return textArea.setFocus();
    }
    
+   /**
+    * @return
+    */
+   public boolean isScrollOnAppend()
+   {
+      return scrollOnAppend;
+   }
+
+   /**
+    * @param scrollOnAppend
+    */
+   public void setScrollOnAppend(boolean scrollOnAppend)
+   {
+      this.scrollOnAppend = scrollOnAppend;
+   }
+
    /** 
     * Apply style range
     * 
@@ -200,16 +220,21 @@ public class StyledText extends Composite
       boolean success;
       try
       {
+         StringBuilder js = new StringBuilder("document.getElementById(\"textArea\").innerHTML ");
          if (refreshContent)
          {
-            String html = applyStyleRanges(0);
-            success = textArea.execute("document.getElementById(\"textArea\").innerHTML = '" + html + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+            js.append("= '");
+            js.append(applyStyleRanges(0));
          }
          else
          {
-            String html = applyStyleRanges(writePosition);
-            success = textArea.execute("document.getElementById(\"textArea\").innerHTML += '" + html + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+            js.append("+= '");
+            js.append(applyStyleRanges(writePosition));
          }
+         js.append("';");
+         if (scrollOnAppend)
+            js.append("window.scrollTo(0, document.body.scrollHeight);");
+         success = textArea.execute(js.toString());
       }
       catch (Exception e)
       {
@@ -244,13 +269,33 @@ public class StyledText extends Composite
    }
    
    /**
+    * @param line
+    * @param lineStartPos
+    */
+   private void styleLine(String line, int lineStartPos)
+   {
+      LineStyleEvent e = new LineStyleEvent();
+      e.lineText = line;
+      for(LineStyleListener l : lineStyleListeners)
+         l.lineGetStyle(e);
+      if (e.styles != null)
+      {
+         for(StyleRange r : e.styles)
+         {
+            r.start += lineStartPos;
+            styleRanges.put(r.start, r);
+         }
+      }
+   }
+   
+   /**
     * Call all registered line style listeners
     */
    protected void fireLineStyleListeners(int startPos)
    {
       if (lineStyleListeners.isEmpty())
          return;
-      
+
       StringBuilder line = new StringBuilder();
       int lineStartPos = startPos;
       char[] text = content.substring(startPos).toCharArray();
@@ -258,24 +303,19 @@ public class StyledText extends Composite
       {
          if (text[i] == '\n')
          {
-            LineStyleEvent e = new LineStyleEvent();
-            e.lineText = line.toString();
-            for(LineStyleListener l : lineStyleListeners)
-               l.lineGetStyle(e);
-            if (e.styles != null)
-            {
-               for(StyleRange r : e.styles)
-               {
-                  r.start += lineStartPos;
-                  styleRanges.put(r.start, r);
-               }
-            }
+            styleLine(line.toString(), lineStartPos);
             lineStartPos = startPos + i + 1;
+            line = new StringBuilder();
          }
          else if (text[i] != '\r')
          {
             line.append(text[i]);
          }
+      }
+      
+      if (line.length() > 0)
+      {
+         styleLine(line.toString(), lineStartPos);
       }
    }
 }

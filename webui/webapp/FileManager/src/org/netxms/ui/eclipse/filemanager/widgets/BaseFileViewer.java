@@ -463,6 +463,7 @@ public class BaseFileViewer extends Composite
    public void setScrollLock(boolean scrollLock)
    {
       this.scrollLock = scrollLock;
+      text.setScrollOnAppend(!scrollLock);
    }
    
    /**

@@ -20,19 +20,18 @@ package org.netxms.ui.eclipse.widgets;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 /**
  * Generic text console widget
  */
 public class TextConsole extends Composite
 {
-   private Text console;
+   private StyledText console;
    private boolean autoScroll = true;
    
    /**
@@ -43,9 +42,9 @@ public class TextConsole extends Composite
    {
       super(parent, style);
       setLayout(new FillLayout());
-      console = new Text(this, SWT.MULTI | SWT.V_SCROLL);
-      console.setEditable(false);
-      console.setData(RWT.CUSTOM_VARIANT, "monospace");
+      console = new StyledText(this, SWT.H_SCROLL | SWT.V_SCROLL);
+      console.setFont(JFaceResources.getTextFont());
+      console.setScrollOnAppend(autoScroll);
    }
 
    /**
@@ -87,7 +86,6 @@ public class TextConsole extends Composite
     */
    public void selectAll()
    {
-      console.selectAll();
    }
    
    /**
@@ -96,6 +94,7 @@ public class TextConsole extends Composite
    public void setAutoScroll(boolean autoScroll)
    {
       this.autoScroll = autoScroll;
+      console.setScrollOnAppend(autoScroll);
    }
    
    /**

@@ -182,6 +182,9 @@ public class AnsiIOConsoleViewer extends IOConsoleViewer
       lastRangeEnd = lastRangeEnd + range.length;
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.console.TextConsoleViewer#lineGetStyle(org.eclipse.swt.custom.LineStyleEvent)
+    */
    @Override
    public void lineGetStyle(LineStyleEvent event)
    {
