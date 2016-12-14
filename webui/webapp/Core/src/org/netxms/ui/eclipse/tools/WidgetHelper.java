@@ -687,10 +687,12 @@ public class WidgetHelper
    /**
 	 * Escape text for HTML
 	 * 
-	 * @param text
+	 * @param text text to escape
+	 * @param convertNl if true will convert new line character to <br> tag
+	 * @param jsString if true will escape ' and \ with \
 	 * @return
 	 */
-	public static String escapeText(final String text)
+	public static String escapeText(final String text, boolean convertNl, boolean jsString)
 	{
 		StringBuffer sb = new StringBuffer();
 		int textLength = text.length();
@@ -711,6 +713,19 @@ public class WidgetHelper
 				case '"':
 					sb.append("&quot;");
 					break;
+				case '\r':
+				   if (!convertNl)
+	               sb.append(ch);
+				   break;
+				case '\n':
+			      sb.append(convertNl ? "<br>" : ch);
+				   break;
+				case '\'':
+               sb.append(jsString ? "\\'" : ch);
+				   break;
+            case '\\':
+               sb.append(jsString ? "\\\\" : ch);
+               break;
 				default:
 					sb.append(ch);
 					break;

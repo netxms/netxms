@@ -140,69 +140,54 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
             case DataCollectionObject.DT_UINT:
             case DataCollectionItem.DT_INT64:
             case DataCollectionItem.DT_UINT64:               
-               if (useMultipliers)
+               long i = Long.parseLong(row.get(columnIndex).getValue());
+               if ((i >= 10000000000000L) || (i <= -10000000000000L))
                {
-                  long i = Long.parseLong(row.get(columnIndex).getValue());
-                  if ((i >= 10000000000000L) || (i <= -10000000000000L))
-                  {
-                     i = i / 1000000000000L;
-                     suffix = "T";
-                  }
-                  if ((i >= 10000000000L) || (i <= -10000000000L))
-                  {
-                     i = i / 1000000000L;
-                     suffix = "G";
-                  }
-                  if ((i >= 10000000) || (i <= -10000000))
-                  {
-                     i = i / 1000000;
-                     suffix = "M";
-                  }
-                  if ((i >= 10000) || (i <= -10000))
-                  {
-                     i = i / 1000;
-                     suffix = "K";
-                  }
-                  value = Long.toString(i);
+                  i = i / 1000000000000L;
+                  suffix = "T";
                }
-               else
+               if ((i >= 10000000000L) || (i <= -10000000000L))
                {
-                  value = row.get(columnIndex).getValue();
-                  suffix = " ";
+                  i = i / 1000000000L;
+                  suffix = "G";
                }
+               if ((i >= 10000000) || (i <= -10000000))
+               {
+                  i = i / 1000000;
+                  suffix = "M";
+               }
+               if ((i >= 10000) || (i <= -10000))
+               {
+                  i = i / 1000;
+                  suffix = "K";
+               }
+               value = Long.toString(i);
                break;
             case DataCollectionObject.DT_FLOAT:
-               if (useMultipliers)
+               double d = Double.parseDouble(row.get(columnIndex).getValue());
+               NumberFormat nf = NumberFormat.getNumberInstance();
+               nf.setMaximumFractionDigits(2);
+               if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
                {
-                  double d = Double.parseDouble(row.get(columnIndex).getValue());
-                  NumberFormat nf = NumberFormat.getNumberInstance();
-                  nf.setMaximumFractionDigits(2);
-                  if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
-                  {
-                     d = d / 1000000000000.0;
-                     suffix = "T";
-                  }
-                  if ((d >= 10000000000.0) || (d <= -10000000000.0))
-                  {
-                     d = d / 1000000000.0;
-                     suffix = "G";
-                  }
-                  if ((d >= 10000000) || (d <= -10000000))
-                  {
-                     d = d / 1000000;
-                     suffix = "M";
-                  }
-                  if ((d >= 10000) || (d <= -10000))
-                  {
-                     d = d / 1000;
-                     suffix = "K";
-                  }
-                  value = Double.toString(d);
+                  d = d / 1000000000000.0;
+                  suffix = "T";
                }
-               else
+               if ((d >= 10000000000.0) || (d <= -10000000000.0))
                {
-                  value = row.get(columnIndex).getValue();
+                  d = d / 1000000000.0;
+                  suffix = "G";
                }
+               if ((d >= 10000000) || (d <= -10000000))
+               {
+                  d = d / 1000000;
+                  suffix = "M";
+               }
+               if ((d >= 10000) || (d <= -10000))
+               {
+                  d = d / 1000;
+                  suffix = "K";
+               }
+               value = Double.toString(d);
                break;
             default:
                value = row.get(columnIndex).getValue();

@@ -781,17 +781,17 @@ public class WidgetHelper
       return (int)Math.round(pt * (device.getDPI().y / 96.0));
    }
 	
-	/**
-	 * Get width of given text in pixels using settings from given control
-	 * 
-	 * @param control
-	 * @param text
-	 * @return
-	 */
-	public static int getTextWidth(Control control, String text)
-	{
-	   return getTextExtent(control, text).x;
-	}
+   /**
+    * Get width of given text in pixels using settings from given control
+    * 
+    * @param control
+    * @param text
+    * @return
+    */
+   public static int getTextWidth(Control control, String text)
+   {
+      return getTextExtent(control, text).x;
+   }
 
    /**
     * Get width and height of given text in pixels using settings from given control

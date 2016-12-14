@@ -27,6 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.LineStyleEvent;
 import org.netxms.ui.eclipse.widgets.helpers.LineStyleListener;
 import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
@@ -188,35 +189,22 @@ public class StyledText extends Composite
    }
    
    /**
-    * Escapes chars for JavaScript query
-    * @param string
-    * @return
-    */
-   private String escapeChars(String string)
-   {
-      String result = string;
-      result = result.replaceAll("\n", "<br>");
-      result = result.replaceAll("\r", "");
-      result = result.replaceAll("'", "\\\\'");
-      
-      return result;
-   }
-
-   /**
     * refresh widget
     */
    public void refresh()
    {
-      escapeChars(textBuffer);
       try
       {
+         String ptext = WidgetHelper.escapeText(textBuffer, true, true);
          if (setText)
          {
-            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML = '" + escapeChars(textBuffer) + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML = '" + ptext + "';" + "window.scrollTo(0, document.body.scrollHeight);");
             setText = false;
          }
          else
-            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML += '" + escapeChars(textBuffer) + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+         {
+            resetBuffer = textArea.execute("document.getElementById(\"textArea\").innerHTML += '" + ptext + "';" + "window.scrollTo(0, document.body.scrollHeight);");
+         }
       }
       catch (Exception e)
       {
