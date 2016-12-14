@@ -198,6 +198,7 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, Messages.get().AccessControl_DownloadFiles, UserAccessRights.OBJECT_ACCESS_DOWNLOAD);
       createAccessCheck(rights, Messages.get().AccessControl_UploadFiles, UserAccessRights.OBJECT_ACCESS_UPLOAD);
       createAccessCheck(rights, Messages.get().AccessControl_ManageFiles, UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
+      createAccessCheck(rights, "Manage maintenance", UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

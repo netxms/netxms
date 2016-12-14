@@ -3354,7 +3354,7 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MAINTENANCE))
       {
          if ((object->getObjectClass() == OBJECT_CONTAINER) ||
              (object->getObjectClass() == OBJECT_CLUSTER) ||
@@ -3405,7 +3405,7 @@ void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MAINTENANCE))
       {
          if ((object->getObjectClass() == OBJECT_CONTAINER) ||
              (object->getObjectClass() == OBJECT_CLUSTER) ||

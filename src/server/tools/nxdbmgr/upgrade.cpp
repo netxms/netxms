@@ -722,6 +722,43 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+*  Upgrade from V419 to V420
+*/
+static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT access_rights,user_id,object_id FROM acl"));
+   DB_STATEMENT hStmt;
+   if (hResult != NULL)
+   {
+      UINT32 rights;
+      for(int i = 0; i < DBGetNumRows(hResult); i++)
+      {
+         rights = DBGetFieldULong(hResult, i, 0);
+         if ((rights & 0x2) == 0x2)
+         {
+            rights = rights | 0x8000; // Add Manage maintenance access right to all users which have Modify object access right
+            hStmt = DBPrepare(g_hCoreDB, _T("UPDATE acl SET access_rights=? WHERE user_id=? AND object_id=?"));
+            if (hStmt != NULL)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rights);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+               SQLExecute(hStmt);
+               DBFreeStatement(hStmt);
+            }
+         }
+      }
+
+      DBFreeResult(hResult);
+   }
+   else
+      return FALSE;
+
+   CHK_EXEC(SetSchemaVersion(420));
+   return TRUE;
+}
+
+/**
 *  Upgrade from V418 to V419
 */
 static BOOL H_UpgradeFromV418(int currVersion, int newVersion)
@@ -10753,6 +10790,7 @@ static struct
    { 416, 417, H_UpgradeFromV416 },
    { 417, 418, H_UpgradeFromV417 },
    { 418, 419, H_UpgradeFromV418 },
+   { 419, 420, H_UpgradeFromV419 },
    { 0, 0, NULL }
 };
 

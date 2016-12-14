@@ -66,5 +66,6 @@ public class UserAccessRights
    public static final int OBJECT_ACCESS_DOWNLOAD      = 0x00001000;
    public static final int OBJECT_ACCESS_UPLOAD        = 0x00002000;
    public static final int OBJECT_ACCESS_MANAGE_FILES  = 0x00004000;
+   public static final int OBJECT_ACCESS_MAINTENANCE   = 0x00008000;
    
 }
