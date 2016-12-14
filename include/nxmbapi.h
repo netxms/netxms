@@ -129,12 +129,6 @@ public:
 class LIBNXMB_EXPORTABLE NXMBDispatcher
 {
 private:
-   static MUTEX m_instanceAccess;
-	static NXMBDispatcher *m_instance;
-
-	static THREAD_RESULT THREAD_CALL workerThreadStarter(void *);
-
-protected:
 	Queue *m_queue;
 	int m_numSubscribers;
 	NXMBSubscriber **m_subscribers;
@@ -143,12 +137,14 @@ protected:
 	THREAD m_workerThreadHandle;
    CallHandlerMap *m_callHandlers;
    MUTEX m_callHandlerAccess;
+   CONDITION m_stopCondition;
 
 	void workerThread();
+	static THREAD_RESULT THREAD_CALL workerThreadStarter(void *);
 
 public:
 	NXMBDispatcher();
-	virtual ~NXMBDispatcher();
+	~NXMBDispatcher();
 
 	void postMessage(NXMBMessage *msg);
    bool call(const TCHAR *callName, const void *input, void *output);
@@ -159,8 +155,7 @@ public:
    void addCallHandler(const TCHAR *callName, NXMBCallHandler handler);
    void removeCallHandler(const TCHAR *callName);
 
-	static NXMBDispatcher *getInstance();
+   static NXMBDispatcher *getInstance();
 };
-
 
 #endif   /* _nxmbapi_h_ */
