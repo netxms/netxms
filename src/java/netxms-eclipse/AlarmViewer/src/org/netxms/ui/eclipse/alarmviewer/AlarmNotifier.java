@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ public class AlarmNotifier
       ps = Activator.getDefault().getPreferenceStore();
       workspaceUrl = Platform.getInstanceLocation().getURL();
       // Check that required alarm melodies are present locally.
-      checkMelodies();
+      checkSounds();
 
       lastReminderTime = System.currentTimeMillis();
 
@@ -186,13 +186,13 @@ public class AlarmNotifier
    }
 
    /**
-    * Check if required melodies exist locally and download them from server if required.
+    * Check if required sounds exist locally and download them from server if required.
     */
-   private static void checkMelodies()
+   private static void checkSounds()
    {
       for(int i = 0; i < 5; i++)
       {
-         getMelodyAndDownloadIfRequired(SEVERITY_TEXT[i]);
+         getSoundAndDownloadIfRequired(SEVERITY_TEXT[i]);
       }
    }
 
@@ -200,14 +200,14 @@ public class AlarmNotifier
     * @param severity
     * @return
     */
-   private static String getMelodyAndDownloadIfRequired(String severity)
+   private static String getSoundAndDownloadIfRequired(String severity)
    {
-      String melodyName = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
-      if (!isMelodyExists(melodyName, workspaceUrl))
+      String soundName = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
+      if (!isSoundExist(soundName, workspaceUrl))
       {
          try
          {
-            File fileContent = session.downloadFileFromServer(melodyName);
+            File fileContent = session.downloadFileFromServer(soundName);
             if (fileContent != null)
             {
                FileInputStream src = null;
@@ -215,7 +215,7 @@ public class AlarmNotifier
                try
                {
                   src = new FileInputStream(fileContent);
-                  File f = new File(workspaceUrl.getPath(), melodyName);
+                  File f = new File(workspaceUrl.getPath(), soundName);
                   f.createNewFile();
                   dest = new FileOutputStream(f);
                   FileChannel fcSrc = src.getChannel();
@@ -236,7 +236,7 @@ public class AlarmNotifier
          }
          catch(final Exception e)
          {
-            melodyName = ""; //$NON-NLS-1$
+            soundName = ""; //$NON-NLS-1$
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
             Display.getDefault().asyncExec(new Runnable() {
                @Override
@@ -252,19 +252,19 @@ public class AlarmNotifier
             });
          }
       }
-      return melodyName;
+      return soundName;
    }
 
    /**
-    * @param melodyName
+    * @param name
     * @param workspaceUrl
     * @return
     */
-   private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
+   private static boolean isSoundExist(String name, URL workspaceUrl)
    {
-      if (!melodyName.isEmpty() && (workspaceUrl != null))
+      if (!name.isEmpty() && (workspaceUrl != null))
       {
-         File f = new File(workspaceUrl.getPath(), melodyName);
+         File f = new File(workspaceUrl.getPath(), name);
          return f.isFile();
       }
       else
@@ -304,7 +304,7 @@ public class AlarmNotifier
       String fileName;
       try
       {
-         fileName = getMelodyAndDownloadIfRequired(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         fileName = getSoundAndDownloadIfRequired(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
       }
       catch(ArrayIndexOutOfBoundsException e)
       {
