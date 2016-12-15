@@ -745,13 +745,23 @@ static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
                SQLExecute(hStmt);
             }
          }
+         DBFreeStatement(hStmt);
       }
-
-      DBFreeStatement(hStmt);
+      else
+      {
+         if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
       DBFreeResult(hResult);
    }
    else
-      return FALSE;
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
 
    CHK_EXEC(SetSchemaVersion(421));
    return TRUE;
