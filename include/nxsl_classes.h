@@ -832,6 +832,19 @@ public:
 };
 
 /**
+ * NXSL "TableRow" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_TableRowClass : public NXSL_Class
+{
+public:
+   NXSL_TableRowClass();
+   virtual ~NXSL_TableRowClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * NXSL "TableColumn" class
  */
 class LIBNXSL_EXPORTABLE NXSL_TableColumnClass : public NXSL_Class
@@ -900,6 +913,7 @@ public:
  */
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;

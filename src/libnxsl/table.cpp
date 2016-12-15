@@ -28,7 +28,34 @@
  */
 NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
+NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
+
+/**
+ * Table row reference
+ */
+class TableRowReference
+{
+private:
+   Table *m_table;
+   int m_index;
+
+public:
+   TableRowReference(Table *table, int index)
+   {
+      m_table = table;
+      m_index = index;
+      table->incRefCount();
+   }
+   ~TableRowReference()
+   {
+      m_table->decRefCount();
+   }
+
+   const TCHAR *get(int col) { return m_table->getAsString(m_index, col); }
+   int getIndex() { return m_index; }
+   Table *getTable() { return m_table; }
+};
 
 /**
  * addRow() method
@@ -187,6 +214,15 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)table->getNumRows());
    }
+   else if (!_tcscmp(attr, _T("rows")))
+   {
+      NXSL_Array *rows = new NXSL_Array();
+      for(int i = 0; i < table->getNumRows(); i++)
+      {
+         rows->set(i, new NXSL_Value(new NXSL_Object(&g_nxslTableRowClass, new TableRowReference(table, i))));
+      }
+      value = new NXSL_Value(rows);
+   }
    else if (!_tcscmp(attr, _T("title")))
    {
       value = new NXSL_Value(table->getTitle());
@@ -260,6 +296,68 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *att
    else if (!_tcscmp(attr, _T("name")))
    {
       value = new NXSL_Value(tc->getName());
+   }
+   return value;
+}
+
+/**
+ * TableRow::get(column) method
+ */
+NXSL_METHOD_DEFINITION(TableRow, get)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   const TCHAR *value = ((TableRowReference *)object->getData())->get(argv[0]->getValueAsInt32());
+   *result = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+   return 0;
+}
+
+/**
+ * Implementation of "TableRow" class: constructor
+ */
+NXSL_TableRowClass::NXSL_TableRowClass() : NXSL_Class()
+{
+   setName(_T("TableRow"));
+
+   NXSL_REGISTER_METHOD(TableRow, get, 1);
+}
+
+/**
+ * Implementation of "TableRow" class: destructor
+ */
+NXSL_TableRowClass::~NXSL_TableRowClass()
+{
+}
+
+/**
+ * Object delete
+ */
+void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (TableRowReference *)object->getData();
+}
+
+/**
+ * Implementation of "TableRow" class: get attribute
+ */
+NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NULL;
+   TableRowReference *row = (TableRowReference *)object->getData();
+   if (!_tcscmp(attr, _T("index")))
+   {
+      value = new NXSL_Value(row->getIndex());
+   }
+   else if (!_tcscmp(attr, _T("values")))
+   {
+      NXSL_Array *values = new NXSL_Array();
+      for(int i = 0; i < row->getTable()->getNumColumns(); i++)
+      {
+         const TCHAR *v = row->get(i);
+         values->set(i, (v != NULL) ? new NXSL_Value(v) : new NXSL_Value());
+      }
+      value = new NXSL_Value(values);
    }
    return value;
 }

@@ -9,6 +9,7 @@
 - Added template graphs
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - New NXSL "Node" class attributes: isInMaintenanceMode, lastAgentCommTime
+- New NXSL "Table" class attribute "rows"
 - Access to object's alarms in NXSL via "alarms" attribute in "NetObj" class
 - Operator "new" in NXSL which can be used to instantiate objects if object class supports it
 - Template auto-apply and container auto-bind works for clusters
