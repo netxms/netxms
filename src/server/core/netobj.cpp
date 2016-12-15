@@ -663,18 +663,6 @@ void NetObj::deleteObject(NetObj *initiator)
    m_childList->clear();
    unlockChildList();
 
-   // Delete orphaned child objects
-   if (deleteList != NULL)
-   {
-      for(int i = 0; i < deleteList->size(); i++)
-      {
-         NetObj *obj = deleteList->get(i);
-         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), obj->getName(), obj->getId());
-         obj->deleteObject(this);
-      }
-      delete deleteList;
-   }
-
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
    lockParentList(true);
@@ -686,12 +674,31 @@ void NetObj::deleteObject(NetObj *initiator)
       if (obj != initiator)
       {
          obj->deleteChild(this);
-         obj->calculateCompoundStatus();
+         if ((obj->getObjectClass() == OBJECT_SUBNET) && (g_flags & AF_DELETE_EMPTY_SUBNETS) && (obj->getChildCount() == 0))
+         {
+            if (deleteList == NULL)
+               deleteList = new ObjectArray<NetObj>(16, 16, false);
+            deleteList->add(obj);
+         }
+         else
+            obj->calculateCompoundStatus();
       }
 		decRefCount();
    }
    m_parentList->clear();
    unlockParentList();
+
+   // Delete orphaned child objects and empty subnets
+   if (deleteList != NULL)
+   {
+      for(int i = 0; i < deleteList->size(); i++)
+      {
+         NetObj *obj = deleteList->get(i);
+         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), obj->getName(), obj->getId());
+         obj->deleteObject(this);
+      }
+      delete deleteList;
+   }
 
    lockProperties();
    m_isHidden = false;
