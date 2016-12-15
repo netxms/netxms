@@ -50,8 +50,9 @@ public abstract class Plugin
     * Initialize plugin
     * 
     * @param config agent configuration
+    * @throws PluginInitException when plugin initialization failed
     */
-   public void init(Config config)
+   public void init(Config config) throws PluginInitException
    {
       SubAgent.writeDebugLog(6, "JAVA/" + getName() + ": initializing");
    }

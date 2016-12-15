@@ -7,6 +7,7 @@ import org.netxms.agent.Config;
 import org.netxms.agent.Parameter;
 import org.netxms.agent.ParameterType;
 import org.netxms.agent.Plugin;
+import org.netxms.agent.PluginInitException;
 import org.netxms.agent.adapters.ParameterAdapter;
 
 import java.nio.file.Paths;
@@ -60,8 +61,12 @@ public final class Bind9Plugin extends Plugin {
         this.collectionThread = new Thread(collector);
     }
 
-    @Override
-    public void init(Config config) {
+    /* (non-Javadoc)
+    * @see org.netxms.agent.Plugin#init(org.netxms.agent.Config)
+    */
+   @Override
+    public void init(Config config) throws PluginInitException 
+    {
         super.init(config);
 
         // start the collection thread
