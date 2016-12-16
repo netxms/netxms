@@ -120,63 +120,28 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Parse mymobile server response
  */
-static bool ParseResponse(const char *response)
+static bool ParseResponse(const char *xml)
 {
-   json_error_t error;
-   json_t *root = json_loads(response, 0, &error);
-   if (root == NULL)
+   Config *response = new Config();
+   if (!response->loadXmlConfigFromMemory(xml, strlen(xml), NULL, "api_result", false))
    {
-      nxlog_debug(4, _T("MyMobile: cannot parse response JSON"));
+      nxlog_debug(4, _T("MyMobile: cannot parse response XML"));
       return false;
    }
 
    bool success = false;
-   json_t *apiResult = json_object_get(root, "api_result");
-   if (apiResult != NULL)
+   const TCHAR *result = response->getValue(_T("/call_result/result"), _T("false"));
+   if (!_tcsicmp(result, _T("true")))
    {
-      json_t *callResult = json_object_get(apiResult, "call_result");
-      if(callResult != NULL)
-      {
-         json_t *result = json_object_get(callResult, "result");
-         if(result != NULL)
-         {
-            if(json_string_value(result) != NULL)
-            {
-               char *tmp = strlwr(strdup(json_string_value(result)));
-               if(strcmp(tmp, "true"))
-               {
-                  success = true;
-               }
-               else
-               {
-                  nxlog_debug(4, _T("MyMobile: sending result: %s"), json_string_value(result));
-                  json_t *error = json_object_get(callResult, "error");
-                  if(json_string_value(error) != NULL && json_string_value(error) != NULL)
-                     nxlog_debug(4, _T("MyMobile: sending error details %s"), json_string_value(error));
-               }
-               free(tmp);
-            }
-            else
-            {
-               nxlog_debug(4, _T("MyMobile: invalid response (invalid value in \"result\" part)"));
-            }
-         }
-         else
-         {
-            nxlog_debug(4, _T("MyMobile: invalid response (missing \"result\" part)"));
-         }
-      }
-      else
-      {
-         nxlog_debug(4, _T("MyMobile: invalid response (missing \"call_result\" part)"));
-      }
+      success = true;
    }
    else
    {
-      nxlog_debug(4, _T("MyMobile: invalid response (missing \"api_result\" part)"));
+      nxlog_debug(4, _T("MyMobile: sending result: %s"), result);
+      const TCHAR *error = response->getValue(_T("/call_result/error"));
+      if (error != NULL)
+         nxlog_debug(4, _T("MyMobile: sending error details: %s"), error);
    }
-
-   json_decref(root);
    return success;
 }
 
