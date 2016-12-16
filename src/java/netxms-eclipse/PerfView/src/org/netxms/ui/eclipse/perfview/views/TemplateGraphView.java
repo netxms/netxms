@@ -64,6 +64,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Historical data view
  */
+@SuppressWarnings("restriction")
 public class TemplateGraphView extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$

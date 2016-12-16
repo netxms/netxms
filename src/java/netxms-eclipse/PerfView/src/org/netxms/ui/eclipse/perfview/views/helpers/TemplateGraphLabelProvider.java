@@ -22,9 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.perfview.views.TemplateGraphView;
 
 /**

@@ -723,7 +723,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          };
       }
       
-      actionSaveAsImage = new Action("Copy as image", SharedIcons.SAVE_AS_IMAGE) {
+      actionSaveAsImage = new Action("Save as image...", SharedIcons.SAVE_AS_IMAGE) {
           @Override
           public void run()
           {

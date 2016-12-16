@@ -1,13 +1,11 @@
 function canvas2image_findElementByRWTId(id, tagName)
 {
-	console.log("test");
 	var elements = document.getElementsByTagName(tagName);
 
 	for(i = 0; i < elements.length; i++)
 	{
 		if (elements[i].rwtObject._control._rwtId != null && elements[i].rwtObject._control._rwtId == id)
 		{
-			console.log("match!");
 			return elements[i];
 		}
 	}
@@ -20,7 +18,6 @@ function canvas2image_drawImageFromChart(chartRoot, background)
 		var children = chartRoot.rwtObject._control._children;
 	}
 
-	console.log(children);
 	var canvas = document.createElement("canvas");
 	canvas.height = chartRoot.height;
 	canvas.width = chartRoot.width;
@@ -39,6 +36,7 @@ function canvas2image_drawImageFromChart(chartRoot, background)
 			context.drawImage(children[i]._element.firstChild, children[i]._computedLeftValue, children[i]._computedTopValue);
 		}	
 	}
+
 	download(canvas.toDataURL(), "graph.png", "image/png");
 }
 

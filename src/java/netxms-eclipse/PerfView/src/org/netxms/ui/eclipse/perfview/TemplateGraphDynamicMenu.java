@@ -18,7 +18,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractNode;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.api.GraphTemplateCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
