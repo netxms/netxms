@@ -7,6 +7,9 @@
 package org.swtchart;
 
 import java.text.DecimalFormat;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.internal.lifecycle.RemoteAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Canvas;
@@ -26,6 +29,7 @@ import org.swtchart.internal.series.SeriesSet;
 /**
  * A chart which are composed of title, legend, axes and plot area.
  */
+@SuppressWarnings("restriction")
 public class Chart extends Canvas implements Listener
 {
 	/** cached tick step on Y axis */
@@ -396,5 +400,34 @@ public class Chart extends Canvas implements Listener
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+   
+   /**
+    * @return RWT ID
+    */
+   public String getRwtId()
+   {
+      return getAdapter(RemoteAdapter.class).getId();
+   }
+   
+   /**
+    * Sava chart as image
+    */
+   public void saveAsImage()
+   {
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if( executor != null ) 
+      {
+         int r = getBackground().getRed();
+         int g = getBackground().getGreen();
+         int b = getBackground().getBlue();
+         StringBuilder js = new StringBuilder();
+         js.append("canvas2image_convert('");
+         js.append(getRwtId());
+         js.append("', 'canvas', '#");
+         js.append(String.format("%02x%02x%02x", r, g, b));
+         js.append("');"); //$NON-NLS-1$
+         executor.execute(js.toString());
+      }
    }
 }

@@ -419,6 +419,14 @@
             class="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript"
             id="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript">
       </resource>
+      <resource
+            class="org.netxms.ui.eclipse.console.Canvas2Image"
+            id="org.netxms.ui.eclipse.console.Canvas2Image">
+      </resource>
+      <resource
+            class="org.netxms.ui.eclipse.console.DownloadHandlerScript"
+            id="org.netxms.ui.eclipse.console.DownloadHandlerScript">
+      </resource>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

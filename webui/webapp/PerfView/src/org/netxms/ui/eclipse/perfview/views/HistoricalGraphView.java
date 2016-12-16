@@ -33,6 +33,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -61,6 +63,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -117,6 +120,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionSave;
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
+   private Action actionSaveAsImage;
 
    /*
     * (non-Javadoc)
@@ -698,6 +702,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             updateChart();
          }
       });
+      
+      actionSaveAsImage = new Action("Copy as image", SharedIcons.SAVE_AS_IMAGE) {
+         @Override
+         public void run()
+         {
+            chart.saveAsImage();
+         }
+      };
    }
    
    /**
@@ -829,6 +841,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAsTemplate);
+      manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
