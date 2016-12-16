@@ -95,15 +95,15 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmList extends CompositeWithMessageBar
 {
-	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
-	
-	// Columns
-	public static final int COLUMN_SEVERITY = 0;
-	public static final int COLUMN_STATE = 1;
-	public static final int COLUMN_SOURCE = 2;
-	public static final int COLUMN_MESSAGE = 3;
-	public static final int COLUMN_COUNT = 4;
-	public static final int COLUMN_COMMENTS = 5;
+   public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
+
+   // Columns
+   public static final int COLUMN_SEVERITY = 0;
+   public static final int COLUMN_STATE = 1;
+   public static final int COLUMN_SOURCE = 2;
+   public static final int COLUMN_MESSAGE = 3;
+   public static final int COLUMN_COUNT = 4;
+   public static final int COLUMN_COMMENTS = 5;
    public static final int COLUMN_HELPDESK_REF = 6;
 	public static final int COLUMN_ACK_BY = 7;
 	public static final int COLUMN_CREATED = 8;
@@ -131,19 +131,19 @@ public class AlarmList extends CompositeWithMessageBar
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
-	private Action actionExportToCsv;
-	private MenuManager timeAcknowledgeMenu;
-	private List<Action> timeAcknowledge;
-	private Action timeAcknowledgeOther;
-	
-	/**
-	 * Create alarm list widget
-	 *  
-	 * @param viewPart owning view part
-	 * @param parent parent composite
-	 * @param style widget style
-	 * @param configPrefix prefix for saving/loading widget configuration
-	 */
+   private Action actionExportToCsv;
+   private MenuManager timeAcknowledgeMenu;
+   private List<Action> timeAcknowledge;
+   private Action timeAcknowledgeOther;
+
+   /**
+    * Create alarm list widget
+    * 
+    * @param viewPart owning view part
+    * @param parent parent composite
+    * @param style widget style
+    * @param configPrefix prefix for saving/loading widget configuration
+    */
    public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
@@ -738,18 +738,18 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-	 * Change root object for alarm list
-	 * 
-	 * @param objectId ID of new root object
-	 */
-	public void setRootObject(long objectId)
-	{
-		alarmFilter.setRootObject(objectId);
-		synchronized(alarmList)
-		{
+    * Change root object for alarm list
+    * 
+    * @param objectId ID of new root object
+    */
+   public void setRootObject(long objectId)
+   {
+      alarmFilter.setRootObject(objectId);
+      synchronized(alarmList)
+      {
 	      filterAndLimit();
-		}
-	}
+      }
+   }
 
    /**
     * Change root objects for alarm list. List is refreshed after change.
@@ -805,14 +805,14 @@ public class AlarmList extends CompositeWithMessageBar
                synchronized(alarmList)
                {
                   alarmViewer.setInput(filteredAlarmList);
-               }
-               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
-               {
-                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
-               }
-               else
-               {
-                  hideMessage();
+                  if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
+                  {
+                     showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
+                  }
+                  else
+                  {
+                     hideMessage();
+                  }
                }
             }
          }
@@ -1058,7 +1058,7 @@ public class AlarmList extends CompositeWithMessageBar
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1075,7 +1075,7 @@ public class AlarmList extends CompositeWithMessageBar
       IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new ConsoleJob(Messages.get().AlarmList_JobTitle_UnlinkTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
@@ -1083,7 +1083,7 @@ public class AlarmList extends CompositeWithMessageBar
          {
             session.unlinkHelpdeskIssue(id);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1113,17 +1113,17 @@ public class AlarmList extends CompositeWithMessageBar
 			{
             MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
                   Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
-			}
-		}
-	}
-	
-	/**
-	 * Get underlying table viewer.
-	 * 
-	 * @return
-	 */
-	public TableViewer getViewer()
-	{
-		return alarmViewer;
-	}
+         }
+      }
+   }
+
+   /**
+    * Get underlying table viewer.
+    * 
+    * @return
+    */
+   public TableViewer getViewer()
+   {
+      return alarmViewer;
+   }
 }

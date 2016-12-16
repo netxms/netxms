@@ -137,7 +137,7 @@ public class AlarmList extends CompositeWithMessageBar
    public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;	
 		
 		// Setup table columns
@@ -638,6 +638,20 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
+    * Change root objects for alarm list. List is refreshed after change.
+    * 
+    * @param List of objectId
+    */
+   public void setRootObjects(List<Long> selectedObjects) 
+   {
+      alarmFilter.setRootObjects(selectedObjects);
+      synchronized(alarmList)
+      {
+         filterAndLimit();
+      }
+   }
+
+   /**
     * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
     * configuration parameter <code>AlarmListDisplayLimit</code>.
     */
@@ -677,33 +691,19 @@ public class AlarmList extends CompositeWithMessageBar
                synchronized(alarmList)
                {
                   alarmViewer.setInput(filteredAlarmList);
-               }
-               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
-               {
-                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
-               }
-               else
-               {
-                  hideMessage();
+                  if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
+                  {
+                     showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
+                  }
+                  else
+                  {
+                     hideMessage();
+                  }
                }
             }
          }
       });
    }
-
-   /**
-	 * Change root objects for alarm list. List is refreshed after change.
-	 * 
-	 * @param List of objectId
-	 */
-	public void setRootObjects(List<Long> selectedObjects) 
-	{
-		alarmFilter.setRootObjects(selectedObjects);
-		synchronized(alarmList)
-		{
-			alarmViewer.refresh();
-		}
-	}
 
 	/**
     * Refresh alarm list
