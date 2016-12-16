@@ -1,5 +1,6 @@
 function canvas2image_findElementByRWTId(id, tagName)
 {
+	console.log("test");
 	var elements = document.getElementsByTagName(tagName);
 
 	for(i = 0; i < elements.length; i++)
@@ -23,10 +24,6 @@ function canvas2image_drawImageFromChart(chartRoot, background)
 	var canvas = document.createElement("canvas");
 	canvas.height = chartRoot.height;
 	canvas.width = chartRoot.width;
-	//chartRoot.style.backgroundColor = background;
-
-	console.log(background);
-	//console.log(chartRoot.style.backgroundColor);
 
 	var context = canvas.getContext("2d");
 	context.fillStyle = background;
@@ -36,10 +33,12 @@ function canvas2image_drawImageFromChart(chartRoot, background)
 
 	for(i = children.length-1; i >= 0; i--)
 	{
-		context.drawImage(children[i]._element.firstChild, children[i]._computedLeftValue, children[i]._computedTopValue);
+		console.log(children[i]._element.firstChild);
+		if ((children[i]._computedWidthValue > 0) && (children[i]._computedHeightValue > 0))
+		{
+			context.drawImage(children[i]._element.firstChild, children[i]._computedLeftValue, children[i]._computedTopValue);
+		}	
 	}
-	canvas.style.backgroundColor = background;
-	console.log(canvas.style.backgroundColor);
 	download(canvas.toDataURL(), "graph.png", "image/png");
 }
 
