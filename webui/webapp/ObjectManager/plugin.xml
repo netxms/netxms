@@ -615,6 +615,7 @@
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
                label="Apply policy"
                menubarPath="objectbinding">
@@ -1060,6 +1061,14 @@
             id="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
             name="%action.label.ScheduleMaintenance">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.commands.restart_poller"
+            name="Restart poller">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.commands.clear_output"
+            name="Clear output">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -1087,6 +1096,29 @@
             class="org.netxms.ui.eclipse.objectmanager.actions.ScheduleMaintenance"
             commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance">
       </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.objectmanager.contexts.NodePollerView"
+            name="Node Poll"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.objectmanager.commands.restart_poller"
+            contextId="org.netxms.ui.eclipse.objectmanager.contexts.NodePollerView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectmanager.commands.clear_output"
+            contextId="org.netxms.ui.eclipse.objectmanager.contexts.NodePollerView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+L">
+      </key>
    </extension>
 
 </plugin>

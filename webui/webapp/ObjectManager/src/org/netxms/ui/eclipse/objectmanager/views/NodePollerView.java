@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
@@ -33,6 +34,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
@@ -52,23 +55,21 @@ import org.netxms.ui.eclipse.widgets.helpers.StyleRange;
 public class NodePollerView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView"; //$NON-NLS-1$
-   
-   private final String[] POLL_NAME = 
-      { 
-         "", //$NON-NLS-1$ 
+
+   private final String[] POLL_NAME = { 
+         "", //$NON-NLS-1$
          Messages.get().NodePollerView_StatusPoll, 
-         Messages.get().NodePollerView_FullConfigPoll, 
+         Messages.get().NodePollerView_FullConfigPoll,
          Messages.get().NodePollerView_InterfacePoll, 
          Messages.get().NodePollerView_TopologyPoll,
-         Messages.get().NodePollerView_ConfigPoll,
-         Messages.get().NodePollerView_InstanceDiscovery
+         Messages.get().NodePollerView_ConfigPoll, 
+         Messages.get().NodePollerView_InstanceDiscovery 
       };
-   
    private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
    private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
    private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
    private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
-   
+
    private NXCSession session;
    private AbstractNode node;
    private NodePollType pollType;
@@ -77,33 +78,37 @@ public class NodePollerView extends ViewPart
    private boolean pollActive = false;
    private Action actionRestart;
    private Action actionClearOutput;
-   
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
    public void init(IViewSite site) throws PartInitException
    {
       super.init(site);
-      
+
       session = (NXCSession)ConsoleSharedData.getSession();
       display = Display.getCurrent();
-      
+
       // Secondary ID must by in form nodeId&pollType
       String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
       if (parts.length != 2)
          throw new PartInitException("Internal error"); //$NON-NLS-1$
-      
+
       AbstractObject obj = session.findObjectById(Long.parseLong(parts[0]));
       node = ((obj != null) && (obj instanceof AbstractNode)) ? (AbstractNode)obj : null;
       if (node == null)
          throw new PartInitException(Messages.get().NodePollerView_InvalidObjectID);
       pollType = NodePollType.valueOf(parts[1]);
-      
+
       setPartName(POLL_NAME[pollType.getValue()] + " - " + node.getObjectName()); //$NON-NLS-1$
    }
 
-   /* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -112,16 +117,31 @@ public class NodePollerView extends ViewPart
       textArea = new StyledText(parent, SWT.MULTI | SWT.V_SCROLL);
       textArea.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
       textArea.setScrollOnAppend(true);
-      
+
+      activateContext();
       createActions();
       contributeToActionBars();
    }
-   
+
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.objectmanager.contexts.NodePollerView"); //$NON-NLS-1$
+      }
+   }
+
    /**
     * Create actions
     */
    private void createActions()
    {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+
       actionRestart = new Action(Messages.get().NodePollerView_ActionRestart, SharedIcons.RESTART) {
          @Override
          public void run()
@@ -129,6 +149,8 @@ public class NodePollerView extends ViewPart
             startPoll();
          }
       };
+      actionRestart.setActionDefinitionId("org.netxms.ui.eclipse.objectmanager.commands.restart_poller"); //$NON-NLS-1$
+      handlerService.activateHandler(actionRestart.getActionDefinitionId(), new ActionHandler(actionRestart));
 
       actionClearOutput = new Action(Messages.get().NodePollerView_ActionClear, SharedIcons.CLEAR_LOG) {
          @Override
@@ -137,6 +159,8 @@ public class NodePollerView extends ViewPart
             textArea.setText(""); //$NON-NLS-1$
          }
       };
+      actionClearOutput.setActionDefinitionId("org.netxms.ui.eclipse.objectmanager.commands.clear_output"); //$NON-NLS-1$
+      handlerService.activateHandler(actionClearOutput.getActionDefinitionId(), new ActionHandler(actionClearOutput));
    }
 
    /**
@@ -152,8 +176,7 @@ public class NodePollerView extends ViewPart
    /**
     * Fill local pull-down menu
     * 
-    * @param manager
-    *           Menu manager for pull-down menu
+    * @param manager Menu manager for pull-down menu
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
@@ -164,8 +187,7 @@ public class NodePollerView extends ViewPart
    /**
     * Fill local tool bar
     * 
-    * @param manager
-    *           Menu manager for local toolbar
+    * @param manager Menu manager for local toolbar
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
@@ -192,7 +214,7 @@ public class NodePollerView extends ViewPart
    {
       Date now = new Date();
       textArea.append("[" + RegionalSettings.getDateTimeFormat().format(now) + "] "); //$NON-NLS-1$ //$NON-NLS-2$
-      
+
       int index = message.indexOf(0x7F);
       if (index != -1)
       {
@@ -201,7 +223,7 @@ public class NodePollerView extends ViewPart
          int lastPos = textArea.getCharCount();
          final String msgPart = message.substring(index + 2);
          textArea.append(msgPart);
-         
+
          StyleRange style = new StyleRange();
          style.start = lastPos;
          style.length = msgPart.length();
@@ -213,7 +235,7 @@ public class NodePollerView extends ViewPart
          textArea.append(message);
       }
    }
-   
+
    /**
     * Get color from color code
     * 
@@ -236,7 +258,9 @@ public class NodePollerView extends ViewPart
       return null;
    }
 
-   /* (non-Javadoc)
+   /*
+    * (non-Javadoc)
+    * 
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -254,9 +278,9 @@ public class NodePollerView extends ViewPart
          return;
       pollActive = true;
       actionRestart.setEnabled(false);
-      
+
       addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n"); //$NON-NLS-1$
-      
+
       final TextOutputListener listener = new TextOutputListener() {
          @Override
          public void messageReceived(final String message)
@@ -271,7 +295,7 @@ public class NodePollerView extends ViewPart
             });
          }
       };
-      
+
       Job job = new Job(String.format(Messages.get().NodePollerView_JobName, node.getObjectName(), node.getObjectId())) {
          @Override
          protected IStatus run(IProgressMonitor monitor)
@@ -291,7 +315,7 @@ public class NodePollerView extends ViewPart
       job.setSystem(true);
       job.schedule();
    }
-   
+
    /**
     * Poll completion handler
     * 
