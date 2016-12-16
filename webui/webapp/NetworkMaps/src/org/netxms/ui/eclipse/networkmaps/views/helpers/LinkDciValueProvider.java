@@ -241,8 +241,11 @@ public class LinkDciValueProvider
 	      }
       }
 	}
-
 	
+   /**
+    * @param link
+    * @return
+    */
    public String getDciDataAsString(NetworkMapLink link)
    {
       if (!link.hasDciData())
@@ -252,7 +255,7 @@ public class LinkDciValueProvider
       for(int i = 0; i < dciList.length;)
       {
          DciValue v = getDciLastValue(dciList[i].dciId); 
-         if(v != null)
+         if (v != null)
          {
             String formatString = dciList[i].getFormatString();
             result += v.format(formatString.isEmpty() ? "%s" : formatString); //$NON-NLS-1$
@@ -263,13 +266,17 @@ public class LinkDciValueProvider
       return result;
    }
    
+   /**
+    * @param DCIList
+    * @return
+    */
    public String getDciDataAsString(List<SingleDciConfig> DCIList)
    {
       String result = ""; //$NON-NLS-1$
       for(int i = 0; i < DCIList.size();)
       {
          DciValue v = getDciLastValue(DCIList.get(i).dciId); 
-         if(v != null)
+         if (v != null)
          {
             String formatString = DCIList.get(i).getFormatString();
             result += v.format(formatString.isEmpty() ? "%s" : formatString); //$NON-NLS-1$

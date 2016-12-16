@@ -34,7 +34,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -459,19 +459,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
     */
    protected String getValueAsDisplayString(DataComparisonElement dci)
    {
-      switch(dci.getObject().getDataType())
-      {
-         case DataCollectionItem.DT_INT:
-            return String.format(dci.getDisplayFormat(), (int)dci.getValue());
-         case DataCollectionItem.DT_UINT:
-         case DataCollectionItem.DT_INT64:
-         case DataCollectionItem.DT_UINT64:
-            return String.format(dci.getDisplayFormat(), (long)dci.getValue());
-         case DataCollectionItem.DT_STRING:
-            return String.format(dci.getDisplayFormat(), dci.getRawValue());
-         default:
-            return String.format(dci.getDisplayFormat(), dci.getValue());
-      }
+      return new DataFormatter(dci.getDisplayFormat(), dci.getObject().getDataType()).format(dci.getRawValue());
    }
 
 	/* (non-Javadoc)

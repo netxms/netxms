@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
-import java.text.NumberFormat;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -26,7 +25,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -97,7 +95,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					return Messages.get().LastValuesLabelProvider_Error;
 				if (((DciValue)element).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
 					return Messages.get().LastValuesLabelProvider_Table;
-				return useMultipliers ? getValue((DciValue)element) : ((DciValue)element).getValue();
+				return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				if (((DciValue)element).getTimestamp().getTime() == 0)
 					return null;
@@ -119,74 +117,6 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		if (threshold == null)
 			return Messages.get().LastValuesLabelProvider_OK;
 		return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
-	}
-
-	/**
-	 * @param element
-	 * @return
-	 */
-	private String getValue(DciValue element)
-	{
-		switch(element.getDataType())
-		{
-			case DataCollectionItem.DT_INT:
-			case DataCollectionItem.DT_INT64:
-			case DataCollectionItem.DT_UINT:
-			case DataCollectionItem.DT_UINT64:
-				try
-				{
-					long i = Long.parseLong(element.getValue());
-					if ((i >= 10000000000000L) || (i <= -10000000000000L))
-					{
-						return Long.toString(i / 1000000000000L) + " T"; //$NON-NLS-1$
-					}
-					if ((i >= 10000000000L) || (i <= -10000000000L))
-					{
-						return Long.toString(i / 1000000000L) + Messages.get().LastValuesLabelProvider_Giga;
-					}
-					if ((i >= 10000000) || (i <= -10000000))
-					{
-						return Long.toString(i / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
-					}
-					if ((i >= 10000) || (i <= -10000))
-					{
-						return Long.toString(i / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
-					}
-				}
-				catch(NumberFormatException e)
-				{
-				}
-				return element.getValue();
-			case DataCollectionItem.DT_FLOAT:
-				try
-				{
-					double d = Double.parseDouble(element.getValue());
-					NumberFormat nf = NumberFormat.getNumberInstance();
-					nf.setMaximumFractionDigits(2);
-					if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
-					{
-						return nf.format(d / 1000000000000.0) + " T"; //$NON-NLS-1$
-					}
-					if ((d >= 10000000000.0) || (d <= -10000000000.0))
-					{
-						return nf.format(d / 1000000000.0) + Messages.get().LastValuesLabelProvider_Giga;
-					}
-					if ((d >= 10000000) || (d <= -10000000))
-					{
-						return nf.format(d / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
-					}
-					if ((d >= 10000) || (d <= -10000))
-					{
-						return nf.format(d / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
-					}
-				}
-				catch(NumberFormatException e)
-				{
-				}
-				return element.getValue();
-			default:
-				return element.getValue();
-		}
 	}
 
 	/* (non-Javadoc)
