@@ -83,6 +83,9 @@ public class ScheduleTableEntryComparator extends ViewerComparator
             
             result = user1.compareTo(user2);
             break;
+         case ScheduledTaskView.COMMENTS:
+            result = task1.getComments().compareToIgnoreCase(task2.getComments());
+            break;
          default:
             result = 0;
             break;

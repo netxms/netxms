@@ -74,6 +74,7 @@ private:
    TCHAR *m_taskHandlerId;
    TCHAR *m_schedule;
    TCHAR *m_params;
+   TCHAR *m_comments;
    time_t m_executionTime;
    time_t m_lastExecution;
    UINT32 m_flags;
@@ -81,8 +82,8 @@ private:
    UINT32 m_objectId;
 
 public:
-   ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
-   ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
+   ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
+   ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
    ScheduledTask(DB_RESULT hResult, int row);
    ~ScheduledTask();
 
@@ -99,8 +100,8 @@ public:
    void setFlag(UINT32 flag) { m_flags |= flag; }
    void removeFlag(UINT32 flag) { m_flags &= ~flag; }
 
-   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags);
-   void update(const TCHAR *taskHandlerId, time_t nextExecution, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags);
+   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags);
+   void update(const TCHAR *taskHandlerId, time_t nextExecution, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags);
 
    void saveToDatabase(bool newObject);
    void run(SchedulerCallback *callback);
@@ -118,10 +119,10 @@ public:
 void InitializeTaskScheduler();
 void CloseTaskScheduler();
 void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight);
-UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags = 0);
-UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags = 0);
-UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
-UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
+UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, const TCHAR *comments = _T(""), UINT32 flags = 0);
+UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, const TCHAR *comments = _T(""), UINT32 flags = 0);
+UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
+UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
 UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights);
 void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights);

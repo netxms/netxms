@@ -2445,6 +2445,7 @@ CREATE TABLE scheduled_tasks
   flags integer not null,
   owner integer not null,
   object_id integer not null,
+  comments varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -2458,6 +2459,7 @@ COMMENT_COLUMN(scheduled_tasks.last_execution_time, '')
 COMMENT_COLUMN(scheduled_tasks.flags, '')
 COMMENT_COLUMN(scheduled_tasks.owner, '')
 COMMENT_COLUMN(scheduled_tasks.object_id, '')
+COMMENT_COLUMN(scheduled_tasks.comments, '')
 
 /*
 ** ZMQ Subscriptions

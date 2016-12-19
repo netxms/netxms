@@ -10,6 +10,7 @@ public class ScheduledTask
    private String scheduledTaskId;
    private String schedule;
    private String parameters;
+   private String comments;
    private Date executionTime;
    private Date lastExecutionTime;
    private int flags;
@@ -33,6 +34,7 @@ public class ScheduledTask
       flags = 0;
       owner = 0;
       objectId = 0;
+      comments = "";
    }
    
    public ScheduledTask(final NXCPMessage msg, long base)
@@ -46,10 +48,11 @@ public class ScheduledTask
       flags = msg.getFieldAsInt32(base+6);
       owner = msg.getFieldAsInt64(base+7);
       objectId = msg.getFieldAsInt64(base+8);
+      comments = msg.getFieldAsString(base+9);
    }
    
    public ScheduledTask(String scheduledTaskId, String schedule, String parameters,
-         Date executionTime, int flags, long objectId)
+         String comments, Date executionTime, int flags, long objectId)
    {
       id = 0;
       this.scheduledTaskId = scheduledTaskId;
@@ -60,6 +63,7 @@ public class ScheduledTask
       this.flags = flags;
       owner = 0;
       this.objectId = objectId;
+      this.comments = comments;
    }
    
    public void fillMessage(NXCPMessage msg)
@@ -73,7 +77,8 @@ public class ScheduledTask
       msg.setField(NXCPCodes.VID_PARAMETER, parameters);
       msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, lastExecutionTime);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);    
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);  
+      msg.setField(NXCPCodes.VID_COMMENTS, comments);
    }
 
    /**
@@ -229,6 +234,24 @@ public class ScheduledTask
       if ((flags & DISABLED) != 0)
          return statusDescription[0];
       return "";
+   }
+   
+   /**
+    * Get scheduled task comments
+    * @return
+    */
+   public String getComments()
+   {
+      return comments;
+   }
+   
+   /**
+    * Set scheduled task comments
+    * @param comments
+    */
+   public void setComments(String comments)
+   {
+      this.comments = comments;
    }
    
    public boolean isDisbaled()

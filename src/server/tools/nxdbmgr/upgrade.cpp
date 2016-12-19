@@ -722,6 +722,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ *  Upgrade from V424 to V425
+ */
+static BOOL H_UpgradeFromV424(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE scheduled_tasks ADD comments varchar(255)")));
+   CHK_EXEC(SetSchemaVersion(425));
+   return TRUE;
+}
+
+/**
  *  Upgrade from V423 to V424
  */
 static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
@@ -753,7 +763,7 @@ static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
 }
 
 /**
- * Upgrade from V420 to V421
+ *  Upgrade from V420 to V421
  */
 static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
 {
@@ -10847,6 +10857,7 @@ static struct
    { 421, 422, H_UpgradeFromV421 },
    { 422, 423, H_UpgradeFromV422 },
    { 423, 424, H_UpgradeFromV423 },
+   { 424, 425, H_UpgradeFromV424 },
    { 0, 0, NULL }
 };
 

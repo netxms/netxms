@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -42,6 +43,7 @@ public class ScheduledTaskEditor extends Dialog
    private ScheduledTask scheduledTask;
    private List<String> scheduleTypeList;
    private LabeledText textParameters;
+   private Text textComments;
    private Combo scheduleType;
    private ScheduleSelector scheduleSelector;
    private ObjectSelector selector;
@@ -121,6 +123,17 @@ public class ScheduledTaskEditor extends Dialog
       textParameters.setLayoutData(gd);
       textParameters.setText(scheduledTask.getParameters());
       
+      textComments = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT, "Description",
+            scheduledTask.getComments(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textComments.setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.heightHint = 100;
+      gd.verticalAlignment = SWT.FILL;
+      textComments.setLayoutData(gd);
+      
       if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) != 0)
       {
          scheduleType.add(scheduledTask.getScheduledTaskId());
@@ -145,6 +158,7 @@ public class ScheduledTaskEditor extends Dialog
       ScheduledTask task = scheduleSelector.getSchedule();
       scheduledTask.setSchedule(task.getSchedule());
       scheduledTask.setExecutionTime(task.getExecutionTime());
+      scheduledTask.setComments(textComments.getText());
       
       if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) == 0)
       {

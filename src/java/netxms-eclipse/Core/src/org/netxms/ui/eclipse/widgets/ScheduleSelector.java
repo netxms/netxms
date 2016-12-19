@@ -146,7 +146,7 @@ public class ScheduleSelector extends Composite
 
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 
    public void setSchedule(ScheduledTask scheduledTask)
