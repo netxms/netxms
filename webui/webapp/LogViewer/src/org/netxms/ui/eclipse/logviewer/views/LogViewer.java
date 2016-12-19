@@ -261,10 +261,15 @@ public class LogViewer extends ViewPart
 			column.setText(lc.getDescription());
 			column.setData(lc);
 			column.setWidth(estimateColumnWidth(lc));
+			if (lc.getType() == LogColumn.LC_TIMESTAMP)
+			{
+			   filterBuilder.addOrderingColumn(lc, true);
+			}
 		}
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName()); //$NON-NLS-1$
 		viewer.setLabelProvider(createLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
+		filter = filterBuilder.createFilter();
 	}
 	
 	/**

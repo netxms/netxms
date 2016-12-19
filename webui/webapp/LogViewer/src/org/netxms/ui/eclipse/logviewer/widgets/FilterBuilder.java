@@ -293,6 +293,21 @@ public class FilterBuilder extends Composite
 	}
 	
 	/**
+	 * Add ordering column to filter
+	 * @param column
+	 */
+	public void addOrderingColumn(LogColumn column, boolean descending)
+	{
+	   final OrderingColumn orderingColumn = new OrderingColumn(column);
+      if (!orderingColumns.contains(orderingColumn))
+      {
+         orderingColumn.setDescending(descending);
+         orderingColumns.add(orderingColumn);
+         orderingList.setInput(orderingColumns.toArray());
+      }
+	}
+	
+	/**
 	 * 
 	 */
 	private void addSortingColumn(final Control linkControl)
