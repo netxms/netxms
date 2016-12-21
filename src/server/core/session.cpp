@@ -2000,7 +2000,15 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
-         msg.setField(VID_SERVERCMD_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+         msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+
+         TCHAR buffer[MAX_DB_STRING];
+         ConfigReadStr(_T("ServerName"), buffer, MAX_DB_STRING, _T(""));
+         msg.setField(VID_SERVER_NAME, buffer);
+
+         ConfigReadStr(_T("ServerColor"), buffer, MAX_DB_STRING, _T(""));
+         msg.setField(VID_SERVER_COLOR, buffer);
+
          debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
             _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);

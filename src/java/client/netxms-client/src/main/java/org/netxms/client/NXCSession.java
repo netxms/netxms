@@ -303,6 +303,8 @@ public class NXCSession
    private long serverTimeRecvTime = System.currentTimeMillis();
    private int alarmListDisplayLimit;
    private Set<String> serverComponents = new HashSet<String>(0);
+   private String serverName;
+   private String serverColor;
 
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
@@ -1944,10 +1946,10 @@ public class NXCSession
       
       final NXCPMessage response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
       int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
-      Logger.debug("NXCSession.connect", "CMD_LOGIN_RESP received, RCC=" + rcc);
+      Logger.debug("NXCSession.login", "CMD_LOGIN_RESP received, RCC=" + rcc);
       if (rcc != RCC.SUCCESS)
       {
-         Logger.warning("NXCSession.connect", "Login failed, RCC=" + rcc);
+         Logger.warning("NXCSession.login", "Login failed, RCC=" + rcc);
          throw new NXCException(rcc);
       }
       userId = response.getFieldAsInt32(NXCPCodes.VID_USER_ID);
@@ -1972,7 +1974,11 @@ public class NXCSession
       strictAlarmStatusFlow = response.getFieldAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
       timedAlarmAckEnabled = response.getFieldAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
       
-      serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVERCMD_TIMEOUT) * 1000;
+      serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVER_COMMAND_TIMEOUT) * 1000;
+      serverColor = response.getFieldAsString(NXCPCodes.VID_SERVER_COLOR);
+      serverName = response.getFieldAsString(NXCPCodes.VID_SERVER_NAME);
+      if ((serverName == null) || serverName.isEmpty())
+         serverName = connAddress;
 
       alarmListDisplayLimit = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
       Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
@@ -1981,7 +1987,7 @@ public class NXCSession
    }
    
    /**
-    * Disconect session in background
+    * Disconnect session in background
     * 
     * @param reason disconnect reason (appropriate session notification code)
     */
@@ -2218,6 +2224,26 @@ public class NXCSession
    public String getServerTimeZone()
    {
       return serverTimeZone;
+   }
+
+   /**
+    * Get server name
+    * 
+    * @return the serverName
+    */
+   public String getServerName()
+   {
+      return serverName;
+   }
+
+   /**
+    * Get server identification color
+    * 
+    * @return the serverColor
+    */
+   public String getServerColor()
+   {
+      return serverColor;
    }
 
    /**

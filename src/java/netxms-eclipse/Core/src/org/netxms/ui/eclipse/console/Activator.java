@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -46,8 +47,8 @@ public class Activator extends AbstractUIPlugin
 	// The shared instance
 	private static Activator plugin;
 	
-	// Shared data
-	private StatusLineContributionItem statusItemConnection;
+	// Status line
+   private IStatusLineManager statusLine;
 	
 	/*
 	 * (non-Javadoc)
@@ -117,22 +118,22 @@ public class Activator extends AbstractUIPlugin
 	}
 
 	/**
-	 * @return the statusItemConnection
-	 */
-	public StatusLineContributionItem getStatusItemConnection()
-	{
-		return statusItemConnection;
-	}
+    * @return the statusLine
+    */
+   public IStatusLineManager getStatusLine()
+   {
+      return statusLine;
+   }
 
-	/**
-	 * @param statusItemConnection the statusItemConnection to set
-	 */
-	public void setStatusItemConnection(StatusLineContributionItem statusItemConnection)
-	{
-		this.statusItemConnection = statusItemConnection;
-	}
-	
-	/**
+   /**
+    * @param statusLine the statusLine to set
+    */
+   public void setStatusLine(IStatusLineManager statusLine)
+   {
+      this.statusLine = statusLine;
+   }
+
+   /**
 	 * Show tray icon
 	 */
 	public static void showTrayIcon()

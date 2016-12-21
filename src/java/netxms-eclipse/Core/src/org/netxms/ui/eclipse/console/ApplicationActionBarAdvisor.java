@@ -431,10 +431,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillStatusLine(IStatusLineManager statusLine)
 	{
+      Activator.getDefault().setStatusLine(statusLine);
+      
 		StatusLineContributionItem statusItem = new StatusLineContributionItem("ConnectionStatus", StatusLineContributionItem.CALC_TRUE_WIDTH); //$NON-NLS-1$
 		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
-		Activator.getDefault().setStatusItemConnection(statusItem);
+
+      statusLine.add(new ServerNameStatusLineItem("ServerName")); //$NON-NLS-1$
 	}
 	
 	/**

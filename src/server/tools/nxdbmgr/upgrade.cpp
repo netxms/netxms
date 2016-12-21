@@ -722,6 +722,17 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+*  Upgrade from V421 to V422
+*/
+static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ServerColor"), _T(""), _T("Identification color for this server"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ServerName"), _T(""), _T("Name of this server"), 'S', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(422));
+   return TRUE;
+}
+
+/**
 *  Upgrade from V420 to V421
 */
 static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
@@ -10813,6 +10824,7 @@ static struct
    { 418, 419, H_UpgradeFromV418 },
    { 419, 420, H_UpgradeFromV419 },
    { 420, 421, H_UpgradeFromV420 },
+   { 421, 422, H_UpgradeFromV421 },
    { 0, 0, NULL }
 };
 

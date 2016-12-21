@@ -118,11 +118,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       NXCSession session = ConsoleSharedData.getSession();
       Activator activator = Activator.getDefault();
-      StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
+      StatusLineContributionItem statusItemConnection = (StatusLineContributionItem)activator.getStatusLine().find("ConnectionStatus");
       statusItemConnection.setImage(Activator.getImageDescriptor(
             session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage()); //$NON-NLS-1$ //$NON-NLS-2$
       statusItemConnection.setText(session.getUserName()
             + "@" + session.getServerAddress() + " (" + session.getServerVersion() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+      ServerNameStatusLineItem statusItemServerName = (ServerNameStatusLineItem)activator.getStatusLine().find("ServerName");
+      statusItemServerName.setServerInfo(session.getServerName(), session.getServerColor());
 
       if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
          Activator.showTrayIcon();

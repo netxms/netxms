@@ -1106,7 +1106,7 @@ typedef struct
 #define VID_ERROR_LINE              ((UINT32)511)
 #define VID_SPEED                   ((UINT32)512)
 #define VID_IFTABLE_SUFFIX          ((UINT32)513)
-#define VID_SERVERCMD_TIMEOUT       ((UINT32)514)
+#define VID_SERVER_COMMAND_TIMEOUT  ((UINT32)514)
 #define VID_SYS_CONTACT             ((UINT32)515)
 #define VID_SYS_LOCATION            ((UINT32)516)
 #define VID_RACK_ID                 ((UINT32)517)
@@ -1153,6 +1153,8 @@ typedef struct
 #define VID_ALLOW_MULTIPART         ((UINT32)558)
 #define VID_ALARM_ID_LIST           ((UINT32)559)
 #define VID_NUM_COMPONENTS          ((UINT32)560)
+#define VID_SERVER_NAME             ((UINT32)561)
+#define VID_SERVER_COLOR            ((UINT32)562)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
