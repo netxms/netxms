@@ -128,7 +128,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
    if (m_nodeId != 0)
       node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == NULL)
-      node = FindNodeByIP(zoneId, getIpAddr());
+      node = FindNodeByIP(zoneId, m_addr);
    if (node != NULL)
    {
       // Check for duplicate messages - only accept messages with ID
@@ -140,7 +140,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
          {
             char message[2048];
             msg->getFieldAsBinary(VID_MESSAGE, (BYTE *)message, msgLen + 1);
-            QueueProxiedSyslogMessage(msg->getFieldAsInetAddress(VID_IP_ADDRESS), msg->getFieldAsUInt32(VID_ZONE_ID),
+            QueueProxiedSyslogMessage(msg->getFieldAsInetAddress(VID_IP_ADDRESS), zoneId,
                                       msg->getFieldAsTime(VID_TIMESTAMP), message, msgLen);
          }
       }

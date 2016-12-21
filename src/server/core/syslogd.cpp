@@ -308,8 +308,9 @@ static Node *FindNodeByHostname(const char *hostName, UINT32 zoneId)
  */
 static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneId)
 {
-   Node *node = NULL;
+   nxlog_debug(6, _T("BindMsgToNode: addr=%s zoneId=%d"), (const TCHAR *)sourceAddr.toString(), zoneId);
 
+   Node *node = NULL;
    if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
       node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, sourceAddr);
@@ -446,8 +447,8 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
 		TCHAR ipAddr[64];
-		DbgPrintf(6, _T("Syslog message: ipAddr=%s objectId=%d tag=\"%hs\" msg=\"%hs\""),
-		          msg->sourceAddr.toString(ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
+		nxlog_debug(6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
+		            msg->sourceAddr.toString(ipAddr), msg->zoneId, record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
 		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
