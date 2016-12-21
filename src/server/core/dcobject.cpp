@@ -527,15 +527,28 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
  */
 bool DCObject::isReadyForPolling(time_t currTime)
 {
-   bool result;
-
    lock();
    if ((m_pollingSession != NULL) && !m_busy)
    {
-      unlock();
-      return true;
+      if ((m_status != ITEM_STATUS_DISABLED) &&
+          isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
+          matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
+      {
+         unlock();
+         return true;
+      }
+      else
+      {
+         // DCI cannot be force polled at the moment, clear force poll request
+         nxlog_debug(6, _T("Forced poll of DC object %s [%d] on node %s [%d] cancelled"), m_name, m_id, m_owner->getName(), m_owner->getId());
+         m_pollingSession->decRefCount();
+         m_pollingSession = NULL;
+         unlock();
+         return false;
+      }
    }
 
+   bool result;
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
@@ -954,28 +967,29 @@ NXSL_Value *DCObject::createNXSLObject()
    return new NXSL_Value(new NXSL_Object(&g_nxslDciClass, new DCObjectInfo(this)));
 }
 
+/**
+ * Process force poll request
+ */
 ClientSession *DCObject::processForcePoll()
 {
-   MutexLock(m_hMutex);
-
+   lock();
    ClientSession *session = m_pollingSession;
    m_pollingSession = NULL;
-
-   MutexUnlock(m_hMutex);
+   unlock();
    return session;
 }
 
+/**
+ * Request force poll
+ */
 void DCObject::requestForcePoll(ClientSession *session)
 {
-   MutexLock(m_hMutex);
-
+   lock();
    if (m_pollingSession != NULL)
       m_pollingSession->decRefCount();
-
    m_pollingSession = session;
    m_pollingSession->incRefCount();
-
-   MutexUnlock(m_hMutex);
+   unlock();
 }
 
 /**
