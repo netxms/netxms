@@ -2513,7 +2513,6 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
          {
             msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
             DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE);
-            DecodeSQLString(szBuffer);
             msg.setField(dwId++, szBuffer);
             msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
          }
