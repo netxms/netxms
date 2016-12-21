@@ -297,6 +297,7 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 
    OCISessionEnd(pConn->handleService, pConn->handleError, NULL, OCI_DEFAULT);
    OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
+   OCIHandleFree(pConn->handleSession, OCI_HTYPE_SESSION);
    OCIHandleFree(pConn->handleService, OCI_HTYPE_SVCCTX);
    OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
    OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
