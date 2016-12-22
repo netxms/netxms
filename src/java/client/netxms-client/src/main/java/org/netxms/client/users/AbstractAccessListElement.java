@@ -74,9 +74,16 @@ public abstract class AbstractAccessListElement
 		return accessRights;
 	}
 	
-	
-
 	/* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "AbstractAccessListElement [userId=" + userId + ", accessRights=" + accessRights + "]";
+   }
+
+   /* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override

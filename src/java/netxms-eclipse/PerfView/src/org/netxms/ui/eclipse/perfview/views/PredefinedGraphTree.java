@@ -59,6 +59,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -474,11 +475,11 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		
 		GraphSettings settings = (GraphSettings)selection.getFirstElement();
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, settings);
-		final GraphSettings newSettings = settings;
 		if (dlg != null)
 		{
 			if (dlg.open() == Window.OK)
 			{
+		      final GraphSettings newSettings = settings;
 				try
 				{
 					new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
@@ -486,6 +487,13 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
 							session.saveGraph(newSettings, true);
+							runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           viewer.update(newSettings, null);
+                        }
+                     });
 						}
 						
 						@Override
@@ -500,10 +508,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 					MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
-			settings.setName(newSettings.getName());
-			settings.getAccessList().clear();
-			settings.getAccessList().addAll(newSettings.getAccessList());
-			viewer.update(settings, null);
 		}
 	}
 	
@@ -566,23 +570,22 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                }
             });
             break;
-         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
+         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
+            if (((GraphSettings)n.getObject()).isTemplate())
+               return;
+            
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @SuppressWarnings("unchecked")
                @Override
                public void run()
                {
-                  if(!(n.getObject() instanceof GraphSettings))
-                     return;
-                  if(((GraphSettings)n.getObject()).isTemplate())
-                     return;
                   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
                   
                   final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
                   boolean objectUpdated = false;
                   for(int i = 0; i < list.size(); i++)
                   {
-                     if(list.get(i).getId() == n.getSubCode())
+                     if (list.get(i).getId() == n.getSubCode())
                      {
                         list.set(i, (GraphSettings)n.getObject());
                         objectUpdated = true;
@@ -590,21 +593,18 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                      }
                   }
                   
-                  if(!objectUpdated)
+                  if (!objectUpdated)
                   {
                      list.add((GraphSettings)n.getObject());
                      viewer.setInput(list);
                   }
                   viewer.refresh();
                   
-                  if (selection.size() == 1)
+                  if ((selection.size() == 1) && (selection.getFirstElement() instanceof GraphSettings))
                   {
-                     if(selection.getFirstElement() instanceof GraphSettings)
-                     {
-                        GraphSettings element = (GraphSettings)selection.getFirstElement();
-                        if(element.getId() == n.getSubCode())
-                              viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
-                     }
+                     GraphSettings element = (GraphSettings)selection.getFirstElement();
+                     if (element.getId() == n.getSubCode())
+                        viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
                   }
                }
             });

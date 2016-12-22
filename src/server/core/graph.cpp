@@ -23,7 +23,7 @@
 #include "nxcore.h"
 
 /**
- * Load graph's ACL - load for all graphs if graphId is 0
+ * Load graph's ACL
  */
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize)
 {
@@ -31,17 +31,11 @@ GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize)
    GRAPH_ACL_ENTRY *pACL = NULL;
    DB_RESULT hResult;
 
-   if (graphId == 0)
-   {
-      hResult = DBSelect(hdb, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
-   }
-   else
-   {
-      TCHAR szQuery[256];
+   TCHAR szQuery[256];
 
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), graphId);
-      hResult = DBSelect(hdb, szQuery);
-   }
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), graphId);
+   hResult = DBSelect(hdb, szQuery);
+
    if (hResult != NULL)
    {
       nSize = DBGetNumRows(hResult);
@@ -62,6 +56,38 @@ GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize)
    {
       *pnACLSize = -1;  // Database error
    }
+   return pACL;
+}
+
+/*
+ * Load all graph ACLs
+ */
+GRAPH_ACL_ENTRY *LoadAllGraphACL(DB_HANDLE hdb, int *pnACLSize)
+{
+   GRAPH_ACL_ENTRY *pACL = NULL;
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
+
+   if (hResult != NULL)
+   {
+      int size = DBGetNumRows(hResult);
+      if (size > 0)
+      {
+         pACL = (GRAPH_ACL_ENTRY *)malloc(sizeof(GRAPH_ACL_ENTRY) * size);
+         for(int i = 0; i < size; i++)
+         {
+            pACL[i].dwGraphId = DBGetFieldULong(hResult, i, 0);
+            pACL[i].dwUserId = DBGetFieldULong(hResult, i, 1);
+            pACL[i].dwAccess = DBGetFieldULong(hResult, i, 2);
+         }
+      }
+      *pnACLSize = size;
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      *pnACLSize = -1; // DB error
+   }
+
    return pACL;
 }
 
@@ -188,7 +214,7 @@ void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs)
 	UINT32 dwId, numGraphs;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
+	GRAPH_ACL_ENTRY *pACL = LoadAllGraphACL(hdb, &nACLSize);
 	if (nACLSize != -1)
 	{
 		DB_RESULT hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs"));
@@ -361,7 +387,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 			{
 				// Insert new ACL
 				nACLSize = (int)pRequest->getFieldAsUInt32(VID_ACL_SIZE);
-				for(i = 0, id = VID_GRAPH_ACL_BASE, sucess = true; i < nACLSize; i++)
+				for(i = 0, id = VID_GRAPH_ACL_BASE; i < nACLSize; i++)
 				{
 					graphUserId = pRequest->getFieldAsUInt32(id++);
 					graphAccess = pRequest->getFieldAsUInt32(id++);
@@ -398,7 +424,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
             update.setField(dwId++, filters);
 
             int nACLSize;
-            GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
+            GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, graphId, &nACLSize);
             if ((pACL != NULL) && (nACLSize > 0))
             {
                UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
