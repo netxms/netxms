@@ -102,7 +102,7 @@ public class TemplateDataSources extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().DataSources_ColPosition, Messages.get().DataSources_ColNode, Messages.get().DataSources_ColParameter, Messages.get().DataSources_ColLabel, Messages.get().DataSources_ColColor };
+      final String[] columnNames = { Messages.get().DataSources_ColPosition, "DCI name", "DCI description", "Display name", Messages.get().DataSources_ColColor };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);

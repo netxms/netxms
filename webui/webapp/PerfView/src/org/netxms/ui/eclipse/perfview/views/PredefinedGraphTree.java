@@ -566,7 +566,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                }
             });
             break;
-         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
+         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @SuppressWarnings("unchecked")
                @Override
@@ -576,7 +576,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                      return;
                   if(((GraphSettings)n.getObject()).isTemplate())
                      return;
-                  
                   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
                   
                   final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
@@ -593,8 +592,8 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                   
                   if(!objectUpdated)
                   {
-                     if(((GraphSettings)n.getObject()).isTemplate())
-                        list.add((GraphSettings)n.getObject());
+                     list.add((GraphSettings)n.getObject());
+                     viewer.setInput(list);
                   }
                   viewer.refresh();
                   

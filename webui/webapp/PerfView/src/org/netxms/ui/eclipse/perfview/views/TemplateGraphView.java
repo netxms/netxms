@@ -62,7 +62,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Historical data view
+ * Template Graph Configuration
  */
 @SuppressWarnings("restriction")
 public class TemplateGraphView extends ViewPart implements SessionListener
@@ -135,7 +135,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 			@Override
 			public void run()
 			{
-			   editPredefinedGraph();
+			   editTemplateGraph();
 			}
 		};
 		
@@ -311,9 +311,9 @@ public class TemplateGraphView extends ViewPart implements SessionListener
    }
 
    /**
-    * Edit predefined graph
+    * Edit template graph
     */
-   private void editPredefinedGraph()
+   private void editTemplateGraph()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
@@ -328,7 +328,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
          {
             try
             {
-               new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
+               new ConsoleJob("Update template graph", null, Activator.PLUGIN_ID, null) {
                   @Override
                   protected void runInternal(IProgressMonitor monitor) throws Exception
                   {
@@ -338,7 +338,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
                   @Override
                   protected String getErrorMessage()
                   {
-                     return Messages.get().PredefinedGraphTree_UpdateJobError;
+                     return "Cannot update predefined graph";
                   }
                }.start();
             }

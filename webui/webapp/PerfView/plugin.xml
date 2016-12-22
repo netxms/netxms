@@ -187,15 +187,36 @@
             id="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph#0"
             name="%page.name.PredefGraph">
          <enabledWhen>
-            <instanceof
-                  value="org.netxms.client.datacollection.GraphSettings">
-            </instanceof>
+            <and>
+               <instanceof
+                     value="org.netxms.client.datacollection.GraphSettings">
+               </instanceof>
+               <not>
+                  <test
+                        property="org.netxms.ui.eclipse.perfview.isTemplateGraph">
+                  </test></not>
+            </and>
          </enabledWhen>
       </page>
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.TemplateDataSources"
             id="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph#10"
             name="Template Source">
+         <enabledWhen>
+            <and>
+               <instanceof
+                     value="org.netxms.client.datacollection.GraphSettings">
+               </instanceof>
+               <test
+                     property="org.netxms.ui.eclipse.perfview.isTemplateGraph">
+               </test>
+            </and>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.TemplateGraph"
+            id="org.netxms.ui.eclipse.perfview.propertypages.TemplateGraph#0"
+            name="Template Graph">
          <enabledWhen>
             <and>
                <instanceof
