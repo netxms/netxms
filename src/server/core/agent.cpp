@@ -128,7 +128,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
    if (m_nodeId != 0)
       node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == NULL)
-      node = FindNodeByIP(zoneId, m_addr);
+      node = FindNodeByIP(zoneId, getIpAddr());
    if (node != NULL)
    {
       // Check for duplicate messages - only accept messages with ID
