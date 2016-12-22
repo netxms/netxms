@@ -326,6 +326,14 @@ public class HostSearchResults extends ViewPart
 				IViewPart part = page.showView(ID);
 				((HostSearchResults)part).addResult(cp);
 			}
+			else if ((host != null) && (cp.getType() == ConnectionPointType.UNKNOWN))
+			{
+            MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format("Found node %s but it's connection point is unknown", host.getObjectName()));
+            
+            IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+            IViewPart part = page.showView(ID);
+            ((HostSearchResults)part).addResult(cp);
+			}
 			else
 			{
 				MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound);
@@ -333,6 +341,7 @@ public class HostSearchResults extends ViewPart
 		}
 		catch(Exception e)
 		{
+		   Activator.logError("Exception in host search result view", e);
 			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
 		}
 	}
@@ -362,10 +371,9 @@ public class HostSearchResults extends ViewPart
             
             if ((host != null) && (iface != null))
             {
-
-            IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-            IViewPart part = page.showView(ID);
-            ((HostSearchResults)part).addResult(p);
+               IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+               IViewPart part = page.showView(ID);
+               ((HostSearchResults)part).addResult(p);
             }
          }
          if (counter > 0)

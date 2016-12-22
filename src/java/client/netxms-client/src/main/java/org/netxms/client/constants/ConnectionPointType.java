@@ -29,7 +29,8 @@ public enum ConnectionPointType
 {
    INDIRECT(0),
    DIRECT(1),
-   WIRELESS(2);
+   WIRELESS(2),
+   UNKNOWN(3);
 
    private int value;
    private static Map<Integer, ConnectionPointType> lookupTable = new HashMap<Integer, ConnectionPointType>();
@@ -68,7 +69,7 @@ public enum ConnectionPointType
       if (element == null)
       {
          Logger.warning(ConnectionPointType.class.getName(), "Unknown element " + value);
-         return INDIRECT; // fallback
+         return UNKNOWN; // fallback
       }
       return element;
    }

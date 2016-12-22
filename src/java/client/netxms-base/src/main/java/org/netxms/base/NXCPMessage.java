@@ -246,11 +246,22 @@ public class NXCPMessage
 	/**
 	 * Find field by ID
 	 * 
-	 * @param fieldId variable Id to find
+	 * @param fieldId field ID to find
 	 */
 	public NXCPMessageField findField(final long fieldId)
 	{
 		return fields.get(fieldId);
+	}
+	
+	/**
+	 * Check if field with given ID present in the message
+	 * 
+	 * @param fieldId field ID
+	 * @return
+	 */
+	public boolean isFieldPresent(final long fieldId)
+	{
+	   return fields.containsKey(fieldId);
 	}
 
 	/**

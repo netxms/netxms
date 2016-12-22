@@ -346,6 +346,7 @@ enum
 #define CP_TYPE_INDIRECT      0
 #define CP_TYPE_DIRECT        1
 #define CP_TYPE_WIRELESS      2
+#define CP_TYPE_UNKNOWN       3
 
 /**
  * Events

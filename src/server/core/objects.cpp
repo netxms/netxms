@@ -752,11 +752,10 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress&
    if (!ipAddr.isValidUnicast())
       return NULL;
 
-	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
-
 	Interface *iface = NULL;
 	if (IsZoningEnabled())
 	{
+	   Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
 		if (zone != NULL)
 		{
 			iface = zone->getInterfaceByAddr(ipAddr);

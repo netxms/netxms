@@ -45,7 +45,7 @@ import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 public class FindConnectionPoint implements IObjectActionDelegate
 {
 	private IWorkbenchPart wbPart;
-	private List<Long> objectId = null;
+	private List<AbstractObject> objects = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
@@ -53,7 +53,7 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-	   if ((objectId == null) || (objectId.isEmpty()))
+	   if ((objects == null) || (objects.isEmpty()))
 	      return;
 	   
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -61,12 +61,18 @@ public class FindConnectionPoint implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   final ConnectionPoint[] cps = new ConnectionPoint[objectId.size()];
-			   for (int i = 0; i < objectId.size(); i++)
+			   final ConnectionPoint[] cps = new ConnectionPoint[objects.size()];
+			   for(int i = 0; i < objects.size(); i++)
 			   {
-			      cps[i] = session.findConnectionPoint(objectId.get(i));
+			      AbstractObject object = objects.get(i);
+			      cps[i] = session.findConnectionPoint(object.getObjectId());
 			      if (cps[i] == null)
-			         cps[i] = new ConnectionPoint(session.findObjectById(objectId.get(i)).getParentIdList()[0], objectId.get(i), false);
+			      {
+			         if (object instanceof Node)
+                     cps[i] = new ConnectionPoint(object.getObjectId(), 0, false);
+			         else
+			            cps[i] = new ConnectionPoint(object.getParentIdList()[0], object.getObjectId(), false);
+			      }
 			   }
 				runInUIThread(new Runnable() {
 					@Override
@@ -94,23 +100,22 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() != 0))
+		if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
 		{
-		   objectId = new ArrayList<Long>();
+		   objects = new ArrayList<AbstractObject>();
 			for (Object s : ((IStructuredSelection)selection).toList())
 			{
 			   if ((s instanceof Node) || (s instanceof Interface) || (s instanceof AccessPoint))
 			   {
 			      action.setEnabled(true);
-			      objectId.add(((AbstractObject)s).getObjectId());
+			      objects.add((AbstractObject)s);
 			   }
 			}
 		}
 		else
 		{
 			action.setEnabled(false);
-			objectId = null;
+			objects = null;
 		}
 	}
 

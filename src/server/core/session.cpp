@@ -12104,7 +12104,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 		{
 			UINT32 localNodeId, localIfId;
 
-			Interface *localIf = FindInterfaceByMAC(macAddr);
+			Interface *localIf = (iface != NULL) ? iface : FindInterfaceByMAC(macAddr);
 			if (localIf != NULL)
 			{
 				localIfId = localIf->getId();
@@ -12133,7 +12133,24 @@ void ClientSession::findIpAddress(NXCPMessage *request)
                debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), IpToStr(ipAddr, ipAddrText), node->getId(), cp->getId(), cp->getName());
          }
 		}
+		else if (iface != NULL)
+		{
+		   // Connection not found but node with given IP address registered in the system
+         msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
+         msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+         msg.setField(VID_IP_ADDRESS, ipAddr);
+         msg.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
+         msg.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
+		}
 	}
+   else if (iface != NULL)
+   {
+      // Connection not found but node with given IP address registered in the system
+      msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
+      msg.setField(VID_IP_ADDRESS, ipAddr);
+      msg.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
+      msg.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
+   }
 
 	sendMessage(&msg);
 }

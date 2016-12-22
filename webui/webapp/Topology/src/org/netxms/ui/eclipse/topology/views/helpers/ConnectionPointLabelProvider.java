@@ -32,6 +32,7 @@ import org.netxms.client.constants.ConnectionPointType;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 
@@ -41,13 +42,14 @@ import org.netxms.ui.eclipse.topology.views.HostSearchResults;
  */
 public class ConnectionPointLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-	private static final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), 0, 127, 0);
-	private static final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), 136, 160, 52);
-   private static final Color COLOR_FOUND_OBJECT_WIRELESS = new Color(Display.getDefault(), 10, 125, 138);
-	private static final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), 0, 0, 127);
-	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), 32, 196, 208);
-   private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), 28, 98, 100);
-	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), 127, 0, 0);
+	private static final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkGreen"));
+	private static final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SeaGreen"));
+   private static final Color COLOR_FOUND_OBJECT_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Teal"));
+   private static final Color COLOR_FOUND_OBJECT_UNKNOWN = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Peru"));
+	private static final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkBlue"));
+	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkSlateBlue"));
+   private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SteelBlue"));
+	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkRed"));
 	
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -144,13 +146,22 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	public Color getForeground(Object element)
 	{
 		ConnectionPoint cp = (ConnectionPoint)element;
-		if (cp.getNodeId() == 0)
+		if (!cp.hasConnection())
 			return COLOR_NOT_FOUND;
+		
 		if (cp.getLocalNodeId() == 0)
 			return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
 			   ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
-		return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_OBJECT_DIRECT : 
-		      ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_OBJECT_WIRELESS : COLOR_FOUND_OBJECT_INDIRECT);
+
+		switch(cp.getType())
+		{
+		   case DIRECT: return COLOR_FOUND_OBJECT_DIRECT; 
+         case INDIRECT: return COLOR_FOUND_OBJECT_INDIRECT; 
+         case WIRELESS: return COLOR_FOUND_OBJECT_WIRELESS; 
+         case UNKNOWN: return COLOR_FOUND_OBJECT_UNKNOWN; 
+		}
+		
+		return null;
 	}
 
 	/* (non-Javadoc)

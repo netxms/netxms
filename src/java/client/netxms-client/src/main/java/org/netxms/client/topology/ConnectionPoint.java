@@ -58,7 +58,6 @@ public class ConnectionPoint
 		type = ConnectionPointType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CONNECTION_TYPE));
 	}
 	
-	
 	/**
 	 * Create unconnected connection point information
 	 * 
@@ -181,13 +180,30 @@ public class ConnectionPoint
       return type;
    }
    
+   /**
+    * @return
+    */
    public boolean hasConnection()
    {
       return hasConnection;
    }
    
+   /**
+    * @param hasConnection
+    */
    public void setConnection(boolean hasConnection)
    {
       this.hasConnection = hasConnection;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ConnectionPoint [localNodeId=" + localNodeId + ", localInterfaceId=" + localInterfaceId + ", localMacAddress="
+            + localMacAddress + ", localIpAddress=" + localIpAddress + ", nodeId=" + nodeId + ", interfaceId=" + interfaceId
+            + ", interfaceIndex=" + interfaceIndex + ", type=" + type + ", data=" + data + ", hasConnection=" + hasConnection + "]";
    }
 }
