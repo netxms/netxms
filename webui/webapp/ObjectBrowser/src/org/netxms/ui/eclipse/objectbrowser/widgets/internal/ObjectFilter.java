@@ -90,6 +90,8 @@ public class ObjectFilter extends ViewerFilter
 			case IP_ADDRESS:
 			   if (object instanceof AbstractNode)
 			   {
+			      if (!((AbstractNode)object).getPrimaryIP().isValidAddress())
+			         return false;
 			      return ((AbstractNode)object).getPrimaryIP().getHostAddress().startsWith(filterString);
 			   }
 			   else if (object instanceof Subnet)
@@ -107,6 +109,8 @@ public class ObjectFilter extends ViewerFilter
             }
             else if (object instanceof AccessPoint)
             {
+               if (!((AccessPoint)object).getIpAddress().isValidAddress())
+                  return false;
                return ((AccessPoint)object).getIpAddress().getHostAddress().startsWith(filterString);
             }
 			   return false;

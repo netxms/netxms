@@ -18,7 +18,7 @@
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
@@ -34,7 +34,7 @@ public class AccessPoint extends DataCollectionTarget
 	private long nodeId;
 	private int index;
 	private MacAddress macAddress;
-	private InetAddress ipAddress;
+	private InetAddressEx ipAddress;
    private AccessPointState state;
 	private String vendor;
 	private String model;
@@ -51,7 +51,7 @@ public class AccessPoint extends DataCollectionTarget
 		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
       index = msg.getFieldAsInt32(NXCPCodes.VID_AP_INDEX);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
-		ipAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
+		ipAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 		state = AccessPointState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATE));
 		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
 		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
@@ -112,7 +112,7 @@ public class AccessPoint extends DataCollectionTarget
 	/**
     * @return the ipAddress
     */
-   public InetAddress getIpAddress()
+   public InetAddressEx getIpAddress()
    {
       return ipAddress;
    }

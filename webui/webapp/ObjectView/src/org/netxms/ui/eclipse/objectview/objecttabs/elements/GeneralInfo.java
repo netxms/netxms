@@ -85,7 +85,7 @@ public class GeneralInfo extends TableElement
                AbstractNode node = session.findObjectById(chassis.getControllerId(), AbstractNode.class);
                if (node != null)
                {
-                  addPair("Controller", node.getObjectName());
+                  addPair(Messages.get().GeneralInfo_Controller, node.getObjectName());
                }
             }
             if (chassis.getRackId() != 0)
@@ -150,7 +150,7 @@ public class GeneralInfo extends TableElement
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
-            addPair("Node Type", node.getNodeType().toString(), false);
+            addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())
@@ -191,6 +191,8 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Model, ap.getModel());
 				addPair(Messages.get().GeneralInfo_Serial, ap.getSerialNumber());
 				addPair(Messages.get().GeneralInfo_MACAddr, ap.getMacAddress().toString());
+				if (ap.getIpAddress().isValidAddress())
+				   addPair(Messages.get().GeneralInfo_IPAddr, ap.getIpAddress().getHostAddress());
 				break;
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;

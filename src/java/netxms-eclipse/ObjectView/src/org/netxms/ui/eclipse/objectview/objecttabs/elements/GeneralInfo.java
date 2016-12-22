@@ -191,6 +191,8 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Model, ap.getModel());
 				addPair(Messages.get().GeneralInfo_Serial, ap.getSerialNumber());
 				addPair(Messages.get().GeneralInfo_MACAddr, ap.getMacAddress().toString());
+				if (ap.getIpAddress().isValidAddress())
+				   addPair(Messages.get().GeneralInfo_IPAddr, ap.getIpAddress().getHostAddress());
 				break;
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
