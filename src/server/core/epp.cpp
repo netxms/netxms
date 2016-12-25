@@ -422,8 +422,9 @@ bool EPRule::matchScript(Event *pEvent)
 	NetObj *pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
+      m_pScript->setGlobalVariable(_T("$object"), pObject->createNXSLObject());
 		if (pObject->getObjectClass() == OBJECT_NODE)
-			m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+			m_pScript->setGlobalVariable(_T("$node"), pObject->createNXSLObject());
 	}
 	m_pScript->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
 	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
