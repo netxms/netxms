@@ -321,6 +321,9 @@ public class NXCSession
    private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
    private boolean alarmCategoriesNeedSync = false;
    
+   // Message of the day
+   private String messageOfTheDay;
+   
    /**
     * Message subscription class
     */
@@ -1983,6 +1986,8 @@ public class NXCSession
       alarmListDisplayLimit = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
       Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
 
+      messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
+      
       Logger.info("NXCSession.connect", "succesfully logged in, userId=" + userId);
    }
    
@@ -2387,6 +2392,14 @@ public class NXCSession
    public long getUserSystemRights()
    {
       return userSystemRights;
+   }
+   
+   /** Get message of the day if server config is set
+    * @return Message of the day
+    */
+   public String getMessageOfTheDay()
+   {
+      return messageOfTheDay;
    }
 
    /**

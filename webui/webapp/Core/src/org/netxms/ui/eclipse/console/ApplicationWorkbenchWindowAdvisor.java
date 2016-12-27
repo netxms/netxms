@@ -20,12 +20,14 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.bindings.BindingManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
@@ -151,6 +153,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       String dashboardId = Application.getParameter("dashboard"); //$NON-NLS-1$
       if (dashboardId != null)
          showDashboard(dashboardId);
+      showMessageOfTheDay();
    }
     
 	/**
@@ -211,4 +214,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
             executor.execute("location.reload(true);");
       }
 	}
+	
+	/**
+    * Show the message of the day messagebox
+    */
+   private void showMessageOfTheDay()
+   {   
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      String message = session.getMessageOfTheDay();
+      
+      if (!message.isEmpty())
+      {
+         MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Announcement", message);
+      }
+   }
 }

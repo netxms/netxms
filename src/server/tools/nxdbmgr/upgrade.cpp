@@ -722,6 +722,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ *  Upgrade from V423 to V424
+ */
+static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("MessageOfTheDay"), _T(""), _T("Message to be shown when a user logs into the console"), 'S', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(424));
+   return TRUE;
+}
+
+/**
  *  Upgrade from V422 to V423
  */
 static BOOL H_UpgradeFromV422(int currVersion, int newVersion)
@@ -10836,6 +10846,7 @@ static struct
    { 420, 421, H_UpgradeFromV420 },
    { 421, 422, H_UpgradeFromV421 },
    { 422, 423, H_UpgradeFromV422 },
+   { 423, 424, H_UpgradeFromV423 },
    { 0, 0, NULL }
 };
 

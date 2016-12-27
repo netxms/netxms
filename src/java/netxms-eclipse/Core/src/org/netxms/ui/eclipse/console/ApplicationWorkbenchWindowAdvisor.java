@@ -157,6 +157,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             showDashboard(s.substring(11));
          }
       }
+      showMessageOfTheDay();
 	}
 
    /**
@@ -477,5 +478,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       
       return null;
+   }
+   
+   /**
+    * Show the message of the day messagebox
+    */
+   private void showMessageOfTheDay()
+   {   
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      String message = session.getMessageOfTheDay();
+      
+      if (!message.isEmpty())
+      {
+         MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Announcement", message);
+      }
    }
 }

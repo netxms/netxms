@@ -2009,6 +2009,9 @@ void ClientSession::login(NXCPMessage *pRequest)
          ConfigReadStr(_T("ServerColor"), buffer, MAX_DB_STRING, _T(""));
          msg.setField(VID_SERVER_COLOR, buffer);
 
+         ConfigReadStr(_T("MessageOfTheDay"), buffer, MAX_DB_STRING, _T(""));
+         msg.setField(VID_MESSAGE_OF_THE_DAY, buffer);
+
          debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
             _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);

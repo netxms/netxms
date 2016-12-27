@@ -1155,6 +1155,7 @@ typedef struct
 #define VID_NUM_COMPONENTS          ((UINT32)560)
 #define VID_SERVER_NAME             ((UINT32)561)
 #define VID_SERVER_COLOR            ((UINT32)562)
+#define VID_MESSAGE_OF_THE_DAY      ((UINT32)563)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

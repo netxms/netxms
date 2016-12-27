@@ -115,6 +115,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LockTimeout','60000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LogAllSNMPTraps','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','utf8',1,0);
+INSERT INTO config (var_name,var_value,is_visible,data_type,need_server_restart,description) VALUES ('MessageOfTheDay','',1,'S',0,'Message to be shown when a user logs into the console');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinPasswordLength','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinViewRefreshInterval','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);
