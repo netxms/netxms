@@ -7,7 +7,7 @@
 - Fixed high CPU load on FreeBSD
 - Event sending by agent do not restricted to master servers only anymore
 - Default RADIUS authentication method set to PAP to maintain compatibility with older versions
-- Fixed issues: #1258, #1314, #1357
+- Fixed issues: #1258, #1314, #1351, #1357
 
 
 *
