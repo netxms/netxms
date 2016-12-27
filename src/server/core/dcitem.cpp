@@ -1390,8 +1390,8 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	}
 	else if (g_dbSyntax == DB_SYNTAX_PGSQL)
 	{
-		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
-			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+		_sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_%u ")
+			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
 			functions[func], m_owner->getId());
 	}
 	else
