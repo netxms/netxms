@@ -25,6 +25,7 @@
 - Implemented interrupt and context switch counters in platform subagents
 - Implemented CPU interrupt time parameters on Windows
 - JMX subagent
+- Event sending by agent do not restricted to master servers only anymore
 - Management console:
 	- File manager improvements
 	- Option to save graph as image
