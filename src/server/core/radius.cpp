@@ -698,7 +698,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	pairadd(&req, vp);
 
    char authMethod[16];
-   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "CHAP");
+   ConfigReadStrA(_T("RADIUSAuthMethod"), authMethod, 16, "PAP");
 	nxlog_debug(4, _T("RADIUS: authenticating user %hs on server %hs using %hs"), login, serverName, authMethod);
    if (!stricmp(authMethod, "PAP"))
    {
