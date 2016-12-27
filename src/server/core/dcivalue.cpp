@@ -27,45 +27,41 @@
  */
 ItemValue::ItemValue()
 {
-   m_szString[0] = 0;
-   m_iInt32 = 0;
-   m_iInt64 = 0;
-   m_dwInt32 = 0;
-   m_qwInt64 = 0;
-   m_dFloat = 0;
-   m_dwTimeStamp = (UINT32)time(NULL);
+   m_string[0] = 0;
+   m_int32 = 0;
+   m_int64 = 0;
+   m_uint32 = 0;
+   m_uint64 = 0;
+   m_double = 0;
+   m_timestamp = time(NULL);
 }
 
 /**
  * Construct value object from string value
  */
-ItemValue::ItemValue(const TCHAR *pszValue, UINT32 dwTimeStamp)
+ItemValue::ItemValue(const TCHAR *value, time_t timestamp)
 {
-   nx_strncpy(m_szString, pszValue, MAX_DB_STRING);
-   m_iInt32 = _tcstol(m_szString, NULL, 0);
-   m_iInt64 = _tcstoll(m_szString, NULL, 0);
-   m_dwInt32 = _tcstoul(m_szString, NULL, 0);
-   m_qwInt64 = _tcstoull(m_szString, NULL, 0);
-   m_dFloat = _tcstod(m_szString, NULL);
-
-   if (dwTimeStamp == 0)
-      m_dwTimeStamp = (UINT32)time(NULL);
-   else
-      m_dwTimeStamp = dwTimeStamp;
+   nx_strncpy(m_string, value, MAX_DB_STRING);
+   m_int32 = _tcstol(m_string, NULL, 0);
+   m_int64 = _tcstoll(m_string, NULL, 0);
+   m_uint32 = _tcstoul(m_string, NULL, 0);
+   m_uint64 = _tcstoull(m_string, NULL, 0);
+   m_double = _tcstod(m_string, NULL);
+   m_timestamp = (timestamp == 0) ? time(NULL) : timestamp;
 }
 
 /**
  * Construct value object from another ItemValue object
  */
-ItemValue::ItemValue(const ItemValue *pValue)
+ItemValue::ItemValue(const ItemValue *value)
 {
-   _tcscpy(m_szString, pValue->m_szString);
-   m_iInt32 = pValue->m_iInt32;
-   m_iInt64 = pValue->m_iInt64;
-   m_dwInt32 = pValue->m_dwInt32;
-   m_qwInt64 = pValue->m_qwInt64;
-   m_dFloat = pValue->m_dFloat;
-   m_dwTimeStamp = pValue->m_dwTimeStamp;
+   _tcscpy(m_string, value->m_string);
+   m_int32 = value->m_int32;
+   m_int64 = value->m_int64;
+   m_uint32 = value->m_uint32;
+   m_uint64 = value->m_uint64;
+   m_double = value->m_double;
+   m_timestamp = value->m_timestamp;
 }
 
 /**
@@ -80,108 +76,124 @@ ItemValue::~ItemValue()
  */
 const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
-   _tcscpy(m_szString, src.m_szString);
-   m_iInt32 = src.m_iInt32;
-   m_iInt64 = src.m_iInt64;
-   m_dwInt32 = src.m_dwInt32;
-   m_qwInt64 = src.m_qwInt64;
-   m_dFloat = src.m_dFloat;
+   _tcscpy(m_string, src.m_string);
+   m_int32 = src.m_int32;
+   m_int64 = src.m_int64;
+   m_uint32 = src.m_uint32;
+   m_uint64 = src.m_uint64;
+   m_double = src.m_double;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(const TCHAR *pszStr)
+const ItemValue& ItemValue::operator=(const TCHAR *value)
 {
-   nx_strncpy(m_szString, CHECK_NULL_EX(pszStr), MAX_DB_STRING);
-   m_iInt32 = _tcstol(m_szString, NULL, 0);
-   m_iInt64 = _tcstoll(m_szString, NULL, 0);
-   m_dwInt32 = _tcstoul(m_szString, NULL, 0);
-   m_qwInt64 = _tcstoull(m_szString, NULL, 0);
-   m_dFloat = _tcstod(m_szString, NULL);
+   nx_strncpy(m_string, CHECK_NULL_EX(value), MAX_DB_STRING);
+   m_int32 = _tcstol(m_string, NULL, 0);
+   m_int64 = _tcstoll(m_string, NULL, 0);
+   m_uint32 = _tcstoul(m_string, NULL, 0);
+   m_uint64 = _tcstoull(m_string, NULL, 0);
+   m_double = _tcstod(m_string, NULL);
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(double dFloat)
+const ItemValue& ItemValue::operator=(double value)
 {
-   m_dFloat = dFloat;
-   _sntprintf(m_szString, MAX_DB_STRING, _T("%f"), m_dFloat);
-   m_iInt32 = (INT32)m_dFloat;
-   m_iInt64 = (INT64)m_dFloat;
-   m_dwInt32 = (UINT32)m_dFloat;
-   m_qwInt64 = (UINT64)m_dFloat;
+   m_double = value;
+   _sntprintf(m_string, MAX_DB_STRING, _T("%f"), m_double);
+   m_int32 = (INT32)m_double;
+   m_int64 = (INT64)m_double;
+   m_uint32 = (UINT32)m_double;
+   m_uint64 = (UINT64)m_double;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(INT32 iInt32)
+const ItemValue& ItemValue::operator=(INT32 value)
 {
-   m_iInt32 = iInt32;
-   _sntprintf(m_szString, MAX_DB_STRING, _T("%d"), m_iInt32);
-   m_dFloat = (double)m_iInt32;
-   m_iInt64 = (INT64)m_iInt32;
-   m_dwInt32 = (UINT32)m_iInt32;
-   m_qwInt64 = (UINT64)m_iInt32;
+   m_int32 = value;
+   _sntprintf(m_string, MAX_DB_STRING, _T("%d"), m_int32);
+   m_double = (double)m_int32;
+   m_int64 = (INT64)m_int32;
+   m_uint32 = (UINT32)m_int32;
+   m_uint64 = (UINT64)m_int32;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(INT64 iInt64)
+const ItemValue& ItemValue::operator=(INT64 value)
 {
-   m_iInt64 = iInt64;
-   _sntprintf(m_szString, MAX_DB_STRING, INT64_FMT, m_iInt64);
-   m_dFloat = (double)m_iInt64;
-   m_iInt32 = (INT32)m_iInt64;
-   m_dwInt32 = (UINT32)m_iInt64;
-   m_qwInt64 = (UINT64)m_iInt64;
+   m_int64 = value;
+   _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
+   m_double = (double)m_int64;
+   m_int32 = (INT32)m_int64;
+   m_uint32 = (UINT32)m_int64;
+   m_uint64 = (UINT64)m_int64;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(UINT32 dwInt32)
+const ItemValue& ItemValue::operator=(UINT32 value)
 {
-   m_dwInt32 = dwInt32;
-   _sntprintf(m_szString, MAX_DB_STRING, _T("%u"), m_dwInt32);
-   m_dFloat = (double)m_dwInt32;
-   m_iInt32 = (INT32)m_dwInt32;
-   m_iInt64 = (INT64)m_dwInt32;
-   m_qwInt64 = (UINT64)m_dwInt32;
+   m_uint32 = value;
+   _sntprintf(m_string, MAX_DB_STRING, _T("%u"), m_uint32);
+   m_double = (double)m_uint32;
+   m_int32 = (INT32)m_uint32;
+   m_int64 = (INT64)m_uint32;
+   m_uint64 = (UINT64)m_uint32;
    return *this;
 }
 
-const ItemValue& ItemValue::operator=(UINT64 qwInt64)
+const ItemValue& ItemValue::operator=(UINT64 value)
 {
-   m_qwInt64 = qwInt64;
-   _sntprintf(m_szString, MAX_DB_STRING, UINT64_FMT, m_qwInt64);
-   m_dFloat = (double)((INT64)m_qwInt64);
-   m_iInt32 = (INT32)m_qwInt64;
-   m_iInt64 = (INT64)m_qwInt64;
+   m_uint64 = value;
+   _sntprintf(m_string, MAX_DB_STRING, UINT64_FMT, m_uint64);
+   m_double = (double)((INT64)m_uint64);
+   m_int32 = (INT32)m_uint64;
+   m_int64 = (INT64)m_uint64;
    return *this;
+}
+
+/**
+ * Signed diff for unsigned int32 values
+ */
+inline INT64 diff_uint32(UINT32 curr, UINT32 prev)
+{
+   return (curr >= prev) ? (INT64)(curr - prev) : -((INT64)(prev - curr));
+}
+
+/**
+ * Signed diff for unsigned int64 values
+ */
+inline INT64 diff_uint64(UINT64 curr, UINT64 prev)
+{
+   return (curr >= prev) ? (INT64)(curr - prev) : -((INT64)(prev - curr));
 }
 
 /**
  * Calculate difference between two values
  */
-void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2)
+void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &curr, const ItemValue &prev)
 {
    switch(nDataType)
    {
       case DCI_DT_INT:
-         result = (INT32)value1 - (INT32)value2;
+         result = curr.getInt32() - prev.getInt32();
          break;
       case DCI_DT_UINT:
-         result = (UINT32)value1 - (UINT32)value2;
+         result = diff_uint32(curr, prev);
          break;
       case DCI_DT_INT64:
-         result = (INT64)value1 - (INT64)value2;
+         result = curr.getInt64() - prev.getInt64();
          break;
       case DCI_DT_UINT64:
-         result = (UINT64)value1 - (UINT64)value2;
+         result = diff_uint64(curr, prev);
          break;
       case DCI_DT_FLOAT:
-         result = (double)value1 - (double)value2;
+         result = curr.getDouble() - prev.getDouble();
          break;
       case DCI_DT_STRING:
-         result = (INT32)((_tcscmp((const TCHAR *)value1, (const TCHAR *)value2) == 0) ? 0 : 1);
+         result = (INT32)((_tcscmp(curr.getString(), prev.getString()) == 0) ? 0 : 1);
          break;
       default:
          // Delta calculation is not supported for other types
-         result = value1;
+         result = curr;
          break;
    }
 }

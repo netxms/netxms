@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -248,7 +248,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
 
    BOOL bMatch = FALSE;
-   int iDataType = m_dataType;
+   int dataType = m_dataType;
 
    // Execute function on value
    switch(m_function)
@@ -268,8 +268,16 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          break;
       case F_DIFF:
          calculateDiff(&fvalue, value, ppPrevValues);
-         if (m_dataType == DCI_DT_STRING)
-            iDataType = DCI_DT_INT;  // diff() for strings is an integer
+         switch(m_dataType)
+         {
+            case DCI_DT_STRING:
+               dataType = DCI_DT_INT;  // diff() for strings is an integer
+               break;
+            case DCI_DT_UINT:
+            case DCI_DT_UINT64:
+               dataType = DCI_DT_INT64;  // diff() always signed
+               break;
+         }
          break;
       case F_ERROR:        // Check for collection error
          fvalue = (UINT32)0;
@@ -338,7 +346,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       switch(m_operation)
       {
          case OP_LE:    // Less
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue < (INT32)m_value);
@@ -358,7 +366,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             break;
          case OP_LE_EQ: // Less or equal
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue <= (INT32)m_value);
@@ -378,7 +386,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             break;
          case OP_EQ:    // Equal
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue == (INT32)m_value);
@@ -401,7 +409,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             break;
          case OP_GT_EQ: // Greater or equal
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue >= (INT32)m_value);
@@ -421,7 +429,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             break;
          case OP_GT:    // Greater
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue > (INT32)m_value);
@@ -441,7 +449,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             break;
          case OP_NE:    // Not equal
-            switch(iDataType)
+            switch(dataType)
             {
                case DCI_DT_INT:
                   bMatch = ((INT32)fvalue != (INT32)m_value);

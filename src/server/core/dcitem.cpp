@@ -712,7 +712,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    }
 
    // Create new ItemValue object and transform it as needed
-   pValue = new ItemValue((const TCHAR *)originalValue, (UINT32)tmTimeStamp);
+   pValue = new ItemValue((const TCHAR *)originalValue, tmTimeStamp);
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
@@ -1232,7 +1232,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
    {
       pMsg->setField(dwId++, (UINT16)m_dataType);
       pMsg->setField(dwId++, m_ppValueCache[0]->getString());
-      pMsg->setField(dwId++, m_ppValueCache[0]->getTimeStamp());
+      pMsg->setFieldFromTime(dwId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
@@ -1293,7 +1293,6 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
-
             CalculateItemValueDiff(result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
             pValue = new NXSL_Value(result.getString());
          }
@@ -1306,9 +1305,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-
-            CalculateItemValueAverage(result, m_dataType,
-                                      min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
+            CalculateItemValueAverage(result, m_dataType, min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else
@@ -1320,9 +1317,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-
-            CalculateItemValueMD(result, m_dataType,
-                                 min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
+            CalculateItemValueMD(result, m_dataType, min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else

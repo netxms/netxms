@@ -51,44 +51,44 @@ enum ThresholdCheckResult
 class NXCORE_EXPORTABLE ItemValue
 {
 private:
-   double m_dFloat;
-   INT32 m_iInt32;
-   INT64 m_iInt64;
-   UINT32 m_dwInt32;
-   UINT64 m_qwInt64;
-   TCHAR m_szString[MAX_DB_STRING];
-   UINT32 m_dwTimeStamp;
+   double m_double;
+   INT32 m_int32;
+   INT64 m_int64;
+   UINT32 m_uint32;
+   UINT64 m_uint64;
+   TCHAR m_string[MAX_DB_STRING];
+   time_t m_timestamp;
 
 public:
    ItemValue();
-   ItemValue(const TCHAR *pszValue, UINT32 dwTimeStamp);
-   ItemValue(const ItemValue *pValue);
+   ItemValue(const TCHAR *value, time_t timestamp);
+   ItemValue(const ItemValue *value);
    ~ItemValue();
 
-   void setTimeStamp(UINT32 dwTime) { m_dwTimeStamp = dwTime; }
-   UINT32 getTimeStamp() { return m_dwTimeStamp; }
+   void setTimeStamp(time_t timestamp) { m_timestamp = timestamp; }
+   time_t getTimeStamp() const { return m_timestamp; }
 
-   INT32 getInt32() { return m_iInt32; }
-   UINT32 getUInt32() { return m_dwInt32; }
-   INT64 getInt64() { return m_iInt64; }
-   UINT64 getUInt64() { return m_qwInt64; }
-   double getDouble() { return m_dFloat; }
-   const TCHAR *getString() { return m_szString; }
+   INT32 getInt32() const { return m_int32; }
+   UINT32 getUInt32() const { return m_uint32; }
+   INT64 getInt64() const { return m_int64; }
+   UINT64 getUInt64() const { return m_uint64; }
+   double getDouble() const { return m_double; }
+   const TCHAR *getString() const { return m_string; }
 
-   operator double() { return m_dFloat; }
-   operator UINT32() { return m_dwInt32; }
-   operator UINT64() { return m_qwInt64; }
-   operator INT32() { return m_iInt32; }
-   operator INT64() { return m_iInt64; }
-   operator const TCHAR*() const { return m_szString; }
+   operator double() const { return m_double; }
+   operator UINT32() const { return m_uint32; }
+   operator UINT64() const { return m_uint64; }
+   operator INT32() const { return m_int32; }
+   operator INT64() const { return m_int64; }
+   operator const TCHAR*() const { return m_string; }
 
    const ItemValue& operator=(const ItemValue &src);
-   const ItemValue& operator=(const TCHAR *pszStr);
-   const ItemValue& operator=(double dFloat);
-   const ItemValue& operator=(INT32 iInt32);
-   const ItemValue& operator=(INT64 iInt64);
-   const ItemValue& operator=(UINT32 dwInt32);
-   const ItemValue& operator=(UINT64 qwInt64);
+   const ItemValue& operator=(const TCHAR *value);
+   const ItemValue& operator=(double value);
+   const ItemValue& operator=(INT32 value);
+   const ItemValue& operator=(INT64 value);
+   const ItemValue& operator=(UINT32 value);
+   const ItemValue& operator=(UINT64 value);
 };
 
 
@@ -655,7 +655,7 @@ void DeleteAllItemsForNode(UINT32 dwNodeId);
 void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
-void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2);
+void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &value1, const ItemValue &value2);
 void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
 void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
 void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
