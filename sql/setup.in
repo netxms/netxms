@@ -127,6 +127,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PollCountForStatusChange','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PollerThreadPoolBaseSize','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PollerThreadPoolMaxSize','250',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('RADIUSAuthMethod','PAP',1,0,'S','RADIUS authentication method to be used (PAP, CHAP, MS-CHAPv1, MS-CHAPv2)');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSNumRetries','5',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSPort','1645',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSSecondaryPort','1645',1,0);

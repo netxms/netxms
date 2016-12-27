@@ -722,8 +722,18 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
-*  Upgrade from V421 to V422
-*/
+ *  Upgrade from V422 to V423
+ */
+static BOOL H_UpgradeFromV422(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("RADIUSAuthMethod"), _T("PAP"), _T("RADIUS authentication method to be used (PAP, CHAP, MS-CHAPv1, MS-CHAPv2)"), 'S', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(423));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V421 to V422
+ */
 static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ServerColor"), _T(""), _T("Identification color for this server"), 'S', true, false, false, false));
@@ -733,8 +743,8 @@ static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
 }
 
 /**
-*  Upgrade from V420 to V421
-*/
+ * Upgrade from V420 to V421
+ */
 static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
 {
    DB_RESULT hResult = SQLSelect(_T("SELECT access_rights,user_id,object_id FROM acl"));
@@ -791,8 +801,8 @@ static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
 }
 
 /**
-*  Upgrade from V418 to V419
-*/
+ * Upgrade from V418 to V419
+ */
 static BOOL H_UpgradeFromV418(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD npe_name varchar(15)")));
@@ -801,8 +811,8 @@ static BOOL H_UpgradeFromV418(int currVersion, int newVersion)
 }
 
 /**
-*  Upgrade from V417 to V418
-*/
+ *  Upgrade from V417 to V418
+ */
 static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
 {
    // Update in object tools objectToolFilter objectMenuFilter
@@ -916,8 +926,8 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
 }
 
 /**
-*  Upgrade from V416 to V417
-*/
+ * Upgrade from V416 to V417
+ */
 static BOOL H_UpgradeFromV416(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("JiraIssueType"), _T("Task"), true, false));
@@ -932,8 +942,8 @@ static BOOL H_UpgradeFromV416(int currVersion, int newVersion)
 }
 
 /**
-*  Upgrade from V415 to V416
-*/
+ * Upgrade from V415 to V416
+ */
 static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateTable(
@@ -10825,6 +10835,7 @@ static struct
    { 419, 420, H_UpgradeFromV419 },
    { 420, 421, H_UpgradeFromV420 },
    { 421, 422, H_UpgradeFromV421 },
+   { 422, 423, H_UpgradeFromV422 },
    { 0, 0, NULL }
 };
 
