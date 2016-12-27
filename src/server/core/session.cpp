@@ -12049,6 +12049,34 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 		   msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
       }
 	}
+	else
+	{
+      Interface *localIf = FindInterfaceByMAC(macAddr);
+      if (localIf != NULL)
+      {
+         msg.setField(VID_LOCAL_NODE_ID, localIf->getParentNodeId());
+         msg.setField(VID_LOCAL_INTERFACE_ID, localIf->getId());
+         msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+         msg.setField(VID_IP_ADDRESS, localIf->getIpAddressList()->getFirstUnicastAddress());
+
+         if (localIf->getPeerInterfaceId() != 0)
+         {
+            Interface *remoteIf = (Interface *)FindObjectById(localIf->getPeerInterfaceId(), OBJECT_INTERFACE);
+            msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_DIRECT);
+            msg.setField(VID_OBJECT_ID, localIf->getPeerNodeId());
+            msg.setField(VID_INTERFACE_ID, remoteIf->getId());
+            msg.setField(VID_IF_INDEX, remoteIf->getIfIndex());
+         }
+         else
+         {
+            msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
+         }
+
+         TCHAR buffer[64];
+         debugPrintf(5, _T("findMacAddress: MAC address %s not found in FDB but interface found (%s on %s [%d])"),
+                     MACToStr(macAddr, buffer), localIf->getName(), localIf->getParentNode()->getName(), localIf->getParentNodeId());
+      }
+	}
 
 	sendMessage(&msg);
 }

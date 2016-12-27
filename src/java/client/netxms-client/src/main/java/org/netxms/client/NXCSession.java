@@ -7183,8 +7183,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      if (response.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID) != 0) return new ConnectionPoint(response);
-      return null;
+      return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
    }
 
    /**
@@ -7203,8 +7202,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_MAC_ADDR, macAddr.getValue());
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      if (response.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID) != 0) return new ConnectionPoint(response);
-      return null;
+      return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
    }
 
    /**
