@@ -537,14 +537,14 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"));
    BOOL result = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset);
-   if(data->follow && result)
+   if (data->follow && result)
    {
-      g_monitorFileList.addMonitoringFile(data->fileNameCode);
+      g_monitorFileList.add(data->fileNameCode);
       FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
       ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
-   safe_free(data->fileName);
-   safe_free(data->fileNameCode);
+   free(data->fileName);
+   free(data->fileNameCode);
    delete data;
    return THREAD_OK;
 }
@@ -741,7 +741,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
          ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
 
-         if (session->isMasterServer() && CheckFullPath(fileName, false))
+         if (CheckFullPath(fileName, false))
          {
             TCHAR *fileNameCode = (TCHAR*)malloc(MAX_PATH * sizeof(TCHAR));
             request->getFieldAsString(VID_NAME, fileNameCode, MAX_PATH);
@@ -767,22 +767,15 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       case CMD_CANCEL_FILE_MONITORING:
       {
          response->setId(request->getId());
-         if (session->isMasterServer())
+         TCHAR fileName[MAX_PATH];
+         request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
+         if (g_monitorFileList.remove(fileName))
          {
-            TCHAR fileName[MAX_PATH];
-            request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-            if(g_monitorFileList.removeMonitoringFile(fileName))
-            {
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-            }
+            response->setField(VID_RCC, ERR_SUCCESS);
          }
          else
          {
-            response->setField(VID_RCC, ERR_ACCESS_DENIED);
+            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
          }
          return TRUE;
       }
@@ -832,7 +825,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    _T("FILEMGR"), NETXMS_VERSION_STRING,
    SubagentInit, SubagentShutdown, ProcessCommands,
    0, NULL, // parameters
-   0, NULL, //enums
+   0, NULL, // lists
    0, NULL, // tables
    0, NULL, // actions
    0, NULL  // push parameters

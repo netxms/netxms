@@ -575,15 +575,8 @@ void CommSession::processingThread()
                updateConfig(pMsg, &msg);
                break;
             case CMD_ENABLE_AGENT_TRAPS:
-               if (m_masterServer)
-               {
-                  m_acceptTraps = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
-               }
+               m_acceptTraps = true;
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ENABLE_FILE_UPDATES:
                if (m_masterServer)
