@@ -785,7 +785,7 @@ public class AlarmList extends CompositeWithMessageBar
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().AcknowledgeAlarm_TaskName, alarms.length);
+				monitor.beginTask(Messages.get(getDisplay()).AcknowledgeAlarm_TaskName, alarms.length);
 				for(Object o : alarms)
 				{
 					if (monitor.isCanceled())
