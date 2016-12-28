@@ -372,14 +372,13 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
       if (dlg.open() == Window.OK)
       {
+         final String scriptSource = scriptEditor.getText();
          new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.modifyScript(0, dlg.getName(), scriptEditor.getText()); //$NON-NLS-1$
-               
-               runInUIThread(new Runnable()
-               {
+               session.modifyScript(0, dlg.getName(), scriptSource);
+               runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
@@ -535,13 +534,13 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
     */
    public void intermediateSave(boolean saveOnSelectionChange)
    {
-      final Script s = library.get( saveOnSelectionChange ? previousSelection : scriptCombo.getSelectionIndex());
+      final Script s = library.get(saveOnSelectionChange ? previousSelection : scriptCombo.getSelectionIndex());
+      final String scriptSource = scriptEditor.getText();
       new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.modifyScript(s.getId(), s.getName(), scriptEditor.getText());
-
+            session.modifyScript(s.getId(), s.getName(), scriptSource);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -700,14 +699,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    public void messageReceived(final String text)
    {
       if (consoleOutputStream != null)
-         {
+      {
          try
-               {
+         {
             consoleOutputStream.write(text);
-               }
+         }
          catch(IOException e)
          {
          }
-         }
+      }
    }
 }
