@@ -680,10 +680,13 @@ void Table::setAt(int nRow, int nCol, double dData)
 /**
  * Get data from position
  */
-const TCHAR *Table::getAsString(int nRow, int nCol)
+const TCHAR *Table::getAsString(int nRow, int nCol, const TCHAR *defaultValue)
 {
    TableRow *r = m_data->get(nRow);
-   return (r != NULL) ? r->getValue(nCol) : NULL;
+   if (r == NULL)
+      return defaultValue;
+   const TCHAR *v = r->getValue(nCol);
+   return (v != NULL) ? v : defaultValue;
 }
 
 INT32 Table::getAsInt(int nRow, int nCol)

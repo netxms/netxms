@@ -47,7 +47,7 @@ DCTableCondition::DCTableCondition(DCTableCondition *src)
  */
 DCTableCondition::~DCTableCondition()
 {
-   safe_free(m_column);
+   free(m_column);
 }
 
 /**
@@ -122,7 +122,7 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsDouble(row, col) == (double)m_value);
                break;
             case DCI_DT_STRING:
-               result = !_tcscmp(value->getAsString(row, col), m_value.getString());
+               result = !_tcscmp(value->getAsString(row, col, _T("")), m_value.getString());
                break;
          }
          break;
@@ -185,15 +185,15 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsDouble(row, col) != (double)m_value);
                break;
             case DCI_DT_STRING:
-               result = _tcscmp(value->getAsString(row, col), m_value.getString()) ? true : false;
+               result = _tcscmp(value->getAsString(row, col, _T("")), m_value.getString()) ? true : false;
                break;
          }
          break;
       case OP_LIKE:
-         result = MatchString(m_value.getString(), value->getAsString(row, col), true);
+         result = MatchString(m_value.getString(), value->getAsString(row, col, _T("")), true);
          break;
       case OP_NOTLIKE:
-         result = !MatchString(m_value.getString(), value->getAsString(row, col), true);
+         result = !MatchString(m_value.getString(), value->getAsString(row, col, _T("")), true);
          break;
       default:
          break;
