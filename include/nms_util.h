@@ -1103,7 +1103,7 @@ public:
    void setStatusAt(int row, int col, int status);
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
-   const TCHAR *getAsString(int nRow, int nCol);
+   const TCHAR *getAsString(int nRow, int nCol, const TCHAR *defaultValue = NULL);
    INT32 getAsInt(int nRow, int nCol);
    UINT32 getAsUInt(int nRow, int nCol);
    INT64 getAsInt64(int nRow, int nCol);
