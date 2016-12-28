@@ -1205,7 +1205,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
  */
 UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session)
 {
-   UINT32 dwRet = RCC_INVALID_ALARM_ID;
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
@@ -1213,22 +1213,21 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
       Alarm *alarm = m_alarmList->get(i);
       if (alarm->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAccess(session))
+         if (alarm->checkCategoryAccess(session))
          {
             alarm->fillMessage(msg);
-            dwRet = RCC_SUCCESS;
-            break;
+            rcc = RCC_SUCCESS;
          }
          else
          {
-            dwRet = RCC_ACCESS_DENIED;
-            break;
+            rcc = RCC_ACCESS_DENIED;
          }
+         break;
       }
    }
    MutexUnlock(m_mutex);
 
-	return dwRet;
+   return rcc;
 }
 
 /**

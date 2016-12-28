@@ -294,7 +294,7 @@ static bool ForwardEvent(const TCHAR *server, Event *event)
 	if (!addr.isValidUnicast())
 	{
 		nxlog_debug(2, _T("ForwardEvent: host name %s is invalid or cannot be resolved"), server);
-		return FALSE;
+		return false;
 	}
 
 	ISC *isc = new ISC(addr);
