@@ -1210,10 +1210,12 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
-      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+      Alarm *alarm = m_alarmList->get(i);
+      if (alarm->getAlarmId() == alarmId)
       {
          if (m_alarmList->get(i)->checkCategoryAccess(session))
          {
+            alarm->fillMessage(msg);
             dwRet = RCC_SUCCESS;
             break;
          }
