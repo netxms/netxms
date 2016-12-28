@@ -287,20 +287,17 @@ static void RunCommand(void *arg)
 /**
  * Forward event to other server
  */
-static BOOL ForwardEvent(const TCHAR *server, Event *event)
+static bool ForwardEvent(const TCHAR *server, Event *event)
 {
-	ISC *isc;
-	UINT32 i, addr, rcc;
-
-	addr = ResolveHostName(server);
-	if (addr == INADDR_NONE)
+      InetAddress addr = InetAddress::resolveHostName(server);
+      if (!addr.isValidUnicast())
 	{
 		DbgPrintf(2, _T("ForwardEvent: unable to resolve host name %s"), server);
-		return FALSE;
+		return false;
 	}
 
-	isc = new ISC(addr);
-	rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
+	ISC *isc = new ISC(addr);
+	UINT32 rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
 	if (rcc == ISC_ERR_SUCCESS)
 	{
 		NXCPMessage msg;
@@ -320,7 +317,7 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 			if (event->getUserTag() != NULL)
 				msg.setField(VID_USER_TAG, event->getUserTag());
 			msg.setField(VID_NUM_ARGS, (WORD)event->getParametersCount());
-			for(i = 0; i < event->getParametersCount(); i++)
+			for(int i = 0; i < event->getParametersCount(); i++)
 				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
 			if (isc->sendMessage(&msg))
@@ -365,7 +362,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
 		memset(ppValueList, 0, sizeof(NXSL_Value *) * event->getParametersCount());
-		for(UINT32 i = 0; i < event->getParametersCount(); i++)
+		for(int i = 0; i < event->getParametersCount(); i++)
 			ppValueList[i] = new NXSL_Value(event->getParameter(i));
 
 		if (vm->run(event->getParametersCount(), ppValueList))

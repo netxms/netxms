@@ -502,77 +502,74 @@ void CommSession::writeThread()
  */
 void CommSession::processingThread()
 {
-   NXCPMessage *pMsg;
-   NXCPMessage msg;
-   UINT32 dwCommand;
-
-   while(1)
+   NXCPMessage response;
+   while(true)
    {
-      pMsg = (NXCPMessage *)m_processingQueue->getOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      NXCPMessage *request = (NXCPMessage *)m_processingQueue->getOrBlock();
+      if (request == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
-      dwCommand = pMsg->getCode();
+      UINT32 command = request->getCode();
 
       // Prepare response message
-      msg.setCode(CMD_REQUEST_COMPLETED);
-      msg.setId(pMsg->getId());
+      response.setCode(CMD_REQUEST_COMPLETED);
+      response.setId(request->getId());
 
       // Check if authentication required
-      if ((!m_authenticated) && (dwCommand != CMD_AUTHENTICATE))
+      if ((!m_authenticated) && (command != CMD_AUTHENTICATE))
       {
 			DebugPrintf(m_dwIndex, 6, _T("Authentication required"));
-         msg.setField(VID_RCC, ERR_AUTH_REQUIRED);
+         response.setField(VID_RCC, ERR_AUTH_REQUIRED);
       }
       else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_pCtx == NULL))
       {
 			DebugPrintf(m_dwIndex, 6, _T("Encryption required"));
-         msg.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
+         response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
       }
       else
       {
-         switch(dwCommand)
+         switch(command)
          {
             case CMD_AUTHENTICATE:
-               authenticate(pMsg, &msg);
+               authenticate(request, &response);
                break;
             case CMD_GET_PARAMETER:
-               getParameter(pMsg, &msg);
+               getParameter(request, &response);
                break;
             case CMD_GET_LIST:
-               getList(pMsg, &msg);
+               getList(request, &response);
                break;
             case CMD_GET_TABLE:
-               getTable(pMsg, &msg);
+               getTable(request, &response);
                break;
             case CMD_KEEPALIVE:
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_ACTION:
-               action(pMsg, &msg);
+               action(request, &response);
                break;
             case CMD_TRANSFER_FILE:
-               recvFile(pMsg, &msg);
+               recvFile(request, &response);
                break;
             case CMD_UPGRADE_AGENT:
-               msg.setField(VID_RCC, upgrade(pMsg));
+               response.setField(VID_RCC, upgrade(request));
                break;
             case CMD_GET_PARAMETER_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetParameterList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetParameterList(&response);
                break;
             case CMD_GET_ENUM_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetEnumList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetEnumList(&response);
                break;
             case CMD_GET_TABLE_LIST:
-               msg.setField(VID_RCC, ERR_SUCCESS);
-               GetTableList(&msg);
+               response.setField(VID_RCC, ERR_SUCCESS);
+               GetTableList(&response);
                break;
             case CMD_GET_AGENT_CONFIG:
-               getConfig(&msg);
+               getConfig(&response);
                break;
             case CMD_UPDATE_AGENT_CONFIG:
-               updateConfig(pMsg, &msg);
+               updateConfig(request, &response);
                break;
             case CMD_ENABLE_AGENT_TRAPS:
                m_acceptTraps = true;
@@ -582,113 +579,113 @@ void CommSession::processingThread()
                if (m_masterServer)
                {
                   m_acceptFileUpdates = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
 				case CMD_DEPLOY_AGENT_POLICY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, DeployPolicy(this, pMsg));
+						response.setField(VID_RCC, DeployPolicy(this, request));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
 				case CMD_UNINSTALL_AGENT_POLICY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, UninstallPolicy(this, pMsg));
+						response.setField(VID_RCC, UninstallPolicy(this, request));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
 				case CMD_GET_POLICY_INVENTORY:
 					if (m_masterServer)
 					{
-						msg.setField(VID_RCC, GetPolicyInventory(this, &msg));
+						response.setField(VID_RCC, GetPolicyInventory(this, &response));
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
             case CMD_TAKE_SCREENSHOT:
 					if (m_controlServer)
 					{
                   TCHAR sessionName[256];
-                  pMsg->getFieldAsString(VID_NAME, sessionName, 256);
+                  request->getFieldAsString(VID_NAME, sessionName, 256);
                   DebugPrintf(m_dwIndex, 6, _T("Take snapshot from session \"%s\""), sessionName);
                   SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
                   if (conn != NULL)
                   {
                      DebugPrintf(m_dwIndex, 6, _T("Session agent connector acquired"));
-                     conn->takeScreenshot(&msg);
+                     conn->takeScreenshot(&response);
                      conn->decRefCount();
                   }
                   else
                   {
-                     msg.setField(VID_RCC, ERR_NO_SESSION_AGENT);
+                     response.setField(VID_RCC, ERR_NO_SESSION_AGENT);
                   }
 					}
 					else
 					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
             case CMD_SET_SERVER_CAPABILITIES:
                // Servers before 2.0 use VID_ENABLED
-               m_ipv6Aware = pMsg->isFieldExist(VID_IPV6_SUPPORT) ? pMsg->getFieldAsBoolean(VID_IPV6_SUPPORT) : pMsg->getFieldAsBoolean(VID_ENABLED);
-               m_bulkReconciliationSupported = pMsg->getFieldAsBoolean(VID_BULK_RECONCILIATION);
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
+               m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_SET_SERVER_ID:
-               m_serverId = pMsg->getFieldAsUInt64(VID_SERVER_ID);
+               m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);
                DebugPrintf(m_dwIndex, 1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
-               msg.setField(VID_RCC, ERR_SUCCESS);
+               response.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_DATA_COLLECTION_CONFIG:
                if (m_serverId != 0)
                {
-                  ConfigureDataCollection(m_serverId, pMsg);
+                  ConfigureDataCollection(m_serverId, request);
                   m_acceptData = true;
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
                   DebugPrintf(m_dwIndex, 1, _T("Data collection configuration command received but server ID is not set"));
-                  msg.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+                  response.setField(VID_RCC, ERR_SERVER_ID_UNSET);
                }
                break;
             case CMD_CLEAN_AGENT_DCI_CONF:
                if (m_masterServer)
                {
                   ClearDataCollectionConfiguration();
-                  msg.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_RCC, ERR_SUCCESS);
                }
                else
                {
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
-                  msg.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
+               if (!ProcessCmdBySubAgent(command, request, &response, this))
+                  response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
       }
-      delete pMsg;
+      delete request;
 
       // Send response
-      sendMessage(&msg);
-      msg.deleteAllFields();
+      sendMessage(&response);
+      response.deleteAllFields();
    }
 }
 
