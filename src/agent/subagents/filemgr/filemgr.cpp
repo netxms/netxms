@@ -25,10 +25,27 @@
 #include <grp.h>
 #endif
 
+/*
+ * Create new RootFolder
+ */
+RootFolder::RootFolder(const TCHAR *folder, bool isReadOnly)
+{
+   m_folder = _tcsdup(folder);
+   m_readOnly = isReadOnly;
+
+   TCHAR *ptr = _tcschr(m_folder, _T(';'));
+   if (ptr == NULL)
+      return;
+
+   *ptr = 0;
+   if (_tcscmp(ptr+1, _T("ro")) == 0)
+      m_readOnly = true;
+}
+
 /**
  * Root folders
  */
-static StringList *g_rootFileManagerFolders;
+static ObjectArray<RootFolder> *g_rootFileManagerFolders;
 
 /**
  * Monitored file list
@@ -76,14 +93,15 @@ static void ConvertPathToNetwork(TCHAR *path)
  */
 static BOOL SubagentInit(Config *config)
 {
-   g_rootFileManagerFolders = new StringList();
+   g_rootFileManagerFolders = new ObjectArray<RootFolder>;
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {
       for(int i = 0; i < root->getValueCount(); i++)
       {
-         g_rootFileManagerFolders->add(root->getValue(i));
-         AgentWriteDebugLog(5, _T("FILEMGR: added root folder %s"), root->getValue(i));
+         RootFolder *folder = new RootFolder(root->getValue(i), false);
+         g_rootFileManagerFolders->add(folder);
+         AgentWriteDebugLog(5, _T("FILEMGR: added root folder \"%s\""), folder->getFolder());
       }
    }
    AgentWriteDebugLog(2, _T("FILEMGR: subagent initialized"));
@@ -183,7 +201,7 @@ static TCHAR *GetRealPath(TCHAR *path)
  * If second parameter is set to true - then request is for getting content and "/" path should be acepted
  * and afterwards treatet as: "give list of all allowd folders".
  */
-static bool CheckFullPath(TCHAR *folder, bool withHomeDir)
+static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false)
 {
    AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), folder);
    if (withHomeDir && !_tcscmp(folder, FS_PATH_SEPARATOR))
@@ -208,8 +226,11 @@ static bool CheckFullPath(TCHAR *folder, bool withHomeDir)
    }
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
-      if (!_tcsncmp(g_rootFileManagerFolders->get(i), folder, _tcslen(g_rootFileManagerFolders->get(i))))
-         return true;
+      if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), folder, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+         if (isModify && g_rootFileManagerFolders->get(i)->isReadOnly())
+            return false;
+         else
+            return true;
    }
 
    return false;
@@ -338,7 +359,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
 
       for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
       {
-         if (FillMessageFolderContent(g_rootFileManagerFolders->get(i), g_rootFileManagerFolders->get(i), msg, fieldId))
+         if (FillMessageFolderContent(g_rootFileManagerFolders->get(i)->getFolder(), g_rootFileManagerFolders->get(i)->getFolder(), msg, fieldId))
          {
             count++;
             fieldId+=10;
@@ -705,7 +726,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          ConvertPathToHost(file);
 
-         if (CheckFullPath(file, false) && session->isMasterServer())
+         if (CheckFullPath(file, false, true) && session->isMasterServer())
          {
             if (Delete(file))
             {
@@ -739,7 +760,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && session->isMasterServer())
+         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
             if (Rename(oldName, newName))
             {
@@ -773,7 +794,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && session->isMasterServer())
+         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
             if(MoveFile(oldName, newName))
             {
@@ -804,7 +825,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          ConvertPathToHost(name);
 
-         if (CheckFullPath(name, false) && session->isMasterServer())
+         if (CheckFullPath(name, false, true) && session->isMasterServer())
          {
             response->setField(VID_RCC, session->openFile(name, request->getId()));
          }
@@ -903,7 +924,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          ConvertPathToHost(directory);
 
-         if (CheckFullPath(directory, false) && session->isMasterServer())
+         if (CheckFullPath(directory, false, true) && session->isMasterServer())
          {
             if (CreateFolder(directory))
             {

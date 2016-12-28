@@ -102,6 +102,26 @@ public:
    bool remove(const TCHAR *fileName);
 };
 
+/*
+ * Root folders
+ */
+class RootFolder
+{
+private:
+   TCHAR *m_folder;
+   bool m_readOnly;
+
+public:
+   RootFolder(const TCHAR *folder, bool isReadOnly);
+   ~RootFolder()
+   {
+      free(m_folder);
+   }
+
+   const TCHAR *getFolder() { return m_folder; }
+   bool isReadOnly() { return m_readOnly; }
+};
+
 /**
  * Global instance of monitored files list
  */
