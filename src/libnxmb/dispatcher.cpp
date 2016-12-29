@@ -241,16 +241,16 @@ static NXMBDispatcher s_instance;
 /**
  * Instance access lock
  */
-static Mutex s_instanceLock;
+static MUTEX s_instanceLock = MutexCreate();
 
 /**
  * Get global dispatcher instance
  */
 NXMBDispatcher *NXMBDispatcher::getInstance()
 {
-   s_instanceLock.lock();
+   MutexLock(s_instanceLock);
    if (s_instance.m_workerThreadHandle == INVALID_THREAD_HANDLE)
       s_instance.m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, &s_instance);
-   s_instanceLock.unlock();
+   MutexUnlock(s_instanceLock);
 	return &s_instance;
 }
