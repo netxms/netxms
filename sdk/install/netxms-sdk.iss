@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS SDK
-AppVerName=NetXMS SDK 2.0.4
-AppVersion=2.0.4
+AppVerName=NetXMS SDK 2.0.8
+AppVersion=2.0.8
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.radensolutions.com
@@ -16,7 +16,7 @@ LicenseFile=..\..\LGPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-OutputBaseFilename=netxms-sdk-2.0.4
+OutputBaseFilename=netxms-sdk-2.0.8
 
 [Files]
 ; Header files
