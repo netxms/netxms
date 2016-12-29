@@ -112,7 +112,7 @@ private:
    bool m_readOnly;
 
 public:
-   RootFolder(const TCHAR *folder, bool isReadOnly);
+   RootFolder(const TCHAR *folder);
    ~RootFolder()
    {
       free(m_folder);

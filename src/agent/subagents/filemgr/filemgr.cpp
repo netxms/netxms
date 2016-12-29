@@ -28,10 +28,10 @@
 /*
  * Create new RootFolder
  */
-RootFolder::RootFolder(const TCHAR *folder, bool isReadOnly)
+RootFolder::RootFolder(const TCHAR *folder)
 {
    m_folder = _tcsdup(folder);
-   m_readOnly = isReadOnly;
+   m_readOnly = false;
 
    TCHAR *ptr = _tcschr(m_folder, _T(';'));
    if (ptr == NULL)
@@ -99,7 +99,7 @@ static BOOL SubagentInit(Config *config)
    {
       for(int i = 0; i < root->getValueCount(); i++)
       {
-         RootFolder *folder = new RootFolder(root->getValue(i), false);
+         RootFolder *folder = new RootFolder(root->getValue(i));
          g_rootFileManagerFolders->add(folder);
          AgentWriteDebugLog(5, _T("FILEMGR: added root folder \"%s\""), folder->getFolder());
       }
