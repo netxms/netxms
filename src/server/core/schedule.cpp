@@ -539,6 +539,89 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
 }
 
 /**
+ * Find scheduled task by task handler id
+ */
+ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
+{
+   ScheduledTask *task;
+   bool found = false;
+
+   s_cronScheduleLock.lock();
+   for (int i = 0; i < s_cronSchedules.size(); i++)
+   {
+      if (_tcscmp(s_cronSchedules.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      {
+         task = s_cronSchedules.get(i);
+         found = true;
+         break;
+      }
+   }
+   s_cronScheduleLock.unlock();
+
+   if (found)
+      return task;
+
+   s_oneTimeScheduleLock.lock();
+   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+   {
+      if (_tcscmp(s_oneTimeSchedules.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      {
+         task = s_oneTimeSchedules.get(i);
+         found = true;
+         break;
+      }
+   }
+   s_oneTimeScheduleLock.unlock();
+
+   if (found)
+      return task;
+
+   return NULL;
+}
+
+/**
+ * Remove scheduled task by task handler id
+ */
+bool RemoveScheduledTaskByHandlerId(const TCHAR *taskHandlerId)
+{
+   bool removed = false;
+
+   s_cronScheduleLock.lock();
+   for (int i = 0; i < s_cronSchedules.size(); i++)
+   {
+      if (_tcscmp(s_cronSchedules.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      {
+         s_cronSchedules.remove(i);
+         removed = true;
+         break;
+      }
+   }
+   s_cronScheduleLock.unlock();
+
+   if (removed)
+      return true;
+
+   s_oneTimeScheduleLock.lock();
+   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+   {
+      if (_tcscmp(s_oneTimeSchedules.get(i)->getTaskHandlerId(), taskHandlerId) == 0)
+      {
+         s_oneTimeSchedules.remove(i);
+         s_oneTimeSchedules.sort(ScheduledTaskComparator);
+         removed = true;
+         break;
+      }
+   }
+   s_oneTimeScheduleLock.unlock();
+
+   if (removed)
+      return true;
+
+   return false;
+
+}
+
+/**
  * Fills message with scheduled tasks list
  */
 void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)

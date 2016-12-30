@@ -57,6 +57,7 @@ struct MAIL_ENVELOPE
    char subject[MAX_EMAIL_SUBJECT_LEN];
    char *text;
    char encoding[64];
+   bool isHtml;
    int retryCount;
 };
 
@@ -134,7 +135,7 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 /**
  * Send e-mail
  */
-static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding)
+static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding, bool isHtml)
 {
    SOCKET hSocket;
    char szBuffer[SMTP_BUFFER_SIZE];
@@ -298,8 +299,8 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // content-type
                      snprintf(szBuffer, SMTP_BUFFER_SIZE,
-                                       "Content-Type: text/plain; charset=%s\r\n"
-                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", encoding);
+                                       "Content-Type: text/%s; charset=%s\r\n"
+                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", isHtml ? "html" : "plain", encoding);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
 
                      // Mail body
@@ -389,7 +390,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       ConfigReadStrA(_T("SMTPFromName"), m_szFromName, MAX_PATH, "NetXMS Server");
       m_wSmtpPort = (WORD)ConfigReadInt(_T("SMTPPort"), 25);
 
-      UINT32 dwResult = SendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding);
+      UINT32 dwResult = SendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding, pEnvelope->isHtml);
       if (dwResult != SMTP_ERR_SUCCESS)
 		{
 			pEnvelope->retryCount--;
@@ -441,11 +442,16 @@ void ShutdownMailer()
 /**
  * Post e-mail to queue
  */
-void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText)
+void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml)
 {
    MAIL_ENVELOPE *envelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
    ConfigReadStrA(_T("MailEncoding"), envelope->encoding, 64, "utf8");
-   bool isUtf8 = (!stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8"));
+   bool isUtf8;
+
+   if (isHtml)
+      isUtf8 = true;
+   else
+      isUtf8 = (!stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8"));
 
 #ifdef UNICODE
 	WideCharToMultiByte(isUtf8 ? CP_UTF8 : CP_ACP, isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
@@ -470,5 +476,6 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 	}
 #endif
 	envelope->retryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
+	envelope->isHtml = isHtml;
    m_pMailerQueue->put(envelope);
 }

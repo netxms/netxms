@@ -11,6 +11,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AgentUpgradeWaitTime','600',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AlarmHistoryRetentionTime','180',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AlarmListDisplayLimit','4096',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('AlarmSummaryEmailRecipients','',1,0,'S','A \";\" separated list of alarm summary e-mail recipient addresses');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('AlarmSummaryEmailSchedule','',1,1,'S','Schedule for sending alarm summary e-mails in cron format');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowDirectSMS','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowedCiphers','63',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('AllowTrapVarbindsConversion','1',1,1);
@@ -63,6 +65,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableNXSLContainerFunctions','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableObjectTransactions','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSNMPTraps','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('EnableAlarmSummaryEmails','0',1,1,'I','Enable alarm summary e-mails');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSyslogReceiver','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableTimedAlarmAck','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableXMPPConnector','0',1,1);

@@ -947,7 +947,14 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
 	RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right beacause it will be used only by server
 	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right beacause it will be used only by server
+   RegisterSchedulerTaskHandler(_T("Send.Alarm.Summary.Email"), SendAlarmSummaryEmail, 0); //No access right beacause it will be used only by server
    InitializeTaskScheduler();
+
+   // Send summary emails
+   if (ConfigReadInt(_T("EnableAlarmSummaryEmails"), 0))
+      EnableAlarmSummaryEmails();
+   else
+      RemoveScheduledTaskByHandlerId(_T("Send.Alarm.Summary.Email"));
 
 	// Allow clients to connect
 	ThreadCreate(ClientListener, 0, NULL);

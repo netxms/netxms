@@ -94,6 +94,7 @@ public:
    time_t getExecutionTime() { return m_executionTime; }
    UINT32 getOwner() { return m_owner; }
    UINT32 getObjectId() { return m_objectId; }
+   UINT32 getFlags() { return m_flags; }
 
    void setLastExecutionTime(time_t time) { m_lastExecution = time; };
    void setExecutionTime(time_t time) { m_executionTime = time; }
@@ -124,6 +125,8 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
 UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
 UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
 UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights);
+bool RemoveScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
+ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights);
 void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights);
 UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);

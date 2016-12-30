@@ -1021,7 +1021,7 @@ void SaveCurrentFreeId();
 
 void InitMailer();
 void ShutdownMailer();
-void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText);
+void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml = false);
 
 void InitSMSSender();
 void ShutdownSMSSender();
@@ -1144,6 +1144,12 @@ UINT32 UpdateAlarmCategory(const NXCPMessage *request);
 UINT32 DeleteAlarmCategory(UINT32 id);
 bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
 void LoadAlarmCategories();
+
+/**
+ * Alarm summary emails
+ */
+void SendAlarmSummaryEmail(const ScheduledTaskParameters *params);
+void EnableAlarmSummaryEmails();
 
 /**
  * File monitoring

@@ -5758,7 +5758,6 @@ void ClientSession::bulkResolveAlarms(NXCPMessage *pRequest, bool terminate)
 void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
 {
    NXCPMessage msg;
-
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());

@@ -29,7 +29,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			pds.cpp poll.cpp rack.cpp radius.cpp \
 			reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			session.cpp situation.cpp slmcheck.cpp smclp.cpp \
-			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp \
+			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
 			template.cpp tools.cpp tracert.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
