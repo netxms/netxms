@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
-import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
@@ -51,13 +50,14 @@ public class PerfTab extends PropertyPage
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
 	private Button checkLogScale;
+   private Button checkStacked;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
 	private Combo type;
 	private Spinner orderNumber;
 	private Button checkShowThresholds;
-	private DciSelector parentDci;
+	private LabeledText groupName;
    private Spinner timeRange;
    private Combo timeUnits;
 	private YAxisRangeEditor yAxisRange;
@@ -117,16 +117,14 @@ public class PerfTab extends PropertyPage
       orderNumber = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().PerfTab_Order, 0, 65535, new GridData(SWT.LEFT, SWT.CENTER, false, false));
       orderNumber.setSelection(settings.getOrder());
 
-      parentDci = new DciSelector(dialogArea, SWT.NONE, false);
-      parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
-      parentDci.setFixedNode(true);
-      parentDci.setAllowNoValueObjects(true);
-      parentDci.setLabel(Messages.get().PerfTab_Attach);
+      groupName = new LabeledText(dialogArea, SWT.NONE);
+      groupName.setLabel("Group");
+      groupName.setText(settings.getGroupName());
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      parentDci.setLayoutData(gd);
+      groupName.setLayoutData(gd);
 
       name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(Messages.get().PerfTab_NameInLegend);
@@ -198,6 +196,13 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       checkLogScale.setLayoutData(gd);
       
+      checkStacked = new Button(optionsGroup, SWT.CHECK);
+      checkStacked.setText("&Stacked");
+      checkStacked.setSelection(settings.isStacked());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkStacked.setLayoutData(gd);
+      
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
@@ -223,14 +228,14 @@ public class PerfTab extends PropertyPage
 		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));
 		settings.setType(type.getSelectionIndex());
 		settings.setOrder(orderNumber.getSelection());
+      settings.setGroupName(groupName.getText().trim());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
+		settings.setStacked(checkStacked.getSelection());
 		
 		settings.setAutoScale(yAxisRange.isAuto());
 		settings.setMinYScaleValue(yAxisRange.getMinY());
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 
-		settings.setParentDciId(parentDci.getDciId());
-		
 		settings.setTimeRange(timeRange.getSelection());
 		settings.setTimeUnits(timeUnits.getSelectionIndex());
 		
@@ -276,6 +281,7 @@ public class PerfTab extends PropertyPage
 		checkShow.setSelection(defaults.isEnabled());
 		title.setText(defaults.getTitle());
 		color.setColorValue(ColorConverter.rgbFromInt(defaults.getColorAsInt()));
-		parentDci.setDciId(0, 0);
+		groupName.setText("");
+		orderNumber.setSelection(100);
 	}
 }

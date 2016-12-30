@@ -11249,7 +11249,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                if (vm != NULL)
                {
                   vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
-                  if(object->getObjectClass() == OBJECT_NODE)
+                  if (object->getObjectClass() == OBJECT_NODE)
                   {
                      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
                   }

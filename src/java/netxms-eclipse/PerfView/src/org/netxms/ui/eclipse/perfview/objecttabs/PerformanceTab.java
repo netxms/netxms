@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ import org.netxms.ui.eclipse.widgets.AnimatedImage;
  */
 public class PerformanceTab extends ObjectTab
 {
-	private Map<Long, PerfTabGraph> charts = new HashMap<Long, PerfTabGraph>();
+	private Map<String, PerfTabGraph> charts = new HashMap<String, PerfTabGraph>();
 	private ScrolledComposite scroller;
 	private Composite chartArea;
 	private AnimatedImage waitingImage = null;
@@ -192,22 +192,18 @@ public class PerformanceTab extends ObjectTab
 			}
 		}
 		
-		// Parent DCI ID can be template DCI ID. Replace it with real DCI ID.
-		for(PerfTabGraphSettings s : settings)
-			s.fixParentDciId(settings);
-		
-		// Sort DCIs: put top-level first, then by order number, then alphabetically
+		// Sort DCIs: by group name, then by order number, then alphabetically
 		Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
 			{
-				int result = Long.signum(o1.getParentDciId() - o2.getParentDciId());
+				int result = o1.getGroupName().compareToIgnoreCase(o2.getGroupName());
 				if (result == 0)
 					result = Integer.signum(o1.getOrder() - o2.getOrder());
 				if (result == 0)
 				{
 					// Sort top-level DCI's by chart title, and attached DCIs by legend name  
-					if (o1.getParentDciId() == 0)
+					if (o1.getGroupName().isEmpty())
 						result = o1.getRuntimeTitle().compareToIgnoreCase(o2.getRuntimeTitle());
 					else
 						result = o1.getRuntimeName().compareToIgnoreCase(o2.getRuntimeName());
@@ -218,16 +214,18 @@ public class PerformanceTab extends ObjectTab
 		
 		for(PerfTabGraphSettings s : settings)
 		{
-			if (s.getParentDciId() == 0)
+		   String groupName = s.getGroupName();
+         PerfTabGraph chart = groupName.isEmpty() ? null : charts.get(groupName);
+			if (chart == null)
 			{
-				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s, getViewPart(), new VisibilityValidator() {
+				chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s, getViewPart(), new VisibilityValidator() {
                @Override
                public boolean isVisible()
                {
                   return isActive();
                }
             });
-				charts.put(s.getRuntimeDciInfo().getId(), chart);
+			   charts.put(groupName.isEmpty() ? "##" + Long.toString(s.getRuntimeDciInfo().getId()) : groupName, chart);
 				
 				final GridData gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
@@ -237,11 +235,7 @@ public class PerformanceTab extends ObjectTab
 			}
 			else
 			{
-				PerfTabGraph chart = charts.get(s.getParentDciId());
-				if (chart != null)
-				{
-					chart.addItem(s.getRuntimeDciInfo(), s);
-				}
+				chart.addItem(s.getRuntimeDciInfo(), s);
 			}
 		}
 		

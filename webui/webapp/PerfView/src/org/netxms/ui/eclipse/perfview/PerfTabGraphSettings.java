@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.perfview;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.List;
-
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
@@ -44,6 +42,9 @@ public class PerfTabGraphSettings
    
    @Element(required = false)
    private boolean logScaleEnabled = false;
+   
+   @Element(required = false)
+   private boolean stacked = false;
    
    @Element(required = false)
    private int minYScaleValue = 1;
@@ -73,13 +74,13 @@ public class PerfTabGraphSettings
 	private boolean showThresholds = false;
 	
 	@Element(required=false)
-	private long parentDciId = 0;
-
-	@Element(required=false)
-	private String parentDciName = null;
+	private String groupName = null;
 	
 	@Element(required=false)
 	private int order = 100;
+	
+   @Element(required=false)
+	private long parentDciId = 0;
 	
 	private PerfTabDci runtimeDciInfo = null;
 
@@ -229,38 +230,24 @@ public class PerfTabGraphSettings
 	}
 
 	/**
-	 * @return the parentDciId
-	 */
-	public final long getParentDciId()
-	{
-		return parentDciId;
-	}
+    * @return the groupName
+    */
+   public String getGroupName()
+   {
+      if (groupName != null)
+         return runtimeDciInfo != null ? groupName.replace("{instance}", runtimeDciInfo.getInstance()) : groupName; 
+      return parentDciId != 0 ? "##" + Long.toString(parentDciId) : "";
+   }
 
-	/**
-	 * @param parentDciId the parentDciId to set
-	 */
-	public final void setParentDciId(long parentDciId)
-	{
-		this.parentDciId = parentDciId;
-	}
+   /**
+    * @param groupName the groupName to set
+    */
+   public void setGroupName(String groupName)
+   {
+      this.groupName = groupName;
+   }
 
-	/**
-	 * @return the parentDciName
-	 */
-	public final String getParentDciName()
-	{
-		return parentDciName;
-	}
-
-	/**
-	 * @param parentDciName the parentDciName to set
-	 */
-	public final void setParentDciName(String parentDciName)
-	{
-		this.parentDciName = parentDciName;
-	}
-
-	/**
+   /**
 	 * @return the runtimeDciInfo
 	 */
 	public final PerfTabDci getRuntimeDciInfo()
@@ -306,30 +293,6 @@ public class PerfTabGraphSettings
 	}
 
 	/**
-	 * Fix parent DCI ID (it can be template DCI ID - replace it with real DCI ID).
-	 * 
-	 * @param settings list of all DCIs for performance tab
-	 */
-	public final void fixParentDciId(List<PerfTabGraphSettings> settings)
-	{
-		if (parentDciId == 0)
-			return;
-		
-		for(PerfTabGraphSettings s : settings)
-		{
-			if (parentDciId == s.getRuntimeDciInfo().getId())
-				return;	// found valid parent ID
-			if (((parentDciId == s.getRuntimeDciInfo().getTemplateDciId()) || (parentDciId == s.getRuntimeDciInfo().getRootTemplateDciId())) &&
-			    s.getRuntimeDciInfo().getInstance().equals(runtimeDciInfo.getInstance()))
-			{
-				// found parent ID from template
-				parentDciId = s.getRuntimeDciInfo().getId();
-				return;
-			}
-		}
-	}
-
-	/**
 	 * @return the order
 	 */
 	public final int getOrder()
@@ -345,31 +308,65 @@ public class PerfTabGraphSettings
 		this.order = order;
 	}
 	
+	/**
+	 * @return
+	 */
 	public boolean isAutoScale()
    {
       return autoScale;
    }
 
+   /**
+    * @param autoScale
+    */
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;
    }
 
+   /**
+    * @return the stacked
+    */
+   public boolean isStacked()
+   {
+      return stacked;
+   }
+
+   /**
+    * @param stacked the stacked to set
+    */
+   public void setStacked(boolean stacked)
+   {
+      this.stacked = stacked;
+   }
+
+   /**
+    * @return
+    */
    public int getMinYScaleValue()
    {
       return minYScaleValue;
    }
 
+   /**
+    * @param minYScaleValue
+    */
    public void setMinYScaleValue(int minYScaleValue)
    {
       this.minYScaleValue = minYScaleValue;
    }
 
+   /**
+    * @return
+    */
    public int getMaxYScaleValue()
    {
       return maxYScaleValue;
    }
 
+   /**
+    * @param maxYScaleValue
+    */
    public void setMaxYScaleValue(int maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;

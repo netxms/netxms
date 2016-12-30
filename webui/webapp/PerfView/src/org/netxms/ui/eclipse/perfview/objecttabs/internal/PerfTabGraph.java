@@ -85,6 +85,7 @@ public class PerfTabGraph extends DashboardComposite
 		chart.setChartTitle(settings.getRuntimeTitle());
 		chart.setLegendVisible(false);
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
+		chart.setStacked(settings.isStacked());
       
 		timeInterval = settings.getTimeRangeMillis();
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
