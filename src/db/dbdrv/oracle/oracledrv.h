@@ -131,4 +131,24 @@ struct ORACLE_UNBUFFERED_RESULT
    char **columnNames;
 };
 
+/**
+ * Undocumented internal structure for column parameter handler
+ */
+struct OCI_PARAM_STRUCT_COLUMN_INFO
+{
+   unsigned char unknownFields[4 * sizeof(int) + 3 * sizeof(void *)];
+   unsigned char attributes[sizeof(int)];
+   unsigned char unknownFields2[sizeof(int)];
+   char *name;
+};
+
+/**
+ * Undocumented internal structure for column parameter handler
+ */
+struct OCI_PARAM_STRUCT
+{
+   unsigned char unknownFields[2 * sizeof(void *) + 1 * sizeof(int)];
+   OCI_PARAM_STRUCT_COLUMN_INFO *columnInfo;
+};
+
 #endif   /* _oracledrv_h_ */

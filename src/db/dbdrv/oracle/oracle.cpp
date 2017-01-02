@@ -32,6 +32,11 @@ static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR 
 static OCIEnv *s_handleEnv = NULL;
 
 /**
+ * Major OCI version
+ */
+static int s_ociVersionMajor = 0;
+
+/**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
@@ -108,6 +113,11 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
+   sword major, minor, update, patch, pupdate;
+   OCIClientVersion(&major, &minor, &update, &patch, &pupdate);
+   nxlog_debug(1, _T("ORACLE: OCI version %d.%d.%d.%d.%d"), (int)major, (int)minor, (int)update, (int)patch, (int)pupdate);
+   s_ociVersionMajor = (int)major;
+
    if (OCIEnvNlsCreate(&s_handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
                        NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) != OCI_SUCCESS)
    {
@@ -115,7 +125,6 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
       return false;
    }
 	return true;
-
 }
 
 /**
@@ -911,6 +920,42 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *conn, const WCHAR *query, WCHAR *e
 }
 
 /**
+ * Get column name from parameter handle
+ *
+ * OCI library has memory leak when retrieving column name in UNICODE mode
+ * Driver attempts to use workaround described in https://github.com/vrogier/ocilib/issues/31
+ * (accessing internal OCI structure directly to avoid conversion to UTF-16 by OCI library)
+ */
+static char *GetColumnName(OCIParam *handleParam, OCIError *handleError)
+{
+   if ((s_ociVersionMajor == 11) || (s_ociVersionMajor == 12))
+   {
+      OCI_PARAM_STRUCT *p = (OCI_PARAM_STRUCT *)handleParam;
+      if ((p != NULL) && (p->columnInfo != NULL) && (p->columnInfo->name != NULL) && (p->columnInfo->attributes[1] != 0))
+      {
+         size_t len = p->columnInfo->attributes[1];
+         char *n = (char *)malloc(len + 1);
+         memcpy(n, p->columnInfo->name, len);
+         n[len] = 0;
+         return n;
+      }
+   }
+
+   // Use standard method as fallback
+   text *colName;
+   ub4 size;
+   if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &size, OCI_ATTR_NAME, handleError) == OCI_SUCCESS)
+   {
+      // We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
+      return MBStringFromUCS2String((UCS2CHAR *)colName);
+   }
+   else
+   {
+      return strdup("");
+   }
+}
+
+/**
  * Process SELECT results
  */
 static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStmt, DWORD *pdwError)
@@ -921,7 +966,6 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 	ub2 nWidth;
 	sword nStatus;
 	ORACLE_FETCH_BUFFER *pBuffers;
-	text *colName;
 
 	ORACLE_RESULT *pResult = (ORACLE_RESULT *)malloc(sizeof(ORACLE_RESULT));
 	pResult->nRows = 0;
@@ -940,15 +984,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 			                           (void **)&handleParam, (ub4)(i + 1))) == OCI_SUCCESS)
 			{
 				// Column name
-				if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &nCount, OCI_ATTR_NAME, pConn->handleError) == OCI_SUCCESS)
-				{
-					// We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
-					pResult->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)colName);
-				}
-				else
-				{
-					pResult->columnNames[i] = strdup("");
-				}
+            pResult->columnNames[i] = GetColumnName(handleParam, pConn->handleError);
 
 				// Data size
             ub2 type = 0;
@@ -1276,16 +1312,7 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
                          (void **)&handleParam, (ub4)(i + 1)) == OCI_SUCCESS)
          {
             // Column name
-            text *colName;
-            if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &nCount, OCI_ATTR_NAME, pConn->handleError) == OCI_SUCCESS)
-            {
-               // We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
-               result->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)colName);
-            }
-            else
-            {
-               result->columnNames[i] = strdup("");
-            }
+            result->columnNames[i] = GetColumnName(handleParam, pConn->handleError);
 
             // Data size
             sword nStatus;
