@@ -931,7 +931,7 @@ static char *GetColumnName(OCIParam *handleParam, OCIError *handleError)
    if ((s_ociVersionMajor == 11) || (s_ociVersionMajor == 12))
    {
       OCI_PARAM_STRUCT *p = (OCI_PARAM_STRUCT *)handleParam;
-      if ((p != NULL) && (p->columnInfo != NULL) && (p->columnInfo->name != NULL) && (p->columnInfo->attributes[1] != 0))
+      if ((p->columnInfo != NULL) && (p->columnInfo->name != NULL) && (p->columnInfo->attributes[1] != 0))
       {
          size_t len = p->columnInfo->attributes[1];
          char *n = (char *)malloc(len + 1);
