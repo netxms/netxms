@@ -136,9 +136,8 @@ struct ORACLE_UNBUFFERED_RESULT
  */
 struct OCI_PARAM_STRUCT_COLUMN_INFO
 {
-   unsigned char unknownFields[4 * sizeof(int) + 3 * sizeof(void *)];
-   unsigned char attributes[sizeof(int)];
-   unsigned char unknownFields2[sizeof(int)];
+   unsigned char unknownFields[6 * sizeof(int) + 2 * sizeof(void *)];
+   unsigned char attributes[sizeof(void *)];
    char *name;
 };
 
@@ -147,7 +146,7 @@ struct OCI_PARAM_STRUCT_COLUMN_INFO
  */
 struct OCI_PARAM_STRUCT
 {
-   unsigned char unknownFields[2 * sizeof(void *) + 1 * sizeof(int)];
+   unsigned char unknownFields[3 * sizeof(void *)];
    OCI_PARAM_STRUCT_COLUMN_INFO *columnInfo;
 };
 
