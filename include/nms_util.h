@@ -1761,8 +1761,8 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *data, size_t size, WCHAR *pStr);
-char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *data, size_t size, char *pStr);
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str);
+char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str);
 #ifdef UNICODE
 #define BinToStr BinToStrW
 #else

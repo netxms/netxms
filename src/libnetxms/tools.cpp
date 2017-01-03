@@ -871,35 +871,33 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 /**
  * Convert byte array to text representation (wide character version)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, size_t size, WCHAR *pStr)
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str)
 {
-   size_t i;
-   WCHAR *pCurr;
-
-   for(i = 0, pCurr = pStr; i < size; i++)
+   const BYTE *in = (const BYTE *)data;
+   WCHAR *out = str;
+   for(size_t i = 0; i < size; i++, in++)
    {
-      *pCurr++ = bin2hex(pData[i] >> 4);
-      *pCurr++ = bin2hex(pData[i] & 15);
+      *out++ = bin2hex(*in >> 4);
+      *out++ = bin2hex(*in & 15);
    }
-   *pCurr = 0;
-   return pStr;
+   *out = 0;
+   return str;
 }
 
 /**
  * Convert byte array to text representation (multibyte character version)
  */
-char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, size_t size, char *pStr)
+char LIBNETXMS_EXPORTABLE *BinToStrA(const void *data, size_t size, char *str)
 {
-   size_t i;
-   char *pCurr;
-
-   for(i = 0, pCurr = pStr; i < size; i++)
+   const BYTE *in = (const BYTE *)data;
+   char *out = str;
+   for(size_t i = 0; i < size; i++, in++)
    {
-      *pCurr++ = bin2hex(pData[i] >> 4);
-      *pCurr++ = bin2hex(pData[i] & 15);
+      *out++ = bin2hex(*in >> 4);
+      *out++ = bin2hex(*in & 15);
    }
-   *pCurr = 0;
-   return pStr;
+   *out = 0;
+   return str;
 }
 
 /**
