@@ -1402,6 +1402,8 @@ protected:
 	TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
 	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
 	UINT32 m_sshProxy;
+	UINT32 m_numberingScheme;
+	UINT32 m_rows;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }

@@ -144,6 +144,33 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attribu
 }
 
 /**
+ * Get orientation of the modules in the device
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return module orientation
+ */
+int H3CDriver::getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+{
+   return NDD_ORIENTATION_HORIZONTAL;
+}
+
+/**
+ * Get port layout of given module
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param module Module number (starting from 1)
+ * @param layout Layout structure to fill
+ */
+void H3CDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+{
+   layout->numberingScheme = NDD_PN_DU_LR;
+   layout->rows = 2;
+}
+
+/**
  * Driver entry point
  */
 DECLARE_NDD_ENTRY_POINT(s_driverName, H3CDriver);

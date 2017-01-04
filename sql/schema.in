@@ -442,6 +442,8 @@ CREATE TABLE nodes
   ssh_login varchar(63) null,
   ssh_password varchar(63) null,
   ssh_proxy integer not null,
+  port_rows integer integer null,
+  port_numbering_scheme integer null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -488,6 +490,8 @@ COMMENT_COLUMN(nodes.agent_cache_mode, '')
 COMMENT_COLUMN(nodes.last_agent_comm_time, '')
 COMMENT_COLUMN(nodes.syslog_msg_count, 'Total number of received syslog messages')
 COMMENT_COLUMN(nodes.snmp_trap_count, 'Total number of received SNMP traps')
+COMMENT_COLUMN(nodes.port_rows, 'Number of port rows')
+COMMENT_COLUMN(nodes.port_numbering_scheme, 'Numbering scheme of ports')
 
 /*
 ** Clusters information

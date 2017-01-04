@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ public class DeviceView extends DashboardComposite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot));
+				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getRowCount(), ((Node)object).getNumberingScheme());
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

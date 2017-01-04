@@ -944,6 +944,8 @@ public class NXCPCodes
    public static final long VID_SERVER_NAME = 561;
    public static final long VID_SERVER_COLOR = 562;
    public static final long VID_MESSAGE_OF_THE_DAY = 563;
+   public static final long VID_PORT_ROW_COUNT = 564;
+   public static final long VID_PORT_NUMBERING_SCHEME = 565;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

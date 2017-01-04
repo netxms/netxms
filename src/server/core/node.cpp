@@ -120,6 +120,8 @@ Node::Node() : DataCollectionTarget()
    m_sshLogin[0] = 0;
    m_sshPassword[0] = 0;
    m_sshProxy = 0;
+   m_numberingScheme = 0;
+   m_rows = 0;
 }
 
 /**
@@ -218,6 +220,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_sshLogin[0] = 0;
    m_sshPassword[0] = 0;
    m_sshProxy = sshProxy;
+   m_numberingScheme = 0;
+   m_rows = 0;
 }
 
 /**
@@ -292,7 +296,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
       _T("rack_id,rack_image,rack_position,rack_height,")
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-      _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy FROM nodes WHERE id=?"));
+      _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,port_rows,port_numbering_scheme FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -382,6 +386,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 42, m_sshLogin, MAX_SSH_LOGIN_LEN);
    DBGetField(hResult, 0, 43, m_sshPassword, MAX_SSH_PASSWORD_LEN);
    m_sshProxy = DBGetFieldULong(hResult, 0, 44);
+   m_rows = DBGetFieldULong(hResult, 0, 45);
+   m_numberingScheme = DBGetFieldULong(hResult, 0, 46);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -479,7 +485,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
          _T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
          _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
-         _T("ssh_proxy=?,chassis_id=? WHERE id=?"));
+         _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=? WHERE id=?"));
    }
    else
    {
@@ -489,8 +495,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
         _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
         _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,id) ")
-        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,id,port_rows,port_numbering_scheme) ")
+        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
    {
@@ -556,6 +562,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_sshProxy);
    DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_chassisId);
    DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 48, DB_SQLTYPE_INTEGER, m_rows);
+   DBBind(hStmt, 49, DB_SQLTYPE_INTEGER, m_numberingScheme);
 
    BOOL bResult = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -2575,6 +2583,10 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 
    // Allow driver to gather additional info
    m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
+   NDD_MODULE_LAYOUT layout;
+   m_driver->getModuleLayout(pTransport, &m_customAttributes, m_driverData, 1, &layout); // TODO module set to 1
+   m_rows = layout.rows;
+   m_numberingScheme = layout.numberingScheme;
 
    // Get sysName, sysContact, sysLocation
    if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), dwRqId, &m_sysName))
@@ -4620,6 +4632,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_SSH_PROXY, m_sshProxy);
    pMsg->setField(VID_SSH_LOGIN, m_sshLogin);
    pMsg->setField(VID_SSH_PASSWORD, m_sshPassword);
+   pMsg->setField(VID_PORT_ROW_COUNT, m_rows);
+   pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_numberingScheme);
 }
 
 /**

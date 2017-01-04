@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,11 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculatorDownUpLeftRight;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculatorLeftRightDownUp;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculatorLeftRightUpDown;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculatorUpDownLeftRight;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 
@@ -46,6 +51,22 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
  */
 public class SlotView extends Canvas implements PaintListener, MouseListener
 {
+   // Slot layouts
+   private static final int NDD_PN_UNKNOWN = 0; // port layout not known to driver, default used (layout 4)
+   private static final int NDD_PN_CUSTOM = 1;  // custom layout, driver defines location of each port
+   private static final int NDD_PN_LR_UD = 2;   // left-to-right, then up-down:
+                                                //  1 2 3 4
+                                                //  5 6 7 8
+   private static final int NDD_PN_LR_DU = 3;   // left-to-right, then down-up:
+                                                //  5 6 7 8
+                                                //  1 2 3 4
+   private static final int NDD_PN_UD_LR = 4;   // up-down, then left-right:
+                                                //  1 3 5 7
+                                                //  2 4 6 8
+   private static final int NDD_PN_DU_LR = 5;   // down-up, then left-right:
+                                                //  2 4 6 8
+                                                //  1 3 5 7
+   
 	private static final int HORIZONTAL_MARGIN = 20;
 	private static final int VERTICAL_MARGIN = 10;
 	private static final int HORIZONTAL_SPACING = 10;
@@ -57,7 +78,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	private static final RGB HIGHLIGHT_COLOR = new RGB(64, 156, 224);
 	
 	private List<PortInfo> ports = new ArrayList<PortInfo>();
-	private int rowCount = 2;
+	private int rowCount;
+	private int numberingScheme;
 	private String slotName;
 	private Point nameSize;
 	private boolean portStatusVisible = true;
@@ -69,10 +91,12 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	 * @param parent
 	 * @param style
 	 */
-	public SlotView(Composite parent, int style, String slotName)
+	public SlotView(Composite parent, int style, String slotName, int rowCount, int numberingScheme)
 	{
 		super(parent, style | SWT.BORDER);
 		this.slotName = slotName;
+		this.numberingScheme = numberingScheme;
+		this.rowCount = rowCount;
 		
 		colors = new ColorCache(this);
 		
@@ -131,23 +155,31 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	{
 		e.gc.drawText(slotName, HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
 		
-		int x = HORIZONTAL_MARGIN + nameSize.x + HORIZONTAL_SPACING;
-		int y = VERTICAL_MARGIN;
-		int row = 0;
+		PortCalculator portCalculator = null;
+		switch(numberingScheme)
+		{
+		   case NDD_PN_DU_LR:
+		      portCalculator = new PortCalculatorDownUpLeftRight(nameSize.x, rowCount);
+		      break;
+		   case NDD_PN_LR_UD:
+		      portCalculator = new PortCalculatorLeftRightUpDown(nameSize.x, ports.size(), rowCount);
+		      break;
+		   case NDD_PN_LR_DU:
+		      portCalculator = new PortCalculatorLeftRightDownUp(nameSize.x, ports.size(), rowCount);
+		      break;
+		   case NDD_PN_CUSTOM:
+		      break;
+         case NDD_PN_UNKNOWN:
+         case NDD_PN_UD_LR:
+		   default:
+            portCalculator = new PortCalculatorUpDownLeftRight(nameSize.x, rowCount);
+            break;
+		}
+		
 		for(PortInfo p : ports)
 		{
-			drawPort(p, x, y, e.gc);
-			row++;
-			if (row == rowCount)
-			{
-				row = 0;
-				y = VERTICAL_MARGIN;
-				x += HORIZONTAL_SPACING + PORT_WIDTH;
-			}
-			else
-			{
-				y += VERTICAL_SPACING + PORT_HEIGHT;
-			}
+			drawPort(p, portCalculator.getXPos(), portCalculator.getYPos(), e.gc);
+         portCalculator.calculateNextPos();
 		}
 	}
 	

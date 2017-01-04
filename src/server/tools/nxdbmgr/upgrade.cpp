@@ -740,6 +740,17 @@ static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 /**
  *  Upgrade from V424 to V425
  */
+static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD port_rows integer")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD port_numbering_scheme integer")));
+   CHK_EXEC(SetSchemaVersion(426));
+   return TRUE;
+}
+
+/**
+ *  Upgrade from V424 to V425
+ */
 static BOOL H_UpgradeFromV424(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE scheduled_tasks ADD comments varchar(255)")));
