@@ -126,17 +126,19 @@ static String CreateAlarmSummary()
  */
 void EnableAlarmSummaryEmails()
 {
-   ScheduledTask *task = FindScheduledTaskByHandlerId(_T("Send.Alarm.Summary.Email"));
-   TCHAR schedule[24];
-   ConfigReadStr(_T("AlarmSummaryEmailSchedule"), schedule, 24, _T("0"));
+   TCHAR schedule[MAX_DB_STRING];
+   ConfigReadStr(_T("AlarmSummaryEmailSchedule"), schedule, MAX_DB_STRING, _T("0 0 * * *"));
 
+   ScheduledTask *task = FindScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    if (task != NULL)
    {
-      if (_tcscmp(task->getSchedule(), schedule) != 0)
-         UpdateScheduledTask(task->getId(), _T("Send.Alarm.Summary.Email"), schedule, _T(""), _T(""), 0, 0, SYSTEM_ACCESS_FULL, task->getFlags());
+      if (_tcscmp(task->getSchedule(), schedule))
+         UpdateScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), _T(""), 0, 0, SYSTEM_ACCESS_FULL, task->getFlags());
    }
    else
-      AddScheduledTask(_T("Send.Alarm.Summary.Email"), schedule, _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), 0);
+   {
+      AddScheduledTask(ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), 0);
+   }
 }
 
 /**

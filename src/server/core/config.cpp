@@ -367,6 +367,11 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
 	{
 		ReinitializeSyslogParser();
 	}
+   else if (!_tcscmp(name, _T("AlarmSummaryEmailSchedule")))
+   {
+      if (ConfigReadInt(_T("EnableAlarmSummaryEmails"), 0))
+         EnableAlarmSummaryEmails();  // this call will update schedule for existing task
+   }
    else if (!_tcsncmp(name, _T("CAS"), 3))
    {
       CASReadSettings();
@@ -378,6 +383,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("DefaultDCIRetentionTime")))
    {
       DCObject::m_defaultRetentionTime = _tcstol(value, NULL, 0);
+   }
+   else if (!_tcscmp(name, _T("EnableAlarmSummaryEmails")))
+   {
+      if (_tcstol(value, NULL, 0))
+         EnableAlarmSummaryEmails();
+      else
+         RemoveScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {

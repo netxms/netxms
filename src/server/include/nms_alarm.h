@@ -24,6 +24,11 @@
 #define _nms_alarm_h_
 
 /**
+ * Scheduled task handler ID for alarm summary email
+ */
+#define ALARM_SUMMARY_EMAIL_TASK_ID _T("Alarms.SendSummaryEmail")
+
+/**
  * Alarm class
  */
 class NXCORE_EXPORTABLE Alarm

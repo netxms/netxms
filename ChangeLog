@@ -6,6 +6,7 @@
 	- EPP rules can be configured to generate categorised alarms
 	- Alarm categories can be created and configured in Alarm Category Configurator
 	- By default view_all_alarms acl added to Everyone group
+- Server can be configured to periodically send alarm summary emails
 - Added template graphs
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - New NXSL "Node" class attributes: isInMaintenanceMode, lastAgentCommTime

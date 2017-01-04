@@ -446,12 +446,7 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 {
    MAIL_ENVELOPE *envelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
    ConfigReadStrA(_T("MailEncoding"), envelope->encoding, 64, "utf8");
-   bool isUtf8;
-
-   if (isHtml)
-      isUtf8 = true;
-   else
-      isUtf8 = (!stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8"));
+   bool isUtf8 = isHtml ||!stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8");
 
 #ifdef UNICODE
 	WideCharToMultiByte(isUtf8 ? CP_UTF8 : CP_ACP, isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);

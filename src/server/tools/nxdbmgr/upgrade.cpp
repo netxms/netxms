@@ -726,9 +726,9 @@ static bool SetSchemaVersion(int version)
  */
 static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("EnableAlarmSummaryEmails"), _T(""), _T("Enable alarm summary e-mails"), 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailSchedule"), _T(""), _T("Schedule for sending alarm summary e-mails in cron format"), 'S', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailRecipients"), _T(""), _T("A \";\" separated list of alarm summary e-mail recipient addresses"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("EnableAlarmSummaryEmails"), _T(""), _T("Enable alarm summary e-mails"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailSchedule"), _T(""), _T("Schedule for sending alarm summary e-mails in cron format"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailRecipients"), _T(""), _T("A semicolon separated list of alarm summary e-mail recipient addresses"), 'S', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(426));
    return TRUE;
 }
