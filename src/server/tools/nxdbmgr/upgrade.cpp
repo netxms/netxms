@@ -210,6 +210,10 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 					_sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
 					success = SQLQuery(query);
 				}
+				else
+				{
+				   success = TRUE; // No PK to drop
+				}
 				DBFreeResult(hResult);
 			}
 			break;
