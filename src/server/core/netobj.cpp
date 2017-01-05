@@ -1059,7 +1059,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 /**
  * Fill NXCP message with object's data - stage 2
  * Object's properties are not locked when this method is called. Should be
- * used only to fill data where properties lock is not enough (like data 
+ * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
 void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg)
@@ -1070,10 +1070,10 @@ void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg)
  * Fill NXCP message with object's data
  */
 void NetObj::fillMessage(NXCPMessage *msg)
-{ 
-   lockProperties(); 
+{
+   lockProperties();
    fillMessageInternal(msg);
-   unlockProperties(); 
+   unlockProperties();
    fillMessageInternalStage2(msg);
 
    lockACL();
@@ -1126,12 +1126,12 @@ void NetObj::setModified(bool notify)
  * Modify object from NXCP message - common wrapper
  */
 UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
-{ 
-   lockProperties(); 
+{
+   lockProperties();
    UINT32 rcc = modifyFromMessageInternal(msg);
    setModified();
    unlockProperties();
-   return rcc; 
+   return rcc;
 }
 
 /**
@@ -1897,8 +1897,11 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 void NetObj::addLocationToHistory()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   UINT32 startTimestamp;
    bool isSamePlace;
+   double latitude = 0;
+   double longitude = 0;
+   UINT32 accuracy = 0;
+   UINT32 startTimestamp = 0;
    DB_RESULT hResult;
    if (!isLocationTableExists(hdb))
    {
@@ -1937,21 +1940,26 @@ void NetObj::addLocationToHistory()
 		goto onFail;
    if (DBGetNumRows(hResult) > 0)
    {
+      latitude = DBGetFieldDouble(hResult, 0, 0);
+      longitude = DBGetFieldDouble(hResult, 0, 1);
+      accuracy = DBGetFieldLong(hResult, 0, 2);
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
-      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldLong(hResult, 0, 2));
-      DBFreeStatement(hStmt);
-      DBFreeResult(hResult);
+      isSamePlace = m_geoLocation.sameLocation(latitude, longitude, accuracy);
    }
    else
    {
       isSamePlace = false;
    }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
 
    if (isSamePlace)
    {
       TCHAR query[256];
       _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_id);
       hStmt = DBPrepare(hdb, query);
+      if (hStmt == NULL)
+         goto onFail;
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startTimestamp);
    }
@@ -1961,6 +1969,8 @@ void NetObj::addLocationToHistory()
       _sntprintf(query, 255, _T("INSERT INTO gps_history_%d (latitude,longitude,")
                        _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
       hStmt = DBPrepare(hdb, query);
+      if (hStmt == NULL)
+         goto onFail;
 
       TCHAR lat[32], lon[32];
       _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
@@ -1973,16 +1983,19 @@ void NetObj::addLocationToHistory()
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
 	}
 
-	if (hStmt == NULL)
-		goto onFail;
-
-   DBExecute(hStmt);
+   if(!DBExecute(hStmt))
+   {
+      DbgPrintf(4, _T("NetObj::addLocationToHistory: Failed to add location to history. New: lat %f, lon %f, ac %d, t %d. Old: lat %f, lon %f, ac %d, t %d."),
+                m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(), (UINT32)m_geoLocation.getTimestamp(),
+                latitude, longitude, accuracy, startTimestamp);
+   }
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
    return;
 
 onFail:
-   DBFreeStatement(hStmt);
+   if(hStmt != NULL)
+      DBFreeStatement(hStmt);
    DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
    DBConnectionPoolReleaseConnection(hdb);
    return;
