@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2014 Victor Kirhenshtein
+** Copyright (C) 2008-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -310,7 +310,7 @@ static BOOL SubagentInit(Config *config)
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
-	{ _T("LogWatch.Parser.Status(*)"), H_ParserStats, _T("S"), DCI_DT_INT, _T("Parser {instance} status") },
+	{ _T("LogWatch.Parser.Status(*)"), H_ParserStats, _T("S"), DCI_DT_STRING, _T("Parser {instance} status") },
 	{ _T("LogWatch.Parser.MatchedRecords(*)"), H_ParserStats, _T("M"), DCI_DT_INT, _T("Number of records matched by parser {instance}") },
 	{ _T("LogWatch.Parser.ProcessedRecords(*)"), H_ParserStats, _T("P"), DCI_DT_INT, _T("Number of records processed by parser {instance}") }
 };

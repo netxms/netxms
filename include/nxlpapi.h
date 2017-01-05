@@ -240,6 +240,8 @@ private:
 
    const LogParserRule *findRuleByName(const TCHAR *name) const;
 
+   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
+
 public:
 	LogParser();
 	LogParser(LogParser *src);
@@ -257,7 +259,6 @@ public:
 	void setName(const TCHAR *name);
 	const TCHAR *getName() { return m_name; }
 
-	void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
 	const TCHAR *getStatus() { return m_status; }
 
 	void setThread(THREAD th) { m_thread = th; }
