@@ -841,6 +841,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\summary_email.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\svccontainer.cpp"
 				>
 			</File>

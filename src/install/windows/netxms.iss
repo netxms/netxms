@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x86
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.1-M1
+OutputBaseFilename=netxms-2.1-M2
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed

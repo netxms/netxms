@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-2.1-M1
+OutputBaseFilename=nxagent-2.1-M2
 
 [Files]
 Source: "..\..\..\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
