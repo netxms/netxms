@@ -728,12 +728,12 @@ static bool SetSchemaVersion(int version)
 /**
  *  Upgrade from V425 to V426
  */
-static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("EnableAlarmSummaryEmails"), _T(""), _T("Enable alarm summary e-mails"), 'I', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailSchedule"), _T(""), _T("Schedule for sending alarm summary e-mails in cron format"), 'S', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailRecipients"), _T(""), _T("A semicolon separated list of alarm summary e-mail recipient addresses"), 'S', true, false, false, false));
-   CHK_EXEC(SetSchemaVersion(426));
+   CHK_EXEC(SetSchemaVersion(427));
    return TRUE;
 }
 
@@ -10886,6 +10886,7 @@ static struct
    { 423, 424, H_UpgradeFromV423 },
    { 424, 425, H_UpgradeFromV424 },
    { 425, 426, H_UpgradeFromV425 },
+   { 426, 427, H_UpgradeFromV426 },
    { 0, 0, NULL }
 };
 
