@@ -276,6 +276,7 @@ AC_ARG_WITH(jdk,
 		if test -d "${withval}/include/solaris"; then
 			CPPFLAGS="$CPPFLAGS -I${withval}/include/solaris"
 		fi
+		AC_DEFINE_UNQUOTED([JDK_LOCATION],["$withval"],[JDK location])
 	fi
 	COMPONENTS="$COMPONENTS java"
 fi ])
@@ -3088,6 +3089,7 @@ else
 	fi
 	LDFLAGS_SUFFIX="$LDFLAGS_SUFFIX -R $RUNTIME_PREFIX/lib"
 fi
+
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 
 if test "x${ENABLE_WERROR}" = "xyes"; then

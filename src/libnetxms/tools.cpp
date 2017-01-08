@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -2619,6 +2619,137 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
          break;
    }
 #endif
+}
+
+#ifndef _WIN32
+
+/**
+ * Check potential JVM path
+ */
+static bool CheckJvmPath(const char *base, const char *libdir, const char *arch, char *jvm)
+{
+   snprintf(jvm, MAX_PATH, "%s%s/lib/%s/server/libjvm.so", base, libdir, arch);
+   nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+   if (access(jvm, 0) == 0)
+      return true;
+
+   snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/server/libjvm.so", base, libdir, arch);
+   nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+   if (access(jvm, 0) == 0)
+      return true;
+
+   if (!strcmp(arch, "x86_64"))
+      return CheckJvmPath(base, libdir, "amd64", jvm);
+
+   if (!strcmp(arch, "i686"))
+      return CheckJvmPath(base, libdir, "i386", jvm);
+
+   return false;
+}
+
+#endif
+
+/**
+ * Find Java runtime module. Search algorithm is following:
+ * 1. Windows only - check for bundled JRE in bin\jre
+ * 2. Check for bundled JRE in $NETXMS_HOME/bin/jre (Windows) or $NETXMS_HOME/lib/jre (non-Windows)
+ * 3. Windows only - check JRE location in registry
+ * 3. Check $JAVA_HOME
+ * 4. Check $JAVA_HOME/jre
+ * 5. Check JDK location specified at compile time
+ *
+ * @param buffer buffer for result
+ * @param size buffer size in characters
+ * @return buffer on success or NULL on failure
+ */
+TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
+{
+#ifdef _WIN32
+   TCHAR path[MAX_PATH];
+   GetModuleFileName(NULL, path, MAX_PATH);
+   TCHAR *s = _tcsrchr(path, _T('\\'));
+   if (s != NULL)
+   {
+      s++;
+      _tcscpy(s, _T("jre\\bin\\server\\jvm.dll"));
+      nxlog_debug(7, _T("FindJavaRuntime: checking %s"), path);
+      if (_taccess(path, 0) == 0)
+      {
+         nx_strncpy(buffer, path, size);
+         return buffer;
+      }
+   }
+#endif
+
+   char jvm[MAX_PATH] = "";
+
+#ifndef _WIN32
+   struct utsname un;
+   uname(&un);
+#endif
+
+   // Use NETXMS_HOME
+   const char *netxmsHome = getenv("NETXMS_HOME");
+   if ((netxmsHome != NULL) && (*netxmsHome != 0))
+   {
+#ifdef _WIN32
+      snprintf(jvm, MAX_PATH, "%s\\bin\\jre\\bin\\server\\jvm.dll", netxmsHome);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+#else
+      CheckJvmPath(netxmsHome, "/lib", un.machine, jvm);
+#endif
+   }
+
+#ifdef _WIN32
+   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   {
+      HKEY hKey;
+
+   }
+#endif
+
+   // Check JAVA_HOME
+   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   {
+      const char *javaHome = getenv("JAVA_HOME");
+      if ((javaHome != NULL) && (*javaHome != 0))
+      {
+#ifdef _WIN32
+         snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
+         nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+         if (access(jvm, 0) != 0)
+         {
+            snprintf(jvm, MAX_PATH, "%s\\jre\\bin\\server\\jvm.dll", javaHome);
+            nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+         }
+#else
+         CheckJvmPath(javaHome, "", un.machine, jvm);
+#endif
+      }
+   }
+
+#ifdef JDK_LOCATION
+   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   {
+#ifdef _WIN32
+      snprintf(jvm, MAX_PATH, JDK_LOCATION "\\jre\\bin\\server\\jvm.dll");
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+#else
+      CheckJvmPath(JDK_LOCATION, "", un.machine, jvm);
+#endif
+   }
+#endif
+
+   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+      return NULL;
+
+#ifdef UNICODE
+   MultiByteToWideChar(CP_UTF8, 0, jvm, -1, buffer, (int)size);
+   buffer[size - 1] = 0;
+#else
+   nx_strncpy(buffer, jvm, size);
+#endif
+   return buffer;
 }
 
 #if WITH_JEMALLOC

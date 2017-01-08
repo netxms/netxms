@@ -25,15 +25,6 @@
 #include "SubAgent.h"
 
 /**
- * Classpath separator character
- */
-#ifdef _WIN32
-#define CLASSPATH_SEPARATOR   _T(';')
-#else
-#define CLASSPATH_SEPARATOR   _T(':')
-#endif
-
-/**
  * JVM instance
  */
 static JavaVM *s_jvm = NULL;
@@ -195,7 +186,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 {
    { _T("JVM"), CT_STRING, 0, 0, MAX_PATH, 0,  s_jvmPath },
    { _T("JVMOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_jvmOptions },
-   { _T("ClassPath"), CT_STRING_LIST, CLASSPATH_SEPARATOR, 0, 0, 0, &s_userClasspath },
+   { _T("ClassPath"), CT_STRING_LIST, JAVA_CLASSPATH_SEPARATOR, 0, 0, 0, &s_userClasspath },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -332,21 +323,11 @@ static void AddContributionItems()
  */
 DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 {
-   AgentWriteDebugLog(1, _T("Initializing Java subagent"));
+   nxlog_debug(1, _T("Initializing Java subagent"));
 
    // Try to set default JVM
-#ifdef _WIN32
-   const TCHAR *javaHome = _tgetenv(_T("JAVA_HOME"));
-   if ((javaHome != NULL) && (*javaHome != 0))
-   {
-      _sntprintf(s_jvmPath, MAX_PATH, _T("%s\\bin\\server\\jvm.dll"), javaHome);
-      if (_taccess(s_jvmPath, 0) != 0)
-      {
-         _sntprintf(s_jvmPath, MAX_PATH, _T("%s\\jre\\bin\\server\\jvm.dll"), javaHome);
-      }
-      AgentWriteDebugLog(1, _T("JAVA: Default JVM set from JAVA_HOME: %s"), s_jvmPath);
-   }
-#endif
+   if (FindJavaRuntime(s_jvmPath, MAX_PATH) != NULL)
+      nxlog_debug(1, _T("JAVA: Default JVM: %s"), s_jvmPath);
 
    if (!config->parseTemplate(_T("Java"), s_configTemplate))
    {
@@ -354,7 +335,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
       return FALSE;
    }
 
-   AgentWriteDebugLog(1, _T("JAVA: using JVM %s"), s_jvmPath);
+   nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
    
    TCHAR errorText[256];
    s_jvmModule = DLOpen(s_jvmPath, errorText);
@@ -379,7 +360,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    classpath.append(_T("netxms-agent.jar"));
    if (s_userClasspath != NULL)
    {
-      classpath.append(CLASSPATH_SEPARATOR);
+      classpath.append(JAVA_CLASSPATH_SEPARATOR);
       classpath.append(s_userClasspath);
       free(s_userClasspath);
       s_userClasspath = NULL;
@@ -398,9 +379,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    vmArgs.nOptions = 1;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
-   AgentWriteDebugLog(6, _T("JVM options:"));
+   nxlog_debug(6, _T("JVM options:"));
    for(int i = 0; i < vmArgs.nOptions; i++)
-      AgentWriteDebugLog(6, _T("    %hs"), vmArgs.options[i].optionString);
+      nxlog_debug(6, _T("    %hs"), vmArgs.options[i].optionString);
 
    T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(s_jvmModule, "JNI_CreateJavaVM", NULL);
    if (CreateJavaVM != NULL)

@@ -161,6 +161,15 @@ typedef int bool;
 #undef DWORD
 #endif
 
+/**
+ * Java class path separator character
+ */
+#ifdef _WIN32
+#define JAVA_CLASSPATH_SEPARATOR   _T(';')
+#else
+#define JAVA_CLASSPATH_SEPARATOR   _T(':')
+#endif
+
 
 /***** Platform dependent includes and defines *****/
 
