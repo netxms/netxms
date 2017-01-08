@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-207 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -273,9 +273,12 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
       if (!ParseValueList(&p, args))
       {
          // argument parsing error
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (userId %d object \"%s\" [%d])"),
-                     param->m_params, param->m_userId, object->getName(), object->getId());
-         args.clear();
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
+                        param->m_params, object->getName(), object->getId());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), param->m_params);
+         args.setOwner(true);
          return;
       }
    }
