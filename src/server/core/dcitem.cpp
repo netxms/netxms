@@ -463,6 +463,7 @@ void DCItem::checkThresholds(ItemValue &value)
 	if (m_thresholds == NULL)
 		return;
 
+	bool thresholdDeactivated = false;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
@@ -489,13 +490,18 @@ void DCItem::checkThresholds(ItemValue &value)
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssisss",
 					s_paramNamesRearm, m_name, m_description, m_id, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue);
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+            {
+               // this flag used to re-send activation event for next active threshold
+               thresholdDeactivated = true;
+            }
             break;
          case ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
 	            time_t now = time(NULL);
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
+				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
 				   {
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_description, t->getStringValue(),
@@ -512,6 +518,7 @@ void DCItem::checkThresholds(ItemValue &value)
 				{
 					i = m_thresholds->size();  // Threshold condition still true, stop processing
 				}
+				thresholdDeactivated = false;
             break;
          default:
             break;
