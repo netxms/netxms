@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -256,8 +256,8 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
    {
       if (!object->checkAccessRights(param->m_userId, OBJECT_ACCESS_CONTROL))
       {
-			nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
-			            param->m_params, param->m_userId, object->getName(), object->getId());
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
+			               param->m_params, param->m_userId, object->getName(), object->getId());
          return;
       }
    }
@@ -273,9 +273,12 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
       if (!ParseValueList(&p, args))
       {
          // argument parsing error
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (userId %d object \"%s\" [%d])"),
-                     param->m_params, param->m_userId, object->getName(), object->getId());
-         args.clear();
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
+                        param->m_params, object->getName(), object->getId());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), param->m_params);
+         args.setOwner(true);
          return;
       }
    }
@@ -287,12 +290,20 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
       if (vm->run(&args))
       {
-			nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"), param->m_params, object->getName(), object->getId());
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
+                        param->m_params, object->getName(), object->getId());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), param->m_params);
       }
       else
       {
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
-                     param->m_params, object->getName(), object->getId(), vm->getErrorText());
+         if (object != NULL)
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
+                        param->m_params, object->getName(), object->getId(), vm->getErrorText());
+         else
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
+                        param->m_params, vm->getErrorText());
       }
       delete vm;
    }
