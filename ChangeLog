@@ -7,8 +7,8 @@
 - Fixed high CPU load on FreeBSD
 - Event sending by agent do not restricted to master servers only anymore
 - Default RADIUS authentication method set to PAP to maintain compatibility with older versions
-- Threshold violation events are re-sent after higher priority threshold rearmed (2.0.8-P1)
-- Fixed server crash when executing scheduled script (2.0.8-P1)
+- Threshold violation events are re-sent after higher priority threshold rearmed (2.0.8.1)
+- Fixed server crash when executing scheduled script (2.0.8.1)
 - Fixed issues: #1258, #1311, #1314, #1351, #1352, #1357, #1376
 
 
