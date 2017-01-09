@@ -32,13 +32,9 @@ public class Shell
       {
          shell.run(args);
       }
-      catch(org.python.core.PyException e)
-      {
-         e.printStackTrace();
-      }
       catch(Exception e)
       {
-         System.out.println(e.getClass().getName() + ": " + e.getMessage());
+         e.printStackTrace();
       }
    }
 
@@ -51,7 +47,8 @@ public class Shell
    {
       initJython(args);
 
-      readCredentials(args.length == 0 && isInteractive());
+      readCredentials((args.length == 0) && isInteractive());
+
       final NXCSession session = connect();
 
       final InteractiveConsole console = createInterpreter(args);

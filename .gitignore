@@ -143,6 +143,10 @@ target
 /src/client/nxalarm/nxalarm
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
+/src/client/nxshell/nxshell
+/src/client/nxshell/java/.classpath
+/src/client/nxshell/java/.project
+/src/client/nxshell/java/.settings
 /src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
@@ -174,9 +178,6 @@ target
 /src/java/nxreporting/.settings
 /src/java/nxreporting/netxms-reporting-server-*
 /src/java/nxreporting/src/main/resources/nxreporting.xml
-/src/java/nxshell/.classpath
-/src/java/nxshell/.project
-/src/java/nxshell/.settings
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
 /src/libnxsl/lex.parser.cpp

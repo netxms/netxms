@@ -1829,12 +1829,12 @@ check_step:
 }
 
 /**
- * Failure handler for DecryptPassword
+ * Failure handler for DecryptPasswordW
  */
-inline bool DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
+inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    if (decryptedPasswd != encryptedPasswd)
-      nx_strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+      wcsncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
    return false;
 }
 
@@ -1843,45 +1843,76 @@ inline bool DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPa
  * In case when it was not possible to decrypt password as the decrypted password will be set the original one.
  * The buffer length for encryptedPasswd and decryptedPasswd should be the same.
  */
-bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
+bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    //check that lenght is correct
 	if (_tcslen(encryptedPasswd) != 44)
-      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
+      return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
-   int invalidSymbolIndex = (int)_tcsspn(encryptedPasswd, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
-   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != _T('=')) || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != _T('='))))))
-      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
+   int invalidSymbolIndex = (int)wcsspn(encryptedPasswd, L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != L'=') || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != L'=')))))
+      return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-#ifdef UNICODE
 	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
 	char *mblogin = MBStringFromWideString(login);
-#else
-	const char *mbencrypted = encryptedPasswd;
-	const char *mblogin = login;
-#endif
 
 	BYTE encrypted[32], decrypted[32], key[16];
 	size_t encSize = 32;
 	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
 	if (encSize != 32)
-      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
+      return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
 	ICEDecryptData(encrypted, 32, decrypted, key);
 	decrypted[31] = 0;
 
-#ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, (int)bufferLenght);
 	decryptedPasswd[bufferLenght - 1] = 0;
 	free(mbencrypted);
 	free(mblogin);
-#else
-	nx_strncpy(decryptedPasswd, (char *)decrypted, bufferLenght);
-#endif
 
 	return true;
+}
+
+/**
+ * Failure handler for DecryptPasswordA
+ */
+inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
+{
+   if (decryptedPasswd != encryptedPasswd)
+      strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+   return false;
+}
+
+/**
+ * Decrypt password encrypted with nxencpassw.
+ * In case when it was not possible to decrypt password as the decrypted password will be set the original one.
+ * The buffer length for encryptedPasswd and decryptedPasswd should be the same.
+ */
+bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
+{
+   //check that lenght is correct
+   if (strlen(encryptedPasswd) != 44)
+      return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
+
+   // check that password contains only allowed symbols
+   int invalidSymbolIndex = (int)strspn(encryptedPasswd, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != '=') || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != '=')))))
+      return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
+
+   BYTE encrypted[32], decrypted[32], key[16];
+   size_t encSize = 32;
+   base64_decode(encryptedPasswd, strlen(encryptedPasswd), (char *)encrypted, &encSize);
+   if (encSize != 32)
+      return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
+
+   CalculateMD5Hash((BYTE *)login, strlen(login), key);
+   ICEDecryptData(encrypted, 32, decrypted, key);
+   decrypted[31] = 0;
+
+   strncpy(decryptedPasswd, (char *)decrypted, bufferLenght);
+   return true;
 }
 
 #ifndef UNDER_CE

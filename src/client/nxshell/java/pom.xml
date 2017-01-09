@@ -42,6 +42,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.finalName>${project.artifactId}-${project.version}</build.finalName>
     </properties>
 
     <dependencies>
@@ -63,7 +64,17 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>nxshell-launcher</id>
+            <properties>
+                <build.finalName>${project.artifactId}</build.finalName>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
+        <finalName>${build.finalName}</finalName>
         <plugins>
             <plugin>
                 <groupId>net.sf.mavenjython</groupId>
@@ -80,6 +91,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.5</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -90,6 +102,7 @@
                         </manifest>
                     </archive>
                     <appendAssemblyId>false</appendAssemblyId>
+                    <attach>false</attach>
                 </configuration>
                 <executions>
                     <execution>
