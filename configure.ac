@@ -3304,21 +3304,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ipso/Makefile
 	src/agent/subagents/java/Makefile
 	src/agent/subagents/java/java/Makefile
-	src/agent/subagents/java/java/src/Makefile
-	src/agent/subagents/java/java/src/main/Makefile
-	src/agent/subagents/java/java/src/main/java/Makefile
-	src/agent/subagents/java/java/src/main/java/org/Makefile
-	src/agent/subagents/java/java/src/main/java/org/netxms/Makefile
-	src/agent/subagents/java/java/src/main/java/org/netxms/agent/Makefile
-	src/agent/subagents/java/java/src/main/java/org/netxms/agent/adapters/Makefile
-	src/agent/subagents/java/sample/Makefile
-	src/agent/subagents/java/sample/src/Makefile
-	src/agent/subagents/java/sample/src/main/Makefile
-	src/agent/subagents/java/sample/src/main/java/Makefile
-	src/agent/subagents/java/sample/src/main/java/org/Makefile
-	src/agent/subagents/java/sample/src/main/java/org/netxms/Makefile
-	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/Makefile
-	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/demo/Makefile
 	src/agent/subagents/jmx/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile

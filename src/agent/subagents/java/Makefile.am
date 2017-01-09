@@ -11,7 +11,7 @@ EXTRA_DIST = \
 	java_subagent.h \
 	SubAgent.h
 
-SUBDIRS = java sample
+SUBDIRS = java
 
 if !STATIC_BUILD
 install-exec-hook:

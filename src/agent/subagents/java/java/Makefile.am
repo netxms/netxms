@@ -6,6 +6,4 @@ netxms-agent.jar: pom.xml
 	mvn install
 	mv target/netxms-agent.jar .
 
-SUBDIRS = src
-
 EXTRA_DIST = pom.xml netxms-agent.jar
