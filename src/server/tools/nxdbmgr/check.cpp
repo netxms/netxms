@@ -469,8 +469,8 @@ static void CheckContainerMembership()
    DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
    if (containerList != NULL && objectList != NULL)
    {
-      DWORD numContainers = DBGetNumRows(containerList);
-      DWORD numObjects = DBGetNumRows(objectList);
+      int numContainers = DBGetNumRows(containerList);
+      int numObjects = DBGetNumRows(objectList);
       bool match = false;
       TCHAR szQuery[1024];
 

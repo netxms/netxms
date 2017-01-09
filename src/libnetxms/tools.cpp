@@ -29,6 +29,7 @@
 
 #ifdef _WIN32
 #include <psapi.h>
+#define access _access
 #define read	_read
 #define close	_close
 #define wcsicmp _wcsicmp
@@ -2626,15 +2627,15 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 /**
  * Check potential JVM path
  */
-static bool CheckJvmPath(const char *base, const char *libdir, const char *arch, char *jvm)
+static bool CheckJvmPath(const char *base, const char *libdir, const char *arch, char *jvm, const TCHAR *description)
 {
    snprintf(jvm, MAX_PATH, "%s%s/lib/%s/server/libjvm.so", base, libdir, arch);
-   nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+   nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
    if (access(jvm, 0) == 0)
       return true;
 
    snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/server/libjvm.so", base, libdir, arch);
-   nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+   nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
    if (access(jvm, 0) == 0)
       return true;
 
@@ -2672,7 +2673,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
       s++;
       _tcscpy(s, _T("jre\\bin\\server\\jvm.dll"));
-      nxlog_debug(7, _T("FindJavaRuntime: checking %s"), path);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %s (executable path)"), path);
       if (_taccess(path, 0) == 0)
       {
          nx_strncpy(buffer, path, size);
@@ -2694,9 +2695,9 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, "%s\\bin\\jre\\bin\\server\\jvm.dll", netxmsHome);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (NetXMS home)"), jvm);
 #else
-      CheckJvmPath(netxmsHome, "/lib", un.machine, jvm);
+      CheckJvmPath(netxmsHome, "/lib", un.machine, jvm, _T("NetXMS home"));
 #endif
    }
 
@@ -2704,7 +2705,26 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    if ((jvm[0] == 0) || (access(jvm, 0) != 0))
    {
       HKEY hKey;
-
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\JavaSoft\\Java Runtime Environment"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         TCHAR currVersion[64];
+         DWORD size = sizeof(currVersion);
+         if (RegQueryValueEx(hKey, _T("CurrentVersion"), NULL, NULL, (BYTE *)currVersion, &size) == ERROR_SUCCESS)
+         {
+            HKEY hSubKey;
+            if (RegOpenKeyEx(hKey, currVersion, 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+            {
+               size = MAX_PATH - 20;
+               if (RegQueryValueExA(hSubKey, "JavaHome", NULL, NULL, (BYTE *)jvm, &size) == ERROR_SUCCESS)
+               {
+                  strcat(jvm, "\\bin\\server\\jvm.dll");
+                  nxlog_debug(7, _T("FindJavaRuntime: checking %hs (registry)"), jvm);
+               }
+               RegCloseKey(hSubKey);
+            }
+         }
+         RegCloseKey(hKey);
+      }
    }
 #endif
 
@@ -2716,14 +2736,14 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
       {
 #ifdef _WIN32
          snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
-         nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+         nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
          if (access(jvm, 0) != 0)
          {
             snprintf(jvm, MAX_PATH, "%s\\jre\\bin\\server\\jvm.dll", javaHome);
-            nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+            nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
          }
 #else
-         CheckJvmPath(javaHome, "", un.machine, jvm);
+         CheckJvmPath(javaHome, "", un.machine, jvm, _T("Java home"));
 #endif
       }
    }
@@ -2733,9 +2753,9 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, JDK_LOCATION "\\jre\\bin\\server\\jvm.dll");
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs"), jvm);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (JDK defined at compile time)"), jvm);
 #else
-      CheckJvmPath(JDK_LOCATION, "", un.machine, jvm);
+      CheckJvmPath(JDK_LOCATION, "", un.machine, jvm, _T("JDK defined at compile time"));
 #endif
    }
 #endif

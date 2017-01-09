@@ -123,7 +123,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 static bool ParseResponse(const char *xml)
 {
    Config *response = new Config();
-   if (!response->loadXmlConfigFromMemory(xml, strlen(xml), NULL, "api_result", false))
+   if (!response->loadXmlConfigFromMemory(xml, (int)strlen(xml), NULL, "api_result", false))
    {
       nxlog_debug(4, _T("MyMobile: cannot parse response XML"));
       return false;
