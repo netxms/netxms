@@ -27,6 +27,7 @@
 - Implemented CPU interrupt time parameters on Windows
 - JMX subagent
 - Event sending by agent do not restricted to master servers only anymore
+- Launcher for nxshell
 - Management console:
 	- File manager improvements
 	- Option to save graph as image

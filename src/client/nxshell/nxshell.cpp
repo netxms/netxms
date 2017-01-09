@@ -136,7 +136,7 @@ static int StartApp(int argc, char *argv[])
                for(int i = 0; i < argc; i++)
                {
                   jchar *tmp = (jchar *)UCS2StringFromMBString(argv[i]);
-                  jstring js = jniEnv->NewString(tmp, ucs2_strlen(tmp));
+                  jstring js = jniEnv->NewString(tmp, (jsize)ucs2_strlen((UCS2CHAR *)tmp));
                   free(tmp);
                   if (js != NULL)
                   {
