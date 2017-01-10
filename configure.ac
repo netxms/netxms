@@ -48,6 +48,7 @@ COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
+DISABLE_SSH="no"
 ENABLE_DEBUG="no"
 ENABLE_WERROR="no"
 STATIC_BUILD="no"
@@ -500,6 +501,14 @@ AC_ARG_WITH(bundled-openssl,
 [
 	OPENSSL_LIBSSL="nxssl"
 	OPENSSL_LIBCRYPTO="nxcrypto"
+])
+
+AC_ARG_ENABLE(ssh,
+[AS_HELP_STRING(--disable-ssh,disable SSH support)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_SSH="yes"
+	fi
 ])
 
 AC_ARG_WITH(jemalloc,
@@ -1857,14 +1866,20 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
-AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
-if test "x$HAVE_LIBSSH" = "xyes"; then
-  AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
-fi
+if test "x$DISABLE_SSH" != "xyes"; then
+	AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
+	if test "x$HAVE_LIBSSH" = "xyes"; then
+		AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
+	fi
 
-if test "x$HAVE_LIBSSH" = "xyes"; then
-  SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
-  AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
+	if test "x$HAVE_LIBSSH" = "xyes"; then
+		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
+		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
+	else
+		AC_MSG_ERROR(libssh is required for SSH support. Check that it is installed or use --disable-ssh option)
+	fi
+else
+	HAVE_LIBSSH=no
 fi
 
 if test "x$LDAP_SUPPORT" = "xyes"; then
