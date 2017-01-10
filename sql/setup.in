@@ -27,6 +27,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('CaseInsensitiveLoginNames','0',1,1,'B','Enable/disable case insensitive login names');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('CheckTrustedNodes','0',1,1,'B','Enable/disable trusted nodes check');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ClientListenerPort','4701',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('ClusterContainerAutoBind','0',1,0,'B','Enable/disable container auto binding for clusters');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('ClusterTemplateAutoApply','0',1,0,'B','Enable/disable template auto apply for clusters');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConditionPollingInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConfigurationPollingInterval','3600',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,is_public,description) VALUES ('DashboardDataExportEnableInterpolation','1',1,1,'B','Y','Enable/disable data interpolation in dashboard data export');

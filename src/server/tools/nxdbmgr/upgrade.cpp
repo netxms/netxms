@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -726,7 +726,18 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
- *  Upgrade from V425 to V426
+ *  Upgrade from V427 to V428
+ */
+static BOOL H_UpgradeFromV427(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ClusterContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for clusters"), 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ClusterTemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for clusters"), 'B', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(428));
+   return TRUE;
+}
+
+/**
+ *  Upgrade from V426 to V427
  */
 static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
 {
@@ -737,7 +748,7 @@ static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V424 to V425
+ *  Upgrade from V425 to V426
  */
 static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 {
@@ -10887,6 +10898,7 @@ static struct
    { 424, 425, H_UpgradeFromV424 },
    { 425, 426, H_UpgradeFromV425 },
    { 426, 427, H_UpgradeFromV426 },
+   { 427, 428, H_UpgradeFromV427 },
    { 0, 0, NULL }
 };
 

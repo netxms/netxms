@@ -535,10 +535,12 @@ void Cluster::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerIn
       return;
 
    DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Applying templates"), m_name);
-   applyUserTemplates();
+   if (ConfigReadInt(_T("ClusterTemplateAutoApply"), 0))
+      applyUserTemplates();
 
    DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Updating container bindings"), m_name);
-   updateContainerMembership();
+   if (ConfigReadInt(_T("ClusterContainerAutoBind"), 0))
+      updateContainerMembership();
 
    lockProperties();
    m_lastConfigurationPoll = time(NULL);
