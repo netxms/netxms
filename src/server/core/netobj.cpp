@@ -1985,7 +1985,7 @@ void NetObj::addLocationToHistory()
 
    if(!DBExecute(hStmt))
    {
-      DbgPrintf(4, _T("NetObj::addLocationToHistory: Failed to add location to history. New: lat %f, lon %f, ac %d, t %d. Old: lat %f, lon %f, ac %d, t %d."),
+      DbgPrintf(1, _T("NetObj::addLocationToHistory: Failed to add location to history. New: lat %f, lon %f, ac %d, t %d. Old: lat %f, lon %f, ac %d, t %d."),
                 m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(), (UINT32)m_geoLocation.getTimestamp(),
                 latitude, longitude, accuracy, startTimestamp);
    }
