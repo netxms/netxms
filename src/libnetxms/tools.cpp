@@ -1846,7 +1846,7 @@ inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedP
 bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
    //check that lenght is correct
-	if (_tcslen(encryptedPasswd) != 44)
+	if (wcslen(encryptedPasswd) != 44)
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
