@@ -451,6 +451,7 @@ private:
 	ObjectIndex m_agentConn;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
+	HashMap<UINT32, CommandExec> *m_serverCommands;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -686,6 +687,7 @@ private:
 	void listLibraryImages(NXCPMessage *request);
 	void deleteLibraryImage(NXCPMessage *request);
 	void executeServerCommand(NXCPMessage *request);
+	void stopServerCommand(NXCPMessage *request);
 	void uploadFileToAgent(NXCPMessage *request);
 	void listServerFileStore(NXCPMessage *request);
 	void processConsoleCommand(NXCPMessage *msg);
@@ -738,6 +740,7 @@ private:
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
+   void registerServerCommand(CommandExec *command) { m_serverCommands->set(command->getStreamId(), command); }
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -875,22 +878,18 @@ enum ThreadPoolStat
 /**
  * Server command execution data
  */
-class ServerCommandExecData
+class ServerCommandExec : public CommandExec
 {
 private:
-   TCHAR *m_command;
-   bool m_sendOutput;
    UINT32 m_requestId;
    ClientSession *m_session;
 
-public:
-   ServerCommandExecData(TCHAR *command, bool sendOutput, UINT32 requestId, ClientSession *session);
-   ~ServerCommandExecData();
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
 
-   bool sendOutput() { return m_sendOutput; }
-   const TCHAR *getCommand() { return m_command; }
-   UINT32 getRequestId() { return m_requestId; }
-   ClientSession *getSession() { return m_session; }
+public:
+   ServerCommandExec(NXCPMessage *msg, ClientSession *session);
+   ~ServerCommandExec();
 };
 
 /**
@@ -1041,8 +1040,6 @@ void CreateObjectToolExportRecord(String &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config);
 UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
 UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
-
-void ExecuteServerCommand(void *arg);
 
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);

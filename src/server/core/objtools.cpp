@@ -1496,13 +1496,37 @@ cleanup:
 /**
  * Command execution data constructor
  */
-ServerCommandExecData::ServerCommandExecData(TCHAR *command, bool sendOutput, UINT32 requestId, ClientSession *session)
+ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *session) : CommandExec()
 {
-   m_command = command;
-   m_sendOutput = sendOutput;
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      StringMap *inputFields;
+      int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+      if (count > 0)
+      {
+         inputFields = new StringMap();
+         UINT32 fieldId = VID_FIELD_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR *name = request->getFieldAsString(fieldId++);
+            TCHAR *value = request->getFieldAsString(fieldId++);
+            inputFields->setPreallocated(name, value);
+         }
+      }
+      else
+         inputFields = NULL;
+
+      TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
+      m_cmd = ((Node *)object)->expandText(cmd, inputFields, session->getLoginName());
+      free(cmd);
+      delete inputFields;
+   }
+
+   m_sendOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
    if (m_sendOutput)
    {
-      m_requestId = requestId;
+      m_requestId = request->getId();
       m_session = session;
       m_session->incRefCount();
    }
@@ -1516,61 +1540,34 @@ ServerCommandExecData::ServerCommandExecData(TCHAR *command, bool sendOutput, UI
 /**
  * Command execution data destructor
  */
-ServerCommandExecData::~ServerCommandExecData()
+ServerCommandExec::~ServerCommandExec()
 {
    if (m_session != NULL)
       m_session->decRefCount();
-   free(m_command);
 }
 
 /**
- * Worker thread for server side command execution
+ * Send output to console
  */
-void ExecuteServerCommand(void *arg)
+void ServerCommandExec::onOutput(const char *text)
 {
-   ServerCommandExecData *data = (ServerCommandExecData *)arg;
-   DbgPrintf(5, _T("Running server-side command: %s"), data->getCommand());
-   if (data->sendOutput())
-   {
-      NXCPMessage msg;
-      msg.setCode(CMD_REQUEST_COMPLETED);
-      msg.setId(data->getRequestId());
+   NXCPMessage msg;
+   msg.setId(m_requestId);
+   msg.setCode(CMD_COMMAND_OUTPUT);
+   TCHAR *buffer = WideStringFromMBString(text);
+   msg.setField(VID_MESSAGE, buffer);
+   m_session->sendMessage(&msg);
+   free(buffer);
+}
 
-      FILE *pipe = _tpopen(data->getCommand(), _T("r"));
-      if (pipe != NULL)
-      {
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         data->getSession()->sendMessage(&msg);
-
-         msg.deleteAllFields();
-         msg.setCode(CMD_COMMAND_OUTPUT);
-         while(true)
-         {
-            TCHAR line[4096];
-
-            TCHAR *ret = safe_fgetts(line, 4096, pipe);
-            if (ret == NULL)
-               break;
-
-            msg.setField(VID_MESSAGE, line);
-            data->getSession()->sendMessage(&msg);
-            msg.deleteAllFields();
-         }
-
-         pclose(pipe);
-         msg.deleteAllFields();
-         msg.setEndOfSequence();
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_EXEC_FAILED);
-      }
-      data->getSession()->sendMessage(&msg);
-   }
-   else
-   {
-	   if (_tsystem(data->getCommand()) == -1)
-         DbgPrintf(5, _T("Failed to execute command \"%s\""), data->getCommand());
-   }
-   delete data;
+/**
+ * Send message to make console stop listening to output
+ */
+void ServerCommandExec::endOfOutput()
+{
+   NXCPMessage msg;
+   msg.setId(m_requestId);
+   msg.setCode(CMD_COMMAND_OUTPUT);
+   msg.setEndOfSequence();
+   m_session->sendMessage(&msg);
 }

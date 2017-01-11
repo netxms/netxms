@@ -33,6 +33,11 @@ public class AgentTest extends AbstractSessionTest
          {
             System.out.print(text);
          }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+         }
       }, null);
 
       session.disconnect();

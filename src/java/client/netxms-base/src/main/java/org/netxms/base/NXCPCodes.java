@@ -111,7 +111,7 @@ public class NXCPCodes
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
 	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
 	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
-	// UNUSED: public static final int CMD_MODIFY_CONTAINER_CAT = 0x0058;
+	public static final int CMD_STOP_SERVER_CMD = 0x0058;
 	public static final int CMD_POLL_NODE = 0x0059;
 	public static final int CMD_POLLING_INFO = 0x005A;
 	public static final int CMD_COPY_DCI = 0x005B;
@@ -948,7 +948,8 @@ public class NXCPCodes
    public static final long VID_PORT_NUMBERING_SCHEME = 565;
    public static final long VID_NUM_VALUES = 566;
 	public static final long VID_NUM_PSTORAGE = 567;
-
+   public static final long VID_COMMAND_ID = 568;
+   
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
 	public static final long VID_ACL_RIGHTS_BASE = 0x00002000L;

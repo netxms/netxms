@@ -6821,7 +6821,9 @@ public class NXCSession
                }
             }
             if (m.isEndOfSequence())
+            {
                setComplete();
+            }
             return true;
          }
       } : null;
@@ -6832,10 +6834,13 @@ public class NXCSession
       }
       
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId());
 
       if (receiveOutput)
       {
+         if (listener != null)
+            listener.setStreamId(response.getFieldAsInt64(NXCPCodes.VID_COMMAND_ID));
+         
          synchronized(handler)
          {
             try
@@ -6848,7 +6853,23 @@ public class NXCSession
          }
          if (handler.isTimeout())
             throw new NXCException(RCC.TIMEOUT);
-      }      
+      }
+   }
+   
+   /**
+    * Stop server command
+    * 
+    * @param commandId
+    * @throws NXCException 
+    * @throws IOException 
+    */
+   public void stopServerCommand(long commandId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_STOP_SERVER_CMD);
+      msg.setFieldInt64(NXCPCodes.VID_COMMAND_ID, commandId);
+      sendMessage(msg);
+      
+      waitForRCC(msg.getMessageId());
    }
 
    /**

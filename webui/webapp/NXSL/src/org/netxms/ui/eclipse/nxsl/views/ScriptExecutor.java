@@ -709,4 +709,9 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          }
       }
    }
+
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
 }

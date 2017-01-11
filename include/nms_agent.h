@@ -515,6 +515,41 @@ public:
 };
 
 /**
+ * Execute server command
+ */
+class CommandExec
+{
+private:
+   int m_pipe[2];
+   pid_t m_pid;
+   UINT32 m_streamId;
+   THREAD m_outputThread;
+
+protected:
+   TCHAR *m_cmd;
+   bool m_sendOutput;
+
+   int getOutputPipe() { return m_pipe[0]; }
+
+   static THREAD_RESULT THREAD_CALL readOutput(void *pArg);
+
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
+
+public:
+   CommandExec(const TCHAR *cmd);
+   CommandExec();
+   virtual ~CommandExec();
+
+   UINT32 getStreamId() const { return m_streamId; }
+   const TCHAR *getCommand() const { return m_cmd; }
+
+   bool execute();
+   void stop();
+
+};
+
+/**
  * Subagent's parameter information
  */
 typedef struct

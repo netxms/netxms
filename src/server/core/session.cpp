@@ -293,6 +293,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
+   m_serverCommands = new HashMap<UINT32, CommandExec>(true);
 }
 
 /**
@@ -342,6 +343,8 @@ ClientSession::~ClientSession()
    {
       m_agentConn.forEach(&DeleteCallback, NULL);
    }
+
+   delete m_serverCommands;
 }
 
 /**
@@ -1344,6 +1347,9 @@ void ClientSession::processingThread()
 			case CMD_EXECUTE_SERVER_COMMAND:
 				executeServerCommand(pMsg);
 				break;
+			case CMD_STOP_SERVER_CMD:
+			   stopServerCommand(pMsg);
+			   break;
 			case CMD_LIST_SERVER_FILES:
 				listServerFileStore(pMsg);
 				break;
@@ -12510,32 +12516,11 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-            StringMap *inputFields;
-            int count = request->getFieldAsInt16(VID_NUM_FIELDS);
-            if (count > 0)
-            {
-               inputFields = new StringMap();
-               UINT32 fieldId = VID_FIELD_LIST_BASE;
-               for(int i = 0; i < count; i++)
-               {
-                  TCHAR *name = request->getFieldAsString(fieldId++);
-                  TCHAR *value = request->getFieldAsString(fieldId++);
-                  inputFields->setPreallocated(name, value);
-               }
-            }
-            else
-            {
-               inputFields = NULL;
-            }
-
-				TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-            TCHAR *expCmd = ((Node *)object)->expandText(cmd, inputFields, m_loginName);
-				free(cmd);
-            delete inputFields;
-
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
-            ThreadPoolExecute(g_mainThreadPool, ExecuteServerCommand,
-               new ServerCommandExecData(expCmd, request->getFieldAsBoolean(VID_RECEIVE_OUTPUT), request->getId(), this));
+			   ServerCommandExec *cmd = new ServerCommandExec(request, this);
+			   registerServerCommand(cmd);
+			   cmd->execute();
+			   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), cmd->getCommand());
+            msg.setField(VID_COMMAND_ID, cmd->getStreamId());
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -12555,6 +12540,30 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 	}
 
 	sendMessage(&msg);
+}
+
+/**
+ * Stop server command
+ */
+void ClientSession::stopServerCommand(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   msg.setId(request->getId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+
+   CommandExec *cmd = m_serverCommands->get(request->getFieldAsInt64(VID_COMMAND_ID));
+   if (cmd != NULL)
+   {
+      cmd->stop();
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      sendMessage(&msg);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_REQUEST);
+      sendMessage(&msg);
+   }
 }
 
 /**

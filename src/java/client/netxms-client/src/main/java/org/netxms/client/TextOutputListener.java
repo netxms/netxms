@@ -29,4 +29,11 @@ public interface TextOutputListener
     * @param text received message
     */
    public void messageReceived(String text);
+   
+   /**
+    * Called when output stream ID is known
+    * 
+    * @param streamId ID of output stream (actual meaning depends on API call)
+    */
+   public void setStreamId(long streamId);
 }

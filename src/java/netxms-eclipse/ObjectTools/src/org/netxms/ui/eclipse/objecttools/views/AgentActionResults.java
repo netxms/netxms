@@ -182,4 +182,12 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
       }
       super.dispose();
    }
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
 }

@@ -186,4 +186,9 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
       }
       super.dispose();
    }
+
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
 }

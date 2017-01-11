@@ -323,7 +323,7 @@ typedef struct
 #define CMD_EXECUTE_LIBRARY_SCRIPT     0x0055
 #define CMD_GET_PREDICTION_ENGINES     0x0056
 #define CMD_GET_PREDICTED_DATA         0x0057
-//UNUSED: #define CMD_MODIFY_CONTAINER_CAT       0x0058
+#define CMD_STOP_SERVER_CMD            0x0058
 #define CMD_POLL_NODE                  0x0059
 #define CMD_POLLING_INFO               0x005A
 #define CMD_COPY_DCI                   0x005B
@@ -1160,6 +1160,7 @@ typedef struct
 #define VID_PORT_NUMBERING_SCHEME   ((UINT32)565)
 #define VID_NUM_VALUES              ((UINT32)566)
 #define VID_NUM_PSTORAGE            ((UINT32)567)
+#define VID_COMMAND_ID              ((UINT32)568)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -29,10 +29,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.MenuFiltringObj;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 

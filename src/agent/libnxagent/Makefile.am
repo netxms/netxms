@@ -1,4 +1,4 @@
-SOURCES = bridge.cpp main.cpp registry.cpp tools.cpp
+SOURCES = bridge.cpp main.cpp registry.cpp tools.cpp command_exec.cpp
 
 lib_LTLIBRARIES = libnxagent.la
 

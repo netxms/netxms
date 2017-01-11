@@ -251,6 +251,10 @@ static bool RotateLog(bool needLock)
       TCHAR buffer[32];
       _ftprintf(m_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
       fflush(m_logFileHandle);
+#ifndef _WIN32
+      int fd = fileno(m_logFileHandle);
+      fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+#endif
    }
 
 	if (needLock)
@@ -390,6 +394,12 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
          _ftprintf(m_logFileHandle, _T("\n%s Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\n"),
                    FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
          fflush(m_logFileHandle);
+
+#ifndef _WIN32
+         int fd = fileno(m_logFileHandle);
+         fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+#endif
+
          if (s_flags & NXLOG_BACKGROUND_WRITER)
          {
             s_logBuffer.setAllocationStep(8192);
