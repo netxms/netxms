@@ -142,7 +142,7 @@ COMMENT_COLUMN(user_groups.system_access, 'Bit-mask of system access rights')
 COMMENT_COLUMN(user_groups.flags, '')
 COMMENT_COLUMN(user_groups.description, 'Description')
 COMMENT_COLUMN(user_groups.ldap_dn, 'LDAP dn')
-COMMENT_COLUMN(users.ldap_unique_id, 'LDAP unique id if field set')
+COMMENT_COLUMN(user_groups.ldap_unique_id, 'LDAP unique id if field set')
 
 /*
 ** Users to groups mapping
@@ -490,6 +490,11 @@ COMMENT_COLUMN(nodes.agent_cache_mode, '')
 COMMENT_COLUMN(nodes.last_agent_comm_time, '')
 COMMENT_COLUMN(nodes.syslog_msg_count, 'Total number of received syslog messages')
 COMMENT_COLUMN(nodes.snmp_trap_count, 'Total number of received SNMP traps')
+COMMENT_COLUMN(nodes.node_type, '')
+COMMENT_COLUMN(nodes.node_subtype, '')
+COMMENT_COLUMN(nodes.ssh_login, '')
+COMMENT_COLUMN(nodes.ssh_password, '')
+COMMENT_COLUMN(nodes.ssh_proxy, '')
 COMMENT_COLUMN(nodes.port_rows, 'Number of port rows')
 COMMENT_COLUMN(nodes.port_numbering_scheme, 'Numbering scheme of ports')
 
@@ -577,6 +582,12 @@ CREATE TABLE subnets
 ) TABLE_TYPE;
 
 COMMENT_TABLE(subnets, '')
+COMMENT_COLUMN(subnets.
+COMMENT_COLUMN(subnets.id, '')
+COMMENT_COLUMN(subnets.ip_addr, '')
+COMMENT_COLUMN(subnets.ip_netmask, '')
+COMMENT_COLUMN(subnets.zone_guid, '')
+COMMENT_COLUMN(subnets.synthetic_mask, '')
 
 /*
 ** Nodes' interfaces
@@ -690,7 +701,7 @@ CREATE TABLE vpn_connectors
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(vpn_connectors, '')
+COMMENT_TABLE(vpn_connectors, 'This table is deprecated.')
 COMMENT_COLUMN(vpn_connectors.id, '')
 COMMENT_COLUMN(vpn_connectors.node_id, '')
 COMMENT_COLUMN(vpn_connectors.peer_gateway, '')
@@ -707,7 +718,7 @@ CREATE TABLE vpn_connector_networks
   PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(vpn_connector_networks, '')
+COMMENT_TABLE(vpn_connector_networks, 'This table is deprecated.')
 COMMENT_COLUMN(vpn_connector_networks.vpn_id, '')
 COMMENT_COLUMN(vpn_connector_networks.network_type, '')
 COMMENT_COLUMN(vpn_connector_networks.ip_addr, '')
@@ -947,6 +958,7 @@ COMMENT_COLUMN(items.instd_method, '')
 COMMENT_COLUMN(items.instd_data, '')
 COMMENT_COLUMN(items.instd_filter, '')
 COMMENT_COLUMN(items.samples, '')
+COMMENT_COLUMN(items.npe_name, '')
 COMMENT_COLUMN(items.comments, '')
 
 /*
@@ -2530,3 +2542,9 @@ CREATE TABLE config_repositories
 	description varchar(1023) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(config_repositories, '')
+COMMENT_COLUMN(config_repositories.id, '')
+COMMENT_COLUMN(config_repositories.url, '')
+COMMENT_COLUMN(config_repositories.auth_token, '')
+COMMENT_COLUMN(config_repositories.description, '')
