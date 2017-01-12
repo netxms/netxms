@@ -7648,8 +7648,9 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
 				if (zone != NULL)
 				{
 					// Check if target zone already have object with same primary IP
-					if ((FindNodeByIP(zoneId, node->getIpAddress()) == NULL) &&
-						 (FindSubnetByIP(zoneId, node->getIpAddress()) == NULL))
+					if ((node->getFlags() & NF_REMOTE_AGENT) ||
+					    ((FindNodeByIP(zoneId, node->getIpAddress()) == NULL) &&
+						  (FindSubnetByIP(zoneId, node->getIpAddress()) == NULL)))
 					{
 						node->changeZone(zoneId);
 						msg.setField(VID_RCC, RCC_SUCCESS);
