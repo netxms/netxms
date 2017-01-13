@@ -495,7 +495,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
         _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
         _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,id,port_rows,port_numbering_scheme) ")
+        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,id) ")
         _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
@@ -561,9 +561,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 44, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
    DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_sshProxy);
    DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_chassisId);
-   DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_id);
-   DBBind(hStmt, 48, DB_SQLTYPE_INTEGER, m_portRowCount);
-   DBBind(hStmt, 49, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
+   DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portRowCount);
+   DBBind(hStmt, 48, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
+   DBBind(hStmt, 49, DB_SQLTYPE_INTEGER, m_id);
 
    BOOL bResult = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -4584,8 +4584,6 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
    pMsg->setField(VID_NODE_SUBTYPE, m_subType);
-if (m_id==289)
-_tprintf(_T("**** FLAGS=%08X\n"), m_flags);
    pMsg->setField(VID_FLAGS, m_flags);
    pMsg->setField(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);
