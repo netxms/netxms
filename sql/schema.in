@@ -582,7 +582,6 @@ CREATE TABLE subnets
 ) TABLE_TYPE;
 
 COMMENT_TABLE(subnets, '')
-COMMENT_COLUMN(subnets.
 COMMENT_COLUMN(subnets.id, '')
 COMMENT_COLUMN(subnets.ip_addr, '')
 COMMENT_COLUMN(subnets.ip_netmask, '')
