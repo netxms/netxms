@@ -113,13 +113,12 @@ public class Communication extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		/* TODO: sync in some way with "Polling" page */
 		int flags = node.getFlags();
       if (agentIsRemote.getSelection())
          flags |= AbstractNode.NF_REMOTE_AGENT;
       else
          flags &= ~AbstractNode.NF_REMOTE_AGENT;
-		md.setObjectFlags(flags);
+		md.setObjectFlags(flags, AbstractNode.NF_REMOTE_AGENT);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().Communication_JobName, node.getObjectName()), null, Activator.PLUGIN_ID, null) {

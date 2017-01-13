@@ -1041,10 +1041,9 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 	// Flags
 	if (pRequest->isFieldExist(VID_FLAGS))
 	{
-      UINT32 newFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
-      newFlags &= IF_USER_FLAGS_MASK;
-		m_flags &= ~IF_USER_FLAGS_MASK;
-		m_flags |= newFlags;
+      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? (pRequest->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
+		m_flags &= ~mask;
+		m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
 	}
 
    return NetObj::modifyFromMessageInternal(pRequest);

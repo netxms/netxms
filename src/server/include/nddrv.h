@@ -51,7 +51,7 @@ extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() { return new im
 /**
  * Port numbering schemes
  */
-enum
+enum PortNumberingScheme
 {
 	NDD_PN_UNKNOWN = 0, // port layout not known to driver
 	NDD_PN_CUSTOM = 1,  // custom layout, driver defines location of each port
@@ -72,7 +72,7 @@ enum
 /**
  * Modules orientation on the switch
  */
-enum
+enum ModuleOrientation
 {
 	NDD_ORIENTATION_HORIZONTAL = 0,
 	NDD_ORIENTATION_VERTICAL = 1

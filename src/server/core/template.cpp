@@ -894,13 +894,21 @@ void Template::fillMessageInternal(NXCPMessage *pMsg)
  */
 UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
+   // Skip modifications for subclasses
+   if (getObjectClass() != OBJECT_TEMPLATE)
+      return NetObj::modifyFromMessageInternal(pRequest);
+
    // Change template version
    if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->getFieldAsUInt32(VID_TEMPLATE_VERSION);
 
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
-		m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+   {
+      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? pRequest->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
+      m_flags &= ~mask;
+      m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
+   }
 
    // Change apply filter
 	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))

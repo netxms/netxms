@@ -211,6 +211,21 @@ public class NodePolling extends PropertyPage
 		}
 		return flags;
 	}
+
+   /**
+    * Collect mask for flags being modified
+    * 
+    * @return
+    */
+   private int collectNodeFlagsMask()
+   {
+      int mask = 0;
+      for(int i = 0; i < flagButtons.size(); i++)
+      {
+         mask |= flagValues.get(i);
+      }
+      return mask;
+   }
 	
 	/**
 	 * Collect ifXTabe usage policy from radio buttons
@@ -250,7 +265,7 @@ public class NodePolling extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		
 		md.setPollerNode(pollerNode.getObjectId());
-		md.setObjectFlags(collectNodeFlags());
+		md.setObjectFlags(collectNodeFlags(), collectNodeFlagsMask());
 		md.setIfXTablePolicy(collectIfXTablePolicy());
 		md.setAgentCacheMode(collectAgentCacheMode());
 		

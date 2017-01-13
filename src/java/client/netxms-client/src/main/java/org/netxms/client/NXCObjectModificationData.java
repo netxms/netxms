@@ -1071,7 +1071,7 @@ public class NXCObjectModificationData
 	 */
 	public void setObjectFlags(int objectFlags)
 	{
-	   setObjectFlags(objectFlags, 0x7FFFFFFF);
+	   setObjectFlags(objectFlags, 0xFFFFFFFF);
 	}
 
    /**
