@@ -457,9 +457,9 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 #else
 	if (isUtf8)
 	{
-	   utf8_to_mb(pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
+	   mb_to_utf8(pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
 	   envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
-      utf8_to_mb(pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
+      mb_to_utf8(pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
       envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
 	   envelope->text = UTF8StringFromMBString(pszText);
 	}
