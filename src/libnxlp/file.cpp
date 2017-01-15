@@ -414,7 +414,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	}
 
 	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
-	while(1)
+	while(true)
 	{
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) == 0)
@@ -424,16 +424,16 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 #else
 			fh = _topen(fname, O_RDONLY);
 #endif
-         if (m_fileEncoding == -1)
-         {
-            m_fileEncoding = ScanFileEncoding(fh);
-            lseek(fh, 0, SEEK_SET);
-         }
-
 			if (fh != -1)
 			{
 				setStatus(LPS_RUNNING);
 				LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+
+            if (m_fileEncoding == -1)
+            {
+               m_fileEncoding = ScanFileEncoding(fh);
+               lseek(fh, 0, SEEK_SET);
+            }
 
 				size = (size_t)st.st_size;
 				if (readFromStart)
@@ -484,9 +484,9 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 					}
 
 #ifdef _WIN32
-					if (st.st_size > stn.st_size)
+					if (st.st_ctime != stn.st_ctime)
 					{
-						LogParserTrace(3, _T("LogParser: file size for fstat(%d) is greater then for stat(%s), assume file rename"), fh, fname);
+						LogParserTrace(3, _T("LogParser: creation time for fstat(%d) is not equal to creation time for stat(%s), assume file rename"), fh, fname);
 						readFromStart = true;
 						break;
 					}
