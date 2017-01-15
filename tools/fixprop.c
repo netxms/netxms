@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
       return 2;
    }
 
-   printf("Processing %s ...\n", argv[1]);
+   printf("Processing %s ... ", argv[1]);
 
    char outfile[1024];
    snprintf(outfile, 1024, "%s.tmp", argv[1]);
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
       return 3;
    }
 
+   int errors = 0;
    while(!feof(in))
    {
       char line[8192];
@@ -76,8 +77,9 @@ int main(int argc, char *argv[])
       }
       else
       {
-         printf("iconv() error (%s): text=\"%s\"\n", strerror(errno), line);
-         fwrite(line, inputLen, 1, out);
+         //printf("iconv() error (%s): text=\"%s\"\n", strerror(errno), line);
+         errors++;
+         fwrite(line, strlen(line), 1, out);
       }
    }
 
@@ -97,5 +99,6 @@ int main(int argc, char *argv[])
       return 8;
    }
 
+   printf("%s\n", errors == 0 ? "OK" : "ERRORS");
    return 0;
 }
