@@ -232,6 +232,7 @@ target
 /tests/test-libnxdb/test-libnxdb
 /tests/test-libnxsnmp/test-libnxsnmp
 /tools/inst.tar.gz
+/tools/fixprop
 /webui/eclipse
 /x64
 
