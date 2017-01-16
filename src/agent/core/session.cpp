@@ -987,7 +987,7 @@ UINT32 CommSession::upgrade(NXCPMessage *pRequest)
       if(hdb != NULL)
       {
          TCHAR upgradeFileInsert[256];
-         _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file','%s')"), (const TCHAR *)DBPrepareString(hdb, szPkgName));
+         _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file',%s)"), (const TCHAR *)DBPrepareString(hdb, szPkgName));
          DBQuery(hdb, upgradeFileInsert);
       }
 
