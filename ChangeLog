@@ -28,6 +28,7 @@
 - JMX subagent
 - Event sending by agent do not restricted to master servers only anymore
 - Launcher for nxshell
+- Log monitoring subagent supports pre-allocated log files
 - Management console:
 	- File manager improvements
 	- Option to save graph as image
