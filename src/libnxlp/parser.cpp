@@ -97,8 +97,9 @@ struct XML_PARSER_STATE
 /**
  * Parser default constructor
  */
-LogParser::LogParser() : m_rules(16, 16, true)
+LogParser::LogParser()
 {
+   m_rules = new ObjectArray<LogParserRule>(16, 16, true);
 	m_cb = NULL;
 	m_userArg = NULL;
 	m_name = NULL;
@@ -122,11 +123,12 @@ LogParser::LogParser() : m_rules(16, 16, true)
 /**
  * Parser copy constructor
  */
-LogParser::LogParser(LogParser *src) : m_rules(16, 16, true)
+LogParser::LogParser(LogParser *src)
 {
-   int count = src->m_rules.size();
+   int count = src->m_rules->size();
+   m_rules = new ObjectArray<LogParserRule>(count, 16, true);
 	for(int i = 0; i < count; i++)
-		m_rules.add(new LogParserRule(src->m_rules.get(i), this));
+		m_rules->add(new LogParserRule(src->m_rules->get(i), this));
 
 	m_cb = src->m_cb;
 	m_userArg = src->m_userArg;
@@ -164,6 +166,7 @@ LogParser::LogParser(LogParser *src) : m_rules(16, 16, true)
  */
 LogParser::~LogParser()
 {
+   delete m_rules;
 	free(m_name);
 	free(m_fileName);
 #ifdef _WIN32
@@ -194,7 +197,7 @@ bool LogParser::addRule(LogParserRule *rule)
 	bool valid = rule->isValid();
 	if (valid)
 	{
-	   m_rules.add(rule);
+	   m_rules->add(rule);
 	}
 	else
 	{
@@ -259,9 +262,9 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 
 	m_recordsProcessed++;
 	int i;
-	for(i = 0; i < m_rules.size(); i++)
+	for(i = 0; i < m_rules->size(); i++)
 	{
-	   LogParserRule *rule = m_rules.get(i);
+	   LogParserRule *rule = m_rules->get(i);
 		trace(6, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
 		if ((state = checkContext(rule)) != NULL)
 		{
@@ -295,9 +298,9 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 			}
 		}
 	}
-	if (i < m_rules.size())
+	if (i < m_rules->size())
 		trace(5, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
-				m_rules.get(i)->getDescription(), matched ? _T("true") : _T("false"));
+				m_rules->get(i)->getDescription(), matched ? _T("true") : _T("false"));
 	else
 		trace(5, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 	return matched;
@@ -812,9 +815,9 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
  */
 const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
 {
-   for(int i = 0; i < m_rules.size(); i++)
+   for(int i = 0; i < m_rules->size(); i++)
    {
-      LogParserRule *rule = m_rules.get(i);
+      LogParserRule *rule = m_rules->get(i);
       if (!_tcsicmp(rule->getName(), name))
          return rule;
    }
@@ -826,12 +829,12 @@ const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
  */
 void LogParser::restoreCounters(const LogParser *parser)
 {
-   for(int i = 0; i < m_rules.size(); i++)
+   for(int i = 0; i < m_rules->size(); i++)
    {
-      const LogParserRule *rule = parser->findRuleByName(m_rules.get(i)->getName());
+      const LogParserRule *rule = parser->findRuleByName(m_rules->get(i)->getName());
       if (rule != NULL)
       {
-         m_rules.get(i)->restoreCounters(rule);
+         m_rules->get(i)->restoreCounters(rule);
       }
    }
 }

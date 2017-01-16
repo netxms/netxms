@@ -203,7 +203,7 @@ class LIBNXLP_EXPORTABLE LogParser
 	friend bool LogParserRule::matchInternal(bool, const TCHAR *, UINT32, UINT32, const TCHAR *, LogParserCallback, UINT32, void *);
 
 private:
-	ObjectArray<LogParserRule> m_rules;
+	ObjectArray<LogParserRule> *m_rules;
 	StringMap m_contexts;
 	StringMap m_macros;
 	LogParserCallback m_cb;
