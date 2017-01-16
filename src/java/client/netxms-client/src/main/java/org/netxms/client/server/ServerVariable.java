@@ -18,6 +18,8 @@
  */
 package org.netxms.client.server;
 
+import java.util.HashMap;
+
 /**
  * Server's configuration variable.
  *
@@ -26,6 +28,9 @@ public final class ServerVariable
 {
 	private String name;
 	private String value;
+	private String description;
+	private String dataType;
+	private HashMap<String, String> values = new HashMap<String, String>();
 	private boolean isServerRestartNeeded;
 
 	
@@ -36,10 +41,12 @@ public final class ServerVariable
 	 * @param value Variable's value
 	 * @param isServerRestartNeeded Server restart flag (server has to be restarted after variable change if this flag is set)
 	 */
-	public ServerVariable(String name, String value, boolean isServerRestartNeeded)
+	public ServerVariable(String name, String value, boolean isServerRestartNeeded, String dataType, String description)
 	{
 		this.name = name;
 		this.value = value;
+		this.description = description;
+		this.dataType = dataType;
 		this.isServerRestartNeeded = isServerRestartNeeded;
 	}
 
@@ -52,6 +59,13 @@ public final class ServerVariable
 		return name;
 	}
 
+	  /**
+    * @return Variable's value description
+    */
+   public String getValueDescription()
+   {
+      return values.get(value);
+   }
 
 	/**
 	 * @return Variable's value
@@ -60,7 +74,22 @@ public final class ServerVariable
 	{
 		return value;
 	}
-
+	
+	/**
+	 * @return Variable`s data type
+	 */
+	public String getDataType()
+	{
+	   return dataType;
+	}
+	
+	/**
+	 * @return Variable`s description
+	 */
+	public String getDescription()
+	{
+	   return description;
+	}
 
 	/**
 	 * @return Server restart flag
@@ -68,5 +97,21 @@ public final class ServerVariable
 	public boolean isServerRestartNeeded()
 	{
 		return isServerRestartNeeded;
+	}
+	
+	/** Adds possible values to variable
+	 * @param value
+	 */
+	public void setPossibleValues(String description, String value)
+	{
+	   values.put(description, value);
+	}
+	
+	/**
+	 * @return A list of possible variable values
+	 */
+	public HashMap<String, String> getPossibleValues()
+	{
+	   return values;
 	}
 }

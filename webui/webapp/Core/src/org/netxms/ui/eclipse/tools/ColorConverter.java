@@ -196,7 +196,7 @@ public class ColorConverter
 	 */
 	public static int rgbToInt(RGB rgb)
 	{
-		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
+		return rgb.blue | (rgb.green << 8) | (rgb.red << 16);
 	}
 	
 	/**

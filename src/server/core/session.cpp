@@ -2637,7 +2637,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Retrieve configuration variables from database
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart,data_type,description FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -2646,9 +2646,23 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
          for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
          {
             msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-            DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE);
-            msg.setField(dwId++, szBuffer);
+            msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
             msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
+            msg.setField(dwId++, DBGetField(hResult, i, 3, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId++, DBGetField(hResult, i, 4, szBuffer, MAX_CONFIG_VALUE));
+         }
+         DBFreeResult(hResult);
+      }
+      hResult = DBSelect(hdb, _T("SELECT var_name,var_value,var_description FROM config_values"));
+      if (hResult != NULL)
+      {
+         dwNumRecords = DBGetNumRows(hResult);
+         msg.setField(VID_NUM_VALUES, dwNumRecords);
+         for(i = 0; i < dwNumRecords; i++)
+         {
+            msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
+            msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId++, DBGetField(hResult, i, 2, szBuffer, MAX_DB_STRING));
          }
          DBFreeResult(hResult);
       }

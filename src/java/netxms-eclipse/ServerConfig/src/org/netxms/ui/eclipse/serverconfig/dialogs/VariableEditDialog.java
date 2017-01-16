@@ -18,14 +18,22 @@
  */
 package org.netxms.ui.eclipse.serverconfig.dialogs;
 
+import java.util.HashMap;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -35,18 +43,26 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class VariableEditDialog extends Dialog
 {
 	private LabeledText textName;
-	private LabeledText textValue;
+	private Text textValue;
+	private Spinner spinnerValue;
+	private Button buttonEnable;
+	private ColorSelector colorSelector;
+	private Combo comboValue;
 	private String varName;
 	private String varValue;
+	private String varDataType;
+	private HashMap<String, String> possibleValues;
 	
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, String varName, String varValue)
+	public VariableEditDialog(Shell parentShell, ServerVariable var)
 	{
 		super(parentShell);
-		this.varName = varName;
-		this.varValue = varValue;
+		this.varName = var.getName();
+		this.varValue = var.getValue();
+		this.varDataType = var.getDataType();
+		possibleValues = var.getPossibleValues();
 	}
 
 	/* (non-Javadoc)
@@ -77,18 +93,59 @@ public class VariableEditDialog extends Dialog
       gd.widthHint = 300;
       textName.setLayoutData(gd);
       
-      textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel(Messages.get().VariableEditDialog_Value);
-      textValue.getTextControl().setTextLimit(2000);
-      if (varValue != null)
-      	textValue.setText(varValue);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      textValue.setLayoutData(gd);
-      
-      if (varName != null)
-      	textValue.setFocus();
+      switch(varDataType)
+      {
+         case "B":
+            buttonEnable = new Button(dialogArea, SWT.CHECK);
+            buttonEnable.setText("Enable");
+            buttonEnable.setSelection(varValue.equals("1"));
+            
+            if (varName != null)
+               buttonEnable.setFocus();
+            break;
+         case "C":
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            comboValue = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER, Messages.get().VariableEditDialog_Value, gd);
+            comboValue.setItems(possibleValues.values().toArray(new String[possibleValues.size()]));
+            comboValue.setText(possibleValues.get(varValue));
+            
+            if (varName != null)
+               comboValue.setFocus();
+            break;
+         case "H":
+            colorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().VariableEditDialog_Value, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            if (!varValue.isEmpty())
+               colorSelector.setColorValue(ColorConverter.parseColorDefinition(varValue));
+            break;
+         case "I":
+            spinnerValue = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().VariableEditDialog_Value, 0,
+                                                               (possibleValues.isEmpty()) ? 0xffffff : Integer.parseInt((String)possibleValues.keySet().toArray()[0]),
+                                                                     WidgetHelper.DEFAULT_LAYOUT_DATA);
+            spinnerValue.setSelection(Integer.parseInt(varValue));
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            spinnerValue.setLayoutData(gd);
+            
+            if (varName != null)
+               spinnerValue.setFocus();
+            break;
+         case "S":
+         default:
+            textValue = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().VariableEditDialog_Value, 
+                                                      (varValue != null ? varValue : ""), WidgetHelper.DEFAULT_LAYOUT_DATA);
+            textValue.setTextLimit(2000);
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            textValue.setLayoutData(gd);
+            
+            if (varName != null)
+               textValue.setFocus();
+            break;
+      }
       
 		return dialogArea;
 	}
@@ -127,8 +184,26 @@ public class VariableEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		varName = textName.getText();
-		varValue = textValue.getText();
+	   varName = textName.getText();
+	   switch (varDataType)
+	   {
+	      case "B":
+	         varValue = (buttonEnable.getSelection()) ? "1" : "0";
+	         break;
+	      case "C":
+	         varValue = Integer.toString(comboValue.getSelectionIndex());
+	         break;
+	      case "H":
+	         if (colorSelector.getColorValue() != null)
+	            varValue = String.format("#%06X", ColorConverter.rgbToInt(colorSelector.getColorValue()));
+	         break;
+	      case "I":
+            varValue = spinnerValue.getText();
+            break;
+	      case "S":
+	         varValue = textValue.getText();
+	         break;
+	   }
 		super.okPressed();
 	}
 }

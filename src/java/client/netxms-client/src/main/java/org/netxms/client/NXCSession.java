@@ -3298,11 +3298,16 @@ public class NXCSession
       long id;
       int i, count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
       final HashMap<String, ServerVariable> varList = new HashMap<String, ServerVariable>(count);
-      for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++, id += 3)
+      for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++)
       {
-         String name = response.getFieldAsString(id);
+         String name = response.getFieldAsString(id++);
          varList.put(name,
-            new ServerVariable(name, response.getFieldAsString(id + 1), response.getFieldAsBoolean(id + 2)));
+            new ServerVariable(name, response.getFieldAsString(id++), response.getFieldAsBoolean(id++), response.getFieldAsString(id++), response.getFieldAsString(id++)));
+      }
+      count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
+      for(i = 0; i < count; i++)
+      {
+         varList.get(response.getFieldAsString(id++)).setPossibleValues(response.getFieldAsString(id++), response.getFieldAsString(id++));
       }
 
       return varList;

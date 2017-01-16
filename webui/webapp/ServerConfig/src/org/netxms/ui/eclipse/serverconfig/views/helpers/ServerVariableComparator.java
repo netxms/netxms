@@ -34,11 +34,17 @@ public class ServerVariableComparator extends ViewerComparator
 				result = ((ServerVariable)e1).getName().compareToIgnoreCase(((ServerVariable)e2).getName());
 				break;
 			case ServerConfigurationEditor.COLUMN_VALUE:
-				result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
+			   if (((ServerVariable)e1).getDataType().equals("C") && ((ServerVariable)e2).getDataType().equals("C"))
+			      result = ((ServerVariable)e1).getValueDescription().compareToIgnoreCase(((ServerVariable)e2).getValueDescription());
+			   else
+			      result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
 				break;
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
 				result = compareBooleans(((ServerVariable)e1).isServerRestartNeeded(), ((ServerVariable)e2).isServerRestartNeeded());
 				break;
+        case ServerConfigurationEditor.COLUMN_DESCRIPTION:
+            result = ((ServerVariable)e1).getDescription().compareToIgnoreCase(((ServerVariable)e2).getDescription());
+            break;
 			default:
 				result = 0;
 				break;

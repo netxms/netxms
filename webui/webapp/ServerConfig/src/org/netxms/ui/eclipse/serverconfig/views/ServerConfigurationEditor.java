@@ -100,6 +100,7 @@ public class ServerConfigurationEditor extends ViewPart
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;
 	public static final int COLUMN_NEED_RESTART = 2;
+	public static final int COLUMN_DESCRIPTION = 3;
 
 	@Override
    public void init(IViewSite site) throws PartInitException
@@ -137,9 +138,9 @@ public class ServerConfigurationEditor extends ViewPart
          }
       });
 	   
-		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, Messages.get().ServerConfigurationEditor_ColRestart };
-		final int[] widths = { 200, 150, 80 };
-		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, Messages.get().ServerConfigurationEditor_ColRestart, "Description" };
+		final int[] widths = { 200, 150, 80, 500 };
+		viewer = new SortableTableViewer(content, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerVariablesLabelProvider());
 		viewer.setComparator(new ServerVariableComparator());
@@ -432,7 +433,7 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void addVariable()
 	{
-		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null, null);
+		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
@@ -469,7 +470,7 @@ public class ServerConfigurationEditor extends ViewPart
 			return;
 		
 		final ServerVariable var = (ServerVariable)selection.getFirstElement();
-		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var.getName(), var.getValue());
+		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var);
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob(Messages.get().ServerConfigurationEditor_ModifyJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {

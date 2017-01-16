@@ -1158,6 +1158,7 @@ typedef struct
 #define VID_MESSAGE_OF_THE_DAY      ((UINT32)563)
 #define VID_PORT_ROW_COUNT          ((UINT32)564)
 #define VID_PORT_NUMBERING_SCHEME   ((UINT32)565)
+#define VID_NUM_VALUES              ((UINT32)566)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

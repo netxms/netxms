@@ -36,7 +36,7 @@ CREATE TABLE config
   data_type char(1) not null default 'S',
   is_public char(1) not null default 'N',
 #endif
-  description varchar(255) null,
+  description varchar(450) null,
   possible_values SQL_TEXT null,
   PRIMARY KEY(var_name)
 ) TABLE_TYPE;
@@ -64,6 +64,22 @@ CREATE TABLE config_clob
 COMMENT_TABLE(config_clob, 'System configuration table for large data elements')
 COMMENT_COLUMN(config_clob.var_name, 'Parameter name')
 COMMENT_COLUMN(config_clob.var_value, 'Value')
+
+/*
+** System configuration possible values
+*/
+CREATE TABLE config_values
+{
+	var_name varchar(63) not null,
+	var_value varchar(2000) null,
+	var_description varchar(255) null,
+	PRIMARY KEY(var_name,var_value)
+}	TABLE_TYPE;
+
+COMMENT_TABLE(config_values, 'Possible values for system configuration parameters')
+COMMENT_COLUMN(config_values.var_name, 'Parameter name')
+COMMENT_COLUMN(config_values.var_value, 'Parameter value')
+COMMENT_COLUMN(config_values.var_description, 'Parameter description')
 
 /*
 ** Users

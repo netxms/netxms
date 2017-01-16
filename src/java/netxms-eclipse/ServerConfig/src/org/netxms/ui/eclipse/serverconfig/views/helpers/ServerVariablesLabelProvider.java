@@ -41,9 +41,14 @@ public class ServerVariablesLabelProvider extends LabelProvider implements ITabl
 			case ServerConfigurationEditor.COLUMN_NAME:
 				return ((ServerVariable)obj).getName();
 			case ServerConfigurationEditor.COLUMN_VALUE:
-				return ((ServerVariable)obj).getValue();
+			   if (((ServerVariable)obj).getDataType().equals("C"))
+			      return ((ServerVariable)obj).getValueDescription();
+			   else
+			      return ((ServerVariable)obj).getValue();
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
 				return ((ServerVariable)obj).isServerRestartNeeded() ? Messages.get().ServerVariablesLabelProvider_Yes : Messages.get().ServerVariablesLabelProvider_No;
+         case ServerConfigurationEditor.COLUMN_DESCRIPTION:
+            return ((ServerVariable)obj).getDescription();
 		}
 		return ""; //$NON-NLS-1$
 	}

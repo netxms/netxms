@@ -726,6 +726,245 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ *  Upgrade from V428 to V429
+ */
+static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE config ALTER COLUMN description TYPE varchar(450)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between active network discovery polls.' WHERE var_name='ActiveDiscoveryInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable active network discovery. This setting is change by Network Discovery GUI' WHERE var_name='ActiveNetworkDiscovery'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.' WHERE var_name='AgentCommandTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='String that will be used as a shared secret in case if agent will required authentication.' WHERE var_name='AgentDefaultSharedSecret'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Maximum wait time in seconds for agent restart after upgrade. If agent cannot be contacted after this time period, \nupgrade process is considered as failed.' WHERE var_name='AgentUpgradeWaitTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='A number of days the server keeps an alarm history in the database.' WHERE var_name='AlarmHistoryRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Maximum alarm count that will be displayed on Alarm Browser page. Alarms that exceed this count will not be shown.' WHERE var_name='AlarmListDisplayLimit'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='A semicolon separated list of alarm summary e-mail recipient addresses.' WHERE var_name='AlarmSummaryEmailRecipients'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Schedule for sending alarm summary e-mails in cron format' WHERE var_name='AlarmSummaryEmailSchedule'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Allow/disallow sending of SMS via NetXMS server using nxsms utility.' WHERE var_name='AllowDirectSMS'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='A bitmask for encryption algorithms allowed in the server(sum the values to allow multiple algorithms at once): \n\t*1 - AES256 \n\t*2 - Blowfish-256 \n\t*4 - IDEA \n\t*8 - 3DES\n\t*16 - AES128\n\t*32 - Blowfish-128' WHERE var_name='AllowedCiphers'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='AllowTrapVarbindsConversion'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='AnonymousFileAccess'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable applying all DCIs from a template to the node, including disabled ones.' WHERE var_name='ApplyDCIFromTemplateToDisabledDCI'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Retention time in days for the records in audit log. All records older than specified will be deleted by housekeeping process.' WHERE var_name='AuditLogRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Comma-separated list of hosts to be used as beacons for checking NetXMS server network connectivity. Either DNS names \nor IP addresses can be used. This list is pinged by NetXMS server and if none of the hosts have responded, server considers that connection \nwith network is lost and generates specific event.' WHERE var_name='BeaconHosts'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in milliseconds between beacon hosts polls.' WHERE var_name='BeaconPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds to consider beacon host unreachable.' WHERE var_name='BeaconTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='BlockInactiveUserAccounts'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='CapabilityExpirationTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable case insensitive login names' WHERE var_name='CaseInsensitiveLoginNames'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable trusted nodes check' WHERE var_name='CheckTrustedNodes'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The server port for incoming client connections (such as management console).' WHERE var_name='ClientListenerPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable container auto binding for clusters.' WHERE var_name='ClusterContainerAutoBind'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable template auto apply for clusters.' WHERE var_name='ClusterTemplateAutoApply'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between polling (re-evaluating) of condition objects.' WHERE var_name='ConditionPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between configuration polls.' WHERE var_name='ConfigurationPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable data interpolation in dashboard data export.' WHERE var_name='DashboardDataExportEnableInterpolation'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='A number of connections to the database created on server startup.' WHERE var_name='DBConnectionPoolBaseSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DBConnectionPoolCooldownTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DBConnectionPoolMaxLifetime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='A maximum number of connections in the connection pool.' WHERE var_name='DBConnectionPoolMaxSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='DBLockInfo'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DBLockPID'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='DBLockStatus'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DefaultAgentCacheMode'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='D',description='Default format to display date in console GUI.' WHERE var_name='DefaultConsoleDateFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default format to display time in a short way in console GUI.' WHERE var_name='DefaultConsoleShortTimeFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default format to display time in a long way in console GUI.' WHERE var_name='DefaultConsoleTimeFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default polling interval for newly created DCI (in seconds).' WHERE var_name='DefaultDCIPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default retention time for newly created DCI (in days).' WHERE var_name='DefaultDCIRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Set the default encryption policy for communications with agents.' WHERE var_name='DefaultEncryptionPolicy'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Default expected state for new interface objects.' WHERE var_name='DefaultInterfaceExpectedState'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='H',description='Default background color for new network map objects.' WHERE var_name='DefaultMapBackgroundColor'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default mask for synthetic IPv4 subnets.' WHERE var_name='DefaultSubnetMaskIPv4'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default mask for synthetic IPv6 subnets.' WHERE var_name='DefaultSubnetMaskIPv6'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable automatic alarm removal of an object when it is deleted' WHERE var_name='DeleteAlarmsOfDeletedObject'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable automatic deletion of subnet objects without any nodes within. When enabled, empty subnets will be deleted \nby housekeeping process.' WHERE var_name='DeleteEmptySubnets'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable automatic event removal of an object when it is deleted.' WHERE var_name='DeleteEventsOfDeletedObject'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Delete nodes which were unreachable for a number of days specified by this parameter.' WHERE var_name='DeleteUnreachableNodesPeriod'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='DiscoveryFilter'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DiscoveryFilterFlags'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between passive network discovery polls.' WHERE var_name='DiscoveryPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableAdminInterface'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable agent self-registration' WHERE var_name='EnableAgentRegistration'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable audit log.' WHERE var_name='EnableAuditLog'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableCheckPointSNMP'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableReportingServer'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableEventStormDetection'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable Inter-Server Communications Listener.' WHERE var_name='EnableISCListener'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable server-side NXSL functions for container management (such as CreateContainer, RemoveContainer, BindObject, \nUnbindObject).' WHERE var_name='EnableNXSLContainerFunctions.'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableObjectTransactions'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable SNMP trap processing.' WHERE var_name='EnableSNMPTraps'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable alarm summary e-mails.' WHERE var_name='EnableAlarmSummaryEmails'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable receiving of syslog messages.' WHERE var_name='EnableSyslogReceiver'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EnableTimedAlarmAck'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable XMPP connector (required to enable XMPP message sending).' WHERE var_name='EnableXMPPConnector'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable zoning support' WHERE var_name='EnableZoning'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='EscapeLocalCommands'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The retention time of event logs' WHERE var_name='EventLogRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='EventStormDuration'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Event storm events per second' WHERE var_name='EventStormEventsPerSecond'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable extended access control in log queries.' WHERE var_name='ExtendedLogQueryAccessControl'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Syslog facility to be used in audit log records sent to external server.' WHERE var_name='ExternalAuditFacility'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='UDP port of external syslog server to send audit records to.' WHERE var_name='ExternalAuditPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='External syslog server to send audit records to. If set to ‘’none’‘, external audit logging is disabled.' WHERE var_name='ExternalAuditServer'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Syslog severity to be used in audit log records sent to external server.' WHERE var_name='ExternalAuditSeverity'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Syslog tag to be used in audit log records sent to external server.' WHERE var_name='ExternalAuditTag'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='FirstFreeObjectId'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='FixedStatusValue'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='HelpDeskLink'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Time when housekeeper starts. Housekeeper deletes old log lines, old DCI data, cleans removed objects and does VACUUM for \nPostgreSQL.' WHERE var_name='HousekeeperStartTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Size of ICMP packets (in bytes, excluding IP header size) used for status polls.' WHERE var_name='IcmpPingSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout for ICMP ping used for status polls (in milliseconds).' WHERE var_name='IcmpPingTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Import configuration from local files on server startup.' WHERE var_name='ImportConfigurationOnStartup'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Instance polling interval (in milliseconds).' WHERE var_name='InstancePollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable internal certificate authority.' WHERE var_name='InternalCA'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='IntruderLockoutThreshold'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='IntruderLockoutTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='JiraIssueType'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Jira login name.' WHERE var_name='JiraLogin'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Jira password' WHERE var_name='JiraPassword'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Jira project code' WHERE var_name='JiraProjectCode'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='JiraProjectComponent'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The URL of the Jira server' WHERE var_name='JiraServerURL'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='JobHistoryRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Maximum mumber of job execution retrys.' WHERE var_name='JobRetryCount'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between sending keep alive packets to connected clients.' WHERE var_name='KeepAliveInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Specifies which object class represents group objects. If the found entry is not of user or group class, it will be ignored.' WHERE var_name='LdapGroupClass'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='LdapGroupUniqueId'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The LdapConnectionString configuration parameter may be a comma- or whitespace-separated list of URIs containing only the \nschema, the host, and the port fields. Format: schema://host:port.' WHERE var_name='LdapConnectionString'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The name of an attribute whose value will be used as a user`s description.' WHERE var_name='LdapMappingDescription'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The name of an attribute whose value will be used as a user`s full name.' WHERE var_name='LdapMappingFullName'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The name of an attribute whose value will be used as a user`s login name.' WHERE var_name='LdapMappingName'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The maximum amount of records that can be returned in one search page.' WHERE var_name='LdapPageSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The DN of the entry at which to start the search.' WHERE var_name='LdapSearchBase'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='A string representation of the filter to apply in the search.' WHERE var_name='LdapSearchFilter'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The synchronization interval (in minutes) between the NetXMS server and the LDAP server. If the parameter is set to 0, no \nsynchronization will take place.' WHERE var_name='LdapSyncInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='User login for LDAP synchronization.' WHERE var_name='LdapSyncUser'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='User password for LDAP synchronization.' WHERE var_name='LdapSyncUserPassword'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The object class which represents user objects. If the found entry is not of user or group class, it will be ignored.' WHERE var_name='LdapUserClass'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='This parameter specifies what should be done while synchronizing with a deleted user/group from LDAP.' WHERE var_name='LdapUserDeleteAction'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='LdapUserUniqueId'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='LockTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Log all SNMP traps.' WHERE var_name='LogAllSNMPTraps'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Encoding for e-mails generated by NetXMS server.' WHERE var_name='MailEncoding'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Message to be shown when a user logs into the console.' WHERE var_name='MessageOfTheDay'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default minimum password length for a NetXMS user. The default applied only if per-user setting is not defined.' WHERE var_name='MinPasswordLength'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='MinViewRefreshInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='MobileDeviceListenerPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The number of threads used for data collection.' WHERE var_name='NumberOfDataCollectors'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The number of threads used to perform agent upgrades (i.e. maximum number of parallel upgrades).' WHERE var_name='NumberOfUpgradeThreads'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Time period in seconds within which received offline data still relevant for threshold validation.' WHERE var_name='OfflineDataRelevanceTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Set of flags to enforce password complexity.' WHERE var_name='PasswordComplexity'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Password expiration time in days. If set to 0, password expiration is disabled.' WHERE var_name='PasswordExpiration'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Number of previous passwords to keep. Users are not allowed to set password if it matches one from previous passwords list.' WHERE var_name='PasswordHistoryLength'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The number of consecutive unsuccessful polls required to declare interface as down.' WHERE var_name='PollCountForStatusChange'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The base thread pool size.' WHERE var_name='PollerThreadPoolBaseSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Maximum thread pool size.' WHERE var_name='PollerThreadPoolMaxSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='RADIUS authentication method to be used (PAP, CHAP, MS-CHAPv1, MS-CHAPv2).' WHERE var_name='RADIUSAuthMethod'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The number of retries for RADIUS authentication.' WHERE var_name='RADIUSNumRetries'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Port number used for connection to primary RADIUS server.' WHERE var_name='RADIUSPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Port number used for connection to secondary RADIUS server.' WHERE var_name='RADIUSSecondaryPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Shared secret used for communication with secondary RADIUS server.' WHERE var_name='RADIUSSecondarySecret'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Host name or IP address of secondary RADIUS server.' WHERE var_name='RADIUSSecondaryServer'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Shared secret used for communication with primary RADIUS server.' WHERE var_name='RADIUSSecret'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Host name or IP address of primary RADIUS server.' WHERE var_name='RADIUSServer'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in seconds for requests to RADIUS server.' WHERE var_name='RADIUSTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable reception of events forwarded by another NetXMS server. Please note that for external event reception ISC listener \nshould be enabled as well.' WHERE var_name='ReceiveForwardedEvents'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The hostname of the reporting server.' WHERE var_name='ReportingServerHostname'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The port of the reporting server.' WHERE var_name='ReportingServerPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Resolve DNS to IP on status poll.' WHERE var_name='ResolveDNSToIPOnStatusPoll'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='' WHERE var_name='ResolveNodeNames'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between reading routing table from node.' WHERE var_name='RoutingTableUpdateInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable automatic network discovery process. *This setting is changed by Network Discovery in the GUI*.' WHERE var_name='RunNetworkDiscovery'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='H',description='Identification color for this server' WHERE var_name='ServerColor'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='ServerCommandOutputTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Name of this server' WHERE var_name='ServerName'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Mobile phone driver to be used for sending SMS.' WHERE var_name='SMSDriver'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='SMS driver parameters. For ‘’generic’’ driver, it should be the name of COM port device.' WHERE var_name='SMSDrvConfig'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The address used for sending mail from.' WHERE var_name='SMTPFromAddr'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The name used as the sender.' WHERE var_name='SMTPFromName'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Number of retries for sending mail.' WHERE var_name='SMTPRetryCount'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='TCP port for SMTP server.' WHERE var_name='SNMPPorts'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='An SMTP server used for sending mail.' WHERE var_name='SMTPServer'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds for SNMP requests sent by NetXMS server.' WHERE var_name='SNMPRequestTimeout'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='The time how long SNMP trap logs are retained.' WHERE var_name='SNMPTrapLogRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Port used for SNMP traps.' WHERE var_name='SNMPTrapPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='StatusCalculationAlgorithm'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between status polls.' WHERE var_name='StatusPollingInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Algorithm for status propagation (how object’s status affects its child object statuses).' WHERE var_name='StatusPropagationAlgorithm'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='StatusShift'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='StatusSingleThreshold'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='StatusThresholds'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='StatusTranslation'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable strict alarm status flow (alarm can be terminated only after it has been resolved).' WHERE var_name='StrictAlarmStatusFlow'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between writing object changes to the database.' WHERE var_name='SyncInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable synchronization of node names with DNS on each configuration poll.' WHERE var_name='SyncNodeNamesWithDNS'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Ignore timestamp received in syslog messages and always use server time.' WHERE var_name='SyslogIgnoreMessageTimestamp'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='UDP port used by built-in syslog server.' WHERE var_name='SyslogListenPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Node matching policy for built-in syslog daemon.' WHERE var_name='SyslogNodeMatchingPolicy'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Retention time in days for records in syslog. All records older than specified will be deleted by housekeeping process.' WHERE var_name='SyslogRetentionTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='System-wide interval in seconds for resending threshold violation events. Value of 0 disables event resending.' WHERE var_name='ThresholdRepeatInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='The URL for the Tile server.' WHERE var_name='TileServerURL'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='TopologyDiscoveryRadius'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='TopologyExpirationTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Search all zones to match trap/syslog source address to node.' WHERE var_name='TrapSourcesInAllZones'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable the use of DNS name instead of IP address as primary name for newly discovered nodes.' WHERE var_name='UseDNSNameForDiscoveredNodes'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable the use of fully qualified domain names as primary names for newly discovered nodes.' WHERE var_name='UseFQDNForNodeNames'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable the use of SNMP ifXTable instead of ifTable for interface configuration polling.' WHERE var_name='UseIfXTable'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Control usage of interface aliases (or descriptions).' WHERE var_name='UseInterfaceAliases'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='This parameter defines if trap information should be used for new node discovery.' WHERE var_name='UseSNMPTrapsForDiscovery'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Login name that will be used to authentication on XMPP server.' WHERE var_name='XMPPLogin'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Password that will be used to authentication on XMPP server.' WHERE var_name='XMPPPassword'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='XMPP connection port.' WHERE var_name='XMPPPort'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='XMPP connection server.' WHERE var_name='XMPPServer'")));
+
+   CHK_EXEC(CreateTable(
+               _T("CREATE TABLE config_values (")
+               _T("var_name varchar(63) not null,")
+               _T("var_value varchar(2000) null,")
+               _T("var_description varchar(255) null,")
+               _T("PRIMARY KEY(var_name,var_value))")));
+
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ClientListenerPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ExternalAuditPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('MobileDeviceListenerPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('RADIUSPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('RADIUSSecondaryPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ReportingServerPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('SNMPPorts','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('SNMPTrapPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('SyslogListenPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('XMPPPort','65535')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('AllowedCiphers','63')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','0','UP')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','1','DOWN')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','2','IGNORE')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','0','Disabled')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','1','Allowed')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','2','Preferred')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','3','Required')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','0','Default')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','1','Unchanged')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','2','Fixed')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','3','Relative')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','4','Translated')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','0','Don`t use aliases')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','1','Use aliases when possible')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','2','Concatenate alias and name')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','3','Concatenate name and alias')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SyslogNodeMatchingPolicy','0','IP, then hostname')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SyslogNodeMatchingPolicy','1','Hostname, then IP')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','0','Delete user')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','1','Disable user')")));
+
+
+
+
+   CHK_EXEC(SetSchemaVersion(429));
+   return TRUE;
+}
+
+/**
  *  Upgrade from V427 to V428
  */
 static BOOL H_UpgradeFromV427(int currVersion, int newVersion)
@@ -10915,6 +11154,7 @@ static struct
    { 425, 426, H_UpgradeFromV425 },
    { 426, 427, H_UpgradeFromV426 },
    { 427, 428, H_UpgradeFromV427 },
+   { 428, 429, H_UpgradeFromV428 },
    { 0, 0, NULL }
 };
 

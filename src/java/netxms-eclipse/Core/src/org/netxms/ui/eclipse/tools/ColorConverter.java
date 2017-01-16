@@ -196,7 +196,7 @@ public class ColorConverter
 	 */
 	public static int rgbToInt(RGB rgb)
 	{
-		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
+		return rgb.blue | (rgb.green << 8) | (rgb.red << 16);
 	}
 	
 	/**
@@ -289,6 +289,19 @@ public class ColorConverter
 	{
 	   if ((cdef == null) || cdef.isEmpty())
 	      return null;
+	   
+	   if (cdef.charAt(1) == 'x')
+      {
+         try
+         {
+            int v = Integer.parseInt(cdef.substring(2), 16) & 0x00FFFFFF;
+            return new RGB(v >> 16, (v >> 8) & 0xFF, v & 0xFF);
+         }
+         catch(NumberFormatException e)
+         {
+            return null;
+         }
+      }
 	   
       if (cdef.charAt(0) == '#')
       {
