@@ -229,6 +229,12 @@ private:
 	void trace(int level, const TCHAR *format, ...);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
 
+   const LogParserRule *findRuleByName(const TCHAR *name) const;
+
+   int getCharSize() const;
+
+   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
+
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
 
@@ -237,10 +243,6 @@ private:
 
    time_t readLastProcessedRecordTimestamp();
 #endif
-
-   const LogParserRule *findRuleByName(const TCHAR *name) const;
-
-   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
 
 public:
 	LogParser();

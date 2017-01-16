@@ -835,3 +835,23 @@ void LogParser::restoreCounters(const LogParser *parser)
       }
    }
 }
+
+/**
+ * Get character size in bytes for parser's encoding
+ */
+int LogParser::getCharSize() const
+{
+   switch(m_fileEncoding)
+   {
+      case LP_FCP_UCS4_BE:
+      case LP_FCP_UCS4_LE:
+      case LP_FCP_UCS4:
+         return 4;
+      case LP_FCP_UCS2_BE:
+      case LP_FCP_UCS2_LE:
+      case LP_FCP_UCS2:
+         return 2;
+      default:
+         return 1;
+   }
+}

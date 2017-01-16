@@ -409,6 +409,32 @@ static int ScanFileEncoding(int fh)
 }
 
 /**
+ * Seek file to the beginning of zeroes block
+ */
+static void SeekToZero(int fh, int chsize)
+{
+   char buffer[4096];
+   while(true)
+   {
+      int bytes = read(fh, buffer, 4096);
+      if (bytes <= 0)
+         break;
+      char *p = buffer;
+      for(int i = 0; i < bytes - chsize + 1; i++, p++)
+      {
+         if ((*p == 0) && ((chsize == 1) || !memcmp(p, "\x00\x00\x00\x00", chsize)))
+         {
+            off_t pos = lseek(fh, i - bytes, SEEK_CUR);
+            LogParserTrace(6, _T("LogParser: beginning of zero block found at %ld"), (long)pos);
+            return;
+         }
+      }
+      if (chsize > 1)
+         lseek(fh, 1 - chsize, SEEK_CUR); // re-read potentially incomplete last character
+   }
+}
+
+/**
  * File parser thread
  */
 bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
@@ -453,6 +479,10 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 					LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
 					off_t resetPos = ParseNewRecords(this, fh);
                lseek(fh, resetPos, SEEK_SET);
+				}
+				else if (m_preallocatedFile)
+				{
+				   SeekToZero(fh, getCharSize());
 				}
 				else
 				{
