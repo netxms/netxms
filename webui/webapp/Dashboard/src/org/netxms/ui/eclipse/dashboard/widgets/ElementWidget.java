@@ -165,4 +165,12 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 	   return dbc.getSelectionProvider();
 	}
+	
+	/**
+	 * Request layout run for entire dashboard. Can be called by subclasses when complete dashboard layout re-run is needed. 
+	 */
+	protected void requestDashboardLayout()
+	{
+	   dbc.layout(true, true);
+	}
 }
