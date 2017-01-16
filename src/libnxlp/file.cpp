@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -173,15 +173,17 @@ static char *FindEOL(char *start, int length, int encoding)
 /**
  * Parse new log records
  */
-static void ParseNewRecords(LogParser *parser, int fh)
+static off_t ParseNewRecords(LogParser *parser, int fh)
 {
    char *ptr, *eptr, buffer[READ_BUFFER_SIZE];
    int bytes, bufPos = 0;
+   off_t resetPos;
 	int encoding = parser->getFileEncoding();
 	TCHAR text[READ_BUFFER_SIZE];
 
    do
    {
+      resetPos = lseek(fh, 0, SEEK_CUR);
       if ((bytes = read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
       {
          bytes += bufPos;
@@ -191,8 +193,17 @@ static void ParseNewRecords(LogParser *parser, int fh)
 				eptr = FindEOL(ptr, bytes - bufPos, encoding);
             if (eptr == NULL)
             {
-					bufPos = bytes - bufPos;
-               memmove(buffer, ptr, bufPos);
+					int remaining = bytes - bufPos;
+               resetPos = lseek(fh, 0, SEEK_CUR) - remaining;
+					if (remaining > 0)
+					{
+                  memmove(buffer, ptr, remaining);
+                  if (parser->isFilePreallocated() && !memcmp(buffer, "\x00\x00\x00\x00", min(remaining, 4)))
+                  {
+                     // Found zeroes in preallocated file, next read should be after last known EOL
+                     return resetPos;
+                  }
+					}
                break;
             }
 				// remove possible CR character and put 0 to indicate end of line
@@ -371,6 +382,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
          bytes = 0;
       }
    } while(bytes == READ_BUFFER_SIZE);
+   return resetPos;
 }
 
 /**
@@ -439,14 +451,15 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 				if (readFromStart)
 				{
 					LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
-					ParseNewRecords(this, fh);
+					off_t resetPos = ParseNewRecords(this, fh);
+               lseek(fh, resetPos, SEEK_SET);
 				}
 				else
 				{
 					lseek(fh, 0, SEEK_END);
 				}
 
-				while(1)
+				while(true)
 				{
 					if (ConditionWait(stopCondition, 5000))
 						goto stop_parser;
@@ -508,8 +521,38 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 							LogParserTrace(3, _T("LogParser: file \"%s\" st_size != size"), fname);
 						}
 						size = (size_t)st.st_size;
-						LogParserTrace(6, _T("LogParser: new data avialable in file \"%s\""), fname);
-						ParseNewRecords(this, fh);
+						LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+						off_t resetPos = ParseNewRecords(this, fh);
+						lseek(fh, resetPos, SEEK_SET);
+					}
+					else if (m_preallocatedFile)
+					{
+					   char buffer[4];
+					   int bytes = read(fh, buffer, 4);
+					   if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
+					   {
+                     lseek(fh, -4, SEEK_CUR);
+	                  LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+	                  off_t resetPos = ParseNewRecords(this, fh);
+	                  lseek(fh, resetPos, SEEK_SET);
+					   }
+					   else
+					   {
+                     off_t pos = lseek(fh, -bytes, SEEK_CUR);
+                     if (pos > 0)
+                     {
+                        int readSize = min(pos, 4);
+                        lseek(fh, -readSize, SEEK_CUR);
+                        int bytes = read(fh, buffer, readSize);
+                        if (!memcmp(buffer, "\x00\x00\x00\x00", readSize))
+                        {
+                           LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);
+                           lseek(fh, 0, SEEK_SET);
+                           off_t resetPos = ParseNewRecords(this, fh);
+                           lseek(fh, resetPos, SEEK_SET);
+                        }
+                     }
+					   }
 					}
 				}
 				close(fh);

@@ -165,14 +165,6 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
 }
 
 /**
- * Trace callback
- */
-static void LogParserTrace(const TCHAR *format, va_list args)
-{
-	AgentWriteDebugLog2(7, format, args);
-}
-
-/**
  * Add parser from config parameter
  */
 static void AddParserFromConfig(const TCHAR *file)
@@ -193,7 +185,7 @@ static void AddParserFromConfig(const TCHAR *file)
 				if (parser->getFileName() != NULL)
 				{
 					parser->setCallback(LogParserMatch);
-					parser->setTraceCallback(LogParserTrace);
+					parser->setTraceCallback(AgentWriteDebugLog2);
                s_parsers.add(parser);
 					AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
 						parser->getFileName(), parser->getTraceLevel());

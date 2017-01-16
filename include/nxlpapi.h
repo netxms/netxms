@@ -203,14 +203,14 @@ class LIBNXLP_EXPORTABLE LogParser
 	friend bool LogParserRule::matchInternal(bool, const TCHAR *, UINT32, UINT32, const TCHAR *, LogParserCallback, UINT32, void *);
 
 private:
-	int m_numRules;
-	LogParserRule **m_rules;
+	ObjectArray<LogParserRule> m_rules;
 	StringMap m_contexts;
 	StringMap m_macros;
 	LogParserCallback m_cb;
 	void *m_userArg;
 	TCHAR *m_fileName;
 	int m_fileEncoding;
+	bool m_preallocatedFile;
 	TCHAR *m_name;
 	CODE_TO_TEXT *m_eventNameList;
 	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
@@ -219,7 +219,7 @@ private:
 	int m_recordsMatched;
 	bool m_processAllRules;
 	int m_traceLevel;
-	void (*m_traceCallback)(const TCHAR *, va_list);
+	void (*m_traceCallback)(int, const TCHAR *, va_list);
 	TCHAR m_status[MAX_PARSER_STATUS_LEN];
 #ifdef _WIN32
    TCHAR *m_marker;
@@ -250,16 +250,14 @@ public:
 	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1,
 		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, UINT32 *) = NULL);
 
-	void setFileName(const TCHAR *name);
-	const TCHAR *getFileName() { return m_fileName; }
-
-	void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
-	int getFileEncoding() { return m_fileEncoding; }
+   const TCHAR *getName() const { return m_name; }
+	const TCHAR *getFileName() const { return m_fileName; }
+	int getFileEncoding() const { return m_fileEncoding; }
+   const TCHAR *getStatus() const { return m_status; }
+   bool isFilePreallocated() const { return m_preallocatedFile; }
 
 	void setName(const TCHAR *name);
-	const TCHAR *getName() { return m_name; }
-
-	const TCHAR *getStatus() { return m_status; }
+   void setFileName(const TCHAR *name);
 
 	void setThread(THREAD th) { m_thread = th; }
 	THREAD getThread() { return m_thread; }
@@ -281,12 +279,12 @@ public:
 	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
 	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId = 0);
 
-	int getProcessedRecordsCount() { return m_recordsProcessed; }
-	int getMatchedRecordsCount() { return m_recordsMatched; }
+	int getProcessedRecordsCount() const { return m_recordsProcessed; }
+	int getMatchedRecordsCount() const { return m_recordsMatched; }
 
-	int getTraceLevel() { return m_traceLevel; }
+	int getTraceLevel() const { return m_traceLevel; }
 	void setTraceLevel(int level) { m_traceLevel = level; }
-	void setTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
+	void setTraceCallback(void (*cb)(int, const TCHAR *, va_list)) { m_traceCallback = cb; }
 
 	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
 #ifdef _WIN32

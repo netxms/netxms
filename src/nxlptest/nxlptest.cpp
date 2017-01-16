@@ -23,6 +23,9 @@
 
 #include "nxlptest.h"
 
+#ifndef _WIN32
+#include <signal.h>
+#endif
 
 //
 // Static data
@@ -51,7 +54,7 @@ static TCHAR m_helpText[] =
 /**
  * Trace callback
  */
-static void TraceCallback(const TCHAR *format, va_list args)
+static void TraceCallback(int level, const TCHAR *format, va_list args)
 {
 	_vtprintf(format, args);
 	_puttc(_T('\n'), stdout);
@@ -62,7 +65,7 @@ static void TraceCallback(const TCHAR *format, va_list args)
  */
 static void LoggerCallback(int level, const TCHAR *format, va_list args)
 {
-	TraceCallback(format, args);
+	TraceCallback(level, format, args);
 }
 
 /**
@@ -73,6 +76,17 @@ static THREAD_RESULT THREAD_CALL ParserThread(void *arg)
 	((LogParser *)arg)->monitorFile(m_stopCondition);
 	return THREAD_OK;
 }
+
+#ifndef _WIN32
+
+bool s_stop = false;
+
+static void OnBreak(int sig)
+{
+   s_stop = true;
+}
+
+#endif
 
 /**
  * main()
@@ -138,9 +152,10 @@ int main(int argc, char *argv[])
 		TCHAR errorText[1024];
 		THREAD thread;
 
-		parser = new LogParser;
-		if (parser->createFromXml((const char *)xml, size, errorText, 1024))
+      ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)xml, size, errorText, 1024); 
+		if ((parsers != NULL) && (parsers->size() > 0))
 		{
+         LogParser *parser = parsers->get(0);
 			parser->setTraceCallback(TraceCallback);
 			if (traceLevel != -1)
 				parser->setTraceLevel(traceLevel);
@@ -159,6 +174,18 @@ int main(int argc, char *argv[])
 					break;
 			}
 #else
+			_tprintf(_T("Parser started. Press Ctrl+C to stop.\nFile: %s\nTrace level: %d\n\n"),
+				      parser->getFileName(), parser->getTraceLevel());
+
+         signal(SIGINT, OnBreak);
+
+         sigset_t signals;
+         sigemptyset(&signals);
+         sigaddset(&signals, SIGINT);
+         pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
+
+			while(!s_stop)
+            ThreadSleepMs(500);
 #endif
 			ConditionSet(m_stopCondition);
 			ThreadJoin(thread);

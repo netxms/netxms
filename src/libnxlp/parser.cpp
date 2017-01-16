@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -60,7 +60,8 @@ struct XML_PARSER_STATE
 	String event;
 	String file;
 	StringList files;
-	ObjectArray<int> encodings;
+	IntegerArray<INT32> encodings;
+   IntegerArray<INT32> preallocFlags;
 	String id;
 	String level;
 	String source;
@@ -79,7 +80,7 @@ struct XML_PARSER_STATE
 	int repeatInterval;
 	bool resetRepeat;
 
-	XML_PARSER_STATE() : encodings(1, 1, true)
+	XML_PARSER_STATE() : encodings(4, 4), preallocFlags(4, 4)
 	{
       state = -1;
       parser = NULL;
@@ -96,15 +97,14 @@ struct XML_PARSER_STATE
 /**
  * Parser default constructor
  */
-LogParser::LogParser()
+LogParser::LogParser() : m_rules(16, 16, true)
 {
-	m_numRules = 0;
-	m_rules = NULL;
 	m_cb = NULL;
 	m_userArg = NULL;
 	m_name = NULL;
 	m_fileName = NULL;
 	m_fileEncoding = LP_FCP_ACP;
+	m_preallocatedFile = false;
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
 	m_thread = INVALID_THREAD_HANDLE;
@@ -122,18 +122,18 @@ LogParser::LogParser()
 /**
  * Parser copy constructor
  */
-LogParser::LogParser(LogParser *src)
+LogParser::LogParser(LogParser *src) : m_rules(16, 16, true)
 {
-	m_numRules = src->m_numRules;
-	m_rules = (LogParserRule **)malloc(sizeof(LogParserRule *) * m_numRules);
-	for(int i = 0; i < m_numRules; i++)
-		m_rules[i] = new LogParserRule(src->m_rules[i], this);
+   int count = src->m_rules.size();
+	for(int i = 0; i < count; i++)
+		m_rules.add(new LogParserRule(src->m_rules.get(i), this));
 
 	m_cb = src->m_cb;
 	m_userArg = src->m_userArg;
-	m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
-	m_fileName = (src->m_fileName != NULL) ? _tcsdup(src->m_fileName) : NULL;
+	m_name = _tcsdup_ex(src->m_name);
+	m_fileName = _tcsdup_ex(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
+	m_preallocatedFile = src->m_preallocatedFile;
 
 	if (src->m_eventNameList != NULL)
 	{
@@ -164,11 +164,6 @@ LogParser::LogParser(LogParser *src)
  */
 LogParser::~LogParser()
 {
-	int i;
-
-	for(i = 0; i < m_numRules; i++)
-		delete m_rules[i];
-	free(m_rules);
 	free(m_name);
 	free(m_fileName);
 #ifdef _WIN32
@@ -187,7 +182,7 @@ void LogParser::trace(int level, const TCHAR *format, ...)
 		return;
 
 	va_start(args, format);
-	m_traceCallback(format, args);
+	m_traceCallback(level, format, args);
 	va_end(args);
 }
 
@@ -196,19 +191,16 @@ void LogParser::trace(int level, const TCHAR *format, ...)
  */
 bool LogParser::addRule(LogParserRule *rule)
 {
-	bool isOK;
-
-	isOK = rule->isValid();
-	if (isOK)
+	bool valid = rule->isValid();
+	if (valid)
 	{
-		m_rules = (LogParserRule **)realloc(m_rules, sizeof(LogParserRule *) * (m_numRules + 1));
-		m_rules[m_numRules++] = rule;
+	   m_rules.add(rule);
 	}
 	else
 	{
 		delete rule;
 	}
-	return isOK;
+	return valid;
 }
 
 /**
@@ -257,7 +249,6 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
 										 UINT32 level, const TCHAR *line, UINT32 objectId)
 {
-	int i;
 	const TCHAR *state;
 	bool matched = false;
 
@@ -267,43 +258,46 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		trace(5, _T("Match line: \"%s\""), line);
 
 	m_recordsProcessed++;
-	for(i = 0; i < m_numRules; i++)
+	int i;
+	for(i = 0; i < m_rules.size(); i++)
 	{
-		trace(6, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->getDescription());
-		if ((state = checkContext(m_rules[i])) != NULL)
+	   LogParserRule *rule = m_rules.get(i);
+		trace(6, _T("checking rule %d \"%s\""), i + 1, rule->getDescription());
+		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-				m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) :
-				m_rules[i]->match(line, m_cb, objectId, m_userArg);
+			   rule->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) :
+				rule->match(line, m_cb, objectId, m_userArg);
 			if (ruleMatched)
 			{
-				trace(5, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
+				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
 				if (!matched)
 					m_recordsMatched++;
 
 				// Update context
-				if (m_rules[i]->getContextToChange() != NULL)
+				if (rule->getContextToChange() != NULL)
 				{
-					m_contexts.set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
-					trace(5, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+					m_contexts.set(rule->getContextToChange(), s_states[rule->getContextAction()]);
+					trace(5, _T("rule %d \"%s\": context %s set to %s"), i + 1,
+					      rule->getDescription(), rule->getContextToChange(), s_states[rule->getContextAction()]);
 				}
 
 				// Set context of this rule to inactive if rule context mode is "automatic reset"
 				if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
 				{
-					m_contexts.set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
+					m_contexts.set(rule->getContext(), s_states[CONTEXT_CLEAR]);
 					trace(5, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
-							i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
+							i + 1, rule->getDescription(), rule->getContext());
 				}
 				matched = true;
-				if (!m_processAllRules || m_rules[i]->getBreakFlag())
+				if (!m_processAllRules || rule->getBreakFlag())
 					break;
 			}
 		}
 	}
-	if (i < m_numRules)
+	if (i < m_rules.size())
 		trace(5, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
-				m_rules[i]->getDescription(), matched ? _T("true") : _T("false"));
+				m_rules.get(i)->getDescription(), matched ? _T("true") : _T("false"));
 	else
 		trace(5, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 	return matched;
@@ -330,7 +324,7 @@ bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, co
  */
 void LogParser::setFileName(const TCHAR *name)
 {
-	safe_free(m_fileName);
+	free(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
 	if (m_name == NULL)
 		m_name = _tcsdup(name);	// Set parser name to file name
@@ -396,39 +390,39 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		{
 			if ((*encoding == 0))
 			{
-				ps->encodings.add(new int(LP_FCP_AUTO));
+				ps->encodings.add(LP_FCP_AUTO);
 			}
 			if (!stricmp(encoding, "acp"))
 			{
-				ps->encodings.add(new int(LP_FCP_ACP));
+				ps->encodings.add(LP_FCP_ACP);
 			}
 			else if (!stricmp(encoding, "utf8") || !stricmp(encoding, "utf-8"))
 			{
-				ps->encodings.add(new int(LP_FCP_UTF8));
+				ps->encodings.add(LP_FCP_UTF8);
 			}
 			else if (!stricmp(encoding, "ucs2") || !stricmp(encoding, "ucs-2") || !stricmp(encoding, "utf-16"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS2));
+				ps->encodings.add(LP_FCP_UCS2);
 			}
 			else if (!stricmp(encoding, "ucs2le") || !stricmp(encoding, "ucs-2le") || !stricmp(encoding, "utf-16le"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS2_LE));
+				ps->encodings.add(LP_FCP_UCS2_LE);
 			}
 			else if (!stricmp(encoding, "ucs2be") || !stricmp(encoding, "ucs-2be") || !stricmp(encoding, "utf-16be"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS2_BE));
+				ps->encodings.add(LP_FCP_UCS2_BE);
 			}
 			else if (!stricmp(encoding, "ucs4") || !stricmp(encoding, "ucs-4") || !stricmp(encoding, "utf-32"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS4));
+				ps->encodings.add(LP_FCP_UCS4);
 			}
 			else if (!stricmp(encoding, "ucs4le") || !stricmp(encoding, "ucs-4le") || !stricmp(encoding, "utf-32le"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS4_LE));
+				ps->encodings.add(LP_FCP_UCS4_LE);
 			}
 			else if (!stricmp(encoding, "ucs4be") || !stricmp(encoding, "ucs-4be") || !stricmp(encoding, "utf-32be"))
 			{
-				ps->encodings.add(new int(LP_FCP_UCS4_BE));
+				ps->encodings.add(LP_FCP_UCS4_BE);
 			}
 			else
 			{
@@ -438,8 +432,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		}
 		else
 		{
-			ps->encodings.add(new int(LP_FCP_AUTO));
+			ps->encodings.add(LP_FCP_AUTO);
 		}
+		ps->preallocFlags.add(XMLGetAttrBoolean(attrs, "preallocated", false) ? 1 : 0);
 	}
 	else if (!strcmp(name, "macros"))
 	{
@@ -772,7 +767,8 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 			{
 				LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
 				p->setFileName(state.files.get(i));
-				p->setFileEncoding(*state.encodings.get(i));
+				p->m_fileEncoding = state.encodings.get(i);
+				p->m_preallocatedFile = (state.preallocFlags.get(i) != 0);
 				parsers->add(p);
 			}
 		}
@@ -816,10 +812,11 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
  */
 const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
 {
-   for(int i = 0; i < m_numRules; i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      if (!_tcsicmp(m_rules[i]->getName(), name))
-         return m_rules[i];
+      LogParserRule *rule = m_rules.get(i);
+      if (!_tcsicmp(rule->getName(), name))
+         return rule;
    }
    return NULL;
 }
@@ -829,12 +826,12 @@ const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
  */
 void LogParser::restoreCounters(const LogParser *parser)
 {
-   for(int i = 0; i < m_numRules; i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      const LogParserRule *rule = parser->findRuleByName(m_rules[i]->getName());
+      const LogParserRule *rule = parser->findRuleByName(m_rules.get(i)->getName());
       if (rule != NULL)
       {
-         m_rules[i]->restoreCounters(rule);
+         m_rules.get(i)->restoreCounters(rule);
       }
    }
 }
