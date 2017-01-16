@@ -79,5 +79,13 @@ public class StatusMapElement extends ElementWidget
 		map.setGroupObjects(config.isGroupObjects());
 		map.setSeverityFilter(config.getSeverityFilter());
 		map.setRootObject(config.getObjectId());
+		
+		map.addRefreshListener(new Runnable() {
+         @Override
+         public void run()
+         {
+            requestDashboardLayout();
+         }
+      });
 	}
 }
