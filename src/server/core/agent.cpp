@@ -632,6 +632,8 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          dcObject->processNewError(false, t);
          break;
       case ERR_NO_SUCH_INSTANCE:
+         if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+            dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
          dcObject->processNewError(true, t);
          break;
       case ERR_INTERNAL_ERROR:
@@ -762,6 +764,8 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
             dcObject->processNewError(false, t);
             break;
          case ERR_NO_SUCH_INSTANCE:
+            if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+               dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
             dcObject->processNewError(true, t);
             break;
          case ERR_INTERNAL_ERROR:

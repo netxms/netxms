@@ -309,13 +309,18 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                      pItem->processNewError(false);
                   }
                   break;
-               case DCE_COMM_ERROR:
+               case DCE_COLLECTION_ERROR:
                   if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                      pItem->setStatus(ITEM_STATUS_ACTIVE, true);
                   pItem->processNewError(false);
                   break;
                case DCE_NO_SUCH_INSTANCE:
+                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
                   pItem->processNewError(true);
+                  break;
+               case DCE_COMM_ERROR:
+                  pItem->processNewError(false);
                   break;
                case DCE_NOT_SUPPORTED:
                   // Change item's status

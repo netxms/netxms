@@ -810,7 +810,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
    }
    else
    {
-      rcc = DCE_COMM_ERROR;
+      rcc = DCE_COLLECTION_ERROR;
    }
 
    for(int i = 0; i < valueCount; i++)
@@ -857,7 +857,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
    }
    else
    {
-      rcc = DCE_COMM_ERROR;
+      rcc = DCE_COLLECTION_ERROR;
    }
 
    for(int i = 0; i < valueCount; i++)

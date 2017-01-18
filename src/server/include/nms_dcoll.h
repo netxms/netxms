@@ -33,6 +33,7 @@
 #define DCE_NOT_SUPPORTED     2
 #define DCE_IGNORE            3
 #define DCE_NO_SUCH_INSTANCE  4
+#define DCE_COLLECTION_ERROR  5
 
 /**
  * Threshold check results

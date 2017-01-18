@@ -3746,7 +3746,8 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHA
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
-      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+      ((dwResult == SNMP_ERR_COMM) ? DCE_COMM_ERROR :
+      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR));
 }
 
 /**
@@ -3843,7 +3844,7 @@ UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableCo
       }
    }
    delete snmp;
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
 }
 
 /**
@@ -3875,7 +3876,7 @@ UINT32 Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
       delete *list;
       *list = NULL;
    }
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
 }
 
 /**
@@ -3938,7 +3939,7 @@ UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **v
    {
       delete data.values;
    }
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
 }
 
 /**
@@ -3964,7 +3965,8 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_name, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
-      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+      ((dwResult == SNMP_ERR_COMM) ? SNMP_ERR_COMM :
+      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR));
 }
 
 /**
@@ -4282,7 +4284,7 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          UINT32 value = ((Interface *)object)->getPingTime();
          if (value == 10000)
-            rc = DCE_COMM_ERROR;
+            rc = DCE_COLLECTION_ERROR;
          else
             _sntprintf(buffer, bufSize, _T("%d"), value);
       }
@@ -4320,7 +4322,7 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
             value = getPingTime();
          }
          if (value == 10000)
-            rc = DCE_COMM_ERROR;
+            rc = DCE_COLLECTION_ERROR;
          else
             _sntprintf(buffer, bufSize, _T("%d"), value);
       }
@@ -4521,6 +4523,7 @@ static UINT32 RCCFromDCIError(UINT32 error)
       case DCE_SUCCESS:
          return RCC_SUCCESS;
       case DCE_COMM_ERROR:
+      case DCE_COLLECTION_ERROR:
          return RCC_COMM_FAILURE;
       case DCE_NO_SUCH_INSTANCE:
          return RCC_NO_SUCH_INSTANCE;

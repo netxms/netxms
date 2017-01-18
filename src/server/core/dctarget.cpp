@@ -643,7 +643,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
          if (value->isNull())
          {
             // NULL value is an error indicator
-            rc = DCE_COMM_ERROR;
+            rc = DCE_COLLECTION_ERROR;
          }
          else
          {
@@ -656,7 +656,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       {
 			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-         rc = DCE_COMM_ERROR;
+         rc = DCE_COLLECTION_ERROR;
       }
       delete vm;
    }
@@ -720,7 +720,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
          }
          else if (value->isNull())
          {
-            rc = DCE_COMM_ERROR;
+            rc = DCE_COLLECTION_ERROR;
          }
          else
          {
@@ -731,7 +731,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
       {
          DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-         rc = DCE_COMM_ERROR;
+         rc = DCE_COLLECTION_ERROR;
       }
       delete vm;
    }
@@ -809,7 +809,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
          }
          else if (value->isNull())
          {
-            rc = DCE_COMM_ERROR;
+            rc = DCE_COLLECTION_ERROR;
          }
          else
          {
@@ -820,7 +820,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
       {
          DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-         rc = DCE_COMM_ERROR;
+         rc = DCE_COLLECTION_ERROR;
       }
       delete vm;
    }
