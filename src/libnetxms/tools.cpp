@@ -37,6 +37,7 @@
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
 #include <sys/time.h>
+#include <signal.h>
 #endif
 
 #if HAVE_SYS_UTSNAME_H
