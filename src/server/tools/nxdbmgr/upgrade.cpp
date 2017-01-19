@@ -944,9 +944,9 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
 
          // Add filter flags to XML
          TCHAR *xml = DBGetField(hResult, i, 2, NULL, 0);
-         size_t len = _tcslen(xml) + 1024;
+         size_t len = (xml != NULL) ? _tcslen(xml) + 1024 : 1024;
          TCHAR *tmp = (TCHAR *)malloc(len * sizeof(TCHAR));
-         TCHAR *ptr = _tcsrchr(xml, '<');
+         TCHAR *ptr = (xml != NULL) ? _tcsrchr(xml, '<') : NULL;
          if (ptr != NULL)
          {
             *ptr = 0;
