@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3678,6 +3678,26 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 }
 
 /**
+ * Convert SNMP error code to DC collection error code
+ */
+inline UINT32 DCErrorFromSNMPError(UINT32 snmpError)
+{
+   switch(snmpError)
+   {
+      case SNMP_ERR_SUCCESS:
+         return DCE_SUCCESS;
+      case SNMP_ERR_NO_OBJECT:
+      case SNMP_ERR_BAD_OID:
+      case SNMP_ERR_PARAM:
+         return DCE_NOT_SUPPORTED;
+      case SNMP_ERR_AGENT:
+         return DCE_COLLECTION_ERROR;
+      default:
+         return DCE_COMM_ERROR;
+   }
+}
+
+/**
  * Get DCI value via SNMP
  */
 UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
@@ -3745,9 +3765,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHA
       }
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
-   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
-      ((dwResult == SNMP_ERR_COMM) ? DCE_COMM_ERROR :
-      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR));
+   return DCErrorFromSNMPError(dwResult);
 }
 
 /**
@@ -3844,7 +3862,7 @@ UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableCo
       }
    }
    delete snmp;
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
+   return DCErrorFromSNMPError(rc);
 }
 
 /**
@@ -3876,7 +3894,7 @@ UINT32 Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
       delete *list;
       *list = NULL;
    }
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
+   return DCErrorFromSNMPError(rc);
 }
 
 /**
@@ -3939,7 +3957,7 @@ UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **v
    {
       delete data.values;
    }
-   return (rc == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : ((rc == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR);
+   return DCErrorFromSNMPError(rc);
 }
 
 /**
@@ -3964,9 +3982,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
       delete pTransport;
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_name, szParam, dwResult);
-   return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
-      ((dwResult == SNMP_ERR_COMM) ? SNMP_ERR_COMM :
-      ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COLLECTION_ERROR));
+   return DCErrorFromSNMPError(dwResult == SNMP_ERR_SUCCESS);
 }
 
 /**
@@ -4021,6 +4037,10 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
                goto end_loop;
             DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
+         case ERR_INTERNAL_ERROR:
+            dwResult = DCE_COLLECTION_ERROR;
+            setLastAgentCommTime();
+            goto end_loop;
       }
    }
 
@@ -4084,6 +4104,10 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
                goto end_loop;
             DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
+         case ERR_INTERNAL_ERROR:
+            dwResult = DCE_COLLECTION_ERROR;
+            setLastAgentCommTime();
+            goto end_loop;
       }
    }
 
@@ -4150,6 +4174,10 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
                goto end_loop;
             DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
+         case ERR_INTERNAL_ERROR:
+            dwResult = DCE_COLLECTION_ERROR;
+            setLastAgentCommTime();
+            goto end_loop;
       }
    }
 
@@ -4523,12 +4551,13 @@ static UINT32 RCCFromDCIError(UINT32 error)
       case DCE_SUCCESS:
          return RCC_SUCCESS;
       case DCE_COMM_ERROR:
-      case DCE_COLLECTION_ERROR:
          return RCC_COMM_FAILURE;
       case DCE_NO_SUCH_INSTANCE:
          return RCC_NO_SUCH_INSTANCE;
       case DCE_NOT_SUPPORTED:
          return RCC_DCI_NOT_SUPPORTED;
+      case DCE_COLLECTION_ERROR:
+         return RCC_AGENT_ERROR;
       default:
          return RCC_SYSTEM_FAILURE;
    }
