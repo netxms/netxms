@@ -883,93 +883,109 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
       {
          int filteringFlag = 0;
          int objectToolFlag = DBGetFieldLong(hResult, i, 1);
-         TCHAR *xml = DBGetField(hResult, i, 2, NULL, 0);
 
-         //Separate and reorder flags for filter and for object tools
-         for(int j = 1; j < 0x5; j=j<<1) //REQUIRES_SNMP 0x01, REQUIRES_AGENT 0x02, REQUIRES_OID_MATCH 0x04
+         // Separate and reorder flags for filter and for object tools
+         for(int j = 1; j < 5; j = j << 1) //REQUIRES_SNMP 0x01, REQUIRES_AGENT 0x02, REQUIRES_OID_MATCH 0x04
          {
-            if((objectToolFlag & j) > 0)
+            if ((objectToolFlag & j) != 0)
             {
                objectToolFlag = objectToolFlag & ~j;
                filteringFlag = filteringFlag | j;
             }
          }
-         if((objectToolFlag & 0x08) > 0) //ASK_CONFIRMATION
+
+         if ((objectToolFlag & 0x08) != 0) //ASK_CONFIRMATION
          {
             objectToolFlag = objectToolFlag & ~0x08;
             objectToolFlag = objectToolFlag | 0x01;
          }
-         if((objectToolFlag & 0x10) > 0) //GENERATES_OUTPUT
+
+         if ((objectToolFlag & 0x10) != 0) //GENERATES_OUTPUT
          {
             objectToolFlag = objectToolFlag & ~0x10;
             objectToolFlag = objectToolFlag | 0x02;
          }
-         if((objectToolFlag & 0x20) > 0) //DISABLED
+
+         if ((objectToolFlag & 0x20) != 0) //DISABLED
          {
             objectToolFlag = objectToolFlag & ~0x20;
             objectToolFlag = objectToolFlag | 0x04;
          }
-         if((objectToolFlag & 0x40) > 0) //SHOW_IN_COMMANDS
+
+         if ((objectToolFlag & 0x40) != 0) //SHOW_IN_COMMANDS
          {
             objectToolFlag = objectToolFlag & ~0x40;
             objectToolFlag = objectToolFlag | 0x08;
          }
-         if((objectToolFlag & 0x80) > 0) //REQUIRES_NODE_OS_MATCH
+
+         if ((objectToolFlag & 0x80) != 0) //REQUIRES_NODE_OS_MATCH
          {
             objectToolFlag = objectToolFlag & ~0x80;
             filteringFlag = filteringFlag | 0x08;
          }
-         if((objectToolFlag & 0x100) > 0) //REQUIRES_TEMPLATE_MATCH
+
+         if ((objectToolFlag & 0x100) != 0) //REQUIRES_TEMPLATE_MATCH
          {
             objectToolFlag = objectToolFlag & ~0x100;
             filteringFlag = filteringFlag | 0x10;
          }
-         if((objectToolFlag & 0x10000) > 0) //SNMP_INDEXED_BY_VALUE
+
+         if ((objectToolFlag & 0x10000) != 0) //SNMP_INDEXED_BY_VALUE
          {
             objectToolFlag = objectToolFlag & ~0x10000;
             objectToolFlag = objectToolFlag | 0x10;
          }
-         if((objectToolFlag & 0x20000) > 0) //REQUIRES_WORKSTATION_OS_MATCH
+
+         if ((objectToolFlag & 0x20000) != 0) //REQUIRES_WORKSTATION_OS_MATCH
          {
             objectToolFlag = objectToolFlag & ~0x20000;
             filteringFlag = filteringFlag | 0x20;
          }
 
-         //Add filter flags to XML
+         // Add filter flags to XML
+         TCHAR *xml = DBGetField(hResult, i, 2, NULL, 0);
+         size_t len = _tcslen(xml) + 1024;
+         TCHAR *tmp = (TCHAR *)malloc(len * sizeof(TCHAR));
          TCHAR *ptr = _tcsrchr(xml, '<');
-         TCHAR tmp[2048];
-         if(ptr != NULL)
+         if (ptr != NULL)
          {
             *ptr = 0;
-            _sntprintf(tmp, 2048, _T("%s<flags>%d</flags></objectMenuFilter>"), xml, filteringFlag);
+            _sntprintf(tmp, len, _T("%s<flags>%d</flags></objectMenuFilter>"), xml, filteringFlag);
             _tcsncpy(tmp, _T("<objectMenuFilter"), 17); //Change main tag name
          }
          else
          {
-            _sntprintf(tmp, 2048, _T("<objectMenuFilter><flags>%d</flags></objectMenuFilter>"), filteringFlag);
+            _sntprintf(tmp, len, _T("<objectMenuFilter><flags>%d</flags></objectMenuFilter>"), filteringFlag);
          }
 
          DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET flags=?,tool_filter=? WHERE tool_id=?"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectToolFlag);
-            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, tmp, DB_BIND_DYNAMIC);
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
             if (!SQLExecute(hStmt))
             {
                if (!g_bIgnoreErrors)
                {
+                  free(xml);
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
                   return FALSE;
                }
             }
          }
-         else if (!g_bIgnoreErrors)
+         else
          {
-            DBFreeResult(hResult);
-            return FALSE;
+            free(tmp);
+            if (!g_bIgnoreErrors)
+            {
+               free(xml);
+               DBFreeResult(hResult);
+               return FALSE;
+            }
          }
+         free(xml);
       }
       DBFreeResult(hResult);
    }
