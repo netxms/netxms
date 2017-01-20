@@ -151,6 +151,7 @@ DEFINE_THREAD_STARTER(executeLibraryScript)
 DEFINE_THREAD_STARTER(fileManagerControl)
 DEFINE_THREAD_STARTER(findIpAddress)
 DEFINE_THREAD_STARTER(findMacAddress)
+DEFINE_THREAD_STARTER(findHostname)
 DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(forceDCIPoll)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
@@ -1304,6 +1305,9 @@ void ClientSession::processingThread()
 			case CMD_FIND_IP_LOCATION:
 				CALL_IN_NEW_THREAD(findIpAddress, pMsg);
 				break;
+			case CMD_FIND_HOSTNAME_LOCATION:
+			   CALL_IN_NEW_THREAD(findHostname, pMsg);
+			   break;
 			case CMD_GET_IMAGE:
 				sendLibraryImage(pMsg);
 				break;
@@ -12036,6 +12040,33 @@ void ClientSession::findIpAddress(NXCPMessage *request)
    }
 
 	sendMessage(&msg);
+}
+
+void ClientSession::findHostname(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   msg.setId(request->getId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   UINT32 zoneId = request->getFieldAsUInt32(VID_ZONE_ID);
+   TCHAR hostname[MAX_STRING_VALUE];
+   request->getFieldAsString(VID_HOSTNAME, hostname, MAX_STRING_VALUE);
+
+   ObjectArray<NetObj> *nodes = FindNodesByHostname(hostname, zoneId);
+
+   msg.setField(VID_NUM_ELEMENTS, nodes->size());
+
+   UINT32 base = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < nodes->size(); i++)
+   {
+      msg.setField(base++, ((Node *)nodes->get(i))->getId());
+   }
+
+   sendMessage(&msg);
+
+   delete(nodes);
 }
 
 /**

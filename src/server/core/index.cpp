@@ -217,6 +217,27 @@ NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)
 }
 
 /**
+ * Find objects by comparing it with given data using external comparator
+ *
+ * @param comparator comparing function (must return true for object to be found)
+ * @param data user data passed to comparator
+ */
+ObjectArray<NetObj> *ObjectIndex::findObjects(bool (*comparator)(NetObj *, void *), void *data)
+{
+   ObjectArray<NetObj> *result = new ObjectArray<NetObj>();
+
+   RWLockReadLock(m_lock, INFINITE);
+   for(int i = 0; i < m_size; i++)
+   {
+      if (comparator(m_elements[i].object, data))
+         result->add(m_elements[i].object);
+   }
+   RWLockUnlock(m_lock);
+
+   return result;
+}
+
+/**
  * Execute callback for each object. Callback should return true to continue enumeration.
  *
  * @param callback

@@ -366,7 +366,7 @@ public class NXCPCodes
    public static final int CMD_BULK_RESOLVE_ALARMS = 0x0158;
    public static final int CMD_BULK_ALARM_STATE_CHANGE = 0x0159;
    public static final int CMD_GET_FOLDER_SIZE = 0x015A;
-   public static final int CMD_FOLDER_CONTENT = 0x015B;
+   public static final int CMD_FIND_HOSTNAME_LOCATION = 0x015B;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -949,7 +949,8 @@ public class NXCPCodes
    public static final long VID_NUM_VALUES = 566;
 	public static final long VID_NUM_PSTORAGE = 567;
    public static final long VID_COMMAND_ID = 568;
-   
+   public static final long VID_HOSTNAME = 569;
+
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
 	public static final long VID_ACL_RIGHTS_BASE = 0x00002000L;

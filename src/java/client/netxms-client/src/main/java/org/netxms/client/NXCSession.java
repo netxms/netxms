@@ -112,6 +112,7 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.market.Repository;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableDescriptor;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.AgentPolicy;
@@ -7250,6 +7251,34 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
+   }
+   
+   /**
+    * Find all nodes that contain the primary hostname
+    *
+    * @param zoneId zone ID
+    * @param hostname Hostname to find
+    * @return List of nodes found
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AbstractNode> findNodesByHostname(int zoneId, String hostname) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_HOSTNAME_LOCATION);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_ID, zoneId);
+      msg.setField(NXCPCodes.VID_HOSTNAME, hostname);
+      sendMessage(msg);
+      
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      List<AbstractNode> nodes = new ArrayList<AbstractNode>();
+      
+      for(int i = 0; i < count; i++)
+      {
+         nodes.add((AbstractNode)findObjectById(response.getFieldAsInt32(base++)));
+      }
+      return nodes;
    }
 
    /**

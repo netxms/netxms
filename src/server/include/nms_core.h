@@ -487,6 +487,7 @@ private:
    DECLARE_THREAD_STARTER(fileManagerControl)
    DECLARE_THREAD_STARTER(findIpAddress)
    DECLARE_THREAD_STARTER(findMacAddress)
+   DECLARE_THREAD_STARTER(findHostname)
    DECLARE_THREAD_STARTER(findNodeConnection)
    DECLARE_THREAD_STARTER(forceDCIPoll)
    DECLARE_THREAD_STARTER(forwardToReportingServer)
@@ -701,6 +702,7 @@ private:
 	void findNodeConnection(NXCPMessage *request);
 	void findMacAddress(NXCPMessage *request);
 	void findIpAddress(NXCPMessage *request);
+	void findHostname(NXCPMessage *request);
 	void sendLibraryImage(NXCPMessage *request);
 	void updateLibraryImage(NXCPMessage *request);
 	void listLibraryImages(NXCPMessage *request);

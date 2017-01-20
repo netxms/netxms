@@ -789,6 +789,44 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
    return ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
 }
 
+struct NodeFindHostnameData
+{
+   TCHAR *hostname;
+   UINT32 zoneId;
+};
+
+/**
+ * Interface description comparator
+ */
+static bool HostnameComparator(NetObj *object, void *data)
+{
+   TCHAR primaryName[MAX_DNS_NAME];
+   if ((object->getObjectClass() == OBJECT_NODE) && !object->isDeleted())
+   {
+      _tcscpy(primaryName, ((Node *)object)->getPrimaryName());
+      _tcsupr(primaryName);
+      _tcsupr(((NodeFindHostnameData *)data)->hostname);
+   }
+   else
+      return false;
+
+   return ((_tcsstr(primaryName, ((NodeFindHostnameData *)data)->hostname) != NULL) &&
+            (IsZoningEnabled() ? (((Node *)object)->getZoneId() == ((NodeFindHostnameData *)data)->zoneId) : true));
+}
+
+/**
+ * Find a list of nodes that contain the hostname
+ */
+ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneId)
+{
+   NodeFindHostnameData data;
+   data.hostname = hostname;
+   data.zoneId = zoneId;
+
+   ObjectArray<NetObj> *nodes = g_idxNodeById.findObjects(HostnameComparator, &data);
+   return nodes;
+}
+
 /**
  * Interface description comparator
  */

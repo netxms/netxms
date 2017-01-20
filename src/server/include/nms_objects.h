@@ -256,6 +256,7 @@ public:
 	void remove(QWORD key);
 	NetObj *get(QWORD key);
 	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
+	ObjectArray<NetObj> *findObjects(bool (*comparator)(NetObj *, void *), void *data);
 
 	int size();
 	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
@@ -1533,6 +1534,7 @@ public:
    const TCHAR *getSshPassword() const { return m_sshPassword; }
    UINT32 getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
+   const TCHAR *getPrimaryName() const { return m_primaryName; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -2603,6 +2605,7 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName);
+ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);

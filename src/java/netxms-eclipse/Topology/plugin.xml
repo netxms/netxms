@@ -110,6 +110,12 @@
             id="org.netxms.ui.eclipse.topology.commands.show_filter"
             name="Toggle Filter">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            description="Find node by primary hostname"
+            id="org.netxms.ui.eclipse.topology.commands.find_node_by_primary_hostname"
+            name="Find node by primary hostname">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -134,6 +140,15 @@
                menubarPath="tools/additions"
                style="push"
                tooltip="%action.tooltip.FindIP">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.FindNodeByPrimaryHostname"
+               definitionId="org.netxms.ui.eclipse.topology.commands.find_node_by_primary_hostname"
+               id="org.netxms.ui.eclipse.topology.actions.find_node_by_primary_hostname"
+               label="Find node by primary hostname..."
+               menubarPath="tools/additions"
+               style="push"
+               tooltip="Find node by primary hostname">
          </action>
       </actionSet>
    </extension>
@@ -210,6 +225,11 @@
             contextId="org.netxms.ui.eclipse.topology.context.Topology"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.topology.commands.find_node_by_primary_hostname"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M2+F11">
       </key>
    </extension>
    <extension

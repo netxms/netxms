@@ -578,6 +578,7 @@ typedef struct
 #define CMD_BULK_RESOLVE_ALARMS        0x0158
 #define CMD_BULK_ALARM_STATE_CHANGE    0x0159
 #define CMD_GET_FOLDER_SIZE            0x015A
+#define CMD_FIND_HOSTNAME_LOCATION     0x015B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1161,6 +1162,7 @@ typedef struct
 #define VID_NUM_VALUES              ((UINT32)566)
 #define VID_NUM_PSTORAGE            ((UINT32)567)
 #define VID_COMMAND_ID              ((UINT32)568)
+#define VID_HOSTNAME                ((UINT32)569)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
