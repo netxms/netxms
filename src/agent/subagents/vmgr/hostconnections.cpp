@@ -351,6 +351,10 @@ const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainNa
             }
             infoChase->update(info);
          }
+         else
+         {
+            delete info;
+         }
       }
       else
       {
@@ -619,6 +623,10 @@ const virStoragePoolInfo *HostConnections::getStorageInformationAndLock(const TC
                m_storageInfo.set(name, info);
             }
             info->update(newInfo);
+         }
+         else
+         {
+            free(newInfo);
          }
 
       }
