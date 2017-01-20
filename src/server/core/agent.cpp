@@ -595,23 +595,6 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    UINT32 status = msg->getFieldAsUInt32(VID_STATUS);
    bool success = true;
 
-   void *value;
-   switch(type)
-   {
-      case DCO_TYPE_ITEM:
-         value = msg->getFieldAsString(VID_VALUE);
-         break;
-      case DCO_TYPE_LIST:
-         value = new StringList();
-         break;
-      case DCO_TYPE_TABLE:
-         value = new Table(msg);
-         break;
-      default:
-         nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
-                     type, dcObject->getName(), dciId, target->getName(), target->getId());
-         return ERR_INTERNAL_ERROR;
-   }
    nxlog_debug(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d]"),
                dcObject->getName(), dciId, type, status, target->getName(), target->getId());
 
@@ -619,11 +602,42 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    {
       case ERR_SUCCESS:
       {
+         void *value;
+         switch(type)
+         {
+            case DCO_TYPE_ITEM:
+               value = msg->getFieldAsString(VID_VALUE);
+               break;
+            case DCO_TYPE_LIST:
+               value = new StringList();
+               break;
+            case DCO_TYPE_TABLE:
+               value = new Table(msg);
+               break;
+            default:
+               nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
+                           type, dcObject->getName(), dciId, target->getName(), target->getId());
+               return ERR_INTERNAL_ERROR;
+         }
+
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
          success = target->processNewDCValue(dcObject, t, value);
          if (t > dcObject->getLastPollTime())
             dcObject->setLastPollTime(t);
+
+         switch(type)
+         {
+            case DCO_TYPE_ITEM:
+               free(value);
+               break;
+            case DCO_TYPE_LIST:
+               delete (StringList *)value;
+               break;
+            case DCO_TYPE_TABLE:
+               // DCTable will keep ownership of created table
+               break;
+         }
          break;
       }
       case ERR_UNKNOWN_PARAMETER:
@@ -638,16 +652,6 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          break;
       case ERR_INTERNAL_ERROR:
          dcObject->processNewError(true, t);
-         break;
-   }
-
-   switch(type)
-   {
-      case DCO_TYPE_ITEM:
-         free(value);
-         break;
-      case DCO_TYPE_LIST:
-         delete (StringList *)value;
          break;
    }
 

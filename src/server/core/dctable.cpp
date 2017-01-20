@@ -311,6 +311,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
    if (m_owner == NULL)
    {
       unlock();
+      ((Table *)value)->decRefCount();
       return false;
    }
 
