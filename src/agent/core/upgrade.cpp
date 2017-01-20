@@ -33,7 +33,7 @@ UINT32 UpgradeAgent(TCHAR *pszPkgFile)
 #if defined(_WIN32)
 
    // Start installation
-   _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES"), pszPkgFile);
+   _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES /LOG /CLOSEAPPLICATIONS"), pszPkgFile);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 
 #elif defined(_NETWARE)
