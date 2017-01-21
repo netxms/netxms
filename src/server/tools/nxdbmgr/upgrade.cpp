@@ -762,20 +762,20 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
       {
          for(int i = 0; i < count; i++)
          {
-            TCHAR key[512];
+            String key;
             TCHAR tmp[256];
             DBGetField(hResult, i, 1, tmp, 256);
-            _tcscpy(key, tmp);
+            key.append(tmp);
             DBGetField(hResult, i, 2, tmp, 256);
-            _tcscat(key, _T("."));
-            _tcscat(key, tmp);
+            key.append(_T("."));
+            key.append(tmp);
             DBGetField(hResult, i, 3, tmp, 256);
-            _tcscat(key, _T("."));
-            _tcscat(key, tmp);
+            key.append(_T("."));
+            key.append(tmp);
             DBGetField(hResult, i, 4, tmp, 256);
 
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 0));
-            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, key, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, key, DB_BIND_STATIC, 512);
             DBBind(hStmt, 3, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
             if (!SQLExecute(hStmt))
             {
@@ -816,7 +816,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
 {
-	CHK_EXEC(SQLQuery(_T("ALTER TABLE config ALTER COLUMN description TYPE varchar(450)")));
+   CHK_EXEC(ResizeColumn(_T("config"), _T("description"), 450, true));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between active network discovery polls.' WHERE var_name='ActiveDiscoveryInterval'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable active network discovery. This setting is change by Network Discovery GUI' WHERE var_name='ActiveNetworkDiscovery'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.' WHERE var_name='AgentCommandTimeout'")));
@@ -1008,8 +1008,7 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
                _T("CREATE TABLE config_values (")
                _T("var_name varchar(63) not null,")
                _T("var_value varchar(2000) null,")
-               _T("var_description varchar(255) null,")
-               _T("PRIMARY KEY(var_name,var_value))")));
+               _T("var_description varchar(255) null)")));
 
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ClientListenerPort','65535')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ExternalAuditPort','65535')")));
@@ -1042,9 +1041,6 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SyslogNodeMatchingPolicy','1','Hostname, then IP')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','0','Delete user')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','1','Disable user')")));
-
-
-
 
    CHK_EXEC(SetSchemaVersion(429));
    return TRUE;
