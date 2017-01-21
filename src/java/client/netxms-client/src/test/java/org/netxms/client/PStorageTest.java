@@ -5,10 +5,7 @@ package org.netxms.client;
 
 import java.util.HashMap;
 import java.util.List;
-import org.eclipse.core.runtime.Assert;
 import org.netxms.client.NXCSession;
-import org.netxms.client.situations.Situation;
-import org.netxms.client.situations.SituationInstance;
 
 /**
  * Persistent storage test
@@ -19,7 +16,7 @@ public class PStorageTest extends AbstractSessionTest
 	{
 		NXCSession session = connect();
 		String key = "PStorageTestKey";
-		Stying value = "PStorageTestValue"
+		String value = "PStorageTestValue";
 		
 		//check that there is no entry with "PStorageTestKey" key
 		HashMap<String, String> map = session.getPersistentStorageList();		
