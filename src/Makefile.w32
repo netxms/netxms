@@ -1,0 +1,3 @@
+SUBDIRS = libexpat libnetxms
+
+include ../Makefile.inc.w32

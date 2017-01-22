@@ -640,7 +640,7 @@ inline void ret_mbstring(TCHAR *rbuf, const char *value)
 
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1300)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%ld"), (long)value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%ld"), (long)value);
@@ -649,7 +649,7 @@ inline void ret_int(TCHAR *rbuf, LONG value)
 
 inline void ret_uint(TCHAR *rbuf, UINT32 value)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1300)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%lu"), (unsigned long)value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lu"), (unsigned long)value);
@@ -658,7 +658,7 @@ inline void ret_uint(TCHAR *rbuf, UINT32 value)
 
 inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1300)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), digits, value);
@@ -667,7 +667,7 @@ inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 
 inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1300)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64d"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, INT64_FMT, value);
@@ -676,7 +676,7 @@ inline void ret_int64(TCHAR *rbuf, INT64 value)
 
 inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1300)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64u"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, UINT64_FMT, value);

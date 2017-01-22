@@ -1925,17 +1925,17 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
 {
    int iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
-   struct stat fs;
+   NX_STAT_STRUCT fs;
 
-   if (fstat(fd, &fs) != -1)
+   if (NX_FSTAT(fd, &fs) != -1)
    {
       pBuffer = (BYTE *)malloc(fs.st_size + 1);
       if (pBuffer != NULL)
       {
-         *pdwFileSize = fs.st_size;
+         *pdwFileSize = (UINT32)fs.st_size;
          for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
          {
-            iNumBytes = min(16384, fs.st_size - iBufPos);
+            iNumBytes = min(16384, (int)fs.st_size - iBufPos);
             if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
             {
                free(pBuffer);

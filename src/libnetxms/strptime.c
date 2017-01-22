@@ -37,6 +37,10 @@
 #define TM_YEAR_BASE 1900
 #endif
 
+#ifdef _WIN32
+#define tzname _tzname
+#endif
+
 /*
  * We do not implement alternate representations. However, we always
  * check whether a given modifier is allowed for a certain conversion.

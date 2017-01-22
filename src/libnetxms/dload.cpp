@@ -149,7 +149,7 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbo
    void *pAddr;
 
 #if defined(_WIN32)
-   pAddr = GetProcAddress(hModule, pszSymbol);
+   pAddr = (void *)GetProcAddress(hModule, pszSymbol);
    if ((pAddr == NULL) && (pszErrorText != NULL))
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)

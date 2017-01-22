@@ -1681,7 +1681,7 @@ typedef struct _dir_struc_w
 
 inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1400)
+#if defined(_WIN32) && (_MSC_VER >= 1400) && !defined(__clang__)
 	_tcsncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
    _tcsncpy(pszDest, pszSrc, nLen - 1);
@@ -1693,7 +1693,7 @@ inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
 #ifdef UNICODE
 inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
 {
-#if defined(_WIN32) && (_MSC_VER >= 1400)
+#if defined(_WIN32) && (_MSC_VER >= 1400) && !defined(__clang__)
 	strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
    strncpy(pszDest, pszSrc, nLen - 1);
