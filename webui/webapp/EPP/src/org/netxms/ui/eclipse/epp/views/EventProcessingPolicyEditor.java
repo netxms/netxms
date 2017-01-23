@@ -20,11 +20,12 @@ package org.netxms.ui.eclipse.epp.views;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
@@ -99,7 +100,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private boolean verticalLayout = false;
    private boolean filterEnabled = true;
    private boolean modified = false;
-   private Set<RuleEditor> selection = new HashSet<RuleEditor>();
+   private Set<RuleEditor> selection;
    private int lastSelectedRule = -1;
    private RuleClipboard clipboard = new RuleClipboard();
 
@@ -129,6 +130,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Action actionEnableRule;
    private Action actionDisableRule;
    private Action actionShowFilter;
+   private Action actionAddRule;
 
    /*
     * (non-Javadoc)
@@ -228,6 +230,14 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 		session.addListener(sessionListener);
+
+      selection = new TreeSet<RuleEditor>(new Comparator<RuleEditor>() {
+         @Override
+         public int compare(RuleEditor arg0, RuleEditor arg1)
+         {
+            return arg0.getRuleNumber() - arg1.getRuleNumber();
+         }
+      });
 
 		createActions();
 		contributeToActionBars();
@@ -390,6 +400,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
             enableFilter(actionShowFilter.isChecked());
          }
       };
+      
+      actionAddRule = new Action("&Add new rule") {
+         @Override
+         public void run()
+         {
+            insertRule(ruleEditors.size());
+         }
+      };
+      actionAddRule.setImageDescriptor(SharedIcons.ADD_OBJECT);
+      
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.epp.commands.show_rule_filter"); //$NON-NLS-1$
       final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
@@ -431,6 +451,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionAddRule);
 		manager.add(actionSave);
 		manager.add(new Separator());
 		manager.add(actionExpandAll);
@@ -602,6 +623,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+            EventProcessingPolicy newPolicy = new EventProcessingPolicy(ruleEditors.size());
+            for(RuleEditor editor: ruleEditors)
+               newPolicy.addRule(editor.getRule());
 				session.saveEventProcessingPolicy(policy);
 				runInUIThread(new Runnable() {
 					@Override
@@ -1102,11 +1126,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
                }
             }
          }
+         policy.deleteRule(e.getRule());
       }
-
-      for(int i = 0; i < movedRuleEditors.size(); i++)
-         movedRuleEditors.get(i).setRuleNumber(i + 1);
-
+      
+      int i = 0;
+      for(RuleEditor e : movedRuleEditors)
+      {
+         policy.insertRule(e.getRule(), i);
+         e.setRuleNumber(++i);
+      }
+      
       ruleEditors = movedRuleEditors;
       anchor.setDragged(false);
 
