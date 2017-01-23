@@ -40,7 +40,7 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 	VALUES (8,'11176d3e-0149-448b-a5fe-2be764762775',7944,'Terminate interface unexpectedly up alarms when interface goes down',
 		'%m',6,'IF_UNEXP_UP_%i_%5','',0,EVENT_ALARM_TIMEOUT);
 
-INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,)
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
 	VALUES (9,'ecc3fb57-672d-489d-a0ef-4214ea896e0f',7944,'Terminate interface unexpectedly up alarms when interface is deleted',
 		'%m',6,'IF_UNEXP_UP_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
@@ -94,7 +94,7 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
 	VALUES (22,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
-		'%m',6,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT,);
+		'%m',6,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
 	VALUES (23,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly',
@@ -128,15 +128,15 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (30,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again',
         '%m',6,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
-INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
     VALUES (31,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization',
         '%m',5,'SYS_LDAP_SYNC_ERROR_%2','',0,EVENT_ALARM_TIMEOUT);
 
-INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
     VALUES (32,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with agent log',
         '%m',5,'SYS_AGENT_LOG_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT);
 
-INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
     VALUES (33,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database',
         '%m',5,'SYS_AGENT_LOCAL_DATABASE_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT);
 
