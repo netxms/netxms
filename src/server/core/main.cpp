@@ -1046,6 +1046,8 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_debug(2, _T("All objects saved to database"));
 	SaveUsers(hdb, INVALID_INDEX);
 	nxlog_debug(2, _T("All users saved to database"));
+   UpdatePStorageDatabase(hdb, INVALID_INDEX);
+	nxlog_debug(2, _T("All persistent storage values saved"));
 	DBConnectionPoolReleaseConnection(hdb);
 
 	StopDBWriter();
@@ -1104,6 +1106,8 @@ void NXCORE_EXPORTABLE FastShutdown()
 	DbgPrintf(2, _T("All objects saved to database"));
 	SaveUsers(hdb, INVALID_INDEX);
 	DbgPrintf(2, _T("All users saved to database"));
+   UpdatePStorageDatabase(hdb, INVALID_INDEX);
+	DbgPrintf(2, _T("All persistent storage values saved"));
 	DBConnectionPoolReleaseConnection(hdb);
 
 	// Remove database lock first, because we have a chance to lose DB connection

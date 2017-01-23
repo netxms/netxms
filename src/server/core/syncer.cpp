@@ -129,7 +129,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          SaveObjects(hdb, watchdogId);
          SaveUsers(hdb, watchdogId);
-         UpdatePStorageDatabase(hdb);
+         UpdatePStorageDatabase(hdb, watchdogId);
          DBConnectionPoolReleaseConnection(hdb);
       }
       WatchdogStartSleep(watchdogId);

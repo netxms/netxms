@@ -129,12 +129,19 @@ void GetPersistentStorageList(NXCPMessage *msg)
    MutexUnlock(s_lockPStorage);
 }
 
+struct PsCbContainer
+{
+   void *ptr;
+   UINT32 watchdogId;
+};
+
 /**
  * Callback for persistent storage value delete form database
  */
 static EnumerationCallbackResult DeletePSValueCB(const TCHAR *key, const void *value, void *data)
 {
-   DB_STATEMENT hStmt = (DB_STATEMENT)hStmt;
+   WatchdogNotify(((PsCbContainer *)data)->watchdogId);
+   DB_STATEMENT hStmt = (DB_STATEMENT)((PsCbContainer *)data)->ptr;
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
@@ -144,7 +151,8 @@ static EnumerationCallbackResult DeletePSValueCB(const TCHAR *key, const void *v
  */
 static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *value, void *data)
 {
-   DB_HANDLE hdb = (DB_HANDLE)data;
+   WatchdogNotify(((PsCbContainer *)data)->watchdogId);
+   DB_HANDLE hdb = (DB_HANDLE)((PsCbContainer *)data)->ptr;
    bool success = true;
    bool isNew = true;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM persistent_storage WHERE entry_key=?"));
@@ -205,7 +213,7 @@ static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const vo
 /**
  * Update persistent storage in database
  */
-void UpdatePStorageDatabase(DB_HANDLE hdb)
+void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
 {
    if(s_valueDeleteList->size() == 0 && s_valueSetList->size() == 0) //do nothing if there are no updates
       return;
@@ -227,7 +235,10 @@ void UpdatePStorageDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM persistent_storage WHERE entry_key=?"));
       if (hStmt != NULL)
       {
-         success = _CONTINUE == tmpDeleteList->forEach(DeletePSValueCB, hStmt);
+         PsCbContainer container;
+         container.watchdogId = watchdogId;
+         container.ptr = hStmt;
+         success = _CONTINUE == tmpDeleteList->forEach(DeletePSValueCB, &container);
          DBFreeStatement(hStmt);
       }
       else

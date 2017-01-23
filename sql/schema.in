@@ -71,8 +71,9 @@ COMMENT_COLUMN(config_clob.var_value, 'Value')
 CREATE TABLE config_values
 {
 	var_name varchar(63) not null,
-	var_value varchar(2000) null,
-	var_description varchar(255) null
+	var_value varchar(15) not null,
+	var_description varchar(255) null,
+	PRIMARY KEY(var_name,var_value)
 }	TABLE_TYPE;
 
 COMMENT_TABLE(config_values, 'Possible values for system configuration parameters')

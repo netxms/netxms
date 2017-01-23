@@ -760,9 +760,9 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
       DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO policy_pstorage_actions (rule_id,ps_key,value,action) VALUES (?,?,?,1)"));
       if (hStmt != NULL)
       {
+         String key;
          for(int i = 0; i < count; i++)
          {
-            String key;
             TCHAR tmp[256];
             DBGetField(hResult, i, 1, tmp, 256);
             key.append(tmp);
@@ -786,6 +786,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
                   return FALSE;
                }
             }
+            key.clear();
          }
          DBFreeStatement(hStmt);
       }
@@ -1007,8 +1008,9 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
    CHK_EXEC(CreateTable(
                _T("CREATE TABLE config_values (")
                _T("var_name varchar(63) not null,")
-               _T("var_value varchar(2000) null,")
-               _T("var_description varchar(255) null)")));
+               _T("var_value varchar(15) not null,")
+               _T("var_description varchar(255) null,")
+               _T("PRIMARY KEY(var_name,var_value))")));
 
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ClientListenerPort','65535')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value) VALUES ('ExternalAuditPort','65535')")));

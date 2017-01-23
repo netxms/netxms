@@ -32,7 +32,7 @@ void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value);
 bool DeletePersistentStorageValue(const TCHAR *key);
 const TCHAR *GetPersistentStorageValue(const TCHAR *key);
 void GetPersistentStorageList(NXCPMessage *msg);
-void UpdatePStorageDatabase(DB_HANDLE hdb);
+void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId);
 
 /**
  * NXSL class for persistent storage
