@@ -6865,10 +6865,9 @@ public class NXCSession
     */
    public void stopServerCommand(long commandId) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_STOP_SERVER_CMD);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_STOP_SERVER_COMMAND);
       msg.setFieldInt32(NXCPCodes.VID_COMMAND_ID, (int)commandId);
       sendMessage(msg);
-      
       waitForRCC(msg.getMessageId());
    }
 

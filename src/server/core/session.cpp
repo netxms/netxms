@@ -1347,7 +1347,7 @@ void ClientSession::processingThread()
 			case CMD_EXECUTE_SERVER_COMMAND:
 				executeServerCommand(pMsg);
 				break;
-			case CMD_STOP_SERVER_CMD:
+			case CMD_STOP_SERVER_COMMAND:
 			   stopServerCommand(pMsg);
 			   break;
 			case CMD_LIST_SERVER_FILES:

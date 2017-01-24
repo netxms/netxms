@@ -130,7 +130,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_EXECUTE_LIBRARY_SCRIPT"),
       _T("CMD_GET_PREDICTION_ENGINES"),
       _T("CMD_GET_PREDICTED_DATA"),
-      _T("<unused>"),
+      _T("CMD_STOP_SERVER_COMMAND"),
       _T("CMD_POLL_NODE"),
       _T("CMD_POLLING_INFO"),
       _T("CMD_COPY_DCI"),

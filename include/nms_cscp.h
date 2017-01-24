@@ -323,7 +323,7 @@ typedef struct
 #define CMD_EXECUTE_LIBRARY_SCRIPT     0x0055
 #define CMD_GET_PREDICTION_ENGINES     0x0056
 #define CMD_GET_PREDICTED_DATA         0x0057
-#define CMD_STOP_SERVER_CMD            0x0058
+#define CMD_STOP_SERVER_COMMAND        0x0058
 #define CMD_POLL_NODE                  0x0059
 #define CMD_POLLING_INFO               0x005A
 #define CMD_COPY_DCI                   0x005B
