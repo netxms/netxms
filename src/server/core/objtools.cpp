@@ -1554,10 +1554,16 @@ void ServerCommandExec::onOutput(const char *text)
    NXCPMessage msg;
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
+#ifdef UNICODE
    TCHAR *buffer = WideStringFromMBString(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(&msg);
    free(buffer);
+#else
+   msg.setField(VID_MESSAGE, text);
+   m_session->sendMessage(&msg);
+#endif
+
 }
 
 /**
