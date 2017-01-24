@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver emulator for databases
-** Copyright (C) 2011 NetXMS Team
+** Copyright (C) 2011-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,15 +23,17 @@
 
 #include "dbemu.h"
 
-static TCHAR s_dbDriver[MAX_PATH];
-static TCHAR s_dbName[MAX_DB_NAME];
-static TCHAR s_dbUsername[MAX_DB_LOGIN];
-static TCHAR s_dbPassword[MAX_DB_PASSWORD];
-static TCHAR s_dbServer[MAX_PATH];
-static TCHAR s_dbSchema[MAX_DB_NAME];
-static TCHAR s_sqlTemplate[1024];
-static DB_DRIVER s_driver;
-static DB_HANDLE s_dbh;
+static TCHAR s_dbDriver[MAX_PATH] = _T("sqlite.ddr");
+static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms");
+static TCHAR s_dbUsername[MAX_DB_LOGIN] = _T("netxms");
+static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
+static TCHAR s_dbServer[MAX_PATH] = _T("localhost");
+static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
+static TCHAR s_sqlTemplate[1024] = _T("");
+static UINT32 s_maxNumberLength = 32;
+static UINT32 s_maxMessageLength = 255;
+static DB_DRIVER s_driver = NULL;
+static DB_HANDLE s_dbh = NULL;
 
 extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
@@ -44,6 +46,8 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 		{ _T("DBPassword"), CT_STRING, 0, 0, sizeof(s_dbPassword) / sizeof(TCHAR), 0,	s_dbPassword },
 		{ _T("DBServer"), CT_STRING, 0, 0, sizeof(s_dbServer) / sizeof(TCHAR), 0, s_dbServer },	
 		{ _T("DBSchema"), CT_STRING, 0, 0, sizeof(s_dbSchema) / sizeof(TCHAR), 0, s_dbSchema },	
+		{ _T("MaxMessageLength"), CT_LONG, 0, 0, 0, 0, &s_maxMessageLength },	
+		{ _T("MaxNumberLength"), CT_LONG, 0, 0, 0, 0, &s_maxNumberLength },	
 		{ _T("QueryTemplate"), CT_STRING, 0, 0, sizeof(s_sqlTemplate) / sizeof(TCHAR), 0, s_sqlTemplate },	
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
@@ -56,6 +60,8 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 			nxlog_debug(1, _T("%s: Unable to load and initialize database driver \"%s\""), MYNAMESTR, s_dbDriver);
 			goto finish;
 		}
+
+      DecryptPassword(s_dbUsername, s_dbPassword, s_dbPassword, MAX_DB_PASSWORD);
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
@@ -89,8 +95,8 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 		DB_STATEMENT dbs = DBPrepare(s_dbh, s_sqlTemplate);
 		if (dbs != NULL)
 		{
-			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
-			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC);
+			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC, s_maxNumberLength);
+			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC, s_maxMessageLength);
 			if (!(bRet = DBExecute(dbs)))
 				nxlog_debug(1, _T("%s: Cannot execute"), MYNAMESTR);
 			else

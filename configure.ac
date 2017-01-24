@@ -3430,6 +3430,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxminfo/Makefile
 	src/server/tools/nxupload/Makefile
 	src/smsdrv/Makefile
+	src/smsdrv/dbemu/Makefile
 	src/smsdrv/dummy/Makefile
 	src/smsdrv/generic/Makefile
 	src/smsdrv/kannel/Makefile
