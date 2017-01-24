@@ -183,9 +183,6 @@ EPRule::EPRule(DB_RESULT hResult, int row)
  */
 EPRule::EPRule(NXCPMessage *msg)
 {
-	UINT32 i, id;
-	TCHAR *name, *value;
-
    m_dwFlags = msg->getFieldAsUInt32(VID_FLAGS);
    m_id = msg->getFieldAsUInt32(VID_RULE_ID);
    m_guid = msg->getFieldAsGUID(VID_GUID);
@@ -212,14 +209,14 @@ EPRule::EPRule(NXCPMessage *msg)
    m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
 
-   int count = msg->getFieldAsUInt32(VID_NUM_SET_PSTORAGE);
+   int count = msg->getFieldAsInt32(VID_NUM_SET_PSTORAGE);
    int base = VID_PSTORAGE_SET_LIST_BASE;
    for(int i = 0; i < count; i++, base+=2)
    {
       m_pstorageSetActions.setPreallocated(msg->getFieldAsString(base), msg->getFieldAsString(base+1));
    }
 
-   count = msg->getFieldAsUInt32(VID_NUM_DELETE_PSTORAGE);
+   count = msg->getFieldAsInt32(VID_NUM_DELETE_PSTORAGE);
    base = VID_PSTORAGE_DELETE_LIST_BASE;
    for(int i = 0; i < count; i++, base++)
    {
@@ -918,13 +915,9 @@ bool EventPolicy::loadFromDB()
  */
 bool EventPolicy::saveToDB()
 {
-   int i;
-   bool success = false;
-
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   readLock();
-   if(DBBegin(hdb))
+   bool success = DBBegin(hdb);
+   if (success)
    {
       success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
@@ -932,14 +925,20 @@ bool EventPolicy::saveToDB()
                 DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
                 DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
-      for(i = 0; i < m_dwNumRules && success; i++)
-         success = m_ppRuleList[i]->saveToDB(hdb);
-      if(success)
+
+      if (success)
+      {
+         readLock();
+         for(UINT32 i = 0; (i < m_dwNumRules) && success; i++)
+            success = m_ppRuleList[i]->saveToDB(hdb);
+         unlock();
+      }
+
+      if (success)
          DBCommit(hdb);
       else
          DBRollback(hdb);
    }
-   unlock();
 	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }

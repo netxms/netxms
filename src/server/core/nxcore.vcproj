@@ -781,6 +781,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ps.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rack.cpp"
 				>
 			</File>
@@ -806,10 +810,6 @@
 			</File>
 			<File
 				RelativePath=".\session.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\situation.cpp"
 				>
 			</File>
 			<File

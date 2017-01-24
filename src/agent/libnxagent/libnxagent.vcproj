@@ -338,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cmdexec.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

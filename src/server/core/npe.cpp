@@ -186,7 +186,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
       rows++;
 
       double value = engine->getPredictedValue(dci->getId(), timestamp);
-      pCurr->timeStamp = timestamp;
+      pCurr->timeStamp = (UINT32)timestamp;
       switch(dataType)
       {
          case DCI_DT_INT:

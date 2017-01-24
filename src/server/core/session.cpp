@@ -12552,7 +12552,7 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
    msg.setId(request->getId());
    msg.setCode(CMD_REQUEST_COMPLETED);
 
-   CommandExec *cmd = m_serverCommands->get(request->getFieldAsInt64(VID_COMMAND_ID));
+   CommandExec *cmd = m_serverCommands->get(request->getFieldAsUInt32(VID_COMMAND_ID));
    if (cmd != NULL)
    {
       cmd->stop();

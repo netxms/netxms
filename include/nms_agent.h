@@ -517,19 +517,28 @@ public:
 /**
  * Execute server command
  */
-class CommandExec
+class LIBNXAGENT_EXPORTABLE CommandExec
 {
 private:
-   int m_pipe[2];
-   pid_t m_pid;
    UINT32 m_streamId;
    THREAD m_outputThread;
+#ifdef _WIN32
+   HANDLE m_phandle;
+   HANDLE m_pipe;
+#else
+   pid_t m_pid;
+   int m_pipe[2];
+#endif
 
 protected:
    TCHAR *m_cmd;
    bool m_sendOutput;
 
+#ifdef _WIN32
+   HANDLE getOutputPipe() { return m_pipe; }
+#else
    int getOutputPipe() { return m_pipe[0]; }
+#endif
 
    static THREAD_RESULT THREAD_CALL readOutput(void *pArg);
 
@@ -546,7 +555,6 @@ public:
 
    bool execute();
    void stop();
-
 };
 
 /**
