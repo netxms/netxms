@@ -235,6 +235,7 @@ bool CommandExec::execute()
          close(m_pipe[1]);
          break;
       case 0: // child
+         setpgid(0, 0); // new process group
          close(m_pipe[0]);
          close(1);
          close(2);
@@ -384,7 +385,7 @@ void CommandExec::stop()
 #ifdef _WIN32
    TerminateProcess(m_phandle, 127);
 #else
-   kill(m_pid, SIGKILL);
+   kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
 }
 
