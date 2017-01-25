@@ -569,7 +569,7 @@ const StringObjectMap<NXvirStoragePool> *HostConnections::getStorageListAndLock(
          allStorage->setPreallocated(WideStringFromMBString(active[i]), new NXvirStoragePool(virStoragePoolLookupByName(m_connection, active[i])));
          free(active[i]);
 #else
-         allStorage->set(activeNetworks[i], new NXvirStoragePool(virStoragePoolLookupByName(m_connection, activeNetworks[i])));
+         allStorage->set(active[i], new NXvirStoragePool(virStoragePoolLookupByName(m_connection, active[i])));
 #endif
       }
 

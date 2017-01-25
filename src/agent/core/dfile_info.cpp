@@ -52,7 +52,7 @@ DownloadFileInfo::~DownloadFileInfo()
  */
 bool DownloadFileInfo::open()
 {
-   m_file = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   m_file = ::_topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
    return m_file != -1;
 }
 
