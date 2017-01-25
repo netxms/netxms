@@ -1251,8 +1251,32 @@ static int CreateConfig(const char *pszServer, const char *pszLogFile, const cha
                 _tctime(&currTime));
       _ftprintf(fp, _T("MasterServers = %hs\nConfigIncludeDir = %hs\nLogFile = %hs\nFileStore = %hs\n"),
                 pszServer, configIncludeDir, pszLogFile, pszFileStore);
+
+      Array extSubAgents;
       for(i = 0; i < iNumSubAgents; i++)
-         _ftprintf(fp, _T("SubAgent = %hs\n"), ppszSubAgentList[i]);
+      {
+         if (!strnicmp(ppszSubAgentList[i], "EXT:", 4))
+         {
+            extSubAgents.add(ppszSubAgentList[i] + 4);
+         }
+         else
+         {
+            _ftprintf(fp, _T("SubAgent = %hs\n"), ppszSubAgentList[i]);
+         }
+      }
+
+      for(i = 0; i < extSubAgents.size(); i++)
+      {
+         char section[MAX_PATH];
+         strncpy(section, (const char *)extSubAgents.get(i), MAX_PATH);
+         char *eptr = strrchr(section, '.');
+         if (eptr != NULL)
+            *eptr = 0;
+         strupr(section);
+         _ftprintf(fp, _T("\n[EXT:%hs]\n"), section);
+         _ftprintf(fp, _T("SubAgent = %hs\n"), (const char *)extSubAgents.get(i));
+      }
+
       fclose(fp);
    }
    return (fp != NULL) ? 0 : 2;
