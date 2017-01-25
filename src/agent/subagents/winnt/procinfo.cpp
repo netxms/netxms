@@ -1,6 +1,6 @@
 /* 
-** Windows NT/2000/XP/2003 NetXMS subagent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Windows NT+ NetXMS subagent
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -263,7 +263,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
    GetModuleBaseName(hProcess, hModule, szBaseName, MAX_PATH);
 	if (bExtMatch)	// Extended version
 	{
-		TCHAR commandLine[MAX_PATH];
+		TCHAR commandLine[8192];
 		BOOL bProcMatch, bCmdMatch, bWindowMatch;
 
 		bProcMatch = bCmdMatch = bWindowMatch = TRUE;
@@ -271,7 +271,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 		if (pszCmdLine[0] != 0)		// not empty, check if match
 		{
 			memset(commandLine, 0, sizeof(commandLine));	
-			GetProcessCommandLine(pid, commandLine, MAX_PATH);
+			GetProcessCommandLine(pid, commandLine, 8192);
 			bCmdMatch = RegexpMatch(commandLine, pszCmdLine, FALSE);
 		}
 
