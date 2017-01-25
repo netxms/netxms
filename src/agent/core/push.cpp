@@ -130,7 +130,7 @@ static THREAD_RESULT THREAD_CALL PushConnector(void *arg)
 	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
 	ea.grfAccessMode = SET_ACCESS;
 	ea.grfInheritance = NO_INHERITANCE;
-	const TCHAR *user = g_config->getValue(_T("/agent/PushUser"), _T("*"));
+	const TCHAR *user = g_config->getValue(_T("/%agent/PushUser"), _T("*"));
 	if ((user[0] == 0) || !_tcscmp(user, _T("*")))
 	{
 		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;

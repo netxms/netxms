@@ -27,6 +27,8 @@
 #include <nms_util.h>
 #include <uuid.h>
 
+class Config;
+
 /**
  * Config entry
  */
@@ -44,12 +46,13 @@ private:
 	int m_line;
 	int m_id;
    StringMap m_attributes;
+   const Config *m_owner;
 
 	void addEntry(ConfigEntry *entry);
 	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 
 public:
-	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id);
+	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id);
 	~ConfigEntry();
 
 	ConfigEntry *getNext() { return m_next; }
@@ -119,6 +122,7 @@ private:
 	ConfigEntry *m_root;
 	int m_errorCount;
 	MUTEX m_mutex;
+   StringMap m_aliases;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
@@ -165,10 +169,13 @@ public:
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 
-	int getErrorCount() { return m_errorCount; }
+	int getErrorCount() const { return m_errorCount; }
 
 	void print(FILE *file);
 	String createXml();
+
+   void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != NULL) m_aliases.set(alias, value); else m_aliases.remove(alias); }
+   const TCHAR *getAlias(const TCHAR *alias) const { return m_aliases.get(alias); }
 };
 
 

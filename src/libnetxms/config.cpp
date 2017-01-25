@@ -126,7 +126,7 @@ static TCHAR *ExpandValue(const TCHAR *src)
 /**
  * Constructor for config entry
  */
-ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id)
+ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id)
 {
    m_name = _tcsdup(CHECK_NULL(name));
    m_first = NULL;
@@ -140,6 +140,7 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *fi
    m_file = _tcsdup(CHECK_NULL(file));
    m_line = line;
    m_id = id;
+   m_owner = owner;
 }
 
 /**
@@ -176,10 +177,20 @@ void ConfigEntry::setName(const TCHAR *name)
  */
 ConfigEntry* ConfigEntry::findEntry(const TCHAR *name)
 {
-   ConfigEntry *e;
-
-   for(e = m_first; e != NULL; e = e->getNext())
-      if (!_tcsicmp(e->getName(), name))
+   const TCHAR *realName;
+   if (name[0] == _T('%'))
+   {
+      const TCHAR *alias = m_owner->getAlias(&name[1]);
+      if (alias == NULL)
+         return NULL;
+      realName = alias;
+   }
+   else
+   {
+      realName = name;
+   }
+   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+      if (!_tcsicmp(e->getName(), realName))
          return e;
    return NULL;
 }
@@ -189,13 +200,22 @@ ConfigEntry* ConfigEntry::findEntry(const TCHAR *name)
  */
 ConfigEntry* ConfigEntry::createEntry(const TCHAR *name)
 {
-   ConfigEntry *e;
+   const TCHAR *realName;
+   if (name[0] == _T('%'))
+   {
+      const TCHAR *alias = m_owner->getAlias(&name[1]);
+      realName = (alias != NULL) ? alias : &name[1];
+   }
+   else
+   {
+      realName = name;
+   }
 
-   for(e = m_first; e != NULL; e = e->getNext())
-      if (!_tcsicmp(e->getName(), name))
+   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+      if (!_tcsicmp(e->getName(), realName))
          return e;
 
-   return new ConfigEntry(name, this, _T("<memory>"), 0, 0);
+   return new ConfigEntry(realName, this, m_owner, _T("<memory>"), 0, 0);
 }
 
 /**
@@ -667,7 +687,7 @@ void ConfigEntry::createXml(String &xml, int level)
  */
 Config::Config()
 {
-   m_root = new ConfigEntry(_T("[root]"), NULL, NULL, 0, 0);
+   m_root = new ConfigEntry(_T("[root]"), NULL, this, NULL, 0, 0);
    m_errorCount = 0;
    m_mutex = MutexCreate();
 }
@@ -949,15 +969,15 @@ ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const 
  */
 ConfigEntry *Config::getEntry(const TCHAR *path)
 {
-   const TCHAR *curr, *end;
-   TCHAR name[256];
-   ConfigEntry *entry = m_root;
-
    if ((path == NULL) || (*path != _T('/')))
       return NULL;
 
    if (!_tcscmp(path, _T("/")))
       return m_root;
+
+   TCHAR name[256];
+   const TCHAR *curr, *end;
+   ConfigEntry *entry = m_root;
 
    curr = path + 1;
    while(entry != NULL)
@@ -1008,14 +1028,14 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
          entry = parent->findEntry(name);
          curr = end + 1;
          if (entry == NULL)
-            entry = new ConfigEntry(name, parent, _T("<memory>"), 0, 0);
+            entry = new ConfigEntry(name, parent, this, _T("<memory>"), 0, 0);
          parent = entry;
       }
       else
       {
          entry = parent->findEntry(curr);
          if (entry == NULL)
-            entry = new ConfigEntry(curr, parent, _T("<memory>"), 0, 0);
+            entry = new ConfigEntry(curr, parent, this, _T("<memory>"), 0, 0);
       }
    }
    while(end != NULL);
@@ -1162,7 +1182,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
    currentSection = m_root->findEntry(defaultIniSection);
    if (currentSection == NULL)
    {
-      currentSection = new ConfigEntry(defaultIniSection, m_root, file, 0, 0);
+      currentSection = new ConfigEntry(defaultIniSection, m_root, this, file, 0, 0);
    }
 
    while(!feof(cfg))
@@ -1202,7 +1222,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          currentSection = m_root->findEntry(&buffer[1]);
          if (currentSection == NULL)
          {
-            currentSection = new ConfigEntry(&buffer[1], m_root, file, sourceLine, 0);
+            currentSection = new ConfigEntry(&buffer[1], m_root, this, file, sourceLine, 0);
          }
       }
       else
@@ -1223,7 +1243,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          ConfigEntry *entry = currentSection->findEntry(buffer);
          if (entry == NULL)
          {
-            entry = new ConfigEntry(buffer, currentSection, file, sourceLine, 0);
+            entry = new ConfigEntry(buffer, currentSection, this, file, sourceLine, 0);
          }
          entry->addValuePreallocated(ExpandValue(ptr));
       }
@@ -1309,7 +1329,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
          if (ps->stack[ps->level] == NULL)
          {
-            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
+            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
             ps->stack[ps->level] = e;
             // add all attributes to the entry
             for(int i = 0; attrs[i] != NULL; i += 2)

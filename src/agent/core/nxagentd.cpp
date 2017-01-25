@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,6 +53,8 @@
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif
+
+#define DEFAULT_CONFIG_SECTION   _T("CORE")
 
 /**
  * Externals
@@ -119,9 +121,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfhHiIKM:n:N:P:r:RsSUvX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIKM:n:N:P:r:RsSUvW:X:Z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fg:hKM:p:P:r:u:vX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:fg:G:hKM:p:P:r:u:vW:X:Z:"
 #endif
 
 /**
@@ -319,8 +321,9 @@ static TCHAR m_szHelpText[] =
 #endif
 	_T("   -f         : Run in foreground\n")
 #if !defined(_WIN32)
-   _T("   -g <gid>   : Chhange group ID to <gid> after start\n")
+   _T("   -g <gid>   : Change group ID to <gid> after start\n")
 #endif
+   _T("   -G <name>  : Use alternate global section <name> in configuration file\n")
    _T("   -h         : Display help and exit\n")
 #ifdef _WIN32
    _T("   -H         : Hide agent's window when in standalone mode\n")
@@ -949,6 +952,16 @@ BOOL Initialize()
       free(m_pszExtSubagentList);
    }
 
+   // Additional external subagents implicitly defined by EXT:* config sections
+   ObjectArray<ConfigEntry> *entries = g_config->getSubEntries(_T("/"), _T("EXT:*"));
+   for(int i = 0; i < entries->size(); i++)
+   {
+      const TCHAR *name = entries->get(i)->getName() + 4;
+      if (!AddExternalSubagent(name))
+         nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", name);
+   }
+   delete entries;
+
    // Parse application agents list
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszAppAgentList != NULL))
    {
@@ -1248,10 +1261,11 @@ static int CreateConfig(const char *pszServer, const char *pszLogFile, const cha
 /**
  * Init config
  */
-static void InitConfig()
+static void InitConfig(const TCHAR *configSection)
 {
 	g_config = new Config();
 	g_config->setTopLevelTag(_T("config"));
+   g_config->setAlias(_T("agent"), configSection);
 
    // Set default data directory on Windows
 #ifdef _WIN32
@@ -1366,6 +1380,7 @@ int main(int argc, char *argv[])
    BOOL bRestart = FALSE;
    UINT32 dwOldPID, dwMainPID;
 	char *eptr;
+   TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
@@ -1436,6 +1451,14 @@ int main(int argc, char *argv[])
 				gid = GetGroupId(optarg);
 				break;
 #endif
+         case 'G':
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configSection, MAX_DB_STRING);
+				configSection[MAX_DB_STRING - 1] = 0;
+#else
+            nx_strncpy(configSection, optarg, MAX_DB_STRING);
+#endif
+            break;
          case 'h':   // Display help and exit
             iAction = ACTION_HELP;
             break;
@@ -1670,7 +1693,7 @@ int main(int argc, char *argv[])
    if (bRestart)
       DoRestartActions(dwOldPID);
 
-   InitConfig();
+   InitConfig(configSection);
 
    // Do requested action
    switch(iAction)
@@ -1707,16 +1730,24 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (g_config->loadConfig(g_szConfigFile, _T("agent")))
+			if (g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION))
 			{
-				const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
+				const TCHAR *dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
+_tprintf(_T(">>>> %s\n"), dir);
 				if (dir != NULL)
 					nx_strncpy(g_szConfigIncludeDir, dir, MAX_PATH);
-				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
+				g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION);
 
-			   g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
+			   g_config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
 
-				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
+            // Check if master section starts with EXT:
+            // If yes, switch to external subagent mode
+            if (!_tcsnicmp(configSection, _T("EXT:"), 4))
+            {
+               nx_strncpy(g_masterAgent, &configSection[4], MAX_PATH);
+            }
+
+				if (g_config->parseTemplate(configSection, m_cfgTemplate))
 				{
                DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
 
@@ -1795,7 +1826,7 @@ int main(int argc, char *argv[])
 #ifndef _WIN32
 					   if (gid == 0)
 					   {
-					      const TCHAR *v = g_config->getValue(_T("/agent/GroupId"));
+					      const TCHAR *v = g_config->getValue(_T("/%agent/GroupId"));
 					      if (v != NULL)
 					      {
 #ifdef UNICODE
@@ -1810,7 +1841,7 @@ int main(int argc, char *argv[])
 					   }
                   if (uid == 0)
                   {
-                     const TCHAR *v = g_config->getValue(_T("/agent/UserId"));
+                     const TCHAR *v = g_config->getValue(_T("/%agent/UserId"));
                      if (v != NULL)
                      {
 #ifdef UNICODE
@@ -1884,13 +1915,13 @@ int main(int argc, char *argv[])
          break;
       case ACTION_CHECK_CONFIG:
          {
-            bool validConfig = g_config->loadConfig(g_szConfigFile, _T("agent"), false);
+            bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, false);
             if (validConfig)
             {
-               const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
+				   const TCHAR *dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
                if (dir != NULL)
                {
-                  validConfig = g_config->loadConfigDirectory(dir, _T("agent"), false);
+                  validConfig = g_config->loadConfigDirectory(dir, DEFAULT_CONFIG_SECTION, false);
                   if (!validConfig)
                   {
                      ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
@@ -1900,7 +1931,7 @@ int main(int argc, char *argv[])
 
             if (validConfig)
             {
-               validConfig = g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
+               validConfig = g_config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
                if (!validConfig)
                {
                   ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigPolicyDir);
@@ -1910,7 +1941,7 @@ int main(int argc, char *argv[])
             if (validConfig)
             {
                g_config->print(stdout);
-               validConfig = g_config->parseTemplate(_T("agent"), m_cfgTemplate);
+               validConfig = g_config->parseTemplate(configSection, m_cfgTemplate);
             }
 
             if (!validConfig)

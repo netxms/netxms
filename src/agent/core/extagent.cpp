@@ -467,7 +467,8 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	// Create a well-known SID for the Everyone group.
 	if(!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidEveryone))
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: AllocateAndInitializeSid failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): AllocateAndInitializeSid failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
@@ -483,38 +484,44 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
 		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
 		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): using \"Everyone\" group"), subagent->getName());
 	}
 	else
 	{
 		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
 		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
 		ea.Trustee.ptstrName  = (LPTSTR)user;
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): using \"%s\" user"), subagent->getName(), user);
 	}
 
 	// Create a new ACL that contains the new ACEs.
 	if (SetEntriesInAcl(1, &ea, NULL, &acl) != ERROR_SUCCESS)
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: SetEntriesInAcl failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): SetEntriesInAcl failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
 	sd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
 	if (sd == NULL)
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: LocalAlloc failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): LocalAlloc failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
 	if (!InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION))
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: InitializeSecurityDescriptor failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): InitializeSecurityDescriptor failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
 	// Add the ACL to the security descriptor. 
    if (!SetSecurityDescriptorDacl(sd, TRUE, acl, FALSE))
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: SetSecurityDescriptorDacl failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): SetSecurityDescriptorDacl failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
@@ -525,11 +532,12 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 	HANDLE hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: CreateNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+		nxlog_debug(2, _T("ExternalSubagentConnector(%s): CreateNamedPipe failed (%s)"), 
+         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 		goto cleanup;
 	}
 
-	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): named pipe created, waiting for connection"), subagent->getName());
+	nxlog_debug(2, _T("ExternalSubagentConnector(%s): named pipe created, waiting for connection"), subagent->getName());
 	int connectErrors = 0;
 	while(!(g_dwFlags & AF_SHUTDOWN))
 	{
@@ -542,7 +550,8 @@ static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
 		}
 		else
 		{
-			AgentWriteDebugLog(2, _T("ExternalSubagentConnector: ConnectNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+			nxlog_debug(2, _T("ExternalSubagentConnector(%s): ConnectNamedPipe failed (%s)"), 
+            subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
 			connectErrors++;
 			if (connectErrors > 10)
 				break;	// Stop this connector if ConnectNamedPipe fails instantly

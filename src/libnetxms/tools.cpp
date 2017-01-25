@@ -1472,7 +1472,7 @@ int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch)
 /**
  * Match string against regexp (UNICODE version)
  */
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase)
+bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase)
 {
    regex_t preg;
    bool result = false;
@@ -1490,7 +1490,7 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 /**
  * Match string against regexp (multibyte version)
  */
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase)
+bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase)
 {
    regex_t preg;
    bool result = false;
