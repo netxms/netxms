@@ -19,6 +19,9 @@
 package org.netxms.ui.eclipse.topology.widgets;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,6 +89,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	private PortInfo selection = null;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private ColorCache colors;
+	private PortLocationFinder finder = new PortLocationFinder();
 	
 	/**
 	 * @param parent
@@ -96,7 +100,10 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		super(parent, style | SWT.BORDER);
 		this.slotName = slotName;
 		this.numberingScheme = numberingScheme;
-		this.rowCount = rowCount;
+		if (rowCount == 0)
+		   this.rowCount = 2; // For when row count is not yet received from driver
+		else
+		   this.rowCount = rowCount;
 		
 		colors = new ColorCache(this);
 		
@@ -116,37 +123,6 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		ports.add(p);
 	}
 	
-	/**
-	 * Get port info object from given point
-	 * 
-	 * @param x
-	 * @param y
-	 * @return
-	 */
-	private PortInfo getPortFromPoint(int x, int y)
-	{
-		final int xOffset = HORIZONTAL_MARGIN + nameSize.x + HORIZONTAL_SPACING;
-		
-		if ((x < xOffset) || (y < VERTICAL_MARGIN))
-			return null;	// x before first column
-		
-		int column = (x - xOffset) / (PORT_WIDTH + HORIZONTAL_SPACING);
-		if (column >= (ports.size() + rowCount - 1) / rowCount)
-			return null;	// x after last column
-		
-		if (x > xOffset + (column * (PORT_WIDTH + HORIZONTAL_SPACING)) + PORT_WIDTH)
-			return null;	// x inside spacing after column
-		
-		int row = (y - VERTICAL_MARGIN) / (PORT_HEIGHT + VERTICAL_SPACING);
-		if (row >= rowCount)
-			return null;	// y after last row
-		
-		if (y > VERTICAL_MARGIN + (row * (PORT_HEIGHT + VERTICAL_SPACING)) + PORT_HEIGHT)
-			return null;	// y inside spacing after row
-		
-		return ports.get(column * rowCount + row);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
 	 */
@@ -178,8 +154,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		for(PortInfo p : ports)
 		{
-			drawPort(p, portCalculator.getXPos(), portCalculator.getYPos(), e.gc);
-         portCalculator.calculateNextPos();
+			drawPort(p, portCalculator.calculateNextPos(), e.gc);
 		}
 	}
 	
@@ -190,10 +165,12 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	 * @param x X coordinate of top left corner
 	 * @param y Y coordinate of top left corner
 	 */
-	private void drawPort(PortInfo p, int x, int y, GC gc)
+	private void drawPort(PortInfo p, Point point, GC gc)
 	{
 		final String label = Integer.toString(p.getPort());
-		Rectangle rect = new Rectangle(x, y, PORT_WIDTH, PORT_HEIGHT);
+		Rectangle rect = new Rectangle(point.x, point.y, PORT_WIDTH, PORT_HEIGHT);
+		
+		finder.addPortLocation(rect, p);
 		
 		if (p.isHighlighted())
 		{
@@ -244,7 +221,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 		
 		Point ext = gc.textExtent(label);
-		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
+		gc.drawText(label, point.x + (PORT_WIDTH - ext.x) / 2, point.y + (PORT_HEIGHT - ext.y) / 2);
 	}
 
 	/* (non-Javadoc)
@@ -316,8 +293,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	@Override
 	public void mouseUp(MouseEvent e)
 	{
-		PortInfo p = getPortFromPoint(e.x, e.y);
-		if (p != selection)
+		PortInfo p = finder.findPortInfo(e.x, e.y);
+		if (p != null && p != selection)
 		{
 			selection = p;
 			redraw();
@@ -352,5 +329,57 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	public void removeSelectionListener(PortSelectionListener listener)
 	{
 		selectionListeners.remove(listener);
+	}
+
+	@SuppressWarnings("rawtypes")
+	private class PortLocationFinder
+	{
+	   private HashMap<Rectangle, PortInfo> portLocations = new HashMap<Rectangle, PortInfo>();
+	   private List<Rectangle> sortedRectangles = new ArrayList<Rectangle>();
+      private Comparator rectangleComparator;
+	   
+	   public PortLocationFinder()
+	   {
+	      rectangleComparator = new Comparator<Rectangle>() {
+            @Override
+            public int compare(Rectangle arg0, Rectangle arg1)
+            {
+               return arg0.x - arg1.x;
+            }
+	      };
+	   }
+	   
+	   /**
+	    * Add port and its rectangle to the map
+	    * @param rect
+	    * @param port
+	    */
+      @SuppressWarnings("unchecked")
+      private void addPortLocation(Rectangle rect, PortInfo port)
+	   {
+         portLocations.put(rect, port);
+	      sortedRectangles.add(rect);
+	      Collections.sort(sortedRectangles, rectangleComparator);
+	   }
+	   
+	   /**
+	    * Find PortInfo by coordinates
+	    * @param x
+	    * @param y
+	    * @return PortInfo
+	    */
+	   private PortInfo findPortInfo(int x, int y)
+	   {
+	      for(Rectangle r : sortedRectangles)
+	      {
+	         if ((x >= r.x) && x < (r.x + PORT_WIDTH))
+	         {
+               if (r.contains(x, y))
+                  return portLocations.get(r);
+	         }
+	      }
+	         
+	      return null;	            
+	   }
 	}
 }

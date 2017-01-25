@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.topology.widgets.helpers;
 
+import org.eclipse.swt.graphics.Point;
+
 /* 
  * Calculates port tab port layout
  * left-to-right, then down-up:
@@ -52,10 +54,16 @@ public class PortCalculatorLeftRightDownUp implements PortCalculator
     * @see org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator#calculateNextPos()
     */
    @Override
-   public void calculateNextPos()
-   {
+   public Point calculateNextPos()
+   {      
+      if (col == 0)
+      {
+         col++;
+         return new Point(x, y);
+      }
+      
       int colCount = ((portCount%rowCount) != 0) ? (portCount/rowCount)+1 : (portCount/rowCount); // To maintain correct row count
-      col++;
+      
       if (col == colCount && y > VERTICAL_MARGIN)
       {
          col = 0;
@@ -64,23 +72,9 @@ public class PortCalculatorLeftRightDownUp implements PortCalculator
       }
       else
          x += HORIZONTAL_SPACING + PORT_WIDTH;
-   }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator#getXPos()
-    */
-   @Override
-   public int getXPos()
-   {
-      return x;
-   }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator#getYPos()
-    */
-   @Override
-   public int getYPos()
-   {
-      return y;
+      
+      col++;
+      
+      return new Point(x, y);
    }
 }

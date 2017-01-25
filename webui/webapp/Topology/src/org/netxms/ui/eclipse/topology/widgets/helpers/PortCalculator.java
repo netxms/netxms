@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.topology.widgets.helpers;
 
+import org.eclipse.swt.graphics.Point;
+
 /*
  * Interface to calculate
  * port coordinates in
@@ -36,15 +38,5 @@ public interface PortCalculator
    /**
     * Calculates next position of port
     */
-   public void calculateNextPos();
-   
-   /**
-    * @return X coordinate
-    */
-   public int getXPos();
-   
-   /**
-    * @return Y coordinate
-    */
-   public int getYPos();
+   public Point calculateNextPos();
 }
