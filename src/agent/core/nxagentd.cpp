@@ -1757,7 +1757,6 @@ int main(int argc, char *argv[])
 			if (g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION))
 			{
 				const TCHAR *dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
-_tprintf(_T(">>>> %s\n"), dir);
 				if (dir != NULL)
 					nx_strncpy(g_szConfigIncludeDir, dir, MAX_PATH);
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION);
