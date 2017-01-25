@@ -94,7 +94,6 @@ bool DeletePersistentStorageValue(const TCHAR *key)
       return false;
    MutexLock(s_lockPStorage);
    bool success = s_persistentStorage.contains(key);
-   s_persistentStorage.remove(key);
    if(success)
    {
       s_persistentStorage.remove(key);

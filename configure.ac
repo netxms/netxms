@@ -1608,7 +1608,7 @@ AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
-AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h])
+AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -1975,7 +1975,7 @@ AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull setlocal
 AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
-AC_CHECK_FUNCS([itoa _itoa isatty getgrnam getpwnam malloc_info malloc_trim])
+AC_CHECK_FUNCS([itoa _itoa isatty getgrnam getpwnam malloc_info malloc_trim utime])
 
 AC_CHECK_DECLS([nanosleep, daemon, strerror])
 
@@ -2332,7 +2332,7 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok])
+AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok wutime])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H

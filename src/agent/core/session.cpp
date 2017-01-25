@@ -113,7 +113,7 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
+CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
@@ -136,8 +136,6 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_ipv6Aware = false;
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
-   m_hCurrFile = -1;
-   m_fileRqId = 0;
    m_compressor = NULL;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -169,9 +167,6 @@ CommSession::~CommSession()
       if (p != INVALID_POINTER_VALUE)
          delete (NXCPMessage *)p;
    delete m_processingQueue;
-
-   if (m_hCurrFile != -1)
-      close(m_hCurrFile);
    delete m_compressor;
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
@@ -273,7 +268,8 @@ void CommSession::readThread()
 
             if (msg->getCode() == CMD_FILE_DATA)
             {
-               if ((m_hCurrFile != -1) && (m_fileRqId == msg->getId()))
+               DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
+               if (dInfo != NULL)
                {
                   const BYTE *data;
                   int dataSize;
@@ -308,14 +304,14 @@ void CommSession::readThread()
                      dataSize = (int)msg->getBinaryDataSize();
                   }
 
-                  if ((dataSize >= 0) && (write(m_hCurrFile, data, dataSize) == dataSize))
+                  if ((dataSize >= 0) && dInfo->write(data, dataSize))
                   {
                      if (msg->isEndOfFile())
                      {
                         NXCPMessage response;
 
-                        close(m_hCurrFile);
-                        m_hCurrFile = -1;
+                        dInfo->close(true);
+                        m_downloadFileMap.remove(msg->getId());
                         delete_and_null(m_compressor);
 
                         response.setCode(CMD_REQUEST_COMPLETED);
@@ -329,8 +325,8 @@ void CommSession::readThread()
                      // I/O error
                      NXCPMessage response;
 
-                     close(m_hCurrFile);
-                     m_hCurrFile = -1;
+                     dInfo->close(false);
+                     m_downloadFileMap.remove(msg->getId());
                      delete_and_null(m_compressor);
 
                      response.setCode(CMD_REQUEST_COMPLETED);
@@ -928,26 +924,21 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Open file for writing
  */
-UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
+UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId, time_t fileModTime)
 {
-   if (m_hCurrFile != -1)
+   DownloadFileInfo *fInfo = new DownloadFileInfo(szFullPath, fileModTime);
+   debugPrintf(5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
+
+   if (!fInfo->open())
    {
-      return ERR_RESOURCE_BUSY;
+      delete fInfo;
+      debugPrintf(2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
+      return ERR_IO_FAILURE;
    }
    else
    {
-      debugPrintf(5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
-      m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
-      if (m_hCurrFile == -1)
-      {
-         debugPrintf(2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
-         return ERR_IO_FAILURE;
-      }
-      else
-      {
-         m_fileRqId = requestId;
-         return ERR_SUCCESS;
-      }
+      m_downloadFileMap.set(requestId, fInfo);
+      return ERR_SUCCESS;
    }
 }
 

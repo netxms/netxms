@@ -27,8 +27,6 @@
 
 #ifdef _WIN32
 #include <psapi.h>
-#define write	_write
-#define close	_close
 #else
 #include <dirent.h>
 #endif
@@ -111,14 +109,6 @@ typedef struct
 static void DeleteCallback(NetObj* obj, void *data)
 {
    ((AgentConnection *)obj)->decRefCount();
-}
-
-/**
- * Callback for sending image library update notifications
- */
-static void ImageLibraryUpdateCallback(ClientSession *pSession, void *pArg)
-{
-	pSession->onLibraryImageChange((uuid_t *)pArg, false);
 }
 
 /**
@@ -237,7 +227,7 @@ THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_downloadFileMap(true)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -279,15 +269,11 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_pOpenDCIList = NULL;
    m_ppEPPRuleList = NULL;
    m_wCurrentCmd = 0;
-   m_hCurrFile = -1;
-   m_dwFileRqId = 0;
-   m_dwUploadCommand = 0;
    m_dwNumRecordsToUpload = 0;
    m_dwRecordsUploaded = 0;
    m_refCount = 0;
    m_dwEncryptionRqId = 0;
    m_dwEncryptionResult = 0;
-   m_dwUploadData = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
 	m_console = NULL;
    m_loginTime = time(NULL);
@@ -443,26 +429,25 @@ void ClientSession::readThread()
          if ((msg->getCode() == CMD_FILE_DATA) ||
              (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
          {
-            if ((m_hCurrFile != -1) && (m_dwFileRqId == msg->getId()))
+            DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
+            if (dInfo != NULL)
             {
                if (msg->getCode() == CMD_FILE_DATA)
                {
-                  if (write(m_hCurrFile, msg->getBinaryData(), (int)msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
+                  if (dInfo->write(msg->getBinaryData(), (int)msg->getBinaryDataSize()))
                   {
                      if (msg->isEndOfFile())
                      {
 								debugPrintf(6, _T("Got end of file marker"));
                         NXCPMessage response;
 
-                        close(m_hCurrFile);
-                        m_hCurrFile = -1;
-
                         response.setCode(CMD_REQUEST_COMPLETED);
                         response.setId(msg->getId());
                         response.setField(VID_RCC, RCC_SUCCESS);
                         sendMessage(&response);
 
-                        onFileUpload(TRUE);
+                        dInfo->close(true);
+                        m_downloadFileMap.remove(msg->getId());
                      }
                   }
                   else
@@ -471,24 +456,20 @@ void ClientSession::readThread()
                      // I/O error
                      NXCPMessage response;
 
-                     close(m_hCurrFile);
-                     m_hCurrFile = -1;
-
                      response.setCode(CMD_REQUEST_COMPLETED);
                      response.setId(msg->getId());
                      response.setField(VID_RCC, RCC_IO_ERROR);
                      sendMessage(&response);
 
-                     onFileUpload(FALSE);
+                     dInfo->close(false);
+                     m_downloadFileMap.remove(msg->getId());
                   }
                }
                else
                {
                   // Abort current file transfer because of client's problem
-                  close(m_hCurrFile);
-                  m_hCurrFile = -1;
-
-                  onFileUpload(FALSE);
+                  dInfo->close(false);
+                  m_downloadFileMap.remove(msg->getId());
                }
             }
             else
@@ -589,14 +570,6 @@ void ClientSession::readThread()
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
    ThreadJoin(m_hProcessingThread);
-
-   // Abort current file upload operation, if any
-   if (m_hCurrFile != -1)
-   {
-      close(m_hCurrFile);
-      m_hCurrFile = -1;
-      onFileUpload(FALSE);
-   }
 
    // remove all pending file transfers from reporting server
    RemovePendingFileTransferRequests(this);
@@ -1561,36 +1534,6 @@ void ClientSession::respondToKeepalive(UINT32 dwRqId)
    msg.setId(dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
-}
-
-/**
- * Process received file
- */
-void ClientSession::onFileUpload(BOOL bSuccess)
-{
-  // Do processing specific to command initiated file upload
-  switch(m_dwUploadCommand)
-  {
-    case CMD_INSTALL_PACKAGE:
-      if (!bSuccess)
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         TCHAR szQuery[256];
-         _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
-         DBQuery(hdb, szQuery);
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-      break;
-    case CMD_MODIFY_IMAGE:
-      EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
-      break;
-    default:
-      break;
-  }
-
-  // Remove received file in case of failure
-  if (!bSuccess)
-    _tunlink(m_szCurrFileName);
 }
 
 /**
@@ -6896,8 +6839,7 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
    NXCPMessage msg;
    TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
    TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN], *pszEscDescr;
-   TCHAR szQuery[2048];
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -6927,43 +6869,29 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
                // Check for duplicate file name
                if (!IsPackageFileExist(pszCleanFileName))
                {
-                  // Prepare for file receive
-                  if (m_hCurrFile == -1)
+                  TCHAR fullFileName[MAX_PATH];
+                  _tcscpy(fullFileName, g_netxmsdDataDir);
+                  _tcscat(fullFileName, DDIR_PACKAGES);
+                  _tcscat(fullFileName, FS_PATH_SEPARATOR);
+                  _tcscat(fullFileName, pszCleanFileName);
+
+                  DownloadFileInfo *fInfo = new DownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
+
+                  if (fInfo->open())
                   {
-                     _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
-                     _tcscat(m_szCurrFileName, DDIR_PACKAGES);
-                     _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
-                     _tcscat(m_szCurrFileName, pszCleanFileName);
-                     m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-                     if (m_hCurrFile != -1)
-                     {
-                        m_dwFileRqId = pRequest->getId();
-                        m_dwUploadCommand = CMD_INSTALL_PACKAGE;
-                        m_dwUploadData = CreateUniqueId(IDG_PACKAGE);
-                        msg.setField(VID_RCC, RCC_SUCCESS);
-                        msg.setField(VID_PACKAGE_ID, m_dwUploadData);
+                     UINT32 uploadData = CreateUniqueId(IDG_PACKAGE);
+                     fInfo->setUploadData(uploadData);
+                     m_downloadFileMap.set(pRequest->getId(), fInfo);
+                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     msg.setField(VID_PACKAGE_ID, uploadData);
 
-                        // Create record in database
-                        pszEscDescr = EncodeSQLString(szDescription);
-                        _sntprintf(szQuery, 2048, _T("INSERT INTO agent_pkg (pkg_id,pkg_name,")
-                                                     _T("version,description,platform,pkg_file) ")
-                                                     _T("VALUES (%d,'%s','%s','%s','%s','%s')"),
-                                   m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
-                                   szPlatform, pszCleanFileName);
-                        free(pszEscDescr);
-
-                        DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-                        DBQuery(hdb, szQuery);
-                        DBConnectionPoolReleaseConnection(hdb);
-                     }
-                     else
-                     {
-                        msg.setField(VID_RCC, RCC_IO_ERROR);
-                     }
+                     // Create record in database
+                     fInfo->updateAgentPkgDBInfo(szDescription, szPkgName, szPkgVersion, szPlatform, pszCleanFileName);
                   }
                   else
                   {
-                     msg.setField(VID_RCC, RCC_RESOURCE_BUSY);
+                     delete fInfo;
+                     msg.setField(VID_RCC, RCC_IO_ERROR);
                   }
                }
                else
@@ -12307,24 +12235,16 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-					if (m_hCurrFile == -1)
-					{
-						m_hCurrFile = _topen(absFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-						if (m_hCurrFile != -1)
-						{
-							m_dwFileRqId = request->getId();
-							m_dwUploadCommand = CMD_MODIFY_IMAGE;
-                     memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
-						}
-						else
-						{
-							rcc = RCC_IO_ERROR;
-						}
-					}
-					else
-					{
-						rcc = RCC_RESOURCE_BUSY;
-					}
+               DownloadFileInfo *dInfo = new DownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
+               if (dInfo->open())
+               {
+                  dInfo->setGUID(guid);
+                  m_downloadFileMap.set(request->getId(), dInfo);
+               }
+               else
+               {
+                  rcc = RCC_IO_ERROR;
+               }
 				}
 				else
 				{
@@ -12892,35 +12812,29 @@ void ClientSession::receiveFile(NXCPMessage *request)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
+		TCHAR fullPath[MAX_PATH];
 
       request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
+      _tcscpy(fullPath, g_netxmsdDataDir);
+      _tcscat(fullPath, DDIR_FILES);
+      _tcscat(fullPath, FS_PATH_SEPARATOR);
+      _tcscat(fullPath, cleanFileName);
 
-      // Prepare for file receive
-      if (m_hCurrFile == -1)
+      DownloadFileInfo *fInfo = new DownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_DATE));
+
+      if (fInfo->open())
       {
-         _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
-			_tcscat(m_szCurrFileName, DDIR_FILES);
-         _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
-         _tcscat(m_szCurrFileName, cleanFileName);
-         m_hCurrFile = _topen(m_szCurrFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-         if (m_hCurrFile != -1)
-         {
-            m_dwFileRqId = request->getId();
-            m_dwUploadCommand = CMD_UPLOAD_FILE;
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
-               _T("Started upload of file \"%s\" to server"), fileName);
-            NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_IO_ERROR);
-         }
+         m_downloadFileMap.set(request->getId(), fInfo);
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
+            _T("Started upload of file \"%s\" to server"), fileName);
+         NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_RESOURCE_BUSY);
+         delete fInfo;
+         msg.setField(VID_RCC, RCC_IO_ERROR);
       }
    }
    else
@@ -12948,16 +12862,17 @@ void ClientSession::deleteFile(NXCPMessage *request)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
+		TCHAR fullPath[MAX_PATH];
 
       request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
-      _tcscat(m_szCurrFileName, DDIR_FILES);
-      _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
-      _tcscat(m_szCurrFileName, cleanFileName);
+      _tcscpy(fullPath, g_netxmsdDataDir);
+      _tcscat(fullPath, DDIR_FILES);
+      _tcscat(fullPath, FS_PATH_SEPARATOR);
+      _tcscat(fullPath, cleanFileName);
 
-      if (_tunlink(m_szCurrFileName) == 0)
+      if (_tunlink(fullPath) == 0)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          msg.setField(VID_RCC, RCC_SUCCESS);

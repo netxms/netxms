@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
@@ -190,6 +190,7 @@
 #define _tmkdir   wmkdir
 #define _tchdir   wchdir
 #define _trmdir   wrmdir
+#define _tutime   wutime
 #define _tcserror wcserror
 #define _tcserror_r wcserror_r
 #define _tsystem  wsystem
@@ -274,6 +275,7 @@
 #define _tmkdir   mkdir
 #define _tchdir   chdir
 #define _trmdir   rmdir
+#define _tutime   utime
 #define _tcserror strerror
 #define _tcserror_r strerror_r
 #define _tsystem  system

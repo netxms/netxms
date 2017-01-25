@@ -42,7 +42,7 @@ bool LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
    if (cd != (iconv_t)(-1))
    {
       iconv_close(cd);
-#endif		
+#endif
       strncpy(g_cpDefault, cp, MAX_CODEPAGE_LEN);
       g_cpDefault[MAX_CODEPAGE_LEN - 1] = 0;
       rc = true;
@@ -802,6 +802,19 @@ int wmkdir(const WCHAR *_path, int mode)
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
       _path, -1, path, MAX_PATH, NULL, NULL);
    return mkdir(path, mode);
+}
+
+#endif
+
+#if !HAVE_WUTIME
+
+int wutime(const WCHAR *_path, utimbuf *buf)
+{
+   char path[MAX_PATH];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+      _path, -1, path, MAX_PATH, NULL, NULL);
+   return utime(path, buf);
 }
 
 #endif

@@ -13,7 +13,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
 			dc_nxsl.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
-			dctcolumn.cpp dctthreshold.cpp debug.cpp \
+			dctcolumn.cpp dctthreshold.cpp debug.cpp dfile_info.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp \
 			filemonitoring.cpp graph.cpp hdlink.cpp hk.cpp id.cpp \

@@ -7655,6 +7655,7 @@ public class NXCSession
          serverFileName = localFile.getName();
       }
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
+      msg.setField(NXCPCodes.VID_DATE, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);
@@ -7678,6 +7679,7 @@ public class NXCSession
       }
       msg.setField(NXCPCodes.VID_FILE_NAME, agentFileName);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setField(NXCPCodes.VID_DATE, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);

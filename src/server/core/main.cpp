@@ -1027,7 +1027,6 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	StopSyslogServer();
 	StopHouseKeeper();
-	PersistentStorageDestroy();
 
 	// Wait for critical threads
 	ThreadJoin(m_thPollManager);
@@ -1054,6 +1053,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_debug(1, _T("Database writer stopped"));
 
 	CleanupUsers();
+	PersistentStorageDestroy();
 
 	// Remove database lock
 	UnlockDB();

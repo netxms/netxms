@@ -32,6 +32,8 @@
 #define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
+#include <nxstat.h>
+
 /**
  * Constants
  */
@@ -1331,8 +1333,15 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    }
    else
    {
+      time_t lastModTime = 0;
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(localFile, &st) == 0)
+      {
+         lastModTime = st.st_mtime;
+      }
       msg.setCode(CMD_FILEMGR_UPLOAD);
 		msg.setField(VID_FILE_NAME, destinationFile);
+		msg.setFieldFromTime(VID_DATE, lastModTime);
    }
 
    if (sendMessage(&msg))

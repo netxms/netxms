@@ -393,6 +393,30 @@ public:
 #define DECLARE_THREAD_STARTER(func) static void ThreadStarter_##func(void *);
 
 /**
+ * Class that stores information about file that will be received
+ */
+class DownloadFileInfo
+{
+private:
+   TCHAR *m_fileName;
+   time_t m_lastModTime;
+   int m_file;
+   UINT32 m_uploadCommand;
+   UINT32 m_uploadData;
+   uuid_t m_uploadImageGuid;
+
+public:
+   DownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime = 0);
+   ~DownloadFileInfo();
+   bool open();
+   void setUploadData(UINT32 data);
+   void setGUID(uuid_t guid);
+   void updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName);
+   bool write(const BYTE *data, int dataSize);
+   void close(bool success);
+};
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
@@ -436,12 +460,7 @@ private:
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
    UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   int m_hCurrFile;
-   UINT32 m_dwFileRqId;
-   UINT32 m_dwUploadCommand;
-   UINT32 m_dwUploadData;
-   uuid_t m_uploadImageGuid;
-   TCHAR m_szCurrFileName[MAX_PATH];
+   HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
    VolatileCounter m_refCount;
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;

@@ -703,6 +703,23 @@ BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
 }
 
 /**
+ * Set last modification time to file
+ */
+bool SetLastModificationTime(TCHAR *fileName, time_t lastModDate)
+{
+   bool success = false;
+#ifdef _WIN32
+   struct _utimbuf ut;
+#else
+   struct utimbuf ut;
+#endif // _WIN32
+   ut.actime = lastModDate;
+   ut.modtime = lastModDate;
+   success = _tutime(fileName, &ut) == 0;
+   return success;
+}
+
+/**
  * Get current time in milliseconds
  * Based on timeval.h by Wu Yongwei
  */

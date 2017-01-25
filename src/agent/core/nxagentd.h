@@ -303,6 +303,24 @@ struct PendingRequest
 };
 
 /**
+ * Class that stores information about file that will be received
+ */
+class DownloadFileInfo
+{
+private:
+   TCHAR *m_fileName;
+   time_t m_lastModTime;
+   int m_file;
+
+public:
+   DownloadFileInfo(const TCHAR *name, time_t lastModTime = 0);
+   ~DownloadFileInfo();
+   bool open();
+   bool write(const BYTE *data, int dataSize);
+   void close(bool success);
+};
+
+/**
  * Communication session
  */
 class CommSession : public AbstractCommSession
@@ -328,8 +346,7 @@ private:
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
-   int m_hCurrFile;
-   UINT32 m_fileRqId;
+   HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
    StreamCompressor *m_compressor;
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
@@ -392,7 +409,7 @@ public:
    virtual bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
    virtual bool isIPv6Aware() { return m_ipv6Aware; }
 
-   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId);
+   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId, time_t fileModTime = 0);
 
    virtual void debugPrintf(int level, const TCHAR *format, ...);
 
@@ -436,7 +453,7 @@ public:
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
+   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...);
 };
 

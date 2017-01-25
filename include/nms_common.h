@@ -221,6 +221,7 @@ typedef int bool;
 #define HAVE_WCSLEN             1
 #define HAVE_WCSNCPY            1
 #define HAVE_WCSDUP             1
+#define HAVE_WUTIME             1
 
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
@@ -237,6 +238,7 @@ typedef int bool;
 
 #ifndef UNDER_CE
 #include <sys/stat.h>
+#include <sys/utime.h>
 #include <process.h>
 #include <io.h>
 #include <fcntl.h>
@@ -552,6 +554,10 @@ using std::wcsncasecmp;
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#if HAVE_UTIME_H
+#include <utime.h>
 #endif
 
 #if HAVE_SYS_INT_TYPES_H

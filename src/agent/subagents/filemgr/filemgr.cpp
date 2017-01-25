@@ -827,7 +827,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(name, false, true) && session->isMasterServer())
          {
-            response->setField(VID_RCC, session->openFile(name, request->getId()));
+            response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_DATE)));
          }
          else
          {

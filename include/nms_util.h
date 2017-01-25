@@ -1821,6 +1821,7 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
 BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
+bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
@@ -1968,6 +1969,9 @@ int wchdir(const WCHAR *_path);
 #endif
 #if !HAVE_WMKDIR
 int wmkdir(const WCHAR *_path, int mode);
+#endif
+#if !HAVE_WUTIME
+int wutime(const WCHAR *_path, struct utimbuf *buf);
 #endif
 #if !HAVE_WRMDIR
 int wrmdir(const WCHAR *_path);
