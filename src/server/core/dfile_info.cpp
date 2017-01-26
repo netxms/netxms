@@ -29,7 +29,9 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time
 {
    m_fileName = _tcsdup(name);
    m_uploadCommand = uploadCommand;
+   m_uploadData = 0;
    m_lastModTime = lastModTime;
+   m_file = -1;
 }
 
 /**

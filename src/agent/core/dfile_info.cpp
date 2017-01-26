@@ -29,6 +29,7 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
 {
    m_fileName = _tcsdup(name);
    m_lastModTime = lastModTime;
+   m_file = -1;
 }
 
 /**
