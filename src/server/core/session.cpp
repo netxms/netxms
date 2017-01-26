@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -227,7 +227,7 @@ THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_downloadFileMap(true)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -280,6 +280,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_download
    m_musicTypeList.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
    m_serverCommands = new HashMap<UINT32, CommandExec>(true);
+   m_downloadFileMap = new HashMap<UINT32, DownloadFileInfo>(true);
 }
 
 /**
@@ -331,6 +332,7 @@ ClientSession::~ClientSession()
    }
 
    delete m_serverCommands;
+   delete m_downloadFileMap;
 }
 
 /**
@@ -429,7 +431,7 @@ void ClientSession::readThread()
          if ((msg->getCode() == CMD_FILE_DATA) ||
              (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
          {
-            DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
+            DownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
             if (dInfo != NULL)
             {
                if (msg->getCode() == CMD_FILE_DATA)
@@ -447,7 +449,7 @@ void ClientSession::readThread()
                         sendMessage(&response);
 
                         dInfo->close(true);
-                        m_downloadFileMap.remove(msg->getId());
+                        m_downloadFileMap->remove(msg->getId());
                      }
                   }
                   else
@@ -462,14 +464,14 @@ void ClientSession::readThread()
                      sendMessage(&response);
 
                      dInfo->close(false);
-                     m_downloadFileMap.remove(msg->getId());
+                     m_downloadFileMap->remove(msg->getId());
                   }
                }
                else
                {
                   // Abort current file transfer because of client's problem
                   dInfo->close(false);
-                  m_downloadFileMap.remove(msg->getId());
+                  m_downloadFileMap->remove(msg->getId());
                }
             }
             else
@@ -6881,7 +6883,7 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
                   {
                      UINT32 uploadData = CreateUniqueId(IDG_PACKAGE);
                      fInfo->setUploadData(uploadData);
-                     m_downloadFileMap.set(pRequest->getId(), fInfo);
+                     m_downloadFileMap->set(pRequest->getId(), fInfo);
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_PACKAGE_ID, uploadData);
 
@@ -12239,7 +12241,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
                if (dInfo->open())
                {
                   dInfo->setGUID(guid);
-                  m_downloadFileMap.set(request->getId(), dInfo);
+                  m_downloadFileMap->set(request->getId(), dInfo);
                }
                else
                {
@@ -12825,7 +12827,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
 
       if (fInfo->open())
       {
-         m_downloadFileMap.set(request->getId(), fInfo);
+         m_downloadFileMap->set(request->getId(), fInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
          WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
             _T("Started upload of file \"%s\" to server"), fileName);

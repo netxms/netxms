@@ -460,7 +460,7 @@ private:
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
    UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
+   HashMap<UINT32, DownloadFileInfo> *m_downloadFileMap;
    VolatileCounter m_refCount;
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;

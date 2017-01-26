@@ -561,6 +561,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dfile_info.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\download_job.cpp"
 				>
 			</File>
