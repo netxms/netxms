@@ -35,9 +35,6 @@
 #include <errno.h>
 #include <psapi.h>
 #include <conio.h>
-#define open	_open
-#define write	_write
-#define close	_close
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -406,14 +403,14 @@ static BOOL InitCryptografy()
 				BYTE *pBufPos = pKeyBuffer;
 				i2d_RSAPublicKey(g_pServerKey, &pBufPos);
 				i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
-				write(fd, &dwLen, sizeof(UINT32));
-				write(fd, pKeyBuffer, dwLen);
+				_write(fd, &dwLen, sizeof(UINT32));
+				_write(fd, pKeyBuffer, dwLen);
 
 			   BYTE hash[SHA1_DIGEST_SIZE];
 				CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
-				write(fd, hash, SHA1_DIGEST_SIZE);
+				_write(fd, hash, SHA1_DIGEST_SIZE);
 
-				close(fd);
+				_close(fd);
 				free(pKeyBuffer);
 				bResult = TRUE;
 			}

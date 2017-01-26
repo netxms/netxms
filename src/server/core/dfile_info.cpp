@@ -22,11 +22,6 @@
 
 #include "nxcore.h"
 
-#ifdef _WIN32
-#define write	_write
-#define close	_close
-#endif
-
 /**
  * Constructor for DownloadFileInfo class only stores given data
  */
@@ -42,9 +37,8 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time
  */
 DownloadFileInfo::~DownloadFileInfo()
 {
-   if(m_file != -1)
+   if (m_file != -1)
       close(false);
-
    delete m_fileName;
 }
 
@@ -53,7 +47,7 @@ DownloadFileInfo::~DownloadFileInfo()
  */
 bool DownloadFileInfo::open()
 {
-   m_file = ::_topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   m_file = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
    return m_file != -1;
 }
 
@@ -96,7 +90,7 @@ void DownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, const TCHA
  */
 bool DownloadFileInfo::write(const BYTE *data, int dataSize)
 {
-   return ::write(m_file, data, dataSize) == dataSize;
+   return _write(m_file, data, dataSize) == dataSize;
 }
 
 
@@ -113,32 +107,31 @@ static void ImageLibraryUpdateCallback(ClientSession *pSession, void *pArg)
  */
 void DownloadFileInfo::close(bool success)
 {
-   ::close(m_file);
+   _close(m_file);
    m_file = -1;
 
    switch(m_uploadCommand)
    {
-   case CMD_INSTALL_PACKAGE:
-      if (!success)
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         TCHAR szQuery[256];
-         _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_uploadData);
-         DBQuery(hdb, szQuery);
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-      break;
-   case CMD_MODIFY_IMAGE:
-      EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
-      break;
-   case CMD_UPLOAD_FILE:
-      if(m_lastModTime != 0)
-         SetLastModificationTime(m_fileName, m_lastModTime);
-      break;
-   default:
-      break;
+      case CMD_INSTALL_PACKAGE:
+         if (!success)
+         {
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            TCHAR szQuery[256];
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_uploadData);
+            DBQuery(hdb, szQuery);
+            DBConnectionPoolReleaseConnection(hdb);
+         }
+         break;
+      case CMD_MODIFY_IMAGE:
+         EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
+         break;
+      case CMD_UPLOAD_FILE:
+         if(m_lastModTime != 0)
+            SetLastModificationTime(m_fileName, m_lastModTime);
+         break;
+      default:
+         break;
    }
-
 
    // Remove received file in case of failure
    if (!success)

@@ -21,12 +21,6 @@
 **/
 
 #include "nxagentd.h"
-
-#ifdef _WIN32
-#define write _write
-#define close _close
-#endif
-
 #include <nxstat.h>
 
 /**
@@ -147,7 +141,7 @@ static UINT32 DeployConfig(AbstractCommSession *session, const uuid& guid, NXCPM
 		if (data != NULL)
 		{
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (write(fh, data, size) == size)
+			if (_write(fh, data, size) == size)
 			{
 		      session->debugPrintf(3, _T("Configuration file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
@@ -162,7 +156,7 @@ static UINT32 DeployConfig(AbstractCommSession *session, const uuid& guid, NXCPM
 		{
 			rcc = ERR_MEM_ALLOC_FAILED;
 		}
-		close(fh);
+		_close(fh);
 	}
 	else
 	{
@@ -193,7 +187,7 @@ static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NX
 		if (data != NULL)
 		{
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (write(fh, data, size) == size)
+			if (_write(fh, data, size) == size)
 			{
 		      session->debugPrintf(3, _T("Log parser file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
@@ -208,7 +202,7 @@ static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NX
 		{
 			rcc = ERR_MEM_ALLOC_FAILED;
 		}
-		close(fh);
+		_close(fh);
 	}
 	else
 	{

@@ -23,16 +23,12 @@
 
 #include "libnxsrv.h"
 #include <stdarg.h>
+#include <nxstat.h>
 
-#ifdef _WIN32
-#define open	_open
-#define close	_close
-#define write	_write
-#else
+#ifndef _WIN32
 #define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
-#include <nxstat.h>
 
 /**
  * Constants
@@ -145,7 +141,7 @@ AgentConnection::~AgentConnection()
 
 	if (m_hCurrFile != -1)
 	{
-		close(m_hCurrFile);
+		_close(m_hCurrFile);
 		onFileDownload(false);
 	}
 
@@ -282,11 +278,11 @@ void AgentConnection::receiverThread()
             {
                if (m_hCurrFile != -1)
                {
-                  if (write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
+                  if (_write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
                   {
                      if (ntohs(pRawMsg->flags) & MF_END_OF_FILE)
                      {
-                        close(m_hCurrFile);
+                        _close(m_hCurrFile);
                         m_hCurrFile = -1;
 
                         onFileDownload(true);
@@ -303,7 +299,7 @@ void AgentConnection::receiverThread()
                else
                {
                   // I/O error
-                  close(m_hCurrFile);
+                  _close(m_hCurrFile);
                   m_hCurrFile = -1;
 
                   onFileDownload(false);
@@ -324,7 +320,7 @@ void AgentConnection::receiverThread()
             else
             {
                //error on agent side
-               close(m_hCurrFile);
+               _close(m_hCurrFile);
                m_hCurrFile = -1;
 
                onFileDownload(false);
@@ -419,7 +415,7 @@ void AgentConnection::receiverThread()
    lock();
 	if (m_hCurrFile != -1)
 	{
-		close(m_hCurrFile);
+		_close(m_hCurrFile);
 		m_hCurrFile = -1;
 		onFileDownload(false);
 	}
@@ -625,7 +621,7 @@ void AgentConnection::disconnect()
    lock();
 	if (m_hCurrFile != -1)
 	{
-		close(m_hCurrFile);
+		_close(m_hCurrFile);
 		m_hCurrFile = -1;
 		onFileDownload(false);
 	}
@@ -1928,7 +1924,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 				{
                if (fileResendCallback != NULL)
                {
-                  close(m_hCurrFile);
+                  _close(m_hCurrFile);
                   m_hCurrFile = -1;
                   _tremove(recvFile);
                }

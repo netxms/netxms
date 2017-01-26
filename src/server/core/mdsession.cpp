@@ -24,8 +24,6 @@
 
 #ifdef _WIN32
 #include <psapi.h>
-#define write	_write
-#define close	_close
 #endif
 
 // WARNING! this hack works only for d2i_X509(); be carefull when adding new code
