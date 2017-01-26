@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -226,17 +226,12 @@ Event::~Event()
  */
 void Event::expandMessageText()
 {
-   if (m_messageTemplate != NULL)
-   {
-      if (m_messageText != NULL)
-      {
-         free(m_messageText);
-         m_messageText = NULL;
-      }
-      m_messageText = expandText(m_messageTemplate);
-      free(m_messageTemplate);
-      m_messageTemplate = NULL;
-   }
+   if (m_messageTemplate == NULL)
+      return;
+
+   if (m_messageText != NULL)
+      free(m_messageText);
+   m_messageText = expandText(m_messageTemplate);
 }
 
 /**
