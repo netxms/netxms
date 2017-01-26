@@ -29,10 +29,6 @@
 
 #ifdef _WIN32
 #include <psapi.h>
-#define access _access
-#define read	_read
-#define close	_close
-#define wcsicmp _wcsicmp
 #endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
@@ -1953,7 +1949,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
          for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
          {
             iNumBytes = min(16384, (int)fs.st_size - iBufPos);
-            if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+            if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
             {
                free(pBuffer);
                pBuffer = NULL;
@@ -1964,7 +1960,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
             pBuffer[fs.st_size] = 0;
       }
    }
-   close(fd);
+   _close(fd);
    return pBuffer;
 }
 
@@ -2680,12 +2676,12 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
 {
    snprintf(jvm, MAX_PATH, "%s%s/lib/%s/server/libjvm.so", base, libdir, arch);
    nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-   if (access(jvm, 0) == 0)
+   if (_access(jvm, 0) == 0)
       return true;
 
    snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/server/libjvm.so", base, libdir, arch);
    nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-   if (access(jvm, 0) == 0)
+   if (_access(jvm, 0) == 0)
       return true;
 
    if (!strcmp(arch, "x86_64"))
@@ -2751,7 +2747,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 
 #ifdef _WIN32
-   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
    {
       HKEY hKey;
       if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\JavaSoft\\Java Runtime Environment"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
@@ -2778,7 +2774,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 #endif
 
    // Check JAVA_HOME
-   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
    {
       const char *javaHome = getenv("JAVA_HOME");
       if ((javaHome != NULL) && (*javaHome != 0))
@@ -2786,7 +2782,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
 #ifdef _WIN32
          snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
          nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
-         if (access(jvm, 0) != 0)
+         if (_access(jvm, 0) != 0)
          {
             snprintf(jvm, MAX_PATH, "%s\\jre\\bin\\server\\jvm.dll", javaHome);
             nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
@@ -2798,7 +2794,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 
 #ifdef JDK_LOCATION
-   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, JDK_LOCATION "\\jre\\bin\\server\\jvm.dll");
@@ -2809,7 +2805,7 @@ TCHAR LIBNETXMS_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    }
 #endif
 
-   if ((jvm[0] == 0) || (access(jvm, 0) != 0))
+   if ((jvm[0] == 0) || (_access(jvm, 0) != 0))
       return NULL;
 
 #ifdef UNICODE

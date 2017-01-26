@@ -23,16 +23,8 @@
 
 #include "libnxlp.h"
 
-#ifdef _NETWARE
-#include <fsio.h>
-#endif
-
 #ifdef _WIN32
 #include <share.h>
-
-#define read _read
-#define close _close
-
 #endif
 
 
@@ -184,7 +176,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
    do
    {
       resetPos = lseek(fh, 0, SEEK_CUR);
-      if ((bytes = read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
+      if ((bytes = _read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
       {
          bytes += bufPos;
          for(ptr = buffer;; ptr = eptr + 1)
@@ -585,7 +577,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 					   }
 					}
 				}
-				close(fh);
+				_close(fh);
 			}
 			else
 			{

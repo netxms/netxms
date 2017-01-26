@@ -22,10 +22,6 @@
 
 #ifdef _WIN32
 #include <share.h>
-
-#define read _read
-#define close _close
-
 #endif
 
 /**
@@ -184,7 +180,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
          readSize = newOffset - flData->getOffset();
          for(int i = readSize; i > 0; i = i - readSize)
          {
-            if(readSize+1+headerSize > MAX_MSG_SIZE)
+            if (readSize+1+headerSize > MAX_MSG_SIZE)
             {
                readSize = MAX_MSG_SIZE - headerSize;
                newOffset = flData->getOffset() + readSize;
@@ -196,7 +192,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 
             lseek(hFile, flData->getOffset(), SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
-            readSize = read(hFile, readBytes, readSize);
+            readSize = _read(hFile, readBytes, readSize);
             AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
 #ifdef UNICODE
             TCHAR *text = WideStringFromMBString((char *)readBytes);
@@ -229,6 +225,6 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       }
    }
    delete flData;
-   close(hFile);
+   _close(hFile);
    return THREAD_OK;
 }

@@ -264,6 +264,8 @@ typedef int bool;
 #define pclose       _pclose
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
+#define wcsicmp      _wcsicmp
+#define wcsnicmp     _wcsnicmp
 #define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
 #define putenv(s)    _putenv(s)
@@ -726,11 +728,26 @@ typedef UINT64 QWORD;   // for compatibility
 #endif
 #endif
 
-// Windows compatibility defines for standard C I/O functions
+// Windows compatibility layer for standard C I/O functions
+#ifdef __cplusplus
+
+inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
+inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
+inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
+inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
+inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
+inline int _close(int fd) { return ::close(fd); }
+
+#else
+
+#define _access(p, m)      access((p), (m))
 #define _open              open
 #define _close(f)          close(f)
 #define _read(f, b, l)     read((f), (b), (l))
-#define _write(f, b, l)    read((f), (b), (l))
+#define _write(f, b, l)    write((f), (b), (l))
+#define _close(f)          close(f)
+
+#endif
 
 // Socket compatibility
 typedef int SOCKET;

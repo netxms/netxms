@@ -25,11 +25,6 @@
 #include <nxcpapi.h>
 #include <nxstat.h>
 
-#ifdef _WIN32
-#define read	_read
-#define close	_close
-#endif
-
 /**
  * Additional message name resolvers
  */
@@ -672,7 +667,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 			{
             if (compressor != NULL)
             {
-				   iBytes = read(hFile, compBuffer, min(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, compBuffer, min(FILE_BUFFER_SIZE, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;
@@ -686,7 +681,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
             }
             else
             {
-				   iBytes = read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;
@@ -729,7 +724,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 
 			free(pMsg);
 		}
-		close(hFile);
+		_close(hFile);
 	}
 
    safe_free(compBuffer);

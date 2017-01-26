@@ -23,11 +23,6 @@
 
 #include "libnxsl.h"
 
-#ifdef _WIN32
-#define read	_read
-#define close	_close
-#endif
-
 /**
  * For unknown reasons, min() becames undefined on Linux, despite the fact
  * that it is defined in nms_common.h
@@ -100,7 +95,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFile
             for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
             {
                iNumBytes = min(16384, fs.st_size - iBufPos);
-               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+               if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
                {
                   free(pBuffer);
                   pBuffer = NULL;
@@ -116,7 +111,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFile
 				}
          }
       }
-      close(fd);
+      _close(fd);
    }
 
 #ifdef UNICODE
