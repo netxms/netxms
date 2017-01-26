@@ -743,15 +743,15 @@ BOOL Initialize()
    nxlog_debug(2, _T("Effective group ID %d"), (int)getegid());
 #endif
 
-   //Initialize log parser policy folder
+   // Initialize log parser policy folder
    TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
-   DebugPrintf(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
+   nxlog_debug(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
 
-   DebugPrintf(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
+   nxlog_debug(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -767,7 +767,7 @@ BOOL Initialize()
    s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSession,
       SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory);
-   DebugPrintf(1, _T("Subagent API initialized"));
+   nxlog_debug(1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
    if (!InitCryptoLib(s_enabledCiphers))
@@ -937,43 +937,46 @@ BOOL Initialize()
       free(m_pszParamProviderList);
    }
 
-   // Parse external subagents list
-	if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszExtSubagentList != NULL))
-   {
-      for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+	{
+      // Parse external subagents list
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszExtSubagentList != NULL))
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
-         if (!AddExternalSubagent(pItem))
-            nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+         for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+         {
+            pEnd = _tcschr(pItem, _T('\n'));
+            if (pEnd != NULL)
+               *pEnd = 0;
+            StrStrip(pItem);
+            if (!AddExternalSubagent(pItem))
+               nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+         }
+         free(m_pszExtSubagentList);
       }
-      free(m_pszExtSubagentList);
-   }
 
-   // Additional external subagents implicitly defined by EXT:* config sections
-   ObjectArray<ConfigEntry> *entries = g_config->getSubEntries(_T("/"), _T("EXT:*"));
-   for(int i = 0; i < entries->size(); i++)
-   {
-      const TCHAR *name = entries->get(i)->getName() + 4;
-      if (!AddExternalSubagent(name))
-         nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", name);
-   }
-   delete entries;
-
-   // Parse application agents list
-	if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszAppAgentList != NULL))
-   {
-      for(pItem = pEnd = m_pszAppAgentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      // Additional external subagents implicitly defined by EXT:* config sections
+      ObjectArray<ConfigEntry> *entries = g_config->getSubEntries(_T("/"), _T("EXT:*"));
+      for(int i = 0; i < entries->size(); i++)
       {
-         pEnd = _tcschr(pItem, _T('\n'));
-         if (pEnd != NULL)
-            *pEnd = 0;
-         StrStrip(pItem);
-         RegisterApplicationAgent(pItem);
+         const TCHAR *name = entries->get(i)->getName() + 4;
+         if (!AddExternalSubagent(name))
+            nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", name);
       }
-      free(m_pszAppAgentList);
+      delete entries;
+
+      // Parse application agents list
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszAppAgentList != NULL))
+      {
+         for(pItem = pEnd = m_pszAppAgentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+         {
+            pEnd = _tcschr(pItem, _T('\n'));
+            if (pEnd != NULL)
+               *pEnd = 0;
+            StrStrip(pItem);
+            RegisterApplicationAgent(pItem);
+         }
+         free(m_pszAppAgentList);
+      }
    }
 
    ThreadSleep(1);
