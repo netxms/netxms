@@ -1946,7 +1946,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
 
    if (NX_FSTAT(fd, &fs) != -1)
    {
-      pBuffer = (BYTE *)malloc(fs.st_size + 1);
+      pBuffer = (BYTE *)malloc((size_t)fs.st_size + 1);
       if (pBuffer != NULL)
       {
          *pdwFileSize = (UINT32)fs.st_size;

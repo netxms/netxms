@@ -299,7 +299,7 @@ static void get_random_bytes(void *buf, int nbytes)
 		return;
 
 	/* FIXME: put something better here if no /dev/random! */
-   srand((unsigned int)time(NULL) ^ getpid());
+   srand((unsigned int)time(NULL) ^ GetCurrentProcessId());
 	for (i = 0; i < nbytes; i++)
 		*cp++ = rand() & 0xFF;
 	return;

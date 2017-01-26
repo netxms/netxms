@@ -22,11 +22,6 @@
 
 #include "nxagentd.h"
 
-#ifdef _WIN32
-#define write	_write
-#define close	_close
-#endif
-
 /**
  * Constructor for DownloadFileInfo class only stores given data
  */
@@ -41,9 +36,8 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
  */
 DownloadFileInfo::~DownloadFileInfo()
 {
-   if(m_file != -1)
-      close(false);
-
+   if (m_file != -1)
+      ::_close(false);
    delete m_fileName;
 }
 
@@ -61,7 +55,7 @@ bool DownloadFileInfo::open()
  */
 bool DownloadFileInfo::write(const BYTE *data, int dataSize)
 {
-   return ::write(m_file, data, dataSize) == dataSize;
+   return ::_write(m_file, data, dataSize) == dataSize;
 }
 
 /**
@@ -69,7 +63,7 @@ bool DownloadFileInfo::write(const BYTE *data, int dataSize)
  */
 void DownloadFileInfo::close(bool success)
 {
-   ::close(m_file);
+   ::_close(m_file);
    m_file = -1;
 
    if(m_lastModTime != 0)

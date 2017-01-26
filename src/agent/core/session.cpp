@@ -22,11 +22,6 @@
 
 #include "nxagentd.h"
 
-#ifdef _WIN32
-#define write	_write
-#define close	_close
-#endif
-
 /**
  * Externals
  */
@@ -1035,11 +1030,11 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 							i--;
                   }
             }
-            if (write(hFile, pConfig, size) == size)
+            if (_write(hFile, pConfig, size) == size)
                pMsg->setField(VID_RCC, ERR_SUCCESS);
             else
                pMsg->setField(VID_RCC, ERR_IO_FAILURE);
-            close(hFile);
+            _close(hFile);
          }
          else
          {

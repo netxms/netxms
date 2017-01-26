@@ -266,7 +266,6 @@ typedef int bool;
 #define strnicmp     _strnicmp
 #define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
-#define getpid       _getpid
 #define putenv(s)    _putenv(s)
 #define fileno(f)    _fileno(f)
 #define chdir(p)     _chdir(p)
@@ -726,6 +725,12 @@ typedef UINT64 QWORD;   // for compatibility
 #define MAX_PATH 1024
 #endif
 #endif
+
+// Windows compatibility defines for standard C I/O functions
+#define _open              open
+#define _close(f)          close(f)
+#define _read(f, b, l)     read((f), (b), (l))
+#define _write(f, b, l)    read((f), (b), (l))
 
 // Socket compatibility
 typedef int SOCKET;
