@@ -213,7 +213,7 @@ static void random_vector(unsigned char *vector)
 	if (!did_srand)
 	{
 		char garbage[8];
-		i = (unsigned int)time(NULL) + getpid();
+      i = (unsigned int)time(NULL) + GetCurrentProcessId();
 		for (n = 0; n < 8; n++)
 		{
 			i += (garbage[n] << i);
@@ -688,7 +688,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	auth = (AUTH_HDR *)send_buffer;
 	auth->code = PW_AUTHENTICATION_REQUEST;
 	random_vector(auth->vector);
-	auth->id = getpid() & 255;
+   auth->id = (BYTE)(GetCurrentProcessId() & 255);
 
 	// Create attribute chain
 	req = NULL;

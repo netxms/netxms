@@ -1112,7 +1112,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
 	// Create request
-	request = new SNMP_PDU(SNMP_SET_REQUEST, getpid(), trans->getSnmpVersion());
+   request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), trans->getSnmpVersion());
 
 	if (SNMPIsCorrectOID(argv[1]->getValueAsString(&len)))
 	{
