@@ -37,7 +37,7 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
 DownloadFileInfo::~DownloadFileInfo()
 {
    if (m_file != -1)
-      ::_close(false);
+      close(false);
    delete m_fileName;
 }
 
@@ -46,7 +46,7 @@ DownloadFileInfo::~DownloadFileInfo()
  */
 bool DownloadFileInfo::open()
 {
-   m_file = ::_topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   m_file = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
    return m_file != -1;
 }
 
@@ -55,7 +55,7 @@ bool DownloadFileInfo::open()
  */
 bool DownloadFileInfo::write(const BYTE *data, int dataSize)
 {
-   return ::_write(m_file, data, dataSize) == dataSize;
+   return _write(m_file, data, dataSize) == dataSize;
 }
 
 /**
@@ -63,7 +63,7 @@ bool DownloadFileInfo::write(const BYTE *data, int dataSize)
  */
 void DownloadFileInfo::close(bool success)
 {
-   ::_close(m_file);
+   _close(m_file);
    m_file = -1;
 
    if(m_lastModTime != 0)
