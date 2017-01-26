@@ -255,8 +255,8 @@
 #define _tcsncat  strncat
 #define _tcspbrk  strpbrk
 #define _tcstok_r strtok_r
-#define _topen    open
-#define _taccess  access
+#define _topen    _open
+#define _taccess  _access
 #define _tstat    stat
 #define _tchmod   chmod
 #define _tunlink  unlink
