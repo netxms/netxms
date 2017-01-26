@@ -725,6 +725,16 @@ static bool SetSchemaVersion(int version)
    return SQLQuery(query);
 }
 
+/*
+ * Upgrade from V430 to V431
+ */
+static BOOL H_UpgradeFromV430(int currVersion, int newVersion)
+{	
+	CHK_EXEC(SQLQuery(_T("DELETE FROM config_values WHERE var_name='SNMPPorts'")));
+	CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='TCP port for SMTP server.' WHERE var_name='SNMPPorts'")));
+	CHK_EXEC(SetSchemaVersion(431));
+   return TRUE;
+}
 
 
 /*
@@ -11240,6 +11250,7 @@ static struct
    { 427, 428, H_UpgradeFromV427 },
    { 428, 429, H_UpgradeFromV428 },
    { 429, 430, H_UpgradeFromV429 },
+   { 430, 431, H_UpgradeFromV430 },
    { 0, 0, NULL }
 };
 

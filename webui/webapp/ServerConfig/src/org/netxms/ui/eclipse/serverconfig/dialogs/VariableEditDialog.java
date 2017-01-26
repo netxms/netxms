@@ -192,6 +192,8 @@ public class VariableEditDialog extends Dialog
 	         break;
 	      case "C":
 	         varValue = Integer.toString(comboValue.getSelectionIndex());
+            if (varValue.equals("-1"))
+               varValue = "0";
 	         break;
 	      case "H":
 	         if (colorSelector.getColorValue() != null)

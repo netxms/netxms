@@ -3281,6 +3281,7 @@ public class NXCSession
       long id;
       int i, count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
       final HashMap<String, ServerVariable> varList = new HashMap<String, ServerVariable>(count);
+
       for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++)
       {
          String name = response.getFieldAsString(id++);
@@ -3290,7 +3291,11 @@ public class NXCSession
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
       for(i = 0; i < count; i++)
       {
-         varList.get(response.getFieldAsString(id++)).setPossibleValues(response.getFieldAsString(id++), response.getFieldAsString(id++));
+         ServerVariable var = varList.get(response.getFieldAsString(id++));
+         if (var != null)
+            var.setPossibleValues(response.getFieldAsString(id++), response.getFieldAsString(id++));
+         else
+            id+=2;
       }
 
       return varList;
