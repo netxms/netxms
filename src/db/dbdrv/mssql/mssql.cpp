@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -337,16 +337,14 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery
    return result;
 }
 
-
-//
-// Bind parameter to statement
-//
-
+/**
+ * Bind parameter to statement
+ */
 extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
-	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
-	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double), 0 };
 
 	int length = (cType == DB_CTYPE_STRING) ? ((int)wcslen((WCHAR *)buffer) + 1) : 0;
 
@@ -354,14 +352,40 @@ extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int 
 	switch(allocType)
 	{
 		case DB_BIND_STATIC:
-			sqlBuffer = buffer;
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            stmt->buffers->add(sqlBuffer);
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = buffer;
+         }
 			break;
 		case DB_BIND_DYNAMIC:
-			sqlBuffer = buffer;
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            free(buffer);
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = buffer;
+         }
 			stmt->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+         }
 			stmt->buffers->add(sqlBuffer);
 			break;
 		default:
@@ -371,11 +395,9 @@ extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int 
 	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCHAR *errorText)
 {
    DWORD dwResult;
@@ -397,11 +419,9 @@ extern "C" DWORD EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCH
 	return dwResult;
 }
 
-
-//
-// Destroy prepared statement
-//
-
+/**
+ * Destroy prepared statement
+ */
 extern "C" void EXPORT DrvFreeStatement(MSSQL_STATEMENT *stmt)
 {
 	if (stmt == NULL)

@@ -355,7 +355,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             {
                sqlBuffer = WideStringFromUTF8String((char *)buffer);
                stmt->buffers->add(sqlBuffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
             }
             else
             {
@@ -371,7 +371,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             {
                sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
                stmt->buffers->add(sqlBuffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
             }
 				else
 				{
@@ -406,7 +406,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             {
                sqlBuffer = WideStringFromUTF8String((char *)buffer);
                free(buffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
             }
             else
             {
@@ -422,7 +422,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             {
                sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
                free(buffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
             }
 				else
 				{
@@ -457,7 +457,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             if (cType == DB_CTYPE_UTF8_STRING)
             {
                sqlBuffer = WideStringFromUTF8String((char *)buffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
             }
             else
             {
@@ -471,7 +471,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
             if (cType == DB_CTYPE_UTF8_STRING)
             {
                sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-               length = (int)strlen((char *)sqlBuffer) + 1;
+               length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
             }
 				else
 				{

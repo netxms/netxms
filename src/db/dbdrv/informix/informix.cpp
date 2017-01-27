@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010-2015 Raden Solutinos
+** Copyright (C) 2010-2017 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -327,7 +327,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {
@@ -339,7 +339,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             free(buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {
@@ -351,7 +351,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {

@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010-2016 Raden Solutinos
+** Copyright (C) 2010-2017 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -353,11 +353,9 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *p
 	return result;
 }
 
-
-//
-// Bind parameter to statement
-//
-
+/**
+ * Bind parameter to statement
+ */
 extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
@@ -375,7 +373,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {
@@ -391,7 +389,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
          }
 			else
 			{
@@ -405,7 +403,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             free(buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {
@@ -421,7 +419,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
             free(buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
          }
 			else
 			{
@@ -435,7 +433,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -449,7 +447,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 			else if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-            length = (int)strlen((char *)sqlBuffer) + 1;
+            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
          }
 			else
 			{
