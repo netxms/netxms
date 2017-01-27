@@ -433,7 +433,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = (int)wcslen((char *)sqlBuffer) + 1;
+            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
          }
          else
          {
