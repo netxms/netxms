@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("record_id"), _T("Record ID"), LC_INTEGER },
 			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP },
 			{ _T("subsystem"), _T("Subsystem"), LC_TEXT },
+         { _T("object_id"), _T("Object"), LC_OBJECT_ID },
 			{ _T("user_id"), _T("User"), LC_USER_ID },
          { _T("session_id"), _T("Session"), LC_INTEGER },
 			{ _T("workstation"), _T("Workstation"), LC_TEXT },
