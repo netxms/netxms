@@ -94,6 +94,12 @@ public class General extends PropertyPage
       final String newName = textName.getText();
       final String newDescription = textDescription.getText();
 
+      if (newName.equals(""))
+      {
+         MessageDialogHelper.openError(getShell(), "Error", "Category name cannot be empty!");
+         return false;
+      }
+      
       if (newName.equals(category.getName()) && newDescription.equals(category.getDescription()))
          return true; // Nothing to apply
       
