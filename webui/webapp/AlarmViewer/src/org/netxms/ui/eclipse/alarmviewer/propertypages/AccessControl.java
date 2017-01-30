@@ -102,7 +102,7 @@ public class AccessControl extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), User.class);
+            SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), AbstractUserObject.class);
             if (dlg.open() == Window.OK)
             {
                AbstractUserObject[] selection = dlg.getSelection();
