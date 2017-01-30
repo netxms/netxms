@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.eclipse.ui.IWorkbenchPage;
@@ -155,7 +156,7 @@ public class GraphTemplateCache
       GraphSettings result = new GraphSettings(data, name);
       
       ChartDciConfig[] conf = result.getDciList();
-      ArrayList<ChartDciConfig> newList = new ArrayList<ChartDciConfig>();
+      HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
       int foundByDescription = -1;
       int foundDCICount = 0;
       //parse config and compare name as regexp and then compare description
@@ -176,10 +177,15 @@ public class GraphTemplateCache
             if(!conf[i].dciDescription.isEmpty() && descriptionPattern.matcher(values[j].getDescription()).find())
             {
                foundByDescription = j;
+               if(conf[i].multiMatch)
+               {
+                  newList.add(new ChartDciConfig(values[j]));
+                  foundDCICount++;
+               }
             }
          }
          
-         if(j == values.length && foundByDescription >= 0)
+         if(!conf[i].multiMatch && j == values.length && foundByDescription >= 0)
          {
             foundDCICount++;
             newList.add(new ChartDciConfig(values[foundByDescription]));
@@ -188,7 +194,7 @@ public class GraphTemplateCache
       if(foundDCICount > 0)
       {
          result.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
-         showPredefinedGraph(result);
+         showPredefinedGraph(result, node.getObjectId());
       }
       else
       {
@@ -201,7 +207,7 @@ public class GraphTemplateCache
     * 
     * @param gs graph settings
     */
-   private static void showPredefinedGraph(GraphSettings gs)
+   private static void showPredefinedGraph(GraphSettings gs, long objectId)
    {
       String encodedName;
       try
@@ -212,7 +218,7 @@ public class GraphTemplateCache
       {
          encodedName = "___ERROR___"; //$NON-NLS-1$
       }
-      String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName; //$NON-NLS-1$
+      String id = HistoricalGraphView.PREDEFINED_GRAPH_SUBID + "&" + encodedName + "&" + objectId; //$NON-NLS-1$
       try
       {
          HistoricalGraphView g = (HistoricalGraphView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);

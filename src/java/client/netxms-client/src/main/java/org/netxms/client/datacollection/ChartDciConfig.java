@@ -53,7 +53,7 @@ public class ChartDciConfig
 	@Element(required=false)
 	public int type;
 
-	@Element(required=false)
+   @Element(required=false)
 	public String color;
 
 	@Element(required=false)
@@ -237,5 +237,29 @@ public class ChartDciConfig
    public void setDciDescription(String dciDescription)
    {
       this.dciDescription = dciDescription;
+   }   
+
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
+   @Override
+   public boolean equals(Object arg0)
+   {
+      if(arg0 instanceof ChartDciConfig)
+      {
+         return dciId == ((ChartDciConfig)arg0).dciId;
+      }
+      
+      return super.equals(arg0);
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#hashCode()
+    */
+   @Override
+   public int hashCode()
+   {
+      return Long.hashCode(dciId);
    }
 }
