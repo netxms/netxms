@@ -1471,6 +1471,37 @@ static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
       CHK_EXEC(SQLQuery(query));
    }
 
+   //Add adming to Admin group if exists
+   UINT32 groupId = 0;
+   hResult = SQLSelect(_T("SELECT id FROM user_groups WHERE name='Admins'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         groupId = DBGetFieldULong(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+   if(groupId != 0)
+   {
+      _sntprintf(query, 256, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (%d,%d)"), groupId, userId);
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   //Update non object ACL
+   _sntprintf(query, 256, _T("UPDATE pbject_tool_acl SET user_id=%d WHERE user_id=0"), userId);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("UPDATE graph_acl SET user_id=%d WHERE user_id=0"), userId);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("UPDATE graphs SET owner_id=%d WHERE owner_id=0"), userId);
+   CHK_EXEC(SQLQuery(query));
+
+
    CHK_EXEC(SetSchemaVersion(413));
    return TRUE;
 }
