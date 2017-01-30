@@ -97,14 +97,17 @@ public class General extends PropertyPage
       if (newName.equals(category.getName()) && newDescription.equals(category.getDescription()))
          return true; // Nothing to apply
       
-      AlarmCategory c = session.findAlarmCategoryByName(newName);
-      if (c != null)
+      if (!newName.equals(category.getName()))
       {
-         MessageDialogHelper.openError(getShell(), "Error", "Category name already exists!");
-         return false;
+         AlarmCategory c = session.findAlarmCategoryByName(newName);
+         if (c != null)
+         {
+            MessageDialogHelper.openError(getShell(), "Error", "Category name already exists!");
+            return false;
+         }
+         category.setName(newName);
       }
       
-      category.setName(newName);
       category.setDescription(newDescription);
       
       editor.modify();
