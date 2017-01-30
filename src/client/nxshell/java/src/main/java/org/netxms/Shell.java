@@ -178,6 +178,7 @@ public class Shell
       imp.load("site");
 
       console.exec("from org.netxms.client import *");
+      console.exec("from org.netxms.client.agent.config import *");
       console.exec("from org.netxms.client.constants import *");
       console.exec("from org.netxms.client.dashboards import *");
       console.exec("from org.netxms.client.datacollection import *");
@@ -186,6 +187,7 @@ public class Shell
       console.exec("from org.netxms.client.maps import *");
       console.exec("from org.netxms.client.maps.configs import *");
       console.exec("from org.netxms.client.maps.elements import *");
+      console.exec("from org.netxms.client.market import *");
       console.exec("from org.netxms.client.mt import *");
       console.exec("from org.netxms.client.objects import *");
       console.exec("from org.netxms.client.objecttools import *");
@@ -193,11 +195,11 @@ public class Shell
       console.exec("from org.netxms.client.reporting import *");
       console.exec("from org.netxms.client.server import *");
       console.exec("from org.netxms.client.services import *");
-      console.exec("from org.netxms.client.situations import *");
       console.exec("from org.netxms.client.snmp import *");
       console.exec("from org.netxms.client.topology import *");
       console.exec("from org.netxms.client.users import *");
       console.exec("from org.netxms.client.xml import *");
+      console.exec("from org.netxms.client.zeromq import *");
 
       console.set("__name__", "__nxshell__");
 
