@@ -5782,13 +5782,15 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void modifyAlarmCategory(AlarmCategory object, int fields) throws IOException, NXCException
+   public long modifyAlarmCategory(AlarmCategory object) throws IOException, NXCException
    {
+      if (object.getName().isEmpty())
+         return 0;
       NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_ALARM_CATEGORY);
-      msg.setFieldInt32(NXCPCodes.VID_FIELDS, fields);
       object.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
    }
    
    /**
@@ -5841,6 +5843,28 @@ public class NXCSession
       synchronized(alarmCategories)
       {
          return alarmCategories.get(id);
+      }
+   }
+   
+   /**
+    * Find alarm category by name in alarm category database internally
+    * maintained by session object. You must call
+    * NXCSession.syncAlarmCategories() first to make local copy of event template
+    * database.
+    *
+    * @param code Event code
+    * @return Event template object or null if not found
+    */
+   public AlarmCategory findAlarmCategoryByName(String name)
+   {
+      synchronized(alarmCategories)
+      {
+         for (Map.Entry<Long, AlarmCategory> c : alarmCategories.entrySet())
+         {
+            if (((AlarmCategory)c.getValue()).getName().equals(name))
+               return (AlarmCategory)c.getValue();
+         }
+         return null;
       }
    }
    

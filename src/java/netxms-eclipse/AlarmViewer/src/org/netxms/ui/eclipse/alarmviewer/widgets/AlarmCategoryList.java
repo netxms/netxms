@@ -52,6 +52,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.AlarmCategoryLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmCategoryListComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmCategoryListFilter;
@@ -430,13 +431,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
     */
    public void createCategory()
    {
-      AlarmCategory category = new AlarmCategory();
-      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, category);
-      if (dlg != null)
-      {
-         dlg.getShell().setText("Properties");
-         dlg.open();
-      }
+      AlarmCategoryEditor editor = new AlarmCategoryEditor(new AlarmCategory());
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, editor);
+      dlg.open();
    }
 
    /**
@@ -447,13 +444,9 @@ public class AlarmCategoryList extends Composite implements SessionListener
       if (selection.isEmpty())
          return;
 
-      AlarmCategory category = new AlarmCategory((AlarmCategory)selection.getFirstElement());
-      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, category);
-      if (dlg != null)
-      {
-         dlg.getShell().setText("Properties");
-         dlg.open();
-      }
+      AlarmCategoryEditor editor = new AlarmCategoryEditor((AlarmCategory)selection.getFirstElement());
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, editor);
+      dlg.open();
    }
 
    /**

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.propertypages;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,9 +27,9 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.ui.eclipse.alarmviewer.Activator;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -40,17 +39,9 @@ public class General extends PropertyPage
 {
    private Text textName;
    private Text textDescription;
-   private String categoryName;
-   private String categoryDescription;
-   private AlarmCategory object;
+   private AlarmCategoryEditor editor;
+   private AlarmCategory category;
    private NXCSession session;
-   private boolean applyPressed = false;
-
-   public General()
-   {
-      super();
-      session = ConsoleSharedData.getSession();
-   }
 
    /*
     * (non-Javadoc)
@@ -60,9 +51,11 @@ public class General extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
+      session = ConsoleSharedData.getSession();
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
-      object = (AlarmCategory)getElement().getAdapter(AlarmCategory.class);
+      editor = (AlarmCategoryEditor)getElement().getAdapter(AlarmCategoryEditor.class);
+      category = editor.getObjectAsItem();
 
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -70,17 +63,15 @@ public class General extends PropertyPage
 
       // Category ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, "Category ID",
-            Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
+            Long.toString(category.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       // Category name
-      categoryName = object.getName();
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Category name", categoryName,
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Category name", category.getName(),
             WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       // Category description
-      categoryDescription = object.getDescription();
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT, "Description",
-            categoryDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            category.getDescription(), WidgetHelper.DEFAULT_LAYOUT_DATA);
       textDescription.setTextLimit(255);
       GridData gd = new GridData();
       gd.horizontalSpan = 2;
@@ -98,49 +89,27 @@ public class General extends PropertyPage
     * 
     * @param isApply true if update operation caused by "Apply" button
     */
-   protected void applyChanges(final boolean isApply)
+   protected boolean applyChanges(final boolean isApply)
    {
       final String newName = textName.getText();
       final String newDescription = textDescription.getText();
 
-      if (newName.equals(categoryName) && newDescription.equals(categoryDescription) && applyPressed)
-         return; // Nothing to apply
-
-      if (isApply)
-         setValid(false);
-
-      new ConsoleJob("Update alarm category database", null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            object.setName(newName);
-            object.setDescription(newDescription);
-
-            session.modifyAlarmCategory(object, AlarmCategory.MODIFY_ALARM_CATEGORY);
-         }
-
-         @Override
-         protected void jobFinalize()
-         {
-            if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     General.this.setValid(true);
-                  }
-               });
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot update alarm category database entry";
-         }
-
-      }.start();
+      if (newName.equals(category.getName()) && newDescription.equals(category.getDescription()))
+         return true; // Nothing to apply
+      
+      AlarmCategory c = session.findAlarmCategoryByName(newName);
+      if (c != null)
+      {
+         MessageDialogHelper.openError(getShell(), "Error", "Category name already exists!");
+         return false;
+      }
+      
+      category.setName(newName);
+      category.setDescription(newDescription);
+      
+      editor.modify();
+      
+      return true;
    }
 
    /*
@@ -151,8 +120,7 @@ public class General extends PropertyPage
    @Override
    public boolean performOk()
    {
-      applyChanges(false);
-      return true;
+      return applyChanges(false);
    }
 
    /*
@@ -164,6 +132,5 @@ public class General extends PropertyPage
    protected void performApply()
    {
       applyChanges(true);
-      applyPressed = true;
    }
 }

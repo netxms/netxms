@@ -63,4 +63,11 @@ public class CommonRCC
 	public static final int CLIENT_LICENSE_EXCEEDED = 106;
 	public static final int OBJECT_ALREADY_EXISTS = 107;
    public static final int OBJECT_IN_USE = 116;
+   public static final int RCC_NXSL_COMPILATION_ERROR = 117;
+   public static final int RCC_NXSL_EXECUTION_ERROR = 118;
+   public static final int RCC_UNKNOWN_CONFIG_VARIABLE = 119;
+   public static final int RCC_UNSUPPORTED_AUTH_METHOD = 120;
+   public static final int RCC_NAME_ALEARDY_EXISTS = 121;
+   public static final int RCC_CATEGORY_IN_USE = 122;
+   public static final int RCC_CATEGORY_NAME_EMPTY = 123;
 }

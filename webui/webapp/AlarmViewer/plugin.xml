@@ -209,7 +209,7 @@
             name="General">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.events.AlarmCategory">
+                  value="org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor">
             </instanceof>
          </enabledWhen>
       </page>
@@ -219,7 +219,7 @@
             name="Access Control">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.client.events.AlarmCategory">
+                  value="org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor">
             </instanceof>
          </enabledWhen>
       </page>

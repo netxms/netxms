@@ -103,21 +103,13 @@ void AlarmCategory::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 void AlarmCategory::modifyFromMessage(const NXCPMessage *msg)
 {
-   UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
+   free(m_name);
+   m_name = msg->getFieldAsString(VID_NAME);
 
-   if (fields & ALARM_MODIFY_CATEGORY)
-   {
-      free(m_name);
-      m_name = msg->getFieldAsString(VID_NAME);
+   free(m_description);
+   m_description = msg->getFieldAsString(VID_DESCRIPTION);
 
-      free(m_description);
-      m_description = msg->getFieldAsString(VID_DESCRIPTION);
-   }
-
-   if (fields & ALARM_MODIFY_ACCESS_LIST)
-   {
-      msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
-   }
+   msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
 }
 
 /**
@@ -221,28 +213,13 @@ void GetAlarmCategories(NXCPMessage *msg)
 /**
 * Update alarm category database
 */
-UINT32 UpdateAlarmCategory(const NXCPMessage *request)
+UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId)
 {
-   UINT32 id = request->getFieldAsUInt32(VID_CATEGORY_ID);
+   TCHAR *name = request->getFieldAsString(VID_NAME);
+   if (name == NULL || name[0] == 0)
+      return RCC_CATEGORY_NAME_EMPTY;
 
-   TCHAR name[64];
-   request->getFieldAsString(VID_NAME, name, 64);
-   s_lock.readLock();
-   bool nameExists = false;
-   Iterator<AlarmCategory> *it = s_categories.iterator();
-   while(it->hasNext())
-   {
-      AlarmCategory *c = it->next();
-      if (!_tcsicmp(c->getName(), name) && (c->getId() != id))
-      {
-         nameExists = true;
-         break;
-      }
-   }
-   delete it;
-   s_lock.unlock();
-   if (nameExists)
-      return RCC_NAME_ALEARDY_EXISTS;
+   UINT32 id = request->getFieldAsUInt32(VID_CATEGORY_ID);
 
    AlarmCategory *category;
    s_lock.writeLock();
@@ -261,6 +238,7 @@ UINT32 UpdateAlarmCategory(const NXCPMessage *request)
          return RCC_INVALID_OBJECT_ID;
       }
    }
+   *returnId = id;
    category->modifyFromMessage(request);
    UINT32 rcc = category->saveToDatabase() ? RCC_SUCCESS : RCC_DB_FAILURE;
 
@@ -332,7 +310,7 @@ UINT32 DeleteAlarmCategory(UINT32 id)
                NXCPMessage nmsg;
                nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
                nmsg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_DELETE);
-               nmsg.setField(VID_CATEGORY_ID, id);
+               nmsg.setField(VID_ELEMENT_LIST_BASE, id);
                EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
             }
          }

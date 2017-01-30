@@ -2028,7 +2028,9 @@ void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      msg.setField(VID_RCC, UpdateAlarmCategory(pRequest));
+      UINT32 id = 0;
+      msg.setField(VID_RCC, UpdateAlarmCategory(pRequest, &id));
+      msg.setField(VID_CATEGORY_ID, id);
    }
    else
    {

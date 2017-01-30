@@ -1152,7 +1152,7 @@ void RunHouseKeeper();
  * Alarm category functions
  */
 void GetAlarmCategories(NXCPMessage *msg);
-UINT32 UpdateAlarmCategory(const NXCPMessage *request);
+UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId);
 UINT32 DeleteAlarmCategory(UINT32 id);
 bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
 void LoadAlarmCategories();

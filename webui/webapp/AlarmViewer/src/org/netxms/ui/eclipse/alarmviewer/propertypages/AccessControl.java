@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.alarmviewer.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -41,8 +40,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
-import org.netxms.ui.eclipse.alarmviewer.Activator;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
@@ -56,7 +54,8 @@ public class AccessControl extends PropertyPage
 {
    private SortableTableViewer userList;
    private NXCSession session;
-   private AlarmCategory object;
+   private AlarmCategory category;
+   private AlarmCategoryEditor editor;
    private HashMap<Long, AbstractUserObject> accessMap = new HashMap<Long, AbstractUserObject>(0);
 
    @Override
@@ -65,7 +64,8 @@ public class AccessControl extends PropertyPage
       session = ConsoleSharedData.getSession();
       
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      object = (AlarmCategory)getElement().getAdapter(AlarmCategory.class);
+      editor = (AlarmCategoryEditor)getElement().getAdapter(AlarmCategoryEditor.class);
+      category = editor.getObjectAsItem();
       
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
@@ -154,7 +154,7 @@ public class AccessControl extends PropertyPage
       });
 
       // Initial data
-      for(long userId : object.getAccessControl())
+      for(long userId : category.getAccessControl())
       {
          final AbstractUserObject user = session.findUserDBObjectById(userId);
          if (user != null)
@@ -172,45 +172,16 @@ public class AccessControl extends PropertyPage
     * 
     * @param isApply true if update operation caused by "Apply" button
     */
-   protected void applyChanges(final boolean isApply)
-   {
-      if (isApply)
-         setValid(false);
-      
+   protected boolean applyChanges(final boolean isApply)
+   {      
       Long[] accessControlIds = new Long[accessMap.size()];
       int i = 0;
       for(Long id : accessMap.keySet())
          accessControlIds[i++] = id;
-      object.setAccessControl(accessControlIds);
+      category.setAccessControl(accessControlIds);
       
-      new ConsoleJob("Update alarm category acl", null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            session.modifyAlarmCategory(object, AlarmCategory.MODIFY_ACCESS_CONTROL);
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot update alarm category access list";
-         }
-
-         @Override
-         protected void jobFinalize()
-         {
-            if (isApply)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     AccessControl.this.setValid(true);
-                  }
-               });
-            }
-         }
-      }.start();
+      editor.modify();
+      return true;
    }
 
    /* (non-Javadoc)
@@ -219,8 +190,7 @@ public class AccessControl extends PropertyPage
    @Override
    public boolean performOk()
    {
-      applyChanges(false);
-      return true;
+      return applyChanges(false);
    }
 
    /* (non-Javadoc)

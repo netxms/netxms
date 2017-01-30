@@ -135,6 +135,14 @@ public class AlarmCategory
    {
       return id;
    }
+   
+   /**
+    * @param id to set
+    */
+   public void setId(long id)
+   {
+      this.id = id;
+   }
 
    /**
     * @return Access List

@@ -537,6 +537,7 @@ enum SessionState
 #define RCC_UNSUPPORTED_AUTH_METHOD  ((UINT32)120)
 #define RCC_NAME_ALEARDY_EXISTS      ((UINT32)121)
 #define RCC_CATEGORY_IN_USE          ((UINT32)122)
+#define RCC_CATEGORY_NAME_EMPTY      ((UINT32)123)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
