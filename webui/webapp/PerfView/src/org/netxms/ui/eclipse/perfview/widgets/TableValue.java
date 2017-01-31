@@ -39,6 +39,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -65,9 +67,11 @@ import org.netxms.ui.eclipse.perfview.widgets.helpers.CellSelectionManager;
 import org.netxms.ui.eclipse.perfview.widgets.helpers.TableContentProvider;
 import org.netxms.ui.eclipse.perfview.widgets.helpers.TableItemComparator;
 import org.netxms.ui.eclipse.perfview.widgets.helpers.TableLabelProvider;
+import org.netxms.ui.eclipse.perfview.widgets.helpers.TableValueFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -93,6 +97,9 @@ public class TableValue extends Composite
    private Action actionShowBarChart;
    private Action actionShowPieChart;
    private Action actionUseMultipliers;
+   private Action actionShowFilter;
+   private FilterText filterText;
+   private TableValueFilter filter;
 
    /**
     * @param parent
@@ -107,6 +114,23 @@ public class TableValue extends Composite
       session = (NXCSession)ConsoleSharedData.getSession();
 
       setLayout(new FormLayout());
+      
+      // Create filter area
+      filterText = new FilterText(this, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 
       viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.getTable().setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
@@ -114,14 +138,23 @@ public class TableValue extends Composite
       viewer.setContentProvider(new TableContentProvider());
       labelProvider = new TableLabelProvider();
       viewer.setLabelProvider(labelProvider);
+      filter = new TableValueFilter();
+      viewer.addFilter(filter);
       cellSelectionManager = new CellSelectionManager(viewer);
       
+      // Setup layout
       FormData fd = new FormData();
-      fd.top = new FormAttachment(0, 0);
       fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
       
       StringBuilder sb = new StringBuilder("TableLastValues."); //$NON-NLS-1$
       sb.append(dciId);
@@ -133,11 +166,39 @@ public class TableValue extends Composite
       configId = sb.toString();
       
       final IDialogSettings ds = Activator.getDefault().getDialogSettings();
-      if (ds.get(configId + ".useMultipliers") != null)
-         labelProvider.setUseMultipliers(ds.getBoolean(configId + ".useMultipliers"));
-
+      labelProvider.setUseMultipliers(getBoolean(ds, configId + ".useMultipliers", false));
+      
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(viewer, ds, configId);
+            ds.put(configId + ".initShowfilter", actionShowFilter.isChecked());
+         }
+      });
+      
       createActions();
       createPopupMenu();
+      
+      // Set initial focus to filter input line
+      if (getBoolean(ds, configId + ".initShowfilter", false))
+      {
+         filterText.setFocus();
+         actionShowFilter.setChecked(true);
+      }
+      else
+         enableFilter(false); // Will hide filter area correctly
+   }
+   
+   /**
+    * @param ds IDialogSettings
+    * @param s Settings string
+    * @param defval default value
+    * @return
+    */
+   private boolean getBoolean(IDialogSettings ds, String s, boolean defval)
+   {
+      return ds.getBoolean(s) ? true : defval;
    }
 
    /**
@@ -186,6 +247,21 @@ public class TableValue extends Composite
          }
       };
       actionUseMultipliers.setChecked(labelProvider.areMultipliersUsed());
+      
+      actionShowFilter = new Action() {
+         /*
+          * (non-Javadoc)
+          * 
+          * @see org.eclipse.jface.action.Action#run()
+          */
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setText("Show filter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.perfview.commands.show_table_values_filter"); //$NON-NLS-1$
    }
 
    /**
@@ -227,6 +303,7 @@ public class TableValue extends Composite
       manager.add(actionShowPieChart);
       manager.add(new Separator());
       manager.add(actionUseMultipliers);
+      manager.add(actionShowFilter);
       manager.add(new Separator());
       manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
@@ -550,5 +627,62 @@ public class TableValue extends Composite
    public Action getActionUseMultipliers()
    {
       return actionUseMultipliers;
+   }
+   
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      actionShowFilter.setChecked(enable);
+      filterText.setVisible(enable);
+      FormData fd = (FormData)viewer.getControl().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      layout();
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Get filter text
+    * 
+    * @return Current filter text
+    */
+   public String getFilterText()
+   {
+      return filterText.getText();
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+   
+   /**
+    * Get show filter action
+    */
+   public Action getShowFilterAction()
+   {
+      return actionShowFilter;
    }
 }

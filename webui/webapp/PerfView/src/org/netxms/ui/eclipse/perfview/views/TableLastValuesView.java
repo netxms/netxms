@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
@@ -87,6 +88,7 @@ public class TableLastValuesView extends ViewPart
 
 		createActions();
 		contributeToActionBars();
+      activateContext();
 	
 		viewer.setObject(objectId, dciId);
 		refreshTable();
@@ -107,6 +109,18 @@ public class TableLastValuesView extends ViewPart
 
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer.getViewer(), false);
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.perfview.context.TableLastValuesView"); //$NON-NLS-1$
+      }
+   }
 
 	/**
 	 * Contribute actions to action bar
@@ -128,6 +142,7 @@ public class TableLastValuesView extends ViewPart
 	{
 		manager.add(actionExportAllToCsv);
 		manager.add(viewer.getActionUseMultipliers());
+      manager.add(viewer.getShowFilterAction());
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

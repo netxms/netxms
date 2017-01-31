@@ -238,12 +238,16 @@
       </command>
       <command
             id="org.netxms.ui.eclipse.perfview.commands.show_graph_filter"
-            name="Show filter">
+            name="Show graph filter">
       </command>
       <command
             description="Open Template Graphs"
             id="org.netxms.ui.eclipse.perfview.commands.open_template_graph_view"
             name="Template Graphs">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.perfview.commands.show_table_values_filter"
+            name="Show table value filter">
       </command>
    </extension>
    <extension
@@ -303,12 +307,23 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.perfview.commands.show_table_values_filter"
+            contextId="org.netxms.ui.eclipse.perfview.context.TableLastValuesView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.perfview.context.PredefinedGraphTree"
             name="Graphs"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.perfview.context.TableLastValuesView"
+            name="Table Last Values"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
