@@ -49,12 +49,14 @@
         <tycho.version>0.23.0</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+         <maven.compiler.source>1.7</maven.compiler.source>
+         <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
 
     <repositories>
         <repository>
             <id>eclipse-Draw2D</id>
-            <url>http://download.eclipse.org/tools/gef/updates/milestones</url>
+            <url> http://download.eclipse.org/tools/gef/updates/releases</url>
             <layout>p2</layout>
         </repository>
         <repository>

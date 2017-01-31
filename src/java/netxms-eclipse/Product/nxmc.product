@@ -54,7 +54,6 @@ Copyright (c) 2003-2017 Raden Solutions
       <plugin id="org.eclipse.birt.chart.engine"/>
       <plugin id="org.eclipse.birt.chart.engine.extension"/>
       <plugin id="org.eclipse.birt.core"/>
-      <plugin id="org.eclipse.birt.jetty.overlay" fragment="true"/>
       <plugin id="org.eclipse.compare.core"/>
       <plugin id="org.eclipse.compare.core.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.compare.core.nl_cs" fragment="true"/>
