@@ -260,6 +260,6 @@ public class ChartDciConfig
    @Override
    public int hashCode()
    {
-      return Long.hashCode(dciId);
+      return Long.valueOf(dciId).hashCode();
    }
 }
