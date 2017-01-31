@@ -1736,6 +1736,7 @@ CREATE TABLE syslog
 ) TABLE_TYPE;
 
 CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
+CREATE INDEX idx_syslog_source ON syslog(source_object_id);
 
 COMMENT_TABLE(syslog, '')
 COMMENT_COLUMN(syslog.msg_id, '')
@@ -1779,6 +1780,7 @@ CREATE TABLE snmp_trap_log
 ) TABLE_TYPE;
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
+CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id);
 
 COMMENT_TABLE(snmp_trap_log, '')
 COMMENT_COLUMN(snmp_trap_log.trap_id, '')
