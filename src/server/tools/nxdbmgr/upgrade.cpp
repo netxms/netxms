@@ -766,8 +766,6 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
             _T("value varchar(2000) null,")
             _T("PRIMARY KEY(entry_key))")));
 
-
-
    //Move previous attrs form situations to pstorage
    DB_RESULT hResult = SQLSelect(_T("SELECT event_policy.rule_id,situations.name,event_policy.situation_instance,")
                                  _T("policy_situation_attr_list.attr_name,policy_situation_attr_list.attr_value ")
