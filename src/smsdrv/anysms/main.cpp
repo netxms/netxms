@@ -52,8 +52,8 @@ struct RequestData
  */
 static char s_login[128] = "user";
 static char s_password[128] = "password";
-static char s_sender[64] = "";
-static char s_gateway[64] = "";
+static char s_sender[64] = "NETXMS";
+static char s_gateway[64] = "28";
 
 /**
  * Init driver
@@ -84,17 +84,17 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 #ifdef UNICODE
    WCHAR buffer[128];
 
-   ExtractNamedOptionValue(initArgs, _T("login"), buffer, 128);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_login, 128, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("login"), buffer, 128))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_login, 128, NULL, NULL);
 
-   ExtractNamedOptionValue(initArgs, _T("password"), buffer, 128);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_password, 128, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("password"), buffer, 128))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_password, 128, NULL, NULL);
 
-   ExtractNamedOptionValue(initArgs, _T("sender"), buffer, 64);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_sender, 64, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("sender"), buffer, 64))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_sender, 64, NULL, NULL);
 
-   ExtractNamedOptionValue(initArgs, _T("gateway"), buffer, 64);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_gateway, 64, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("gateway"), buffer, 64))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_gateway, 64, NULL, NULL);
 #else
    ExtractNamedOptionValue(initArgs, _T("login"), s_login, 128);
    ExtractNamedOptionValue(initArgs, _T("password"), s_password, 128);
@@ -187,7 +187,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
                }
                else
                {
-               	nxlog_debug(4, _T("AnySMS: error response (%s)"), data->data);
+               	nxlog_debug(4, _T("AnySMS: error response (%hs)"), data->data);
                }
             }
          }
