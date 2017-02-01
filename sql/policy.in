@@ -50,7 +50,7 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
 	VALUES (11,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
-		'%m',1,'','',0,EVENT_ALARM_TIMEOUT,0,'');
+		'%m',1,'','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
 	VALUES (12,'062228ef-c155-4669-a90a-603cae13240e',7944,'Generate alarm when server enconters NXSL script execution error',
