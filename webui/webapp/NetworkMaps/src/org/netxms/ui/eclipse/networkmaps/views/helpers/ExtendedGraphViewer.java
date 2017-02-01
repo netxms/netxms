@@ -716,11 +716,11 @@ public class ExtendedGraphViewer extends GraphViewer
 		snapToGrid = snap;
 		if (snap)
 		{
-			graph.getLightweightSystem().getRootFigure().addMouseListener(snapToGridListener);			
+			graph.getZestRootLayer().addMouseListener(snapToGridListener);
 		}
 		else
 		{
-			graph.getLightweightSystem().getRootFigure().removeMouseListener(snapToGridListener);			
+		   graph.getZestRootLayer().removeMouseListener(snapToGridListener);			
 		}
 	}
 	
