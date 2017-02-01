@@ -809,6 +809,18 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 
 #endif
 
+/**
+ * Get last socket error as text
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
+{
+#ifdef _WIN32
+   return GetSystemErrorText(WSAGetLastError(), buffer, size);
+#else
+   nx_strncpy(buffer, _tcserror(errno), size);
+#endif
+}
+
 #if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
 
 /**

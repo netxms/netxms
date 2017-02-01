@@ -1906,6 +1906,8 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 
+TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size);
+
 #if !HAVE_DAEMON || !HAVE_DECL_DAEMON
 int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
 #define daemon __daemon

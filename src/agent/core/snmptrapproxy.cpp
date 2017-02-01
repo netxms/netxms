@@ -26,11 +26,11 @@ class UdpMessage
 {
 public:
    UINT32 ipAddr;
-   short port;
-   BYTE* rawMessage;
+   UINT16 port;
+   BYTE *rawMessage;
    int lenght;
 
-   ~UdpMessage() { safe_free(rawMessage); }
+   ~UdpMessage() { free(rawMessage); }
 };
 
 /**
@@ -60,7 +60,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
-      DebugPrintf(1, _T("SNMPTrapReceiver: cannot create socket (%s)"), _tcserror(errno));
+      TCHAR buffer[1024];
+      nxlog_debug(1, _T("SNMPTrapReceiver: cannot create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       return THREAD_OK;
    }
 
@@ -70,6 +71,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Fill in local address structure
    struct sockaddr_in sa;
    memset(&sa, 0, sizeof(sa));
+   sa.sin_family = AF_INET;
    if (!_tcscmp(g_szSNMPTrapListenAddress, _T("*")))
    {
       sa.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -91,7 +93,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)) != 0)
    {
-      DebugPrintf(1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
+      TCHAR buffer[1024];
+      nxlog_debug(1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(hSocket);
       return THREAD_OK;
    }
@@ -114,7 +117,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       {
          UdpMessage *message = new UdpMessage();
          message->ipAddr = ntohl(sa.sin_addr.s_addr);
-         message->port = (short)g_snmpTrapPort;
+         message->port = g_snmpTrapPort;
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
          DebugPrintf(6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));

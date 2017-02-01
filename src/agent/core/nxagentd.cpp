@@ -167,7 +167,7 @@ ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
 UINT32 g_execTimeout = 2000;     // External process execution timeout in milliseconds
 UINT32 g_snmpTimeout = 1000;
-UINT32 g_snmpTrapPort = 162;
+UINT16 g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 0;
@@ -296,7 +296,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_snmpTimeout, NULL },
 	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, NULL },
-   { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_snmpTrapPort, NULL },
+   { _T("SNMPTrapPort"), CT_WORD, 0, 0, 0, 0, &g_snmpTrapPort, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, NULL },

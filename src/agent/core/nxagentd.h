@@ -687,7 +687,7 @@ extern UINT32 g_dwIdleTimeout;
 extern UINT32 g_dwMaxSessions;
 extern UINT32 g_execTimeout;
 extern UINT32 g_snmpTimeout;
-extern UINT32 g_snmpTrapPort;
+extern UINT16 g_snmpTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
 extern UINT32 g_zoneId;
