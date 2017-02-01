@@ -31,6 +31,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.MenuFiltringObj;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -50,6 +51,7 @@ public class Filter extends PropertyPage
 	private Text textNodeOS;
 	private Text textWorkstationOS;
 	private Text textTemplate;
+	private ObjectToolDetails objectTool = null;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
@@ -68,6 +70,9 @@ public class Filter extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 	   MenuFiltringObj obj = (MenuFiltringObj)getElement().getAdapter(MenuFiltringObj.class);
+	   if(obj instanceof ObjectTool)
+	      objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);	   
+	   
 	   filter = obj.getFilter();
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
@@ -212,44 +217,81 @@ public class Filter extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		if (checkAgent.getSelection())
-		   filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_AGENT;
+		   addFlag(ObjectMenuFilter.REQUIRES_AGENT);
 		else
-		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_AGENT;
+		   removeFlag(ObjectMenuFilter.REQUIRES_AGENT);
 
 		if (checkSNMP.getSelection())
-		   filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_SNMP;
+		   addFlag(ObjectMenuFilter.REQUIRES_SNMP);
 		else
-		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_SNMP;
+		   removeFlag(ObjectMenuFilter.REQUIRES_SNMP);
 
 		if (checkMatchOID.getSelection())
-			filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_OID_MATCH;
+			addFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
 		else
-		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_OID_MATCH;
+		   removeFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
 		
-		filter.snmpOid = textOID.getText();		
+      setFilter(textOID.getText(), ObjectMenuFilter.REQUIRES_OID_MATCH);	
 
       if (checkMatchNodeOS.getSelection())
-         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_NODE_OS_MATCH;
+         addFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       else
-         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_NODE_OS_MATCH;
+         removeFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
-      filter.toolNodeOS = textNodeOS.getText();
+      setFilter(textNodeOS.getText(), ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
       if ((checkMatchWorkstationOS != null) && checkMatchWorkstationOS.getSelection())
-         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH;
+         addFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
       else
-         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH;
+         removeFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
       
       if (textWorkstationOS != null)
-         filter.toolWorkstationOS = textWorkstationOS.getText();
+         setFilter(textWorkstationOS.getText(), ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
 
       if (checkMatchTemplate.getSelection())
-         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH;
+         addFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       else
-         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH;
+         removeFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       
-      filter.toolTemplate = textTemplate.getText();
+      setFilter(textTemplate.getText(), ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);    
    }
+	
+	private void setFilter(String filterText, int filterType)
+	{
+	   if(objectTool != null)
+      {
+         objectTool.setFilter(filterText, filterType);
+      }
+      else
+      {
+         filter.setFilter(filterText, filterType);
+      }
+	}
+	
+	private void addFlag(int flag)
+	{
+      if(objectTool != null)
+      {
+         objectTool.setFilterFlags(objectTool.getFilter().flags | flag);
+      }
+      else
+      {
+         filter.flags = filter.flags | flag;
+      }
+	}
+	
+	private void removeFlag(int flag)
+   {
+      if(objectTool != null)
+      {
+         objectTool.setFilterFlags(objectTool.getFilter().flags & ~flag);
+      }
+      else
+      {
+         filter.flags = filter.flags & ~flag;
+      }
+   }
+	
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()

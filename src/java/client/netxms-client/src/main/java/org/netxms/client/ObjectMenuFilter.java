@@ -148,4 +148,30 @@ public class ObjectMenuFilter
       
       return true;
    }
+   
+
+   
+   /**
+    * @param filter
+    */
+   public void setFilter(String filterText, int filterType)
+   {
+      switch(filterType)
+      {
+         case ObjectMenuFilter.REQUIRES_OID_MATCH:
+            snmpOid = filterText;
+            break;
+         case ObjectMenuFilter.REQUIRES_NODE_OS_MATCH:
+            toolNodeOS = filterText;
+            break;
+         case ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH:
+            toolWorkstationOS = filterText;
+            break;
+         case ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH:
+            toolTemplate = filterText;
+            break;
+         default:
+            //do nothing no sutch filter   
+      }
+   }
 }

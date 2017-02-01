@@ -340,4 +340,22 @@ public class ObjectToolDetails extends ObjectTool
 	   this.imageData = imageData;
 	   modified = true;
 	}
+	
+	/**
+	 * @param filter
+	 */
+	public void setFilter(String filterText, int filterType)
+	{
+	   filter.setFilter(filterText, filterType);
+	   modified = true;
+	}
+   
+   /**
+    * @param filter
+    */
+   public void setFilterFlags(int flags)
+   {
+      filter.flags = flags;
+      modified = true;
+   }
 }
