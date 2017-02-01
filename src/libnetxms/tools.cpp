@@ -817,7 +817,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
 #ifdef _WIN32
    return GetSystemErrorText(WSAGetLastError(), buffer, size);
 #else
-   nx_strncpy(buffer, _tcserror(errno), size);
+   return nx_strncpy(buffer, _tcserror(errno), size);
 #endif
 }
 
