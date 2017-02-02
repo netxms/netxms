@@ -627,7 +627,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		parent->addChild(node);
 		node->addParent(parent);
 		node->unhide();
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+		*ppResult = node->createNXSLObject();
 	}
 	else
 	{
@@ -670,8 +670,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	container->addParent(parent);
 	container->unhide();
 
-	*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, container));
-
+	*ppResult = container->createNXSLObject();
 	return 0;
 }
 

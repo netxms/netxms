@@ -400,6 +400,7 @@ public:
    INT64 getValueAsInt64();
    UINT64 getValueAsUInt64();
    double getValueAsReal();
+   bool getValueAsBoolean() { return getValueAsInt32() != 0; }
    NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
    NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
    NXSL_HashMap *getValueAsHashMap() { return (m_nDataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }

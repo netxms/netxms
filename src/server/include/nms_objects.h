@@ -1931,6 +1931,8 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
+   void setAutoBindFilterInternal(const TCHAR *script);
+
 public:
    Container();
    Container(const TCHAR *pszName, UINT32 dwCategory);
@@ -1947,13 +1949,17 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual NXSL_Value *createNXSLObject();
+
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
    AutoBindDecision isSuitableForObject(NetObj *object);
-	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
-	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_BIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
+	bool isAutoBindEnabled() const { return (m_flags & CF_AUTO_BIND) ? true : false; }
+	bool isAutoUnbindEnabled() const { return ((m_flags & (CF_AUTO_BIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
+	const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
 
-	void setAutoBindFilter(const TCHAR *script);
+	void setAutoBindFilter(const TCHAR *script) { lockProperties(); setAutoBindFilterInternal(script); unlockProperties(); }
+	void setAutoBindMode(bool doBind, bool doUnbind);
 };
 
 /**

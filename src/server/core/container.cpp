@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -264,8 +264,8 @@ UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
 	if (request->isFieldExist(VID_AUTOBIND_FILTER))
 	{
 		TCHAR *script = request->getFieldAsString(VID_AUTOBIND_FILTER);
-		setAutoBindFilter(script);
-		safe_free(script);
+		setAutoBindFilterInternal(script);
+		free(script);
 	}
 
    return NetObj::modifyFromMessageInternal(request);
@@ -274,7 +274,7 @@ UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
 /**
  * Set container's autobind script
  */
-void Container::setAutoBindFilter(const TCHAR *script)
+void Container::setAutoBindFilterInternal(const TCHAR *script)
 {
 	if (script != NULL)
 	{
@@ -305,6 +305,27 @@ void Container::setAutoBindFilter(const TCHAR *script)
 		safe_free_and_null(m_bindFilterSource);
 	}
 	setModified();
+}
+
+/**
+ * Set auito bind mode for container
+ */
+void Container::setAutoBindMode(bool doBind, bool doUnbind)
+{
+   lockProperties();
+
+   if (doBind)
+      m_flags |= CF_AUTO_BIND;
+   else
+      m_flags &= ~CF_AUTO_BIND;
+
+   if (doUnbind)
+      m_flags |= CF_AUTO_UNBIND;
+   else
+      m_flags &= ~CF_AUTO_UNBIND;
+
+   setModified();
+   unlockProperties();
 }
 
 /**
@@ -360,4 +381,12 @@ AutoBindDecision Container::isSuitableForObject(NetObj *object)
 bool Container::showThresholdSummary()
 {
 	return true;
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Container::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslContainerClass, this));
 }

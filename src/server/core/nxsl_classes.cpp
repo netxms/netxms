@@ -1036,6 +1036,69 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * Container::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
+{
+   if (!argv[0]->isInteger() || !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   ((Container *)object->getData())->setAutoBindMode(argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * Container::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Container, setAutoBindScript)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   ((Container *)object->getData())->setAutoBindFilter(argv[0]->getValueAsCString());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * NXSL class "Container" constructor
+ */
+NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
+{
+   setName(_T("Container"));
+
+   NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(Container, setAutoBindScript, 1);
+}
+
+/**
+ * NXSL class "Cluster" attributes
+ */
+NXSL_Value *NXSL_ContainerClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Container *container = (Container *)object->getData();
+   if (!_tcscmp(attr, _T("autoBindScript")))
+   {
+      const TCHAR *script = container->getAutoBindScriptSource();
+      value = new NXSL_Value(CHECK_NULL_EX(script));
+   }
+   else if (!_tcscmp(attr, _T("isAutoBindEnabled")))
+   {
+      value = new NXSL_Value(container->isAutoBindEnabled() ? 1 : 0);
+   }
+   else if (!_tcscmp(attr, _T("isAutoUnbindEnabled")))
+   {
+      value = new NXSL_Value(container->isAutoUnbindEnabled() ? 1 : 0);
+   }
+   return value;
+}
+
+/**
  * Event::setMessage() method
  */
 NXSL_METHOD_DEFINITION(Event, setMessage)
@@ -1494,6 +1557,7 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
+NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;

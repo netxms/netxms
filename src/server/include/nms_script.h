@@ -93,6 +93,17 @@ public:
 };
 
 /**
+ * NXSL "Container" class
+ */
+class NXSL_ContainerClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_ContainerClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
  * NXSL "Zone" class
  */
 class NXSL_ZoneClass : public NXSL_NetObjClass
@@ -219,6 +230,7 @@ extern NXSL_Library *g_pScriptLibrary;
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
+extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
