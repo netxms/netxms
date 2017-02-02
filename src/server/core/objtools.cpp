@@ -364,39 +364,53 @@ static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
    }
 
    // Get values for other columns
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
-   for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
+   if (((SNMP_ENUM_ARGS *)pArg)->dwNumCols > 1)
    {
-      _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);
-      _tcscat(szOid, szSuffix);
-      nameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
-      if (nameLen != 0)
+      pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
+      for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
       {
-         pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLen));
+         _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);
+         _tcscat(szOid, szSuffix);
+         nameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
+         if (nameLen != 0)
+         {
+            pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLen));
+         }
+      }
+
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
+      delete pRqPDU;
+      if (dwResult == SNMP_ERR_SUCCESS)
+      {
+         if ((pRespPDU->getNumVariables() > 0) &&
+             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         {
+            ((SNMP_ENUM_ARGS *)pArg)->table->addRow();
+
+            // Add first column to results
+            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
+                          ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
+                          ((SNMP_ENUM_ARGS *)pArg)->pNode);
+
+            for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
+               AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, i,
+                             pRespPDU->getVariable(i - 1),
+                             ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
+                             ((SNMP_ENUM_ARGS *)pArg)->pNode);
+         }
+         delete pRespPDU;
       }
    }
-
-   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-   delete pRqPDU;
-   if (dwResult == SNMP_ERR_SUCCESS)
+   else  // single column
    {
-      if ((pRespPDU->getNumVariables() > 0) &&
-          (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
-      {
-			((SNMP_ENUM_ARGS *)pArg)->table->addRow();
+      ((SNMP_ENUM_ARGS *)pArg)->table->addRow();
 
-         // Add first column to results
-         AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
-                       ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
-                       ((SNMP_ENUM_ARGS *)pArg)->pNode);
+      // Add first column to results
+      AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, 0, pVar,
+                    ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
+                    ((SNMP_ENUM_ARGS *)pArg)->pNode);
 
-         for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
-            AddSNMPResult(((SNMP_ENUM_ARGS *)pArg)->table, i,
-                          pRespPDU->getVariable(i - 1),
-                          ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
-                          ((SNMP_ENUM_ARGS *)pArg)->pNode);
-      }
-      delete pRespPDU;
+      dwResult = SNMP_ERR_SUCCESS;
    }
    return dwResult;
 }
