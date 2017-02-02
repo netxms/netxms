@@ -636,4 +636,9 @@ void ResetDiscoveryPoller()
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    else
       g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
+
+   if (ConfigReadInt(_T("UseSyslogForDiscovery"), 0))
+      g_flags |= AF_SYSLOG_DISCOVERY;
+   else
+      g_flags &= ~AF_SYSLOG_DISCOVERY;
 }

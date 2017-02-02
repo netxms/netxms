@@ -19,6 +19,7 @@ public class DiscoveryConfig
 	private boolean enabled;
 	private boolean active;
 	private boolean useSnmpTraps;
+	private boolean useSyslog;
 	private int filterFlags;
 	private String filter;
 	private List<InetAddressListElement> targets;
@@ -48,6 +49,7 @@ public class DiscoveryConfig
 		config.enabled = getBoolean(variables, "RunNetworkDiscovery", false); //$NON-NLS-1$
 		config.active = getBoolean(variables, "ActiveNetworkDiscovery", false); //$NON-NLS-1$
 		config.useSnmpTraps = getBoolean(variables, "UseSNMPTrapsForDiscovery", false); //$NON-NLS-1$
+      config.useSyslog = getBoolean(variables, "UseSyslogForDiscovery", false); //$NON-NLS-1$
 		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
 		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
 		
@@ -131,6 +133,7 @@ public class DiscoveryConfig
 		session.setServerVariable("RunNetworkDiscovery", enabled ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("ActiveNetworkDiscovery", active ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      session.setServerVariable("UseSyslogForDiscovery", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
 		session.setServerVariable("DiscoveryFilter", filter); //$NON-NLS-1$
 		
@@ -250,5 +253,21 @@ public class DiscoveryConfig
    public void setUseSnmpTraps(boolean useSnmpTraps)
    {
       this.useSnmpTraps = useSnmpTraps;
+   }
+
+   /**
+    * @return the useSyslog
+    */
+   public boolean isUseSyslog()
+   {
+      return useSyslog;
+   }
+
+   /**
+    * @param useSyslog the useSyslog to set
+    */
+   public void setUseSyslog(boolean useSyslog)
+   {
+      this.useSyslog = useSyslog;
    }
 }

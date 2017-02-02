@@ -78,6 +78,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
    private Button checkUseSnmpTraps;
+   private Button checkUseSyslog;
    private Button radioFilterOff;
    private Button radioFilterCustom;
    private Button radioFilterAuto;
@@ -241,8 +242,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             SWT.RADIO);
       radioDiscoveryActive.addSelectionListener(listener);
 
-      checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery,
-            SWT.CHECK);
+      checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery, SWT.CHECK);
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -254,6 +254,16 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       GridData gd = new GridData();
       gd.verticalIndent = 10;
       checkUseSnmpTraps.setLayoutData(gd);
+
+      checkUseSyslog = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSyslogForDiscovery, SWT.CHECK);
+      checkUseSyslog.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setUseSyslog(checkUseSyslog.getSelection());
+            setModified();
+         }
+      });
    }
 
    /**
@@ -516,6 +526,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive.setSelection(config.isEnabled() && !config.isActive());
       radioDiscoveryActive.setSelection(config.isEnabled() && config.isActive());
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
+      checkUseSyslog.setSelection(config.isUseSyslog());
 
       if (config.getFilter().equalsIgnoreCase(NetworkDiscovery.FILTER_NONE) || config.getFilter().isEmpty())
       {

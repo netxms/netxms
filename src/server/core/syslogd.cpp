@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,11 @@
  * Max syslog message length
  */
 #define MAX_SYSLOG_MSG_LEN    1024
+
+/**
+ * Externals
+ */
+extern Queue g_nodePollerQueue;
 
 /**
  * Queued syslog message structure
@@ -465,6 +470,34 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 #endif
 		}
 		MutexUnlock(s_parserLock);
+
+	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
+	   {
+	      DbgPrintf(4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
+	      Subnet *subnet = FindSubnetForNode(msg->zoneId, msg->sourceAddr);
+	      if (subnet != NULL)
+	      {
+	         if (!subnet->getIpAddress().equals(msg->sourceAddr) && !msg->sourceAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+	         {
+	            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+	            pInfo->ipAddr = msg->sourceAddr;
+	            pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
+	            pInfo->zoneId = msg->zoneId;
+	            pInfo->ignoreFilter = FALSE;
+	            memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+	            g_nodePollerQueue.put(pInfo);
+	         }
+	      }
+	      else
+	      {
+	         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+	         pInfo->ipAddr = msg->sourceAddr;
+	         pInfo->zoneId = msg->zoneId;
+	         pInfo->ignoreFilter = FALSE;
+	         memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+	         g_nodePollerQueue.put(pInfo);
+	      }
+	   }
    }
 	else
 	{

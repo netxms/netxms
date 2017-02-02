@@ -5,6 +5,7 @@
 - Improved the usability of the Server Configuration, by adding descriptions and recognition for data types and possible values
 - Alternative core configuration section can be set for nxagentd using -G command line option
 - Implicit external subagent registartion using EXT:* sections in agent configuration file
+- Unknown syslog sources can be automatically added as nodes
 - Fixed issues: NX-60, NX-630, NX-916, NX-1151
 
 

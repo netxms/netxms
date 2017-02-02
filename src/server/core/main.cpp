@@ -327,6 +327,8 @@ static void LoadGlobalConfig()
 		g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
    if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
+   if (ConfigReadInt(_T("UseSyslogForDiscovery"), 0))
+      g_flags |= AF_SYSLOG_DISCOVERY;
 	if (ConfigReadInt(_T("ResolveNodeNames"), 1))
 		g_flags |= AF_RESOLVE_NODE_NAMES;
 	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))

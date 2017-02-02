@@ -185,7 +185,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseFQDNForNodeNames','1',1,1,'B','Enable/disable the use of fully qualified domain names as primary names for newly discovered nodes.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseIfXTable','1',1,0,'B','Enable/disable the use of SNMP ifXTable instead of ifTable for interface configuration polling.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseInterfaceAliases','0',1,0,'C','Control usage of interface aliases (or descriptions).');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseSNMPTrapsForDiscovery','0',1,1,'B','This parameter defines if trap information should be used for new node discovery.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseSNMPTrapsForDiscovery','0',1,1,'B','Use SNMP trap information for new node discovery.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseSyslogForDiscovery','0',1,1,'B','Use syslog messages for new node discovery.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('XMPPLogin','netxms@localhost',1,1,'S','Login name that will be used to authentication on XMPP server.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('XMPPPassword','netxms',1,1,'S','Password that will be used to authentication on XMPP server.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('XMPPPort','5222',1,1,'I','XMPP connection port.');

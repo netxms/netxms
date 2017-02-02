@@ -726,6 +726,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /*
+ * Upgrade from V432 to V433
+ */
+static BOOL H_UpgradeFromV432(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("UseSyslogForDiscovery"), _T("0"), _T("Use syslog messages for new node discovery."), 'B', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(433));
+   return TRUE;
+}
+
+/*
  * Upgrade from V431 to V432
  */
 static BOOL H_UpgradeFromV431(int currVersion, int newVersion)
@@ -1017,7 +1027,7 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable the use of fully qualified domain names as primary names for newly discovered nodes.' WHERE var_name='UseFQDNForNodeNames'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable the use of SNMP ifXTable instead of ifTable for interface configuration polling.' WHERE var_name='UseIfXTable'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Control usage of interface aliases (or descriptions).' WHERE var_name='UseInterfaceAliases'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='This parameter defines if trap information should be used for new node discovery.' WHERE var_name='UseSNMPTrapsForDiscovery'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Use SNMP trap information for new node discovery.' WHERE var_name='UseSNMPTrapsForDiscovery'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Login name that will be used to authentication on XMPP server.' WHERE var_name='XMPPLogin'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Password that will be used to authentication on XMPP server.' WHERE var_name='XMPPPassword'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='XMPP connection port.' WHERE var_name='XMPPPort'")));
@@ -11291,6 +11301,7 @@ static struct
    { 429, 430, H_UpgradeFromV429 },
    { 430, 431, H_UpgradeFromV430 },
    { 431, 432, H_UpgradeFromV431 },
+   { 432, 433, H_UpgradeFromV432 },
    { 0, 0, NULL }
 };
 

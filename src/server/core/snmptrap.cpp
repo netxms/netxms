@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-207 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-
 
 /**
  * Externals
@@ -430,9 +429,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       {
          if (!subnet->getIpAddress().equals(srcAddr) && !srcAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
          {
-            NEW_NODE *pInfo;
-
-            pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->ipAddr = srcAddr;
             pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
 				pInfo->zoneId = zoneId;
@@ -443,9 +440,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       }
       else
       {
-         NEW_NODE *pInfo;
-
-         pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
          pInfo->ipAddr = srcAddr;
 			pInfo->zoneId = zoneId;
 			pInfo->ignoreFilter = FALSE;

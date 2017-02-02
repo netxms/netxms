@@ -147,6 +147,7 @@ public class Messages extends NLS
    public static String NetworkDiscoveryConfigurator_SectionGeneral;
    public static String NetworkDiscoveryConfigurator_SectionGeneralDescr;
    public static String NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery;
+   public static String NetworkDiscoveryConfigurator_UseSyslogForDiscovery;
    public static String OpenMappingTables_Error;
    public static String OpenMappingTables_ErrorOpeningView;
    public static String OpenNetworkDiscoveryConfig_Error;
