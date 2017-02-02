@@ -452,3 +452,69 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
    *start = p - 1;
    return (state != -1);
 }
+
+/**
+ * Execute server startup scripts
+ */
+void ExecuteStartupScripts()
+{
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, path);
+   _tcscat(path, SDIR_SCRIPTS);
+
+   int count = 0;
+   nxlog_debug(1, _T("Running startup scripts from %s"), path);
+   _TDIR *dir = _topendir(path);
+   if (dir != NULL)
+   {
+      _tcscat(path, FS_PATH_SEPARATOR);
+      int insPos = (int)_tcslen(path);
+
+      struct _tdirent *f;
+      while((f = _treaddir(dir)) != NULL)
+      {
+         if (MatchString(_T("*.nxsl"), f->d_name, FALSE))
+         {
+            count++;
+            _tcscpy(&path[insPos], f->d_name);
+
+            UINT32 size;
+            char *source = (char *)LoadFile(path, &size);
+            if (source != NULL)
+            {
+               TCHAR errorText[1024];
+#ifdef UNICODE
+               WCHAR *wsource = WideStringFromUTF8String(source);
+               NXSL_VM *vm = NXSLCompileAndCreateVM(wsource, errorText, 1024, new NXSL_ServerEnv());
+               free(wsource);
+#else
+               NXSL_VM *vm = NXSLCompileAndCreateVM(source, errorText, 1024, new NXSL_ServerEnv());
+#endif
+               free(source);
+               if (vm != NULL)
+               {
+                  if (vm->run())
+                  {
+                     nxlog_debug(1, _T("Startup script %s completed successfully"), f->d_name);
+                  }
+                  else
+                  {
+                     nxlog_debug(1, _T("Runtime error in startup script %s: %s"), f->d_name, vm->getErrorText());
+                  }
+                  delete vm;
+               }
+               else
+               {
+                  nxlog_debug(1, _T("Cannot compile startup script %s (%s)"), f->d_name, errorText);
+               }
+            }
+            else
+            {
+               nxlog_debug(1, _T("Cannot load startup script %s"), f->d_name);
+            }
+         }
+      }
+      _tclosedir(dir);
+   }
+   nxlog_debug(1, _T("%d startup scripts processed"), count);
+}

@@ -72,6 +72,7 @@ void CleanupUsers();
 void LoadPerfDataStorageDrivers();
 void ImportLocalConfiguration();
 void RegisterPredictionEngines();
+void ExecuteStartupScripts();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -984,6 +985,8 @@ retry_db_lock:
 #if WITH_ZMQ
    StartZMQConnector();
 #endif
+
+   ExecuteStartupScripts();
 
 	g_flags |= AF_SERVER_INITIALIZED;
 	nxlog_debug(1, _T("Server initialization completed"));
