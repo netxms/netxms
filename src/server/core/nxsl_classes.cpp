@@ -51,6 +51,38 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
 }
 
 /**
+ * setMapImage(image)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setMapImage)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   bool success = false;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid FROM images WHERE upper(guid)=upper(?) OR upper(name)=upper(?)"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, argv[0]->getValueAsCString(), DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            uuid guid = DBGetFieldGUID(hResult, 0, 0);
+            ((NetObj *)object->getData())->setMapImage(guid);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   *result = new NXSL_Value(success ? 1 : 0);
+   return 0;
+}
+
+/**
  * setStatusCalculation(type, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
@@ -150,6 +182,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
+   NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
@@ -221,6 +254,11 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
       TCHAR buffer[64];
       GetObjectIpAddress(object).toString(buffer);
       value = new NXSL_Value(buffer);
+   }
+   else if (!_tcscmp(attr, _T("mapImage")))
+   {
+      TCHAR buffer[64];
+      value = new NXSL_Value(object->getMapImage().toString(buffer));
    }
    else if (!_tcscmp(attr, _T("name")))
    {

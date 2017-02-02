@@ -542,10 +542,13 @@ public:
 	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
-	void setGeoLocation(const GeoLocation& geoLocation) { m_geoLocation = geoLocation; markAsModified(); }
+	void setGeoLocation(const GeoLocation& geoLocation) { lockProperties(); m_geoLocation = geoLocation; setModified(); unlockProperties(); }
 
    const PostalAddress *getPostalAddress() const { return m_postalAddress; }
-   void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
+   void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(); unlockProperties(); }
+
+   const uuid& getMapImage() { return m_image; }
+   void setMapImage(const uuid& image) { lockProperties(); m_image = image; setModified(); unlockProperties(); }
 
    bool isModified() const { return m_isModified; }
    bool isDeleted() const { return m_isDeleted; }

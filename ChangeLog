@@ -7,6 +7,8 @@
 - Implicit external subagent registartion using EXT:* sections in agent configuration file
 - Unknown syslog sources can be automatically added as nodes
 - Server startup scripts
+- New method "setMapImage" in NXSL class "NetObj"
+- New attribute "mapImage" in NXSL class "NetObj"
 - Fixed issues: NX-60, NX-630, NX-916, NX-1151
 
 
