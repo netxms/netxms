@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -155,7 +155,7 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
    bool success = true;
    bool isNew = true;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM persistent_storage WHERE entry_key=?"));
-   if(hStmt != NULL)
+   if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
       DB_RESULT result = DBSelectPrepared(hStmt);
@@ -175,14 +175,14 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
       success = false;
    }
 
-   if(success)
+   if (success)
    {
-      if(isNew)
+      if (isNew)
          hStmt = DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)"));
       else
          hStmt = DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?"));
 
-      if(hStmt != NULL)
+      if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, (TCHAR *)value, DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
@@ -204,7 +204,7 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
 static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const void *value, void *data)
 {
    StringMap *mapToMove = (StringMap*)data;
-   if(!s_valueDeleteList->contains(key) && !s_valueSetList->contains(key))
+   if (!s_valueDeleteList->contains(key) && !s_valueSetList->contains(key))
       mapToMove->set(key, (TCHAR *)value);
    return _CONTINUE;
 }
@@ -214,7 +214,7 @@ static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const vo
  */
 void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
 {
-   if(s_valueDeleteList->size() == 0 && s_valueSetList->size() == 0) //do nothing if there are no updates
+   if (s_valueDeleteList->size() == 0 && s_valueSetList->size() == 0) //do nothing if there are no updates
       return;
 
    DBBegin(hdb);
@@ -229,7 +229,7 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
    s_valueSetList = new StringMap();
    MutexUnlock(s_lockPStorage);
 
-   if(tmpDeleteList->size()> 0)
+   if (tmpDeleteList->size()> 0)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM persistent_storage WHERE entry_key=?"));
       if (hStmt != NULL)
@@ -246,13 +246,18 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
       }
    }
 
-   if(tmpSetList->size() > 0)
+   if (tmpSetList->size() > 0)
    {
-      success = _CONTINUE == tmpSetList->forEach(SetPSValueCB, hdb);
+      PsCbContainer container;
+      container.watchdogId = watchdogId;
+      container.ptr = hdb;
+      success = _CONTINUE == tmpSetList->forEach(SetPSValueCB, &container);
    }
 
-   if(success)
+   if (success)
+   {
       DBCommit(hdb);
+   }
    else
    {
       DBRollback(hdb);
