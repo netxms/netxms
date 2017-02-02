@@ -1147,3 +1147,36 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		THRESHOLD_EVENT_PARAMS
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_UP, 'SYS_IF_EXPECTED_STATE_UP', '4997c3f5-b332-4077-8e99-983142f0e193',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to UP',
+		'Generated when interface expected state set to UP.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_DOWN, 'SYS_IF_EXPECTED_STATE_DOWN', '75de536c-4861-4f19-ba56-c43d814431d7',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to DOWN',
+		'Generated when interface expected state set to DOWN.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_IGNORE, 'SYS_IF_EXPECTED_STATE_IGNORE', '0e488c0e-3340-4e02-ad96-b999b8392e55',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to IGNORE',
+		'Generated when interface expected state set to IGNORE.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);

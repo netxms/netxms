@@ -29,7 +29,7 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 		'%m',6,'IF_DOWN_%i_%5','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (6,'6f46d451-ee66-4563-8747-d129877df24d',7944,'Terminate interface down alarms when interface is deleted',
+	VALUES (6,'6f46d451-ee66-4563-8747-d129877df24d',7944,'Terminate interface down alarms when interface is deleted or it''s expected state changed',
 		'%m',6,'IF_DOWN_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
@@ -41,7 +41,7 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 		'%m',6,'IF_UNEXP_UP_%i_%5','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (9,'ecc3fb57-672d-489d-a0ef-4214ea896e0f',7944,'Terminate interface unexpectedly up alarms when interface is deleted',
+	VALUES (9,'ecc3fb57-672d-489d-a0ef-4214ea896e0f',7944,'Terminate interface unexpectedly up alarms when interface is deleted or it''s expected state changed',
 		'%m',6,'IF_UNEXP_UP_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
@@ -149,9 +149,13 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (3,EVENT_SERVICE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (4,EVENT_INTERFACE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (5,EVENT_INTERFACE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (6,EVENT_INTERFACE_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (6,EVENT_IF_EXPECTED_STATE_DOWN);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (6,EVENT_IF_EXPECTED_STATE_IGNORE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (7,EVENT_INTERFACE_UNEXPECTED_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (8,EVENT_INTERFACE_EXPECTED_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_INTERFACE_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_IF_EXPECTED_STATE_UP);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_IF_EXPECTED_STATE_IGNORE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (10,EVENT_INCORRECT_NETMASK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_MAC_ADDR_CHANGED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_SCRIPT_ERROR);

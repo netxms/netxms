@@ -716,6 +716,27 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Add event to EPP rule by rule GUID
+ */
+static bool AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT rule_id FROM event_policy WHERE rule_guid='%s'"), guid);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+
+   bool success = true;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), DBGetFieldLong(hResult, 0, 0), eventCode);
+      success = SQLQuery(query);
+   }
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
  * Set schema version
  */
 static bool SetSchemaVersion(int version)
@@ -725,7 +746,54 @@ static bool SetSchemaVersion(int version)
    return SQLQuery(query);
 }
 
-/*
+/**
+ * Upgrade from V433 to V434
+ */
+static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
+{
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_IF_EXPECTED_STATE_UP, _T("SYS_IF_EXPECTED_STATE_UP"),
+         SEVERITY_NORMAL, EF_LOG, _T("4997c3f5-b332-4077-8e99-983142f0e193"),
+         _T("Expected state for interface \"%2\" set to UP"),
+         _T("Generated when interface expected state set to UP.\r\n")
+         _T("Please note that source of event is node, not an interface itself.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface index\r\n")
+         _T("    2) Interface name"))
+      );
+
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_IF_EXPECTED_STATE_DOWN, _T("SYS_IF_EXPECTED_STATE_DOWN"),
+         SEVERITY_NORMAL, EF_LOG, _T("75de536c-4861-4f19-ba56-c43d814431d7"),
+         _T("Expected state for interface \"%2\" set to DOWN"),
+         _T("Generated when interface expected state set to DOWN.\r\n")
+         _T("Please note that source of event is node, not an interface itself.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface index\r\n")
+         _T("    2) Interface name"))
+      );
+
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_IF_EXPECTED_STATE_IGNORE, _T("SYS_IF_EXPECTED_STATE_IGNORE"),
+         SEVERITY_NORMAL, EF_LOG, _T("0e488c0e-3340-4e02-ad96-b999b8392e55"),
+         _T("Expected state for interface \"%2\" set to IGNORE"),
+         _T("Generated when interface expected state set to IGNORE.\r\n")
+         _T("Please note that source of event is node, not an interface itself.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface index\r\n")
+         _T("    2) Interface name"))
+      );
+
+   CHK_EXEC(AddEventToEPPRule(_T("6f46d451-ee66-4563-8747-d129877df24d"), EVENT_IF_EXPECTED_STATE_DOWN));
+   CHK_EXEC(AddEventToEPPRule(_T("6f46d451-ee66-4563-8747-d129877df24d"), EVENT_IF_EXPECTED_STATE_IGNORE));
+   CHK_EXEC(AddEventToEPPRule(_T("ecc3fb57-672d-489d-a0ef-4214ea896e0f"), EVENT_IF_EXPECTED_STATE_UP));
+   CHK_EXEC(AddEventToEPPRule(_T("ecc3fb57-672d-489d-a0ef-4214ea896e0f"), EVENT_IF_EXPECTED_STATE_IGNORE));
+
+   CHK_EXEC(SetSchemaVersion(434));
+   return TRUE;
+}
+
+/**
  * Upgrade from V432 to V433
  */
 static BOOL H_UpgradeFromV432(int currVersion, int newVersion)
@@ -735,7 +803,7 @@ static BOOL H_UpgradeFromV432(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
+/**
  * Upgrade from V431 to V432
  */
 static BOOL H_UpgradeFromV431(int currVersion, int newVersion)
@@ -746,7 +814,7 @@ static BOOL H_UpgradeFromV431(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
+/**
  * Upgrade from V430 to V431
  */
 static BOOL H_UpgradeFromV430(int currVersion, int newVersion)
@@ -757,8 +825,8 @@ static BOOL H_UpgradeFromV430(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
- *  Upgrade from V429 to V430
+/**
+ * Upgrade from V429 to V430
  */
 static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
 {
@@ -1077,7 +1145,7 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V427 to V428
+ * Upgrade from V427 to V428
  */
 static BOOL H_UpgradeFromV427(int currVersion, int newVersion)
 {
@@ -1088,7 +1156,7 @@ static BOOL H_UpgradeFromV427(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V426 to V427
+ * Upgrade from V426 to V427
  */
 static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
 {
@@ -1099,7 +1167,7 @@ static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V425 to V426
+ * Upgrade from V425 to V426
  */
 static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 {
@@ -1111,7 +1179,7 @@ static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V424 to V425
+ * Upgrade from V424 to V425
  */
 static BOOL H_UpgradeFromV424(int currVersion, int newVersion)
 {
@@ -1121,7 +1189,7 @@ static BOOL H_UpgradeFromV424(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V423 to V424
+ * Upgrade from V423 to V424
  */
 static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
 {
@@ -1131,7 +1199,7 @@ static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V422 to V423
+ * Upgrade from V422 to V423
  */
 static BOOL H_UpgradeFromV422(int currVersion, int newVersion)
 {
@@ -1152,7 +1220,7 @@ static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V420 to V421
+ * Upgrade from V420 to V421
  */
 static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
 {
@@ -1197,7 +1265,7 @@ static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
+/**
  * Upgrade from V419 to V420
  */
 static BOOL H_UpgradeFromV419(int currVersion, int newVersion)
@@ -1220,7 +1288,7 @@ static BOOL H_UpgradeFromV418(int currVersion, int newVersion)
 }
 
 /**
- *  Upgrade from V417 to V418
+ * Upgrade from V417 to V418
  */
 static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
 {
@@ -11302,6 +11370,7 @@ static struct
    { 430, 431, H_UpgradeFromV430 },
    { 431, 432, H_UpgradeFromV431 },
    { 432, 433, H_UpgradeFromV432 },
+   { 433, 434, H_UpgradeFromV433 },
    { 0, 0, NULL }
 };
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1033,9 +1033,7 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 	// Expected interface state
 	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
 	{
-      UINT32 expectedState = pRequest->getFieldAsUInt16(VID_EXPECTED_STATE);
-		m_flags &= ~IF_EXPECTED_STATE_MASK;
-		m_flags |= expectedState << 28;
+		setExpectedStateInternal(pRequest->getFieldAsInt16(VID_EXPECTED_STATE));
 	}
 
 	// Flags
@@ -1052,13 +1050,19 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Set expected state for interface
  */
-void Interface::setExpectedState(int state)
+void Interface::setExpectedStateInternal(int state)
 {
-	lockProperties();
-	m_flags &= ~IF_EXPECTED_STATE_MASK;
-	m_flags |= (UINT32)state << 28;
-	setModified();
-	unlockProperties();
+   static UINT32 eventCode[] = { EVENT_IF_EXPECTED_STATE_UP, EVENT_IF_EXPECTED_STATE_DOWN, EVENT_IF_EXPECTED_STATE_IGNORE };
+
+	int curr = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
+	if (curr != state)
+	{
+      m_flags &= ~IF_EXPECTED_STATE_MASK;
+      m_flags |= (UINT32)state << 28;
+      setModified();
+      if (state != IF_EXPECTED_STATE_AUTO)
+         PostEvent(eventCode[state], getParentNodeId(), "ds", m_index, m_name);
+	}
 }
 
 /**

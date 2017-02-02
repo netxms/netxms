@@ -11,6 +11,7 @@
 - New attribute "mapImage" in NXSL class "NetObj"
 - New NXSL class "Container"
 - Container autobind mode and script can be set from NXSL
+- Events generated when interface expected state changed
 - Fixed issues: NX-60, NX-630, NX-916, NX-1151
 
 

@@ -823,6 +823,8 @@ protected:
 	virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
+   void setExpectedStateInternal(int state);
+
 public:
    Interface();
    Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask);
@@ -900,7 +902,7 @@ public:
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
    UINT32 wakeUp();
-	void setExpectedState(int state);
+	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
 	void updatePingData();
 };
