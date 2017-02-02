@@ -729,7 +729,7 @@ static bool SetSchemaVersion(int version)
  * Upgrade from V431 to V432
  */
 static BOOL H_UpgradeFromV431(int currVersion, int newVersion)
-{	
+{
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_syslog_source ON syslog(source_object_id)")));
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id)")));
    CHK_EXEC(SetSchemaVersion(432));
@@ -740,7 +740,7 @@ static BOOL H_UpgradeFromV431(int currVersion, int newVersion)
  * Upgrade from V430 to V431
  */
 static BOOL H_UpgradeFromV430(int currVersion, int newVersion)
-{	
+{
    CHK_EXEC(SQLQuery(_T("DELETE FROM config_values WHERE var_name='SNMPPorts'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Comma separated list of UDP ports used by SNMP capable devices.' WHERE var_name='SNMPPorts'")));
    CHK_EXEC(SetSchemaVersion(431));
@@ -1500,7 +1500,7 @@ static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
    }
 
    //Update non object ACL
-   _sntprintf(query, 256, _T("UPDATE pbject_tool_acl SET user_id=%d WHERE user_id=0"), userId);
+   _sntprintf(query, 256, _T("UPDATE object_tools_acl SET user_id=%d WHERE user_id=0"), userId);
    CHK_EXEC(SQLQuery(query));
 
    _sntprintf(query, 256, _T("UPDATE graph_acl SET user_id=%d WHERE user_id=0"), userId);
