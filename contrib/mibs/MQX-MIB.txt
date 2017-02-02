@@ -1,0 +1,540 @@
+MQX-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+
+  enterprises
+    FROM RFC1155-SMI;
+
+        DisplayString ::= OCTET STRING
+
+        freescalemqx    OBJECT IDENTIFIER ::= { enterprises 34535 }
+
+        mqx             OBJECT IDENTIFIER ::= { freescalemqx 1 }
+
+        mqxKernel       OBJECT IDENTIFIER ::= { mqx 1 }
+
+        mqxVersion OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 1 }
+
+        mqxRevision OBJECT-TYPE
+                SYNTAX MqxRevision
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 2 }
+
+        MqxRevision ::= SEQUENCE { 
+            mqxRevKernel INTEGER,
+            mqxRevPSP INTEGER,
+            mqxRevIO INTEGER,
+            mqxRevBSP INTEGER
+        }
+
+        mqxRevKernel OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxRevision 1 }
+
+        mqxRevPSP OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxRevision 2 }
+
+        mqxRevIO OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxRevision 3 }
+
+        mqxRevBSP OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxRevision 4 }
+
+        mqxCopyright OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 3 }
+
+        mqxDate OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 4 }
+
+        mqxCPU OBJECT-TYPE
+                SYNTAX MqxCPU
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 5 }
+
+        MqxCPU ::= SEQUENCE { 
+            mqxCPUType INTEGER,
+            mqxCPUEndian INTEGER,
+            mqxCPUAddressing INTEGER
+        }
+
+        mqxCPUType OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxCPU 1 }
+
+        mqxCPUEndian OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxCPU 2 }
+
+        mqxCPUAddressing OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxCPU 3 }
+
+        mqxProcessorNum OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 6 }
+
+        mqxConfig OBJECT-TYPE
+                SYNTAX MqxConfig
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxKernel 7 }
+
+        MqxConfig ::= SEQUENCE { 
+            mqxConfigFloatingPointIO INTEGER,
+            mqxConfigInlineMacros INTEGER,
+            mqxConfigKernelLogging INTEGER,
+            mqxConfigMonitorStack INTEGER,
+            mqxConfigTaskCreationBlocks INTEGER,
+            mqxConfigTaskDestruction INTEGER,
+            mqxConfigComponentDestruction INTEGER,
+            mqxConfigCheckErrors INTEGER,
+            mqxConfigCheckValidity INTEGER,
+            mqxConfigCheckAlloc INTEGER,
+            mqxConfig64BitInts INTEGER,
+            mqxConfigPspKernelLogging INTEGER,
+            mqxConfigPspFPRegisters INTEGER,
+            mqxConfig32BitQIDs INTEGER
+        }
+
+        mqxConfigFloatingPointIO OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 1 }
+
+        mqxConfigInlineMacros OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 2 }
+
+        mqxConfigKernelLogging OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 3 }
+
+        mqxConfigMonitorStack OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 4 }
+
+        mqxConfigTaskCreationBlocks OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 5 }
+
+        mqxConfigTaskDestruction OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 6 }
+
+        mqxConfigComponentDestruction OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 7 }
+
+        mqxConfigCheckErrors OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 8 }
+
+        mqxConfigCheckValidity OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 9 }
+
+        mqxConfigCheckAlloc OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 10 }
+
+        mqxConfig64BitInts OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 11 }
+
+        mqxConfigPspKernelLogging OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 12 }
+
+        mqxConfigPspFPRegisters OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 13 }
+
+        mqxConfig32BitQIDs OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxConfig 14 }
+
+        mqxTask         OBJECT IDENTIFIER ::= { mqx 2 }
+
+        mqxTaskTable OBJECT-TYPE
+                SYNTAX SEQUENCE OF MqxTaskEntry
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTask 1 }
+
+        mqxTaskEntry OBJECT-TYPE
+                SYNTAX MqxTaskEntry
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                INDEX { mqxTaskID}
+                ::= { mqxTaskTable 1 }
+
+        MqxTaskEntry ::= SEQUENCE { 
+            mqxTaskID INTEGER,
+            mqxTaskCreator INTEGER,
+            mqxTaskName DisplayString,
+            mqxTaskState INTEGER,
+            mqxTaskErrorCode INTEGER,
+            mqxTaskSched MqxTaskSched,
+            mqxTaskStackSize INTEGER,
+            mqxTaskStackUsed INTEGER,
+            mqxTaskIO MqxTaskIO,
+            mqxTaskFlag MqxTaskFlag
+        }
+
+        mqxTaskID OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 1 }
+
+        mqxTaskCreator OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 2 }
+
+        mqxTaskName OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 3 }
+
+        mqxTaskState OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 4 }
+
+        mqxTaskErrorCode OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 5 }
+
+        mqxTaskSched OBJECT-TYPE
+                SYNTAX MqxTaskSched
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 6 }
+
+        MqxTaskSched ::= SEQUENCE { 
+            mqxTaskSchedPriority INTEGER,
+            mqxTaskSchedHomePriority INTEGER,
+            mqxTaskSchedPolicy INTEGER,
+            mqxTaskSchedTimeSlice INTEGER
+        }
+
+        mqxTaskSchedPriority OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskSched 1 }
+
+        mqxTaskSchedHomePriority OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskSched 2 }
+
+        mqxTaskSchedPolicy OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskSched 3 }
+
+        mqxTaskSchedTimeSlice OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskSched 4 }
+
+        mqxTaskStackSize OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 7 }
+
+        mqxTaskStackUsed OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 8 }
+
+        mqxTaskIO OBJECT-TYPE
+                SYNTAX MqxTaskIO
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 9 }
+
+        MqxTaskIO ::= SEQUENCE { 
+            mqxTaskIOstdin DisplayString,
+            mqxTaskIOstdout DisplayString,
+            mqxTaskIOstderr DisplayString
+        }
+
+        mqxTaskIOstdin OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskIO 1 }
+
+        mqxTaskIOstdout OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskIO 2 }
+
+        mqxTaskIOstderr OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskIO 3 }
+
+        mqxTaskFlag OBJECT-TYPE
+                SYNTAX MqxTaskFlag
+                ACCESS not-accessible
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskEntry 10 }
+
+        MqxTaskFlag ::= SEQUENCE { 
+            mqxTaskFlagFloatingPoint INTEGER,
+            mqxTaskFlagLoggingEnabled INTEGER,
+            mqxTaskFlagWatchdogEnabled INTEGER,
+            mqxTaskFlagPreemptionDisabled INTEGER
+        }
+
+        mqxTaskFlagFloatingPoint OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskFlag 1 }
+
+        mqxTaskFlagLoggingEnabled OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskFlag 2 }
+
+        mqxTaskFlagWatchdogEnabled OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskFlag 3 }
+
+        mqxTaskFlagPreemptionDisabled OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-only
+                STATUS mandatory
+                DESCRIPTION
+                        ""
+                ::= { mqxTaskFlag 4 }
+
+        mqxComponent    OBJECT IDENTIFIER ::= { mqx 3 }
+
+        mqxComponentName OBJECT IDENTIFIER ::= { mqxComponent 1 }
+
+        mqxComponentSem OBJECT IDENTIFIER ::= { mqxComponent 2 }
+
+        mqxComponentEvent OBJECT IDENTIFIER ::= { mqxComponent 3 }
+
+        mqxComponentMutex OBJECT IDENTIFIER ::= { mqxComponent 4 }
+
+        mqxComponentTimer OBJECT IDENTIFIER ::= { mqxComponent 5 }
+
+        mqxComponentLog OBJECT IDENTIFIER ::= { mqxComponent 6 }
+
+        mqxComponentWatchdog OBJECT IDENTIFIER ::= { mqxComponent 7 }
+
+        mqxComponentMessage OBJECT IDENTIFIER ::= { mqxComponent 8 }
+
+        mqxComponentPart OBJECT IDENTIFIER ::= { mqxComponent 9 }
+
+        mqxComponentIPC OBJECT IDENTIFIER ::= { mqxComponent 10 }
+
+        mqxComponentQlog OBJECT IDENTIFIER ::= { mqxComponent 11 }
+
+        mqxComponentEDS OBJECT IDENTIFIER ::= { mqxComponent 12 }
+
+        mqxIOC          OBJECT IDENTIFIER ::= { mqx 4 }
+
+        mqxIOCIO        OBJECT IDENTIFIER ::= { mqxIOC 1 }
+
+        mqxIOCRTCS      OBJECT IDENTIFIER ::= { mqxIOC 2 }
+
+        mqxIOCLAPB      OBJECT IDENTIFIER ::= { mqxIOC 3 }
+
+        mqxIOCLAPD      OBJECT IDENTIFIER ::= { mqxIOC 4 }
+
+        mqxIOCSDLC      OBJECT IDENTIFIER ::= { mqxIOC 5 }
+
+        mqxIOCHDLC      OBJECT IDENTIFIER ::= { mqxIOC 6 }
+
+        mqxIOCMFS       OBJECT IDENTIFIER ::= { mqxIOC 7 }
+
+        mqxIOCCAN       OBJECT IDENTIFIER ::= { mqxIOC 8 }
+
+        mqxIOCPPP       OBJECT IDENTIFIER ::= { mqxIOC 9 }
+
+        mqxIOCSNMP      OBJECT IDENTIFIER ::= { mqxIOC 10 }
+
+        mqxIOCENET      OBJECT IDENTIFIER ::= { mqxIOC 11 }
+
+END

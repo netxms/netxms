@@ -395,6 +395,7 @@ mibs_DATA = \
 	MSSQLSERVER-MIB.txt \
 	MSTP-MIB.txt \
 	MTA-MIB.txt \
+	MQX-MIB.txt \
 	NAS-MIB.txt \
 	NET-SNMP-AGENT-MIB.txt \
 	NET-SNMP-MIB.txt \
