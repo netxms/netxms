@@ -11,6 +11,7 @@
     <module>ActionManager</module>
     <module>AgentManager</module>
     <module>AlarmViewer</module>
+    <module>Branding</module> 
     <module>Charts</module>
     <module>Core</module>
     <module>Dashboard</module>
@@ -30,7 +31,6 @@
     <module>ObjectView</module>
     <module>PerfView</module>
     <module>PolicyManager</module>
-    <module>Product</module> 
     <module>Reporter</module>
     <module>SLM</module>
     <module>SNMP</module>
