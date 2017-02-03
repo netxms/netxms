@@ -40,9 +40,9 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DBLockPID','0',0,0,'I','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DBLockStatus','UNLOCKED',0,1,'S','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultAgentCacheMode','2',1,1,'I','');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleDateFormat','dd.MM.yyyy',1,0,'S','Default format to display date in console GUI.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleShortTimeFormat','HH:mm',1,0,'S','Default format to display time in a short way in console GUI.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleTimeFormat','HH:mm:ss',1,0,'S','Default format to display time in a long way in console GUI.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleDateFormat','dd.MM.yyyy',1,0,'S','Default date display format for GUI.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleShortTimeFormat','HH:mm',1,0,'S','Default short time display format for GUI.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleTimeFormat','HH:mm:ss',1,0,'S','Default long time display format for GUI.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultDCIPollingInterval','60',1,0,'I','Default polling interval for newly created DCI (in seconds).');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultDCIRetentionTime','30',1,0,'I','Default retention time for newly created DCI (in days).');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultEncryptionPolicy','1',1,1,'C','Set the default encryption policy for communications with agents.');

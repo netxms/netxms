@@ -158,6 +158,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.disable_task"
             name="Disable task">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_persistent_storage"
+            name="Persistent storage">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">

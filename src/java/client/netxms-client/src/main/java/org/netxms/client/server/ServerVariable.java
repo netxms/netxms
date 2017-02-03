@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
 package org.netxms.client.server;
 
 import java.util.HashMap;
+import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.ServerVariableDataType;
 
 /**
  * Server's configuration variable.
- *
  */
 public final class ServerVariable
 {
 	private String name;
 	private String value;
 	private String description;
-	private String dataType;
+	private ServerVariableDataType dataType;
 	private HashMap<String, String> values = new HashMap<String, String>();
 	private boolean isServerRestartNeeded;
 
-	
 	/**
 	 * Default constructor for NXCServerVariable.
 	 * 
@@ -41,7 +41,7 @@ public final class ServerVariable
 	 * @param value Variable's value
 	 * @param isServerRestartNeeded Server restart flag (server has to be restarted after variable change if this flag is set)
 	 */
-	public ServerVariable(String name, String value, boolean isServerRestartNeeded, String dataType, String description)
+	public ServerVariable(String name, String value, boolean isServerRestartNeeded, ServerVariableDataType dataType, String description)
 	{
 		this.name = name;
 		this.value = value;
@@ -49,7 +49,22 @@ public final class ServerVariable
 		this.dataType = dataType;
 		this.isServerRestartNeeded = isServerRestartNeeded;
 	}
-
+	
+	/**
+	 * Create variable from NXCP message
+	 * 
+	 * @param msg
+	 * @param baseId
+	 */
+	public ServerVariable(NXCPMessage msg, long baseId)
+	{
+      name = msg.getFieldAsString(baseId);
+      value = msg.getFieldAsString(baseId + 1);
+      isServerRestartNeeded = msg.getFieldAsBoolean(baseId + 2);
+      String code = msg.getFieldAsString(baseId + 3);
+      dataType = ServerVariableDataType.getByCode(((code != null) && !code.isEmpty()) ? code.charAt(0) : 'S');
+      description = msg.getFieldAsString(baseId + 4);
+	}
 
 	/**
 	 * @return Varaible's name
@@ -78,7 +93,7 @@ public final class ServerVariable
 	/**
 	 * @return Variable`s data type
 	 */
-	public String getDataType()
+	public ServerVariableDataType getDataType()
 	{
 	   return dataType;
 	}

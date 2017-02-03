@@ -3285,10 +3285,11 @@ public class NXCSession
 
       for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++)
       {
-         String name = response.getFieldAsString(id++);
-         varList.put(name,
-            new ServerVariable(name, response.getFieldAsString(id++), response.getFieldAsBoolean(id++), response.getFieldAsString(id++), response.getFieldAsString(id++)));
+         ServerVariable v = new ServerVariable(response, id);
+         varList.put(v.getName(), v);
+         id += 5;
       }
+      
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
       for(i = 0; i < count; i++)
       {
@@ -3296,7 +3297,7 @@ public class NXCSession
          if (var != null)
             var.setPossibleValues(response.getFieldAsString(id++), response.getFieldAsString(id++));
          else
-            id+=2;
+            id += 2;
       }
 
       return varList;

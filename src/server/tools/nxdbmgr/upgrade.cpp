@@ -950,9 +950,9 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DBLockPID'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='' WHERE var_name='DBLockStatus'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='' WHERE var_name='DefaultAgentCacheMode'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='D',description='Default format to display date in console GUI.' WHERE var_name='DefaultConsoleDateFormat'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default format to display time in a short way in console GUI.' WHERE var_name='DefaultConsoleShortTimeFormat'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default format to display time in a long way in console GUI.' WHERE var_name='DefaultConsoleTimeFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default date display format for GUI.' WHERE var_name='DefaultConsoleDateFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default short time display format for GUI.' WHERE var_name='DefaultConsoleShortTimeFormat'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='S',description='Default long time display format for GUI.' WHERE var_name='DefaultConsoleTimeFormat'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default polling interval for newly created DCI (in seconds).' WHERE var_name='DefaultDCIPollingInterval'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Default retention time for newly created DCI (in days).' WHERE var_name='DefaultDCIRetentionTime'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='C',description='Set the default encryption policy for communications with agents.' WHERE var_name='DefaultEncryptionPolicy'")));

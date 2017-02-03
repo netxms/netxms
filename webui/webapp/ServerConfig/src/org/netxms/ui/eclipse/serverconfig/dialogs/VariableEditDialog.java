@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.constants.ServerVariableDataType;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -50,7 +51,7 @@ public class VariableEditDialog extends Dialog
 	private Combo comboValue;
 	private String varName;
 	private String varValue;
-	private String varDataType;
+	private ServerVariableDataType varDataType;
 	private HashMap<String, String> possibleValues;
 	
 	/**
@@ -95,7 +96,7 @@ public class VariableEditDialog extends Dialog
       
       switch(varDataType)
       {
-         case "B":
+         case BOOLEAN:
             buttonEnable = new Button(dialogArea, SWT.CHECK);
             buttonEnable.setText("Enable");
             buttonEnable.setSelection(varValue.equals("1"));
@@ -103,7 +104,7 @@ public class VariableEditDialog extends Dialog
             if (varName != null)
                buttonEnable.setFocus();
             break;
-         case "C":
+         case CHOICE:
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
@@ -114,12 +115,12 @@ public class VariableEditDialog extends Dialog
             if (varName != null)
                comboValue.setFocus();
             break;
-         case "H":
+         case COLOR:
             colorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().VariableEditDialog_Value, WidgetHelper.DEFAULT_LAYOUT_DATA);
             if (!varValue.isEmpty())
                colorSelector.setColorValue(ColorConverter.parseColorDefinition(varValue));
             break;
-         case "I":
+         case INTEGER:
             spinnerValue = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().VariableEditDialog_Value, 0,
                                                                (possibleValues.isEmpty()) ? 0xffffff : Integer.parseInt((String)possibleValues.keySet().toArray()[0]),
                                                                      WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -132,8 +133,7 @@ public class VariableEditDialog extends Dialog
             if (varName != null)
                spinnerValue.setFocus();
             break;
-         case "S":
-         default:
+         case STRING:
             textValue = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().VariableEditDialog_Value, 
                                                       (varValue != null ? varValue : ""), WidgetHelper.DEFAULT_LAYOUT_DATA);
             textValue.setTextLimit(2000);
@@ -187,22 +187,22 @@ public class VariableEditDialog extends Dialog
 	   varName = textName.getText();
 	   switch (varDataType)
 	   {
-	      case "B":
+	      case BOOLEAN:
 	         varValue = (buttonEnable.getSelection()) ? "1" : "0";
 	         break;
-	      case "C":
+	      case CHOICE:
 	         varValue = Integer.toString(comboValue.getSelectionIndex());
-            if (varValue.equals("-1"))
-               varValue = "0";
+	         if (varValue.equals("-1"))
+	            varValue = "0";
 	         break;
-	      case "H":
+	      case COLOR:
 	         if (colorSelector.getColorValue() != null)
 	            varValue = String.format("#%06X", ColorConverter.rgbToInt(colorSelector.getColorValue()));
 	         break;
-	      case "I":
+	      case INTEGER:
             varValue = spinnerValue.getText();
             break;
-	      case "S":
+	      case STRING:
 	         varValue = textValue.getText();
 	         break;
 	   }
