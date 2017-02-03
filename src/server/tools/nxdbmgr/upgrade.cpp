@@ -902,8 +902,8 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("DROP TABLE situations")));
    CHK_EXEC(SQLQuery(_T("DROP TABLE policy_situation_attr_list")));
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy DROP COLUMN situation_id")));
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy DROP COLUMN situation_instance")));
+   CHK_EXEC(SQLDropColumn(_T("event_policy"), _T("situation_id")));
+   CHK_EXEC(SQLDropColumn(_T("event_policy"), _T("situation_instance")));
    CHK_EXEC(SetSchemaVersion(430));
    return TRUE;
 }
@@ -4578,10 +4578,7 @@ static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
 {
-   static TCHAR batch[] =
-   	_T("ALTER TABLE dct_thresholds DROP COLUMN current_state\n")
-	_T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLDropColumn(_T("dct_thresholds"), _T("current_state")));
    CHK_EXEC(SetSchemaVersion(289));
    return TRUE;
 }
@@ -4771,7 +4768,7 @@ static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
          return FALSE;
    }
 
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables DROP COLUMN instance_column")));
+   CHK_EXEC(SQLDropColumn(_T("dc_tables"), _T("instance_column")));
 
    CHK_EXEC(SetSchemaVersion(280));
    return TRUE;
@@ -6047,11 +6044,9 @@ static BOOL H_UpgradeFromV237(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V236 to V237
-//
-
+/**
+ * Upgrade from V236 to V237
+ */
 static BOOL H_UpgradeFromV236(int currVersion, int newVersion)
 {
 	static TCHAR batch[] =
@@ -10142,11 +10137,9 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    return TRUE;
 }
 
-
-//
-// Upgrade from V26 to V27
-//
-
+/**
+ * Upgrade from V26 to V27
+ */
 static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
