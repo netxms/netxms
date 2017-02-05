@@ -1,0 +1,7 @@
+TARGET = nxappget.exe
+TYPE = exe
+SOURCES = nxappget.cpp
+
+LIBS = appagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

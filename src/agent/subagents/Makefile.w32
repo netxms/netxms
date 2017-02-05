@@ -1,0 +1,3 @@
+SUBDIRS = db2 dbquery devemu ecs filemgr gps informix
+
+include ..\..\..\Makefile.inc.w32

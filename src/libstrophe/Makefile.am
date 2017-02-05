@@ -11,6 +11,7 @@ libstrophe_la_LIBADD += ../libexpat/libexpat/libnxexpat.la
 endif
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	GPL-LICENSE.txt LICENSE.txt MIT-LICENSE.txt \
 	libstrophe.vcproj \
 	common.h \

@@ -1,0 +1,8 @@
+TARGET = appagent.dll
+TYPE = dll
+SOURCES = appagent.cpp client.cpp message.cpp tools.cpp
+
+CPPFLAGS = /DAPPAGENT_EXPORTS
+LIBS = libnetxms.lib
+	  
+include ..\..\Makefile.inc.w32

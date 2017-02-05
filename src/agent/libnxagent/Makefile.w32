@@ -1,0 +1,8 @@
+TARGET = libnxagent.dll
+TYPE = dll
+SOURCES = bridge.cpp cmdexec.cpp main.cpp registry.cpp tools.cpp
+
+CPPFLAGS = /DLIBNXAGENT_EXPORTS
+LIBS = libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

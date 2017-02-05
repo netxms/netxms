@@ -1,0 +1,3 @@
+SUBDIRS = libnxsnmp nxsnmpget nxsnmpset nxsnmpwalk
+
+include ..\..\Makefile.inc.w32

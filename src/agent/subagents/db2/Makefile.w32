@@ -1,0 +1,7 @@
+TARGET = db2.nsm
+TYPE = nsm
+SOURCES = db2_subagent.cpp db2dci.cpp
+
+LIBS = libnxagent.lib libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

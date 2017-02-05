@@ -1,0 +1,3 @@
+SUBDIRS = nxappget nxapush
+
+include ..\..\..\Makefile.inc.w32

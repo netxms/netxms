@@ -1,0 +1,7 @@
+TARGET = ecs.nsm
+TYPE = nsm
+SOURCES = ecs.cpp
+
+LIBS = libnxagent.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

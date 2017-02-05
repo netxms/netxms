@@ -1,0 +1,3 @@
+SUBDIRS = libnxagent core nxsagent subagents tools
+
+include ..\..\Makefile.inc.w32

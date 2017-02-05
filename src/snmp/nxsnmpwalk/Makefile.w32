@@ -1,0 +1,7 @@
+TARGET = nxsnmpwalk.exe
+TYPE = exe
+SOURCES = nxsnmpwalk.cpp
+
+LIBS = libnetxms.lib libnxsnmp.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32

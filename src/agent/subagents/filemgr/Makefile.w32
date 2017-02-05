@@ -1,0 +1,7 @@
+TARGET = filemgr.nsm
+TYPE = nsm
+SOURCES = filemgr.cpp logmonitoring.cpp
+
+LIBS = libnxagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

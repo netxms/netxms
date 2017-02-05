@@ -1,0 +1,7 @@
+TARGET = informix.nsm
+TYPE = nsm
+SOURCES = main.cpp
+
+LIBS = libnxagent.lib libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

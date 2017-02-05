@@ -1,0 +1,8 @@
+TARGET = libnxmb.dll
+TYPE = dll
+SOURCES = dispatcher.cpp filter.cpp main.cpp message.cpp subscriber.cpp
+
+CPPFLAGS = /DLIBNXMB_EXPORTS
+LIBS = libnetxms.lib
+	  
+include ../../Makefile.inc.w32

@@ -1,0 +1,8 @@
+TARGET = libnxdb.dll
+TYPE = dll
+SOURCES = dbcp.cpp drivers.cpp main.cpp session.cpp util.cpp
+
+CPPFLAGS = /DLIBNXDB_EXPORTS
+LIBS = libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32

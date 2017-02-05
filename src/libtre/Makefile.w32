@@ -1,0 +1,20 @@
+TARGET = libtre.dll
+TYPE = dll
+SOURCES = \
+	tre-ast.c		\
+	tre-compile.c		\
+	tre-match-approx.c	\
+	tre-match-backtrack.c	\
+	tre-match-parallel.c	\
+	tre-mem.c		\
+	tre-parse.c		\
+	tre-stack.c		\
+	regcomp.c		\
+	regexec.c		\
+	regerror.c		\
+	windll.cpp
+
+CPPFLAGS = /I.. /I..\win32 /DLIBTRE_EXPORTS /DHAVE_CONFIG_H
+LDFLAGS = /DEF:..\libtre.def
+
+!include ..\..\Makefile.inc.w32

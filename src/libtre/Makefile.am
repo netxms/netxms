@@ -35,6 +35,7 @@ EXTRA_DIST = \
 	LICENSE \
 	README \
 	THANKS \
+	Makefile.w32 \
 	libtre.def \
 	libtre.vcproj \
 	windll.cpp \

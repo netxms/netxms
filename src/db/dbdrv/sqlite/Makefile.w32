@@ -1,0 +1,8 @@
+TARGET = sqlite.ddr
+TYPE = ddr
+SOURCES = sqlite.cpp
+
+CPPFLAGS = /I$(NETXMS_BASE)\src\sqlite
+LIBS = libnetxms.lib nxsqlite.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

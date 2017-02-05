@@ -1,0 +1,7 @@
+TARGET = nxsnmpget.exe
+TYPE = exe
+SOURCES = nxsnmpget.cpp
+
+LIBS = libnetxms.lib libnxsnmp.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32

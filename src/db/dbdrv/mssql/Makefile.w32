@@ -1,0 +1,7 @@
+TARGET = mssql.ddr
+TYPE = ddr
+SOURCES = mssql.cpp
+
+LIBS = libnetxms.lib odbc32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

@@ -7,4 +7,4 @@ libnxagent_la_CPPFLAGS=-I@top_srcdir@/include
 libnxagent_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxagent_la_LIBADD = ../../db/libnxdb/libnxdb.la ../../libnetxms/libnetxms.la
 
-EXTRA_DIST = libnxagent.h libnxagent.vcproj
+EXTRA_DIST = Makefile.w32 libnxagent.h libnxagent.vcproj

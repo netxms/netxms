@@ -1,0 +1,17 @@
+TARGET = nxagentd.exe
+TYPE = exe
+SOURCES = \
+	actions.cpp appagent.cpp comm.cpp config.cpp \
+	ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp dfile_info.cpp epp.cpp \
+	exec.cpp extagent.cpp getparam.cpp hddinfo.cpp localdb.cpp master.cpp \
+	nxagentd.cpp policy.cpp push.cpp register.cpp sa.cpp \
+	sd.cpp service.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
+	subagent.cpp sysinfo.cpp syslog.cpp \
+	tools.cpp trap.cpp tunnel.cpp upgrade.cpp watchdog.cpp win32.cpp
+GENERATED = messages.h MSG00001.bin nxagentd.res
+
+LIBS = libnxagent.lib appagent.lib libnxsnmp.lib libnxdb.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32
+
+nxagentd.res: MSG00001.bin

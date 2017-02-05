@@ -1,0 +1,19 @@
+TARGET = jansson.dll
+TYPE = dll
+SOURCES = \
+	dump.c \
+	error.c \
+	hashtable.c \
+	hashtable_seed.c \
+	load.c \
+	memory.c \
+	pack_unpack.c \
+	strbuffer.c \
+	strconv.c \
+	utf.c \
+	value.c
+
+CPPFLAGS = /I ..
+LDFLAGS = /DEF:..\jansson.def
+
+include ..\..\Makefile.inc.w32

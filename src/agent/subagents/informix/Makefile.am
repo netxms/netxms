@@ -6,7 +6,7 @@ informix_la_CPPFLAGS=-I@top_srcdir@/include
 informix_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 informix_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST = informix.vcproj informix_subagent.h
+EXTRA_DIST = informix.vcproj informix_subagent.h Makefile.w32
 
 if !STATIC_BUILD
 install-exec-hook:

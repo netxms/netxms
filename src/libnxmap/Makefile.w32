@@ -1,0 +1,8 @@
+TARGET=libnxmap.dll
+TYPE=dll
+SOURCES=element.cpp link.cpp main.cpp objlist.cpp
+
+CPPFLAGS=/DLIBNXMAP_EXPORTS
+LIBS=libnetxms.lib
+	  
+include ../../Makefile.inc.w32

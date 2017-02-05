@@ -1,0 +1,5 @@
+TARGET = nxsqlite.dll
+TYPE = dll
+SOURCES= dllmain.c sqlite3.c
+
+include ..\..\Makefile.inc.w32

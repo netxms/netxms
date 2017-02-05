@@ -1,79 +1,116 @@
 # Common settings for Win32 builds
 
-CC=cl
-CXX=cl
-LD=link
-MAKE=nmake
+CC = cl
+CXX = cl
+LD = link
+PERL = perl
+LEX = flex
+YACC = bison
+MC = mc
 
 # Source base path
-#BASE_PATH := $(dir $(lastword $(MAKEFILE_LIST)))
+# Default location is C:\Source\NetXMS
+# It can be changed by setting NETXMS_BASE environment variable
+!ifndef NETXMS_BASE
+NETXMS_BASE = C:\Source\NetXMS
+!endif
 
 # Architecture
 !ifndef ARCH
-ARCH=x64
+ARCH = x64
 !endif
 
-!if "$(ARCH)"=="x64"
-WINDDK_ARCH=amd64
-WINSDK_LIB=Lib\x64
-WINSDK_BIN=Bin\x64
-OBJDIR=amd64
+!if "$(ARCH)" == "x64"
+WINDDK_ARCH = amd64
+WINSDK_LIB = Lib\x64
+WINSDK_BIN = Bin\x64
+VCBUILD_LIB = Lib\amd64
+OBJDIR = amd64
 !endif
 
-!if "$(ARCH)"=="x86"
-WINDDK_ARCH=i386
-WINSDK_LIB=Lib
-WINSDK_BIN=Bin
-OBJDIR=i386
+!if "$(ARCH)" == "x86"
+WINDDK_ARCH = i386
+WINSDK_LIB = Lib
+WINSDK_BIN = Bin
+VCBUILD_LIB = Lib
+OBJDIR = i386
 !endif
 
 # SDK locations
 #-include ${BASE_PATH}winsdk.inc
 
 !ifndef VCBUILD_BASE
-VCBUILD_BASE=C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC
+VCBUILD_BASE = C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC
 !endif
 !ifndef WINSDK_BASE
-WINSDK_BASE=C:\SDK\Windows 7 SDK
+WINSDK_BASE = C:\SDK\Windows 7 SDK
 !endif
 !ifndef WINDDK_BASE
-WINDDK_BASE=C:\SDK\WinDDK
+WINDDK_BASE = C:\SDK\WinDDK
 !endif
 !ifndef OPENSSL_BASE
-OPENSSL_BASE=C:\SDK\OpenSSL
+OPENSSL_BASE = C:\SDK\OpenSSL
+!endif
+
+# Binaries directory
+BINDIR = $(NETXMS_BASE)\bin\$(OBJDIR)
+
+# Output files
+!ifdef TARGET
+BINFILE = $(BINDIR)\$(TARGET)
 !endif
 
 # Common C/C++ compiler flags
-CPPFLAGS=$(CPPFLAGS) /O2 /Gd -I "$(BASE_PATH)include" -I "$(WINSDK_BASE)\include" -I "$(VCBUILD_BASE)\include" \
-   -I "$(OPENSSL_BASE)\$(ARCH)\include" \
-	-D_MT -DUNICODE
+CPPFLAGS = $(CPPFLAGS) /O2 /Gd /EHs- /GR- \
+   /I "$(NETXMS_BASE)\include" \
+   /I "$(NETXMS_BASE)\build" \
+   /I "$(WINSDK_BASE)\include" \
+   /I "$(VCBUILD_BASE)\include" \
+   /I "$(OPENSSL_BASE)\$(ARCH)\include" \
+	/D_MT /DUNICODE
 	
 # Common linker flags
-!if "$(TYPE)"=="dll"
-IMPLIB=$(TARGET:.dll=.lib)
-LDFLAGS=$(LDFLAGS) -dll -implib:$(IMPLIB)
+!if "$(TYPE)" == "dll"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+IMPLIB = $(BINFILE:.dll=.lib)
+LDFLAGS = $(LDFLAGS) /DLL /IMPLIB:$(IMPLIB)
 !endif
-MANIFEST=$(TARGET).intermediate.manifest
-LDFLAGS=$(LDFLAGS) -subsystem:windows -machine:$(ARCH) -manifestfile:$(MANIFEST) -libpath:"$(OPENSSL_BASE)\$(ARCH)\lib" -libpath:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)" -libpath:"$(WINSDK_BASE)\$(WINSDK_LIB)"
+!if "$(TYPE)" == "ddr"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
+!if "$(TYPE)" == "nsm"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
+MANIFEST = $(TARGET).intermediate.manifest
+LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
+   /LIBPATH:"$(BINDIR)" \
+   /LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
+   /LIBPATH:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)" \
+   /LIBPATH:"$(WINSDK_BASE)\$(WINSDK_LIB)"  \
+   /LIBPATH:"$(VCBUILD_BASE)\$(VCBUILD_LIB)"
 
 # Common libraries
-LIBS=$(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
+LIBS = $(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
 
 # Prepare list of object files	
-__sources=$(SOURCES:.cpp=.obj)
-OBJ=$(__sources:.c=.obj)
+__sources = $(SOURCES:.cpp=.obj)
+OBJ = $(__sources:.c=.obj)
 
 # Source directory
-SRCDIR=$(MAKEDIR)
+SRCDIR = $(MAKEDIR)
 
-all: subdirs $(GENERATED) $(TARGET)
+all: Makefile.w32 subdirs $(GENERATED) $(BINFILE)
 
 # Build target
 !ifdef TARGET
 
-$(TARGET): objdir $(OBJ)
-   $(LD) $(LDFLAGS) /out:$(TARGET) $(OBJ) $(LIBS)
-	rm -f $(MANIFEST)
+$(BINFILE): objdir $(OBJ)
+   @if not exist $(BINDIR) mkdir $(BINDIR)
+   @echo "    LD " $(TARGET)
+   @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(LIBS)
+	@rm -f $(MANIFEST)
 
 .PHONY: objdir
 
@@ -82,27 +119,54 @@ objdir:
    @cd $(OBJDIR)
 
 {$(SRCDIR)}.c.obj:
-   $(CC) $(CPPFLAGS) $(CFLAGS) /c $< /Fo$@
+   @echo "    CC " $(<F)
+   @$(CC) /nologo $(CPPFLAGS) $(CFLAGS) /c $< /Fo$@ | tail -n +2
 
 {$(SRCDIR)}.cpp.obj:
-   $(CXX) $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@
+   @echo "    CXX" $(<F)
+   @$(CXX) /nologo $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@ | tail -n +2
 
-messages.cpp: messages.mc
-	$(MC) $< -cpp
+.rc.res:
+   @echo "    RC " $(<F)
+   @$(RC) /nologo /r /i "$(WINSDK_BASE)\include" /i "$(VCBUILD_BASE)\include" $<
+
+MSG00001.bin: messages.mc
+   @echo "    MC  messages.mc"
+   @$(MC) messages.mc
+
+messages.h: messages.mc
+   @echo "    MC  messages.mc"
+   @$(MC) messages.mc
 
 !endif
 
 # Clean
+.PHONY: clean
+
 clean:
-	rm -f $(OBJ) $(TARGET) $(GENERATED) $(EXTRA_CLEAN)
+   rm -rf $(OBJ) $(TARGET) $(OBJDIR) $(GENERATED) $(EXTRA_CLEAN)
+	@for %%s in ($(SUBDIRS)) do @( \
+		echo === Entering %%s === && \
+		cd %%s && \
+      @( \
+			$(MAKE) /NOLOGO /F Makefile.w32 clean || \
+         exit 1 \
+      ) && \
+		echo === Leaving %%s === && \
+		cd .. \
+   )
 
 # Sub-directories building rules
 .PHONY: subdirs
 
 subdirs:
-   @for %%s in ($(SUBDIRS)) do @( \
-   	echo === Entering %%s === && \
-      cd %%s && \
-	   $(MAKE) /NOLOGO /F Makefile.w32 && \
-   	echo === Leaving %%s === \
+	@for %%s in ($(SUBDIRS)) do @( \
+		echo === Entering %%s === && \
+		cd %%s && \
+      @( \
+			$(MAKE) /NOLOGO /F Makefile.w32 || \
+         exit 1 \
+      ) && \
+		echo === Leaving %%s === && \
+		cd .. \
    )

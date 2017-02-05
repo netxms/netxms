@@ -1,0 +1,10 @@
+GENERATED=netxms-build-tag.h
+
+!INCLUDE ..\Makefile.inc.w32
+
+$(GENERATED): tag
+
+.PHONY: tag
+
+tag:
+	$(PERL) updatetag.pl $(GENERATED)

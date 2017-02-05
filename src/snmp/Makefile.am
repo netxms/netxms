@@ -9,3 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = libnxsnmp nxmibc nxsnmpget nxsnmpset nxsnmpwalk
+
+EXTRA_DIST = Makefile.w32

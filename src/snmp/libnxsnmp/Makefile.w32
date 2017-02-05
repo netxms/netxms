@@ -1,0 +1,10 @@
+TARGET = libnxsnmp.dll
+TYPE = dll
+SOURCES = ber.cpp engine.cpp main.cpp mib.cpp oid.cpp pdu.cpp \
+          security.cpp snapshot.cpp transport.cpp util.cpp \
+          variable.cpp zfile.cpp
+
+CPPFLAGS = /I$(NETXMS_BASE)\src\zlib /DLIBNXSNMP_EXPORTS
+LIBS = libnetxms.lib nxzlib.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32

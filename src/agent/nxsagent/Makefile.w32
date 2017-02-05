@@ -1,0 +1,8 @@
+TARGET = nxsagent.exe
+TYPE = exe
+SOURCES = main.cpp png.cpp screenshot.cpp
+
+CPPFLAGS = /I$(NETXMS_BASE)\src\libpng
+LIBS = libnetxms.lib libpng.lib ws2_32.lib gdi32.lib wtsapi32.lib
+	  
+include ..\..\..\Makefile.inc.w32

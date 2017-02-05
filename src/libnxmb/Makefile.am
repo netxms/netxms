@@ -7,7 +7,7 @@ libnxmb_la_CPPFLAGS=-I@top_srcdir@/include
 libnxmb_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxmb_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
-
 EXTRA_DIST = \
+	Makefile.w32 \
 	libnxmb.vcproj \
 	libnxmb.h

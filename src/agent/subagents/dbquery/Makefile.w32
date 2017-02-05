@@ -1,0 +1,7 @@
+TARGET = dbquery.nsm
+TYPE = nsm
+SOURCES = conn.cpp dbquery.cpp direct.cpp poll.cpp
+
+LIBS = libnxagent.lib libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

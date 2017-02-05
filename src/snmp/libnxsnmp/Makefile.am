@@ -15,5 +15,6 @@ libnxsnmp_la_LIBADD += ../../zlib/libnxzlib.la
 endif
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	libnxsnmp.vcproj \
 	libnxsnmp.h

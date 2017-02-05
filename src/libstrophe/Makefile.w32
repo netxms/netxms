@@ -1,0 +1,10 @@
+TARGET = libstrophe.dll
+TYPE = dll
+SOURCES = auth.c conn.c ctx.c event.c handler.c hash.c jid.c \
+	md5.c parser_expat.c sasl.c snprintf.c sock.c \
+	stanza.c tls_openssl.c util.c
+
+CPPFLAGS = /I$(NETXMS_BASE)\src\libexpat\libexpat /DLIBSTROPHE_EXPORTS
+LIBS = libexpat.lib ws2_32.lib
+	  
+include ../../Makefile.inc.w32

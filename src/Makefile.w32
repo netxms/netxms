@@ -1,3 +1,3 @@
-SUBDIRS=libexpat libnetxms
+SUBDIRS = jansson libexpat libtre sqlite zlib libnetxms libnxlp libnxmap libnxmb libstrophe db snmp appagent agent
 
 include ..\Makefile.inc.w32
