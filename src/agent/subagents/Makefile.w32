@@ -1,3 +1,3 @@
-SUBDIRS = db2 dbquery devemu ecs filemgr gps informix
+SUBDIRS = db2 dbquery devemu ecs filemgr gps informix java
 
 include ..\..\..\Makefile.inc.w32

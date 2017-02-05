@@ -17,4 +17,4 @@ if USE_INTERNAL_LIBTRE
 nxscript_LDADD += ../libtre/libnxtre.la
 endif
 
-EXTRA_DIST = nxscript.vcproj nxscript.h
+EXTRA_DIST = Makefile.w32 nxscript.vcproj nxscript.h

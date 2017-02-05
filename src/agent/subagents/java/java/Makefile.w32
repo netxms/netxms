@@ -1,0 +1,4 @@
+TARGET = netxms-agent.jar
+TYPE = jar
+
+include ..\..\..\..\..\Makefile.inc.w32

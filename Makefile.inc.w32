@@ -51,6 +51,9 @@ WINDDK_BASE = C:\SDK\WinDDK
 !ifndef OPENSSL_BASE
 OPENSSL_BASE = C:\SDK\OpenSSL
 !endif
+!ifndef JDK_BASE
+JDK_BASE = C:\Program Files\Java\jdk1.8.0_121
+!endif
 
 # Binaries directory
 BINDIR = $(NETXMS_BASE)\bin\$(OBJDIR)
@@ -106,6 +109,15 @@ all: Makefile.w32 subdirs $(GENERATED) $(BINFILE)
 # Build target
 !ifdef TARGET
 
+!if "$(TYPE)" == "jar"
+
+$(BINFILE): pom.xml
+	mvn clean
+	mvn install
+	mv target/$(TARGET) $(BINFILE)
+
+!else
+
 $(BINFILE): objdir $(OBJ)
    @if not exist $(BINDIR) mkdir $(BINDIR)
    @echo "    LD " $(TARGET)
@@ -138,6 +150,7 @@ messages.h: messages.mc
    @echo "    MC  messages.mc"
    @$(MC) messages.mc
 
+!endif
 !endif
 
 # Clean

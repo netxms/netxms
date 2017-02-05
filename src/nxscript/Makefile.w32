@@ -1,0 +1,7 @@
+TARGET = nxscript.exe
+TYPE = exe
+SOURCES = class.cpp nxscript.cpp
+
+LIBS = libnetxms.lib libnxsl.lib ws2_32.lib
+	  
+include ..\..\Makefile.inc.w32

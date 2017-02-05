@@ -7,6 +7,7 @@ java_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 java_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	java.vcproj \
 	java_subagent.h \
 	SubAgent.h
