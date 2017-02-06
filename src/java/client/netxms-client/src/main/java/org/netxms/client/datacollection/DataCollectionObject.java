@@ -67,6 +67,14 @@ public abstract class DataCollectionObject
    public static final int DCF_NO_STORAGE            = 0x0200;
    public static final int DCF_CACHE_MODE_MASK       = 0x3000;
    public static final int DCF_AGGREGATE_WITH_ERRORS = 0x4000;
+   
+   // Instance discovery methods
+   public static final int IDM_NONE = 0;
+   public static final int IDM_AGENT_LIST = 1;
+   public static final int IDM_AGENT_TABLE = 2;
+   public static final int IDM_SNMP_WALK_VALUES = 3;
+   public static final int IDM_SNMP_WALK_OIDS = 4;
+   public static final int IDM_SCRIPT = 5;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
@@ -87,6 +95,10 @@ public abstract class DataCollectionObject
 	protected ArrayList<String> schedules;
 	protected Object userData;
 	private String comments;
+   private String instance;
+   private int instanceDiscoveryMethod;
+   private String instanceDiscoveryData;
+   private String instanceDiscoveryFilter;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -121,6 +133,11 @@ public abstract class DataCollectionObject
 		{
 			schedules.add(msg.getFieldAsString(varId));
 		}
+		
+      instance = msg.getFieldAsString(NXCPCodes.VID_INSTANCE);
+      instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
+      instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
+      instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
 	}
 
 	/**
@@ -149,6 +166,7 @@ public abstract class DataCollectionObject
 		snmpPort = 0;
 		schedules = new ArrayList<String>(0);
 		comments = "";
+      instance = "";
 	}
 	
 	/**
@@ -181,6 +199,13 @@ public abstract class DataCollectionObject
 		{
 			msg.setField(varId++, schedules.get(i));
 		}
+		
+      msg.setField(NXCPCodes.VID_INSTANCE, instance);
+      msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
+      if (instanceDiscoveryData != null)
+         msg.setField(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
+      if (instanceDiscoveryFilter != null)
+         msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
 	}
 
 	/**
@@ -612,5 +637,69 @@ public abstract class DataCollectionObject
    public void setId(long id)
    {
       this.id = id;
+   }
+   
+   /**
+    * @return the instance
+    */
+   public String getInstance()
+   {
+      return instance;
+   }
+
+   /**
+    * @param instance the instance to set
+    */
+   public void setInstance(String instance)
+   {
+      this.instance = instance;
+   }
+   
+   /**
+    * @return the instanceDiscoveryMethod
+    */
+   public final int getInstanceDiscoveryMethod()
+   {
+      return instanceDiscoveryMethod;
+   }
+
+   /**
+    * @param instanceDiscoveryMethod the instanceDiscoveryMethod to set
+    */
+   public final void setInstanceDiscoveryMethod(int instanceDiscoveryMethod)
+   {
+      this.instanceDiscoveryMethod = instanceDiscoveryMethod;
+   }
+
+   /**
+    * @return the instanceDiscoveryData
+    */
+   public final String getInstanceDiscoveryData()
+   {
+      return instanceDiscoveryData;
+   }
+
+   /**
+    * @param instanceDiscoveryData the instanceDiscoveryData to set
+    */
+   public final void setInstanceDiscoveryData(String instanceDiscoveryData)
+   {
+      this.instanceDiscoveryData = instanceDiscoveryData;
+   }
+
+   /**
+    * @return the instanceDiscoveryFilter
+    */
+   public final String getInstanceDiscoveryFilter()
+   {
+      return instanceDiscoveryFilter;
+   }
+
+   /**
+    * @param instanceDiscoveryFilter the instanceDiscoveryFilter to set
+    */
+   public final void setInstanceDiscoveryFilter(String instanceDiscoveryFilter)
+   {
+      this.instanceDiscoveryFilter = instanceDiscoveryFilter;
    }
 }

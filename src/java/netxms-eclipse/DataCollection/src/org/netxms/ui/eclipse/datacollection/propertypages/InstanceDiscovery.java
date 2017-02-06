@@ -27,8 +27,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
@@ -36,14 +37,15 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * "Instance Discovery" property page for DCI
+ * "Instance Discovery" property page for DCO
  */
 public class InstanceDiscovery extends DCIPropertyPageDialog
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
 	
-	private DataCollectionItem dci;
+	private DataCollectionObjectEditor editor;
+	private DataCollectionObject dco;
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
 	private ScriptEditor filterScript;
@@ -55,7 +57,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	protected Control createContents(Composite parent)
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
-		dci = editor.getObjectAsItem();
+		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		dco = editor.getObject();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -71,15 +74,15 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkValues);
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkOids);
       discoveryMethod.add(Messages.get().InstanceDiscovery_Script);
-      discoveryMethod.select(dci.getInstanceDiscoveryMethod());
+      discoveryMethod.select(dco.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				int method = discoveryMethod.getSelectionIndex();
 		      discoveryData.setLabel(getDataLabel(method));
-		      discoveryData.setEnabled(method != DataCollectionItem.IDM_NONE);
-		      filterScript.setEnabled(method != DataCollectionItem.IDM_NONE);
+		      discoveryData.setEnabled(method != DataCollectionObject.IDM_NONE);
+		      filterScript.setEnabled(method != DataCollectionObject.IDM_NONE);
 			}
 			
 			@Override
@@ -90,13 +93,13 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 		});
       
       discoveryData = new LabeledText(dialogArea, SWT.NONE);
-      discoveryData.setLabel(getDataLabel(dci.getInstanceDiscoveryMethod()));
-      discoveryData.setText(dci.getInstanceDiscoveryData());
+      discoveryData.setLabel(getDataLabel(dco.getInstanceDiscoveryMethod()));
+      discoveryData.setText(dco.getInstanceDiscoveryData());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       discoveryData.setLayoutData(gd);
-      discoveryData.setEnabled(dci.getInstanceDiscoveryMethod() != DataCollectionItem.IDM_NONE);
+      discoveryData.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
      
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -123,8 +126,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       filterScript.setLayoutData(gd);
-      filterScript.setText(dci.getInstanceDiscoveryFilter());
-      filterScript.setEnabled(dci.getInstanceDiscoveryMethod() != DataCollectionItem.IDM_NONE);
+      filterScript.setText(dco.getInstanceDiscoveryFilter());
+      filterScript.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
       
 		return dialogArea;
 	}
@@ -139,14 +142,14 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	{
 		switch(method)
 		{
-			case DataCollectionItem.IDM_NONE:
+			case DataCollectionObject.IDM_NONE:
 				return Messages.get().InstanceDiscovery_DiscoveryData;
-			case DataCollectionItem.IDM_AGENT_LIST:
+			case DataCollectionObject.IDM_AGENT_LIST:
 				return Messages.get().InstanceDiscovery_ListName;
-			case DataCollectionItem.IDM_AGENT_TABLE:
+			case DataCollectionObject.IDM_AGENT_TABLE:
 				return Messages.get().InstanceDiscovery_TableName;
-			case DataCollectionItem.IDM_SNMP_WALK_VALUES:
-			case DataCollectionItem.IDM_SNMP_WALK_OIDS:
+			case DataCollectionObject.IDM_SNMP_WALK_VALUES:
+			case DataCollectionObject.IDM_SNMP_WALK_OIDS:
 				return Messages.get().InstanceDiscovery_BaseOid;
 		}
 		return ""; //$NON-NLS-1$
@@ -159,9 +162,9 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		dci.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
-		dci.setInstanceDiscoveryData(discoveryData.getText());
-		dci.setInstanceDiscoveryFilter(filterScript.getText());
+	   dco.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
+	   dco.setInstanceDiscoveryData(discoveryData.getText());
+	   dco.setInstanceDiscoveryFilter(filterScript.getText());
 		editor.modify();
 	}
 
@@ -191,8 +194,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		discoveryMethod.select(DataCollectionItem.IDM_NONE);
-		discoveryData.setLabel(getDataLabel(DataCollectionItem.IDM_NONE));
+		discoveryMethod.select(DataCollectionObject.IDM_NONE);
+		discoveryData.setLabel(getDataLabel(DataCollectionObject.IDM_NONE));
 		discoveryData.setText(""); //$NON-NLS-1$
 		discoveryData.setEnabled(false);
 		filterScript.setText(""); //$NON-NLS-1$

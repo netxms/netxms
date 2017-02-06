@@ -653,6 +653,10 @@ CREATE TABLE dc_tables
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   transformation_script SQL_TEXT null,
   comments SQL_TEXT null,
+  instance varchar(255) null,
+  instd_method integer not null.
+  instd_data varchar(255) null,
+  instd_filter SQL TEXT null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

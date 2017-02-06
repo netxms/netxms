@@ -372,7 +372,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.get().LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.get(getDisplay()).LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY, getDisplay()) {
 			@Override
 			protected String getErrorMessage()
 			{

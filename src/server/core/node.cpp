@@ -3508,15 +3508,15 @@ void Node::doInstanceDiscovery(UINT32 requestId)
    sendPollerMsg(requestId, _T("Running DCI instance discovery\r\n"));
 
    // collect instance discovery DCIs
-   ObjectArray<DCItem> rootItems;
+   ObjectArray<DCObject> rootObjects;
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *object = m_dcObjects->get(i);
-      if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
+      if (object->getInstanceDiscoveryMethod() != IDM_NONE)
       {
          object->setBusyFlag();
-         rootItems.add((DCItem *)object);
+         rootObjects.add(object);
       }
    }
    unlockDciAccess();
@@ -3524,28 +3524,28 @@ void Node::doInstanceDiscovery(UINT32 requestId)
    // process instance discovery DCIs
    // it should be done that way to prevent DCI list lock for long time
    bool changed = false;
-   for(int i = 0; i < rootItems.size(); i++)
+   for(int i = 0; i < rootObjects.size(); i++)
    {
-      DCItem *dci = rootItems.get(i);
-      DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCI %s [%d]"),
-                m_name, m_id, dci->getName(), dci->getId());
-      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), dci->getName(), dci->getId());
-      StringMap *instances = getInstanceList(dci);
+      DCObject *object = rootObjects.get(i);
+      DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
+                m_name, m_id, object->getName(), object->getId());
+      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName(), object->getId());
+      StringMap *instances = getInstanceList(object);
       if (instances != NULL)
       {
          DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
-         dci->filterInstanceList(instances);
-         if (updateInstances(dci, instances, requestId))
+         object->filterInstanceList(instances);
+         if (updateInstances(object, instances, requestId))
             changed = true;
          delete instances;
       }
       else
       {
-         DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCI %s [%d]"),
-                   m_name, m_id, dci->getName(), dci->getId());
+         DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%d]"),
+                   m_name, m_id, object->getName(), object->getId());
          sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
       }
-      dci->clearBusyFlag();
+      object->clearBusyFlag();
    }
 
    if (changed)
@@ -3553,26 +3553,26 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 }
 
 /**
- * Get instances for instance discovery DCI
+ * Get instances for instance discovery DCO
  */
-StringMap *Node::getInstanceList(DCItem *dci)
+StringMap *Node::getInstanceList(DCObject *dco)
 {
-   if (dci->getInstanceDiscoveryData() == NULL)
+   if (dco->getInstanceDiscoveryData() == NULL)
       return NULL;
 
    Node *node;
-   if (dci->getSourceNode() != 0)
+   if (dco->getSourceNode() != 0)
    {
-      node = (Node *)FindObjectById(dci->getSourceNode(), OBJECT_NODE);
+      node = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (node == NULL)
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dci->getName(), dci->getId(), dci->getSourceNode());
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
          return NULL;
       }
       if (!node->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"),
-                   dci->getName(), dci->getId(), m_name, m_id, node->getName(), node->getId());
+                  dco->getName(), dco->getId(), m_name, m_id, node->getName(), node->getId());
          return NULL;
       }
    }
@@ -3583,19 +3583,19 @@ StringMap *Node::getInstanceList(DCItem *dci)
 
    StringList *instances = NULL;
    StringMap *instanceMap = NULL;
-   switch(dci->getInstanceDiscoveryMethod())
+   switch(dco->getInstanceDiscoveryMethod())
    {
       case IDM_AGENT_LIST:
-         node->getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
+         node->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_SCRIPT:
-         node->getStringMapFromScript(dci->getInstanceDiscoveryData(), &instanceMap);
+         node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap);
          break;
       case IDM_SNMP_WALK_VALUES:
-         node->getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+         node->getListFromSNMP(dco->getSnmpPort(), dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instanceMap);
+         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getInstanceDiscoveryData(), &instanceMap);
          break;
       default:
          instances = NULL;
@@ -3625,9 +3625,9 @@ static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const vo
 /**
  * Data for CreateInstanceDCI
  */
-struct CreateInstanceDCIData
+struct CreateInstanceDCOData
 {
-   DCItem *root;
+   DCObject *root;
    Node *object;
    UINT32 requestId;
 };
@@ -3637,29 +3637,30 @@ struct CreateInstanceDCIData
  */
 static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
 {
-   Node *object = ((CreateInstanceDCIData *)data)->object;
-   DCItem *root = ((CreateInstanceDCIData *)data)->root;
+   Node *object = ((CreateInstanceDCOData *)data)->object;
+   DCObject *root = ((CreateInstanceDCOData *)data)->root;
 
-   DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
+   DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
              object->getName(), object->getId(), root->getName(), root->getId(), key);
-   object->sendPollerMsg(((CreateInstanceDCIData *)data)->requestId, _T("      Creating new DCI for instance \"%s\"\r\n"), key);
+   object->sendPollerMsg(((CreateInstanceDCOData *)data)->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
 
-   DCItem *dci = new DCItem(root);
-   dci->setTemplateId(object->getId(), root->getId());
-   dci->setInstance((const TCHAR *)value);
-   dci->setInstanceDiscoveryMethod(IDM_NONE);
-   dci->setInstanceDiscoveryData(key);
-   dci->setInstanceFilter(NULL);
-   dci->expandInstance();
-   dci->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
-   object->addDCObject(dci, true);
+   DCObject *dco = root->clone();
+
+   dco->setTemplateId(object->getId(), root->getId());
+   dco->setInstance((const TCHAR *)value);
+   dco->setInstanceDiscoveryMethod(IDM_NONE);
+   dco->setInstanceDiscoveryData(key);
+   dco->setInstanceFilter(NULL);
+   dco->expandInstance();
+   dco->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
+   object->addDCObject(dco, true);
    return _CONTINUE;
 }
 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-bool Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
+bool Node::updateInstances(DCObject *root, StringMap *instances, UINT32 requestId)
 {
    bool changed = false;
 
@@ -3670,32 +3671,30 @@ bool Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *object = m_dcObjects->get(i);
-      if ((object->getType() != DCO_TYPE_ITEM) ||
-          (object->getTemplateId() != m_id) ||
-          (object->getTemplateItemId() != root->getId()))
+      if ((object->getTemplateId() != m_id) || (object->getTemplateItemId() != root->getId()))
          continue;
 
-      const TCHAR *dciInstance = ((DCItem *)object)->getInstanceDiscoveryData();
-      if (instances->forEach(FindInstanceCallback, (void *)dciInstance) == _STOP)
+      const TCHAR *dcoInstance = object->getInstanceDiscoveryData();
+      if (instances->forEach(FindInstanceCallback, (void *)dcoInstance) == _STOP)
       {
          // found, remove value from instances
          DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-                   m_name, m_id, root->getName(), root->getId(), dciInstance);
-         const TCHAR *name = instances->get(dciInstance);
-         if (_tcscmp(name, ((DCItem *)object)->getInstance()))
+                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
+         const TCHAR *name = instances->get(dcoInstance);
+         if (_tcscmp(name, object->getInstance()))
          {
-            ((DCItem *)object)->setInstance(name);
-            ((DCItem *)object)->updateFromTemplate(root);
+            object->setInstance(name);
+            object->updateFromTemplate(root);
             changed = true;
          }
-         instances->remove(dciInstance);
+         instances->remove(dcoInstance);
       }
       else
       {
-         // not found, delete DCI
-         DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
-                   m_name, m_id, root->getName(), root->getId(), dciInstance);
-         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dciInstance);
+         // not found, delete DCO
+         DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
+                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
+         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
          deleteList.add(object->getId());
          changed = true;
       }
@@ -3707,7 +3706,7 @@ bool Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
    // Create new instances
    if (instances->size() > 0)
    {
-      CreateInstanceDCIData data;
+      CreateInstanceDCOData data;
       data.root = root;
       data.object = this;
       data.requestId = requestId;

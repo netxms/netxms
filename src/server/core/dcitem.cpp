@@ -46,7 +46,6 @@ DCItem::DCItem() : DCObject()
    m_dataType = DCI_DT_INT;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
-   m_instance[0] = 0;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
@@ -56,10 +55,6 @@ DCItem::DCItem() : DCObject()
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
-	m_instanceDiscoveryMethod = IDM_NONE;
-	m_instanceDiscoveryData = NULL;
-	m_instanceFilterSource = NULL;
-	m_instanceFilter = NULL;
 	m_predictionEngine[0] = 0;
 }
 
@@ -71,7 +66,6 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    m_dataType = pSrc->m_dataType;
    m_deltaCalculation = pSrc->m_deltaCalculation;
 	m_sampleCount = pSrc->m_sampleCount;
-	_tcscpy(m_instance, pSrc->m_instance);
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
@@ -81,11 +75,6 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 	m_nMultiplier = pSrc->m_nMultiplier;
 	m_customUnitName = (pSrc->m_customUnitName != NULL) ? _tcsdup(pSrc->m_customUnitName) : NULL;
 	m_snmpRawValueType = pSrc->m_snmpRawValueType;
-	m_instanceDiscoveryMethod = pSrc->m_instanceDiscoveryMethod;
-	m_instanceDiscoveryData = (pSrc->m_instanceDiscoveryData != NULL) ? _tcsdup(pSrc->m_instanceDiscoveryData) : NULL;
-	m_instanceFilterSource = NULL;
-	m_instanceFilter = NULL;
-   setInstanceFilter(pSrc->m_instanceFilterSource);
    _tcscpy(m_predictionEngine, pSrc->m_predictionEngine);
 
    // Copy thresholds
@@ -187,7 +176,6 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
 {
-   m_instance[0] = 0;
    m_dataType = iDataType;
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
@@ -201,10 +189,6 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
-	m_instanceDiscoveryMethod = IDM_NONE;
-	m_instanceDiscoveryData = NULL;
-	m_instanceFilterSource = NULL;
-	m_instanceFilter = NULL;
 	m_predictionEngine[0] = 0;
 
    updateCacheSizeInternal();
@@ -215,7 +199,6 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
  */
 DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 {
-   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
@@ -228,12 +211,6 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
-	m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
-	const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
-	m_instanceDiscoveryData = (value != NULL) ? _tcsdup(value) : NULL;
-	m_instanceFilterSource = NULL;
-	m_instanceFilter = NULL;
-	setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
@@ -267,9 +244,6 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-	free(m_instanceDiscoveryData);
-	free(m_instanceFilterSource);
-	delete m_instanceFilter;
 	free(m_customUnitName);
    clearCache();
 }
@@ -537,7 +511,6 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->setField(VID_INSTANCE, m_instance);
    pMsg->setField(VID_DCI_DATA_TYPE, (WORD)m_dataType);
    pMsg->setField(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
    pMsg->setField(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
@@ -545,11 +518,6 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_MULTIPLIER, (UINT32)m_nMultiplier);
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
-	pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
-	if (m_instanceDiscoveryData != NULL)
-		pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
-	if (m_instanceFilterSource != NULL)
-		pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
 	if (m_customUnitName != NULL)
 		pMsg->setField(VID_CUSTOM_UNITS_NAME, m_customUnitName);
 	if (m_thresholds != NULL)
@@ -595,7 +563,6 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 
    lock();
 
-   pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
    m_dataType = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DATA_TYPE);
    m_deltaCalculation = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = (int)pMsg->getFieldAsUInt16(VID_SAMPLE_COUNT);
@@ -605,14 +572,6 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
    pMsg->getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
-	m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
-
-	safe_free(m_instanceDiscoveryData);
-	m_instanceDiscoveryData = pMsg->getFieldAsString(VID_INSTD_DATA);
-
-   TCHAR *pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
-	setInstanceFilter(pszStr);
-   safe_free(pszStr);
 
    // Update thresholds
    UINT32 dwNum = pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
@@ -1033,9 +992,6 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
 		for(int i = 0; i < getThresholdCount(); i++)
          m_thresholds->get(i)->bindToItem(m_id, m_owner->getId());
 	}
-
-	if (doMacroExpansion)
-		expandMacros(m_instance, m_instance, MAX_DB_STRING);
 
    clearCache();
    updateCacheSizeInternal();
@@ -1515,58 +1471,8 @@ void DCItem::updateFromTemplate(DCObject *src)
    for(i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-   if ((item->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
-   {
-      expandInstance();
-   }
-   else
-   {
-      expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
-      m_instanceDiscoveryMethod = item->m_instanceDiscoveryMethod;
-      safe_free(m_instanceDiscoveryData);
-	   m_instanceDiscoveryData = _tcsdup_ex(item->m_instanceDiscoveryData);
-      safe_free_and_null(m_instanceFilterSource);
-      delete_and_null(m_instanceFilter);
-      setInstanceFilter(item->m_instanceFilterSource);
-   }
-
    updateCacheSizeInternal();
    unlock();
-}
-
-/**
- * Set new instance discovery filter script
- */
-void DCItem::setInstanceFilter(const TCHAR *pszScript)
-{
-	safe_free(m_instanceFilterSource);
-	delete m_instanceFilter;
-   if (pszScript != NULL)
-   {
-      m_instanceFilterSource = _tcsdup(pszScript);
-      StrStrip(m_instanceFilterSource);
-      if (m_instanceFilterSource[0] != 0)
-      {
-         TCHAR errorText[1024];
-         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
-         if (m_instanceFilter == NULL)
-         {
-            // node can be NULL if this DCI was just created from template
-            // in this case compilation error will be reported on template level anyway
-            if (m_owner != NULL)
-               nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_owner->getId(), m_owner->getName(), m_id, m_name, errorText);
-         }
-      }
-      else
-      {
-         m_instanceFilter = NULL;
-      }
-   }
-   else
-   {
-      m_instanceFilterSource = NULL;
-      m_instanceFilter = NULL;
-   }
 }
 
 /**
@@ -1825,177 +1731,17 @@ bool DCItem::isCacheLoaded()
 }
 
 /**
- * Should return true if object has (or can have) value
- */
-bool DCItem::hasValue()
-{
-   if ((m_owner != NULL) && (m_owner->getObjectClass() == OBJECT_CLUSTER))
-      return isAggregateOnCluster() && (m_instanceDiscoveryMethod == IDM_NONE);
-	return m_instanceDiscoveryMethod == IDM_NONE;
-}
-
-/**
- * Expand {instance} macro in name and description
- */
-void DCItem::expandInstance()
-{
-	String temp = m_name;
-   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
-	temp.replace(_T("{instance-name}"), m_instance);
-	nx_strncpy(m_name, (const TCHAR *)temp, MAX_ITEM_NAME);
-
-	temp = m_description;
-   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
-	temp.replace(_T("{instance-name}"), m_instance);
-	nx_strncpy(m_description, (const TCHAR *)temp, MAX_DB_STRING);
-}
-
-/**
- * Filter callback data
- */
-struct FilterCallbackData
-{
-   StringMap *filteredInstances;
-   DCItem *dci;
-   NXSL_VM *instanceFilter;
-};
-
-/**
- * Callback for filtering instances
- */
-static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *value, void *data)
-{
-   NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
-   DCItem *dci = ((FilterCallbackData *)data)->dci;
-
-   instanceFilter->setGlobalVariable(_T("$node"), dci->getOwner()->createNXSLObject());
-   instanceFilter->setGlobalVariable(_T("$dci"), dci->createNXSLObject());
-
-   NXSL_Value *argv[2];
-   argv[0] = new NXSL_Value(key);
-   argv[1] = new NXSL_Value((const TCHAR *)value);
-
-   if (instanceFilter->run(2, argv))
-   {
-      bool accepted;
-      const TCHAR *instance = key;
-      const TCHAR *name = (const TCHAR *)value;
-      NXSL_Value *result = instanceFilter->getResult();
-      if (result != NULL)
-      {
-         if (result->isArray())
-         {
-            NXSL_Array *array = result->getValueAsArray();
-            if (array->size() > 0)
-            {
-               accepted = array->get(0)->getValueAsInt32() ? true : false;
-               if (accepted && (array->size() > 1))
-               {
-                  // transformed value
-                  const TCHAR *newValue = array->get(1)->getValueAsCString();
-                  if ((newValue != NULL) && (*newValue != 0))
-                  {
-                     DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
-                               dci->getName(), dci->getId(), instance, newValue);
-                     instance = newValue;
-                  }
-
-                  if (array->size() > 2)
-                  {
-                     // instance name
-                     const TCHAR *newName = array->get(2)->getValueAsCString();
-                     if ((newName != NULL) && (*newName != 0))
-                     {
-                        DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
-                                  dci->getName(), dci->getId(), instance, newName);
-                        name = newName;
-                     }
-                  }
-               }
-            }
-            else
-            {
-               accepted = true;
-            }
-         }
-         else
-         {
-            accepted = result->getValueAsInt32() ? true : false;
-         }
-      }
-      else
-      {
-         accepted = true;
-      }
-		if (accepted)
-      {
-         ((FilterCallbackData *)data)->filteredInstances->set(instance, name);
-      }
-      else
-		{
-			DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
-                   dci->getName(), dci->getId(), key);
-		}
-   }
-   else
-   {
-      TCHAR szBuffer[1024];
-		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dci->getOwnerName(), dci->getId());
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
-      ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
-   }
-   return _CONTINUE;
-}
-
-/**
- * Filter instance list
- */
-void DCItem::filterInstanceList(StringMap *instances)
-{
-   lock();
-   if (m_instanceFilter == NULL)
-   {
-      unlock();
-		return;
-   }
-
-   FilterCallbackData data;
-   data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
-   if (!data.instanceFilter->load(m_instanceFilter))
-   {
-      TCHAR szBuffer[1024];
-      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, data.instanceFilter->getErrorText(), m_id);
-   }
-   unlock();
-
-   StringMap filteredInstances;
-   data.filteredInstances = &filteredInstances;
-   data.dci = this;
-   instances->forEach(FilterCallback, &data);
-   instances->clear();
-   instances->addAll(&filteredInstances);
-   delete data.instanceFilter;
-}
-
-/**
- * Create DCObject from import file
+ * Create DCI from import file
  */
 void DCItem::updateFromImport(ConfigEntry *config)
 {
    DCObject::updateFromImport(config);
 
    lock();
-   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
-   m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
-   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   safe_free(m_instanceDiscoveryData);
-   m_instanceDiscoveryData = _tcsdup_ex(value);
-   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
 
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
    if (thresholdsRoot != NULL)
@@ -2018,4 +1764,12 @@ void DCItem::updateFromImport(ConfigEntry *config)
 
    updateCacheSizeInternal();
    unlock();
+}
+
+/*
+ * Clone DCI
+ */
+DCObject *DCItem::clone()
+{
+   return new DCItem(this);
 }

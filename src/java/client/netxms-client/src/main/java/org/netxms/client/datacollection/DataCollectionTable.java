@@ -28,6 +28,14 @@ import org.netxms.base.NXCPMessage;
  */
 public class DataCollectionTable extends DataCollectionObject
 {
+   // Instance discovery methods
+   public static final int IDM_NONE = 0;
+   public static final int IDM_AGENT_LIST = 1;
+   public static final int IDM_AGENT_TABLE = 2;
+   public static final int IDM_SNMP_WALK_VALUES = 3;
+   public static final int IDM_SNMP_WALK_OIDS = 4;
+   public static final int IDM_SCRIPT = 5;
+   
 	private String instanceColumn;
 	private List<ColumnDefinition> columns;
 	private List<TableThreshold> thresholds;

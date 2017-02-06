@@ -1515,8 +1515,8 @@ protected:
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
 
 	void doInstanceDiscovery(UINT32 requestId);
-	StringMap *getInstanceList(DCItem *dci);
-	bool updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
+	StringMap *getInstanceList(DCObject *dco);
+	bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);

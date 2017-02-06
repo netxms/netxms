@@ -65,6 +65,11 @@ DCObject::DCObject()
    m_transformationScript = NULL;
    m_comments = NULL;
    m_pollingSession = NULL;
+   m_instanceDiscoveryMethod = IDM_NONE;
+   m_instanceDiscoveryData = NULL;
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   m_instance[0] = 0;
 }
 
 /**
@@ -103,6 +108,13 @@ DCObject::DCObject(const DCObject *pSrc)
    setTransformationScript(pSrc->m_transformationScriptSource);
 
    m_schedules = (pSrc->m_schedules != NULL) ? new StringList(pSrc->m_schedules) : NULL;
+
+   m_instanceDiscoveryMethod = pSrc->m_instanceDiscoveryMethod;
+   m_instanceDiscoveryData = (pSrc->m_instanceDiscoveryData != NULL) ? _tcsdup(pSrc->m_instanceDiscoveryData) : NULL;
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   setInstanceFilter(pSrc->m_instanceFilterSource);
+   _tcscpy(m_instance, pSrc->m_instance);
 }
 
 /**
@@ -143,6 +155,11 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_transformationScript = NULL;
    m_comments = NULL;
    m_pollingSession = NULL;
+   m_instanceDiscoveryMethod = IDM_NONE;
+   m_instanceDiscoveryData = NULL;
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   m_instance[0] = 0;
 }
 
 /**
@@ -200,6 +217,14 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
          m_schedules->add(schedules->getValue(i));
       }
 	}
+
+   m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
+   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
+   m_instanceDiscoveryData = (value != NULL) ? _tcsdup(value) : NULL;
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
 }
 
 /**
@@ -213,6 +238,9 @@ DCObject::~DCObject()
 	safe_free(m_pszPerfTabSettings);
 	safe_free(m_comments);
    MutexDestroy(m_hMutex);
+   free(m_instanceDiscoveryData);
+   free(m_instanceFilterSource);
+   delete m_instanceFilter;
 }
 
 /**
@@ -334,11 +362,11 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
+		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
 				else
 				{
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
+		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
 					          m_id, src, &macro[7], vm->getErrorText());
 					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
 				}
@@ -346,7 +374,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			}
 			else
 			{
-	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
+	         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
 			}
 		}
 		temp += rest;
@@ -400,6 +428,7 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExp
 	{
 		expandMacros(m_name, m_name, MAX_ITEM_NAME);
 		expandMacros(m_description, m_description, MAX_DB_STRING);
+      expandMacros(m_instance, m_instance, MAX_DB_STRING);
 	}
 
    unlock();
@@ -669,6 +698,12 @@ void DCObject::createMessage(NXCPMessage *pMsg)
 	{
       pMsg->setField(VID_NUM_SCHEDULES, (UINT32)0);
 	}
+   pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
+   if (m_instanceDiscoveryData != NULL)
+      pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
+   if (m_instanceFilterSource != NULL)
+      pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
+   pMsg->setField(VID_INSTANCE, m_instance);
    unlock();
 }
 
@@ -722,6 +757,16 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
       delete_and_null(m_schedules);
    }
 
+   m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
+
+   safe_free(m_instanceDiscoveryData);
+   m_instanceDiscoveryData = pMsg->getFieldAsString(VID_INSTD_DATA);
+
+   pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
+   setInstanceFilter(pszStr);
+   safe_free(pszStr);
+   pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+
 	unlock();
 }
 
@@ -773,6 +818,22 @@ bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb)
 }
 
 /**
+ * Expand {instance} macro in name and description
+ */
+void DCObject::expandInstance()
+{
+   String temp = m_name;
+   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-name}"), m_instance);
+   nx_strncpy(m_name, (const TCHAR *)temp, MAX_ITEM_NAME);
+
+   temp = m_description;
+   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+   temp.replace(_T("{instance-name}"), m_instance);
+   nx_strncpy(m_description, (const TCHAR *)temp, MAX_DB_STRING);
+}
+
+/**
  * Update DC object from template object
  */
 void DCObject::updateFromTemplate(DCObject *src)
@@ -800,6 +861,21 @@ void DCObject::updateFromTemplate(DCObject *src)
    // Copy schedules
    delete m_schedules;
    m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
+
+   if ((src->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
+   {
+      expandInstance();
+   }
+   else
+   {
+      expandMacros(src->m_instance, m_instance, MAX_DB_STRING);
+      m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
+      safe_free(m_instanceDiscoveryData);
+      m_instanceDiscoveryData = _tcsdup_ex(src->m_instanceDiscoveryData);
+      safe_free_and_null(m_instanceFilterSource);
+      delete_and_null(m_instanceFilter);
+      setInstanceFilter(src->m_instanceFilterSource);
+   }
 
 	unlock();
 }
@@ -837,7 +913,9 @@ void DCObject::processNewError(bool noInstance, time_t now)
  */
 bool DCObject::hasValue()
 {
-	return true;
+   if ((m_owner != NULL) && (m_owner->getObjectClass() == OBJECT_CLUSTER))
+      return isAggregateOnCluster() && (m_instanceDiscoveryMethod == IDM_NONE);
+   return m_instanceDiscoveryMethod == IDM_NONE;
 }
 
 /**
@@ -949,6 +1027,14 @@ void DCObject::updateFromImport(ConfigEntry *config)
    {
       delete_and_null(m_schedules);
    }
+
+   m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
+   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
+   safe_free(m_instanceDiscoveryData);
+   m_instanceDiscoveryData = _tcsdup_ex(value);
+   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+
    unlock();
 }
 
@@ -1002,6 +1088,170 @@ void DCObject::requestForcePoll(ClientSession *session)
 }
 
 /**
+ * Filter callback data
+ */
+struct FilterCallbackData
+{
+   StringMap *filteredInstances;
+   DCObject *dco;
+   NXSL_VM *instanceFilter;
+};
+
+/**
+ * Callback for filtering instances
+ */
+static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *value, void *data)
+{
+   NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
+   DCObject *dco = ((FilterCallbackData *)data)->dco;
+
+   instanceFilter->setGlobalVariable(_T("$node"), dco->getOwner()->createNXSLObject());
+   instanceFilter->setGlobalVariable(_T("$dci"), dco->createNXSLObject());
+
+   NXSL_Value *argv[2];
+   argv[0] = new NXSL_Value(key);
+   argv[1] = new NXSL_Value((const TCHAR *)value);
+
+   if (instanceFilter->run(2, argv))
+   {
+      bool accepted;
+      const TCHAR *instance = key;
+      const TCHAR *name = (const TCHAR *)value;
+      NXSL_Value *result = instanceFilter->getResult();
+      if (result != NULL)
+      {
+         if (result->isArray())
+         {
+            NXSL_Array *array = result->getValueAsArray();
+            if (array->size() > 0)
+            {
+               accepted = array->get(0)->getValueAsInt32() ? true : false;
+               if (accepted && (array->size() > 1))
+               {
+                  // transformed value
+                  const TCHAR *newValue = array->get(1)->getValueAsCString();
+                  if ((newValue != NULL) && (*newValue != 0))
+                  {
+                     DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
+                              dco->getName(), dco->getId(), instance, newValue);
+                     instance = newValue;
+                  }
+
+                  if (array->size() > 2)
+                  {
+                     // instance name
+                     const TCHAR *newName = array->get(2)->getValueAsCString();
+                     if ((newName != NULL) && (*newName != 0))
+                     {
+                        DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
+                                 dco->getName(), dco->getId(), instance, newName);
+                        name = newName;
+                     }
+                  }
+               }
+            }
+            else
+            {
+               accepted = true;
+            }
+         }
+         else
+         {
+            accepted = result->getValueAsInt32() ? true : false;
+         }
+      }
+      else
+      {
+         accepted = true;
+      }
+      if (accepted)
+      {
+         ((FilterCallbackData *)data)->filteredInstances->set(instance, name);
+      }
+      else
+      {
+         DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
+                  dco->getName(), dco->getId(), key);
+      }
+   }
+   else
+   {
+      TCHAR szBuffer[1024];
+      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
+      ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Filter instance list
+ */
+void DCObject::filterInstanceList(StringMap *instances)
+{
+   lock();
+   if (m_instanceFilter == NULL)
+   {
+      unlock();
+      return;
+   }
+
+   FilterCallbackData data;
+   data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
+   if (!data.instanceFilter->load(m_instanceFilter))
+   {
+      TCHAR szBuffer[1024];
+      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), getOwnerName(), m_id);
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, data.instanceFilter->getErrorText(), m_id);
+   }
+   unlock();
+
+   StringMap filteredInstances;
+   data.filteredInstances = &filteredInstances;
+   data.dco = this;
+   instances->forEach(FilterCallback, &data);
+   instances->clear();
+   instances->addAll(&filteredInstances);
+   delete data.instanceFilter;
+}
+
+
+/**
+ * Set new instance discovery filter script
+ */
+void DCObject::setInstanceFilter(const TCHAR *pszScript)
+{
+   safe_free(m_instanceFilterSource);
+   delete m_instanceFilter;
+   if (pszScript != NULL)
+   {
+      m_instanceFilterSource = _tcsdup(pszScript);
+      StrStrip(m_instanceFilterSource);
+      if (m_instanceFilterSource[0] != 0)
+      {
+         TCHAR errorText[1024];
+         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
+         if (m_instanceFilter == NULL)
+         {
+            // node can be NULL if this DCO was just created from template
+            // in this case compilation error will be reported on template level anyway
+            if (m_owner != NULL)
+               nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_owner->getId(), m_owner->getName(), m_id, m_name, errorText);
+         }
+      }
+      else
+      {
+         m_instanceFilter = NULL;
+      }
+   }
+   else
+   {
+      m_instanceFilterSource = NULL;
+      m_instanceFilter = NULL;
+   }
+}
+
+/**
  * Data collection object info - constructor
  */
 DCObjectInfo::DCObjectInfo(DCObject *object)
@@ -1011,7 +1261,7 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    nx_strncpy(m_name, object->getName(), MAX_ITEM_NAME);
    nx_strncpy(m_description, object->getDescription(), MAX_DB_STRING);
    nx_strncpy(m_systemTag, object->getSystemTag(), MAX_DB_STRING);
-   nx_strncpy(m_instance, (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getInstance() : _T(""), MAX_DB_STRING);
+   nx_strncpy(m_instance, object->getInstance(), MAX_DB_STRING);
    m_comments = _tcsdup_ex(object->getComments());
    m_dataType = (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getDataType() : -1;
    m_origin = object->getDataSource();

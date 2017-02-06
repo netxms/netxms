@@ -391,7 +391,7 @@ void Template::loadItemsFromDB(DB_HANDLE hdb)
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
-              _T("transformation_script,comments,guid FROM dc_tables WHERE node_id=?"));
+              _T("transformation_script,comments,guid,instd_method,instd_data,instd_filter,instance FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -414,10 +414,8 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 {
    int i;
    bool success = false;
-
    if (!alreadyLocked)
       lockDciAccess(true); // write lock
-
    // Check if that object exists
    for(i = 0; i < m_dcObjects->size(); i++)
       if (m_dcObjects->get(i)->getId() == object->getId())

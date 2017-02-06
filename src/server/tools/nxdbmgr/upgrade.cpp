@@ -746,6 +746,24 @@ static bool SetSchemaVersion(int version)
    return SQLQuery(query);
 }
 
+/*
+ * Upgrade from V442 to V443
+ */
+static BOOL H_UpgradeFromV442(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE dc_tables ADD instance varchar(255) null\n")
+            _T("ALTER TABLE dc_tables ADD instd_method integer null\n")
+            _T("UPDATE dc_tables SET instd_method=0\n")
+            _T("ALTER TABLE dc_tables ADD instd_data varchar(255) null\n")
+            _T("ALTER TABLE dc_tables ADD instd_filter $SQL:TEXT null\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   SetNotNullConstraint(_T("dc_tables"), _T("instd_method"));
+   CHK_EXEC(SetSchemaVersion(443));
+   return TRUE;
+}
+
 /**
  * Upgrade from V441 to V442
  */
@@ -11573,6 +11591,7 @@ static struct
    { 439, 440, H_UpgradeFromV439 },
    { 440, 441, H_UpgradeFromV440 },
    { 441, 442, H_UpgradeFromV441 },
+   { 442, 443, H_UpgradeFromV442 },
    { 0, 0, NULL }
 };
 

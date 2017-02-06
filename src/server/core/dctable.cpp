@@ -208,6 +208,15 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
    loadThresholds(hdb);
+
+   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
+   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, NULL, 0);
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
+   setInstanceFilter(pszTmp);
+   free(pszTmp);
+   DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
 }
 
 /**
@@ -497,15 +506,17 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=?,")
+									  _T("instd_method=?,instd_data=?,instd_filter=?,instance=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,comments,guid,item_id) ")
-									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,guid, ")
+									  _T("instd_method,instd_data,instd_filter,instance,item_id) ")
+									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -530,7 +541,11 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_guid);
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
+   DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
+   DBBind(hStmt, 21, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
+   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
+   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -979,13 +994,16 @@ void DCTable::createExportRecord(String &str)
                           _T("\t\t\t\t\t<retention>%d</retention>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
+                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
+                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
+                          _T("\t\t\t\t\t<instance>%s</instance>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_flags, (int)m_snmpPort);
+								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod),
+								  (const TCHAR *)EscapeStringForXML2(m_instance);
 
 	if (m_transformationScriptSource != NULL)
 	{
@@ -1033,6 +1051,20 @@ void DCTable::createExportRecord(String &str)
 		str.append(_T("</perfTabSettings>\n"));
 	}
 
+	if (m_instanceDiscoveryData != NULL)
+   {
+      str += _T("\t\t\t\t\t<instanceDiscoveryData>");
+      str.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
+      str += _T("</instanceDiscoveryData>\n");
+   }
+
+   if (m_instanceFilterSource != NULL)
+   {
+      str += _T("\t\t\t\t\t<instanceFilter>");
+      str.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
+      str += _T("</instanceFilter>\n");
+   }
+
    unlock();
    str.append(_T("\t\t\t\t</dctable>\n"));
 }
@@ -1072,16 +1104,6 @@ void DCTable::updateFromImport(ConfigEntry *config)
 }
 
 /**
- * Should return true if object has (or can have) value
- */
-bool DCTable::hasValue()
-{
-   if (m_owner->getObjectClass() == OBJECT_CLUSTER)
-      return isAggregateOnCluster();
-   return true;
-}
-
-/**
  * Get list of used events
  */
 void DCTable::getEventList(IntegerArray<UINT32> *eventList)
@@ -1096,4 +1118,12 @@ void DCTable::getEventList(IntegerArray<UINT32> *eventList)
       }
    }
    unlock();
+}
+
+/*
+ * Clone DCTable
+ */
+DCObject *DCTable::clone()
+{
+   return new DCTable(this);
 }

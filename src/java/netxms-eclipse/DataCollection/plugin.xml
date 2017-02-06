@@ -273,7 +273,7 @@
               name="%page.name.InstanceDiscovery">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.datacollection.DataCollectionItem">
+                    value="org.netxms.client.datacollection.DataCollectionObject">
               </instanceof>
            </enabledWhen>
         </page>

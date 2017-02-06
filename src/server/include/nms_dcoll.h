@@ -211,6 +211,11 @@ protected:
    NXSL_Program *m_transformationScript;  // Compiled transformation script
 	TCHAR *m_comments;
 	ClientSession *m_pollingSession;
+   WORD m_instanceDiscoveryMethod;
+   TCHAR *m_instanceDiscoveryData;
+   TCHAR *m_instanceFilterSource;
+   NXSL_Program *m_instanceFilter;
+   TCHAR m_instance[MAX_DB_STRING];
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -225,13 +230,16 @@ protected:
 
 	// --- constructors ---
    DCObject();
-   DCObject(const DCObject *src);
    DCObject(UINT32 dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, Template *pNode,
             const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
 	DCObject(ConfigEntry *config, Template *owner);
+   DCObject(const DCObject *src);
 
 public:
+
 	virtual ~DCObject();
+
+   virtual DCObject *clone() = 0;
 
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
@@ -245,8 +253,6 @@ public:
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
-
-	virtual bool hasValue();
 
 	UINT32 getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
@@ -316,6 +322,17 @@ public:
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
+
+   WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
+   const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
+   void filterInstanceList(StringMap *instances);
+   void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
+   void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
+   void setInstanceFilter(const TCHAR *pszScript);
+   void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
+   const TCHAR *getInstance() const { return m_instance; }
+   void expandInstance();
+   bool hasValue();
 };
 
 /**
@@ -324,7 +341,6 @@ public:
 class NXCORE_EXPORTABLE DCItem : public DCObject
 {
 protected:
-   TCHAR m_instance[MAX_DB_STRING];
    BYTE m_deltaCalculation;      // Delta calculation method
    BYTE m_dataType;
 	int m_sampleCount;            // Number of samples required to calculate value
@@ -339,10 +355,6 @@ protected:
 	int m_nMultiplier;
 	TCHAR *m_customUnitName;
 	WORD m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
-	WORD m_instanceDiscoveryMethod;
-	TCHAR *m_instanceDiscoveryData;
-	TCHAR *m_instanceFilterSource;
-	NXSL_Program *m_instanceFilter;
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
 
    bool transform(ItemValue &value, time_t nElapsedTime);
@@ -364,6 +376,8 @@ public:
 	DCItem(ConfigEntry *config, Template *owner);
    virtual ~DCItem();
 
+   virtual DCObject *clone();
+
 	virtual int getType() const { return DCO_TYPE_ITEM; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
@@ -381,19 +395,11 @@ public:
 	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
    int getThresholdSeverity();
-	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
-	const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
-	const TCHAR *getInstance() const { return m_instance; }
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 
-	void filterInstanceList(StringMap *instances);
-	void expandInstance();
-
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError(bool noInstance, time_t now);
-
-	virtual bool hasValue();
 
    void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
@@ -417,15 +423,11 @@ public:
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
 
-	void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
 	void setDataType(int dataType) { m_dataType = dataType; }
 	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
-	void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
-   void setInstanceFilter(const TCHAR *pszScript);
 
    static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
@@ -577,6 +579,8 @@ public:
    DCTable(ConfigEntry *config, Template *owner);
 	virtual ~DCTable();
 
+	virtual DCObject *clone();
+
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
@@ -587,8 +591,6 @@ public:
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError(bool noInstance, time_t now);
-
-   virtual bool hasValue();
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
