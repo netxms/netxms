@@ -627,7 +627,7 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
-   HDLINK_DIRS="jira"
+   HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
@@ -1862,7 +1862,7 @@ fi
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
   SMSDRV_DIRS="$SMSDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
-  HDLINK_DIRS="$HDLINK_DIRS jira"
+  HDLINK_DIRS="$HDLINK_DIRS jira redmine"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
@@ -3414,6 +3414,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile
+	src/server/hdlink/redmine/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
