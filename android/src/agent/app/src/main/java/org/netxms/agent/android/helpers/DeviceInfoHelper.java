@@ -2,15 +2,20 @@ package org.netxms.agent.android.helpers;
 
 import java.util.regex.Pattern;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.provider.Settings.Secure;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.Patterns;
@@ -105,7 +110,13 @@ public class DeviceInfoHelper
 		if (context != null)
 		{
 			TelephonyManager tman = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-			id = (tman != null) ? tman.getDeviceId() : null;
+			if (tman != null)
+			{
+				if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
+					id = tman.getDeviceId();
+			}
+			else
+				id = null;
 			if (id == null)
 			{
 				id = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);

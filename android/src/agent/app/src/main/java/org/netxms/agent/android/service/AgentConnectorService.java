@@ -22,6 +22,7 @@ import org.netxms.base.Logger;
 import org.netxms.mobile.agent.MobileAgentException;
 import org.netxms.mobile.agent.Session;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -33,6 +34,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -44,6 +46,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -731,7 +734,8 @@ public class AgentConnectorService extends Service implements LocationListener
 			}
 			else
 			{
-				locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
+				if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+					locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
 			}
 		}
 	};
