@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -111,7 +111,7 @@ inline void ThreadSleepMs(UINT32 dwMilliseconds)
    Sleep(dwMilliseconds);
 }
 
-inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
    HANDLE hThread;
    THREAD_ID dwThreadId;
@@ -204,12 +204,18 @@ inline void MutexDestroy(MUTEX mutex)
    free(mutex);
 }
 
-inline BOOL MutexLock(MUTEX mutex)
+inline bool MutexLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
-		return FALSE;
-	EnterCriticalSection(mutex);
-   return TRUE;
+		return false;
+	return EnterCriticalSection(mutex) ? true : false;
+}
+
+inline bool MutexTryLock(MUTEX mutex)
+{
+	if (mutex == INVALID_MUTEX_HANDLE)
+		return false;
+	return TryEnterCriticalSection(mutex) ? true : false;
 }
 
 inline void MutexUnlock(MUTEX mutex)
@@ -217,7 +223,7 @@ inline void MutexUnlock(MUTEX mutex)
    LeaveCriticalSection(mutex);
 }
 
-inline CONDITION ConditionCreate(BOOL bBroadcast)
+inline CONDITION ConditionCreate(bool bBroadcast)
 {
    return CreateEvent(NULL, bBroadcast, FALSE, NULL);
 }
@@ -265,8 +271,8 @@ struct netxms_condition_t
 {
 	pth_cond_t cond;
 	pth_mutex_t mutex;
-	BOOL broadcast;
-   BOOL isSet;
+	bool broadcast;
+   bool isSet;
 };
 typedef struct netxms_condition_t * CONDITION;
 
@@ -309,7 +315,7 @@ inline void ThreadSleepMs(UINT32 dwMilliseconds)
 	pth_usleep(dwMilliseconds * 1000);
 }
 
-inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id;
 
@@ -387,30 +393,23 @@ inline void MutexDestroy(MUTEX mutex)
       free(mutex);
 }
 
-inline BOOL MutexLock(MUTEX mutex)
+inline bool MutexLock(MUTEX mutex)
 {
-	int i;
-	int ret = FALSE;
+   return (mutex != NULL) ? (pth_mutex_acquire(mutex, FALSE, NULL) != 0) : false;
+}
 
-   if (mutex != NULL)
-   {
-		if (pth_mutex_acquire(mutex, FALSE, NULL))
-      {
-			ret = TRUE;
-		}
-	}
-   return ret;
+inline bool MutexTryLock(MUTEX mutex)
+{
+   return (mutex != NULL) ? (pth_mutex_acquire(mutex, TRUE, NULL) != 0) : false;
 }
 
 inline void MutexUnlock(MUTEX mutex)
 {
    if (mutex != NULL) 
-   {
       pth_mutex_release(mutex);
-	}
 }
 
-inline CONDITION ConditionCreate(BOOL bBroadcast)
+inline CONDITION ConditionCreate(bool bBroadcast)
 {
 	CONDITION cond;
 
@@ -571,7 +570,7 @@ struct netxms_mutex_t
 {
    pthread_mutex_t mutex;
 #ifndef HAVE_RECURSIVE_MUTEXES
-   BOOL isRecursive;
+   bool isRecursive;
    pthread_t owner;
 #endif
 };
@@ -580,8 +579,8 @@ struct netxms_condition_t
 {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
-	BOOL broadcast;
-   BOOL isSet;
+	bool broadcast;
+   bool isSet;
 };
 typedef struct netxms_condition_t * CONDITION;
 
@@ -661,7 +660,7 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 	return id;
 }
 
-inline BOOL ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id = ThreadCreateEx(start_address, stack_size, args);
 
@@ -737,29 +736,23 @@ inline void MutexDestroy(MUTEX mutex)
    }
 }
 
-inline BOOL MutexLock(MUTEX mutex)
+inline bool MutexLock(MUTEX mutex)
 {
-	int ret = FALSE;
+   return (mutex != NULL) ? (pthread_mutex_lock(&mutex->mutex) == 0) : false;
+}
 
-   if (mutex != NULL)
-   {
-		if (pthread_mutex_lock(&mutex->mutex) == 0)
-      {
-			ret = TRUE;
-		}
-	}
-   return ret;
+inline bool MutexTryLock(MUTEX mutex)
+{
+   return (mutex != NULL) ? (pthread_mutex_trylock(&mutex->mutex) == 0) : false;
 }
 
 inline void MutexUnlock(MUTEX mutex)
 {
    if (mutex != NULL) 
-   {
       pthread_mutex_unlock(&mutex->mutex);
-	}
 }
 
-inline CONDITION ConditionCreate(BOOL bBroadcast)
+inline CONDITION ConditionCreate(bool bBroadcast)
 {
 	CONDITION cond;
 
