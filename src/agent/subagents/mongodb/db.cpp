@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
- ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2014 Raden Solutions
+ ** Subagent for Mongo DB monitoring
+ ** Copyright (C) 2009-2017 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -142,7 +142,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 #ifdef UNICODE
    char *_connectionString = UTF8StringFromWideString(connectionString);
 	m_dbConn = mongoc_client_new (_connectionString);
-	safe_free(_connectionString);
+	free(_connectionString);
 #else
 	m_dbConn = mongoc_client_new(connectionString);
 #endif
@@ -209,7 +209,7 @@ void DatabaseInstance::getDatabases()
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
-      safe_free(_error);
+      free(_error);
 #else
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
@@ -322,11 +322,11 @@ LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *v
 #ifdef UNICODE
       TCHAR *v = WideStringFromUTF8String(val);
       ret_string(value, v);
-      safe_free(v);
+      free(v);
 #else
       ret_string(value, val);
 #endif // UNICODE
-      safe_free(val);
+      free(val);
       result = SYSINFO_RC_SUCCESS;
    }
 
@@ -424,17 +424,17 @@ LONG DatabaseInstance::setDbNames(StringList *value)
 LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const TCHAR *command, TCHAR *value)
 {
    TCHAR dbName[MAX_STR];
-   if(!AgentGetParameterArg(param, 2, dbName, MAX_STR))
+   if (!AgentGetParameterArg(param, 2, dbName, MAX_STR))
       return SYSINFO_RC_ERROR;
    LONG result = SYSINFO_RC_UNSUPPORTED;
    MutexLock(m_dataLock);
    MongoDBCommand *commandData = NULL;
    StringObjectMap<MongoDBCommand> * list = m_data->get(dbName);
-   if(list != NULL)
+   if (list != NULL)
    {
      commandData = list->get(command);
    }
-   if(commandData != NULL)
+   if (commandData != NULL)
    {
       if((GetCurrentTimeMs() - commandData->m_lastUpdateTime) > 60000)
       {
