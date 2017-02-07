@@ -334,7 +334,7 @@ public class AxisTickLabels implements PaintListener
 			tickLabelPositions.add(tickLabelPosition);
 		}
 	}
-	
+
 	/**
 	 * Updates tick label for log scale.
 	 * 
@@ -380,7 +380,7 @@ public class AxisTickLabels implements PaintListener
 		{
 			firstPosition = MIN.subtract(MIN.remainder(tickStep)).add(tickStep);
 		}
-		
+
 		for(int i = digitMin; i <= digitMax; i++)
 		{
 			for(BigDecimal j = firstPosition; j.doubleValue() <= pow(10, i).doubleValue(); j = j.add(tickStep))

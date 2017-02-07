@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -572,7 +573,7 @@ public class AxisTickLabels implements PaintListener
 	 */
 	private long getPeriodInMillis(int unit, int amount)
 	{
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		cal.setTimeInMillis(0);
 		cal.roll(unit, amount);
 		return cal.getTimeInMillis();
