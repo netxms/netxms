@@ -32,6 +32,7 @@ import org.eclipse.swt.graphics.RGB;
 public class ColorConverter
 {
    private static final Map<String, RGB> colorNames;
+   private static final Map<RGB, String> colorValues;
    
    static
    {
@@ -184,8 +185,158 @@ public class ColorConverter
       colorNames.put("whitesmoke", new RGB(0xf5, 0xf5, 0xf5));
       colorNames.put("yellow", new RGB(0xff, 0xff, 0x00));
       colorNames.put("yellowgreen", new RGB(0x9a, 0xcd, 0x32));
+
+      colorValues = new HashMap<RGB, String>();
+      colorValues.put(new RGB(0xf0, 0xf8, 0xff), "AliceBlue");
+      colorValues.put(new RGB(0xfa, 0xeb, 0xd7), "AntiqueWhite");
+      colorValues.put(new RGB(0x00, 0xff, 0xff), "Aqua");
+      colorValues.put(new RGB(0x7f, 0xff, 0xd4), "Aquamarine");
+      colorValues.put(new RGB(0xf0, 0xff, 0xff), "Azure");
+      colorValues.put(new RGB(0xf5, 0xf5, 0xdc), "Beige");
+      colorValues.put(new RGB(0xff, 0xe4, 0xc4), "Bisque");
+      colorValues.put(new RGB(0x00, 0x00, 0x00), "Black");
+      colorValues.put(new RGB(0xff, 0xeb, 0xcd), "BlanchedAlmond");
+      colorValues.put(new RGB(0x00, 0x00, 0xff), "Blue");
+      colorValues.put(new RGB(0x8a, 0x2b, 0xe2), "BlueViolet");
+      colorValues.put(new RGB(0xa5, 0x2a, 0x2a), "Brown");
+      colorValues.put(new RGB(0xde, 0xb8, 0x87), "Burlywood");
+      colorValues.put(new RGB(0x5f, 0x9e, 0xa0), "CadetBlue");
+      colorValues.put(new RGB(0x7f, 0xff, 0x00), "Chartreuse");
+      colorValues.put(new RGB(0xd2, 0x69, 0x1e), "Chocolate");
+      colorValues.put(new RGB(0xff, 0x7f, 0x50), "Coral");
+      colorValues.put(new RGB(0x64, 0x95, 0xed), "CornflowerBlue");
+      colorValues.put(new RGB(0xff, 0xf8, 0xdc), "Cornsilk");
+      colorValues.put(new RGB(0xdc, 0x14, 0x3c), "Crimson");
+      colorValues.put(new RGB(0x00, 0xff, 0xff), "Cyan");
+      colorValues.put(new RGB(0x00, 0x00, 0x8b), "DarkBlue");
+      colorValues.put(new RGB(0x00, 0x8b, 0x8b), "DarkCyan");
+      colorValues.put(new RGB(0xb8, 0x86, 0x0b), "DarkGoldenRod");
+      colorValues.put(new RGB(0xa9, 0xa9, 0xa9), "DarkGray");
+      colorValues.put(new RGB(0xa9, 0xa9, 0xa9), "DarkGrey");
+      colorValues.put(new RGB(0x00, 0x64, 0x00), "DarkGreen");
+      colorValues.put(new RGB(0xbd, 0xb7, 0x6b), "DarkKhaki");
+      colorValues.put(new RGB(0x8b, 0x00, 0x8b), "DarkMagenta");
+      colorValues.put(new RGB(0x55, 0x6b, 0x2f), "DarkoliveGreen");
+      colorValues.put(new RGB(0xff, 0x8c, 0x00), "DarkOrange");
+      colorValues.put(new RGB(0x99, 0x32, 0xcc), "Darkorchid");
+      colorValues.put(new RGB(0x8b, 0x00, 0x00), "DarkRed");
+      colorValues.put(new RGB(0xe9, 0x96, 0x7a), "DarkSalmon");
+      colorValues.put(new RGB(0x8f, 0xbc, 0x8f), "DarkseaGreen");
+      colorValues.put(new RGB(0x48, 0x3d, 0x8b), "DarkSlateBlue");
+      colorValues.put(new RGB(0x2f, 0x4f, 0x4f), "DarkSlateGray");
+      colorValues.put(new RGB(0x2f, 0x4f, 0x4f), "DarkSlateGrey");
+      colorValues.put(new RGB(0x00, 0xce, 0xd1), "DarkTurquoise");
+      colorValues.put(new RGB(0x94, 0x00, 0xd3), "DarkViolet");
+      colorValues.put(new RGB(0xff, 0x14, 0x93), "DeepPink");
+      colorValues.put(new RGB(0x00, 0xbf, 0xff), "DeepskyBlue");
+      colorValues.put(new RGB(0x69, 0x69, 0x69), "DimGray");
+      colorValues.put(new RGB(0x69, 0x69, 0x69), "DimGrey");
+      colorValues.put(new RGB(0x1e, 0x90, 0xff), "DodgerBlue");
+      colorValues.put(new RGB(0xb2, 0x22, 0x22), "Firebrick");
+      colorValues.put(new RGB(0xff, 0xfa, 0xf0), "FloralWhite");
+      colorValues.put(new RGB(0x22, 0x8b, 0x22), "ForestGreen");
+      colorValues.put(new RGB(0xff, 0x00, 0xff), "Fuchsia");
+      colorValues.put(new RGB(0xdc, 0xdc, 0xdc), "Gainsboro");
+      colorValues.put(new RGB(0xf8, 0xf8, 0xff), "GhostWhite");
+      colorValues.put(new RGB(0xff, 0xd7, 0x00), "Gold");
+      colorValues.put(new RGB(0xda, 0xa5, 0x20), "GoldenRod");
+      colorValues.put(new RGB(0x80, 0x80, 0x80), "Gray");
+      colorValues.put(new RGB(0x80, 0x80, 0x80), "Grey");
+      colorValues.put(new RGB(0x00, 0x80, 0x00), "Green");
+      colorValues.put(new RGB(0xad, 0xff, 0x2f), "GreenYellow");
+      colorValues.put(new RGB(0xf0, 0xff, 0xf0), "HoneyDew");
+      colorValues.put(new RGB(0xff, 0x69, 0xb4), "HotPink");
+      colorValues.put(new RGB(0xcd, 0x5c, 0x5c), "IndianRed");
+      colorValues.put(new RGB(0x4b, 0x00, 0x82), "Indigo");
+      colorValues.put(new RGB(0xff, 0xff, 0xf0), "Ivory");
+      colorValues.put(new RGB(0xf0, 0xe6, 0x8c), "Khaki");
+      colorValues.put(new RGB(0xe6, 0xe6, 0xfa), "Lavender");
+      colorValues.put(new RGB(0xff, 0xf0, 0xf5), "LavenderBlush");
+      colorValues.put(new RGB(0x7c, 0xfc, 0x00), "LawnGreen");
+      colorValues.put(new RGB(0xff, 0xfa, 0xcd), "LemonChiffon");
+      colorValues.put(new RGB(0xad, 0xd8, 0xe6), "LightBlue");
+      colorValues.put(new RGB(0xf0, 0x80, 0x80), "LightCoral");
+      colorValues.put(new RGB(0xe0, 0xff, 0xff), "LightCyan");
+      colorValues.put(new RGB(0xfa, 0xfa, 0xd2), "LightGoldenRodYellow");
+      colorValues.put(new RGB(0xd3, 0xd3, 0xd3), "LightGray");
+      colorValues.put(new RGB(0xd3, 0xd3, 0xd3), "LightGrey");
+      colorValues.put(new RGB(0x90, 0xee, 0x90), "LightGreen");
+      colorValues.put(new RGB(0xff, 0xb6, 0xc1), "LightPink");
+      colorValues.put(new RGB(0xff, 0xa0, 0x7a), "LightSalmon");
+      colorValues.put(new RGB(0x20, 0xb2, 0xaa), "LightseaGreen");
+      colorValues.put(new RGB(0x87, 0xce, 0xfa), "LightskyBlue");
+      colorValues.put(new RGB(0x77, 0x88, 0x99), "LightSlateGray");
+      colorValues.put(new RGB(0x77, 0x88, 0x99), "LightSlateGrey");
+      colorValues.put(new RGB(0xb0, 0xc4, 0xde), "LightsteelBlue");
+      colorValues.put(new RGB(0xff, 0xff, 0xe0), "LightYellow");
+      colorValues.put(new RGB(0x00, 0xff, 0x00), "Lime");
+      colorValues.put(new RGB(0x32, 0xcd, 0x32), "LimeGreen");
+      colorValues.put(new RGB(0xfa, 0xf0, 0xe6), "Linen");
+      colorValues.put(new RGB(0xff, 0x00, 0xff), "Magenta");
+      colorValues.put(new RGB(0x80, 0x00, 0x00), "Maroon");
+      colorValues.put(new RGB(0x66, 0xcd, 0xaa), "Mediumaquamarine");
+      colorValues.put(new RGB(0x00, 0x00, 0xcd), "MediumBlue");
+      colorValues.put(new RGB(0xba, 0x55, 0xd3), "Mediumorchid");
+      colorValues.put(new RGB(0x93, 0x70, 0xdb), "MediumPurple");
+      colorValues.put(new RGB(0x3c, 0xb3, 0x71), "MediumseaGreen");
+      colorValues.put(new RGB(0x7b, 0x68, 0xee), "MediumSlateBlue");
+      colorValues.put(new RGB(0x00, 0xfa, 0x9a), "MediumSpringGreen");
+      colorValues.put(new RGB(0x48, 0xd1, 0xcc), "MediumTurquoise");
+      colorValues.put(new RGB(0xc7, 0x15, 0x85), "MediumVioletRed");
+      colorValues.put(new RGB(0x19, 0x19, 0x70), "MidnightBlue");
+      colorValues.put(new RGB(0xf5, 0xff, 0xfa), "Mintcream");
+      colorValues.put(new RGB(0xff, 0xe4, 0xe1), "Mistyrose");
+      colorValues.put(new RGB(0xff, 0xe4, 0xb5), "Moccasin");
+      colorValues.put(new RGB(0xff, 0xde, 0xad), "NavajoWhite");
+      colorValues.put(new RGB(0x00, 0x00, 0x80), "Navy");
+      colorValues.put(new RGB(0xfd, 0xf5, 0xe6), "Oldlace");
+      colorValues.put(new RGB(0x80, 0x80, 0x00), "Olive");
+      colorValues.put(new RGB(0x6b, 0x8e, 0x23), "Olivedrab");
+      colorValues.put(new RGB(0xff, 0xa5, 0x00), "Orange");
+      colorValues.put(new RGB(0xff, 0x45, 0x00), "OrangeRed");
+      colorValues.put(new RGB(0xda, 0x70, 0xd6), "Orchid");
+      colorValues.put(new RGB(0xee, 0xe8, 0xaa), "PaleGoldenRod");
+      colorValues.put(new RGB(0x98, 0xfb, 0x98), "PaleGreen");
+      colorValues.put(new RGB(0xaf, 0xee, 0xee), "PaleTurquoise");
+      colorValues.put(new RGB(0xdb, 0x70, 0x93), "PaleVioletRed");
+      colorValues.put(new RGB(0xff, 0xef, 0xd5), "Papayawhip");
+      colorValues.put(new RGB(0xff, 0xda, 0xb9), "Peachpuff");
+      colorValues.put(new RGB(0xcd, 0x85, 0x3f), "Peru");
+      colorValues.put(new RGB(0xff, 0xc0, 0xcb), "Pink");
+      colorValues.put(new RGB(0xdd, 0xa0, 0xdd), "Plum");
+      colorValues.put(new RGB(0xb0, 0xe0, 0xe6), "PowderBlue");
+      colorValues.put(new RGB(0x80, 0x00, 0x80), "Purple");
+      colorValues.put(new RGB(0x66, 0x33, 0x99), "RebeccaPurple");
+      colorValues.put(new RGB(0xff, 0x00, 0x00), "Red");
+      colorValues.put(new RGB(0xbc, 0x8f, 0x8f), "RosyBrown");
+      colorValues.put(new RGB(0x41, 0x69, 0xe1), "RoyalBlue");
+      colorValues.put(new RGB(0x8b, 0x45, 0x13), "SaddleBrown");
+      colorValues.put(new RGB(0xfa, 0x80, 0x72), "Salmon");
+      colorValues.put(new RGB(0xf4, 0xa4, 0x60), "SandyBrown");
+      colorValues.put(new RGB(0x2e, 0x8b, 0x57), "SeaGreen");
+      colorValues.put(new RGB(0xff, 0xf5, 0xee), "SeaShell");
+      colorValues.put(new RGB(0xa0, 0x52, 0x2d), "Sienna");
+      colorValues.put(new RGB(0xc0, 0xc0, 0xc0), "Silver");
+      colorValues.put(new RGB(0x87, 0xce, 0xeb), "SkyBlue");
+      colorValues.put(new RGB(0x6a, 0x5a, 0xcd), "SlateBlue");
+      colorValues.put(new RGB(0x70, 0x80, 0x90), "SlateGray");
+      colorValues.put(new RGB(0x70, 0x80, 0x90), "SlateGrey");
+      colorValues.put(new RGB(0xff, 0xfa, 0xfa), "Snow");
+      colorValues.put(new RGB(0x00, 0xff, 0x7f), "SpringGreen");
+      colorValues.put(new RGB(0x46, 0x82, 0xb4), "SteelBlue");
+      colorValues.put(new RGB(0xd2, 0xb4, 0x8c), "Tan");
+      colorValues.put(new RGB(0x00, 0x80, 0x80), "Teal");
+      colorValues.put(new RGB(0xd8, 0xbf, 0xd8), "Thistle");
+      colorValues.put(new RGB(0xff, 0x63, 0x47), "Tomato");
+      colorValues.put(new RGB(0x40, 0xe0, 0xd0), "Turquoise");
+      colorValues.put(new RGB(0xee, 0x82, 0xee), "Violet");
+      colorValues.put(new RGB(0xf5, 0xde, 0xb3), "wheat");
+      colorValues.put(new RGB(0xff, 0xff, 0xff), "White");
+      colorValues.put(new RGB(0xf5, 0xf5, 0xf5), "Whitesmoke");
+      colorValues.put(new RGB(0xff, 0xff, 0x00), "Yellow");
+      colorValues.put(new RGB(0x9a, 0xcd, 0x32), "YellowGreen");
    }
-   
+
 	/**
 	 * Create integer value from Red/Green/Blue
 	 * 
@@ -196,7 +347,7 @@ public class ColorConverter
 	 */
 	public static int rgbToInt(RGB rgb)
 	{
-		return rgb.blue | (rgb.green << 8) | (rgb.red << 16);
+		return rgb.red | (rgb.green << 8) | (rgb.blue << 16);
 	}
 	
 	/**
@@ -280,6 +431,21 @@ public class ColorConverter
 	}
 	
 	/**
+	 * Convert given RGB value into CSS format
+	 * 
+	 * @param rgb rgb value
+	 * @return color definition in CSS format
+	 */
+	public static String rgbToCss(RGB rgb)
+	{
+	   String name = colorValues.get(rgb);
+	   if (name != null)
+	      return name;
+	   int v = rgbToInt(rgb); // value is in BGR format
+	   return String.format("#%02x%02x%02x", v & 0xFF, (v >> 8) & 0xFF, v >> 16);
+	}
+	
+	/**
 	 * Parse CSS compatible color definition
 	 * 
 	 * @param cdef color definition
@@ -289,6 +455,19 @@ public class ColorConverter
 	{
 	   if ((cdef == null) || cdef.isEmpty())
 	      return null;
+	   
+	   if (cdef.startsWith("0x"))
+      {
+         try
+         {
+            int v = Integer.parseInt(cdef.substring(2), 16) & 0x00FFFFFF;
+            return new RGB(v >> 16, (v >> 8) & 0xFF, v & 0xFF);
+         }
+         catch(NumberFormatException e)
+         {
+            return null;
+         }
+      }
 	   
       if (cdef.charAt(0) == '#')
       {

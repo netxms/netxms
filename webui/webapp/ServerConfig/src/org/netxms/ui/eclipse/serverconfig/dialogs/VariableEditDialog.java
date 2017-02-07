@@ -197,7 +197,7 @@ public class VariableEditDialog extends Dialog
 	         break;
 	      case COLOR:
 	         if (colorSelector.getColorValue() != null)
-	            varValue = String.format("#%06X", ColorConverter.rgbToInt(colorSelector.getColorValue()));
+	            varValue = ColorConverter.rgbToCss(colorSelector.getColorValue());
 	         break;
 	      case INTEGER:
             varValue = spinnerValue.getText();
