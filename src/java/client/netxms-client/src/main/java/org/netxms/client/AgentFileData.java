@@ -32,9 +32,9 @@ public class AgentFileData
    /**
     * Create new agent file object
     * 
-    * @param id FIXME
-    * @param remoteName FIXME
-    * @param file FIXME
+    * @param id file id
+    * @param remoteName name of remote file
+    * @param file local file
     */
    public AgentFileData(String id, String remoteName, File file)
    {
@@ -44,7 +44,7 @@ public class AgentFileData
    }
 
    /**
-    * @return the id
+    * @return file id
     */
    public String getId()
    {
@@ -52,7 +52,7 @@ public class AgentFileData
    }
 
    /**
-    * @return the remoteName
+    * @return remote file name
     */
    public String getRemoteName()
    {
@@ -60,7 +60,9 @@ public class AgentFileData
    }
 
    /**
-    * @return the file
+    * Get local file
+    *
+    * @return local file
     */
    public File getFile()
    {

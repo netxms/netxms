@@ -29,9 +29,10 @@ public class AgentFileInfo
    
    /**
     * Create new agent file info object
-    * @param remoteName FIXME
-    * @param itemCount FIXME
-    * @param size FIXME
+    * 
+    * @param remoteName remote file name
+    * @param itemCount number of sub-elements
+    * @param size file size
     */
    public AgentFileInfo(String remoteName, long itemCount, long size)
    {
@@ -63,5 +64,4 @@ public class AgentFileInfo
    {
       return remoteName;
    }
-
 }

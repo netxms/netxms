@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public class AgentParameter
 	 * Create agent parameter from NXCP message
 	 * 
 	 * @param msg NXCP message
-	 * @param baseId Base variable ID
+	 * @param baseId Base field ID
 	 */
 	protected AgentParameter(final NXCPMessage msg, final long baseId)
 	{
@@ -45,9 +45,9 @@ public class AgentParameter
 	/**
 	 * Create agent parameter info from scratch.
 	 * 
-	 * @param name FIXME
-	 * @param description FIXME
-	 * @param dataType FIXME
+	 * @param name parameter name
+	 * @param description parameter description
+	 * @param dataType parameter data type
 	 */
 	public AgentParameter(String name, String description, int dataType)
 	{
