@@ -58,8 +58,7 @@ public class InputFieldOptions
    /**
     * Create XML from configuration.
     * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
+    * @return XML document or null if serialization failed
     */
    public String createXml()
    {

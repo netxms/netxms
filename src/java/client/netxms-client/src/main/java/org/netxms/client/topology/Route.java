@@ -36,8 +36,8 @@ public class Route
    /**
     * Create route object from NXCP message
     * 
-    * @param msg
-    * @param baseId
+    * @param msg FIXME
+    * @param baseId FIXME
     */
    public Route(NXCPMessage msg, long baseId)
    {

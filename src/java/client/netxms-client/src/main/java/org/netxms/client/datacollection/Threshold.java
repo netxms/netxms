@@ -184,7 +184,7 @@ public class Threshold
 	/**
 	 * Set sample count for threshold
 	 * 
-	 * @param new sample count
+	 * @param sampleCount sample count
 	 */
 	public void setSampleCount(int sampleCount)
 	{

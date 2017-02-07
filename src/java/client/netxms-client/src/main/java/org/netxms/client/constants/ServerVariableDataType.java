@@ -51,26 +51,16 @@ public enum ServerVariableDataType
       lookupTableCode.put((int)'H', COLOR);
    }
 
-   /**
-    * @param value
-    */
    private ServerVariableDataType(int value)
    {
       this.value = value;
    }
 
-   /**
-    * @return
-    */
    public int getValue()
    {
       return value;
    }
 
-   /**
-    * @param value
-    * @return
-    */
    public static ServerVariableDataType getByValue(int value)
    {
       final ServerVariableDataType element = lookupTableValue.get(value);
@@ -82,10 +72,6 @@ public enum ServerVariableDataType
       return element;
    }
 
-   /**
-    * @param value
-    * @return
-    */
    public static ServerVariableDataType getByCode(char code)
    {
       final ServerVariableDataType element = lookupTableCode.get((int)code);

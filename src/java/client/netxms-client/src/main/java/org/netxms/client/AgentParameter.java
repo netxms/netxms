@@ -45,9 +45,9 @@ public class AgentParameter
 	/**
 	 * Create agent parameter info from scratch.
 	 * 
-	 * @param name
-	 * @param description
-	 * @param dataType
+	 * @param name FIXME
+	 * @param description FIXME
+	 * @param dataType FIXME
 	 */
 	public AgentParameter(String name, String description, int dataType)
 	{

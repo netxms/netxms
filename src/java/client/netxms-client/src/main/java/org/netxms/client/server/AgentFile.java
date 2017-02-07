@@ -37,6 +37,8 @@ public class AgentFile
     * 
     * @param msg NXCP message
     * @param baseId base variable ID
+    * @param parent FIXME
+    * @param nodeId FIXME
     */
    public AgentFile(NXCPMessage msg, long baseId, AgentFile parent, long nodeId)
    {
@@ -53,12 +55,6 @@ public class AgentFile
       setExtension();
    }
    
-   /**
-    * @param name
-    * @param fileType
-    * @param parent
-    * @param nodeId
-    */
    public AgentFile(String name, int fileType, AgentFile parent, long nodeId)
    {
       this.name = name;
@@ -283,7 +279,7 @@ public class AgentFile
    }
    
    /**
-    * @param Set agent file info
+    * @param info Set agent file info
     */
    public void setFileInfo(AgentFileInfo info)
    {

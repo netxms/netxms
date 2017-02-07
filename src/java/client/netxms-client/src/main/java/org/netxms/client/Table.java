@@ -177,7 +177,7 @@ public class Table
 	 *
 	 * @param column Column index (zero-based)
 	 * @return Column name
-	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
 	 */
 	public TableColumnDefinition getColumnDefinition(final int column) throws IndexOutOfBoundsException
 	{
@@ -189,7 +189,7 @@ public class Table
 	 *
 	 * @param column Column index (zero-based)
 	 * @return Column name
-	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
 	 */
 	public String getColumnName(final int column) throws IndexOutOfBoundsException
 	{
@@ -201,7 +201,7 @@ public class Table
 	 *
 	 * @param column Column index (zero-based)
 	 * @return Column name
-	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
 	 */
 	public String getColumnDisplayName(final int column) throws IndexOutOfBoundsException
 	{
@@ -213,7 +213,7 @@ public class Table
 	 *
 	 * @param column Column index (zero-based)
 	 * @return Column format
-	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
+	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
 	 */
 	@Deprecated
 	public int getColumnFormat(final int column) throws IndexOutOfBoundsException
@@ -251,8 +251,8 @@ public class Table
 	 * @param row Row index (zero-based)
 	 * @param column Column index (zero-based)
 	 * @return Data from given cell
-	 * @throws IndexOutOfBoundsException if column index is out of range (column < 0 || column >= getColumnCount())
-	 *         or row index is out of range (row < 0 || row >= getRowCount())
+	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
+	 *         or row index is out of range (row &lt; 0 || row &gt;= getRowCount())
 	 */
 	public String getCellValue(final int row, final int column) throws IndexOutOfBoundsException
 	{
@@ -260,10 +260,10 @@ public class Table
 	}
 
    /**
-    * @param row
-    * @param column
-    * @return
-    * @throws IndexOutOfBoundsException
+    * @param row FIXME
+    * @param column FIXME
+    * @return FIXME
+    * @throws IndexOutOfBoundsException FIXME
     */
    public TableCell getCell(final int row, final int column) throws IndexOutOfBoundsException
    {
@@ -275,7 +275,7 @@ public class Table
 	 *
 	 * @param row Row index (zero-based)
 	 * @return table row
-	 * @throws IndexOutOfBoundsException if row index is out of range (row < 0 || row >= getRowCount())
+	 * @throws IndexOutOfBoundsException if row index is out of range (row &lt; 0 || row &gt;= getRowCount())
 	 */
 	public TableRow getRow(final int row) throws IndexOutOfBoundsException
 	{
@@ -344,9 +344,9 @@ public class Table
 	/**
 	 * Set cell value
 	 * 
-	 * @param row
-	 * @param col
-	 * @param value
+	 * @param row FIXME
+	 * @param col FIXME
+	 * @param value FIXME
 	 */
 	public void setCell(int row, int col, String value)
 	{
@@ -373,7 +373,7 @@ public class Table
 	/**
 	 * Get display names of all columns
 	 * 
-	 * @return
+	 * @return FIXME
 	 */
 	public String[] getColumnDisplayNames()
 	{
@@ -385,8 +385,8 @@ public class Table
 
 	/**
 	 * Get display names of all columns
-	 * 
-	 * @return
+	 *
+	 * @return FIXME
 	 */
 	public int[] getColumnDataTypes()
 	{

@@ -183,17 +183,11 @@ public class ColumnDefinition
 		this.flags = flags;
 	}
 	
-	/**
-	 * @return
-	 */
 	public boolean isInstanceColumn()
 	{
 		return (flags & TCF_INSTANCE_COLUMN) != 0;
 	}
 	
-	/**
-	 * @param isInstance
-	 */
 	public void setInstanceColumn(boolean isInstance)
 	{
 		if (isInstance)
@@ -202,17 +196,11 @@ public class ColumnDefinition
 			flags &= ~TCF_INSTANCE_COLUMN;
 	}
 	
-	/**
-	 * @return
-	 */
 	public boolean isInstanceLabelColumn()
 	{
 		return (flags & TCF_INSTANCE_LABEL_COLUMN) != 0;
 	}
 	
-	/**
-	 * @param isInstance
-	 */
 	public void setInstanceLabelColumn(boolean isInstanceLabel)
 	{
 		if (isInstanceLabel)

@@ -62,7 +62,7 @@ public class AuthCertificate
 	 * @param id Id of certificate, should be set to 0 if new certificate is created.
 	 * @param type Type of certificate mapping. Can be USER_MAP_CERT_BY_SUBJECT or USER_MAP_CERT_BY_PUBKEY.
 	 * @param certData Certificate in PEM format.
-	 * @param subjec Subject of the certificate
+	 * @param subject Subject of the certificate
 	 * @param comments Comments for certificate
 	 */
 	public AuthCertificate(long id, int type, String certData, String subject, String comments)

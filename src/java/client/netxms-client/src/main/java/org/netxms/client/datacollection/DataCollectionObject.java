@@ -397,10 +397,7 @@ public abstract class DataCollectionObject
 	public void setSchedules(Collection<String> newSchedules)
 	{
 		schedules.clear();
-		for(String s : newSchedules)
-		{
-			schedules.add(new String(s));
-		}
+		schedules.addAll(newSchedules);
 	}
 
 	/**
@@ -416,7 +413,7 @@ public abstract class DataCollectionObject
 	/**
 	 * Get ID of owning node.
 	 * 
-	 * @return
+	 * @return FIXME
 	 */
 	public long getNodeId()
 	{
@@ -531,9 +528,6 @@ public abstract class DataCollectionObject
 		return (flags & DCF_AGGREGATE_ON_CLUSTER) != 0;
 	}
 
-	/**
-	 * @param enable
-	 */
 	public void setAggregateOnCluster(boolean enable)
 	{
 		if (enable)
@@ -567,17 +561,11 @@ public abstract class DataCollectionObject
          flags &= ~DCF_AGGREGATE_WITH_ERRORS;
    }
 
-   /**
-    * @return 
-    */
    public boolean isTransformAggregated()
    {
       return (flags & DCF_TRANSFORM_AGGREGATED) != 0;
    }
 
-   /**
-    * @param enable
-    */
    public void setTransformAggregated(boolean enable)
    {
       if (enable)
@@ -610,9 +598,6 @@ public abstract class DataCollectionObject
       return AgentCacheMode.getByValue((flags & DCF_CACHE_MODE_MASK) >> 12);
    }
 
-   /**
-    * @param func
-    */
    public void setCacheMode(AgentCacheMode mode)
    {
       flags = (flags & ~DCF_CACHE_MODE_MASK) | ((mode.getValue() & 0x03) << 12);

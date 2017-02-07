@@ -334,7 +334,6 @@ public class NXCSession
       /**
        * @param messageCode
        * @param messageId
-       * @param handler
        */
       protected MessageSubscription(int messageCode, long messageId)
       {
@@ -1033,34 +1032,16 @@ public class NXCSession
       }
    }
 
-   /**
-    * @param connAddress
-    * @param connLoginName
-    * @param connPassword
-    */
    public NXCSession(String connAddress)
    {
       this(connAddress, DEFAULT_CONN_PORT, false);
    }
 
-   /**
-    * @param connAddress
-    * @param connPort
-    * @param connLoginName
-    * @param connPassword
-    */
    public NXCSession(String connAddress, int connPort)
    {
       this(connAddress, connPort, false);
    }
 
-   /**
-    * @param connAddress
-    * @param connPort
-    * @param connLoginName
-    * @param connPassword
-    * @param connUseEncryption
-    */
    public NXCSession(String connAddress, int connPort, boolean connUseEncryption)
    {
       this.connAddress = connAddress;
@@ -1859,7 +1840,6 @@ public class NXCSession
    /**
     * Login to server using certificate.
     * 
-    * @param authType authentication type
     * @param login login name
     * @param certificate user's certificate
     * @param signature user's digital signature
@@ -2829,7 +2809,7 @@ public class NXCSession
     * Get object name by ID.
     *
     * @param objectId object ID
-    * @return object name if object is known, or string in form [<object_id>] for unknown objects
+    * @return object name if object is known, or string in form [&lt;object_id&gt;] for unknown objects
     */
    public String getObjectName(long objectId)
    {
@@ -3143,7 +3123,7 @@ public class NXCSession
     * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
     * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
     * 
-    * @param helpdeskReference
+    * @param alarmId FIXME
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3626,7 +3606,6 @@ public class NXCSession
     * Modify user database object
     * 
     * @param object User data
-    * @param fields bit mask indicating fields to modify
     * @throws IOException
     *            if socket I/O error occurs
     * @throws NXCException
@@ -5819,7 +5798,7 @@ public class NXCSession
     * NXCSession.syncAlarmCategories() first to make local copy of event template
     * database.
     *
-    * @param code Event code
+    * @param id FIXME
     * @return Event template object or null if not found
     */
    public AlarmCategory findAlarmCategoryById(long id)
@@ -6090,7 +6069,7 @@ public class NXCSession
    /**
     * Send event to server. Event can be identified either by event code or event name. If event name
     * is given, event code will be ignored.
-    * <p/>
+    *
     * Node: sending events by name supported by server version 1.1.8 and higher.
     *
     * @param eventCode  event code. Ignored if event name is not null.
@@ -7034,7 +7013,7 @@ public class NXCSession
    /**
     * Get list of predefined graphs or graph templates
     *
-    * @param graphTemplate defines if non template or template graph list should re requested 
+    * @param graphTemplates defines if non template or template graph list should re requested
     * @return message with predefined graphs or with template graphs
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7700,7 +7679,9 @@ public class NXCSession
     * Upload local file to server's file store
     *
     * @param localFile      local file
-    * @param serverFileName name under which file will be stored on server
+    * @param agentFileName FIXME
+    * @param nodeId FIXME
+    * @param listener FIXME
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7723,8 +7704,8 @@ public class NXCSession
    /**
     * Upload local file to server's file store
     *
-    * @param localFile      local file
-    * @param serverFileName name under which file will be stored on server
+    * @param folder FIXME
+    * @param nodeId FIXME
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7740,8 +7721,8 @@ public class NXCSession
 
    /**
     * Notify progress listener
-    * @param id
-    * @param length
+    * @param id FIXME
+    * @param length FIXME
     */
    void notifyProgressListener(long id, int length)
    {
@@ -7861,7 +7842,8 @@ public class NXCSession
    /**
     * Delete file from agent
     *
-    * @param serverFileName name of server file
+    * @param nodeId FIXME
+    * @param fileName FIXME
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7877,7 +7859,9 @@ public class NXCSession
    /**
     * Rename file from agent
     *
-    * @param serverFileName name of server file
+    * @param nodeId FIXME
+    * @param oldName FIXME
+    * @param newFileName FIXME
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7894,7 +7878,9 @@ public class NXCSession
    /**
     * Move file from agent
     *
-    * @param serverFileName name of server file
+    * @param nodeId FIXME
+    * @param oldName FIXME
+    * @param newFileName FIXME
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8034,7 +8020,7 @@ public class NXCSession
    /**
     * Get address list.
     *
-    * @param list list identifier (defined in NXCSession as ADDRESS_LIST_xxx)
+    * @param listId list identifier (defined in NXCSession as ADDRESS_LIST_xxx)
     * @return address list
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9125,7 +9111,6 @@ public class NXCSession
     * be set to null.
     * 
     * @param nodeId node object ID
-    * @param sessionId session ID for session to take screenshot from
     * @param sessionName session name for session to take screenshot from
     * @return Screenshot as PNG image
     * @throws IOException  if socket I/O error occurs

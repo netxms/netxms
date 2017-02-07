@@ -32,8 +32,9 @@ public class AgentFileData
    /**
     * Create new agent file object
     * 
-    * @param id
-    * @param file
+    * @param id FIXME
+    * @param remoteName FIXME
+    * @param file FIXME
     */
    public AgentFileData(String id, String remoteName, File file)
    {

@@ -54,8 +54,7 @@ public class DciSummaryTable
 	/**
 	 * Create full object from NXCP message.
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg FIXME
 	 */
 	public DciSummaryTable(NXCPMessage msg)
 	{

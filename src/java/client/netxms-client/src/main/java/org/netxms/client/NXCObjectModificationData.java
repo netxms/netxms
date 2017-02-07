@@ -320,7 +320,7 @@ public class NXCObjectModificationData
 	}
 
 	/**
-	 * @param autoApplyFilter the autoApplyFilter to set
+	 * @param autoBindFilter the autoApplyFilter to set
 	 */
 	public void setAutoBindFilter(String autoBindFilter)
 	{
@@ -1066,17 +1066,11 @@ public class NXCObjectModificationData
       return objectFlagsMask;
    }
 
-	/**
-	 * @param nodeFlags the nodeFlags to set
-	 */
 	public void setObjectFlags(int objectFlags)
 	{
 	   setObjectFlags(objectFlags, 0xFFFFFFFF);
 	}
 
-   /**
-    * @param nodeFlags the nodeFlags to set
-    */
    public void setObjectFlags(int objectFlags, int objectFlagsMask)
    {
       this.objectFlags = objectFlags;

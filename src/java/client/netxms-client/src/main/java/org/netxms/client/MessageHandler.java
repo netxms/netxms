@@ -45,7 +45,7 @@ public abstract class MessageHandler
    /**
     * Get completion flag
     * 
-    * @return
+    * @return FIXME
     */
    public boolean isComplete()
    {
@@ -76,9 +76,6 @@ public abstract class MessageHandler
       return timeout;
    }
 
-   /**
-    * @param timeout the timeout to set
-    */
    protected void setTimeout()
    {
       timeout = true;

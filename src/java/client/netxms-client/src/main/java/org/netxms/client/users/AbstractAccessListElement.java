@@ -30,8 +30,8 @@ public abstract class AbstractAccessListElement
 	/**
 	 * Create new ACL element with given user ID and rights
 	 * 
-	 * @param userId
-	 * @param accessRights
+	 * @param userId user id
+	 * @param accessRights bit mask
 	 */
 	public AbstractAccessListElement(long userId, int accessRights)
 	{

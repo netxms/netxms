@@ -143,6 +143,6 @@ public class ConfigContent
    public void setSequenceNumber(long sequenceNumber)
    {
       this.sequenceNumber = sequenceNumber;
-   }  
-   
+   }
+
 }

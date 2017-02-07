@@ -342,7 +342,8 @@ public class ObjectToolDetails extends ObjectTool
 	}
 	
 	/**
-	 * @param filter
+	 * @param filterText FIXME
+	 * @param filterType FIXME
 	 */
 	public void setFilter(String filterText, int filterType)
 	{
@@ -351,7 +352,7 @@ public class ObjectToolDetails extends ObjectTool
 	}
    
    /**
-    * @param filter
+    * @param flags FIXME
     */
    public void setFilterFlags(int flags)
    {

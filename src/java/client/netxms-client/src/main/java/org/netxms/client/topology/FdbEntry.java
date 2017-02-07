@@ -37,8 +37,8 @@ public class FdbEntry
    /**
     * Create FDB entry from NXCP message.
     * 
-    * @param msg
-    * @param baseId
+    * @param msg FIXME
+    * @param baseId FIXME
     */
    public FdbEntry(NXCPMessage msg, long baseId)
    {

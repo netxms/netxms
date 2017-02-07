@@ -186,7 +186,7 @@ public class ColumnFilter
 	}
 
 	/**
-	 * @param equalsTo the equalsTo to set
+	 * @param numericValue numeric value to set
 	 */
 	public void setNumericValue(long numericValue)
 	{

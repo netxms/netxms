@@ -27,10 +27,13 @@ public class Port
 	private long ifIndex;
 	private int slot;
 	private int port;
-	
+
 	/**
-	 * @param slot
-	 * @param port
+	 *
+	 * @param objectId FIXME
+	 * @param ifIndex FIXME
+	 * @param slot FIXME
+	 * @param port FIXME
 	 */
 	public Port(long objectId, long ifIndex, int slot, int port)
 	{

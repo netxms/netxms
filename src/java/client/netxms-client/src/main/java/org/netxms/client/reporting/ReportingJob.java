@@ -49,7 +49,7 @@ public class ReportingJob
 	/**
 	 * Create reportingJob
 	 * 
-	 * @param reportGuid
+	 * @param reportId report id
 	 */
 	public ReportingJob(UUID reportId)
 	{
@@ -65,7 +65,7 @@ public class ReportingJob
 	 * Create reportingJob object from NXCP message
 	 * 
 	 * @param msg
-	 * @param baseId
+	 * @param varId base field id
 	 */
 	public ReportingJob(NXCPMessage msg, long varId)
 	{

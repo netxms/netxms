@@ -149,11 +149,6 @@ public class ObjectMenuFilter
       return true;
    }
    
-
-   
-   /**
-    * @param filter
-    */
    public void setFilter(String filterText, int filterType)
    {
       switch(filterType)

@@ -186,7 +186,7 @@ public class NetworkMapElement
    }
    
    /**
-    * @param flag the flag to be added to current flags
+    * @param flags the flag to be added to current flags
     */
    public void addFlag(int flags)
    {
@@ -194,7 +194,7 @@ public class NetworkMapElement
    }
    
    /**
-    * @param flag the flag 
+    * @param flags the flag
     */
    public void removeFlag(int flags)
    {

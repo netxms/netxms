@@ -48,7 +48,8 @@ public class SnmpObjectId
 	
 	/**
 	 * Create child OID - add given value at the end of parent OID.
-	 * @param value parent OID
+	 * @param parent parent OID
+	 * @param id FIXME
 	 */
 	public SnmpObjectId(SnmpObjectId parent, long id)
 	{

@@ -114,9 +114,6 @@ public class NXCReceivedFile
 		}
 	}
 	
-	/**
-	 * @param cause
-	 */
 	protected void abortTransfer()
 	{
 		if (status == OPEN)

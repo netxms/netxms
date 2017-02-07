@@ -167,7 +167,7 @@ public class NetworkMapPage
 	}
 
 	/**
-	 * @param name the name to set
+	 * @param id the id to set
 	 */
 	public void setId(String id)
 	{
@@ -264,9 +264,8 @@ public class NetworkMapPage
 	/**
 	 * Find all links using given object as status source
 	 * 
-	 * @param source source element
-	 * @param destination destination element
-	 * @return link between source and destination or null if there are no such link 
+	 * @param objectId status source object id
+	 * @return list of link using this object
 	 */
 	public List<NetworkMapLink> findLinksWithStatusObject(long objectId)
 	{

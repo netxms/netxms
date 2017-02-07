@@ -35,10 +35,6 @@ public class WirelessStation
 	private String ssid;
 	private int vlan;
 	
-	/**
-	 * @param msg
-	 * @param baseId
-	 */
 	public WirelessStation(NXCPMessage msg, long baseId)
 	{
 		macAddress = new MacAddress(msg.getFieldAsBinary(baseId));

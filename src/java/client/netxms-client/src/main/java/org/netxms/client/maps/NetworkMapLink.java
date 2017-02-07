@@ -229,7 +229,7 @@ public class NetworkMapLink
 	 * name (connector1 - connector2)
 	 * otherwise it will have form
 	 * connector1 - connector2
-	 * If any of connector names is null or empty, it will be replaced with string "<noname>".
+	 * If any of connector names is null or empty, it will be replaced with string "&lt;noname&gt;".
 	 * 
 	 * @return display label or null for unnamed link 
 	 */

@@ -54,6 +54,8 @@ public class User extends AbstractUserObject
 
 	/**
 	 * Default constructor
+	 *
+	 * @param name FIXME
 	 */
 	public User(final String name)
 	{
@@ -65,6 +67,8 @@ public class User extends AbstractUserObject
 	
 	/**
 	 * Copy constructor
+	 *
+	 * @param src FIXME
 	 */
 	public User(final User src)
 	{
@@ -85,6 +89,8 @@ public class User extends AbstractUserObject
 	
 	/**
 	 * Create user object from NXCP message
+	 *
+	 * @param msg FIXME
 	 */
 	public User(final NXCPMessage msg)
 	{
@@ -106,6 +112,8 @@ public class User extends AbstractUserObject
 	
 	/**
 	 * Fill NXCP message with object data
+	 *
+	 * @param msg FIXME
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{

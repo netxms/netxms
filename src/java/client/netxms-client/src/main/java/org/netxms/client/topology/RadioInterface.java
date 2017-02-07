@@ -37,9 +37,10 @@ public class RadioInterface
 	
 	/**
 	 * Create radio interface object from NXCP message
-	 * 
-	 * @param msg
-	 * @param baseId
+	 *
+	 * @param ap FIXME
+	 * @param msg FIXME
+	 * @param baseId FIXME
 	 */
 	public RadioInterface(AccessPoint ap, NXCPMessage msg, long baseId)
 	{

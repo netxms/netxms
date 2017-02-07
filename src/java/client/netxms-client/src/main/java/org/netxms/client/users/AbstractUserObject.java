@@ -72,6 +72,7 @@ public abstract class AbstractUserObject
 
 	/**
 	 * Default constructor
+	 * @param name FIXME
 	 */
 	public AbstractUserObject(final String name)
 	{
@@ -82,6 +83,8 @@ public abstract class AbstractUserObject
 	
 	/**
 	 * Copy constructor
+	 *
+	 * @param src source object
 	 */
 	public AbstractUserObject(final AbstractUserObject src)
 	{
@@ -129,6 +132,7 @@ public abstract class AbstractUserObject
 	
 	/**
 	 * Fill NXCP message with object data
+	 * @param msg destination message
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
@@ -264,6 +268,7 @@ public abstract class AbstractUserObject
 	/**
 	 * Get custom attribute
 	 * @param name Name of the attribute
+	 * @return Custom attribute value
 	 */
 	public String getCustomAttribute(final String name)
 	{
@@ -295,7 +300,7 @@ public abstract class AbstractUserObject
 	 */
 	public boolean isDisabled()
 	{
-		return ((flags & DISABLED) == DISABLED) ? true : false;
+		return ((flags & DISABLED) == DISABLED);
 	}
 	
 	/**
@@ -304,7 +309,7 @@ public abstract class AbstractUserObject
 	 */
 	public boolean isPasswordChangeNeeded()
 	{
-		return ((flags & CHANGE_PASSWORD) == CHANGE_PASSWORD) ? true : false;
+		return ((flags & CHANGE_PASSWORD) == CHANGE_PASSWORD);
 	}
 	
 	/**
@@ -313,6 +318,6 @@ public abstract class AbstractUserObject
 	 */
 	public boolean isPasswordChangeForbidden()
 	{
-		return ((flags & CANNOT_CHANGE_PASSWORD) == CANNOT_CHANGE_PASSWORD) ? true : false;
+		return ((flags & CANNOT_CHANGE_PASSWORD) == CANNOT_CHANGE_PASSWORD);
 	}
 }

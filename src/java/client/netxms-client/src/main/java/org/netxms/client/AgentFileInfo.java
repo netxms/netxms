@@ -29,8 +29,9 @@ public class AgentFileInfo
    
    /**
     * Create new agent file info object
-    * @param itemCount
-    * @param size
+    * @param remoteName FIXME
+    * @param itemCount FIXME
+    * @param size FIXME
     */
    public AgentFileInfo(String remoteName, long itemCount, long size)
    {

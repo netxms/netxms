@@ -31,6 +31,8 @@ public class UserGroup extends AbstractUserObject
 	
 	/**
 	 * Default constructor
+	 *
+	 * @param name FIXME
 	 */
 	public UserGroup(final String name)
 	{
@@ -40,6 +42,8 @@ public class UserGroup extends AbstractUserObject
 	
 	/**
 	 * Copy constructor
+	 *
+	 * @param src FIXME
 	 */
 	public UserGroup(final UserGroup src)
 	{
@@ -50,6 +54,8 @@ public class UserGroup extends AbstractUserObject
 	
 	/**
 	 * Create group from NXCP message
+	 *
+	 * @param msg FIXME
 	 */
 	public UserGroup(final NXCPMessage msg)
 	{
