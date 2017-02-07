@@ -527,7 +527,16 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
  */
 bool DCObject::isReadyForPolling(time_t currTime)
 {
-   lock();
+   // Normally data collection object will be locked when it is being
+   // changed or when it is processing new data
+   // In both cases there is no point to block item poller and wait, it
+   // is more effective to try schedule on next run
+   if (!tryLock())
+   {
+      nxlog_debug(3, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object %d"), m_id);
+      return false;
+   }
+
    if ((m_pollingSession != NULL) && !m_busy)
    {
       if ((m_status != ITEM_STATUS_DISABLED) &&

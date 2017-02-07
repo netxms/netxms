@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -426,10 +426,10 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
    if (i == m_dcObjects->size())     // Add new item
    {
 		m_dcObjects->add(object);
-      object->setLastPollTime(0);    // Cause item to be polled immediatelly
+      object->setLastPollTime(0);    // Cause item to be polled immediately
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
-      object->setBusyFlag(FALSE);
+      object->clearBusyFlag();
       m_isModified = true;
       success = true;
    }

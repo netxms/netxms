@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
          // Update item's last poll time and clear busy flag so item can be polled again
          pItem->setLastPollTime(time(NULL));
-         pItem->setBusyFlag(FALSE);
+         pItem->clearBusyFlag();
 		   continue;
 		}
 
@@ -353,7 +353,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 		// Update item's last poll time and clear busy flag so item can be polled again
       pItem->setLastPollTime(currTime);
-      pItem->setBusyFlag(FALSE);
+      pItem->clearBusyFlag();
    }
 
    free(pBuffer);
@@ -370,8 +370,8 @@ static void QueueItems(NetObj *object, void *data)
       return;
 
    WatchdogNotify(*((UINT32 *)data));
-	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
-				 object->getName(), object->getId());
+	nxlog_debug(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
+				   object->getName(), object->getId());
 	((DataCollectionTarget *)object)->queueItemsForPolling(&g_dataCollectionQueue);
 }
 
