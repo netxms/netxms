@@ -12,6 +12,7 @@
 - New NXSL class "Container"
 - Container autobind mode and script can be set from NXSL
 - Events generated when interface expected state changed
+- Situations functionality is replaced with persistent storage that is included in each execution environment
 - Fixed issues: NX-60, NX-630, NX-916, NX-1151, NX-1161
 
 
