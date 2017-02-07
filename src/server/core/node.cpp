@@ -5555,7 +5555,8 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
          *ifIndex = ((Interface *)object)->getIfIndex();
          *isVpn = false;
          nx_strncpy(name, object->getName(), MAX_OBJECT_NAME);
-         if (object->getStatus() == SEVERITY_NORMAL)  /* TODO: use separate link status */
+         if ((((Interface *)object)->getAdminState() == IF_ADMIN_STATE_UP) &&
+             (((Interface *)object)->getOperState() == IF_OPER_STATE_UP))
          {
             // found operational interface
             nextHopFound = true;
