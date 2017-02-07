@@ -3339,8 +3339,8 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
       {
-			object->setBusyFlag(TRUE);
-			rootItems.add((DCItem *)object);
+         object->setBusyFlag();
+         rootItems.add((DCItem *)object);
       }
    }
    unlockDciAccess();
@@ -3368,9 +3368,9 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCI %s [%d]"),
 						 m_name, m_id, dci->getName(), dci->getId());
          sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
-		}
-		dci->setBusyFlag(FALSE);
-	}
+      }
+      dci->clearBusyFlag();
+   }
 
 	if (changed)
 	   onDataCollectionChange();

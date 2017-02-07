@@ -529,7 +529,16 @@ bool DCObject::isReadyForPolling(time_t currTime)
 {
    bool result;
 
-   lock();
+   // Normally data collection object will be locked when it is being
+   // changed or when it is processing new data
+   // In both cases there is no point to block item poller and wait, it
+   // is more effective to try schedule on next run
+   if (!tryLock())
+   {
+      nxlog_debug(3, _T("DCObject::isReadyForPolling: cannot obtain lock for data collection object %d"), m_id);
+      return false;
+   }
+
    if(m_forcePoll)
    {
       m_forcePoll = false;
