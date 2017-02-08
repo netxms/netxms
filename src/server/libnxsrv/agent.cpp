@@ -1318,6 +1318,13 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    dwRqId = generateRequestId();
    msg.setId(dwRqId);
 
+   time_t lastModTime = 0;
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(localFile, &st) == 0)
+   {
+      lastModTime = st.st_mtime;
+   }
+
    // Use core agent if destination file name is not set and file manager subagent otherwise
    if ((destinationFile == NULL) || (*destinationFile == 0))
    {
@@ -1329,16 +1336,10 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    }
    else
    {
-      time_t lastModTime = 0;
-      NX_STAT_STRUCT st;
-      if (CALL_STAT(localFile, &st) == 0)
-      {
-         lastModTime = st.st_mtime;
-      }
       msg.setCode(CMD_FILEMGR_UPLOAD);
 		msg.setField(VID_FILE_NAME, destinationFile);
-		msg.setFieldFromTime(VID_DATE, lastModTime);
    }
+   msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
 
    if (sendMessage(&msg))
    {

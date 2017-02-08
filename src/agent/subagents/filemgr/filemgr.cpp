@@ -827,7 +827,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(name, false, true) && session->isMasterServer())
          {
-            response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_DATE)));
+            response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
          }
          else
          {
@@ -851,7 +851,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             if (CALL_STAT(fileName, &fs) == 0)
             {
                response->setField(VID_FILE_SIZE, (UINT64)fs.st_size);
-               response->setField(VID_MODIFY_TIME, (UINT64)fs.st_mtime);
+               response->setField(VID_MODIFICATION_TIME, (UINT64)fs.st_mtime);
                response->setField(VID_RCC, ERR_SUCCESS);
             }
             else

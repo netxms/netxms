@@ -999,7 +999,7 @@ typedef struct
 #define VID_DOT1X_PAE_STATE         ((UINT32)403)
 #define VID_DOT1X_BACKEND_STATE     ((UINT32)404)
 #define VID_IS_COMPLETE             ((UINT32)405)
-#define VID_MODIFY_TIME             ((UINT32)406)
+#define VID_MODIFICATION_TIME       ((UINT32)406)
 #define VID_IS_PHYS_PORT            ((UINT32)407)
 #define VID_CREATE_STATUS_DCI       ((UINT32)408)
 #define VID_NUM_COMMENTS            ((UINT32)409)

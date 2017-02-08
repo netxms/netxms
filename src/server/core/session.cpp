@@ -12854,14 +12854,13 @@ void ClientSession::receiveFile(NXCPMessage *request)
       _tcscat(fullPath, FS_PATH_SEPARATOR);
       _tcscat(fullPath, cleanFileName);
 
-      DownloadFileInfo *fInfo = new DownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_DATE));
+      DownloadFileInfo *fInfo = new DownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_MODIFICATION_TIME));
 
       if (fInfo->open())
       {
          m_downloadFileMap->set(request->getId(), fInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
-         WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
-            _T("Started upload of file \"%s\" to server"), fileName);
+         WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Started upload of file \"%s\" to server"), fileName);
          NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
       }
       else
@@ -12879,11 +12878,9 @@ void ClientSession::receiveFile(NXCPMessage *request)
    sendMessage(&msg);
 }
 
-
 /**
  * Delete file in store
  */
-
 void ClientSession::deleteFile(NXCPMessage *request)
 {
    NXCPMessage msg;

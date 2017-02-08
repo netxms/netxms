@@ -7669,52 +7669,52 @@ public class NXCSession
          serverFileName = localFile.getName();
       }
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
-      msg.setField(NXCPCodes.VID_DATE, new Date(localFile.lastModified()));
+      msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);
    }
    
    /**
-    * Upload local file to server's file store
+    * Upload local file to remote node via agent. If remote file name is not provided
+    * local file name will be used.
     *
-    * @param localFile      local file
-    * @param agentFileName FIXME
-    * @param nodeId FIXME
-    * @param listener FIXME
+    * @param nodeId node object ID
+    * @param localFile local file
+    * @param remoteFileName remote file name (can be null or empty)
+    * @param listener progress listener (can be null)
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadLocalFileToAgent(File localFile, String agentFileName, long nodeId, ProgressListener listener)
+   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, ProgressListener listener)
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
-      if(agentFileName.equals(""))
+      if ((remoteFileName == null) || remoteFileName.isEmpty())
       {
-         agentFileName = localFile.getName();
+         remoteFileName = localFile.getName();
       }
-      msg.setField(NXCPCodes.VID_FILE_NAME, agentFileName);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setField(NXCPCodes.VID_DATE, new Date(localFile.lastModified()));
+      msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);
    }
    
    /**
-    * Upload local file to server's file store
+    * Create folder on remote system via agent
     *
-    * @param folder FIXME
-    * @param nodeId FIXME
+    * @param nodeId node object ID
+    * @param folder folder name
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createFolderOnAgent(String folder, long nodeId)
-      throws IOException, NXCException
+   public void createFolderOnAgent(long nodeId, String folder) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
-      msg.setField(NXCPCodes.VID_FILE_NAME, folder);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setField(NXCPCodes.VID_FILE_NAME, folder);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

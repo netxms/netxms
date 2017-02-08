@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -908,7 +908,7 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
       BuildFullPath(szFileName, szFullPath);
 
 		// Check if for some reason we have already opened file
-      pMsg->setField(VID_RCC, openFile(szFullPath, pRequest->getId()));
+      pMsg->setField(VID_RCC, openFile(szFullPath, pRequest->getId(), pRequest->getFieldAsTime(VID_MODIFICATION_TIME)));
 	}
 	else
 	{
