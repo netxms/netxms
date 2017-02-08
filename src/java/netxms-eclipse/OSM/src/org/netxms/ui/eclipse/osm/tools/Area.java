@@ -123,7 +123,7 @@ public class Area
 		sb.append(xLow);
 		sb.append(',');
 		sb.append(yLow);
-		sb.append('-');
+		sb.append('/');
 		sb.append(xHigh);
 		sb.append(',');
 		sb.append(yHigh);

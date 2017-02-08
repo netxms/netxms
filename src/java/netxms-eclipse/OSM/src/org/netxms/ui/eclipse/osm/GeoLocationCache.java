@@ -237,10 +237,11 @@ public class GeoLocationCache implements SessionListener
 	 */
 	public static GeoLocation displayToCoordinates(Point point, int zoom)
 	{
-		double longitude = (point.x *(360 / (Math.pow(2, zoom) * 256))) - 180;
-		
+	   double longitude = (point.x * (360 / (Math.pow(2, zoom) * 256))) - 180;
 		double latitude = (1 - (point.y * (2 / (Math.pow(2, zoom) * 256)))) * Math.PI;
 		latitude = Math.toDegrees(Math.atan(Math.sinh(latitude)));
+		if (latitude <= (-89.998))
+		   latitude = -89.997; // Needed because tan() is undefined for angles of 90 degrees
 		
 		return new GeoLocation(latitude, longitude);
 	}
@@ -275,7 +276,7 @@ public class GeoLocationCache implements SessionListener
 				break;
 			default:
 				throw new IllegalArgumentException("pointLocation=" + pointLocation); //$NON-NLS-1$
-		}
+		}	
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
 	}
 

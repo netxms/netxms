@@ -72,9 +72,10 @@ public class MapLoader
 	 * @return
 	 */
 	private static Point tileFromLocation(double lat, double lon, int zoom)
-	{
-		int x = (int)Math.floor((lon + 180) / 360 * (1 << zoom));
-		int y = (int)Math.floor((1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1 << zoom));
+	{		
+	   int x = (int)Math.floor( (lon + 180) / 360 * (1<<zoom) ) ;
+	   int y = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1<<zoom) ) ;
+
 		return new Point(x, y);
 	}
 	
@@ -295,7 +296,7 @@ public class MapLoader
 		Point topRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
 		
 		Tile[][] tiles = new Tile[bottomLeft.y - topRight.y + 1][topRight.x - bottomLeft.x + 1];
-		
+
 		int x = bottomLeft.x;
 		int y = topRight.y;
 		int l = (bottomLeft.y - topRight.y + 1) * (topRight.x - bottomLeft.x + 1);
