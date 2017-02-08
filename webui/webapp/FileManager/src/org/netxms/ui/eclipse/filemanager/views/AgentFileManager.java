@@ -799,7 +799,7 @@ public class AgentFileManager extends ViewPart
                   if(fileList.size() == 1)
                      remoteFile = dlg.getRemoteFileName();
                   
-		           session.uploadLocalFileToAgent(localFile, upladFolder.getFullName()+"/"+remoteFile, objectId, new ProgressListener() { //$NON-NLS-1$
+		           session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+remoteFile, new ProgressListener() { //$NON-NLS-1$
 		              private long prevWorkDone = 0;
 
 		              @Override
@@ -863,7 +863,7 @@ public class AgentFileManager extends ViewPart
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
                File folder = dlg.getLocalFile();
-               session.createFolderOnAgent(upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId); //$NON-NLS-1$
+               session.createFolderOnAgent(objectId, upladFolder.getFullName()+"/"+dlg.getRemoteFileName()); //$NON-NLS-1$
                listFilesForFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor); //$NON-NLS-1$
                
                upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
@@ -895,18 +895,18 @@ public class AgentFileManager extends ViewPart
     * @throws NXCException
     * @throws IOException
     */
-   public void listFilesForFolder(final File folder, final String upladFolder, final IProgressMonitor monitor) throws NXCException, IOException 
+   public void listFilesForFolder(final File folder, final String uploadFolder, final IProgressMonitor monitor) throws NXCException, IOException 
    {
-      for (final File fileEntry : folder.listFiles()) 
+      for(final File fileEntry : folder.listFiles())
       {
           if (fileEntry.isDirectory()) 
           {
-             session.createFolderOnAgent(upladFolder+"/"+fileEntry.getName(), objectId); //$NON-NLS-1$
-             listFilesForFolder(fileEntry, upladFolder+"/"+fileEntry.getName(), monitor); //$NON-NLS-1$
+             session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName()); //$NON-NLS-1$
+             listFilesForFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
           } 
           else 
           {
-             session.uploadLocalFileToAgent(fileEntry, upladFolder+"/"+fileEntry.getName(), objectId, new ProgressListener() { //$NON-NLS-1$
+             session.uploadLocalFileToAgent(objectId, fileEntry, uploadFolder + "/" + fileEntry.getName(), new ProgressListener() { //$NON-NLS-1$
                 private long prevWorkDone = 0;
 
                 @Override
@@ -1261,7 +1261,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.createFolderOnAgent(parentFolder.getFullName() + "/" + newFolder, objectId); //$NON-NLS-1$
+            session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder); //$NON-NLS-1$
             parentFolder.setChildren(session.listAgentFiles(parentFolder, parentFolder.getFullName(), objectId));
 
             runInUIThread(new Runnable() {
