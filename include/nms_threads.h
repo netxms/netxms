@@ -208,7 +208,8 @@ inline bool MutexLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
 		return false;
-	return EnterCriticalSection(mutex) ? true : false;
+	EnterCriticalSection(mutex);
+   return true;
 }
 
 inline bool MutexTryLock(MUTEX mutex)
