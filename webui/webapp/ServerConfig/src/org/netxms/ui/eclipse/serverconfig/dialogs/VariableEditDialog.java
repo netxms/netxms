@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.serverconfig.dialogs;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
@@ -31,10 +33,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.constants.ServerVariableDataType;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -49,21 +51,18 @@ public class VariableEditDialog extends Dialog
 	private Button buttonEnable;
 	private ColorSelector colorSelector;
 	private Combo comboValue;
-	private String varName;
-	private String varValue;
-	private ServerVariableDataType varDataType;
-	private HashMap<String, String> possibleValues;
+	private ServerVariable variable;
+	private Map<Integer, String> valueMap;
+	private String name;
+	private String value;
 	
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, ServerVariable var)
+	public VariableEditDialog(Shell parentShell, ServerVariable variable)
 	{
 		super(parentShell);
-		this.varName = var.getName();
-		this.varValue = var.getValue();
-		this.varDataType = var.getDataType();
-		possibleValues = var.getPossibleValues();
+		this.variable  = variable;
 	}
 
 	/* (non-Javadoc)
@@ -83,9 +82,9 @@ public class VariableEditDialog extends Dialog
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(Messages.get().VariableEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
-      if (varName != null)
+      if (variable.getName() != null)
       {
-      	textName.setText(varName);
+      	textName.setText(variable.getName());
       	textName.getTextControl().setEditable(false);
       }
       GridData gd = new GridData();
@@ -94,55 +93,62 @@ public class VariableEditDialog extends Dialog
       gd.widthHint = 300;
       textName.setLayoutData(gd);
       
-      switch(varDataType)
+      switch(variable.getDataType())
       {
          case BOOLEAN:
             buttonEnable = new Button(dialogArea, SWT.CHECK);
             buttonEnable.setText("Enable");
-            buttonEnable.setSelection(varValue.equals("1"));
+            buttonEnable.setSelection(variable.getValueAsBoolean());
             
-            if (varName != null)
+            if (variable.getName() != null)
                buttonEnable.setFocus();
             break;
          case CHOICE:
+            valueMap = new HashMap<Integer, String>();
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
-            comboValue = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER, Messages.get().VariableEditDialog_Value, gd);
-            comboValue.setItems(possibleValues.values().toArray(new String[possibleValues.size()]));
-            comboValue.setText(possibleValues.get(varValue));
+            comboValue = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().VariableEditDialog_Value, gd);
+            for(Entry<String, String> e : variable.getPossibleValues().entrySet())
+            {
+               comboValue.add(e.getValue());
+               int index = comboValue.getItemCount() - 1;
+               valueMap.put(index, e.getKey());
+               if (e.getKey().equals(variable.getValue()))
+                  comboValue.select(index);
+            }
             
-            if (varName != null)
+            if (variable.getName() != null)
                comboValue.setFocus();
             break;
          case COLOR:
             colorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().VariableEditDialog_Value, WidgetHelper.DEFAULT_LAYOUT_DATA);
-            if (!varValue.isEmpty())
-               colorSelector.setColorValue(ColorConverter.parseColorDefinition(varValue));
+            if (!variable.getValue().isEmpty())
+               colorSelector.setColorValue(ColorConverter.parseColorDefinition(variable.getValue()));
             break;
          case INTEGER:
             spinnerValue = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().VariableEditDialog_Value, 0,
-                                                               (possibleValues.isEmpty()) ? 0xffffff : Integer.parseInt((String)possibleValues.keySet().toArray()[0]),
+                                                               (variable.getPossibleValues().isEmpty()) ? 0xffffff : Integer.parseInt((String)variable.getPossibleValues().keySet().toArray()[0]),
                                                                      WidgetHelper.DEFAULT_LAYOUT_DATA);
-            spinnerValue.setSelection(Integer.parseInt(varValue));
+            spinnerValue.setSelection(variable.getValueAsInt());
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             spinnerValue.setLayoutData(gd);
             
-            if (varName != null)
+            if (variable.getName() != null)
                spinnerValue.setFocus();
             break;
          case STRING:
             textValue = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, Messages.get().VariableEditDialog_Value, 
-                                                      (varValue != null ? varValue : ""), WidgetHelper.DEFAULT_LAYOUT_DATA);
+                  variable.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
             textValue.setTextLimit(2000);
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             textValue.setLayoutData(gd);
             
-            if (varName != null)
+            if (variable.getName() != null)
                textValue.setFocus();
             break;
       }
@@ -157,7 +163,7 @@ public class VariableEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((varName == null) ? Messages.get().VariableEditDialog_TitleCreate : Messages.get().VariableEditDialog_TitleEdit);
+		newShell.setText((variable.getName() == null) ? Messages.get().VariableEditDialog_TitleCreate : Messages.get().VariableEditDialog_TitleEdit);
 	}
 	
 	/**
@@ -166,7 +172,7 @@ public class VariableEditDialog extends Dialog
 	 */
 	public String getVarName()
 	{
-		return varName;
+		return name;
 	}
 	
 	/**
@@ -175,7 +181,7 @@ public class VariableEditDialog extends Dialog
 	 */
 	public String getVarValue()
 	{
-		return varValue;
+		return value;
 	}
 
 	/* (non-Javadoc)
@@ -184,26 +190,29 @@ public class VariableEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-	   varName = textName.getText();
-	   switch (varDataType)
+	   name = textName.getText();
+	   switch(variable.getDataType())
 	   {
 	      case BOOLEAN:
-	         varValue = (buttonEnable.getSelection()) ? "1" : "0";
+	         value = (buttonEnable.getSelection()) ? "1" : "0";
 	         break;
 	      case CHOICE:
-	         varValue = Integer.toString(comboValue.getSelectionIndex());
-	         if (varValue.equals("-1"))
-	            varValue = "0";
+	         if (comboValue.getSelectionIndex() == -1)
+	         {
+	            MessageDialogHelper.openWarning(getShell(), "Warning", "Please select valid value and then press OK");
+	            return;
+	         }
+	         value = valueMap.get(comboValue.getSelectionIndex());
 	         break;
 	      case COLOR:
 	         if (colorSelector.getColorValue() != null)
-	            varValue = ColorConverter.rgbToCss(colorSelector.getColorValue());
+	            value = ColorConverter.rgbToCss(colorSelector.getColorValue());
 	         break;
 	      case INTEGER:
-            varValue = spinnerValue.getText();
+	         value = spinnerValue.getText();
             break;
 	      case STRING:
-	         varValue = textValue.getText();
+	         value = textValue.getText();
 	         break;
 	   }
 		super.okPressed();

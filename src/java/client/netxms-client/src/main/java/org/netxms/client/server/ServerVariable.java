@@ -68,6 +68,17 @@ public final class ServerVariable
       description = msg.getFieldAsString(baseId + 4);
 	}
 
+   /** 
+    * Add possible value to variable
+    * 
+    * @param description FIXME
+    * @param value FIXME
+    */
+   public void addPossibleValue(NXCPMessage msg, long baseId)
+   {
+      values.put(msg.getFieldAsString(baseId), msg.getFieldAsString(baseId + 1));
+   }
+   
 	/**
 	 * @return Varaible's name
 	 */
@@ -89,9 +100,43 @@ public final class ServerVariable
 	 */
 	public String getValue()
 	{
-		return value;
+		return (value != null) ? value : "";
 	}
 	
+	/**
+	 * Get variable value as boolean
+	 * 
+	 * @return value as boolean
+	 */
+	public boolean getValueAsBoolean()
+	{
+	   try
+	   {
+	      return Integer.parseInt(value) != 0;
+	   }
+	   catch(NumberFormatException e)
+	   {
+	      return false;
+	   }
+	}
+	
+   /**
+    * Get variable value as integer
+    * 
+    * @return value as integer
+    */
+   public int getValueAsInt()
+   {
+      try
+      {
+         return Integer.parseInt(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
+   }
+   
 	/**
 	 * @return Variable`s data type
 	 */
@@ -114,15 +159,6 @@ public final class ServerVariable
 	public boolean isServerRestartNeeded()
 	{
 		return isServerRestartNeeded;
-	}
-	
-	/** Adds possible values to variable
-	 * @param description FIXME
-	 * @param value FIXME
-	 */
-	public void setPossibleValues(String description, String value)
-	{
-	   values.put(description, value);
 	}
 	
 	/**

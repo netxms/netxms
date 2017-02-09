@@ -3259,11 +3259,11 @@ public class NXCSession
 
       final NXCPMessage response = waitForRCC(request.getMessageId());
 
-      long id;
-      int i, count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
       final HashMap<String, ServerVariable> varList = new HashMap<String, ServerVariable>(count);
 
-      for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++)
+      long id = NXCPCodes.VID_VARLIST_BASE;
+      for(int i = 0; i < count; i++)
       {
          ServerVariable v = new ServerVariable(response, id);
          varList.put(v.getName(), v);
@@ -3271,13 +3271,12 @@ public class NXCSession
       }
       
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
-      for(i = 0; i < count; i++)
+      for(int i = 0; i < count; i++)
       {
          ServerVariable var = varList.get(response.getFieldAsString(id++));
          if (var != null)
-            var.setPossibleValues(response.getFieldAsString(id++), response.getFieldAsString(id++));
-         else
-            id += 2;
+            var.addPossibleValue(response, id);
+         id += 2;
       }
 
       return varList;
