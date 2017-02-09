@@ -76,9 +76,9 @@ public class VlanInfo
    /**
     * Check if given port is within VLAN
     *
-	* @param slot FIXME
-    * @param port FIXME
-    * @return FIXME
+	* @param slot slot
+    * @param port port
+    * @return if given port is within VLAN
     */
    public boolean containsPort(int slot, int port)
    {

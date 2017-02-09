@@ -40,8 +40,10 @@ public final class ServerVariable
 	 * @param name Variable's name
 	 * @param value Variable's value
 	 * @param isServerRestartNeeded Server restart flag (server has to be restarted after variable change if this flag is set)
-	 * @param dataType FIXME
-	 * @param description FIXME
+	 * @param dataType Data type for server configuration variable
+	 * @param description Description
+	 * 
+	 * @see ServerVariableDataType
 	 */
 	public ServerVariable(String name, String value, boolean isServerRestartNeeded, ServerVariableDataType dataType, String description)
 	{
@@ -55,8 +57,8 @@ public final class ServerVariable
 	/**
 	 * Create variable from NXCP message
 	 * 
-	 * @param msg FIXME
-	 * @param baseId FIXME
+	 * @param msg NXCP message
+	 * @param baseId base object id
 	 */
 	public ServerVariable(NXCPMessage msg, long baseId)
 	{

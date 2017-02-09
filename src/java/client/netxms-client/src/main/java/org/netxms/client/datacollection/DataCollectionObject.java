@@ -413,7 +413,7 @@ public abstract class DataCollectionObject
 	/**
 	 * Get ID of owning node.
 	 * 
-	 * @return FIXME
+	 * @return id of owning node
 	 */
 	public long getNodeId()
 	{

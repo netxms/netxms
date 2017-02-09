@@ -342,8 +342,10 @@ public class ObjectToolDetails extends ObjectTool
 	}
 	
 	/**
-	 * @param filterText FIXME
-	 * @param filterType FIXME
+	 * Update menu filter information
+	 * 
+	 * @param filterText menu filter text
+	 * @param filterType menu filter type 
 	 */
 	public void setFilter(String filterText, int filterType)
 	{
@@ -352,7 +354,10 @@ public class ObjectToolDetails extends ObjectTool
 	}
    
    /**
-    * @param flags FIXME
+    * Update menu filter flags 
+    * 
+    * @param flags new value for menu filter flag
+    * @see ObjectMenuFilter
     */
    public void setFilterFlags(int flags)
    {

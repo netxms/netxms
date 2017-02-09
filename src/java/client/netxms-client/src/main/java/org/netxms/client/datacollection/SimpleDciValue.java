@@ -26,9 +26,9 @@ import org.netxms.base.NXCPMessage;
 public class SimpleDciValue extends DciValue
 {
 	/**
-	 * @param nodeId ndoe id
+	 * @param nodeId node id
 	 * @param msg source message
-	 * @param base FIXME
+	 * @param base Base field ID for value object
 	 */
 	protected SimpleDciValue(long nodeId, NXCPMessage msg, long base)
 	{

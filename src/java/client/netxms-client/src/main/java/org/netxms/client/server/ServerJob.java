@@ -67,7 +67,7 @@ public class ServerJob
 	/**
 	 * Create job object from notification message
 	 *
-	 * @param msg FIXME
+	 * @param msg NXCP message
 	 */
 	public ServerJob(final NXCPMessage msg)
 	{

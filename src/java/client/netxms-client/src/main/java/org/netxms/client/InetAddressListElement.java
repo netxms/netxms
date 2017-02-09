@@ -37,8 +37,8 @@ public class InetAddressListElement
 	/**
 	 * Create new "range" element
 	 * 
-	 * @param baseAddress FIXME
-	 * @param endAddress FIXME
+	 * @param baseAddress base address
+	 * @param endAddress end address
 	 */
 	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress)
 	{
@@ -51,8 +51,8 @@ public class InetAddressListElement
    /**
     * Create new "subnet" element
     * 
-    * @param baseAddress FIXME
-    * @param maskBits FIXME
+    * @param baseAddress base address
+    * @param maskBits mask bits
     */
    public InetAddressListElement(InetAddress baseAddress, int maskBits)
    {
@@ -87,8 +87,8 @@ public class InetAddressListElement
 	/**
 	 * Fill NXCP message
 	 * 
-	 * @param msg FIXME
-	 * @param baseId FIXME
+	 * @param msg NXCP message
+	 * @param baseId object base id
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
    {

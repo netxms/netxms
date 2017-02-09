@@ -30,8 +30,8 @@ public class ConfigListElement implements Comparable<ConfigListElement>
    /**
     * Create from message 
     * 
-    * @param base FIXME
-    * @param response FIXME
+    * @param base base id for fields
+    * @param response response message 
     */
    public ConfigListElement(long base,  NXCPMessage response)
    {

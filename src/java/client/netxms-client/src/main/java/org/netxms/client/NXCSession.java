@@ -3123,7 +3123,7 @@ public class NXCSession
     * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
     * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
     * 
-    * @param alarmId FIXME
+    * @param alarmId alarm id
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -5802,7 +5802,7 @@ public class NXCSession
     * NXCSession.syncAlarmCategories() first to make local copy of event template
     * database.
     *
-    * @param id FIXME
+    * @param id alarm category id
     * @return Event template object or null if not found
     */
    public AlarmCategory findAlarmCategoryById(long id)
@@ -7725,8 +7725,8 @@ public class NXCSession
 
    /**
     * Notify progress listener
-    * @param id FIXME
-    * @param length FIXME
+    * @param id id
+    * @param length lenght
     */
    void notifyProgressListener(long id, int length)
    {
@@ -7846,8 +7846,8 @@ public class NXCSession
    /**
     * Delete file from agent
     *
-    * @param nodeId FIXME
-    * @param fileName FIXME
+    * @param nodeId node id
+    * @param fileName full path to file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7861,11 +7861,11 @@ public class NXCSession
    }
    
    /**
-    * Rename file from agent
+    * Rename agent's file
     *
-    * @param nodeId FIXME
-    * @param oldName FIXME
-    * @param newFileName FIXME
+    * @param nodeId node id
+    * @param oldName old full file path
+    * @param newFileName new full file path
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7882,9 +7882,9 @@ public class NXCSession
    /**
     * Move file from agent
     *
-    * @param nodeId FIXME
-    * @param oldName FIXME
-    * @param newFileName FIXME
+    * @param nodeId node id
+    * @param oldName old file path
+    * @param newFileName new file path
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

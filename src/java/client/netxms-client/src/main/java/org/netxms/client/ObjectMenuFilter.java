@@ -13,7 +13,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Class created to store 
+ * Class created to store menu filter
  */
 @Root(name="objectMenuFilter")
 public class ObjectMenuFilter

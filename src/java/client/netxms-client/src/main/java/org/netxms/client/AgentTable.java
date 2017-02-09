@@ -66,9 +66,9 @@ public class AgentTable
 	/**
 	 * Create agent table info from scratch.
 	 * 
-	 * @param name FIXME
-	 * @param description FIXME
-	 * @param instanceColumns FIXME
+	 * @param name table name
+	 * @param description table description
+	 * @param instanceColumns instance columns
 	 */
 	public AgentTable(String name, String description, String[] instanceColumns)
 	{
@@ -104,7 +104,7 @@ public class AgentTable
 	/**
 	 * Get all instance columns as comma separated list
 	 * 
-	 * @return FIXME
+	 * @return returns string with comma separated list of instance columns
 	 */
 	public String getInstanceColumnsAsList()
 	{

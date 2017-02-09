@@ -72,7 +72,7 @@ public abstract class AbstractUserObject
 
 	/**
 	 * Default constructor
-	 * @param name FIXME
+	 * @param name object name
 	 */
 	public AbstractUserObject(final String name)
 	{

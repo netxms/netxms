@@ -61,9 +61,9 @@ public class ConnectionPoint
 	/**
 	 * Create unconnected connection point information
 	 * 
-	 * @param localNodeId FIXME
-	 * @param localInterfaceId FIXME
-	 * @param hasConnection FIXME
+	 * @param localNodeId Local node id
+	 * @param localInterfaceId Local interface id
+	 * @param hasConnection Boolean value that defines if there is connection
 	 */
 	public ConnectionPoint(long localNodeId, long localInterfaceId, boolean hasConnection)
 	{
@@ -81,7 +81,8 @@ public class ConnectionPoint
 	}
 	
 	/** Set node ID
-	 * @param nodeId FIXME
+	 * 
+	 * @param nodeId node id
 	 */
 	public void setNodeId(long nodeId)
 	{
@@ -97,7 +98,8 @@ public class ConnectionPoint
 	}
 	
 	/** Set interface ID
-    * @param interfaceId FIXME
+	 * 
+    * @param interfaceId interface id
     */
 	public void setInterfaceId(long interfaceId)
 	{
@@ -113,7 +115,7 @@ public class ConnectionPoint
 	}
 	
 	/** Set interface insex
-    * @param interfaceIndex FIXME
+    * @param interfaceIndex interface index
     */
 	public void setInterfaceIndex(int interfaceIndex)
 	{
@@ -181,7 +183,7 @@ public class ConnectionPoint
    }
    
    /**
-    * @return FIXME
+    * @return if there is connection
     */
    public boolean hasConnection()
    {
@@ -189,7 +191,7 @@ public class ConnectionPoint
    }
    
    /**
-    * @param hasConnection FIXME
+    * @param hasConnection sets if there is connection
     */
    public void setConnection(boolean hasConnection)
    {

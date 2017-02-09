@@ -48,8 +48,9 @@ public class SnmpObjectId
 	
 	/**
 	 * Create child OID - add given value at the end of parent OID.
+	 * 
 	 * @param parent parent OID
-	 * @param id FIXME
+	 * @param id id
 	 */
 	public SnmpObjectId(SnmpObjectId parent, long id)
 	{
@@ -62,6 +63,7 @@ public class SnmpObjectId
 
 	/**
 	 * Parse string argument as SNMP OID. Expected to be ion format .n.n.n.n.n
+	 * 
 	 * @param s string to parse
 	 * @return SNMP OID object
 	 * @throws SnmpObjectIdFormatException when string passed is not a valid SNMP OID

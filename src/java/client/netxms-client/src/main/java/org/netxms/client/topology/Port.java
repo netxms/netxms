@@ -30,10 +30,10 @@ public class Port
 
 	/**
 	 *
-	 * @param objectId FIXME
-	 * @param ifIndex FIXME
-	 * @param slot FIXME
-	 * @param port FIXME
+	 * @param objectId object id
+	 * @param ifIndex interface index
+	 * @param slot slot
+	 * @param port port
 	 */
 	public Port(long objectId, long ifIndex, int slot, int port)
 	{

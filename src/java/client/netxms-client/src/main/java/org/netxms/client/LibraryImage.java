@@ -50,11 +50,11 @@ public class LibraryImage implements Comparable<LibraryImage>
 
 	/**
 	 * 
-	 * @param guid FIXME
-	 * @param name FIXME
-	 * @param category FIXME
-	 * @param mimeType FIXME
-	 * @param imageProtected FIXME
+	 * @param guid GUID
+	 * @param name name
+	 * @param category category
+	 * @param mimeType mime type
+	 * @param imageProtected defines if image is protected
 	 */
 	public LibraryImage(final UUID guid, final String name, final String category, final String mimeType,
 			final boolean imageProtected)
@@ -70,7 +70,7 @@ public class LibraryImage implements Comparable<LibraryImage>
 	 * Create object from NXCP message
 	 * 
 	 * @param msg Message containing object's data
-	 * @param imageFile FIXME
+	 * @param imageFile image file
 	 */
 	public LibraryImage(final NXCPMessage msg, File imageFile)
 	{
@@ -119,7 +119,7 @@ public class LibraryImage implements Comparable<LibraryImage>
 	/**
 	 * Fill NXCP message with object data
 	 *
-	 * @param msg FIXME
+	 * @param msg NXCP message
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{

@@ -45,7 +45,7 @@ public abstract class MessageHandler
    /**
     * Get completion flag
     * 
-    * @return FIXME
+    * @return returns if message is complete
     */
    public boolean isComplete()
    {

@@ -62,7 +62,7 @@ public class EventProcessingPolicy
 	/**
 	 * Delete rule.
 	 * 
-	 * @param rule FIXME
+	 * @param rule rule object to be remove
 	 */
 	public void deleteRule(EventProcessingPolicyRule rule)
 	{
