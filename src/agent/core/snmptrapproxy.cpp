@@ -162,7 +162,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {
-         sent = SendRawMessageToMasterAgent(msg->createMessage());
+         sent = SendMessageToMasterAgent(msg);
       }
       else
       {
@@ -173,7 +173,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
             {
                if (g_pSessionList[i]->canAcceptTraps())
                {
-                  g_pSessionList[i]->sendRawMessage(msg->createMessage());
+                  g_pSessionList[i]->sendMessage(msg);
                   sent = true;
                }
             }

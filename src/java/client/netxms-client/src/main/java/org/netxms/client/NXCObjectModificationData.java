@@ -33,6 +33,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
@@ -48,73 +49,74 @@ import org.netxms.client.objects.ClusterResource;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final int NAME                 = 1;
-	public static final int ACL                  = 2;
-	public static final int CUSTOM_ATTRIBUTES    = 3;
-	public static final int AUTOBIND_FILTER      = 4;
-	public static final int LINK_COLOR           = 5;
-	public static final int POLICY_CONFIG        = 6;
-	public static final int VERSION              = 7;
-	public static final int DESCRIPTION          = 8;
-	public static final int AGENT_PORT           = 9;
-	public static final int AGENT_AUTH           = 10;
-	public static final int SNMP_VERSION         = 11;
-	public static final int SNMP_AUTH            = 12;
-	public static final int AGENT_PROXY          = 13;
-	public static final int SNMP_PROXY           = 14;
-	public static final int TRUSTED_NODES        = 15;
-	public static final int GEOLOCATION          = 16;
-	public static final int PRIMARY_IP           = 17;
-	public static final int SNMP_PORT            = 18;
-	public static final int MAP_LAYOUT           = 19;
-	public static final int MAP_BACKGROUND       = 20;
-	public static final int MAP_CONTENT          = 21;
-	public static final int IMAGE                = 22;
-	public static final int ICMP_PROXY           = 23;
-	public static final int COLUMN_COUNT         = 24;
-	public static final int DASHBOARD_ELEMENTS   = 25;
-	public static final int SCRIPT               = 26;
-	public static final int ACTIVATION_EVENT     = 27;
-	public static final int DEACTIVATION_EVENT   = 28;
-	public static final int SOURCE_OBJECT        = 29;
-	public static final int ACTIVE_STATUS        = 30;
-	public static final int INACTIVE_STATUS      = 31;
-	public static final int DCI_LIST             = 32;
-	public static final int DRILL_DOWN_OBJECT_ID = 33;
-	public static final int IP_ADDRESS           = 34;
-	public static final int IP_PROTOCOL          = 35;
-	public static final int IP_PORT              = 36;
-	public static final int SERVICE_TYPE         = 37;
-	public static final int POLLER_NODE          = 38;
-	public static final int REQUIRED_POLLS       = 39;
-	public static final int REQUEST              = 40;
-	public static final int RESPONSE             = 41;
-	public static final int OBJECT_FLAGS         = 42;
-	public static final int IFXTABLE_POLICY      = 43;
-	public static final int REPORT_DEFINITION    = 44;
-	public static final int CLUSTER_RESOURCES    = 45;
-	public static final int PRIMARY_NAME         = 46;
-	public static final int STATUS_CALCULATION   = 47;
-	public static final int CLUSTER_NETWORKS     = 48;
-	public static final int EXPECTED_STATE       = 49;
-	public static final int CONNECTION_ROUTING   = 50;
-	public static final int DISCOVERY_RADIUS     = 51;
-	public static final int HEIGHT               = 52;
-	public static final int FILTER               = 53;
-   public static final int PEER_GATEWAY         = 54;
-   public static final int VPN_NETWORKS         = 55;
-   public static final int POSTAL_ADDRESS       = 56;
-   public static final int AGENT_CACHE_MODE     = 57;
-   public static final int MAPOBJ_DISP_MODE     = 58;
-   public static final int RACK_PLACEMENT       = 59;
-   public static final int DASHBOARD_LIST       = 60;
-   public static final int RACK_NUMB_SCHEME     = 61;
-   public static final int CONTROLLER_ID        = 62;
-   public static final int CHASSIS_ID           = 63;
-   public static final int SSH_PROXY            = 64;
-   public static final int SSH_LOGIN            = 65;
-   public static final int SSH_PASSWORD         = 66;
-   public static final int ZONE_PROXY           = 67;
+	public static final int NAME                   = 1;
+	public static final int ACL                    = 2;
+	public static final int CUSTOM_ATTRIBUTES      = 3;
+	public static final int AUTOBIND_FILTER        = 4;
+	public static final int LINK_COLOR             = 5;
+	public static final int POLICY_CONFIG          = 6;
+	public static final int VERSION                = 7;
+	public static final int DESCRIPTION            = 8;
+	public static final int AGENT_PORT             = 9;
+	public static final int AGENT_AUTH             = 10;
+	public static final int SNMP_VERSION           = 11;
+	public static final int SNMP_AUTH              = 12;
+	public static final int AGENT_PROXY            = 13;
+	public static final int SNMP_PROXY             = 14;
+	public static final int TRUSTED_NODES          = 15;
+	public static final int GEOLOCATION            = 16;
+	public static final int PRIMARY_IP             = 17;
+	public static final int SNMP_PORT              = 18;
+	public static final int MAP_LAYOUT             = 19;
+	public static final int MAP_BACKGROUND         = 20;
+	public static final int MAP_CONTENT            = 21;
+	public static final int IMAGE                  = 22;
+	public static final int ICMP_PROXY             = 23;
+	public static final int COLUMN_COUNT           = 24;
+	public static final int DASHBOARD_ELEMENTS     = 25;
+	public static final int SCRIPT                 = 26;
+	public static final int ACTIVATION_EVENT       = 27;
+	public static final int DEACTIVATION_EVENT     = 28;
+	public static final int SOURCE_OBJECT          = 29;
+	public static final int ACTIVE_STATUS          = 30;
+	public static final int INACTIVE_STATUS        = 31;
+	public static final int DCI_LIST               = 32;
+	public static final int DRILL_DOWN_OBJECT_ID   = 33;
+	public static final int IP_ADDRESS             = 34;
+	public static final int IP_PROTOCOL            = 35;
+	public static final int IP_PORT                = 36;
+	public static final int SERVICE_TYPE           = 37;
+	public static final int POLLER_NODE            = 38;
+	public static final int REQUIRED_POLLS         = 39;
+	public static final int REQUEST                = 40;
+	public static final int RESPONSE               = 41;
+	public static final int OBJECT_FLAGS           = 42;
+	public static final int IFXTABLE_POLICY        = 43;
+	public static final int REPORT_DEFINITION      = 44;
+	public static final int CLUSTER_RESOURCES      = 45;
+	public static final int PRIMARY_NAME           = 46;
+	public static final int STATUS_CALCULATION     = 47;
+	public static final int CLUSTER_NETWORKS       = 48;
+	public static final int EXPECTED_STATE         = 49;
+	public static final int CONNECTION_ROUTING     = 50;
+	public static final int DISCOVERY_RADIUS       = 51;
+	public static final int HEIGHT                 = 52;
+	public static final int FILTER                 = 53;
+   public static final int PEER_GATEWAY           = 54;
+   public static final int VPN_NETWORKS           = 55;
+   public static final int POSTAL_ADDRESS         = 56;
+   public static final int AGENT_CACHE_MODE       = 57;
+   public static final int MAPOBJ_DISP_MODE       = 58;
+   public static final int RACK_PLACEMENT         = 59;
+   public static final int DASHBOARD_LIST         = 60;
+   public static final int RACK_NUMB_SCHEME       = 61;
+   public static final int CONTROLLER_ID          = 62;
+   public static final int CHASSIS_ID             = 63;
+   public static final int SSH_PROXY              = 64;
+   public static final int SSH_LOGIN              = 65;
+   public static final int SSH_PASSWORD           = 66;
+   public static final int ZONE_PROXY             = 67;
+   public static final int AGENT_COMPRESSION_MODE = 68;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -193,6 +195,7 @@ public class NXCObjectModificationData
 	private List<InetAddressEx> remoteNetworks;
 	private PostalAddress postalAddress;
 	private AgentCacheMode agentCacheMode;
+   private AgentCompressionMode agentCompressionMode;
 	private MapObjectDisplayMode mapObjectDisplayMode;
 	private long rackId;
 	private UUID rackImage;
@@ -1051,7 +1054,9 @@ public class NXCObjectModificationData
 	}
 
 	/**
-	 * @return the nodeFlags
+	 * Get object flags
+	 * 
+	 * @return object flags
 	 */
 	public int getObjectFlags()
 	{
@@ -1059,18 +1064,31 @@ public class NXCObjectModificationData
 	}
 
    /**
-    * @return the objectFlagsMask
+    * Get object flags mask
+    * 
+    * @return the object flags mask
     */
    public int getObjectFlagsMask()
    {
       return objectFlagsMask;
    }
 
+	/**
+	 * Set object flags
+	 * 
+	 * @param objectFlags
+	 */
 	public void setObjectFlags(int objectFlags)
 	{
 	   setObjectFlags(objectFlags, 0xFFFFFFFF);
 	}
 
+   /**
+    * Set selected object flags. Only flags with corresponding mask bits set will be changed.
+    * 
+    * @param objectFlags new object flags
+    * @param objectFlagsMask object flag mask
+    */
    public void setObjectFlags(int objectFlags, int objectFlagsMask)
    {
       this.objectFlags = objectFlags;
@@ -1476,7 +1494,9 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the agentCacheMode
+    * Get agent cache mode
+    * 
+    * @return agent cache mode
     */
    public AgentCacheMode getAgentCacheMode()
    {
@@ -1484,12 +1504,35 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @param agentCacheMode the agentCacheMode to set
+    * Set agent cache mode
+    * 
+    * @param agentCacheMode new agent cache mode
     */
    public void setAgentCacheMode(AgentCacheMode agentCacheMode)
    {
       this.agentCacheMode = agentCacheMode;
       fieldSet.add(AGENT_CACHE_MODE);
+   }
+
+   /**
+    * Get agent compression mode
+    * 
+    * @return agent compression mode
+    */
+   public AgentCompressionMode getAgentCompressionMode()
+   {
+      return agentCompressionMode;
+   }
+
+   /**
+    * Set agent compression mode
+    * 
+    * @param agentCompressionMode new agent compression mode
+    */
+   public void setAgentCompressionMode(AgentCompressionMode agentCompressionMode)
+   {
+      this.agentCompressionMode = agentCompressionMode;
+      fieldSet.add(AGENT_COMPRESSION_MODE);
    }
 
    /**

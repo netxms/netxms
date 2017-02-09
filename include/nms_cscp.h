@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define NXCP_VERSION                   3
+#define NXCP_VERSION                   4
 
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
@@ -1163,6 +1163,8 @@ typedef struct
 #define VID_NUM_PSTORAGE            ((UINT32)567)
 #define VID_COMMAND_ID              ((UINT32)568)
 #define VID_HOSTNAME                ((UINT32)569)
+#define VID_ENABLE_COMPRESSION      ((UINT32)570)
+#define VID_AGENT_COMPRESSION_MODE  ((UINT32)571)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

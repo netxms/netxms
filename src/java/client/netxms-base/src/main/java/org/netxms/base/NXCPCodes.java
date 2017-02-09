@@ -950,6 +950,8 @@ public class NXCPCodes
 	public static final long VID_NUM_PSTORAGE = 567;
    public static final long VID_COMMAND_ID = 568;
    public static final long VID_HOSTNAME = 569;
+   public static final long VID_ENABLE_COMPRESSION = 570;
+   public static final long VID_AGENT_COMPRESSION_MODE = 571;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -4791,6 +4791,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_AGENT_CACHE_MODE, data.getAgentCacheMode().getValue());
       }
       
+      if (data.isFieldSet(NXCObjectModificationData.AGENT_COMPRESSION_MODE))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_AGENT_COMPRESSION_MODE, data.getAgentCompressionMode().getValue());
+      }
+      
       if (data.isFieldSet(NXCObjectModificationData.MAPOBJ_DISP_MODE))
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());

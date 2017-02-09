@@ -26,13 +26,16 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -53,6 +56,9 @@ public class Agent extends PropertyPage
    private Combo agentAuthMethod;
    private Button agentForceEncryption;
    private ObjectSelector agentProxy;
+   private Button radioAgentCompressionDefault;
+   private Button radioAgentCompressionEnabled;
+   private Button radioAgentCompressionDisabled;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -127,9 +133,49 @@ public class Agent extends PropertyPage
       agentSharedSecret.setLayoutData(fd);
       agentSharedSecret.getTextControl().setEnabled(node.getAgentAuthMethod() != AbstractNode.AGENT_AUTH_NONE);
       
+      /* agent compression */
+      Group agentCompressionGroup = new Group(dialogArea, SWT.NONE);
+      agentCompressionGroup.setText("Protocol compression mode");
+      GridLayout layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      agentCompressionGroup.setLayout(layout);
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(agentSharedSecret, 0, SWT.BOTTOM);
+      agentCompressionGroup.setLayoutData(fd);
+      
+      radioAgentCompressionDefault = new Button(agentCompressionGroup, SWT.RADIO);
+      radioAgentCompressionDefault.setText("Default");
+      radioAgentCompressionDefault.setSelection(node.getAgentCompressionMode() == AgentCompressionMode.DEFAULT);
+
+      radioAgentCompressionEnabled = new Button(agentCompressionGroup, SWT.RADIO);
+      radioAgentCompressionEnabled.setText("Enabled");
+      radioAgentCompressionEnabled.setSelection(node.getAgentCompressionMode() == AgentCompressionMode.ENABLED);
+
+      radioAgentCompressionDisabled = new Button(agentCompressionGroup, SWT.RADIO);
+      radioAgentCompressionDisabled.setText("Disabled");
+      radioAgentCompressionDisabled.setSelection(node.getAgentCompressionMode() == AgentCompressionMode.DISABLED);
+
       return dialogArea;
    }
 
+   /**
+    * Collect agent compression mode from radio buttons
+    * 
+    * @return
+    */
+   private AgentCompressionMode collectAgentCompressionMode()
+   {
+      if (radioAgentCompressionEnabled.getSelection())
+         return AgentCompressionMode.ENABLED;
+      if (radioAgentCompressionDisabled.getSelection())
+         return AgentCompressionMode.DISABLED;
+      return AgentCompressionMode.DEFAULT;
+   }
+   
    /**
     * Apply changes
     * 
@@ -156,14 +202,8 @@ public class Agent extends PropertyPage
       md.setAgentProxy(agentProxy.getObjectId());
       md.setAgentAuthMethod(agentAuthMethod.getSelectionIndex());
       md.setAgentSecret(agentSharedSecret.getText());
-      
-      /* TODO: sync in some way with "Polling" page */
-      int flags = node.getFlags();
-      if (agentForceEncryption.getSelection())
-         flags |= AbstractNode.NF_FORCE_ENCRYPTION;
-      else
-         flags &= ~AbstractNode.NF_FORCE_ENCRYPTION;
-      md.setObjectFlags(flags);
+      md.setAgentCompressionMode(collectAgentCompressionMode());
+      md.setObjectFlags(agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0, AbstractNode.NF_FORCE_ENCRYPTION);
 
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating agent communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {

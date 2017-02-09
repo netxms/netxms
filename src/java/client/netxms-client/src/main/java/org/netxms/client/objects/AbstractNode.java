@@ -26,6 +26,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.NodeType;
 
 /**
@@ -103,6 +104,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected int agentPort;
 	protected int agentAuthMethod;
 	protected AgentCacheMode agentCacheMode;
+	protected AgentCompressionMode agentCompressionMode;
 	protected String agentSharedSecret;
 	protected String agentVersion;
 	protected String platformName;
@@ -174,6 +176,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		agentAuthMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		agentSharedSecret = msg.getFieldAsString(NXCPCodes.VID_SHARED_SECRET);
       agentCacheMode = AgentCacheMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_CACHE_MODE));
+      agentCompressionMode = AgentCompressionMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_COMPRESSION_MODE));
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
@@ -317,6 +320,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public AgentCacheMode getAgentCacheMode()
    {
       return agentCacheMode;
+   }
+
+   /**
+    * @return the agentCompressionMode
+    */
+   public AgentCompressionMode getAgentCompressionMode()
+   {
+      return agentCompressionMode;
    }
 
    /**

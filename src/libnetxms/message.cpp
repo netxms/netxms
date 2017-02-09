@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,6 +23,7 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 #include <uthash.h>
+#include <zlib.h>
 
 /**
  * Calculate field size
@@ -148,23 +149,60 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
       m_data = NULL;
       m_dataSize = 0;
 
+      BYTE *msgData;
+      size_t msgDataSize;
+      if ((m_flags & MF_COMPRESSED) && (m_version >= 4))
+      {
+         m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
+         msgDataSize = (size_t)ntohl(*((UINT32 *)((BYTE *)msg + NXCP_HEADER_SIZE))) - NXCP_HEADER_SIZE;
+
+         z_stream stream;
+         stream.zalloc = Z_NULL;
+         stream.zfree = Z_NULL;
+         stream.opaque = Z_NULL;
+         stream.avail_in = (size_t)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+         if (inflateInit(&stream) != Z_OK)
+         {
+            nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            return;
+         }
+
+         msgData = (BYTE *)malloc(msgDataSize);
+         stream.next_out = msgData;
+         stream.avail_out = msgDataSize;
+
+         if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+         {
+            inflateEnd(&stream);
+            TCHAR buffer[256];
+            nxlog_debug(6, _T("NXCPMessage: failed to decompress message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            return;
+         }
+         inflateEnd(&stream);
+      }
+      else
+      {
+         msgData = (BYTE *)msg + NXCP_HEADER_SIZE;
+         msgDataSize = (size_t)ntohl(msg->size) - NXCP_HEADER_SIZE;
+      }
+
       int fieldCount = (int)ntohl(msg->numFields);
-      size_t size = (size_t)ntohl(msg->size);
-      size_t pos = NXCP_HEADER_SIZE;
+      size_t pos = 0;
       for(int f = 0; f < fieldCount; f++)
       {
-         NXCP_MESSAGE_FIELD *field = (NXCP_MESSAGE_FIELD *)(((BYTE *)msg) + pos);
+         NXCP_MESSAGE_FIELD *field = (NXCP_MESSAGE_FIELD *)(msgData + pos);
 
          // Validate position inside message
-         if (pos > size - 8)
+         if (pos > msgDataSize - 8)
             break;
-         if ((pos > size - 12) && 
+         if ((pos > msgDataSize - 12) &&
              ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_BINARY)))
             break;
 
-         // Calculate and validate variable size
+         // Calculate and validate field size
          size_t fieldSize = CalculateFieldSize(field, true);
-         if (pos + fieldSize > size)
+         if (pos + fieldSize > msgDataSize)
             break;
 
          // Create new entry
@@ -214,6 +252,8 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
             pos += fieldSize;
       }
 
+      if (msgData != (BYTE *)msg + NXCP_HEADER_SIZE)
+         free(msgData);
    }
 }
 
@@ -723,7 +763,7 @@ uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId) const
 /**
  * Build protocol message ready to be send over the wire
  */
-NXCP_MESSAGE *NXCPMessage::createMessage() const
+NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
 {
    // Calculate message size
    size_t size = NXCP_HEADER_SIZE;
@@ -816,6 +856,42 @@ NXCP_MESSAGE *NXCPMessage::createMessage() const
             field = (NXCP_MESSAGE_FIELD *)((char *)field + fieldSize + ((8 - (fieldSize % 8)) & 7));
          else
             field = (NXCP_MESSAGE_FIELD *)((char *)field + fieldSize);
+      }
+   }
+
+   // Compress message payload if requested. Compression supported starting with NXCP version 4.
+   if ((m_version >= 4) && allowCompression && (size > 128))
+   {
+      z_stream stream;
+      stream.zalloc = Z_NULL;
+      stream.zfree = Z_NULL;
+      stream.opaque = Z_NULL;
+      stream.avail_in = 0;
+      stream.next_in = Z_NULL;
+      if (deflateInit(&stream, 9) == Z_OK)
+      {
+         size_t compBufferSize = deflateBound(&stream, size - NXCP_HEADER_SIZE);
+         BYTE *compressedMsg = (BYTE *)malloc(compBufferSize + NXCP_HEADER_SIZE + 4);
+         stream.next_in = (BYTE *)msg->fields;
+         stream.avail_in = size - NXCP_HEADER_SIZE;
+         stream.next_out = compressedMsg + NXCP_HEADER_SIZE + 4;
+         stream.avail_out = compBufferSize;
+         if (deflate(&stream, Z_FINISH) == Z_STREAM_END)
+         {
+            size_t compMsgSize = compBufferSize - stream.avail_out + NXCP_HEADER_SIZE + 4;
+            // Message should be aligned to 8 bytes boundary
+            compMsgSize += (8 - (compMsgSize % 8)) & 7;
+            if (compMsgSize < size - 4)
+            {
+               memcpy(compressedMsg, msg, NXCP_HEADER_SIZE);
+               free(msg);
+               msg = (NXCP_MESSAGE *)compressedMsg;
+               msg->flags |= htons(MF_COMPRESSED);
+               memcpy((BYTE *)msg + NXCP_HEADER_SIZE, &msg->size, 4); // Save size of uncompressed message
+               msg->size = htonl((UINT32)compMsgSize);
+            }
+         }
+         deflateEnd(&stream);
       }
    }
    return msg;

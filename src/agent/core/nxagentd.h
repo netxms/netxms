@@ -347,7 +347,8 @@ private:
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
    HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
-   StreamCompressor *m_compressor;
+   StreamCompressor *m_compressor;  // stream compressor for file transfer
+   bool m_allowCompression;   // allow compression for structured messages
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
@@ -388,7 +389,7 @@ public:
    void disconnect();
 
    virtual bool sendMessage(NXCPMessage *msg);
-   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->createMessage()); }
+   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->createMessage(m_allowCompression)); }
    virtual bool sendRawMessage(NXCP_MESSAGE *msg);
    virtual void postRawMessage(NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);

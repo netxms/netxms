@@ -72,7 +72,7 @@ public:
    NXCPMessage(NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
    ~NXCPMessage();
 
-   NXCP_MESSAGE *createMessage() const;
+   NXCP_MESSAGE *createMessage(bool allowCompression = false) const;
 
    UINT16 getCode() const { return m_code; }
    void setCode(UINT16 code) { m_code = code; }

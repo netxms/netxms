@@ -139,8 +139,8 @@ protected:
    virtual ~AgentConnectionEx();
 
 public:
-   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
-            AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
+   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true) :
+            AgentConnection(ipAddr, port, authMethod, secret, allowCompression) { m_nodeId = nodeId; }
 
    UINT32 deployPolicy(AgentPolicy *policy);
    UINT32 uninstallPolicy(AgentPolicy *policy);
@@ -1296,6 +1296,16 @@ enum NodeType
 };
 
 /**
+ * Node agent compression modes
+ */
+enum NodeAgentCompressionMode
+{
+   NODE_AGENT_COMPRESSION_DEFAULT = 0,
+   NODE_AGENT_COMPRESSION_ENABLED = 1,
+   NODE_AGENT_COMPRESSION_DISABLED = 2
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1332,6 +1342,7 @@ protected:
    UINT16 m_agentPort;
    INT16 m_agentAuthMethod;
    INT16 m_agentCacheMode;
+   INT16 m_agentCompressionMode;  // agent compression mode (enabled/disabled/default)
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    INT16 m_iStatusPollType;
    INT16 m_snmpVersion;
@@ -1427,8 +1438,10 @@ protected:
    void checkOSPFSupport(SNMP_Transport *pTransport);
 	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL resolveName(BOOL useOnlyDNS);
-   void setAgentProxy(AgentConnection *pConn);
 	void setPrimaryIPAddress(const InetAddress& addr);
+
+   void setAgentProxy(AgentConnection *conn);
+   bool isAgentCompressionAllowed();
 
    UINT32 getInterfaceCount(Interface **ppInterface);
 

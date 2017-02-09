@@ -4,8 +4,6 @@
 package org.netxms.client;
 
 import java.util.HashMap;
-import java.util.List;
-import org.netxms.client.NXCSession;
 
 /**
  * Persistent storage test

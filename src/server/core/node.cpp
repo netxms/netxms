@@ -2312,7 +2312,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
    bool hasChanges = false;
 
    sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
    setAgentProxy(pAgentConn);
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
@@ -3622,7 +3622,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
    {
-      m_agentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+      m_agentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
@@ -4666,6 +4666,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_SSH_PASSWORD, m_sshPassword);
    pMsg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
    pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
+   pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
 }
 
 /**
@@ -4924,6 +4925,9 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_SSH_PASSWORD))
       pRequest->getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
 
+   if (pRequest->isFieldExist(VID_AGENT_COMPRESSION_MODE))
+      m_agentCompressionMode = pRequest->getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
+
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
 
@@ -5181,13 +5185,11 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
        (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) &&
        (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
    {
-      AgentConnection *pConn;
-
-      pConn = createAgentConnection();
-      if (pConn != NULL)
+      AgentConnection *conn = createAgentConnection();
+      if (conn != NULL)
       {
-         dwError = pConn->checkNetworkService(pdwStatus, ipAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
-         pConn->decRefCount();
+         dwError = conn->checkNetworkService(pdwStatus, ipAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
+         conn->decRefCount();
       }
    }
    return dwError;
@@ -5243,7 +5245,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   AgentConnectionEx *conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   AgentConnectionEx *conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
    setAgentProxy(conn);
    conn->setCommandTimeout(g_agentCommandTimeout);
    if (!conn->connect(g_pServerKey, FALSE, NULL, NULL, sendServerId ? g_serverId : 0))
@@ -7736,4 +7738,14 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
       nx_strncpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
    setModified();
    unlockProperties();
+}
+
+/**
+ * Check if compression allowed for agent
+ */
+bool Node::isAgentCompressionAllowed()
+{
+   if (m_agentCompressionMode == NODE_AGENT_COMPRESSION_DEFAULT)
+      return ConfigReadInt(_T("DefaultAgentProtocolCompressionMode"), NODE_AGENT_COMPRESSION_ENABLED) == NODE_AGENT_COMPRESSION_ENABLED;
+   return m_agentCompressionMode == NODE_AGENT_COMPRESSION_ENABLED;
 }

@@ -132,6 +132,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
    m_compressor = NULL;
+   m_allowCompression = false;
    m_pCtx = NULL;
    m_ts = time(NULL);
    m_socketWriteMutex = MutexCreate();
@@ -339,13 +340,13 @@ void CommSession::readThread()
 
             if (msg->getCode() == CMD_GET_NXCP_CAPS)
             {
-               NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
-               pMsg->id = htonl(msg->getId());
-               pMsg->code = htons((WORD)CMD_NXCP_CAPS);
-               pMsg->flags = htons(MF_CONTROL);
-               pMsg->numFields = htonl(NXCP_VERSION << 24);
-               pMsg->size = htonl(NXCP_HEADER_SIZE);
-               sendRawMessage(pMsg, m_pCtx);
+               NXCP_MESSAGE *response = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
+               response->id = htonl(msg->getId());
+               response->code = htons((WORD)CMD_NXCP_CAPS);
+               response->flags = htons(MF_CONTROL);
+               response->numFields = htonl(NXCP_VERSION << 24);
+               response->size = htonl(NXCP_HEADER_SIZE);
+               sendRawMessage(response, m_pCtx);
             }
             delete msg;
          }
@@ -463,13 +464,18 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
    }
 
    bool success = true;
-   TCHAR buffer[128];
-   debugPrintf(6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
-   if (nxlog_get_debug_level() >= 8)
+   if (nxlog_get_debug_level() >= 6)
    {
-      String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
-      debugPrintf(8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
+      TCHAR buffer[128];
+      debugPrintf(6, _T("Sending message %s (size %d; %s)"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size),
+                  ntohs(msg->flags) & MF_COMPRESSED ? _T("compressed") : _T("uncompressed"));
+      if (nxlog_get_debug_level() >= 8)
+      {
+         String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
+         debugPrintf(8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
+      }
    }
+
    if ((ctx != NULL) && (ctx != PROXY_ENCRYPTION_CTX))
    {
       NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
@@ -489,8 +495,12 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
          success = false;
       }
    }
+
 	if (!success)
+	{
+      TCHAR buffer[128];
 	   debugPrintf(6, _T("CommSession::SendRawMessage() for %s (size %d) failed"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
+	}
    free(msg);
    return success;
 }
@@ -503,7 +513,7 @@ bool CommSession::sendMessage(NXCPMessage *msg)
    if (m_disconnected)
       return false;
 
-   return sendRawMessage(msg->createMessage(), m_pCtx);
+   return sendRawMessage(msg->createMessage(m_allowCompression), m_pCtx);
 }
 
 /**
@@ -677,7 +687,12 @@ void CommSession::processingThread()
                // Servers before 2.0 use VID_ENABLED
                m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
                m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
+               m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
                response.setField(VID_RCC, ERR_SUCCESS);
+               debugPrintf(1, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
+                           m_ipv6Aware ? _T("yes") : _T("no"),
+                           m_bulkReconciliationSupported ? _T("yes") : _T("no"),
+                           m_allowCompression ? _T("yes") : _T("no"));
                break;
             case CMD_SET_SERVER_ID:
                m_serverId = request->getFieldAsUInt64(VID_SERVER_ID);

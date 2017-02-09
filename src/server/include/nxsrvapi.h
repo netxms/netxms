@@ -495,6 +495,7 @@ private:
 	bool m_deleteFileOnDownloadFailure;
 	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE*, void *);
 	bool m_fileUploadInProgress;
+	bool m_allowCompression;
 
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
@@ -535,7 +536,7 @@ protected:
    virtual ~AgentConnection();
 
 public:
-   AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
+   AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
 
    void incRefCount() { InterlockedIncrement(&m_userRefCount); }
    void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }

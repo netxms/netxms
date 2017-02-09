@@ -747,6 +747,24 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V434 to V435
+ */
+static BOOL H_UpgradeFromV434(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("DefaultAgentProtocolCompressionMode"), _T("1"), _T("Default agent protocol compression mode"), 'C', true, false, false, false));
+   static const TCHAR *batch =
+            _T("UPDATE config SET data_type='C',description='Default agent cache mode' WHERE var_name='DefaultAgentCacheMode'\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentCacheMode','1','On')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentCacheMode','2','Off')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentProtocolCompressionMode','1','Enabled')\n")
+            _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentProtocolCompressionMode','2','Disabled')\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetSchemaVersion(435));
+   return TRUE;
+}
+
+/**
  * Upgrade from V433 to V434
  */
 static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
@@ -11364,6 +11382,7 @@ static struct
    { 431, 432, H_UpgradeFromV431 },
    { 432, 433, H_UpgradeFromV432 },
    { 433, 434, H_UpgradeFromV433 },
+   { 434, 435, H_UpgradeFromV434 },
    { 0, 0, NULL }
 };
 

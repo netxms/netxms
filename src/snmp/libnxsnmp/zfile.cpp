@@ -36,6 +36,7 @@ ZFile::ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite)
    m_bCompress = bCompress;
    m_bWrite = bWrite;
    m_pFile = pFile;
+   m_pBufferPos = NULL;
    if (bCompress)
    {
       // Initialize compression stream

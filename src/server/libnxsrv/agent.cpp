@@ -72,7 +72,7 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret)
+AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression)
 {
    m_internalRefCount = 1;
    m_userRefCount = 1;
@@ -92,6 +92,7 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    {
       m_szSecret[0] = 0;
    }
+   m_allowCompression = allowCompression;
    m_hSocket = -1;
    m_tLastCommandTime = 0;
    m_dwNumDataLines = 0;
@@ -573,7 +574,7 @@ setup_encryption:
       goto setup_encryption;
    }
 
-   if(serverId != 0)
+   if (serverId != 0)
       setServerId(serverId);
 
    success = true;
@@ -904,6 +905,7 @@ UINT32 AgentConnection::setServerCapabilities()
    msg.setField(VID_ENABLED, (INT16)1);   // Enables IPv6 on pre-2.0 agents
    msg.setField(VID_IPV6_SUPPORT, (INT16)1);
    msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
+   msg.setField(VID_ENABLE_COMPRESSION, (INT16)(m_allowCompression ? 1 : 0));
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
@@ -952,7 +954,7 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
    bool success;
-   NXCP_MESSAGE *pRawMsg = pMsg->createMessage();
+   NXCP_MESSAGE *pRawMsg = pMsg->createMessage(m_allowCompression);
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {

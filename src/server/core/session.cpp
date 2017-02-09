@@ -12744,11 +12744,9 @@ void ClientSession::closeConsole(UINT32 rqId)
 	sendMessage(&msg);
 }
 
-
-//
-// Process console command
-//
-
+/**
+ * Process console command
+ */
 void ClientSession::processConsoleCommand(NXCPMessage *request)
 {
 	NXCPMessage msg;
