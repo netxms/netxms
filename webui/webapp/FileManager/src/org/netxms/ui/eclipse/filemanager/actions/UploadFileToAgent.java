@@ -39,6 +39,7 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartServerToAgentFileUploadDialog;
@@ -85,34 +86,42 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-				   String remoteFileName = dlg.getRemoteFileName();
-				   if(!remoteFileName.isEmpty())
+				   boolean multipleFiles = dlg.getServerFiles().size() > 1;
+				   for(ServerFile sf : dlg.getServerFiles())
 				   {
-				      if(remoteFileName.endsWith("/") || remoteFileName.endsWith("\\")) //$NON-NLS-1$ //$NON-NLS-2$
-				      {
-				         remoteFileName += dlg.getServerFile().getName();
-				      }
+   				   String remoteFileName = dlg.getRemoteFileName();
+   				   if (!remoteFileName.isEmpty())
+   				   {
+   				      if (remoteFileName.endsWith("/") || remoteFileName.endsWith("\\")) //$NON-NLS-1$ //$NON-NLS-2$
+   				      {
+   				         remoteFileName += sf.getName();
+   				      }
+   				      else if (multipleFiles)
+   				      {
+                        remoteFileName += "/" + sf.getName();
+   				      }
+   				   }
+   				   else 
+   				   {
+   				      if (!dlg.isScheduled())
+   				         remoteFileName = null;
+   				   }
+   					for(int i = 0; i < nodeIdList.length; i++)
+   					{
+   					   if (dlg.isScheduled())
+   					   {
+   					      ScheduledTask task = dlg.getScheduledTask();
+   					      String parameters = sf.getName() + "," + remoteFileName; // $NON-NLS-1$
+   					      task.setParameters(parameters);
+   					      task.setObjectId(nodeIdList[i]);
+   					      session.addSchedule(task);
+   					   }
+   					   else
+   					   {
+   					      session.uploadFileToAgent(nodeIdList[i], sf.getName(), remoteFileName, dlg.isCreateJobOnHold());
+   					   }
+   					}
 				   }
-				   else 
-				   {
-				      if(!dlg.isScheduled())
-				         remoteFileName = null;
-				   }
-					for(int i = 0; i < nodeIdList.length; i++)
-					{
-					   if (dlg.isScheduled())
-					   {
-					      ScheduledTask task = dlg.getScheduledTask();
-					      String parameters = dlg.getServerFile().getName() + "," + remoteFileName; //$NON-NLS-1$
-					      task.setParameters(parameters);
-					      task.setObjectId(nodeIdList[i]);
-					      session.addSchedule(task);
-					   }
-					   else
-					   {
-					      session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), remoteFileName, dlg.isCreateJobOnHold());
-					   }
-					}
 				}
 			}.start();
 		}

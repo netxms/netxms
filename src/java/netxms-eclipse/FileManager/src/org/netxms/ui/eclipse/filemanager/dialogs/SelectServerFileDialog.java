@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,10 +55,16 @@ public class SelectServerFileDialog extends Dialog
 	
 	private SortableTableViewer viewer;
 	private ServerFile[] selectedFiles;
+	private boolean multiSelect;
 	
-	public SelectServerFileDialog(Shell parentShell)
+	/**
+	 * @param parentShell
+	 * @param multiSelect
+	 */
+	public SelectServerFileDialog(Shell parentShell, boolean multiSelect)
 	{
 		super(parentShell);
+		this.multiSelect = multiSelect;
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +92,7 @@ public class SelectServerFileDialog extends Dialog
 		
 		final String[] names = { Messages.get().SelectServerFileDialog_ColName, Messages.get().SelectServerFileDialog_ColSize, Messages.get().SelectServerFileDialog_ColModTime };
 		final int[] widths = { 200, 100, 150 };
-		viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.BORDER);
+		viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.BORDER | (multiSelect ? SWT.MULTI : 0));
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerFileLabelProvider());
 		viewer.setComparator(new ServerFileComparator());

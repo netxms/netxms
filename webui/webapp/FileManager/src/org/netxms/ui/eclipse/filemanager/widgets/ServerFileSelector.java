@@ -28,7 +28,6 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
 /**
  * Selector for server files
- *
  */
 public class ServerFileSelector extends AbstractSelector
 {
@@ -53,7 +52,7 @@ public class ServerFileSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		SelectServerFileDialog dlg = new SelectServerFileDialog(getShell());
+		SelectServerFileDialog dlg = new SelectServerFileDialog(getShell(), false);
 		if (dlg.open() == Window.OK)
 		{
 			setFile(dlg.getSelectedFiles()[0]);

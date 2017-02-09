@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,15 @@
  */
 package org.netxms.ui.eclipse.filemanager.dialogs;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -27,11 +34,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Messages;
-import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -42,12 +49,14 @@ import org.netxms.ui.eclipse.widgets.ScheduleSelector;
  */
 public class StartServerToAgentFileUploadDialog extends Dialog
 {
-	private ServerFileSelector fileSelector;
+	private TableViewer fileList;
+	private Button buttonAddFile;
+   private Button buttonRemoveFile;
 	private LabeledText textRemoteFile;
 	private Button checkJobOnHold;
    private Button checkIsSchedule;
    private ScheduleSelector scheduleSelector;
-	private ServerFile serverFile;
+	private List<ServerFile> serverFiles = new ArrayList<ServerFile>();
 	private String remoteFileName;
 	private boolean createJobOnHold;
 	private boolean scheduledTask;
@@ -89,14 +98,75 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
-		fileSelector = new ServerFileSelector(dialogArea, SWT.NONE);
-		fileSelector.setLabel(Messages.get().StartServerToAgentFileUploadDialog_ServerFile);
+		Label label = new Label(dialogArea, SWT.NONE);
+      label.setText(Messages.get().StartServerToAgentFileUploadDialog_ServerFile);
+      
+		fileList = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
-		fileSelector.setLayoutData(gd);
+		gd.heightHint = 150;
+		fileList.getControl().setLayoutData(gd);
 		
+		fileList.setContentProvider(new ArrayContentProvider());
+		fileList.setInput(serverFiles);
+		
+		Composite buttonArea = new Composite(dialogArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 2;
+      buttonArea.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      buttonArea.setLayoutData(gd);
+      
+      buttonAddFile = new Button(buttonArea, SWT.PUSH);
+      buttonAddFile.setText("&Add...");
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      buttonAddFile.setLayoutData(gd);
+      buttonAddFile.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            SelectServerFileDialog dlg = new SelectServerFileDialog(getShell(), true);
+            if (dlg.open() == Window.OK)
+            {
+               for(ServerFile f : dlg.getSelectedFiles())
+               {
+                  boolean found = false;
+                  for(ServerFile sf : serverFiles)
+                     if (sf.getName().equals(f.getName()))
+                     {
+                        found = true;
+                        break;
+                     }
+                  if (!found)
+                     serverFiles.add(f);
+               }
+               fileList.refresh();
+            }
+         }
+      });
+		
+      buttonRemoveFile = new Button(buttonArea, SWT.PUSH);
+      buttonRemoveFile.setText("&Remove");
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      buttonRemoveFile.setLayoutData(gd);
+      buttonRemoveFile.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)fileList.getSelection();
+            for(Object o : selection.toList())
+               serverFiles.remove(o);
+            fileList.refresh();
+         }
+      });
+      
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
 		textRemoteFile.setLabel(Messages.get().StartServerToAgentFileUploadDialog_RemoteFileName);
 		gd = new GridData();
@@ -107,7 +177,6 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		checkJobOnHold = new Button(dialogArea, SWT.CHECK);
 		checkJobOnHold.setText(Messages.get().StartServerToAgentFileUploadDialog_CreateJobOnHold);
 		checkJobOnHold.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {        
@@ -121,7 +190,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
          }
       });
 		
-		if(canScheduleFileUpload)
+		if (canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
    		checkIsSchedule.setText(Messages.get().StartServerToAgentFileUploadDialog_ScheduleTask);
@@ -155,12 +224,11 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	protected void okPressed()
 	{
 	   scheduledTask = checkIsSchedule.getSelection();
-	   if(scheduledTask)
+	   if (scheduledTask)
 	   {
 	      schedule = scheduleSelector.getSchedule();
 	   }
-		serverFile = fileSelector.getFile();
-		if (serverFile == null)
+		if (serverFiles.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().StartServerToAgentFileUploadDialog_Warning, Messages.get().StartServerToAgentFileUploadDialog_WarningText);
 			return;
@@ -171,11 +239,11 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	}
 
 	/**
-	 * @return the serverFile
+	 * @return selected server files
 	 */
-	public ServerFile getServerFile()
+	public List<ServerFile> getServerFiles()
 	{
-		return serverFile;
+		return serverFiles;
 	}
 
 	/**
@@ -209,5 +277,4 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	{
 	   return schedule;
 	}
-	
 }

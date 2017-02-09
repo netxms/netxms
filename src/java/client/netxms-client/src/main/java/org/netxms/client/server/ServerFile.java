@@ -8,7 +8,6 @@ import org.netxms.base.NXCPMessage;
 
 /**
  * Represents information about file in server's file store
- *
  */
 public class ServerFile
 {
