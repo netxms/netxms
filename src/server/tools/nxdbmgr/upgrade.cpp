@@ -747,6 +747,21 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V435 to V436
+ */
+static BOOL H_UpgradeFromV435(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE nodes ADD agent_comp_mode char(1)\n")
+            _T("UPDATE nodes SET agent_comp_mode='0'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("agent_comp_mode")));
+   CHK_EXEC(SetSchemaVersion(436));
+   return TRUE;
+}
+
+/**
  * Upgrade from V434 to V435
  */
 static BOOL H_UpgradeFromV434(int currVersion, int newVersion)
@@ -11383,6 +11398,7 @@ static struct
    { 432, 433, H_UpgradeFromV432 },
    { 433, 434, H_UpgradeFromV433 },
    { 434, 435, H_UpgradeFromV434 },
+   { 435, 436, H_UpgradeFromV435 },
    { 0, 0, NULL }
 };
 

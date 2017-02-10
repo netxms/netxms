@@ -460,6 +460,7 @@ CREATE TABLE nodes
   ssh_proxy integer not null,
   port_rows integer null,
   port_numbering_scheme integer null,
+  agent_comp_mode char(1) not null, // compression mode for agent
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
