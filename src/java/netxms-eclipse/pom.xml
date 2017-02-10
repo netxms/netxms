@@ -56,7 +56,7 @@
     <repositories>
         <repository>
             <id>eclipse-Draw2D</id>
-            <url> http://download.eclipse.org/tools/gef/updates/releases</url>
+            <url>http://download.eclipse.org/tools/gef/updates/releases</url>
             <layout>p2</layout>
         </repository>
         <repository>

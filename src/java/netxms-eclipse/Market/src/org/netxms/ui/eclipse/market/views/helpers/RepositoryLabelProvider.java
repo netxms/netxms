@@ -54,7 +54,7 @@ public class RepositoryLabelProvider extends LabelProvider implements ITableLabe
    public RepositoryLabelProvider()
    {
       FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
-      fd.style = SWT.BOLD;
+      fd.setStyle(SWT.BOLD);
       markFont = new Font(Display.getCurrent(), fd);
       markColor = new Color(Display.getCurrent(), 0, 148, 255);
    }
