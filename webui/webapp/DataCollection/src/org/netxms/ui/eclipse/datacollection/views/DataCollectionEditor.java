@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.DialogData;
 import org.netxms.ui.eclipse.tools.ExtendedPropertyDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -128,6 +129,7 @@ public class DataCollectionEditor extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+	private boolean saveSelection;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -226,6 +228,7 @@ public class DataCollectionEditor extends ViewPart
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
+	         settings.put(ID + "SaveEditDCISelection", saveSelection);
 			}
 		});
 
@@ -296,6 +299,8 @@ public class DataCollectionEditor extends ViewPart
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
+		
+		saveSelection = getBooleanFromSettings(ID + "SaveEditDCISelection", false);
 		
 		activateContext();
 	}
@@ -709,13 +714,44 @@ public class DataCollectionEditor extends ViewPart
 		if (selection.size() != 1)
 			return;
 		
-		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), ""); //$NON-NLS-1$
-		dlg.createAllPages();
-		int result = dlg.open();
-	   if(((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
-	   {
-         viewer.remove(selection.getFirstElement());
-	   }		
+		DataCollectionObject dco = (DataCollectionObject)selection.getFirstElement();
+		
+		DialogData data = null;
+		if (!saveSelection && dco.getTemplateId() != 0)
+		{
+		   if (dco.getTemplateId() == dco.getNodeId())
+		   {
+		      data = MessageDialogHelper.openConfirmWithCheckbox(getSite().getShell(), "Information", "Don't show this message again", "This DCI was added by Instance Discovery, all local changes will be overwritten by parent DCI.");
+		   }
+		   else
+		   {
+	         AbstractObject object = session.findObjectById(dco.getTemplateId());
+            StringBuilder sb = new StringBuilder();
+	         if (object != null)
+	         {
+   	         sb.append(object.getObjectName());
+   	         sb.append((object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ? "cluster" : "template");
+	         }
+	         else
+	         {
+	            sb.append("object with ID: ");
+               sb.append(dco.getTemplateId());
+	         }
+	         data = MessageDialogHelper.openConfirmWithCheckbox(getSite().getShell(), "Information", "Don't show this message again", String.format("This DCI was added by %s, all local changes will be overwritten once it has been modified!", sb.toString()));
+		   } 
+		   saveSelection = data.getSaveSelection();
+		}
+		
+		if (data == null || data.getOkPressed())
+		{
+         ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dco, ""); //$NON-NLS-1$
+         dlg.createAllPages();
+         int result = dlg.open();
+         if(((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
+         {
+            viewer.remove(selection.getFirstElement());
+         }
+		}
 	}
 	
 	/**

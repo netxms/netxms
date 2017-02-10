@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,11 +39,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -51,9 +50,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * "Custom Schedule" property page
  */
-public class CustomSchedule extends PropertyPage
+public class CustomSchedule extends DCIPropertyPageDialog
 {
-	private DataCollectionObjectEditor editor;
 	private DataCollectionObject dci;
 	private HashSet<String> schedules;
 	private SortableTableViewer viewer;
@@ -67,10 +65,8 @@ public class CustomSchedule extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObject();
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

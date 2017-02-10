@@ -22,9 +22,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -42,13 +46,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Label provider for user manager
  */
-public class DciLabelProvider implements ITableLabelProvider
+public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 {
 	private NXCSession session;
 	private Image statusImages[];
 	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> dtTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> statusTexts = new HashMap<Integer, String>();
+   private static Color FONT_COLOR = new Color(Display.getCurrent(), new RGB(0, 0, 100));
 	
 	/**
 	 * Default constructor
@@ -222,4 +227,26 @@ public class DciLabelProvider implements ITableLabelProvider
 	public void removeListener(ILabelProviderListener listener)
 	{
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (((DataCollectionObject)element).getTemplateId() != 0)
+      {
+         return FONT_COLOR;
+      }
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return null;
+   }
 }

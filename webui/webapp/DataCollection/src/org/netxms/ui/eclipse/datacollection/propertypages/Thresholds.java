@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,29 +45,27 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditThresholdDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * "Thresholds" page for data collection item
  */
-public class Thresholds extends PropertyPage
+public class Thresholds extends DCIPropertyPageDialog
 {
 	public static final int COLUMN_OPERATION = 0;
 	public static final int COLUMN_EVENT = 1;
 
 	private static final String COLUMN_SETTINGS_PREFIX = "Thresholds.ThresholdList"; //$NON-NLS-1$
 
-	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
@@ -90,14 +88,12 @@ public class Thresholds extends PropertyPage
 		// Initiate loading of event manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
 
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+		Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
 		
 		thresholds = new ArrayList<Threshold>(dci.getThresholds().size());
 		for(Threshold t : dci.getThresholds())
 			thresholds.add(new Threshold(t));
-
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

@@ -30,9 +30,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
@@ -43,9 +42,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * DCI property page for Performance Tab settings
  */
-public class PerfTab extends PropertyPage
+public class PerfTab extends DCIPropertyPageDialog
 {
-	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
@@ -68,8 +66,9 @@ public class PerfTab extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
+		
 		try
 		{
 			settings = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
@@ -78,8 +77,6 @@ public class PerfTab extends PropertyPage
 		{
 			settings = new PerfTabGraphSettings();	// Create default empty settings
 		}
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

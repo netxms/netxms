@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,25 +45,23 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditTableThresholdDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableThresholdLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Thresholds" property page for table DCI
  */
-public class TableThresholds extends PropertyPage
+public class TableThresholds extends DCIPropertyPageDialog
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableThresholds.ColumnList"; //$NON-NLS-1$
 	
-	private DataCollectionObjectEditor editor;
 	private DataCollectionTable dci;
 	private List<TableThreshold> thresholds;
 	private TableViewer thresholdList;
@@ -79,17 +77,15 @@ public class TableThresholds extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
-
+		
 		thresholds = new ArrayList<TableThreshold>();
 		for(TableThreshold t : dci.getThresholds())
 			thresholds.add(new TableThreshold(t));
 
 		// Initiate loading of event manager plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new EventTemplate(0), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

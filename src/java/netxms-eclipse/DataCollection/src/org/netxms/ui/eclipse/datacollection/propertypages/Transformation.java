@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.TestTransformationDlg;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -40,12 +39,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Transformation" property page for DCI
  */
-public class Transformation extends PropertyPage
+public class Transformation extends DCIPropertyPageDialog
 {
 	private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	private static final String[] DCI_VARIABLES = { "$dci", "$node" }; //$NON-NLS-1$ //$NON-NLS-2$
 	
-	private DataCollectionObjectEditor editor;
 	private Combo deltaCalculation;
 	private ScriptEditor transformationScript;
 	private Button testScriptButton;
@@ -56,9 +54,7 @@ public class Transformation extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

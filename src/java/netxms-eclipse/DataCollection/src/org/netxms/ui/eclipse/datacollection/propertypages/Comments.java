@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,18 +24,16 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Comments" property page for NetXMS object
  *
  */
-public class Comments extends PropertyPage
+public class Comments extends DCIPropertyPageDialog
 {
-   private DataCollectionObjectEditor editor;
    private DataCollectionObject dci;
 	private Text comments;
 	private String initialComments;
@@ -46,9 +44,7 @@ public class Comments extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
       dci = editor.getObject();
       
 		initialComments = dci.getComments();

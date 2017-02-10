@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.AbstractNode;
@@ -38,16 +37,15 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Cluster" property page for data collection object
  */
-public class ClusterOptions extends PropertyPage
+public class ClusterOptions extends DCIPropertyPageDialog
 {
-	private DataCollectionObjectEditor editor;
 	private AbstractObject owner;
 	private Cluster cluster = null;
 	private Combo clusterResource;
@@ -62,8 +60,8 @@ public class ClusterOptions extends PropertyPage
 	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	{      
+      Composite dialogArea = (Composite)super.createContents(parent);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		owner = session.findObjectById(editor.getObject().getNodeId());		
@@ -82,8 +80,6 @@ public class ClusterOptions extends PropertyPage
 				}
 			}
 		}
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -46,13 +45,13 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -62,7 +61,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * "General" property page for DCI
  */
-public class General extends PropertyPage
+public class General extends DCIPropertyPageDialog
 {
 	private static final String[] snmpRawTypes = 
 	{ 
@@ -76,7 +75,6 @@ public class General extends PropertyPage
 		Messages.get().General_SNMP_DT_macAddr
 	};
 	
-	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private Text description;
 	private LabeledText parameter;
@@ -104,10 +102,8 @@ public class General extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{		
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

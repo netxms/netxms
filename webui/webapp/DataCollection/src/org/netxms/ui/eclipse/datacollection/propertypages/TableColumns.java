@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ColumnDefinition;
@@ -60,9 +59,9 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectListener;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditColumnDialog;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -73,11 +72,10 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Columns" property page for table DCI
  */
-public class TableColumns extends PropertyPage
+public class TableColumns extends DCIPropertyPageDialog
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList"; //$NON-NLS-1$
 	
-	private DataCollectionObjectEditor editor;
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
 	private TableViewer columnList;
@@ -94,15 +92,13 @@ public class TableColumns extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
 		editor.setCallback(new TableColumnDataProvider());
-
+		
 		columns = new ArrayList<ColumnDefinition>();
 		for(ColumnDefinition c : dci.getColumns())
 			columns.add(new ColumnDefinition(c));
-		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
