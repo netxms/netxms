@@ -47,7 +47,7 @@ NetworkPath::~NetworkPath()
 /**
  * Add hop to path
  */
-void NetworkPath::addHop(const InetAddress& nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
+void NetworkPath::addHop(const InetAddress& nextHop, const InetAddress& route, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
 {
 	if (m_hopCount == m_allocated)
 	{
@@ -55,6 +55,7 @@ void NetworkPath::addHop(const InetAddress& nextHop, NetObj *currentObject, UINT
 		m_path = (HOP_INFO *)realloc(m_path, sizeof(HOP_INFO) * m_allocated);
 	}
 	m_path[m_hopCount].nextHop = nextHop;
+   m_path[m_hopCount].route = route;
 	m_path[m_hopCount].object = currentObject;
 	m_path[m_hopCount].ifIndex = ifIndex;
 	m_path[m_hopCount].isVpn = isVpn;
@@ -100,12 +101,13 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    {
       UINT32 dwIfIndex;
       InetAddress nextHop;
+      InetAddress route;
       bool isVpn;
       TCHAR name[MAX_OBJECT_NAME];
-      if (pCurr->getNextHop(srcAddr, pDest->getIpAddress(), &nextHop, &dwIfIndex, &isVpn, name))
+      if (pCurr->getNextHop(srcAddr, pDest->getIpAddress(), &nextHop, &route, &dwIfIndex, &isVpn, name))
       {
 			pNext = FindNodeByIP(pSrc->getZoneId(), nextHop);
-			path->addHop(nextHop, pCurr, dwIfIndex, isVpn, name);
+			path->addHop(nextHop, route, pCurr, dwIfIndex, isVpn, name);
          if ((pNext == pCurr) || !nextHop.isValid())
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
@@ -116,7 +118,7 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    }
 	if (pCurr == pDest)
 	{
-      path->addHop(InetAddress(), pCurr, 0, false, _T(""));
+      path->addHop(InetAddress::INVALID, InetAddress::INVALID, pCurr, 0, false, _T(""));
 		path->setComplete();
 	}
 

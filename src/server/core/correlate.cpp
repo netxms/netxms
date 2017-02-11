@@ -134,7 +134,9 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       else
       {
          Interface *pInterface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
-         if ((pInterface != NULL) && ((pInterface->getStatus() == STATUS_CRITICAL) || (pInterface->getStatus() == STATUS_DISABLED)))
+         if ((pInterface != NULL) &&
+             ((pInterface->getAdminState() == IF_ADMIN_STATE_DOWN) || (pInterface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+              (pInterface->getOperState() == IF_OPER_STATE_DOWN) || (pInterface->getOperState() == IF_OPER_STATE_TESTING)))
          {
 				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
 				          pInterface->getName(), pInterface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
@@ -184,6 +186,7 @@ void CorrelateEvent(Event *pEvent)
          }
          break;
       case EVENT_INTERFACE_DOWN:
+      case EVENT_INTERFACE_EXPECTED_DOWN:
          {
             Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
             if (pInterface != NULL)
@@ -219,6 +222,9 @@ void CorrelateEvent(Event *pEvent)
          break;
       case EVENT_NETWORK_CONNECTION_LOST:
          m_networkLostEventId = pEvent->getId();
+         break;
+      case EVENT_ROUTING_LOOP_DETECTED:
+         node->setRoutingLoopEvent(InetAddress::parse(pEvent->getNamedParameter(_T("destAddress"))), pEvent->getNamedParameterAsULong(_T("destNodeId")), pEvent->getId());
          break;
       default:
          break;

@@ -747,6 +747,32 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V436 to V437
+ */
+static BOOL H_UpgradeFromV436(int currVersion, int newVersion)
+{
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_ROUTING_LOOP_DETECTED, _T("SYS_ROUTING_LOOP_DETECTED"),
+         SEVERITY_MAJOR, EF_LOG, _T("98276f42-dc85-41a5-b449-6ba83d1a71b7"),
+         _T("Routing loop detected for destination %3 (selected route %6/%7 via %9)"),
+         _T("Generated when server detects routing loop during network path trace.\r\n")
+         _T("Source of the event is node which routes packet back to already passed hop.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Protocol (IPv4 or IPv6)\r\n")
+         _T("   2) Path trace destination node ID\r\n")
+         _T("   3) Path trace destination address\r\n")
+         _T("   4) Path trace source node ID\r\n")
+         _T("   5) Path trace source node address\r\n")
+         _T("   6) Routing prefix (subnet address)\r\n")
+         _T("   7) Routing prefix length (subnet mask length)\r\n")
+         _T("   8) Next hop node ID\r\n")
+         _T("   9) Next hop address"))
+      );
+   CHK_EXEC(SetSchemaVersion(437));
+   return TRUE;
+}
+
+/**
  * Upgrade from V435 to V436
  */
 static BOOL H_UpgradeFromV435(int currVersion, int newVersion)
@@ -791,8 +817,8 @@ static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
          _T("Generated when interface expected state set to UP.\r\n")
          _T("Please note that source of event is node, not an interface itself.\r\n")
          _T("Parameters:\r\n")
-         _T("    1) Interface index\r\n")
-         _T("    2) Interface name"))
+         _T("   1) Interface index\r\n")
+         _T("   2) Interface name"))
       );
 
    CHK_EXEC(
@@ -802,8 +828,8 @@ static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
          _T("Generated when interface expected state set to DOWN.\r\n")
          _T("Please note that source of event is node, not an interface itself.\r\n")
          _T("Parameters:\r\n")
-         _T("    1) Interface index\r\n")
-         _T("    2) Interface name"))
+         _T("   1) Interface index\r\n")
+         _T("   2) Interface name"))
       );
 
    CHK_EXEC(
@@ -813,8 +839,8 @@ static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
          _T("Generated when interface expected state set to IGNORE.\r\n")
          _T("Please note that source of event is node, not an interface itself.\r\n")
          _T("Parameters:\r\n")
-         _T("    1) Interface index\r\n")
-         _T("    2) Interface name"))
+         _T("   1) Interface index\r\n")
+         _T("   2) Interface name"))
       );
 
    CHK_EXEC(AddEventToEPPRule(_T("6f46d451-ee66-4563-8747-d129877df24d"), EVENT_IF_EXPECTED_STATE_DOWN));
@@ -11399,6 +11425,7 @@ static struct
    { 433, 434, H_UpgradeFromV433 },
    { 434, 435, H_UpgradeFromV434 },
    { 435, 436, H_UpgradeFromV435 },
+   { 436, 437, H_UpgradeFromV436 },
    { 0, 0, NULL }
 };
 

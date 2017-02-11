@@ -1180,3 +1180,21 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) Interface index' CONCAT CRLF CONCAT
 		'   2) Interface name'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ROUTING_LOOP_DETECTED, 'SYS_ROUTING_LOOP_DETECTED', '98276f42-dc85-41a5-b449-6ba83d1a71b7',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Routing loop detected for destination %3 (selected route %6/%7 via %9)',
+		'Generated when server detects routing loop during network path trace.' CONCAT CRLF CONCAT
+		'Source of the event is node which routes packet back to already passed hop.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Protocol (IPv4 or IPv6)' CONCAT CRLF CONCAT
+		'   2) Path trace destination node ID' CONCAT CRLF CONCAT
+		'   3) Path trace destination address' CONCAT CRLF CONCAT
+		'   4) Path trace source node ID' CONCAT CRLF CONCAT
+		'   5) Path trace source node address' CONCAT CRLF CONCAT
+		'   6) Routing prefix (subnet address)' CONCAT CRLF CONCAT
+		'   7) Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
+		'   8) Next hop node ID' CONCAT CRLF CONCAT
+		'   9) Next hop address'
+	);

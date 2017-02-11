@@ -723,8 +723,13 @@ InterfaceList *AgentConnection::getInterfaceList()
                pSlash = defaultMask;
             }
             InetAddress addr = InetAddress::parse(pBuf);
-            addr.setMaskBits(_tcstol(pSlash, NULL, 10));
-            iface->ipAddrList.add(addr);
+            if (addr.isValid())
+            {
+               addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+               // Agent may return 0.0.0.0/0 for interfaces without IP address
+               if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
+                  iface->ipAddrList.add(addr);
+            }
             pBuf = pChar + 1;
          }
 

@@ -877,7 +877,7 @@ public:
                                 (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
-   void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
+   void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }
 
    void setMacAddr(const BYTE *macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
@@ -1306,6 +1306,29 @@ enum NodeAgentCompressionMode
 };
 
 /**
+ * Routing loop event information
+ */
+class RoutingLoopEvent
+{
+private:
+   InetAddress m_address;
+   UINT32 m_nodeId;
+   UINT64 m_eventId;
+
+public:
+   RoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId)
+   {
+      m_address = address;
+      m_nodeId = nodeId;
+      m_eventId = eventId;
+   }
+
+   const InetAddress& getAddress() const { return m_address; }
+   UINT32 getNodeId() const { return m_nodeId; }
+   UINT64 getEventId() const { return m_eventId; }
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1392,7 +1415,8 @@ protected:
    UINT32 m_agentProxy;      // Node used as proxy for agent connection
 	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
    UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
-   UINT64 m_qwLastEvents[MAX_LAST_EVENTS];
+   UINT64 m_lastEvents[MAX_LAST_EVENTS];
+   ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
@@ -1592,7 +1616,7 @@ public:
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
 	VlanList *getVlans();
-   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
+   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
@@ -1681,8 +1705,9 @@ public:
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
-   QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
-   void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
+   UINT64 getLastEventId(int index) { return ((index >= 0) && (index < MAX_LAST_EVENTS)) ? m_lastEvents[index] : 0; }
+   void setLastEventId(int index, UINT64 eventId) { if ((index >= 0) && (index < MAX_LAST_EVENTS)) m_lastEvents[index] = eventId; }
+   void setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId);
 
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
       UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);

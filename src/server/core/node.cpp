@@ -84,7 +84,8 @@ Node::Node() : DataCollectionTarget()
    m_agentProxy = 0;
    m_snmpProxy = 0;
    m_icmpProxy = 0;
-   memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_pRoutingTable = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
@@ -184,7 +185,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_agentProxy = agentProxy;
    m_snmpProxy = snmpProxy;
    m_icmpProxy = icmpProxy;
-   memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
+   m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_isHidden = true;
    m_pRoutingTable = NULL;
    m_failTimeSNMP = 0;
@@ -245,7 +247,7 @@ Node::~Node()
    delete m_smclpConnection;
    delete m_paramList;
    delete m_tableList;
-   safe_free(m_sysDescription);
+   free(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
    if (m_linkLayerNeighbors != NULL)
       m_linkLayerNeighbors->decRefCount();
@@ -263,9 +265,10 @@ Node::~Node()
    delete m_lldpLocalPortInfo;
    delete m_softwarePackages;
    delete m_winPerfObjects;
-   safe_free(m_sysName);
-   safe_free(m_sysContact);
-   safe_free(m_sysLocation);
+   free(m_sysName);
+   free(m_sysContact);
+   free(m_sysLocation);
+   delete m_routingLoopEvents;
 }
 
 /**
@@ -1592,12 +1595,12 @@ restart_agent_check:
                unlockChildList();
 
                // Clear delayed event queue
-               while(1)
+               while(true)
                {
-                  Event *pEvent = (Event *)pQueue->get();
-                  if (pEvent == NULL)
+                  Event *e = (Event *)pQueue->get();
+                  if (e == NULL)
                      break;
-                  delete pEvent;
+                  delete e;
                }
                delete_and_null(pQueue);
 
@@ -1893,12 +1896,43 @@ restart:
       if ((hop->object == NULL) || (hop->object == this) || (hop->object->getObjectClass() != OBJECT_NODE))
          continue;
 
-      DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
-                m_name, m_id, hop->object->getName(), hop->object->getId());
+      // Check for loops
+      if (i > 0)
+      {
+         for(int j = i - 1; j >= 0; j--)
+         {
+            HOP_INFO *prevHop = trace->getHopInfo(j);
+            if (prevHop->object == hop->object)
+            {
+               prevHop = trace->getHopInfo(i - 1);
+               nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): routing loop detected on upstream node %s [%d]"),
+                           m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
+               sendPollerMsg(dwRqId, POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
+
+               static const TCHAR *names[] =
+                        { _T("protocol"), _T("destNodeId"), _T("destAddress"),
+                          _T("sourceNodeId"), _T("sourceAddress"), _T("prefix"),
+                          _T("prefixLength"), _T("nextHopNodeId"), _T("nextHopAddress")
+                        };
+               PostEventWithNames(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId(), "siAiAAdiA", names,
+                     (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"),
+                     m_id, &m_ipAddress, g_dwMgmtNode, &(trace->getSourceAddress()),
+                     &prevHop->route, prevHop->route.getMaskBits(), hop->object->getId(), &prevHop->nextHop);
+
+               pathProblemFound = true;
+               break;
+            }
+         }
+         if (pathProblemFound)
+            break;
+      }
+
+      nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
+                  m_name, m_id, hop->object->getName(), hop->object->getId());
       if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_lastStatusPoll < now - 1))
       {
-         DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
-                   m_name, m_id, hop->object->getName(), hop->object->getId());
+         nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+                     m_name, m_id, hop->object->getName(), hop->object->getId());
          PollerInfo *poller = RegisterPoller(POLLER_TYPE_STATUS, (Node *)hop->object);
          poller->startExecution();
          ((Node *)hop->object)->statusPoll(NULL, 0, poller);
@@ -1907,8 +1941,8 @@ restart:
 
       if (((Node *)hop->object)->isDown())
       {
-         DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
-                   m_name, m_id, hop->object->getName(), hop->object->getId());
+         nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
+                     m_name, m_id, hop->object->getName(), hop->object->getId());
          sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), hop->object->getName());
          pathProblemFound = true;
          break;
@@ -1916,7 +1950,7 @@ restart:
    }
    if (!secondPass && !pathProblemFound)
    {
-      DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
+      nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
       secondPass = true;
       goto restart;
    }
@@ -4278,8 +4312,9 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
             bool isVpn;
             UINT32 ifIndex;
             InetAddress nextHop;
+            InetAddress route;
             TCHAR name[MAX_OBJECT_NAME];
-            if (getNextHop(m_ipAddress, destAddr, &nextHop, &ifIndex, &isVpn, name))
+            if (getNextHop(m_ipAddress, destAddr, &nextHop, &route, &ifIndex, &isVpn, name))
             {
                nextHop.toString(buffer);
             }
@@ -5531,7 +5566,7 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
 /**
  * Get next hop for given destination address
  */
-bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
+bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
 {
    bool nextHopFound = false;
    *name = 0;
@@ -5548,6 +5583,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
              ((VPNConnector *)object)->isLocalAddr(srcAddr))
          {
             *nextHop = ((VPNConnector *)object)->getPeerGatewayAddr();
+            *route = InetAddress::INVALID;
             *ifIndex = object->getId();
             *isVpn = true;
             nx_strncpy(name, object->getName(), MAX_OBJECT_NAME);
@@ -5559,6 +5595,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
                ((Interface *)object)->getIpAddressList()->findSameSubnetAddress(destAddr).isValid())
       {
          *nextHop = destAddr;
+         *route = InetAddress::INVALID;
          *ifIndex = ((Interface *)object)->getIfIndex();
          *isVpn = false;
          nx_strncpy(name, object->getName(), MAX_OBJECT_NAME);
@@ -5599,6 +5636,8 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             {
                *nextHop = m_pRoutingTable->pRoutes[i].dwNextHop;
             }
+            *route = m_pRoutingTable->pRoutes[i].dwDestAddr;
+            route->setMaskBits(BitsInMask(m_pRoutingTable->pRoutes[i].dwDestMask));
             *ifIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
             *isVpn = false;
             if (iface != NULL)
@@ -7753,4 +7792,21 @@ bool Node::isAgentCompressionAllowed()
    if (m_agentCompressionMode == NODE_AGENT_COMPRESSION_DEFAULT)
       return ConfigReadInt(_T("DefaultAgentProtocolCompressionMode"), NODE_AGENT_COMPRESSION_ENABLED) == NODE_AGENT_COMPRESSION_ENABLED;
    return m_agentCompressionMode == NODE_AGENT_COMPRESSION_ENABLED;
+}
+
+/**
+ * Set routing loop event information
+ */
+void Node::setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId)
+{
+   for(int i = 0; i < m_routingLoopEvents->size(); i++)
+   {
+      RoutingLoopEvent *e = m_routingLoopEvents->get(i);
+      if ((e->getNodeId() == nodeId) || e->getAddress().equals(address))
+      {
+         m_routingLoopEvents->remove(i);
+         break;
+      }
+   }
+   m_routingLoopEvents->add(new RoutingLoopEvent(address, nodeId, eventId));
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -299,6 +299,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             pollType = 1;
          }
+         else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
+         {
+            pollType = 4;
+         }
          else if (IsCommand(_T("STATUS"), szBuffer, 1))
          {
             pollType = 2;
@@ -334,6 +338,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      case 3:
                         node->lockForTopologyPoll();
                         ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
+                        break;
+                     case 4:
+                        node->lockForRoutePoll();
+                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
                         break;
                   }
                }
