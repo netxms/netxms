@@ -25,11 +25,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Property page for DCI`s
@@ -45,47 +43,41 @@ public class DCIPropertyPageDialog extends PropertyPage
    protected Control createContents(Composite parent)
    {
       editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
-      if (editor.getObject().getTemplateId() != 0)
+      String message = DataCollectionObjectEditor.createModificationWarningMessage(editor.getObject());
+      if (message != null)
       {
-         String message;
-         if (editor.getObject().getTemplateId() == editor.getObject().getNodeId())
-         {
-            message = "This DCI was added by Instance Discovery, all local changes will be overwritten by the parent DCI";
-         }
-         else
-         {
-            AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(editor.getObject().getTemplateId());
-            if (object != null)
-            {
-               message = String.format("This DCI was added by %s %s, all local changes will be overwritten once it has been modified!",
-                                          object.getObjectName(), (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ? " cluster" : " template");
-            }
-            else
-            {
-               message = String.format("This DCI was added by object with ID: %d", editor.getObject().getTemplateId());
-            }
-         }
-         
-         Composite messageArea = new Composite(parent, SWT.NONE);
+         Composite messageArea = new Composite(parent, SWT.BORDER);
+         messageArea.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, messageArea.getDisplay()));
          GridLayout layout = new GridLayout(2, false);
-         layout.marginWidth = 0;
-         layout.marginHeight = 0;
          messageArea.setLayout(layout);
-         
          GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.TOP;
+         messageArea.setLayoutData(gd);
+         
+         Label imageLabel = new Label(messageArea, SWT.NONE);
+         imageLabel.setBackground(messageArea.getBackground());
+         imageLabel.setImage(Activator.getImageDescriptor("icons/warning.png").createImage());
+         gd = new GridData();
          gd.horizontalAlignment = SWT.LEFT;
          gd.verticalAlignment = SWT.FILL;
-         Label imageLabel = new Label(messageArea, SWT.NONE);
-         imageLabel.setImage(Activator.getImageDescriptor("icons/warning_obj.gif").createImage());
          imageLabel.setLayoutData(gd);
          
+         Label messageLabel = new Label(messageArea, SWT.WRAP);
+         messageLabel.setBackground(messageArea.getBackground());
+         messageLabel.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, messageArea.getDisplay()));
+         messageLabel.setText(message);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
-         gd.verticalAlignment = SWT.FILL;
-         Label messageLabel = new Label(messageArea, SWT.WRAP);
-         messageLabel.setText(message);
+         gd.verticalAlignment = SWT.CENTER;
+         messageLabel.setLayoutData(gd);
       }
-      return new Composite(parent, SWT.NONE);
+      
+      Composite content = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      content.setLayout(layout);
+      return content;
    }
-
 }

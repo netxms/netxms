@@ -26,17 +26,19 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColumnDataProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Helper class for handling modifications in data collection objects
  */
 public class DataCollectionObjectEditor
 {
-	DataCollectionObject object;
+	private DataCollectionObject object;
 	private long sourceNode;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
@@ -69,11 +71,11 @@ public class DataCollectionObjectEditor
 				final boolean isNewObj = object.isNewItem();
 				synchronized(DataCollectionObjectEditor.this)
 				{
-				   if(isNewObj)
+				   if (isNewObj)
 				   {
-				      if(object instanceof DataCollectionItem)
+				      if (object instanceof DataCollectionItem)
 				         object.getOwner().createItem(object);
-				      if(object instanceof DataCollectionTable)
+				      else if (object instanceof DataCollectionTable)
 				         object.getOwner().createTable(object);
 				   }
 					object.getOwner().modifyObject(object);
@@ -85,7 +87,7 @@ public class DataCollectionObjectEditor
 						Object data = object.getOwner().getUserData();
 						if ((data != null) && (data instanceof TableViewer))
 						{
-	                  if(isNewObj)
+	                  if (isNewObj)
 	                  {
 	                     ((TableViewer)data).setInput(object.getOwner().getItems());
 	                  }
@@ -199,5 +201,34 @@ public class DataCollectionObjectEditor
    public long getSourceNode()
    {
       return sourceNode;
+   }
+   
+   /**
+    * Create DCI modification warning message. Returns message ready to display or null if message is not needed.
+    * 
+    * @param dco data collection object
+    * @return warning message or null
+    */
+   public static String createModificationWarningMessage(DataCollectionObject dco)
+   {
+      String message = null;
+      if (dco.getTemplateId() == dco.getNodeId())
+      {
+         message = "This DCI was added by instance discovery\nAll local changes can be overwritten at any moment";
+      }
+      else if (dco.getTemplateId() != 0)
+      {
+         AbstractObject object = ConsoleSharedData.getSession().findObjectById(dco.getTemplateId());
+         if (object != null)
+         {
+            message = String.format("This DCI was added by %s \"%s\"\nAll local changes can be overwritten at any moment",
+                  (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ? "cluster" : "template", object.getObjectName());
+         }
+         else
+         {
+            message = String.format("This DCI was added by unknown object with ID %d\nAll local changes can be overwritten at any moment", dco.getTemplateId());
+         }
+      }
+      return message;
    }
 }

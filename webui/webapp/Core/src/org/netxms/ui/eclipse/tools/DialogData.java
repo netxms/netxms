@@ -45,7 +45,7 @@ public class DialogData
    /**
     * @return was OK pressed
     */
-   public boolean getOkPressed()
+   public boolean isOkPressed()
    {
       return okPressed;
    }

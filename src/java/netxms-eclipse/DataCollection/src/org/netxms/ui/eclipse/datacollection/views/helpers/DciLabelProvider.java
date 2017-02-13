@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,12 +48,13 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 {
+   private static final Color FONT_COLOR = new Color(Display.getDefault(), new RGB(126, 137, 185));
+   
 	private NXCSession session;
 	private Image statusImages[];
 	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> dtTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> statusTexts = new HashMap<Integer, String>();
-	private static Color FONT_COLOR = new Color(Display.getCurrent(), new RGB(0, 0, 100));
 	
 	/**
 	 * Default constructor

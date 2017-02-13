@@ -72,6 +72,7 @@ import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciComparator;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.DciLabelProvider;
@@ -129,7 +130,7 @@ public class DataCollectionEditor extends ViewPart
 	private RefreshAction actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
-	private boolean saveSelection;
+	private boolean hideModificationWarnings;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -228,7 +229,7 @@ public class DataCollectionEditor extends ViewPart
 			public void widgetDisposed(DisposeEvent e)
 			{
 				WidgetHelper.saveTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
-	         settings.put(ID + "SaveEditDCISelection", saveSelection);
+	         settings.put("DataCollectionEditor.hideModificationWarnings", hideModificationWarnings);
 			}
 		});
 
@@ -300,7 +301,7 @@ public class DataCollectionEditor extends ViewPart
 		else
 			enableFilter(false);	// Will hide filter area correctly
 		
-		saveSelection = getBooleanFromSettings(ID + "SaveEditDCISelection", false);
+		hideModificationWarnings = getBooleanFromSettings("DataCollectionEditor.hideModificationWarnings", false);
 		
 		activateContext();
 	}
@@ -706,7 +707,7 @@ public class DataCollectionEditor extends ViewPart
 	}
 	
 	/**
-	 * 
+	 * Edit selected object
 	 */
 	private void editSelectedObject()
 	{
@@ -717,37 +718,22 @@ public class DataCollectionEditor extends ViewPart
 		DataCollectionObject dco = (DataCollectionObject)selection.getFirstElement();
 		
 		DialogData data = null;
-		if (!saveSelection && dco.getTemplateId() != 0)
+		if (!hideModificationWarnings && dco.getTemplateId() != 0)
 		{
-		   if (dco.getTemplateId() == dco.getNodeId())
+		   String message = DataCollectionObjectEditor.createModificationWarningMessage(dco);
+		   if (message != null)
 		   {
-		      data = MessageDialogHelper.openConfirmWithCheckbox(getSite().getShell(), "Information", "Don't show this message again", "This DCI was added by Instance Discovery, all local changes will be overwritten by parent DCI.");
+            data = MessageDialogHelper.openWarningWithCheckbox(getSite().getShell(), "Warning", "Don't show this message again", message);
+            hideModificationWarnings = data.getSaveSelection();
 		   }
-		   else
-		   {
-	         AbstractObject object = session.findObjectById(dco.getTemplateId());
-            StringBuilder sb = new StringBuilder();
-	         if (object != null)
-	         {
-   	         sb.append(object.getObjectName());
-   	         sb.append((object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ? "cluster" : "template");
-	         }
-	         else
-	         {
-	            sb.append("object with ID: ");
-               sb.append(dco.getTemplateId());
-	         }
-	         data = MessageDialogHelper.openConfirmWithCheckbox(getSite().getShell(), "Information", "Don't show this message again", String.format("This DCI was added by %s, all local changes will be overwritten once it has been modified!", sb.toString()));
-		   } 
-		   saveSelection = data.getSaveSelection();
 		}
 		
-		if (data == null || data.getOkPressed())
+		if ((data == null) || data.isOkPressed())
 		{
          ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dco, ""); //$NON-NLS-1$
          dlg.createAllPages();
          int result = dlg.open();
-         if(((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
+         if (((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
          {
             viewer.remove(selection.getFirstElement());
          }
