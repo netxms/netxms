@@ -16,7 +16,7 @@
 - Compression support in communication protocol
 - Management console:
 	- Mutiple files can be scheduled for upload to agent at once
-- Fixed issues: NX-60, NX-630, NX-916, NX-1151, NX-1161, NX-1171
+- Fixed issues: NX-60, NX-630, NX-916, NX-1123, NX-1151, NX-1161, NX-1171
 
 
 *
