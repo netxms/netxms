@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.CRC32;
+import com.jcraft.jzlib.Deflater;
+import com.jcraft.jzlib.DeflaterOutputStream;
+import com.jcraft.jzlib.InflaterInputStream;
+import com.jcraft.jzlib.JZlib;
 
+/**
+ * NXCP (NetXMS Communication Protocol) message
+ */
 public class NXCPMessage
 {
 	public static final int HEADER_SIZE = 16;
@@ -42,6 +50,7 @@ public class NXCPMessage
 	public static final int MF_END_OF_SEQUENCE = 0x0008;
 	public static final int MF_REVERSE_ORDER = 0x0010;
 	public static final int MF_CONTROL = 0x0020;
+   public static final int MF_COMPRESSED = 0x0040;
 	
 	private int messageCode;
 	private int messageFlags;
@@ -74,10 +83,11 @@ public class NXCPMessage
 
 	/**
 	 * Create NXCPMessage from binary NXCP message
-	 * @param nxcpMessage
-	 * @param ectx
-	 * @throws IOException
-	 * @throws NXCPException
+	 * 
+	 * @param nxcpMessage NXCP message
+	 * @param ectx encryption context
+	 * @throws IOException if internal byte stream error occurs (normally should not happen)
+	 * @throws NXCPException if message cannot be parsed
 	 */
 	public NXCPMessage(final byte[] nxcpMessage, EncryptionContext ectx) throws IOException, NXCPException
 	{
@@ -119,11 +129,11 @@ public class NXCPMessage
 			
 			payloadInputStream.skip(4);
 			messageCode = payloadInputStream.readUnsignedShort();
-			createFromStream(payloadInputStream, payloadByteArrayInputStream);
+			createFromStream(payloadInputStream);
 		}
 		else
 		{
-			createFromStream(inputStream, byteArrayInputStream);
+			createFromStream(inputStream);
 		}
 	}
 
@@ -133,7 +143,7 @@ public class NXCPMessage
 	 * @param byteArrayInputStream
 	 * @throws IOException
 	 */
-	private void createFromStream(NXCPDataInputStream inputStream, ByteArrayInputStream byteArrayInputStream) throws IOException
+	private void createFromStream(NXCPDataInputStream inputStream) throws IOException
 	{
 		messageFlags = inputStream.readUnsignedShort();
 		inputStream.skipBytes(4);	// Message size
@@ -151,12 +161,16 @@ public class NXCPMessage
 		}
 		else
 		{
-			final int numVars = inputStream.readInt();
-	
+         final int numVars = inputStream.readInt();
+		   if ((messageFlags & MF_COMPRESSED) == MF_COMPRESSED)
+		   {
+		      // Compressed message
+		      inputStream.skip(4);  // skip original message length
+		      inputStream = new NXCPDataInputStream(new InflaterInputStream(inputStream));
+		   }
+		   
 			for(int i = 0; i < numVars; i++)
 			{
-				byteArrayInputStream.mark(byteArrayInputStream.available());
-				
 				// Read first 8 bytes - any DF (data field) is at least 8 bytes long
 				byte[] df = new byte[32];
 				inputStream.readFully(df, 0, 8);
@@ -173,10 +187,10 @@ public class NXCPMessage
 					case NXCPMessageField.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
 					case NXCPMessageField.TYPE_BINARY:
 						int size = inputStream.readInt();
-						byteArrayInputStream.reset();
-						df = new byte[size + 12];
-						inputStream.readFully(df);
-						
+						df = Arrays.copyOf(df, size + 12);
+						intToBytes(size, df, 8);
+						inputStream.readFully(df, 12, size);
+
 						// Each df aligned to 8-bytes boundary
 						final int rem = (size + 12) % 8;
 						if (rem != 0)
@@ -193,6 +207,22 @@ public class NXCPMessage
 				fields.put(variable.getVariableId(), variable);
 			}
 		}
+	}
+
+	/**
+	 * Encode 32 bit integer into byte array (in network byte order)
+	 * 
+	 * @param value integer value
+	 * @param data byte array
+	 * @param offset offset within byte array
+	 * @throws ArrayIndexOutOfBoundsException if given offset is invalid or there is not enough space for placing integer
+	 */
+	private static void intToBytes(int value, byte[] data, int offset) throws ArrayIndexOutOfBoundsException
+	{
+	   data[offset] = (byte)(value >> 24);
+      data[offset + 1] = (byte)((value >> 16) & 0xFF);
+      data[offset + 2] = (byte)((value >> 8) & 0xFF);
+      data[offset + 3] = (byte)(value & 0xFF);
 	}
 	
 	/**
@@ -578,7 +608,7 @@ public class NXCPMessage
 	 * 
 	 * @return byte stream ready to send
 	 */
-	public byte[] createNXCPMessage() throws IOException
+	public byte[] createNXCPMessage(boolean allowCompression) throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		DataOutputStream outputStream = new DataOutputStream(byteStream);
@@ -613,18 +643,41 @@ public class NXCPMessage
 				final byte[] field = nxcpVariable.createNXCPDataField();
 				outputStream.write(field);
 			}
-			final byte[] payload = byteStream.toByteArray();
+			byte[] payload = byteStream.toByteArray();
+			
+			boolean compressed = false;
+         if (allowCompression && (payload.length > 128))
+         {
+            byteStream = new ByteArrayOutputStream();
+            byte[] length = new byte[4];
+            intToBytes(payload.length, length, 0);
+            byteStream.write(length);
+            DeflaterOutputStream deflaterStream = new DeflaterOutputStream(byteStream, new Deflater(JZlib.Z_BEST_COMPRESSION));
+            deflaterStream.write(payload);
+            deflaterStream.close();
+
+            final int padding = (8 - (byteStream.size() % 8)) & 7;
+            for (int i = 0; i < padding; i++)
+               byteStream.write(0);
+            
+            byte[] compPayload = byteStream.toByteArray();
+            if (compPayload.length < payload.length)
+            {
+               payload = compPayload;
+               compressed = true;
+            }
+         }
 
 			// Create message header in new byte stream and add payload
 			byteStream = new ByteArrayOutputStream();
 			//noinspection IOResourceOpenedButNotSafelyClosed
 			outputStream = new DataOutputStream(byteStream);
 			outputStream.writeShort(messageCode);
-			outputStream.writeShort(messageFlags);
+			outputStream.writeShort(messageFlags | (compressed ? MF_COMPRESSED : 0));
 			outputStream.writeInt(payload.length + HEADER_SIZE);	   // Size
 			outputStream.writeInt((int)messageId);
 			outputStream.writeInt(fields.size());
-			outputStream.write(payload);
+		   outputStream.write(payload);
 		}
 
 		return byteStream.toByteArray();
@@ -779,6 +832,9 @@ public class NXCPMessage
 		this.controlData = controlData;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{

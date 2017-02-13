@@ -120,7 +120,7 @@ ServerJobResult FileDownloadJob::run()
    AgentConnection *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
-		NXCPMessage msg, *response;
+		NXCPMessage msg(conn->getProtocolVersion()), *response;
 
 		m_socket = conn->getSocket();
 		conn->setDeleteFileOnDownloadFailure(false);

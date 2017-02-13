@@ -80,6 +80,9 @@ public:
    UINT32 getId() const { return m_id; }
    void setId(UINT32 id) { m_id = id; }
 
+   int getProtocolVersion() const { return m_version; }
+   void setProtocolVersion(int version) { m_version = version; }
+
    bool isEndOfFile() const { return (m_flags & MF_END_OF_FILE) ? true : false; }
    bool isEndOfSequence() const { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
    bool isReverseOrder() const { return (m_flags & MF_REVERSE_ORDER) ? true : false; }

@@ -260,14 +260,15 @@ public final class EncryptionContext
 	 * Encrypt NXCP message.
 	 * 
 	 * @param msg message to encrypt
+	 * @param allowCompression true if payload compression is allowed
 	 * @return encrypted message as sequence of bytes, ready to send over the network
 	 * @throws IOException 
 	 * @throws GeneralSecurityException 
 	 * @throws InvalidKeyException 
 	 */
-	public byte[] encryptMessage(NXCPMessage msg) throws IOException, GeneralSecurityException
+	public byte[] encryptMessage(NXCPMessage msg, boolean allowCompression) throws IOException, GeneralSecurityException
 	{
-		final byte[] msgBytes = msg.createNXCPMessage();
+		final byte[] msgBytes = msg.createNXCPMessage(allowCompression);
 		
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		DataOutputStream outputStream = new DataOutputStream(byteStream);

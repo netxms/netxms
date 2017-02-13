@@ -265,7 +265,7 @@ static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
    AgentConnection *conn = object->createAgentConnection();
    if(conn != NULL)
    {
-      NXCPMessage request;
+      NXCPMessage request(conn->getProtocolVersion());
       request.setId(conn->generateRequestId());
       request.setCode(CMD_CANCEL_FILE_MONITORING);
       request.setField(VID_FILE_NAME, remoteFile);

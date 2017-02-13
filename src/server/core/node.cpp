@@ -7499,7 +7499,7 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
  */
 void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(conn->getProtocolVersion());
    msg.setCode(CMD_DATA_COLLECTION_CONFIG);
    msg.setId(conn->generateRequestId());
 
@@ -7573,7 +7573,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
  */
 void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(conn->getProtocolVersion());
    msg.setCode(CMD_CLEAN_AGENT_DCI_CONF);
    msg.setId(conn->generateRequestId());
    NXCPMessage *response = conn->customRequest(&msg);

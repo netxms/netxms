@@ -254,9 +254,10 @@ public class NXCSession
    private ReceiverThread recvThread = null;
    private HousekeeperThread housekeeperThread = null;
    private AtomicLong requestId = new AtomicLong(1);
-   private boolean isConnected = false;
-   private boolean isDisconnected = false;
+   private boolean connected = false;
+   private boolean disconnected = false;
    private boolean serverConsoleConnected = false;
+   private boolean allowCompression = false;
    private EncryptionContext encryptionContext = null;
 
    // Communication parameters
@@ -1393,7 +1394,7 @@ public class NXCSession
       {
          try
          {
-            message = encryptionContext.encryptMessage(msg);
+            message = encryptionContext.encryptMessage(msg, allowCompression);
          }
          catch(GeneralSecurityException e)
          {
@@ -1402,7 +1403,7 @@ public class NXCSession
       }
       else
       {
-         message = msg.createNXCPMessage();
+         message = msg.createNXCPMessage(allowCompression);
       }
       outputStream.write(message);
    }
@@ -1732,10 +1733,10 @@ public class NXCSession
     */
    public void connect(int[] componentVersions) throws IOException, UnknownHostException, NXCException, IllegalStateException
    {
-      if (isConnected)
+      if (connected)
          throw new IllegalStateException("Session already connected");
 
-      if (isDisconnected)
+      if (disconnected)
          throw new IllegalStateException("Session already disconnected and cannot be reused");
       
       encryptionContext = null;
@@ -1814,11 +1815,11 @@ public class NXCSession
          }
 
          Logger.debug("NXCSession.connect", "Connected to server version " + serverVersion);
-         isConnected = true;
+         connected = true;
       }
       finally
       {
-         if (!isConnected) 
+         if (!connected) 
             disconnect(SessionNotification.USER_DISCONNECT);
       }
    }
@@ -1866,10 +1867,10 @@ public class NXCSession
     */
    public void login(AuthenticationType authType, String login, String password, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
    {
-      if (!isConnected)
+      if (!connected)
          throw new IllegalStateException("Session not connected");
 
-      if (isDisconnected)
+      if (disconnected)
          throw new IllegalStateException("Session already disconnected and cannot be reused");
       
       authenticationMethod = authType;
@@ -1909,6 +1910,7 @@ public class NXCSession
          request.setField(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
       if (clientLanguage != null)
          request.setField(NXCPCodes.VID_LANGUAGE, clientLanguage);
+      request.setFieldInt16(NXCPCodes.VID_ENABLE_COMPRESSION, 1);
       sendMessage(request);
       
       final NXCPMessage response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
@@ -1951,6 +1953,8 @@ public class NXCSession
       Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
+
+      allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
       
       Logger.info("NXCSession.connect", "succesfully logged in, userId=" + userId);
    }
@@ -1980,7 +1984,7 @@ public class NXCSession
     */
    synchronized private void disconnect(int reason)
    {
-      if (isDisconnected)
+      if (disconnected)
          return;
       
       if (socket != null)
@@ -2047,8 +2051,8 @@ public class NXCSession
          msgWaitQueue = null;
       }
 
-      isConnected = false;
-      isDisconnected = true;
+      connected = false;
+      disconnected = true;
       
       listeners.clear();
       consoleListeners.clear();
@@ -2075,7 +2079,7 @@ public class NXCSession
     */
    public boolean isConnected()
    {
-      return isConnected;
+      return connected;
    }
 
    /**
@@ -7275,7 +7279,7 @@ public class NXCSession
     */
    public boolean checkConnection()
    {
-      if (!isConnected)
+      if (!connected)
          return false;
       
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
@@ -7782,7 +7786,10 @@ public class NXCSession
          }
       }
       
-      AgentFileData file =  new AgentFileData(id, remoteFileName, waitForFile(msg.getMessageId(), 36000000));
+      File remoteFile = waitForFile(msg.getMessageId(), 36000000);
+      if (remoteFile == null)
+         throw new NXCException(RCC.INTERNAL_ERROR);
+      AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile);
       
       try
       {

@@ -57,7 +57,7 @@ public class NXCPMessageTest extends TestCase
 		msg1.setFieldInt64(4, 123456789L);
 		msg1.setField(5, byteTest);
 	
-		final byte[] bytes = msg1.createNXCPMessage();
+		final byte[] bytes = msg1.createNXCPMessage(false);
 		assertEquals(120, bytes.length);
 		
 		final NXCPMessage msg2 = new NXCPMessage(bytes, null);
@@ -71,6 +71,31 @@ public class NXCPMessageTest extends TestCase
 		assertEquals(true, Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
 	}
 	
+   public void testCompressedMessageEncodingAndDecoding() throws Exception
+   {
+      final byte[] byteTest = Arrays.copyOf(new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 }, 500);
+      
+      final NXCPMessage msg1 = new NXCPMessage(1, 2);
+      msg1.setField(1, "string value 01234567890");
+      msg1.setFieldInt16(2, 10);
+      msg1.setFieldInt32(3, 20);
+      msg1.setFieldInt64(4, 123456789L);
+      msg1.setField(5, byteTest);
+   
+      final byte[] bytes = msg1.createNXCPMessage(true);
+      assertEquals(120, bytes.length);
+      
+      final NXCPMessage msg2 = new NXCPMessage(bytes, null);
+      
+      assertEquals(1, msg2.getMessageCode());
+      assertEquals(2L, msg2.getMessageId());
+      assertEquals("string value 01234567890", msg2.findField(1).getAsString());
+      assertEquals(10, msg2.findField(2).getAsInteger().intValue());
+      assertEquals(20, msg2.findField(3).getAsInteger().intValue());
+      assertEquals(123456789L, msg2.findField(4).getAsInteger().longValue());
+      assertEquals(true, Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
+   }
+   
 	/**
 	 * Do encryption test for given cipher ID
 	 * 
@@ -86,11 +111,11 @@ public class NXCPMessageTest extends TestCase
 	   
       final NXCPMessage msg1 = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, 2);
       msg1.setFieldInt32(NXCPCodes.VID_RCC, 0);
-      final byte[] bytes = msg1.createNXCPMessage();
+      final byte[] bytes = msg1.createNXCPMessage(true);
       System.out.println("   Message encoded into " + bytes.length + " bytes");
       
 	   EncryptionContext ctx = new EncryptionContext(cipher);
-	   byte[] encryptedBytes = ctx.encryptMessage(msg1);
+	   byte[] encryptedBytes = ctx.encryptMessage(msg1, true);
       System.out.println("   Message encrypted into " + encryptedBytes.length + " bytes");
       
       final NXCPMessage msg2 = new NXCPMessage(encryptedBytes, ctx);

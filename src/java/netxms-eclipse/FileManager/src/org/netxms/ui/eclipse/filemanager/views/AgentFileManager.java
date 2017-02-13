@@ -1018,6 +1018,7 @@ public class AgentFileManager extends ViewPart
                      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().AgentFileManager_Error,
                            String.format(Messages.get().AgentFileManager_OpenViewError, e.getLocalizedMessage()));
+                     Activator.logError("Exception in AgentFileManager.tailFile", e);
                   }
                }
             });

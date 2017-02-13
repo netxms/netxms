@@ -629,7 +629,7 @@ void ClientSession::updateThread()
    UPDATE_INFO *pUpdate;
    NXCPMessage msg;
 
-   while(1)
+   while(true)
    {
       pUpdate = (UPDATE_INFO *)m_pUpdateQueue->getOrBlock();
       if (pUpdate == INVALID_POINTER_VALUE)    // Session termination indicator
@@ -741,7 +741,7 @@ void ClientSession::processingThread()
    UINT32 i;
 	int status;
 
-   while(1)
+   while(true)
    {
       pMsg = (NXCPMessage *)m_pMessageQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
@@ -1550,17 +1550,18 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
    if (isTerminated())
       return false;
 
-	if (msg->getCode() != CMD_ADM_MESSAGE)
+	NXCP_MESSAGE *rawMsg = msg->createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
+
+   if ((nxlog_get_debug_level() >= 6) && (msg->getCode() != CMD_ADM_MESSAGE))
    {
       TCHAR buffer[128];
-		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
-   }
-
-	NXCP_MESSAGE *rawMsg = msg->createMessage();
-   if ((nxlog_get_debug_level() >= 8) && (msg->getCode() != CMD_ADM_MESSAGE))
-   {
-      String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
-      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      debugPrintf(6, _T("Sending%s message %s (%d bytes)"),
+               (ntohs(rawMsg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(msg->getCode(), buffer), ntohl(rawMsg->size));
+      if (nxlog_get_debug_level() >= 8)
+      {
+         String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
+         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      }
    }
 
    bool result;
@@ -1600,16 +1601,16 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
       return;
 
    UINT16 code = htons(msg->code);
-   if (code != CMD_ADM_MESSAGE)
+   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level() >= 6))
    {
       TCHAR buffer[128];
-	   debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(msg->code), buffer));
-   }
-
-   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level() >= 8))
-   {
-      String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
-      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+	   debugPrintf(6, _T("Sending%s message %s (%d bytes)"),
+	            (ntohs(msg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
+      if (nxlog_get_debug_level() >= 8)
+      {
+         String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
+         debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      }
    }
 
    bool result;
@@ -1942,6 +1943,17 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+
+         if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
+         {
+            debugPrintf(3, _T("Protocol level compression is supported by client"));
+            m_dwFlags |= CSF_COMPRESSION_ENABLED;
+            msg.setField(VID_ENABLE_COMPRESSION, true);
+         }
+         else
+         {
+            debugPrintf(3, _T("Protocol level compression is not supported by client"));
+         }
 
          TCHAR buffer[MAX_DB_STRING];
          ConfigReadStr(_T("ServerName"), buffer, MAX_DB_STRING, _T(""));
@@ -10971,6 +10983,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
          if (conn != NULL)
          {
+            request->setProtocolVersion(conn->getProtocolVersion());
             request->setId(conn->generateRequestId());
             response = conn->customRequest(request);
             if (response != NULL)
@@ -10986,12 +10999,12 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
                   msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                   debugPrintf(6, _T("Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
                }
+               delete response;
             }
             else
             {
                msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
-            delete response;
             conn->decRefCount();
          }
          else
@@ -13622,6 +13635,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
             if (conn != NULL)
             {
                request->setId(conn->generateRequestId());
+               request->setProtocolVersion(conn->getProtocolVersion());
                if ((request->getCode() == CMD_GET_FOLDER_CONTENT) && request->getFieldAsBoolean(VID_ALLOW_MULTIPART))
                {
                   debugPrintf(5, _T("Processing multipart agent folder content request"));
@@ -13639,6 +13653,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                            break;
                         }
                         response->setId(msg.getId());
+                        response->setProtocolVersion(NXCP_VERSION);
                         sendMessage(response);
                         if (response->isEndOfSequence())
                         {
@@ -13667,6 +13682,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                   {
                      response->setId(msg.getId());
                      response->setCode(CMD_REQUEST_COMPLETED);
+                     response->setProtocolVersion(NXCP_VERSION);
                      responseMessage = response;
 
                      // Add line in audit log
