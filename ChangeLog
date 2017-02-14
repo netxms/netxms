@@ -11,6 +11,7 @@
 - New attribute "mapImage" in NXSL class "NetObj"
 - New NXSL class "Container"
 - Container autobind mode and script can be set from NXSL
+- Fixed bug in NXSL string concatenation
 - Events generated when interface expected state changed
 - Situations functionality is replaced with persistent storage that is included in each execution environment
 - Compression support in communication protocol
