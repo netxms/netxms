@@ -47,6 +47,7 @@ public class EventProcessingPolicyRule
 	public static final int SEVERITY_MINOR      = 0x0400;
 	public static final int SEVERITY_MAJOR      = 0x0800;
 	public static final int SEVERITY_CRITICAL   = 0x1000;
+   public static final int CREATE_TICKET       = 0x2000;
 
 	public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 	

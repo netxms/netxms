@@ -753,6 +753,11 @@ public class RuleEditor extends Composite
                }
             }
          }
+         
+         if ((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0)
+         {
+            createLabel(clientArea, 1, false, "creates helpdesk ticket", null);
+         }
       }
 
       /* persistent storage */

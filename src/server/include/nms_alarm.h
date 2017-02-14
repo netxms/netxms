@@ -104,7 +104,7 @@ public:
    void updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, IntegerArray<UINT32> *alarmCategoryList);
    UINT32 acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
    void resolve(UINT32 userId, Event *event, bool terminate, bool notify);
-   UINT32 openHelpdeskIssue(ClientSession *session, TCHAR *hdref);
+   UINT32 openHelpdeskIssue(TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
    UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
    UINT32 deleteComment(UINT32 commentId);
@@ -131,7 +131,7 @@ int GetMostCriticalStatusForObject(UINT32 dwObjectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
+									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue);
 UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate);

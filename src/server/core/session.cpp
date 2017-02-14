@@ -5839,6 +5839,8 @@ void ClientSession::openHelpdeskIssue(NXCPMessage *request)
          TCHAR hdref[MAX_HELPDESK_REF_LEN];
          msg.setField(VID_RCC, OpenHelpdeskIssue(alarmId, this, hdref));
          msg.setField(VID_HELPDESK_REF, hdref);
+         WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
+            _T("Helpdesk issue created successfully from alarm on object %s"), object->getName());
       }
       else
       {

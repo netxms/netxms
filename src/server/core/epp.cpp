@@ -569,7 +569,8 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
                      (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
-                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0, m_alarmCategoryList);
+                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0, m_alarmCategoryList,
+                     ((m_dwFlags & RF_CREATE_TICKET) != 0) ? true : false);
 	}
 }
 

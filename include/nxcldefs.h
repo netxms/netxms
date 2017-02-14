@@ -893,6 +893,7 @@ enum AggregationFunction
 #define RF_SEVERITY_MINOR        0x0400
 #define RF_SEVERITY_MAJOR        0x0800
 #define RF_SEVERITY_CRITICAL     0x1000
+#define RF_CREATE_TICKET         0x2000
 
 /**
  * Action types

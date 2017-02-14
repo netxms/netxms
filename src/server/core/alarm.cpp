@@ -525,7 +525,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
  * Create new alarm
  */
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList)
+									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue)
 {
    UINT32 alarmId = 0;
    bool newAlarm = true;
@@ -552,6 +552,9 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
                updateRelatedEvent = true;
                alarm->addRelatedEvent(event->getId());
             }
+            // Open helpdesk issue
+            if (openHelpdeskIssue)
+               alarm->openHelpdeskIssue(NULL);
 
             newAlarm = false;
             break;
@@ -566,6 +569,10 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
       // Create new alarm structure
       Alarm *alarm = new Alarm(event, pszExpMsg, pszExpKey, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
+
+      // Open helpdesk issue
+      if (openHelpdeskIssue)
+         alarm->openHelpdeskIssue(NULL);
 
       // Add new alarm to active alarm list if needed
 		if ((alarm->getState() & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
@@ -919,9 +926,10 @@ UINT32 NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref)
 /**
  * Open issue in helpdesk system
  */
-UINT32 Alarm::openHelpdeskIssue(ClientSession *session, TCHAR *hdref)
+UINT32 Alarm::openHelpdeskIssue(TCHAR *hdref)
 {
    UINT32 rcc;
+
    if (m_helpDeskState == ALARM_HELPDESK_IGNORED)
    {
       /* TODO: unlock alarm list before call */
@@ -936,8 +944,11 @@ UINT32 Alarm::openHelpdeskIssue(ClientSession *session, TCHAR *hdref)
          m_helpDeskState = ALARM_HELPDESK_OPEN;
          NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
          updateInDatabase();
-         nx_strncpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
+         if (hdref != NULL)
+            nx_strncpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
+
          DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_alarmId, m_helpDeskRef);
+
       }
    }
    else
@@ -961,7 +972,10 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
       Alarm *alarm = m_alarmList->get(i);
       if (alarm->getAlarmId() == alarmId)
       {
-         rcc = alarm->openHelpdeskIssue(session, hdref);
+         if (alarm->checkCategoryAccess(session))
+            rcc = alarm->openHelpdeskIssue(hdref);
+         else
+            rcc = RCC_ACCESS_DENIED;
          break;
       }
    }

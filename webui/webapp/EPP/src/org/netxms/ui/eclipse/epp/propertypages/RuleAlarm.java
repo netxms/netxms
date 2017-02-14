@@ -71,6 +71,7 @@ public class RuleAlarm extends PropertyPage
 	private EventSelector timeoutEvent;
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
+	private Button checkCreateHelpdeskTicket;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -253,6 +254,13 @@ public class RuleAlarm extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       alarmCategory.setLayoutData(gd);
+      
+      checkCreateHelpdeskTicket = new Button(alarmCreationGroup, SWT.CHECK);
+      checkCreateHelpdeskTicket.setText("Create helpdesk ticket on alarm creation");
+      checkCreateHelpdeskTicket.setSelection((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      checkCreateHelpdeskTicket.setLayoutData(gd);
 		
 		alarmTerminationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
@@ -355,6 +363,8 @@ public class RuleAlarm extends PropertyPage
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
 				rule.setAlarmCategories(alarmCategory.getCategoryId());				
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
+				if (checkCreateHelpdeskTicket.getSelection())
+				   rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_TICKET);
 				break;
 			case ALARM_RESOLVE:
 			case ALARM_TERMINATE:
