@@ -1322,14 +1322,7 @@ public class AgentFileManager extends ViewPart
       if (selection.size() != 1)
          return;
       
-      String fileName = ((AgentFile)selection.getFirstElement()).getName();
-      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if( executor != null ) 
-      {
-         StringBuilder js = new StringBuilder();
-         js.append("copyTextToClipboard(\'" + fileName + "\');"); //$NON-NLS-1$
-         executor.execute(js.toString());
-      }
+      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getName());
    }
    
    /**

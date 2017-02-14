@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.tools;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
@@ -521,6 +523,13 @@ public class WidgetHelper
 	 */
 	public static void copyToClipboard(final String text)
 	{
+	   JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if( executor != null ) 
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("copyTextToClipboard(\'" + text + "\');"); //$NON-NLS-1$
+         executor.execute(js.toString());
+      }
    }
 		
 	/**

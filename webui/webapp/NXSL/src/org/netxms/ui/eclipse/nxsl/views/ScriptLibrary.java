@@ -45,10 +45,14 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.commands.ActionHandler;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
@@ -63,6 +67,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Script library view
  */
+@SuppressWarnings("deprecation")
 public class ScriptLibrary extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptLibrary"; //$NON-NLS-1$
@@ -80,6 +85,7 @@ public class ScriptLibrary extends ViewPart
 	private Action actionEdit;
 	private Action actionRename;
 	private Action actionDelete;
+	private Action actionCopyName;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -108,6 +114,7 @@ public class ScriptLibrary extends ViewPart
 					actionEdit.setEnabled(selection.size() == 1);
 					actionRename.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
+					actionCopyName.setEnabled(selection.size() == 1);
 				}
 			}
 		});
@@ -125,13 +132,26 @@ public class ScriptLibrary extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
-		
+
+      activateContext();
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 
 		refreshScriptList();
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.nxsl.context.ScriptLibrary"); //$NON-NLS-1$
+      }
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -147,6 +167,8 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void createActions()
 	{
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+	   
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -189,6 +211,16 @@ public class ScriptLibrary extends ViewPart
 			}
 		};
 		actionDelete.setEnabled(false);
+		
+		actionCopyName = new Action("Copy name", SharedIcons.COPY) {
+		   @Override
+		   public void run()
+		   {
+		      copyNameToClipboard();
+		   }
+		};
+		actionCopyName.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.CopyNameToClipboard");
+		handlerService.activateHandler(actionCopyName.getActionDefinitionId(), new ActionHandler(actionCopyName));
 	}
 
 	/**
@@ -263,6 +295,7 @@ public class ScriptLibrary extends ViewPart
 		mgr.add(actionEdit);
 		mgr.add(actionRename);
 		mgr.add(actionDelete);
+		mgr.add(actionCopyName);
 	}
 
 	/**
@@ -432,5 +465,14 @@ public class ScriptLibrary extends ViewPart
 				return Messages.get().ScriptLibrary_DeleteJobError;
 			}
 		}.start();
+	}
+	
+	/**
+	 * Copy script name to clipboard
+	 */
+	private void copyNameToClipboard()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   WidgetHelper.copyToClipboard(((Script)selection.getFirstElement()).getName());
 	}
 }
