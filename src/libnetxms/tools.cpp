@@ -431,6 +431,8 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
             while(!finishScan);
             break;
          default:
+            if (*SPtr == 0)
+               return false;
             if (*MPtr == *SPtr)
             {
                SPtr++;
