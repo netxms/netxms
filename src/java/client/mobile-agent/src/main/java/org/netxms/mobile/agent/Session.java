@@ -61,6 +61,7 @@ public class Session
 	private AtomicLong requestId = new AtomicLong(1);
 	private boolean isConnected = false;
 	private EncryptionContext encryptionContext = null;
+	private boolean allowCompression = false;
 
 	// Communication parameters
 	private int defaultRecvBufferSize = 65536; // Default is 64KB
@@ -237,7 +238,7 @@ public class Session
 		{
 			try
 			{
-				message = encryptionContext.encryptMessage(msg);
+				message = encryptionContext.encryptMessage(msg, allowCompression);
 			}
 			catch(GeneralSecurityException e)
 			{
@@ -246,7 +247,7 @@ public class Session
 		}
 		else
 		{
-			message = msg.createNXCPMessage();
+			message = msg.createNXCPMessage(allowCompression);
 		}
 		outputStream.write(message);
 	}
