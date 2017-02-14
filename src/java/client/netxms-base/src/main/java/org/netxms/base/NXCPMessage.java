@@ -650,7 +650,7 @@ public class NXCPMessage
          {
             byteStream = new ByteArrayOutputStream();
             byte[] length = new byte[4];
-            intToBytes(payload.length, length, 0);
+            intToBytes(payload.length + HEADER_SIZE, length, 0);
             byteStream.write(length);
             DeflaterOutputStream deflaterStream = new DeflaterOutputStream(byteStream, new Deflater(JZlib.Z_BEST_COMPRESSION));
             deflaterStream.write(payload);
@@ -661,7 +661,7 @@ public class NXCPMessage
                byteStream.write(0);
             
             byte[] compPayload = byteStream.toByteArray();
-            if (compPayload.length < payload.length)
+            if (compPayload.length < payload.length - 4)
             {
                payload = compPayload;
                compressed = true;
