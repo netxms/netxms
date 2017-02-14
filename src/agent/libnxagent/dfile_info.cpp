@@ -20,7 +20,7 @@
 **
 **/
 
-#include "nxagentd.h"
+#include "libnxagent.h"
 
 /**
  * Constructor for DownloadFileInfo class only stores given data
@@ -30,6 +30,7 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
    m_fileName = _tcsdup(name);
    m_lastModTime = lastModTime;
    m_file = -1;
+   m_compressor = NULL;
 }
 
 /**
@@ -38,8 +39,9 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
 DownloadFileInfo::~DownloadFileInfo()
 {
    if (m_file != -1)
-      close(false);
-   delete m_fileName;
+      close(m_file);
+   free(m_fileName);
+   delete m_compressor;
 }
 
 /**
@@ -54,9 +56,36 @@ bool DownloadFileInfo::open()
 /**
  * Function that writes incoming data to file
  */
-bool DownloadFileInfo::write(const BYTE *data, int dataSize)
+bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedStream)
 {
-   return _write(m_file, data, dataSize) == dataSize;
+   if (!compressedStream)
+      return _write(m_file, data, dataSize) == dataSize;
+
+   if (m_compressor == NULL)
+   {
+      NXCPStreamCompressionMethod method = (NXCPStreamCompressionMethod)(*data);
+      m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
+      if (m_compressor != NULL)
+      {
+         nxlog_debug(5, _T("DownloadFileInfo(%s): created stream compressor for method %d"), m_fileName, (int)method);
+      }
+      else
+      {
+         nxlog_debug(5, _T("DownloadFileInfo(%s): unable to create stream compressor for method %d"), m_fileName, (int)method);
+         return false;
+      }
+   }
+
+   const BYTE *uncompressedData;
+   size_t uncompressedDataSize = m_compressor->decompress(data + 4, dataSize - 4, &uncompressedData);
+   if (uncompressedDataSize != (int)ntohs(*((UINT16 *)(data + 2))))
+   {
+      // decompressed block size validation failed
+      nxlog_debug(5, _T("DownloadFileInfo(%s): decompression failure"), m_fileName);
+      return false;
+   }
+
+   return _write(m_file, uncompressedData, uncompressedDataSize) == uncompressedDataSize;
 }
 
 /**
@@ -67,10 +96,14 @@ void DownloadFileInfo::close(bool success)
    _close(m_file);
    m_file = -1;
 
-   if(m_lastModTime != 0)
-      SetLastModificationTime(m_fileName, m_lastModTime);
-
-   // Remove received file in case of failure
-   if (!success)
+   if (success)
+   {
+      if (m_lastModTime != 0)
+         SetLastModificationTime(m_fileName, m_lastModTime);
+   }
+   else
+   {
+      // Remove received file in case of failure
       _tunlink(m_fileName);
+   }
 }

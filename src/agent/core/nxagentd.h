@@ -303,24 +303,6 @@ struct PendingRequest
 };
 
 /**
- * Class that stores information about file that will be received
- */
-class DownloadFileInfo
-{
-private:
-   TCHAR *m_fileName;
-   time_t m_lastModTime;
-   int m_file;
-
-public:
-   DownloadFileInfo(const TCHAR *name, time_t lastModTime = 0);
-   ~DownloadFileInfo();
-   bool open();
-   bool write(const BYTE *data, int dataSize);
-   void close(bool success);
-};
-
-/**
  * Communication session
  */
 class CommSession : public AbstractCommSession
@@ -347,7 +329,6 @@ private:
    bool m_ipv6Aware;
    bool m_bulkReconciliationSupported;
    HashMap<UINT32, DownloadFileInfo> m_downloadFileMap;
-   StreamCompressor *m_compressor;  // stream compressor for file transfer
    bool m_allowCompression;   // allow compression for structured messages
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp

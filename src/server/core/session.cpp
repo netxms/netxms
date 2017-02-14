@@ -97,11 +97,13 @@ typedef struct
 /**
  *
  */
-typedef struct
+struct LIBRARY_IMAGE_UPDATE_INFO
 {
-  uuid_t *guid;
+  uuid guid;
   bool removed;
-} LIBRARY_IMAGE_UPDATE_INFO;
+
+  LIBRARY_IMAGE_UPDATE_INFO(const uuid& _guid, bool _removed) { guid = _guid; removed = _removed; }
+};
 
 /**
  * Callback to delete agent connections for loading files in destructor
@@ -116,7 +118,7 @@ static void DeleteCallback(NetObj* obj, void *data)
  */
 static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 {
-	pSession->onLibraryImageChange((uuid_t *)pArg, true);
+	pSession->onLibraryImageChange(*((const uuid *)pArg), true);
 }
 
 /**
@@ -281,7 +283,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_musicTypeList.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
    m_serverCommands = new HashMap<UINT32, CommandExec>(true);
-   m_downloadFileMap = new HashMap<UINT32, DownloadFileInfo>(true);
+   m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(true);
 }
 
 /**
@@ -432,12 +434,12 @@ void ClientSession::readThread()
          if ((msg->getCode() == CMD_FILE_DATA) ||
              (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
          {
-            DownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
+            ServerDownloadFileInfo *dInfo = m_downloadFileMap->get(msg->getId());
             if (dInfo != NULL)
             {
                if (msg->getCode() == CMD_FILE_DATA)
                {
-                  if (dInfo->write(msg->getBinaryData(), (int)msg->getBinaryDataSize()))
+                  if (dInfo->write(msg->getBinaryData(), msg->getBinaryDataSize(), msg->isCompressedStream()))
                   {
                      if (msg->isEndOfFile())
                      {
@@ -706,21 +708,13 @@ void ClientSession::updateThread()
             break;
          case INFO_CAT_LIBRARY_IMAGE:
             {
-              LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)pUpdate->pData;
-              msg.setCode(CMD_IMAGE_LIBRARY_UPDATE);
-              msg.setField(VID_GUID, (BYTE *)info->guid, UUID_LENGTH);
-              if (info->removed)
-              {
-                msg.setField(VID_FLAGS, (UINT32)1);
-              }
-              else
-              {
-                msg.setField(VID_FLAGS, (UINT32)0);
-              }
-              sendMessage(&msg);
-              msg.deleteAllFields();
-              free(info->guid);
-              free(info);
+               LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)pUpdate->pData;
+               msg.setCode(CMD_IMAGE_LIBRARY_UPDATE);
+               msg.setField(VID_GUID, info->guid);
+               msg.setField(VID_FLAGS, (UINT32)(info->removed ? 1 : 0));
+               sendMessage(&msg);
+               msg.deleteAllFields();
+               delete info;
             }
             break;
          default:
@@ -6895,7 +6889,7 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
                   _tcscat(fullFileName, FS_PATH_SEPARATOR);
                   _tcscat(fullFileName, pszCleanFileName);
 
-                  DownloadFileInfo *fInfo = new DownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
+                  ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
 
                   if (fInfo->open())
                   {
@@ -12160,20 +12154,18 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 		sendFile(absFileName, request->getId(), 0);
 }
 
-void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
+/**
+ * Handle image library change
+ */
+void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
 {
-  UPDATE_INFO *pUpdate;
+  if (guid.isNull() || !isAuthenticated())
+     return;
 
-  if (guid != NULL && isAuthenticated())
-  {
-    pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-    pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
-    LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)malloc(sizeof(LIBRARY_IMAGE_UPDATE_INFO));
-    info->guid = (uuid_t *)(nx_memdup(guid, UUID_LENGTH));
-    info->removed = removed;
-    pUpdate->pData = info;
-    m_pUpdateQueue->put(pUpdate);
-  }
+   UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+   pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
+   pUpdate->pData = new LIBRARY_IMAGE_UPDATE_INFO(guid, removed);
+   m_pUpdateQueue->put(pUpdate);
 }
 
 /**
@@ -12283,10 +12275,10 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-               DownloadFileInfo *dInfo = new DownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
+               ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
                if (dInfo->open())
                {
-                  dInfo->setGUID(guid);
+                  dInfo->setImageGuid(guid);
                   m_downloadFileMap->set(request->getId(), dInfo);
                }
                else
@@ -12330,7 +12322,6 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
 {
 	NXCPMessage msg;
 	UINT32 rcc = RCC_SUCCESS;
-	uuid_t guid;
 	TCHAR guidText[64];
 	TCHAR query[MAX_DB_STRING];
 
@@ -12344,8 +12335,8 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
       return;
    }
 
-	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
-	_uuid_to_string(guid, guidText);
+	uuid guid = request->getFieldAsGUID(VID_GUID);
+	guid.toString(guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -12394,7 +12385,7 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(ImageLibraryDeleteCallback, (void *)&guid);
+		EnumerateClientSessions(ImageLibraryDeleteCallback, &guid);
 	}
 }
 
@@ -12867,7 +12858,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
       _tcscat(fullPath, FS_PATH_SEPARATOR);
       _tcscat(fullPath, cleanFileName);
 
-      DownloadFileInfo *fInfo = new DownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_MODIFICATION_TIME));
+      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request->getFieldAsTime(VID_MODIFICATION_TIME));
 
       if (fInfo->open())
       {

@@ -131,7 +131,6 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_ipv6Aware = false;
    m_bulkReconciliationSupported = false;
    m_disconnected = false;
-   m_compressor = NULL;
    m_allowCompression = false;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -163,7 +162,6 @@ CommSession::~CommSession()
       if (p != INVALID_POINTER_VALUE)
          delete (NXCPMessage *)p;
    delete m_processingQueue;
-   delete m_compressor;
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
@@ -267,40 +265,7 @@ void CommSession::readThread()
                DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
                if (dInfo != NULL)
                {
-                  const BYTE *data;
-                  int dataSize;
-                  if (msg->isCompressedStream())
-                  {
-                     const BYTE *in = msg->getBinaryData();
-                     if (m_compressor == NULL)
-                     {
-                        NXCPStreamCompressionMethod method = (NXCPStreamCompressionMethod)(*in);
-                        m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
-                        if (m_compressor == NULL)
-                        {
-                           debugPrintf(5, _T("Unable to create stream compressor for method %d"), (int)method);
-                           data = NULL;
-                           dataSize = -1;
-                        }
-                     }
-
-                     if (m_compressor != NULL)
-                     {
-                        dataSize = (int)m_compressor->decompress(in + 4, msg->getBinaryDataSize() - 4, &data);
-                        if (dataSize != (int)ntohs(*((UINT16 *)(in + 2))))
-                        {
-                           // decompressed block size validation failed
-                           dataSize = -1;
-                        }
-                     }
-                  }
-                  else
-                  {
-                     data = msg->getBinaryData();
-                     dataSize = (int)msg->getBinaryDataSize();
-                  }
-
-                  if ((dataSize >= 0) && dInfo->write(data, dataSize))
+                  if (dInfo->write(msg->getBinaryData(), msg->getBinaryDataSize(), msg->isCompressedStream()))
                   {
                      if (msg->isEndOfFile())
                      {
@@ -308,7 +273,6 @@ void CommSession::readThread()
 
                         dInfo->close(true);
                         m_downloadFileMap.remove(msg->getId());
-                        delete_and_null(m_compressor);
 
                         response.setCode(CMD_REQUEST_COMPLETED);
                         response.setId(msg->getId());
@@ -323,7 +287,6 @@ void CommSession::readThread()
 
                      dInfo->close(false);
                      m_downloadFileMap.remove(msg->getId());
-                     delete_and_null(m_compressor);
 
                      response.setCode(CMD_REQUEST_COMPLETED);
                      response.setId(msg->getId());

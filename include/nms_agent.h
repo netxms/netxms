@@ -38,6 +38,7 @@
 #include <nms_util.h>
 #include <nxconfig.h>
 #include <nxdbapi.h>
+#include <nxcpapi.h>
 
 /**
  * Initialization function declaration macro
@@ -482,6 +483,26 @@
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_OPEN_FILES                 _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
+
+/**
+ * Class that stores information about file that will be received
+ */
+class LIBNXAGENT_EXPORTABLE DownloadFileInfo
+{
+protected:
+   TCHAR *m_fileName;
+   time_t m_lastModTime;
+   int m_file;
+   StreamCompressor *m_compressor;  // stream compressor for file transfer
+
+public:
+   DownloadFileInfo(const TCHAR *name, time_t lastModTime = 0);
+   virtual ~DownloadFileInfo();
+
+   virtual bool open();
+   virtual bool write(const BYTE *data, size_t dataSize, bool compressedStream);
+   virtual void close(bool success);
+};
 
 /**
  * API for CommSession

@@ -396,25 +396,22 @@ public:
 /**
  * Class that stores information about file that will be received
  */
-class DownloadFileInfo
+class ServerDownloadFileInfo : public DownloadFileInfo
 {
-private:
-   TCHAR *m_fileName;
-   time_t m_lastModTime;
-   int m_file;
+protected:
    UINT32 m_uploadCommand;
    UINT32 m_uploadData;
-   uuid_t m_uploadImageGuid;
+   uuid m_uploadImageGuid;
 
 public:
-   DownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime = 0);
-   ~DownloadFileInfo();
-   bool open();
-   void setUploadData(UINT32 data);
-   void setGUID(uuid_t guid);
+   ServerDownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime = 0);
+   virtual ~ServerDownloadFileInfo();
+
+   virtual void close(bool success);
+
+   void setUploadData(UINT32 data) { m_uploadData = data; }
+   void setImageGuid(const uuid& guid) { m_uploadImageGuid = guid; }
    void updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName);
-   bool write(const BYTE *data, int dataSize);
-   void close(bool success);
 };
 
 /**
@@ -461,7 +458,7 @@ private:
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
    UINT32 m_dwRecordsUploaded;
    EPRule **m_ppEPPRuleList;   // List of loaded EPP rules
-   HashMap<UINT32, DownloadFileInfo> *m_downloadFileMap;
+   HashMap<UINT32, ServerDownloadFileInfo> *m_downloadFileMap;
    VolatileCounter m_refCount;
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;
@@ -827,7 +824,7 @@ public:
    void onObjectChange(NetObj *pObject);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
-   void onLibraryImageChange(uuid_t *guid, bool removed = false);
+   void onLibraryImageChange(const uuid& guid, bool removed = false);
 };
 
 /**

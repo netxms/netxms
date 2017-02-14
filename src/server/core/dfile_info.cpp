@@ -25,53 +25,23 @@
 /**
  * Constructor for DownloadFileInfo class only stores given data
  */
-DownloadFileInfo::DownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime)
+ServerDownloadFileInfo::ServerDownloadFileInfo(const TCHAR *name, UINT32 uploadCommand, time_t lastModTime) : DownloadFileInfo(name, lastModTime)
 {
-   m_fileName = _tcsdup(name);
    m_uploadCommand = uploadCommand;
    m_uploadData = 0;
-   m_lastModTime = lastModTime;
-   m_file = -1;
 }
 
 /**
  * Destructor
  */
-DownloadFileInfo::~DownloadFileInfo()
+ServerDownloadFileInfo::~ServerDownloadFileInfo()
 {
-   if (m_file != -1)
-      close(false);
-   delete m_fileName;
-}
-
-/**
- * Opens file and returns if it was successfully
- */
-bool DownloadFileInfo::open()
-{
-   m_file = _topen(m_fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-   return m_file != -1;
-}
-
-/**
- * Set upload data for package
- */
-void DownloadFileInfo::setUploadData(UINT32 data)
-{
-   m_uploadData = data;
-}
-/**
- * Set downloadable image guid
- */
-void DownloadFileInfo::setGUID(uuid_t guid)
-{
-   memcpy(m_uploadImageGuid, guid, UUID_LENGTH);
 }
 
 /**
  * Update database information about agent package
  */
-void DownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName)
+void ServerDownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *platform, const TCHAR *cleanFileName)
 {
    TCHAR *escDescr = EncodeSQLString(description);
    TCHAR szQuery[2048];
@@ -88,29 +58,19 @@ void DownloadFileInfo::updateAgentPkgDBInfo(const TCHAR *description, const TCHA
 }
 
 /**
- * Function that writes incoming data to file
- */
-bool DownloadFileInfo::write(const BYTE *data, int dataSize)
-{
-   return _write(m_file, data, dataSize) == dataSize;
-}
-
-
-/**
  * Callback for sending image library update notifications
  */
 static void ImageLibraryUpdateCallback(ClientSession *pSession, void *pArg)
 {
-	pSession->onLibraryImageChange((uuid_t *)pArg, false);
+	pSession->onLibraryImageChange(*((const uuid *)pArg), false);
 }
 
 /**
  * Closes file and changes it's date if required
  */
-void DownloadFileInfo::close(bool success)
+void ServerDownloadFileInfo::close(bool success)
 {
-   _close(m_file);
-   m_file = -1;
+   DownloadFileInfo::close(success);
 
    switch(m_uploadCommand)
    {
@@ -125,17 +85,10 @@ void DownloadFileInfo::close(bool success)
          }
          break;
       case CMD_MODIFY_IMAGE:
-         EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
-         break;
-      case CMD_UPLOAD_FILE:
-         if(m_lastModTime != 0)
-            SetLastModificationTime(m_fileName, m_lastModTime);
+         if (success)
+            EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
          break;
       default:
          break;
    }
-
-   // Remove received file in case of failure
-   if (!success)
-      _tunlink(m_fileName);
 }
