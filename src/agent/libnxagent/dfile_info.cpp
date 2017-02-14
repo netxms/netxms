@@ -39,7 +39,7 @@ DownloadFileInfo::DownloadFileInfo(const TCHAR *name, time_t lastModTime)
 DownloadFileInfo::~DownloadFileInfo()
 {
    if (m_file != -1)
-      close(m_file);
+      close(false); // calling DownloadFileInfo::close, not system function
    free(m_fileName);
    delete m_compressor;
 }
