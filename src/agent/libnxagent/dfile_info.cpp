@@ -59,7 +59,7 @@ bool DownloadFileInfo::open()
 bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedStream)
 {
    if (!compressedStream)
-      return _write(m_file, data, dataSize) == dataSize;
+      return _write(m_file, data, (int)dataSize) == dataSize;
 
    if (m_compressor == NULL)
    {
@@ -85,7 +85,7 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
       return false;
    }
 
-   return _write(m_file, uncompressedData, uncompressedDataSize) == uncompressedDataSize;
+   return _write(m_file, uncompressedData, (int)uncompressedDataSize) == uncompressedDataSize;
 }
 
 /**

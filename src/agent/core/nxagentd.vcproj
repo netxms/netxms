@@ -390,10 +390,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\dfile_info.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\epp.cpp"
 				>
 			</File>

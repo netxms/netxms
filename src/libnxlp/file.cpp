@@ -383,7 +383,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 static int ScanFileEncoding(int fh)
 {
    char buffer[10];
-   if (read(fh, buffer, 4) > 3)
+   if (_read(fh, buffer, 4) > 3)
    {
       if (!memcmp(buffer, "\x00\x00\xFE\xFF", 4))
          return LP_FCP_UCS4_BE;
@@ -408,7 +408,7 @@ static void SeekToZero(int fh, int chsize)
    char buffer[4096];
    while(true)
    {
-      int bytes = read(fh, buffer, 4096);
+      int bytes = _read(fh, buffer, 4096);
       if (bytes <= 0)
          break;
       char *p = buffer;
@@ -550,7 +550,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 					else if (m_preallocatedFile)
 					{
 					   char buffer[4];
-					   int bytes = read(fh, buffer, 4);
+					   int bytes = _read(fh, buffer, 4);
 					   if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
 					   {
                      lseek(fh, -4, SEEK_CUR);
@@ -565,7 +565,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
                      {
                         int readSize = min(pos, 4);
                         lseek(fh, -readSize, SEEK_CUR);
-                        int bytes = read(fh, buffer, readSize);
+                        int bytes = _read(fh, buffer, readSize);
                         if (!memcmp(buffer, "\x00\x00\x00\x00", readSize))
                         {
                            LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);

@@ -97,7 +97,6 @@ int main(int argc, char *argv[])
 	BYTE *xml;
 	UINT32 size;
 	TCHAR *inputFile = NULL;
-	LogParser *parser;
 
    InitNetXMSProcess();
 
@@ -112,7 +111,7 @@ int main(int argc, char *argv[])
             return 0;
          case 'v':
 				_tprintf(_T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
-				         _T("Copyright (c) 2009-2012 Victor Kirhenshtein\n\n"));
+				         _T("Copyright (c) 2009-2017 Victor Kirhenshtein\n\n"));
             return 0;
 			case 'f':
 #ifdef UNICODE
@@ -196,7 +195,6 @@ int main(int argc, char *argv[])
 			_tprintf(_T("ERROR: invalid parser definition file (%s)\n"), errorText);
 			rc = 1;
 		}
-		delete parser;
 		free(xml);
 	}
 	else

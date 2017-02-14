@@ -150,7 +150,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
          stream.zalloc = Z_NULL;
          stream.zfree = Z_NULL;
          stream.opaque = Z_NULL;
-         stream.avail_in = (size_t)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
          stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
          if (inflateInit(&stream) != Z_OK)
          {
@@ -160,7 +160,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
 
          m_data = (BYTE *)malloc(m_dataSize);
          stream.next_out = m_data;
-         stream.avail_out = m_dataSize;
+         stream.avail_out = (UINT32)m_dataSize;
 
          if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
          {
@@ -192,7 +192,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
          stream.zalloc = Z_NULL;
          stream.zfree = Z_NULL;
          stream.opaque = Z_NULL;
-         stream.avail_in = (size_t)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.avail_in = (UINT32)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
          stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
          if (inflateInit(&stream) != Z_OK)
          {
@@ -202,7 +202,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
 
          msgData = (BYTE *)malloc(msgDataSize);
          stream.next_out = msgData;
-         stream.avail_out = msgDataSize;
+         stream.avail_out = (UINT32)msgDataSize;
 
          if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
          {
@@ -904,12 +904,12 @@ NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
       stream.next_in = Z_NULL;
       if (deflateInit(&stream, 9) == Z_OK)
       {
-         size_t compBufferSize = deflateBound(&stream, size - NXCP_HEADER_SIZE);
+         size_t compBufferSize = deflateBound(&stream, (unsigned long)(size - NXCP_HEADER_SIZE));
          BYTE *compressedMsg = (BYTE *)malloc(compBufferSize + NXCP_HEADER_SIZE + 4);
          stream.next_in = (BYTE *)msg->fields;
-         stream.avail_in = size - NXCP_HEADER_SIZE;
+         stream.avail_in = (UINT32)(size - NXCP_HEADER_SIZE);
          stream.next_out = compressedMsg + NXCP_HEADER_SIZE + 4;
-         stream.avail_out = compBufferSize;
+         stream.avail_out = (UINT32)compBufferSize;
          if (deflate(&stream, Z_FINISH) == Z_STREAM_END)
          {
             size_t compMsgSize = compBufferSize - stream.avail_out + NXCP_HEADER_SIZE + 4;

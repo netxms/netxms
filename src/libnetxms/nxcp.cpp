@@ -630,9 +630,9 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
       if (deflateInit(&stream, 9) == Z_OK)
       {
          stream.next_in = (BYTE *)data;
-         stream.avail_in = dataSize;
+         stream.avail_in = (UINT32)dataSize;
          stream.next_out = (BYTE *)msg->fields + 4;
-         stream.avail_out = dataSize + padding - 4;
+         stream.avail_out = (UINT32)(dataSize + padding - 4);
          if (deflate(&stream, Z_FINISH) == Z_STREAM_END)
          {
             size_t compMsgSize = dataSize - stream.avail_out + NXCP_HEADER_SIZE + 4;

@@ -141,6 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -339,6 +340,10 @@
 			</File>
 			<File
 				RelativePath=".\cmdexec.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dfile_info.cpp"
 				>
 			</File>
 			<File
