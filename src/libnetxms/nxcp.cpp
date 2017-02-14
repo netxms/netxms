@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 #include <nxstat.h>
+#include <zlib.h>
 
 /**
  * Additional message name resolvers
@@ -599,32 +600,69 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer
 
 /**
  * Create NXCP message with raw data (MF_BINARY flag)
- * If pBuffer is NULL, new buffer is allocated with malloc()
- * Buffer should be of dwDataSize + NXCP_HEADER_SIZE + 8 bytes.
+ * If buffer is NULL, new buffer is allocated with malloc()
+ * Buffer should be at least dataSize + NXCP_HEADER_SIZE + 8 bytes.
  */
-NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD code, UINT32 id, WORD flags,
-                                                        UINT32 dwDataSize, void *pData,
-                                                        NXCP_MESSAGE *pBuffer)
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
+                                                        const void *data, size_t dataSize,
+                                                        NXCP_MESSAGE *buffer, bool allowCompression)
 {
-   NXCP_MESSAGE *pMsg;
-   UINT32 dwPadding;
-
-   if (pBuffer == NULL)
-      pMsg = (NXCP_MESSAGE *)malloc(dwDataSize + NXCP_HEADER_SIZE + 8);
-   else
-      pMsg = pBuffer;
+   NXCP_MESSAGE *msg = (buffer == NULL) ? (NXCP_MESSAGE *)malloc(dataSize + NXCP_HEADER_SIZE + 8) : buffer;
 
    // Message should be aligned to 8 bytes boundary
-   dwPadding = (8 - ((dwDataSize + NXCP_HEADER_SIZE) % 8)) & 7;
+   size_t padding = (8 - ((dataSize + NXCP_HEADER_SIZE) % 8)) & 7;
 
-   pMsg->code = htons(code);
-   pMsg->flags = htons(MF_BINARY | flags);
-   pMsg->id = htonl(id);
-   pMsg->size = htonl(dwDataSize + NXCP_HEADER_SIZE + dwPadding);
-   pMsg->numFields = htonl(dwDataSize);   // numFields contains actual data size for binary message
-   memcpy(pMsg->fields, pData, dwDataSize);
+   msg->code = htons(code);
+   msg->flags = htons(MF_BINARY | flags);
+   msg->id = htonl(id);
+   size_t msgSize = dataSize + NXCP_HEADER_SIZE + padding;
+   msg->size = htonl((UINT32)msgSize);
+   msg->numFields = htonl((UINT32)dataSize);   // numFields contains actual data size for binary message
 
-   return pMsg;
+   if (allowCompression)
+   {
+      z_stream stream;
+      stream.zalloc = Z_NULL;
+      stream.zfree = Z_NULL;
+      stream.opaque = Z_NULL;
+      stream.avail_in = 0;
+      stream.next_in = Z_NULL;
+      if (deflateInit(&stream, 9) == Z_OK)
+      {
+         stream.next_in = (BYTE *)data;
+         stream.avail_in = dataSize;
+         stream.next_out = (BYTE *)msg->fields + 4;
+         stream.avail_out = dataSize + padding - 4;
+         if (deflate(&stream, Z_FINISH) == Z_STREAM_END)
+         {
+            size_t compMsgSize = dataSize - stream.avail_out + NXCP_HEADER_SIZE + 4;
+            // Message should be aligned to 8 bytes boundary
+            compMsgSize += (8 - (compMsgSize % 8)) & 7;
+            if (compMsgSize < msgSize - 4)
+            {
+               msg->flags |= htons(MF_COMPRESSED);
+               memcpy((BYTE *)msg + NXCP_HEADER_SIZE, &msg->size, 4); // Save size of uncompressed message
+               msg->size = htonl((UINT32)compMsgSize);
+            }
+            else
+            {
+               // compression produce message of same size
+               memcpy(msg->fields, data, dataSize);
+            }
+         }
+         else
+         {
+            // compression failed, send uncompressed message
+            memcpy(msg->fields, data, dataSize);
+         }
+         deflateEnd(&stream);
+      }
+   }
+   else
+   {
+      memcpy(msg->fields, data, dataSize);
+   }
+   return msg;
 }
 
 /**
@@ -633,7 +671,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD code, UINT32 id, WO
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex, NXCPCompressionMethod compressionMethod)
+														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
 {
    int hFile, iBytes;
 	INT64 bytesTransferred = 0;
@@ -642,7 +680,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
    NXCP_MESSAGE *pMsg;
    NXCP_ENCRYPTED_MESSAGE *pEnMsg;
 
-   StreamCompressor *compressor = (compressionMethod != NXCP_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
+   StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
    BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;
 
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
@@ -661,7 +699,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
          pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
 			pMsg->id = htonl(id);
 			pMsg->code = htons(CMD_FILE_DATA);
-         pMsg->flags = htons(MF_BINARY | ((compressionMethod != NXCP_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
+         pMsg->flags = htons(MF_BINARY | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED_STREAM : 0));
 
 			while(1)
 			{
@@ -727,7 +765,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 		_close(hFile);
 	}
 
-   safe_free(compBuffer);
+   free(compBuffer);
    delete compressor;
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER

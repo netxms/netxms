@@ -796,7 +796,8 @@ public:
    bool isAuthenticated() const { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() const { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
-   WORD getCurrentCmd() const { return m_wCurrentCmd; }
+   bool isCompressionEnabled() const { return (m_dwFlags & CSF_COMPRESSION_ENABLED) ? true : false; }
+   UINT16 getCurrentCmd() const { return m_wCurrentCmd; }
    int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }

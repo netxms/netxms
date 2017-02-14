@@ -269,12 +269,12 @@ void CommSession::readThread()
                {
                   const BYTE *data;
                   int dataSize;
-                  if (msg->isCompressed())
+                  if (msg->isCompressedStream())
                   {
                      const BYTE *in = msg->getBinaryData();
                      if (m_compressor == NULL)
                      {
-                        NXCPCompressionMethod method = (NXCPCompressionMethod)(*in);
+                        NXCPStreamCompressionMethod method = (NXCPStreamCompressionMethod)(*in);
                         m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
                         if (m_compressor == NULL)
                         {

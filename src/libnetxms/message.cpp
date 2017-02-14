@@ -142,7 +142,39 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
    if (m_flags & MF_BINARY)
    {
       m_dataSize = (size_t)ntohl(msg->numFields);
-      m_data = (BYTE *)nx_memdup(msg->fields, m_dataSize);
+      if ((m_flags & MF_COMPRESSED) && (m_version >= 4))
+      {
+         m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
+
+         z_stream stream;
+         stream.zalloc = Z_NULL;
+         stream.zfree = Z_NULL;
+         stream.opaque = Z_NULL;
+         stream.avail_in = (size_t)ntohl(msg->size) - NXCP_HEADER_SIZE - 4;
+         stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+         if (inflateInit(&stream) != Z_OK)
+         {
+            nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            return;
+         }
+
+         m_data = (BYTE *)malloc(m_dataSize);
+         stream.next_out = m_data;
+         stream.avail_out = m_dataSize;
+
+         if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+         {
+            inflateEnd(&stream);
+            TCHAR buffer[256];
+            nxlog_debug(6, _T("NXCPMessage: failed to decompress binary message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            return;
+         }
+         inflateEnd(&stream);
+      }
+      else
+      {
+         m_data = (BYTE *)nx_memdup(msg->fields, m_dataSize);
+      }
    }
    else
    {
@@ -768,6 +800,8 @@ NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
    // Calculate message size
    size_t size = NXCP_HEADER_SIZE;
    UINT32 fieldCount = 0;
+   BYTE *compressedData = NULL;
+   size_t compressedDataSize = 0;
    if (m_flags & MF_BINARY)
    {
       size += m_dataSize;
@@ -860,7 +894,7 @@ NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
    }
 
    // Compress message payload if requested. Compression supported starting with NXCP version 4.
-   if ((m_version >= 4) && allowCompression && (size > 128))
+   if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & MF_COMPRESSED_STREAM))
    {
       z_stream stream;
       stream.zalloc = Z_NULL;

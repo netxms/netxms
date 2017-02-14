@@ -35,13 +35,13 @@ StreamCompressor::~StreamCompressor()
 /**
  * Create compressor object for given method
  */
-StreamCompressor *StreamCompressor::create(NXCPCompressionMethod method, bool compress, size_t maxBlockSize)
+StreamCompressor *StreamCompressor::create(NXCPStreamCompressionMethod method, bool compress, size_t maxBlockSize)
 {
    switch(method)
    {
-      case NXCP_COMPRESSION_LZ4:
+      case NXCP_STREAM_COMPRESSION_LZ4:
          return new LZ4StreamCompressor(compress, maxBlockSize);
-      case NXCP_COMPRESSION_NONE:
+      case NXCP_STREAM_COMPRESSION_NONE:
          return new DummyStreamCompressor();
    }
    return NULL;

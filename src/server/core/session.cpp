@@ -4289,8 +4289,8 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
       // Prepare and send raw message with fetched data
       NXCP_MESSAGE *msg =
          CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-                              s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                              pData, NULL);
+                              pData, s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+                              NULL, isCompressionEnabled());
       free(pData);
       sendRawMessage(msg);
       free(msg);
@@ -4458,8 +4458,8 @@ read_from_db:
 			// Prepare and send raw message with fetched data
 			NXCP_MESSAGE *msg =
 				CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-											rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-											pData, NULL);
+											pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+											NULL, isCompressionEnabled());
 			free(pData);
 			sendRawMessage(msg);
 			free(msg);

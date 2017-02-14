@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
    TCHAR szKeyFile[MAX_PATH];
    TCHAR szDestinationFile[MAX_PATH] = {0};
    RSA *pServerKey = NULL;
-   NXCPCompressionMethod compression = NXCP_COMPRESSION_NONE;
+   NXCPStreamCompressionMethod compression = NXCP_STREAM_COMPRESSION_NONE;
 
    InitNetXMSProcess();
 
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'z':
-            compression = NXCP_COMPRESSION_LZ4;
+            compression = NXCP_STREAM_COMPRESSION_LZ4;
             break;
          case '?':
             bStart = FALSE;

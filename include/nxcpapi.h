@@ -88,7 +88,7 @@ public:
    bool isReverseOrder() const { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
    bool isBinary() const { return (m_flags & MF_BINARY) ? true : false; }
    bool isControl() const { return (m_flags & MF_CONTROL) ? true : false; }
-   bool isCompressed() const { return (m_flags & MF_COMPRESSED) ? true : false; }
+   bool isCompressedStream() const { return (m_flags & MF_COMPRESSED_STREAM) ? true : false; }
 
    const BYTE *getBinaryData() const { return m_data; }
    size_t getBinaryDataSize() const { return m_dataSize; }
@@ -364,12 +364,12 @@ public:
 };
 
 /**
- * NXCP compression methods
+ * NXCP stresam compression methods
  */
-enum NXCPCompressionMethod
+enum NXCPStreamCompressionMethod
 {
-   NXCP_COMPRESSION_NONE = 0,
-   NXCP_COMPRESSION_LZ4 = 1
+   NXCP_STREAM_COMPRESSION_NONE = 0,
+   NXCP_STREAM_COMPRESSION_LZ4 = 1
 };
 
 /**
@@ -384,7 +384,7 @@ public:
    virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) = 0;
    virtual size_t compressBufferSize(size_t dataSize) = 0;
 
-   static StreamCompressor *create(NXCPCompressionMethod method, bool compress, size_t maxBlockSize);
+   static StreamCompressor *create(NXCPStreamCompressionMethod method, bool compress, size_t maxBlockSize);
 };
 
 /**
@@ -488,13 +488,13 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
                                            NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize);
-NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD flags,
-                                                        UINT32 dwDataSize, void *pData,
-                                                        NXCP_MESSAGE *pBuffer);
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
+                                                        const void *data, size_t dataSize,
+                                                        NXCP_MESSAGE *buffer, bool allowCompression);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex, NXCPCompressionMethod compressionMethod = NXCP_COMPRESSION_NONE);
+														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(UINT16 wCode, TCHAR *buffer);

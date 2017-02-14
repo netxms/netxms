@@ -93,7 +93,24 @@ public class NXCPMessageTest extends TestCase
       assertEquals(10, msg2.findField(2).getAsInteger().intValue());
       assertEquals(20, msg2.findField(3).getAsInteger().intValue());
       assertEquals(123456789L, msg2.findField(4).getAsInteger().longValue());
-      assertEquals(true, Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
+      assertTrue(Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
+   }
+   
+   public void testCompressedBinaryMessage() throws Exception
+   {
+      final byte[] byteTest = Arrays.copyOf(new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 }, 500);
+      NXCPMessage msg1 = new NXCPMessage(1, 100);
+      msg1.setBinaryMessage(true);
+      msg1.setBinaryData(byteTest);
+      
+      final byte[] bytes = msg1.createNXCPMessage(true);
+      assertEquals(40, bytes.length);
+      
+      final NXCPMessage msg2 = new NXCPMessage(bytes, null);
+      assertEquals(1, msg2.getMessageCode());
+      assertEquals(100L, msg2.getMessageId());
+      assertTrue(msg2.isBinaryMessage());
+      assertTrue(Arrays.equals(byteTest, msg2.getBinaryData()));
    }
    
 	/**

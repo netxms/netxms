@@ -4,6 +4,11 @@
 #include <testtools.h>
 
 /**
+ * Test text
+ */
+static TCHAR longText[] = _T("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+
+/**
  * Poster thread
  */
 static THREAD_RESULT THREAD_CALL PosterThread(void *arg)
@@ -63,6 +68,18 @@ void TestMessageClass()
    msg.setField(1, _T("test text"));
    TCHAR buffer[64];
    AssertTrue(!_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text")));
+
+   EndTest();
+
+   StartTest(_T("NXCP message compression"));
+
+   msg.setField(100, longText);
+   NXCP_MESSAGE *binMsg = msg.createMessage(true);
+   AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
+
+   NXCPMessage *dmsg = new NXCPMessage(binMsg);
+   AssertTrue(!_tcscmp(dmsg->getFieldAsString(100), longText));
+   delete dmsg;
 
    EndTest();
 }

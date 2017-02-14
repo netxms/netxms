@@ -218,8 +218,8 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    // Prepare and send raw message with fetched data
    NXCP_MESSAGE *msg =
       CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-                           rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
-                           pData, NULL);
+                           pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+                           NULL, session->isCompressionEnabled());
    free(pData);
    session->sendRawMessage(msg);
    free(msg);

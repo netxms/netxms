@@ -51,6 +51,7 @@ public class NXCPMessage
 	public static final int MF_REVERSE_ORDER = 0x0010;
 	public static final int MF_CONTROL = 0x0020;
    public static final int MF_COMPRESSED = 0x0040;
+   public static final int MF_COMPRESSED_STREAM = 0x0080;
 	
 	private int messageCode;
 	private int messageFlags;
@@ -153,6 +154,12 @@ public class NXCPMessage
 		{
 			final int size = inputStream.readInt();
 			binaryData = new byte[size];
+         if ((messageFlags & MF_COMPRESSED) == MF_COMPRESSED)
+         {
+            // Compressed message
+            inputStream.skip(4);  // skip original message length
+            inputStream = new NXCPDataInputStream(new InflaterInputStream(inputStream));
+         }
 			inputStream.readFully(binaryData);
 		}
 		else if ((messageFlags & MF_CONTROL) == MF_CONTROL)
@@ -623,15 +630,38 @@ public class NXCPMessage
 		}
 		else if ((messageFlags & MF_BINARY) == MF_BINARY) 
 		{
-			outputStream.writeShort(messageCode); // wCode
-			outputStream.writeShort(messageFlags); // wFlags
-			final int length = binaryData.length;
+			byte[] payload = binaryData;
+			boolean compressed = false;
+			if (allowCompression && ((messageFlags & MF_COMPRESSED_STREAM) == 0) && (binaryData.length > 128))
+			{
+			   ByteArrayOutputStream compDataByteStream = new ByteArrayOutputStream();
+            byte[] length = new byte[4];
+            final int unpackedPadding = (8 - ((binaryData.length + HEADER_SIZE) % 8)) & 7;
+            intToBytes(unpackedPadding + HEADER_SIZE, length, 0);
+            compDataByteStream.write(length);   // unpacked message size
+            
+            DeflaterOutputStream deflaterStream = new DeflaterOutputStream(compDataByteStream, new Deflater(JZlib.Z_BEST_COMPRESSION));
+            deflaterStream.write(binaryData);
+            deflaterStream.close();
+
+            byte[] compPayload = compDataByteStream.toByteArray();
+            if (compPayload.length < binaryData.length)
+            {
+               payload = compPayload;
+               compressed = true;
+            }
+			}
+
+         outputStream.writeShort(messageCode); // wCode
+			outputStream.writeShort(compressed ? (messageFlags | MF_COMPRESSED) : messageFlags); // wFlags
+			   
+			final int length = payload.length;
 			final int padding = (8 - ((length + HEADER_SIZE) % 8)) & 7;
 			final int packetSize = length + HEADER_SIZE + padding;
 			outputStream.writeInt(packetSize); // dwSize (padded to 8 bytes boundaries)
 			outputStream.writeInt((int)messageId); // dwId
-			outputStream.writeInt(length); // dwNumVars, here used for real size of the payload (w/o headers and padding)
-			outputStream.write(binaryData);
+			outputStream.writeInt(binaryData.length); // dwNumVars, here used for real size of the payload (w/o headers and padding)
+			outputStream.write(payload);
 			for (int i = 0; i < padding; i++)
 				outputStream.writeByte(0);
 		}
