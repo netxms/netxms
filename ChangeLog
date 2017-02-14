@@ -2,6 +2,7 @@
 * 2.0.9
 *
 
+- Fixed bug in NXSL string concatenation
 - Fixed isses: NX-1111
 
 
