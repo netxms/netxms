@@ -3,6 +3,6 @@ TYPE = dll
 SOURCES = bridge.cpp cmdexec.cpp dfile_info.cpp main.cpp registry.cpp tools.cpp
 
 CPPFLAGS = /DLIBNXAGENT_EXPORTS
-LIBS = libnxdb.lib libnetxms.lib
+LIBS = libnxdb.lib libnetxms.lib ws2_32.lib
 	  
 include ..\..\..\Makefile.inc.w32

@@ -145,10 +145,12 @@ objdir:
 MSG00001.bin: messages.mc
    @echo "    MC  messages.mc"
    @$(MC) messages.mc
+   @rm -f messages.rc
 
 messages.h: messages.mc
    @echo "    MC  messages.mc"
    @$(MC) messages.mc
+   @rm -f messages.rc
 
 !endif
 !endif
