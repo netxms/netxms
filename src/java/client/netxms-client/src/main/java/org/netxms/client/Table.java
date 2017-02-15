@@ -260,10 +260,12 @@ public class Table
 	}
 
    /**
-    * @param row FIXME
-    * @param column FIXME
-    * @return FIXME
-    * @throws IndexOutOfBoundsException FIXME
+    * Get table cell
+    * 
+    * @param row row
+    * @param column column
+    * @return table cell using giver row and column
+    * @throws IndexOutOfBoundsException throws error when there is no provided column or rows
     */
    public TableCell getCell(final int row, final int column) throws IndexOutOfBoundsException
    {
@@ -344,9 +346,9 @@ public class Table
 	/**
 	 * Set cell value
 	 * 
-	 * @param row FIXME
-	 * @param col FIXME
-	 * @param value FIXME
+	 * @param row row
+	 * @param col column
+	 * @param value value to be set
 	 */
 	public void setCell(int row, int col, String value)
 	{
@@ -373,7 +375,7 @@ public class Table
 	/**
 	 * Get display names of all columns
 	 * 
-	 * @return FIXME
+	 * @return String array with all column names
 	 */
 	public String[] getColumnDisplayNames()
 	{
@@ -384,9 +386,9 @@ public class Table
 	}
 
 	/**
-	 * Get display names of all columns
+	 * Get data types of all columns
 	 *
-	 * @return FIXME
+	 * @return int array with all column data types
 	 */
 	public int[] getColumnDataTypes()
 	{

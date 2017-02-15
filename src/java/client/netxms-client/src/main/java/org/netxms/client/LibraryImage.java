@@ -41,7 +41,7 @@ public class LibraryImage implements Comparable<LibraryImage>
 
 	/**
 	 * 
-	 * @param guid FIXME
+	 * @param guid GUID
 	 */
 	public LibraryImage(final UUID guid)
 	{

@@ -71,10 +71,10 @@ public final class ServerVariable
 	}
 
    /** 
-    * Add possible value to variable
+    * Add possible value to variable from NXCP message
     * 
-    * @param description FIXME
-    * @param value FIXME
+    * @param msg NXCP Message
+    * @param baseId value base id
     */
    public void addPossibleValue(NXCPMessage msg, long baseId)
    {
