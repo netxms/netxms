@@ -720,6 +720,12 @@ typedef UINT64 QWORD;   // for compatibility
 #define FALSE  0
 #endif
 
+// Some systems may define true and false which may break overloaded functions
+#ifdef __cplusplus
+#undef true
+#undef false
+#endif
+
 #ifndef MAX_PATH
 #ifdef PATH_MAX
 #define MAX_PATH PATH_MAX
