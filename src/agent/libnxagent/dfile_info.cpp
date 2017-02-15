@@ -81,7 +81,8 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
    if (uncompressedDataSize != (int)ntohs(*((UINT16 *)(data + 2))))
    {
       // decompressed block size validation failed
-      nxlog_debug(5, _T("DownloadFileInfo(%s): decompression failure"), m_fileName);
+      nxlog_debug(5, _T("DownloadFileInfo(%s): decompression failure (size %d should be %d)"),
+               m_fileName, (int)uncompressedDataSize, (int)ntohs(*((UINT16 *)(data + 2))));
       return false;
    }
 

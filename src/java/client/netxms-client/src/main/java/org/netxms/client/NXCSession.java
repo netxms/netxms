@@ -56,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4Factory;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
@@ -224,7 +226,7 @@ public class NXCSession
    private static final int MAX_DCI_DATA_ROWS = 200000;
    private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
    private static final int RECEIVED_FILE_TTL = 300000; // 300 seconds
-   private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
+   private static final int FILE_BUFFER_SIZE = 32768; // 32KB
 
    // Internal synchronization objects
    private final Semaphore syncObjects = new Semaphore(1);
@@ -1409,15 +1411,14 @@ public class NXCSession
    }
 
    /**
-    * Send file over CSCP
+    * Send file over NXCP
     *
-    * @param requestId
-    * @param file      source file to be sent
+    * @param requestId request ID
+    * @param file source file to be sent
     * @throws IOException
     * @throws NXCException
     */
-   protected void sendFile(final long requestId, final File file, ProgressListener listener)
-      throws IOException, NXCException
+   protected void sendFile(final long requestId, final File file, ProgressListener listener) throws IOException, NXCException
    {
       if (listener != null) 
          listener.setTotalWorkAmount(file.length());
@@ -1456,6 +1457,8 @@ public class NXCSession
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
+      
+      LZ4Compressor compressor = allowCompression ? LZ4Factory.fastestInstance().fastCompressor() : null;
 
       boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
@@ -1468,10 +1471,25 @@ public class NXCSession
             msg.setEndOfFile(true);
          }
 
-         msg.setBinaryData(bytesRead  == -1 ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
+         if ((compressor != null) && (bytesRead > 0))
+         {
+            byte[] compressedData = new byte[compressor.maxCompressedLength(FILE_BUFFER_SIZE) + 4];
+            int length = compressor.compress(buffer, 0, bytesRead, compressedData, 4, compressedData.length - 4);
+            byte[] payload = Arrays.copyOf(compressedData, length + 4);
+            payload[0] = 1;   // LZ4 method
+            payload[1] = 0;   // reserved
+            payload[2] = (byte)((bytesRead >> 8) & 0xFF);   // uncompressed length, high bits
+            payload[3] = (byte)(bytesRead & 0xFF);   // uncompressed length, low bits
+            msg.setBinaryData(payload);
+            msg.setCompressedStream(true);
+         }
+         else
+         {
+            msg.setBinaryData((bytesRead == -1) ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
+         }
          sendMessage(msg);
 
-         bytesSent += bytesRead == -1 ? 0 : bytesRead;
+         bytesSent += (bytesRead == -1) ? 0 : bytesRead;
          if (listener != null) 
             listener.markProgress(bytesSent);
 
@@ -7672,7 +7690,7 @@ public class NXCSession
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
-      if(serverFileName.equals(""))
+      if ((serverFileName == null) || serverFileName.isEmpty())
       {
          serverFileName = localFile.getName();
       }

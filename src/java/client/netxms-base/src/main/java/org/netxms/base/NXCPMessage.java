@@ -862,6 +862,28 @@ public class NXCPMessage
 		this.controlData = controlData;
 	}
 
+   /**
+    * Return true if message has "compressed stream" flag set
+    * @return "compressed stream" flag
+    */
+   public boolean isCompressedStream()
+   {
+      return (messageFlags & MF_COMPRESSED_STREAM) == MF_COMPRESSED_STREAM;
+   }
+   
+   /**
+    * Set "compressed stream" message flag
+    * 
+    * @param isCompressedStream true to set "compressed stream" message flag
+    */
+   public void setCompressedStream(boolean isCompressedStream)
+   {
+      if (isCompressedStream)
+         messageFlags |= MF_COMPRESSED_STREAM;
+      else
+         messageFlags &= ~MF_COMPRESSED_STREAM;
+   }
+   
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

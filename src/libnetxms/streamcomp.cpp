@@ -132,6 +132,7 @@ size_t LZ4StreamCompressor::compress(const BYTE *in, size_t inSize, BYTE *out, s
    if (LZ4_saveDict(m_stream.encoder, m_buffer, 65536) == 0)
       return 0;
 
+_tprintf(_T("compressed: %d -> %d\n"),(int)inSize, (int)bytes);
    return bytes;
 }
 
