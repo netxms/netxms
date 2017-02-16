@@ -76,6 +76,7 @@ struct MessageData
    TCHAR *fileName;
    TCHAR *fileNameCode;
    bool follow;
+   bool allowCompression;
    UINT32 id;
    long offset;
 	AbstractCommSession *session;

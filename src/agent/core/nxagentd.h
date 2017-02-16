@@ -373,7 +373,7 @@ public:
    virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->createMessage(m_allowCompression)); }
    virtual bool sendRawMessage(NXCP_MESSAGE *msg);
    virtual void postRawMessage(NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
-	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
    virtual UINT32 generateRequestId();
@@ -431,7 +431,7 @@ public:
    virtual void postMessage(NXCPMessage *pMsg) { }
    virtual bool sendRawMessage(NXCP_MESSAGE *pMsg) { return false; }
    virtual void postRawMessage(NXCP_MESSAGE *pMsg) { }
-   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
+   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }

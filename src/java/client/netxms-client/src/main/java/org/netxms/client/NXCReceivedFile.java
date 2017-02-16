@@ -21,6 +21,9 @@ package org.netxms.client;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import org.netxms.base.Logger;
+import com.jcraft.jzlib.Inflater;
+import com.jcraft.jzlib.JZlib;
 
 /**
  * Represents file received from server
@@ -39,7 +42,8 @@ public class NXCReceivedFile
 	private int status;
 	private long timestamp;
 	private long size;
-	private IOException exception;
+	private Exception exception;
+	private Inflater decompressor = null;
 	
 	/**
 	 * Create new received file with given id
@@ -68,17 +72,42 @@ public class NXCReceivedFile
 	 * Write data to file
 	 * @param data
 	 */
-	protected void writeData(final byte[] data)
+	protected void writeData(final byte[] data, boolean compressedStream)
 	{
 		if (status == OPEN)
 		{
 			try
 			{
-				stream.write(data);
+			   if (compressedStream)
+			   {
+			      if (data[0] != 2)
+			         throw new IOException("Unsupported stream compression method " + (int)data[0]);
+			      
+			      if (decompressor == null)
+			      {
+			         decompressor = new Inflater();
+			         Logger.debug(getClass().getName(), "Decompressor created for file " + file.getAbsolutePath());
+			      }
+			      decompressor.setInput(data, 4, data.length - 4, false);
+
+               int dataLength = (((int)data[2] << 8) & 0xFF00) | ((int)data[3] & 0xFF);
+               byte[] uncompressedData = new byte[dataLength];
+			      decompressor.setOutput(uncompressedData);
+			      
+			      int rc = decompressor.inflate(JZlib.Z_SYNC_FLUSH);
+			      if ((rc != JZlib.Z_OK) && (rc != JZlib.Z_STREAM_END))
+			         throw new IOException("Decompression error " + rc);
+               stream.write(uncompressedData);
+			   }
+			   else
+			   {
+			      stream.write(data);
+			   }
 				size += data.length;
 			}
-			catch(IOException e)
+			catch(Exception e)
 			{
+			   Logger.error(getClass().getName(), "Exception during file processing", e);
 				try
 				{
 					stream.close();
@@ -114,6 +143,9 @@ public class NXCReceivedFile
 		}
 	}
 	
+	/**
+	 * Abort file transfer
+	 */
 	protected void abortTransfer()
 	{
 		if (status == OPEN)
@@ -177,6 +209,6 @@ public class NXCReceivedFile
 	 */
 	public IOException getException()
 	{
-		return (exception != null) ? exception : new IOException();
+		return ((exception != null) && (exception instanceof IOException)) ? (IOException)exception : new IOException(exception);
 	}
 }

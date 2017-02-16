@@ -10915,8 +10915,9 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-            bool follow = request->getFieldAsUInt16(VID_FILE_FOLLOW) ? true : false;
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
+            bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile,
+				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
 				if (AddJob(job))
 				{

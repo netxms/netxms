@@ -726,7 +726,7 @@ public class NXCSession
                receivedFiles.put(id, file);
             }
          }
-         file.writeData(msg.getBinaryData());
+         file.writeData(msg.getBinaryData(), msg.isCompressedStream());
          notifyProgressListener(id, msg.getBinaryData().length);
          if (msg.isEndOfFile())
          {
@@ -7040,9 +7040,11 @@ public class NXCSession
       }
       while(ttw > 0);
 
-      if (ttw == 0) throw new NXCException(RCC.TIMEOUT);
+      if (ttw == 0) 
+         throw new NXCException(RCC.TIMEOUT);
 
-      if (file.getStatus() == NXCReceivedFile.FAILED) throw file.getException();
+      if (file.getStatus() == NXCReceivedFile.FAILED) 
+         throw file.getException();
 
       return file.getFile();
    }

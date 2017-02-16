@@ -864,7 +864,7 @@ public class AgentFileManager extends ViewPart
             {
                File folder = dlg.getLocalFile();
                session.createFolderOnAgent(objectId, upladFolder.getFullName()+"/"+dlg.getRemoteFileName()); //$NON-NLS-1$
-               listFilesForFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor); //$NON-NLS-1$
+               uploadFilesInFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor); //$NON-NLS-1$
                
                upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
                runInUIThread(new Runnable() {
@@ -895,14 +895,14 @@ public class AgentFileManager extends ViewPart
     * @throws NXCException
     * @throws IOException
     */
-   public void listFilesForFolder(final File folder, final String uploadFolder, final IProgressMonitor monitor) throws NXCException, IOException 
+   public void uploadFilesInFolder(final File folder, final String uploadFolder, final IProgressMonitor monitor) throws NXCException, IOException 
    {
       for(final File fileEntry : folder.listFiles())
       {
           if (fileEntry.isDirectory()) 
           {
              session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName()); //$NON-NLS-1$
-             listFilesForFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
+             uploadFilesInFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
           } 
           else 
           {
@@ -971,7 +971,7 @@ public class AgentFileManager extends ViewPart
    }
 
    /**
-    * Starts file tail view&messages
+    * Starts file tail
     */
    private void tailFile(final boolean followChanges, final int offset)
    {
@@ -1023,6 +1023,7 @@ public class AgentFileManager extends ViewPart
                      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().AgentFileManager_Error,
                            String.format(Messages.get().AgentFileManager_OpenViewError, e.getLocalizedMessage()));
+                     Activator.logError("Exception in AgentFileManager.tailFile", e);
                   }
                }
             });

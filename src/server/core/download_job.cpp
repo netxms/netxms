@@ -72,9 +72,9 @@ FileDownloadJob::~FileDownloadJob()
 {
 	m_node->decRefCount();
 	m_session->decRefCount();
-	safe_free(m_localFile);
-	safe_free(m_remoteFile);
-	safe_free(m_info);
+	free(m_localFile);
+	free(m_remoteFile);
+	free(m_info);
 }
 
 /**
@@ -150,7 +150,7 @@ ServerJobResult FileDownloadJob::run()
 				msg.setId(conn->generateRequestId());
 				msg.setField(VID_FILE_NAME, m_remoteFile);
 
-            //default - get parameters
+            // default - get parameters
             if (m_maxFileSize > 0)
             {
                msg.setField(VID_FILE_OFFSET, (UINT32)(-((int)m_maxFileSize)));
@@ -161,6 +161,7 @@ ServerJobResult FileDownloadJob::run()
             }
             msg.setField(VID_FILE_FOLLOW, m_follow);
             msg.setField(VID_NAME, m_localFile);
+            msg.setField(VID_ENABLE_COMPRESSION, (m_session == NULL) || m_session->isCompressionEnabled());
 
 				response = conn->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
 				if (response != NULL)

@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2016 Raden Solutions
+ ** Copyright (C) 2014-2017 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -598,10 +598,10 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 {
    MessageData *data = (MessageData *)dataStruct;
 
-   AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
-               data->fileName, data->follow ? _T("true") : _T("false"));
-   BOOL result = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset);
-   if (data->follow && result)
+   AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
+               data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
+   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression);
+   if (data->follow && success)
    {
       g_monitorFileList.add(data->fileNameCode);
       FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
@@ -613,6 +613,9 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    return THREAD_OK;
 }
 
+/**
+ * Get folder information
+ */
 static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folderSize)
 {
    _TDIR *dir = _topendir(folder);
@@ -881,7 +884,8 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             MessageData *data = new MessageData();
             data->fileName = _tcsdup(fileName);
             data->fileNameCode = fileNameCode;
-            data->follow = request->getFieldAsUInt16(VID_FILE_FOLLOW) ? true : false;
+            data->follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
+            data->allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
             data->id = request->getId();
             data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
             data->session = session;

@@ -978,7 +978,7 @@ public class AgentFileManager extends ViewPart
    }
 
    /**
-    * Starts file tail view&messages
+    * Starts file tail
     */
    private void tailFile(final boolean followChanges, final int offset)
    {
