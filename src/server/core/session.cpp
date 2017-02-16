@@ -1638,7 +1638,8 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
  */
 BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset)
 {
-   return !isTerminated() ? SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite) : FALSE;
+   return !isTerminated() ? SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx,
+            ofset, NULL, NULL, m_mutexSocketWrite, isCompressionEnabled() ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) : FALSE;
 }
 
 /**
