@@ -369,7 +369,8 @@ public:
 enum NXCPStreamCompressionMethod
 {
    NXCP_STREAM_COMPRESSION_NONE = 0,
-   NXCP_STREAM_COMPRESSION_LZ4 = 1
+   NXCP_STREAM_COMPRESSION_LZ4 = 1,
+   NXCP_STREAM_COMPRESSION_DEFLATE = 2
 };
 
 /**
@@ -423,6 +424,28 @@ private:
 public:
    LZ4StreamCompressor(bool compress, size_t maxBlockSize);
    virtual ~LZ4StreamCompressor();
+
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
+   virtual size_t compressBufferSize(size_t dataSize);
+};
+
+struct z_stream_s;
+
+/**
+ * Deflate stream compressor
+ */
+class LIBNETXMS_EXPORTABLE DeflateStreamCompressor : public StreamCompressor
+{
+private:
+   z_stream_s *m_stream;
+   BYTE *m_buffer;
+   size_t m_bufferSize;
+   bool m_compress;
+
+public:
+   DeflateStreamCompressor(bool compress, size_t maxBlockSize);
+   virtual ~DeflateStreamCompressor();
 
    virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
    virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);

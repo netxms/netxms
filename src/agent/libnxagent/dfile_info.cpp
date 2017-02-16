@@ -58,6 +58,8 @@ bool DownloadFileInfo::open()
  */
 bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedStream)
 {
+   static const TCHAR *compressionMethods[] = { _T("NONE"), _T("LZ4"), _T("DEFLATE") };
+
    if (!compressedStream)
       return _write(m_file, data, (int)dataSize) == dataSize;
 
@@ -65,13 +67,14 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
    {
       NXCPStreamCompressionMethod method = (NXCPStreamCompressionMethod)(*data);
       m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
+      const TCHAR *methodName = (((int)method >= 0) && ((int)method <= 2)) ? compressionMethods[method] : _T("UNKNOWN");
       if (m_compressor != NULL)
       {
-         nxlog_debug(5, _T("DownloadFileInfo(%s): created stream compressor for method %d"), m_fileName, (int)method);
+         nxlog_debug(5, _T("DownloadFileInfo(%s): created stream compressor for method %s"), m_fileName, methodName);
       }
       else
       {
-         nxlog_debug(5, _T("DownloadFileInfo(%s): unable to create stream compressor for method %d"), m_fileName, (int)method);
+         nxlog_debug(5, _T("DownloadFileInfo(%s): unable to create stream compressor for method %s"), m_fileName, methodName);
          return false;
       }
    }

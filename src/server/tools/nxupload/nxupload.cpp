@@ -1,6 +1,6 @@
 /* 
 ** nxupload - command line tool used to upload files to NetXMS agent
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:d:e:hK:p:qs:uvw:W:z")) != -1)
+	while((ch = getopt(argc, argv, "a:d:e:hK:p:qs:uvw:W:zZ")) != -1)
    {
       switch(ch)
       {
@@ -172,7 +172,8 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
-                     _T("   -z           : Compress data stream.\n")
+                     _T("   -z           : Compress data stream with LZ4.\n")
+                     _T("   -Z           : Compress data stream with DEFLATE.\n")
                      _T("\n"), 
 #ifdef _WITH_ENCRYPTION
                      szKeyFile,
@@ -285,6 +286,9 @@ int main(int argc, char *argv[])
             break;
          case 'z':
             compression = NXCP_STREAM_COMPRESSION_LZ4;
+            break;
+         case 'Z':
+            compression = NXCP_STREAM_COMPRESSION_DEFLATE;
             break;
          case '?':
             bStart = FALSE;
