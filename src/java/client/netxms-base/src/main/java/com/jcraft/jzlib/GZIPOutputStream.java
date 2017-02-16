@@ -30,7 +30,6 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.jcraft.jzlib;
 import java.io.*;
 
-@SuppressWarnings("deprecation")
 public class GZIPOutputStream extends DeflaterOutputStream {
 
   public GZIPOutputStream(OutputStream out) throws IOException {

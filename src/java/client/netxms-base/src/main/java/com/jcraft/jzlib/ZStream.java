@@ -36,13 +36,10 @@ package com.jcraft.jzlib;
 
 /**
  * ZStream
- *
- * @deprecated  Not for public use in the future.
  */
-@Deprecated
 @SuppressWarnings("unused")
-public class ZStream{
-
+public class ZStream
+{
   static final private int MAX_WBITS=15;        // 32K LZ77 window
   static final private int DEF_WBITS=MAX_WBITS;
 

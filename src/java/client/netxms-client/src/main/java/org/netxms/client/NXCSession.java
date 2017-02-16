@@ -56,8 +56,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.jpountz.lz4.LZ4Compressor;
-import net.jpountz.lz4.LZ4Factory;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
@@ -181,6 +179,8 @@ import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
 import org.netxms.client.zeromq.ZmqSubscription;
 import org.netxms.client.zeromq.ZmqSubscriptionType;
+import com.jcraft.jzlib.Deflater;
+import com.jcraft.jzlib.JZlib;
 
 /**
  * Communication session with NetXMS server.
@@ -1458,7 +1458,9 @@ public class NXCSession
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
       
-      LZ4Compressor compressor = allowCompression ? LZ4Factory.fastestInstance().fastCompressor() : null;
+      Deflater compressor = allowCompression ? new Deflater(9) : null;
+      //if (compressor != null)
+      //   compressor.deflateInit(JZlib.Z_BEST_COMPRESSION);
 
       boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
@@ -1473,10 +1475,14 @@ public class NXCSession
 
          if ((compressor != null) && (bytesRead > 0))
          {
-            byte[] compressedData = new byte[compressor.maxCompressedLength(FILE_BUFFER_SIZE) + 4];
-            int length = compressor.compress(buffer, 0, bytesRead, compressedData, 4, compressedData.length - 4);
-            byte[] payload = Arrays.copyOf(compressedData, length + 4);
-            payload[0] = 1;   // LZ4 method
+            byte[] compressedData = new byte[compressor.deflateBound(bytesRead) + 4];
+            compressor.setInput(buffer, 0, bytesRead, false);
+            compressor.setOutput(compressedData, 4, compressedData.length - 4);
+            if (compressor.deflate(JZlib.Z_SYNC_FLUSH) != JZlib.Z_OK)
+               throw new NXCException(RCC.IO_ERROR);
+            int length = compressedData.length - compressor.getAvailOut();
+            byte[] payload = Arrays.copyOf(compressedData, length);
+            payload[0] = 2;   // DEFLATE method
             payload[1] = 0;   // reserved
             payload[2] = (byte)((bytesRead >> 8) & 0xFF);   // uncompressed length, high bits
             payload[3] = (byte)(bytesRead & 0xFF);   // uncompressed length, low bits
@@ -1499,6 +1505,8 @@ public class NXCSession
             break;
          }
       }
+      if (compressor != null)
+         compressor.deflateEnd();
 
       if (!success)
       {

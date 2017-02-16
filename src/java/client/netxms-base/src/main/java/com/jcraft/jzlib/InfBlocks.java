@@ -34,7 +34,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jzlib;
 
-@SuppressWarnings({ "unused", "deprecation" })
+@SuppressWarnings({ "unused" })
 final class InfBlocks{
   static final private int MANY=1440;
 

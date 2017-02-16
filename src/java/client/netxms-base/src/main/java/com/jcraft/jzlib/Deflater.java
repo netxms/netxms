@@ -34,7 +34,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jzlib;
 
-@SuppressWarnings({ "unused", "deprecation" })
+@SuppressWarnings({ "unused" })
 final public class Deflater extends ZStream{
 
   static final private int MAX_WBITS=15;        // 32K LZ77 window
@@ -168,5 +168,17 @@ final public class Deflater extends ZStream{
   public int copy(Deflater src){
     this.finished = src.finished;
     return Deflate.deflateCopy(this, src);
+  }
+ 
+  /**
+   * Calculate pessimistic deflate bound (copied from C ZLib code)
+   * 
+   * @param sourceLen source data length
+   * @return maximum size of compressed data
+   */
+  public int deflateBound(int sourceLen)
+  {
+     return sourceLen +
+           ((sourceLen + 7) >> 3) + ((sourceLen + 63) >> 6) + 5;
   }
 }
