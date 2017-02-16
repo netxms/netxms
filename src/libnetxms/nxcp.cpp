@@ -699,7 +699,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
          pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
 			pMsg->id = htonl(id);
 			pMsg->code = htons(CMD_FILE_DATA);
-         pMsg->flags = htons(MF_BINARY | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED_STREAM : 0));
+         pMsg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
 
 			while(true)
 			{

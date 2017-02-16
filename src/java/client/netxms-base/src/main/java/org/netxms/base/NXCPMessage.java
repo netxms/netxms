@@ -51,7 +51,7 @@ public class NXCPMessage
 	public static final int MF_REVERSE_ORDER = 0x0010;
 	public static final int MF_CONTROL = 0x0020;
    public static final int MF_COMPRESSED = 0x0040;
-   public static final int MF_COMPRESSED_STREAM = 0x0080;
+   public static final int MF_STREAM = 0x0080;
 	
 	private int messageCode;
 	private int messageFlags;
@@ -154,7 +154,7 @@ public class NXCPMessage
 		{
 			final int size = inputStream.readInt();
 			binaryData = new byte[size];
-         if ((messageFlags & MF_COMPRESSED) == MF_COMPRESSED)
+         if (((messageFlags & MF_COMPRESSED) == MF_COMPRESSED) && ((messageFlags & MF_STREAM) == 0))
          {
             // Compressed message
             inputStream.skip(4);  // skip original message length
@@ -632,7 +632,7 @@ public class NXCPMessage
 		{
 			byte[] payload = binaryData;
 			boolean compressed = false;
-			if (allowCompression && ((messageFlags & MF_COMPRESSED_STREAM) == 0) && (binaryData.length > 128))
+			if (allowCompression && ((messageFlags & MF_STREAM) == 0) && (binaryData.length > 128))
 			{
 			   ByteArrayOutputStream compDataByteStream = new ByteArrayOutputStream();
             byte[] length = new byte[4];
@@ -863,25 +863,43 @@ public class NXCPMessage
 	}
 
    /**
-    * Return true if message has "compressed stream" flag set
+    * Return true if message has "stream" flags set
+    * @return "compressed stream" flag
+    */
+   public boolean isStream()
+   {
+      return (messageFlags & MF_STREAM) == MF_STREAM;
+   }
+   
+   /**
+    * Return true if message has "compressed" and "stream" flags set
     * @return "compressed stream" flag
     */
    public boolean isCompressedStream()
    {
-      return (messageFlags & MF_COMPRESSED_STREAM) == MF_COMPRESSED_STREAM;
+      return (messageFlags & (MF_COMPRESSED | MF_STREAM)) == (MF_COMPRESSED | MF_STREAM);
    }
    
    /**
-    * Set "compressed stream" message flag
+    * Set stream related message flags
     * 
-    * @param isCompressedStream true to set "compressed stream" message flag
+    * @param isStream true to set "stream" message flag
+    * @param isCompressed true to set "compressed" message flag (ignored if isStream is false)
     */
-   public void setCompressedStream(boolean isCompressedStream)
+   public void setStream(boolean isStream, boolean isCompressed)
    {
-      if (isCompressedStream)
-         messageFlags |= MF_COMPRESSED_STREAM;
+      if (isStream)
+      {
+         messageFlags |= MF_STREAM;
+         if (isCompressed)
+            messageFlags |= MF_COMPRESSED;
+         else
+            messageFlags &= ~MF_COMPRESSED;
+      }
       else
-         messageFlags &= ~MF_COMPRESSED_STREAM;
+      {
+         messageFlags &= ~(MF_COMPRESSED | MF_STREAM);
+      }
    }
    
 	/* (non-Javadoc)

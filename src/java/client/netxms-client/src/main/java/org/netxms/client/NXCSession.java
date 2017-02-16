@@ -1415,32 +1415,36 @@ public class NXCSession
     *
     * @param requestId request ID
     * @param file source file to be sent
+    * @param listener progress listener
+    * @param allowStreamCompression true if data stream compression is allowed
     * @throws IOException
     * @throws NXCException
     */
-   protected void sendFile(final long requestId, final File file, ProgressListener listener) throws IOException, NXCException
+   protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
       if (listener != null) 
          listener.setTotalWorkAmount(file.length());
       final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-      sendFileStream(requestId, inputStream, listener);
+      sendFileStream(requestId, inputStream, listener, allowStreamCompression);
       inputStream.close();
    }
 
    /**
     * Send block of data as binary message
     *
-    * @param requestId
-    * @param data
+    * @param requestId request ID
+    * @param data file data
+    * @param listener progress listener
+    * @param allowStreamCompression true if data stream compression is allowed
     * @throws IOException
     * @throws NXCException
     */
-   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener) throws IOException, NXCException
+   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
       if (listener != null) 
          listener.setTotalWorkAmount(data.length);
       final InputStream inputStream = new ByteArrayInputStream(data);
-      sendFileStream(requestId, inputStream, listener);
+      sendFileStream(requestId, inputStream, listener, allowStreamCompression);
       inputStream.close();
    }
 
@@ -1448,17 +1452,20 @@ public class NXCSession
     * Send binary message, data loaded from provided input stream and splitted
     * into chunks of {@value FILE_BUFFER_SIZE} bytes
     *
-    * @param requestId
-    * @param inputStream
+    * @param requestId request ID
+    * @param inputStream data input stream
+    * @param listener progress listener
+    * @param allowStreamCompression true if data stream compression is allowed
     * @throws IOException
     * @throws NXCException
     */
-   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener) throws IOException, NXCException
+   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
       
-      Deflater compressor = allowCompression ? new Deflater(9) : null;
+      Deflater compressor = allowStreamCompression ? new Deflater(9) : null;
+      msg.setStream(true, allowStreamCompression);
 
       boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
@@ -1485,7 +1492,6 @@ public class NXCSession
             payload[2] = (byte)((bytesRead >> 8) & 0xFF);   // uncompressed length, high bits
             payload[3] = (byte)(bytesRead & 0xFF);   // uncompressed length, low bits
             msg.setBinaryData(payload);
-            msg.setCompressedStream(true);
          }
          else
          {
@@ -7396,7 +7402,7 @@ public class NXCSession
       final UUID imageGuid = response.getFieldAsUUID(NXCPCodes.VID_GUID);
       image.setGuid(imageGuid);
 
-      sendFile(msg.getMessageId(), image.getBinaryData(), listener);
+      sendFile(msg.getMessageId(), image.getBinaryData(), listener, allowCompression);
 
       waitForRCC(msg.getMessageId());
 
@@ -7439,7 +7445,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
-      sendFile(msg.getMessageId(), image.getBinaryData(), listener);
+      sendFile(msg.getMessageId(), image.getBinaryData(), listener, allowCompression);
 
       waitForRCC(msg.getMessageId());
    }
@@ -7658,8 +7664,7 @@ public class NXCSession
    }
 
    /**
-    * Start file upload from server's file store to agent. Returns ID of upload
-    * job.
+    * Start file upload from server's file store to agent. Returns ID of upload job.
     *
     * @param nodeId         node object ID
     * @param serverFileName file name in server's file store
@@ -7704,7 +7709,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      sendFile(msg.getMessageId(), localFile, listener);
+      sendFile(msg.getMessageId(), localFile, listener, allowCompression);
    }
    
    /**
@@ -7730,10 +7735,10 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-      sendFile(msg.getMessageId(), localFile, listener);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      sendFile(msg.getMessageId(), localFile, listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
    }
-   
+
    /**
     * Create folder on remote system via agent
     *
@@ -8246,7 +8251,7 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       final long id = response.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID);
-      sendFile(msg.getMessageId(), pkgFile, listener);
+      sendFile(msg.getMessageId(), pkgFile, listener, allowCompression);
       waitForRCC(msg.getMessageId());
       return id;
    }

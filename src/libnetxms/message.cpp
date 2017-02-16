@@ -142,7 +142,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
    if (m_flags & MF_BINARY)
    {
       m_dataSize = (size_t)ntohl(msg->numFields);
-      if ((m_flags & MF_COMPRESSED) && (m_version >= 4))
+      if ((m_flags & MF_COMPRESSED) && !(m_flags & MF_STREAM) && (m_version >= 4))
       {
          m_flags &= ~MF_COMPRESSED; // clear "compressed" flag so it will not be mistakenly re-sent
 
@@ -894,7 +894,7 @@ NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
    }
 
    // Compress message payload if requested. Compression supported starting with NXCP version 4.
-   if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & MF_COMPRESSED_STREAM))
+   if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & MF_STREAM))
    {
       z_stream stream;
       stream.zalloc = Z_NULL;

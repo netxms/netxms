@@ -88,7 +88,7 @@ public:
    bool isReverseOrder() const { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
    bool isBinary() const { return (m_flags & MF_BINARY) ? true : false; }
    bool isControl() const { return (m_flags & MF_CONTROL) ? true : false; }
-   bool isCompressedStream() const { return (m_flags & MF_COMPRESSED_STREAM) ? true : false; }
+   bool isCompressedStream() const { return ((m_flags & (MF_COMPRESSED | MF_STREAM)) == (MF_COMPRESSED | MF_STREAM)) ? true : false; }
 
    const BYTE *getBinaryData() const { return m_data; }
    size_t getBinaryDataSize() const { return m_dataSize; }

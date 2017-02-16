@@ -232,7 +232,7 @@ typedef struct
 #define MF_REVERSE_ORDER      0x0010
 #define MF_CONTROL            0x0020
 #define MF_COMPRESSED         0x0040
-#define MF_COMPRESSED_STREAM  0x0080
+#define MF_STREAM             0x0080
 
 /**
  * Message (command) codes

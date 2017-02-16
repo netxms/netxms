@@ -13829,6 +13829,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                   if (rcc == RCC_SUCCESS)
                   {
                      response->setCode(CMD_REQUEST_COMPLETED);
+                     response->setField(VID_ENABLE_COMPRESSION, conn->isCompressionAllowed());
                      responseMessage = response;
 
                      //Add line in audit log

@@ -543,9 +543,10 @@ public:
 
    bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL, UINT64 serverId = 0);
    void disconnect();
-   bool isConnected() { return m_isConnected; }
-	int getProtocolVersion() { return m_nProtocolVersion; }
+   bool isConnected() const { return m_isConnected; }
+	int getProtocolVersion() const { return m_nProtocolVersion; }
 	SOCKET getSocket() { return m_hSocket; }
+	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 
    bool sendMessage(NXCPMessage *pMsg);
    bool sendRawMessage(NXCP_MESSAGE *pMsg);
