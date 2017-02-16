@@ -1459,8 +1459,6 @@ public class NXCSession
       msg.setBinaryMessage(true);
       
       Deflater compressor = allowCompression ? new Deflater(9) : null;
-      //if (compressor != null)
-      //   compressor.deflateInit(JZlib.Z_BEST_COMPRESSION);
 
       boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];

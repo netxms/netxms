@@ -177,7 +177,7 @@ ServerJobResult FileUploadJob::run()
 	if (conn != NULL)
 	{
 		m_fileSize = (INT64)FileSize(m_localFileFullPath);
-		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, uploadCallback, this);
+		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
 		if (rcc == ERR_SUCCESS)
 		{
 			success = JOB_RESULT_SUCCESS;

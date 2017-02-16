@@ -1319,6 +1319,10 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion);
 
+   // Disable compression if it is disabled on connection level or if agent do not support it
+   if (!m_allowCompression || (m_nProtocolVersion < 4))
+      compMethod = NXCP_STREAM_COMPRESSION_NONE;
+
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
@@ -1359,6 +1363,8 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    if (dwResult == ERR_SUCCESS)
    {
+      nxlog_debug(5, _T("AgentConnection: sending file \"%s\" to agent %s compression"),
+               localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
       if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
