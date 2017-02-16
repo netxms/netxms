@@ -726,8 +726,8 @@ public class NXCSession
                receivedFiles.put(id, file);
             }
          }
-         file.writeData(msg.getBinaryData(), msg.isCompressedStream());
-         notifyProgressListener(id, msg.getBinaryData().length);
+         int bytes = file.writeData(msg.getBinaryData(), msg.isCompressedStream());
+         notifyProgressListener(id, bytes);
          if (msg.isEndOfFile())
          {
             file.close();

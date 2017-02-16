@@ -70,10 +70,14 @@ public class NXCReceivedFile
 	
 	/**
 	 * Write data to file
-	 * @param data
+	 * 
+	 * @param data data to be written
+	 * @param compressedStream true if data is part of compressed data stream
+	 * @return number of bytes actually written
 	 */
-	protected void writeData(final byte[] data, boolean compressedStream)
+	protected int writeData(final byte[] data, boolean compressedStream)
 	{
+	   int bytes = 0;
 		if (status == OPEN)
 		{
 			try
@@ -97,13 +101,16 @@ public class NXCReceivedFile
 			      int rc = decompressor.inflate(JZlib.Z_SYNC_FLUSH);
 			      if ((rc != JZlib.Z_OK) && (rc != JZlib.Z_STREAM_END))
 			         throw new IOException("Decompression error " + rc);
-               stream.write(uncompressedData);
+               
+			      stream.write(uncompressedData);
+               bytes = uncompressedData.length;
 			   }
 			   else
 			   {
 			      stream.write(data);
+	            bytes = data.length;
 			   }
-				size += data.length;
+			   size += bytes;
 			}
 			catch(Exception e)
 			{
@@ -120,6 +127,7 @@ public class NXCReceivedFile
 			}
 			timestamp = System.currentTimeMillis();
 		}
+		return bytes;
 	}
 	
 	/**
