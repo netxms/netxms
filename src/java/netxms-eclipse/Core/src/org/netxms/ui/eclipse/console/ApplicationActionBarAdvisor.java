@@ -103,6 +103,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
    private Action actionLangCzech;
 	private Action actionLangEnglish;
    private Action actionLangFrench;
+   private Action actionLangGerman;
+   private Action actionLangPortuguese;
 	private Action actionLangRussian;
 	private Action actionLangSpanish;
 	private IContributionItem contribItemShowView;
@@ -278,6 +280,18 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
             setLanguage("fr"); //$NON-NLS-1$
          }
       };
+      actionLangGerman = new Action("&German", Activator.getImageDescriptor("icons/lang/de.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         public void run()
+         {
+            setLanguage("de"); //$NON-NLS-1$
+         }
+      };
+      actionLangPortuguese = new Action("&Portuguese", Activator.getImageDescriptor("icons/lang/pt.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         public void run()
+         {
+            setLanguage("pt"); //$NON-NLS-1$
+         }
+      };
 		actionLangRussian = new Action("&Russian", Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -325,6 +339,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
       langMenu.add(actionLangFrench);
+      langMenu.add(actionLangGerman);
+      langMenu.add(actionLangPortuguese);
 		langMenu.add(actionLangRussian);
 		langMenu.add(actionLangSpanish);
 
