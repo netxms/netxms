@@ -1,4 +1,7 @@
 # Common settings for Win32 builds
+# This makefile expects that path to build tools and environment variables
+# LIB and INCLUDE for target architecture set before running make
+# They can be set using build\msvc_setenv_* scripts
 
 CC = cl
 CXX = cl
@@ -22,34 +25,23 @@ ARCH = x64
 
 !if "$(ARCH)" == "x64"
 WINDDK_ARCH = amd64
-WINSDK_LIB = Lib\x64
-WINSDK_BIN = Bin\x64
-VCBUILD_LIB = Lib\amd64
 OBJDIR = amd64
 !endif
 
 !if "$(ARCH)" == "x86"
 WINDDK_ARCH = i386
-WINSDK_LIB = Lib
-WINSDK_BIN = Bin
-VCBUILD_LIB = Lib
 OBJDIR = i386
 !endif
 
 # SDK locations
-#-include ${BASE_PATH}winsdk.inc
-
-!ifndef VCBUILD_BASE
-VCBUILD_BASE = C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC
-!endif
-!ifndef WINSDK_BASE
-WINSDK_BASE = C:\SDK\Windows 7 SDK
-!endif
 !ifndef WINDDK_BASE
 WINDDK_BASE = C:\SDK\WinDDK
 !endif
 !ifndef OPENSSL_BASE
 OPENSSL_BASE = C:\SDK\OpenSSL
+!endif
+!ifndef CURL_BASE
+CURL_BASE = C:\SDK\cURL
 !endif
 !ifndef JDK_BASE
 JDK_BASE = C:\Program Files\Java\jdk1.8.0_121
@@ -65,12 +57,15 @@ BINFILE = $(BINDIR)\$(TARGET)
 
 # Common C/C++ compiler flags
 CPPFLAGS = $(CPPFLAGS) /O2 /Gd /EHs- /GR- \
-   /I "$(NETXMS_BASE)\include" \
-   /I "$(NETXMS_BASE)\build" \
-   /I "$(WINSDK_BASE)\include" \
-   /I "$(VCBUILD_BASE)\include" \
-   /I "$(OPENSSL_BASE)\$(ARCH)\include" \
+	/I "$(NETXMS_BASE)\include" \
+	/I "$(NETXMS_BASE)\build" \
+	/I "$(CURL_BASE)\$(ARCH)\include" \
+	/I "$(OPENSSL_BASE)\$(ARCH)\include" \
 	/D_MT /DUNICODE
+
+!if "$(COMPONENT)" == "server"
+CPPFLAGS = $(CPPFLAGS) /I "$(NETXMS_BASE)\src\server\include"
+!endif
 	
 # Common linker flags
 !if "$(TYPE)" == "dll"
@@ -88,11 +83,10 @@ LDFLAGS = $(LDFLAGS) /DLL
 !endif
 MANIFEST = $(TARGET).intermediate.manifest
 LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
-   /LIBPATH:"$(BINDIR)" \
-   /LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
-   /LIBPATH:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)" \
-   /LIBPATH:"$(WINSDK_BASE)\$(WINSDK_LIB)"  \
-   /LIBPATH:"$(VCBUILD_BASE)\$(VCBUILD_LIB)"
+	/LIBPATH:"$(BINDIR)" \
+	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
+	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
+	/LIBPATH:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)"
 
 # Common libraries
 LIBS = $(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
@@ -140,7 +134,7 @@ objdir:
 
 .rc.res:
    @echo "    RC " $(<F)
-   @$(RC) /nologo /r /i "$(WINSDK_BASE)\include" /i "$(VCBUILD_BASE)\include" $<
+   @$(RC) /nologo /r $<
 
 MSG00001.bin: messages.mc
    @echo "    MC  messages.mc"

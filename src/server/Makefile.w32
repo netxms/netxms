@@ -1,0 +1,3 @@
+SUBDIRS = libnxsrv
+
+include ..\..\Makefile.inc.w32

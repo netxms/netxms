@@ -1,0 +1,7 @@
+TARGET = odbcquery.nsm
+TYPE = nsm
+SOURCES = odbcquery.cpp odbcsapi.cpp
+
+LIBS = libnxagent.lib libnetxms.lib odbc32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

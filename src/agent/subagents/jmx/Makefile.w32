@@ -1,0 +1,4 @@
+TARGET = jmx.jar
+TYPE = jar
+
+include ..\..\..\..\Makefile.inc.w32

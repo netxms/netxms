@@ -1,0 +1,13 @@
+TARGET = libnxsrv.dll
+TYPE = dll
+COMPONENT = server
+SOURCES = agent.cpp apinfo.cpp hdlink.cpp iflist.cpp isc.cpp \
+          main.cpp ndd.cpp snmpproxy.cpp vlan.cpp
+GENERATED = messages.h MSG00001.bin libnxsrv.res
+
+CPPFLAGS = /DLIBNXSRV_EXPORTS
+LIBS = libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32
+
+libnxsrv.res: MSG00001.bin

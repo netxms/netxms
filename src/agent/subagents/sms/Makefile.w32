@@ -1,0 +1,7 @@
+TARGET = sms.nsm
+TYPE = nsm
+SOURCES = main.cpp pdumode.cpp sender.cpp
+
+LIBS = libnxagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

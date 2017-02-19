@@ -1,0 +1,7 @@
+TARGET = ping.nsm
+TYPE = nsm
+SOURCES = ping.cpp
+
+LIBS = libnxagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

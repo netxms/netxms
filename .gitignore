@@ -16,6 +16,7 @@
 *.plg
 *.rej
 *.suo
+*.res
 *.vcproj.*.user
 *~
 .#*

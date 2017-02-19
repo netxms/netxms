@@ -1,0 +1,7 @@
+TARGET = logwatch.nsm
+TYPE = nsm
+SOURCES = logwatch.cpp
+
+LIBS = libnxagent.lib libnxlp.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

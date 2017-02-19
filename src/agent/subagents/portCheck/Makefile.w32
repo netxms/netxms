@@ -1,0 +1,7 @@
+TARGET = portcheck.nsm
+TYPE = nsm
+SOURCES = custom.cpp http.cpp main.cpp net.cpp pop3.cpp smtp.cpp ssh.cpp telnet.cpp
+
+LIBS = libnxagent.lib libnetxms.lib libtre.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
