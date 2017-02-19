@@ -6,6 +6,7 @@ libnxzlib_la_LDFLAGS = -no-undefined -version-info 1:0:0 $(LDFLAGS)
 noinst_HEADERS = \
 	crc32.h \
 	deflate.h \
+	gzguts.h \
 	inffast.h \
 	inffixed.h \
 	inflate.h \
@@ -20,7 +21,10 @@ libnxzlib_la_SOURCES = \
 	compress.c \
 	crc32.c \
 	deflate.c \
-	gzio.c \
+	gzclose.c \
+	gzlib.c \
+	gzread.c \
+	gzwrite.c \
 	infback.c \
 	inffast.c \
 	inflate.c \
@@ -32,5 +36,6 @@ libnxzlib_la_SOURCES = \
 EXTRA_DIST = \
 	ChangeLog \
 	README \
+	Makefile.w32 \
 	nxzlib.def \
 	nxzlib.vcproj
