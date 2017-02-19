@@ -1,0 +1,9 @@
+TARGET = cisco.dll
+TYPE = dll
+COMPONENT = server
+SOURCES = cisco.cpp
+
+CPPFLAGS = /DCISCO_EXPORTS
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib
+	  
+include ..\..\..\..\..\Makefile.inc.w32

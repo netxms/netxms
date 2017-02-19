@@ -48,11 +48,32 @@ JDK_BASE = C:\Program Files\Java\jdk1.8.0_121
 !endif
 
 # Binaries directory
-BINDIR = $(NETXMS_BASE)\bin\$(OBJDIR)
+NETXMS_LIBDIR = $(NETXMS_BASE)\bin\$(OBJDIR)
+BINDIR = $(NETXMS_LIBDIR)
 
-# Output files
-!ifdef TARGET
-BINFILE = $(BINDIR)\$(TARGET)
+# Component specific settings
+!if "$(COMPONENT)" == "server"
+CPPFLAGS = $(CPPFLAGS) /I "$(NETXMS_BASE)\src\server\include"
+!endif
+	
+# Target specific settings
+!if "$(TYPE)" == "dll"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+IMPLIB = $(BINFILE:.dll=.lib)
+LDFLAGS = $(LDFLAGS) /DLL /IMPLIB:$(IMPLIB)
+!endif
+!if "$(TYPE)" == "ddr"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
+!if "$(TYPE)" == "ndd"
+BINDIR = $(BINDIR)\ndd
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
+!if "$(TYPE)" == "nsm"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
 !endif
 
 # Common C/C++ compiler flags
@@ -63,27 +84,10 @@ CPPFLAGS = $(CPPFLAGS) /O2 /Gd /EHs- /GR- \
 	/I "$(OPENSSL_BASE)\$(ARCH)\include" \
 	/D_MT /DUNICODE
 
-!if "$(COMPONENT)" == "server"
-CPPFLAGS = $(CPPFLAGS) /I "$(NETXMS_BASE)\src\server\include"
-!endif
-	
 # Common linker flags
-!if "$(TYPE)" == "dll"
-CPPFLAGS = $(CPPFLAGS) /D_USRDLL
-IMPLIB = $(BINFILE:.dll=.lib)
-LDFLAGS = $(LDFLAGS) /DLL /IMPLIB:$(IMPLIB)
-!endif
-!if "$(TYPE)" == "ddr"
-CPPFLAGS = $(CPPFLAGS) /D_USRDLL
-LDFLAGS = $(LDFLAGS) /DLL
-!endif
-!if "$(TYPE)" == "nsm"
-CPPFLAGS = $(CPPFLAGS) /D_USRDLL
-LDFLAGS = $(LDFLAGS) /DLL
-!endif
 MANIFEST = $(TARGET).intermediate.manifest
 LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
-	/LIBPATH:"$(BINDIR)" \
+	/LIBPATH:"$(NETXMS_LIBDIR)" \
 	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
 	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
 	/LIBPATH:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)"
@@ -97,6 +101,11 @@ OBJ = $(__sources:.c=.obj)
 
 # Source directory
 SRCDIR = $(MAKEDIR)
+
+# Output files
+!ifdef TARGET
+BINFILE = $(BINDIR)\$(TARGET)
+!endif
 
 all: Makefile.w32 subdirs $(GENERATED) $(BINFILE)
 
@@ -115,7 +124,7 @@ $(BINFILE): pom.xml
 $(BINFILE): objdir $(OBJ)
    @if not exist $(BINDIR) mkdir $(BINDIR)
    @echo "    LD " $(TARGET)
-   @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(LIBS)
+   $(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(LIBS)
 	@rm -f $(MANIFEST)
 
 .PHONY: objdir

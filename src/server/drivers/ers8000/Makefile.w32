@@ -1,0 +1,8 @@
+TARGET = ers8000.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = ers8000.cpp
+
+LIBS = avaya-ers.lib libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

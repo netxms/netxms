@@ -1,0 +1,9 @@
+TARGET = avaya-ers.dll
+TYPE = dll
+COMPONENT = server
+SOURCES = avaya-ers.cpp vlan-if.cpp
+
+CPPFLAGS = /DAVAYAERS_EXPORTS
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib
+	  
+include ..\..\..\..\..\Makefile.inc.w32

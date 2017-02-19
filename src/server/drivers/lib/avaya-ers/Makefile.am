@@ -8,4 +8,5 @@ libavaya_ers_la_LIBADD = ../../../../libnetxms/libnetxms.la \
 
 EXTRA_DIST = \
 	avaya-ers.vcproj \
-	avaya-ers.h
+	avaya-ers.h \
+	Makefile.w32

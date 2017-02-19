@@ -9,3 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd tools drivers hdlink pdsdrv
+
+EXTRA_DIST = Makefile.w32

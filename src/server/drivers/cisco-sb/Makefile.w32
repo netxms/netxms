@@ -1,0 +1,8 @@
+TARGET = cisco-sb.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = cisco-sb.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

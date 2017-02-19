@@ -1,0 +1,41 @@
+TARGET = nxcore.dll
+TYPE = dll
+COMPONENT = server
+SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
+	admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
+	ap_config.cpp ap_jobs.cpp ap_logparser.cpp beacon.cpp bizservice.cpp \
+	bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
+	cert.cpp chassis.cpp client.cpp cluster.cpp columnfilter.cpp \
+	components.cpp condition.cpp config.cpp console.cpp \
+	container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
+	dc_nxsl.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
+	dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
+	dctcolumn.cpp dctthreshold.cpp debug.cpp dfile_info.cpp \
+	download_job.cpp ef.cpp email.cpp entirenet.cpp \
+	epp.cpp events.cpp evproc.cpp fdb.cpp \
+	filemonitoring.cpp graph.cpp hdlink.cpp hk.cpp id.cpp \
+	import.cpp inaddr_index.cpp index.cpp interface.cpp \
+	isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
+	ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
+	loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
+	market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
+	modules.cpp mt.cpp ndd.cpp ndp.cpp \
+	netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
+	node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
+	nxslext.cpp objects.cpp objtools.cpp package.cpp \
+	pds.cpp poll.cpp ps.cpp rack.cpp radius.cpp \
+	reporting.cpp rootobj.cpp schedule.cpp script.cpp \
+	session.cpp slmcheck.cpp smclp.cpp \
+	sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
+	svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
+	template.cpp tools.cpp tracert.cpp \
+	uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
+	userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+	winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
+
+CPPFLAGS = /DNXCORE_EXPORTS
+LIBS = libnxsrv.lib libnxsnmp.lib libnxlp.lib libnxsl.lib libnxmap.lib \
+   libnxdb.lib libnxagent.lib libnetxms.lib libstrophe.lib libtre.lib \
+   ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib
+	  
+include ..\..\..\Makefile.inc.w32

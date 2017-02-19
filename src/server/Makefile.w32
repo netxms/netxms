@@ -1,3 +1,3 @@
-SUBDIRS = libnxsrv
+SUBDIRS = libnxsrv core drivers
 
 include ..\..\Makefile.inc.w32

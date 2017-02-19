@@ -1,0 +1,3 @@
+SUBDIRS = avaya-ers cisco
+
+include ..\..\..\..\Makefile.inc.w32

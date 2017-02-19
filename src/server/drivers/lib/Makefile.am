@@ -9,3 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = avaya-ers cisco
+
+EXTRA_DIST = Makefile.w32
