@@ -33,6 +33,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
 import org.netxms.base.PostalAddress;
+import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
@@ -112,7 +113,7 @@ public abstract class AbstractObject
 	public static final int PROPAGATE_RELATIVE = 3;
 	public static final int PROPAGATE_TRANSLATED = 4;
 	
-	protected NXCSession session = null;
+	@Internal protected NXCSession session = null;
 	protected long objectId = 0;
 	protected UUID guid;
 	protected String objectName;
@@ -141,8 +142,8 @@ public abstract class AbstractObject
 	protected final Map<String, String> customAttributes = new HashMap<String, String>(0);
 	protected Map<String, Object> moduleData = null;
 	
-	private int effectiveRights = 0;
-	private boolean effectiveRightsCached = false;
+	@Internal private int effectiveRights = 0;
+	@Internal private boolean effectiveRightsCached = false;
 
 	/**
 	 * Create dummy object of GENERIC class

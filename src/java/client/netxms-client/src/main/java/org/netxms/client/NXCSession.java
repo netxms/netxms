@@ -2828,15 +2828,12 @@ public class NXCSession
     *
     * @return List of all objects
     */
-   public AbstractObject[] getAllObjects()
+   public List<AbstractObject> getAllObjects()
    {
-      AbstractObject[] list;
-
       synchronized(objectList)
       {
-         list = objectList.values().toArray(new AbstractObject[objectList.size()]);
+         return new ArrayList<AbstractObject>(objectList.values());
       }
-      return list;
    }
 
    /**

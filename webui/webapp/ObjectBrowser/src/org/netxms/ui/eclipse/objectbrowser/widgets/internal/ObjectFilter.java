@@ -18,15 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
 import org.netxms.base.InetAddressEx;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -52,7 +53,7 @@ public class ObjectFilter extends ViewerFilter
 	private boolean hideTemplateChecks = false;
 	private Map<Long, AbstractObject> objectList = null;
 	private AbstractObject lastMatch = null;
-	private AbstractObject[] sourceObjects = null;
+	private List<AbstractObject> sourceObjects = null;
 	private long[] rootObjects = null;
 	private Set<Integer> classFilter = null;
 	private boolean usePatternMatching = false;
@@ -68,7 +69,7 @@ public class ObjectFilter extends ViewerFilter
 			this.rootObjects = new long[rootObjects.length];
 			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
 		}
-		this.sourceObjects = sourceObjects;
+		this.sourceObjects = Arrays.asList(sourceObjects);
 		this.classFilter = classFilter;
 	}
 	
@@ -227,14 +228,14 @@ public class ObjectFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				AbstractObject[] fullList = (sourceObjects != null) ? sourceObjects : ((NXCSession)ConsoleSharedData.getSession()).getAllObjects();
+				List<AbstractObject> fullList = (sourceObjects != null) ? sourceObjects : ConsoleSharedData.getSession().getAllObjects();
 				objectList = new HashMap<Long, AbstractObject>();
-				for(int i = 0; i < fullList.length; i++)
-					if (matchFilterString(fullList[i]) &&
-					    ((rootObjects == null) || fullList[i].isChildOf(rootObjects)))
+				for(AbstractObject o : fullList)
+					if (matchFilterString(o) &&
+					    ((rootObjects == null) || o.isChildOf(rootObjects)))
 					{
-						objectList.put(fullList[i].getObjectId(), fullList[i]);
-						lastMatch = fullList[i];
+						objectList.put(o.getObjectId(), o);
+						lastMatch = o;
 					}
 			}
 			else
