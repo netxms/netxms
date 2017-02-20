@@ -3152,7 +3152,7 @@ AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 #--------------------------------------------------------------------
 
 COMPILER_VERSION=""
-for opt in --version -v -V -qversion; do
+for opt in -qversion --version -v -V; do
 	v=`$CXX $opt 2>/dev/null | head -1`
 	if test $? = 0; then
 		if test "x$COMPILER_VERSION" = "x"; then
