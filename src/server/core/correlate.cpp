@@ -125,22 +125,21 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       {
          // Next hop is behind VPN tunnel
          VPNConnector *vpnConn = (VPNConnector *)FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR);
-         if ((vpnConn != NULL) &&
-             (vpnConn->getStatus() == STATUS_CRITICAL))
+         if ((vpnConn != NULL) && (vpnConn->getStatus() == STATUS_CRITICAL))
          {
             /* TODO: set root id */
          }
       }
       else
       {
-         Interface *pInterface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
-         if ((pInterface != NULL) &&
-             ((pInterface->getAdminState() == IF_ADMIN_STATE_DOWN) || (pInterface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-              (pInterface->getOperState() == IF_OPER_STATE_DOWN) || (pInterface->getOperState() == IF_OPER_STATE_TESTING)))
+         iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
+         if ((iface != NULL) &&
+             ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+              (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {
 				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
-				          pInterface->getName(), pInterface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
-            pEvent->setRootId(pInterface->getLastDownEventId());
+				         iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
+            pEvent->setRootId(iface->getLastDownEventId());
 				break;
          }
       }

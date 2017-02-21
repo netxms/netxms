@@ -1947,6 +1947,29 @@ restart:
          pathProblemFound = true;
          break;
       }
+
+      if (hop->isVpn)
+      {
+         // Next hop is behind VPN tunnel
+         VPNConnector *vpnConn = (VPNConnector *)FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR);
+         if ((vpnConn != NULL) && (vpnConn->getStatus() == STATUS_CRITICAL))
+         {
+            /* TODO: set root id */
+         }
+      }
+      else
+      {
+         iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
+         if ((iface != NULL) &&
+             ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+              (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
+         {
+            nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is down"),
+                        m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
+            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
+            break;
+         }
+      }
    }
    if (!secondPass && !pathProblemFound)
    {
