@@ -23,7 +23,10 @@ import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -110,6 +113,20 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		fileList.getControl().setLayoutData(gd);
 		
 		fileList.setContentProvider(new ArrayContentProvider());
+		fileList.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((ServerFile)element).getName();
+         }
+		});
+		fileList.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
+         }
+		});
 		fileList.setInput(serverFiles);
 		
 		Composite buttonArea = new Composite(dialogArea, SWT.NONE);
