@@ -69,7 +69,7 @@ public class ObjectFilter extends ViewerFilter
 			this.rootObjects = new long[rootObjects.length];
 			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
 		}
-		this.sourceObjects = Arrays.asList(sourceObjects);
+		this.sourceObjects = (sourceObjects != null) ? Arrays.asList(sourceObjects) : null;
 		this.classFilter = classFilter;
 	}
 	
