@@ -134,7 +134,7 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
    if (m_socket == INVALID_SOCKET)
       return false;
 
-   NXCP_MESSAGE *data = msg->createMessage();
+   NXCP_MESSAGE *data = msg->createMessage(true);
    bool success = (SendEx(m_socket, data, ntohl(data->size), 0, NULL) == ntohl(data->size));
    free(data);
    return success;
