@@ -44,6 +44,7 @@ public class GeoLocation
 	
 	/**
 	 * Create geolocation object from NXCP message
+	 * 
 	 * @param msg NXCP message
 	 */
 	public GeoLocation(final NXCPMessage msg)
@@ -57,20 +58,24 @@ public class GeoLocation
 	
 	/**
     * Create geolocation object from NXCP message
+    * 
     * @param msg NXCP message
+    * @param baseId base field ID
     */
-   public GeoLocation(long base, final NXCPMessage msg)
+   public GeoLocation(final NXCPMessage msg, long baseId)
    {
       type = UNSET;
-      latitude = msg.getFieldAsDouble(base);
-      longitude = msg.getFieldAsDouble(base+1);
-      accuracy = msg.getFieldAsInt32(base+2);
-      timestamp = msg.getFieldAsDate(base+3);
-      endTimestamp = msg.getFieldAsDate(base+4);
+      latitude = msg.getFieldAsDouble(baseId);
+      longitude = msg.getFieldAsDouble(baseId + 1);
+      accuracy = msg.getFieldAsInt32(baseId + 2);
+      timestamp = msg.getFieldAsDate(baseId + 3);
+      endTimestamp = msg.getFieldAsDate(baseId + 4);
    }
 	
 	/**
 	 * Create geolocation object of type UNSET or GPS
+	 * 
+	 * @param isGPS if true set type to GPS
 	 */
 	public GeoLocation(boolean isGPS)
 	{
@@ -99,6 +104,9 @@ public class GeoLocation
 	 * 
 	 * @param lat Latitude
 	 * @param lon Longitude
+	 * @param type geolocation type
+	 * @param accuracy location accuracy in meters
+	 * @param timestamp location timestamp
 	 */
 	public GeoLocation(double lat, double lon, int type, int accuracy, Date timestamp)
 	{
@@ -108,11 +116,40 @@ public class GeoLocation
 		this.accuracy = accuracy;
 		this.timestamp = timestamp;
 	}
+	
+	/**
+	 * Check if this location is within given area.
+	 * 
+	 * @param northWest top left (north west) corner of the area
+	 * @param southEast bottom right (south east) corner of the area
+    * @return true if this location is within given area
+	 */
+	public boolean isWithinArea(GeoLocation northWest, GeoLocation southEast)
+	{
+	   return isWithinArea(northWest.getLatitude(), northWest.getLongitude(), southEast.getLatitude(), southEast.getLongitude());
+	}
+	
+	/**
+    * Check if this location is within given area.
+    * 
+	 * @param northBorder north area border (highest latitude)
+	 * @param westBorder west area border
+	 * @param southBorder south area border (lowest latitude)
+	 * @param eastBorder east area border
+	 * @return true if this location is within given area
+	 */
+	public boolean isWithinArea(double northBorder, double westBorder, double southBorder, double eastBorder)
+	{
+	   if (type == UNSET)
+	      return false;
+	   
+	   return ((latitude <= northBorder) && (latitude >= southBorder) && (longitude <= eastBorder) && (longitude >= westBorder));
+	}
 
 	/**
 	 * Returns true if location was obtained automatically (from GPS or network)
 	 * 
-	 * @return
+	 * @return true if location was obtained automatically (from GPS or network)
 	 */
 	public boolean isAutomatic()
    {

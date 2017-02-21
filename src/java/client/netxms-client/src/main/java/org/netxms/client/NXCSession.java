@@ -9129,10 +9129,10 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
       List <GeoLocation> elements = new ArrayList<GeoLocation>();
-      long i, base;
-      for(i = 0, base = NXCPCodes.VID_LOC_LIST_BASE; i < size; i++, base += 10)
+      long fieldId = NXCPCodes.VID_LOC_LIST_BASE;
+      for(int i = 0; i < size; i++, fieldId += 10)
       {
-         elements.add(new GeoLocation(base, response));
+         elements.add(new GeoLocation(response, fieldId));
       }
       Collections.sort(elements, new Comparator<GeoLocation>() {
          @Override
