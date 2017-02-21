@@ -27,7 +27,6 @@
 #include <nms_util.h>
 #include <nxcpapi.h>
 
-
 //
 // Constants
 //
@@ -654,15 +653,45 @@ public:
 };
 
 /**
+ * NXSL Script
+ */
+class LIBNXSL_EXPORTABLE NXSL_LibraryScript
+{
+protected:
+   UINT32 m_id;
+   uuid m_guid;
+   TCHAR m_name[1024];
+   TCHAR *m_source;
+   NXSL_Program *m_program;
+   TCHAR m_error[1024];
+
+public:
+   NXSL_LibraryScript();
+   NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, TCHAR *source);
+   ~NXSL_LibraryScript();
+
+   bool isValid() const { return m_program != NULL; }
+
+   const uuid& getGuid() { return m_guid; }
+   UINT32 getId() { return m_id; }
+
+   const TCHAR *getName() { return m_name; }
+   const TCHAR *getCode() { return m_source; }
+   const TCHAR *getError() { return m_error; }
+
+   NXSL_Program *getProgram() { return m_program; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 base);
+   void fillMessage(NXCPMessage *msg);
+};
+
+/**
  * Script library
  */
 class LIBNXSL_EXPORTABLE NXSL_Library
 {
 private:
-   UINT32 m_dwNumScripts;
-   NXSL_Program **m_ppScriptList;
-   TCHAR **m_ppszNames;
-   UINT32 *m_pdwIdList;
+   ObjectArray<NXSL_LibraryScript> *m_scriptList;
    MUTEX m_mutex;
 
    void deleteInternal(int nIndex);
@@ -674,13 +703,14 @@ public:
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
 
-   BOOL addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pScript);
+   BOOL addScript(NXSL_LibraryScript *script);
    void deleteScript(const TCHAR *name);
    void deleteScript(UINT32 id);
-   NXSL_Program *findScript(const TCHAR *name);
+   NXSL_Program *findNxslProgram(const TCHAR *name);
+   NXSL_LibraryScript *findScript(UINT32 id);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
 
-   void fillMessage(NXCPMessage *pMsg);
+   void fillMessage(NXCPMessage *msg);
 };
 
 /**

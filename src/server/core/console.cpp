@@ -922,7 +922,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       bool destroyCompiledScript = false;
       g_pScriptLibrary->lock();
 
-      NXSL_Program *compiledScript = g_pScriptLibrary->findScript(szBuffer);
+      NXSL_Program *compiledScript = g_pScriptLibrary->findNxslProgram(szBuffer);
       if (compiledScript == NULL)
       {
          g_pScriptLibrary->unlock();

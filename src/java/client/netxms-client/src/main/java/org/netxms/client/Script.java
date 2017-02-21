@@ -18,6 +18,9 @@
  */
 package org.netxms.client;
 
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+
 /**
  * NXSL script object
  */
@@ -38,7 +41,28 @@ public class Script
 		this.id = id;
 		this.name = (name != null) ? name : ("[" + Long.toString(id) + "]");
 		this.source = source;
-	}
+   }
+	
+   /**
+   * Create script object from msg
+   */
+	public Script(NXCPMessage msg)
+	{
+      this.id = msg.getFieldAsInt64(NXCPCodes.VID_SCRIPT_ID);
+      this.name = msg.getFieldAsString(NXCPCodes.VID_NAME).equals("") ? ("[" + Long.toString(id) + "]") : msg.getFieldAsString(NXCPCodes.VID_NAME);
+      this.source = msg.getFieldAsString(NXCPCodes.VID_SCRIPT_CODE);
+   }
+	
+   /**
+   * Create script object for list from msg
+   */
+   public Script(NXCPMessage msg, long base)
+   {
+      this.id = msg.getFieldAsInt64(base++);
+      this.name = msg.getFieldAsString(base).equals("") ? ("[" + Long.toString(id) + "]") : msg.getFieldAsString(base);
+      base++;
+      this.source = null;
+   }
 
 	/**
 	 * @return the id

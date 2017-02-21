@@ -60,23 +60,10 @@ public class SnmpTrap
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_TRAP_NUM_MAPS);
 		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(count);
-		for(int i = 0; i < count; i++)
+		long base = NXCPCodes.VID_TRAP_PBASE;
+		for(int i = 0; i < count; i++, base += 10)
 		{
-			SnmpTrapParameterMapping pm;
-			long oidLen = msg.getFieldAsInt64(NXCPCodes.VID_TRAP_PLEN_BASE + i);
-			if ((oidLen & 0x80000000) == 0)
-			{
-				// mapping by OID
-				pm = new SnmpTrapParameterMapping(new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_TRAP_PNAME_BASE + i)));
-			}
-			else
-			{
-				// mapping by position
-				pm = new SnmpTrapParameterMapping((int)(oidLen & 0x7FFFFFFF));
-			}
-			pm.setDescription(msg.getFieldAsString(NXCPCodes.VID_TRAP_PDESCR_BASE + i));
-			pm.setFlags(msg.getFieldAsInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + i));
-			parameterMapping.add(pm);
+			parameterMapping.add(new SnmpTrapParameterMapping(msg, base));
 		}
 	}
 	
@@ -88,7 +75,7 @@ public class SnmpTrap
 	public SnmpTrap(NXCPMessage msg, long baseId)
 	{
 		id = msg.getFieldAsInt64(baseId);
-		description = msg.getFieldAsString(baseId + 4);
+		description = msg.getFieldAsString(baseId + 1);
 		objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(baseId + 2));
 		eventCode = msg.getFieldAsInt32(baseId + 3);
 		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(0);
@@ -108,9 +95,10 @@ public class SnmpTrap
 		msg.setFieldInt32(NXCPCodes.VID_TRAP_OID_LEN, objectId.getLength());
 		objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_OID);
 		msg.setFieldInt32(NXCPCodes.VID_TRAP_NUM_MAPS, parameterMapping.size());
-		for(int i = 0; i < parameterMapping.size(); i++)
+		long base = NXCPCodes.VID_TRAP_PBASE;
+		for(int i = 0; i < parameterMapping.size(); i++, base += 10)
 		{
-			parameterMapping.get(i).fillMessage(msg, i);
+			parameterMapping.get(i).fillMessage(msg, base);
 		}
 	}
 

@@ -965,7 +965,8 @@ public class NXCPCodes
 	public static final long VID_DCI_SCHEDULE_BASE = 0x10000000L;
 	public static final long VID_EVENT_ARG_BASE = 0x00008000L;
 	public static final long VID_EVENT_ARG_LAST = 0x00008FFFL;
-	public static final long VID_TRAP_PLEN_BASE = 0x00009000L;
+	public static final long VID_TRAP_PBASE = 0x00009000L;
+	/* Unused
 	public static final long VID_TRAP_PLEN_LAST = 0x000093FFL;
 	public static final long VID_TRAP_PNAME_BASE = 0x00009400L;
 	public static final long VID_TRAP_PNAME_LAST = 0x000097FFL;
@@ -973,6 +974,7 @@ public class NXCPCodes
 	public static final long VID_TRAP_PDESCR_LAST = 0x00009BFFL;
 	public static final long VID_TRAP_PFLAGS_BASE = 0x00009C00L;
 	public static final long VID_TRAP_PFLAGS_LAST = 0x00009FFFL;
+	*/
 	public static final long VID_PARENT_ID_BASE = 0x00003000L;
 	public static final long VID_PARENT_ID_LAST = 0x00003FFFL;
 	public static final long VID_CHILD_ID_BASE = 0x80000000L;

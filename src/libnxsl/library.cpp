@@ -28,11 +28,8 @@
  */
 NXSL_Library::NXSL_Library()
 {
+   m_scriptList = new ObjectArray<NXSL_LibraryScript>(16, 16, true);
    m_mutex = MutexCreate();
-   m_dwNumScripts = 0;
-   m_ppScriptList = NULL;
-   m_ppszNames = NULL;
-   m_pdwIdList = NULL;
 }
 
 /**
@@ -40,89 +37,67 @@ NXSL_Library::NXSL_Library()
  */
 NXSL_Library::~NXSL_Library()
 {
-   for(UINT32 i = 0; i < m_dwNumScripts; i++)
-   {
-      delete m_ppScriptList[i];
-      free(m_ppszNames[i]);
-   }
-   safe_free(m_ppScriptList);
-   safe_free(m_ppszNames);
-   safe_free(m_pdwIdList);
+   delete m_scriptList;
    MutexDestroy(m_mutex);
 }
 
 /**
  * Add script to library
  */
-BOOL NXSL_Library::addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pScript)
+BOOL NXSL_Library::addScript(NXSL_LibraryScript *script)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumScripts; i++)
-      if (!_tcsicmp(m_ppszNames[i], pszName))
-         return FALSE;
-
-   m_dwNumScripts++;
-   m_ppScriptList = (NXSL_Program **)realloc(m_ppScriptList, sizeof(NXSL_Program *) * m_dwNumScripts);
-   m_ppszNames = (TCHAR **)realloc(m_ppszNames, sizeof(TCHAR *) * m_dwNumScripts);
-   m_pdwIdList = (UINT32 *)realloc(m_pdwIdList, sizeof(UINT32) * m_dwNumScripts);
-   m_ppScriptList[i] = pScript;
-   m_ppszNames[i] = _tcsdup(pszName);
-   m_pdwIdList[i] = dwId;
+   m_scriptList->add(script);
    return TRUE;
 }
 
 /**
- * Delete script from library
+ * Delete script by name
  */
-void NXSL_Library::deleteInternal(int nIndex)
-{
-   delete m_ppScriptList[nIndex];
-   free(m_ppszNames[nIndex]);
-   m_dwNumScripts--;
-   memmove(&m_ppScriptList[nIndex], &m_ppScriptList[nIndex + 1],
-           sizeof(NXSL_Program *) * (m_dwNumScripts - nIndex));
-   memmove(&m_ppszNames[nIndex], &m_ppszNames[nIndex + 1],
-           sizeof(char *) * (m_dwNumScripts - nIndex));
-   memmove(&m_pdwIdList[nIndex], &m_pdwIdList[nIndex + 1],
-           sizeof(UINT32) * (m_dwNumScripts - nIndex));
-}
-
 void NXSL_Library::deleteScript(const TCHAR *pszName)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumScripts; i++)
-      if (!_tcsicmp(m_ppszNames[i], pszName))
+   for(int i = 0; i < m_scriptList->size(); i++)
+      if (!_tcsicmp(m_scriptList->get(i)->getName(), pszName))
       {
-         deleteInternal(i);
-         break;
-      }
-}
-
-void NXSL_Library::deleteScript(UINT32 dwId)
-{
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumScripts; i++)
-      if (m_pdwIdList[i] == dwId)
-      {
-         deleteInternal(i);
+         m_scriptList->remove(i);
          break;
       }
 }
 
 /**
- * Find script by name
+ * Delete script by id
  */
-NXSL_Program *NXSL_Library::findScript(const TCHAR *name)
+void NXSL_Library::deleteScript(UINT32 dwId)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumScripts; i++)
-      if (!_tcsicmp(m_ppszNames[i], name))
+   for(int i = 0; i < m_scriptList->size(); i++)
+      if (m_scriptList->get(i)->getId() == dwId)
       {
-         return m_ppScriptList[i];
+         m_scriptList->remove(i);
+         break;
+      }
+}
+
+/**
+ * Find compiled NXSL program by name
+ */
+NXSL_Program *NXSL_Library::findNxslProgram(const TCHAR *name)
+{
+   for(int i = 0; i < m_scriptList->size(); i++)
+      if (!_tcsicmp(m_scriptList->get(i)->getName(), name))
+      {
+         return m_scriptList->get(i)->getProgram();
+      }
+   return NULL;
+}
+
+/**
+ * Find script object by ID
+ */
+NXSL_LibraryScript *NXSL_Library::findScript(UINT32 id)
+{
+   for(int i = 0; i < m_scriptList->size(); i++)
+      if (m_scriptList->get(i)->getId() == id)
+      {
+         return m_scriptList->get(i);
       }
    return NULL;
 }
@@ -135,7 +110,7 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
 {
    NXSL_VM *vm = NULL;
    lock();
-   NXSL_Program *p = findScript(name);
+   NXSL_Program *p = findNxslProgram(name);
    if (p != NULL)
    {
       vm = new NXSL_VM(env);
@@ -154,16 +129,68 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
 }
 
 /**
- * Fill NXCP message with script data
+ * Fill message with script library
  */
-void NXSL_Library::fillMessage(NXCPMessage *pMsg)
+void NXSL_Library::fillMessage(NXCPMessage *msg)
 {
-   UINT32 i, dwId;
-
-   pMsg->setField(VID_NUM_SCRIPTS, m_dwNumScripts);
-   for(i = 0, dwId = VID_SCRIPT_LIST_BASE; i < m_dwNumScripts; i++)
+   lock();
+   msg->setField(VID_NUM_SCRIPTS, m_scriptList->size());
+   UINT32 fieldId = VID_SCRIPT_LIST_BASE;
+   for(int i = 0; i < m_scriptList->size(); i++, fieldId+=2)
    {
-      pMsg->setField(dwId++, m_pdwIdList[i]);
-      pMsg->setField(dwId++, m_ppszNames[i]);
+      m_scriptList->get(i)->fillMessage(msg, fieldId);
    }
+   unlock();
 }
+
+/**
+ * Create empty NXSL Script
+ */
+NXSL_LibraryScript::NXSL_LibraryScript()
+{
+   m_id = 0;
+   nx_strncpy(m_name, _T(""), 1);
+   m_source = NULL;
+   m_program = new NXSL_Program();
+}
+
+/**
+ * Create NXSL Script
+ */
+NXSL_LibraryScript::NXSL_LibraryScript(UINT32 id, uuid guid, const TCHAR *name, TCHAR *source)
+{
+   m_id = id;
+   m_guid = guid;
+   nx_strncpy(m_name, name, 1024);
+   m_source = source;
+   m_program = (NXSL_Program *)NXSLCompile(m_source, m_error, 1024, NULL);
+}
+
+/**
+ * NXSL Script destructor
+ */
+NXSL_LibraryScript::~NXSL_LibraryScript()
+{
+   free(m_source);
+   delete m_program;
+}
+
+/**
+ * Fill message with script id and name for list
+ */
+void NXSL_LibraryScript::fillMessage(NXCPMessage *msg, UINT32 base)
+{
+   msg->setField(base, m_id);
+   msg->setField(base + 1, m_name);
+}
+
+/**
+ * Fill message with script data
+ */
+void NXSL_LibraryScript::fillMessage(NXCPMessage *msg)
+{
+   msg->setField(VID_SCRIPT_ID, m_id);
+   msg->setField(VID_NAME, m_name);
+   msg->setField(VID_SCRIPT_CODE, m_source);
+}
+

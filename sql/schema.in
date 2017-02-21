@@ -1571,6 +1571,7 @@ COMMENT_COLUMN(alarm_category_map.category_id, 'Category ID')
 
 CREATE TABLE snmp_trap_cfg
 (
+  guid varchar(36) not null,
   trap_id integer not null,
   snmp_oid varchar(255),
   event_code integer not null,
@@ -1580,6 +1581,7 @@ CREATE TABLE snmp_trap_cfg
 ) TABLE_TYPE;
 
 COMMENT_TABLE(snmp_trap_cfg, '')
+COMMENT_COLUMN(snmp_trap_cfg.guid, '')
 COMMENT_COLUMN(snmp_trap_cfg.trap_id, '')
 COMMENT_COLUMN(snmp_trap_cfg.snmp_oid, '')
 COMMENT_COLUMN(snmp_trap_cfg.event_code, '')
@@ -1754,6 +1756,7 @@ COMMENT_COLUMN(syslog.msg_text, '')
 */
 CREATE TABLE script_library
 (
+  guid varchar(36) not null,
   script_id integer not null,
   script_name varchar(255) not null,
   script_code SQL_TEXT null,
@@ -1761,6 +1764,7 @@ CREATE TABLE script_library
 ) TABLE_TYPE;
 
 COMMENT_TABLE(script_library, '')
+COMMENT_COLUMN(script_library.guid, '')
 COMMENT_COLUMN(script_library.script_id, '')
 COMMENT_COLUMN(script_library.script_name, '')
 COMMENT_COLUMN(script_library.script_code, '')

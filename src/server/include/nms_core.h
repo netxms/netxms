@@ -913,6 +913,78 @@ public:
 };
 
 /**
+ * SNMP Trap parameter map object
+ */
+class LIBNXSNMP_EXPORTABLE SNMP_TrapParamMap
+{
+private:
+   SNMP_ObjectId *m_objectId;           // Trap OID
+   UINT32 m_position;                   // Trap position
+   UINT32 m_flags;
+   TCHAR m_description[MAX_DB_STRING];
+
+public:
+   SNMP_TrapParamMap();
+   SNMP_TrapParamMap(DB_RESULT mapResult, int row);
+   SNMP_TrapParamMap(ConfigEntry *entry);
+   SNMP_TrapParamMap(SNMP_ObjectId *oid, UINT32 flags, TCHAR *description);
+   SNMP_TrapParamMap(NXCPMessage *msg, UINT32 base);
+   ~SNMP_TrapParamMap();
+
+   void fillMessage(NXCPMessage *msg, UINT32 base);
+
+   SNMP_ObjectId *getOid() { return m_objectId; }
+   UINT32 getOidLength() { return (m_objectId == NULL) ? m_position : (UINT32)m_objectId->length(); }
+   bool isPosition() {  return m_objectId == NULL; }
+
+   UINT32 getFlags() { return m_flags; }
+
+   TCHAR *getDescription() { return m_description; }
+
+};
+
+/**
+ * SNMP Trap configuration object
+ */
+class LIBNXSNMP_EXPORTABLE SNMP_TrapCfg
+{
+private:
+   uuid m_guid;                   // Trap guid
+   UINT32 m_id;                   // Entry ID
+   SNMP_ObjectId *m_objectId;     // Trap OID
+   UINT32 m_eventCode;            // Event code
+   ObjectArray<SNMP_TrapParamMap> *m_pMaps;
+   TCHAR m_description[MAX_DB_STRING];
+   TCHAR m_userTag[MAX_USERTAG_LENGTH];
+
+public:
+   SNMP_TrapCfg();
+   SNMP_TrapCfg(DB_RESULT trapResult, DB_STATEMENT stmt, int row);
+   SNMP_TrapCfg(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode);
+   SNMP_TrapCfg(NXCPMessage *msg);
+   ~SNMP_TrapCfg();
+
+   void fillMessage(NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg, UINT32 base);
+   bool saveParameterMapping(DB_HANDLE hdb);
+   void notifyOnTrapCfgChange(UINT32 code);
+
+   const uuid& getGuid() { return m_guid; }
+   UINT32 getId() { return m_id; }
+
+   SNMP_ObjectId *getOid() { return m_objectId; }
+   UINT32 getOidLength() { return (UINT32)m_objectId->length(); }
+
+   SNMP_TrapParamMap *getMap(int index) { return m_pMaps->get(index); }
+   UINT32 getNumMaps() { return m_pMaps->size(); }
+
+   UINT32 getEventCode() { return m_eventCode; }
+
+   TCHAR *getDescription() { return m_description; }
+   TCHAR *getUserTag() { return m_userTag; }
+};
+
+/**
  * Watchdog thread state codes
  */
 enum WatchdogState
@@ -1043,12 +1115,13 @@ void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
 
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);
-void CreateTrapCfgMessage(NXCPMessage &msg);
+void CreateTrapCfgMessage(NXCPMessage *msg);
 UINT32 CreateNewTrap(UINT32 *pdwTrapId);
-UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
 UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg);
 UINT32 DeleteTrap(UINT32 dwId);
 void CreateTrapExportRecord(String &xml, UINT32 id);
+UINT32 ResolveTrapGuid(const uuid& guid);
+void AddTrapCfgToList(SNMP_TrapCfg *trapCfg);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
@@ -1162,6 +1235,13 @@ void LoadAlarmCategories();
  */
 void SendAlarmSummaryEmail(const ScheduledTaskParameters *params);
 void EnableAlarmSummaryEmails();
+
+/**
+ * NXSL script functions
+ */
+UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId);
+UINT32 RenameScript(const NXCPMessage *request);
+UINT32 DeleteScript(const NXCPMessage *request);
 
 /**
  * File monitoring

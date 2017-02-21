@@ -186,6 +186,7 @@ public class ParamMappingEditDialog extends Dialog
 		position.setIncrement(1);
 		position.setMaximum(255);
 		position.setMinimum(1);
+		position.setSelection(pm.getPosition());
 		gd = new GridData();
 		gd.widthHint = 40;
 		position.setLayoutData(gd);

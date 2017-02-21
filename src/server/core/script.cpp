@@ -33,32 +33,28 @@ NXSL_Library *g_pScriptLibrary = NULL;
 void LoadScripts()
 {
    DB_RESULT hResult;
-   NXSL_Program *pScript;
-   TCHAR *pszCode, szError[1024], szBuffer[MAX_DB_STRING];
-   int i, nRows;
+   NXSL_LibraryScript *pScript;
+   TCHAR buffer[MAX_DB_STRING];
 
-   g_pScriptLibrary = new NXSL_Library;
+   g_pScriptLibrary = new NXSL_Library();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT script_id,script_name,script_code FROM script_library"));
+   hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
    if (hResult != NULL)
    {
-      nRows = DBGetNumRows(hResult);
-      for(i = 0; i < nRows; i++)
+      int numRows = DBGetNumRows(hResult);
+      for(int i = 0; i < numRows; i++)
       {
-         pszCode = DBGetField(hResult, i, 2, NULL, 0);
-         pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024, NULL);
-         free(pszCode);
-         if (pScript != NULL)
+         pScript = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
+                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, NULL, 0));
+         if (pScript->isValid())
          {
-            g_pScriptLibrary->addScript(DBGetFieldULong(hResult, i, 0),
-                                        DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), pScript);
-				DbgPrintf(2, _T("Script %s added to library"), szBuffer);
+            g_pScriptLibrary->addScript(pScript);
+            DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
          }
          else
          {
             nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss",
-                        DBGetFieldULong(hResult, i, 0),
-                        DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szError);
+                        pScript->getId(), pScript->getName(), pScript->getError());
          }
       }
       DBFreeResult(hResult);
@@ -69,16 +65,13 @@ void LoadScripts()
 /**
  * Load script name and code from database
  */
-static bool LoadScriptFromDatabase(UINT32 id, TCHAR **name, TCHAR **code)
+NXSL_LibraryScript *LoadScriptFromDatabase(UINT32 id)
 {
-   bool success = false;
-
-   *name = NULL;
-   *code = NULL;
+   NXSL_LibraryScript *script = NULL;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_name,script_code FROM script_library WHERE script_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library WHERE script_id=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -87,9 +80,9 @@ static bool LoadScriptFromDatabase(UINT32 id, TCHAR **name, TCHAR **code)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            *name = DBGetField(hResult, 0, 0, NULL, 0);
-            *code = DBGetField(hResult, 0, 1, NULL, 0);
-            success = true;
+            TCHAR buffer[MAX_DB_STRING];
+            script = new NXSL_LibraryScript(DBGetFieldULong(hResult, 0, 0), DBGetFieldGUID(hResult, 0, 1),
+                     DBGetField(hResult, 0, 2, buffer, MAX_DB_STRING), DBGetField(hResult, 0, 3, NULL, 0));
          }
          DBFreeResult(hResult);
       }
@@ -97,7 +90,7 @@ static bool LoadScriptFromDatabase(UINT32 id, TCHAR **name, TCHAR **code)
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return success;
+   return script;
 }
 
 /**
@@ -105,29 +98,25 @@ static bool LoadScriptFromDatabase(UINT32 id, TCHAR **name, TCHAR **code)
  */
 void ReloadScript(UINT32 id)
 {
-   TCHAR *name, *code;
-   if (!LoadScriptFromDatabase(id, &name, &code))
+   NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
+   if (script == NULL)
    {
       DbgPrintf(3, _T("ReloadScript: failed to load script with ID %d from database"), (int)id);
       return;
    }
 
-   TCHAR error[1024];
-   NXSL_Program *script = NXSLCompile(code, error, 1024, NULL);
-   free(code);
-
    g_pScriptLibrary->lock();
    g_pScriptLibrary->deleteScript(id);
-   if (script != NULL)
+   if (script->isValid())
    {
-      g_pScriptLibrary->addScript(id, name, script);
+      g_pScriptLibrary->addScript(script);
    }
    else
    {
-      nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", id, name, error);
+      nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", id, script->getName(), script->getError());
+      delete script;
    }
    g_pScriptLibrary->unlock();
-   free(name);
 }
 
 /**
@@ -157,7 +146,8 @@ UINT32 ResolveScriptName(const TCHAR *name)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != NULL)
       {
-         id = DBGetFieldULong(hResult, 0, 0);
+         if (DBGetNumRows(hResult) > 0)
+            id = DBGetFieldULong(hResult, 0, 0);
          DBFreeResult(hResult);
       }
       DBFreeStatement(hStmt);
@@ -168,12 +158,165 @@ UINT32 ResolveScriptName(const TCHAR *name)
 }
 
 /**
+ * Resolve script GUID to ID
+ */
+UINT32 ResolveScriptGuid(const uuid& guid)
+{
+   UINT32 id = 0;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT script_id FROM script_library WHERE guid=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            id = DBGetFieldULong(hResult, 0, 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return id;
+}
+
+/**
+ * Update or create new script
+ */
+UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId)
+{
+   UINT32 rcc = RCC_DB_FAILURE;
+
+   TCHAR scriptName[MAX_DB_STRING];
+   request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+   TCHAR *scriptSource = request->getFieldAsString(VID_SCRIPT_CODE);
+
+   if (scriptSource == NULL)
+      return RCC_INVALID_REQUEST;
+
+   if (IsValidScriptName(scriptName))
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt;
+
+      UINT32 id = ResolveScriptName(scriptName);
+      uuid guid;
+      if (id == 0) // Create new script
+      {
+         guid = uuid::generate();
+         id = CreateUniqueId(IDG_SCRIPT);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
+      }
+      else // Update existing script
+         hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, scriptSource, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
+         if (!guid.isNull())
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)guid.toString(), DB_BIND_STATIC);
+
+         if (DBExecute(hStmt))
+         {
+            ReloadScript(id);
+            *scriptId = id;
+            rcc = RCC_SUCCESS;
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+      rcc = RCC_INVALID_SCRIPT_NAME;
+
+   free(scriptSource);
+
+   return rcc;
+}
+
+/*
+ * Rename script
+ */
+UINT32 RenameScript(const NXCPMessage *request)
+{
+   UINT32 rcc = RCC_DB_FAILURE;
+   UINT32 id = request->getFieldAsUInt32(VID_SCRIPT_ID);
+
+   if (IsValidScriptId(id))
+   {
+      TCHAR scriptName[MAX_DB_STRING];
+      request->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+      if (IsValidScriptName(scriptName))
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=? WHERE script_id=?"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+            if (DBExecute(hStmt))
+            {
+               ReloadScript(id);
+               rcc = RCC_SUCCESS;
+            }
+            DBFreeStatement(hStmt);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+      else
+         rcc = RCC_INVALID_SCRIPT_NAME;
+   }
+   else
+      rcc = RCC_INVALID_SCRIPT_ID;
+
+   return rcc;
+}
+
+/**
+ * Delete script
+ */
+UINT32 DeleteScript(const NXCPMessage *request)
+{
+   UINT32 rcc = RCC_DB_FAILURE;
+   UINT32 id = request->getFieldAsUInt32(VID_SCRIPT_ID);
+
+   if (IsValidScriptId(id))
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM script_library WHERE script_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+         if (DBExecute(hStmt))
+         {
+            g_pScriptLibrary->lock();
+            g_pScriptLibrary->deleteScript(id);
+            g_pScriptLibrary->unlock();
+            rcc = RCC_SUCCESS;
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+      rcc = RCC_INVALID_SCRIPT_ID;
+
+   return rcc;
+}
+
+/**
  * Create export record for library script
  */
 void CreateScriptExportRecord(String &xml, UINT32 id)
 {
-   TCHAR *name, *code;
-   if (!LoadScriptFromDatabase(id, &name, &code))
+   NXSL_LibraryScript *script = LoadScriptFromDatabase(id);
+   if (script == NULL)
    {
       DbgPrintf(3, _T("CreateScriptExportRecord: failed to load script with ID %d from database"), (int)id);
       return;
@@ -182,15 +325,15 @@ void CreateScriptExportRecord(String &xml, UINT32 id)
    xml.append(_T("\t\t<script id=\""));
    xml.append(id);
    xml.append(_T("\">\n"));
+   xml.append(_T("\t\t\t<guid>"));
+   xml.append((const TCHAR *)script->getGuid().toString());
+   xml.append(_T("</guid>\n"));
    xml.append(_T("\t\t\t<name>"));
-   xml.append(EscapeStringForXML2(name));
+   xml.append(EscapeStringForXML2(script->getName()));
    xml.append(_T("</name>\n"));
    xml.append(_T("\t\t\t<code>"));
-   xml.append(EscapeStringForXML2(code));
+   xml.append(EscapeStringForXML2(script->getCode()));
    xml.append(_T("</code>\n\t\t</script>\n"));
-
-   free(name);
-   free(code);
 }
 
 /**
@@ -205,6 +348,13 @@ void ImportScript(ConfigEntry *config)
       return;
    }
 
+   uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (guid.isNull())
+   {
+      guid = uuid::generate();
+      DbgPrintf(4, _T("ImportScript: GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
+   }
+
    const TCHAR *code = config->getSubEntryValue(_T("code"));
    if (code == NULL)
    {
@@ -212,32 +362,36 @@ void ImportScript(ConfigEntry *config)
       return;
    }
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   DB_STATEMENT hStmt;
-   UINT32 id = ResolveScriptName(name);
-   if (id == 0)
+   if (IsValidScriptName(name))
    {
-      id = CreateUniqueId(IDG_SCRIPT);
-      hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id) VALUES (?,?,?)"));
-   }
-   else
-   {
-      hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
-   }
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt;
 
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
-      DBExecute(hStmt);
-      DBFreeStatement(hStmt);
+      bool newScript = false;
+      UINT32 id = ResolveScriptGuid(guid);
+      if (id == 0) // Create new script
+      {
+         id = CreateUniqueId(IDG_SCRIPT);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
+         newScript = true;
+      }
+      else // Update existing script
+         hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, id);
+         if (newScript)
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+
+         if (DBExecute(hStmt))
+            ReloadScript(id);
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
    }
-
-   DBConnectionPoolReleaseConnection(hdb);
-
-   ReloadScript(id);
 }
 
 /**

@@ -25,6 +25,7 @@
 #define _nxcldefs_h_
 
 #include <nxlog.h>
+#include <uuid.h>
 
 /**
  * Some constants
@@ -1076,32 +1077,6 @@ typedef struct
 	UINT32 noteCount;       // Number of notes added to alarm
    UINT32 ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
 } NXC_ALARM;
-
-/**
- * Trap parameter mapping entry
- */
-typedef struct
-{
-   UINT32 *pdwObjectId;     // Trap OID
-   UINT32 dwOidLen;         // Trap OID length (if highest bit is set, then it's a position)
-	UINT32 dwFlags;
-   TCHAR szDescription[MAX_DB_STRING];
-} NXC_OID_MAP;
-
-/**
- * Trap configuration entry
- */
-typedef struct
-{
-   UINT32 dwId;             // Entry ID
-   UINT32 *pdwObjectId;     // Trap OID
-   UINT32 dwOidLen;         // Trap OID length
-   UINT32 dwEventCode;      // Event code
-   UINT32 dwNumMaps;        // Number of parameter mappings
-   NXC_OID_MAP *pMaps;
-   TCHAR szDescription[MAX_DB_STRING];
-	TCHAR szUserTag[MAX_USERTAG_LENGTH];
-} NXC_TRAP_CFG_ENTRY;
 
 /**
  * Condition's input DCI definition

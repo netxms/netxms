@@ -239,7 +239,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importIn
    // First, try to find module in library
    if (m_library != NULL)
    {
-      pScript = m_library->findScript(importInfo->name);
+      pScript = m_library->findNxslProgram(importInfo->name);
       if (pScript != NULL)
       {
          vm->loadModule(pScript, importInfo);

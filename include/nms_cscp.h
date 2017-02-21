@@ -1166,6 +1166,7 @@ typedef struct
 #define VID_HOSTNAME                ((UINT32)569)
 #define VID_ENABLE_COMPRESSION      ((UINT32)570)
 #define VID_AGENT_COMPRESSION_MODE  ((UINT32)571)
+#define VID_TRAP_TYPE               ((UINT32)572)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1197,7 +1198,8 @@ typedef struct
 #define VID_EVENT_ARG_LAST          ((UINT32)0x00008FFF)
 
 // Variable range for trap parameter list
-#define VID_TRAP_PLEN_BASE          ((UINT32)0x00009000)
+#define VID_TRAP_PBASE              ((UINT32)0x00009000)
+/* Unused
 #define VID_TRAP_PLEN_LAST          ((UINT32)0x000093FF)
 #define VID_TRAP_PNAME_BASE         ((UINT32)0x00009400)
 #define VID_TRAP_PNAME_LAST         ((UINT32)0x000097FF)
@@ -1205,6 +1207,7 @@ typedef struct
 #define VID_TRAP_PDESCR_LAST        ((UINT32)0x00009BFF)
 #define VID_TRAP_PFLAGS_BASE        ((UINT32)0x00009C00)
 #define VID_TRAP_PFLAGS_LAST        ((UINT32)0x00009FFF)
+*/
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,

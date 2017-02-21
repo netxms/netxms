@@ -60,24 +60,37 @@ public class SnmpTrapParameterMapping
 		type = BY_OBJECT_ID;
 		objectId = oid;
 	}
+	
+   public SnmpTrapParameterMapping(NXCPMessage msg, long base)
+   {
+      type = msg.getFieldAsInt32(base);
+      if (type == BY_POSITION)
+         position = (int)msg.getFieldAsInt64(base + 1);
+      else
+         objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(base + 1));
+      
+      description = msg.getFieldAsString(base + 2);
+      flags = msg.getFieldAsInt32(base + 3);
+   }
 
 	/**
 	 * Fill NXCP message with parameter mapping's data
 	 * 
 	 * @param index mapping index
 	 */
-	public void fillMessage(NXCPMessage msg, int index)
+	public void fillMessage(NXCPMessage msg, long base)
 	{
-		msg.setFieldInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + index, flags);
-		msg.setField(NXCPCodes.VID_TRAP_PDESCR_BASE + index, description);
+      msg.setFieldInt32(base, flags);
+      msg.setField(base + 1, description);
+      msg.setFieldInt32(base + 2, type);
 		if (type == BY_POSITION)
 		{
-			msg.setFieldInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, position | 0x80000000);
+			msg.setFieldInt32(base + 3, position);
 		}
 		else
 		{
-			msg.setFieldInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, objectId.getLength());
-			objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_PNAME_BASE + index);
+         objectId.setNXCPVariable(msg, base + 3);
+			msg.setFieldInt32(base + 4, objectId.getLength());
 		}
 	}
 

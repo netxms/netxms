@@ -6720,7 +6720,7 @@ void ClientSession::sendAllTraps2(UINT32 dwRqId)
 	if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS))
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
-      CreateTrapCfgMessage(msg);
+      CreateTrapCfgMessage(&msg);
    }
    else
    {
@@ -8285,38 +8285,15 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 void ClientSession::sendScriptList(UINT32 dwRqId)
 {
    NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 i, dwNumScripts, dwId;
-   TCHAR szBuffer[MAX_DB_STRING];
-
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      hResult = DBSelect(hdb, _T("SELECT script_id,script_name FROM script_library"));
-      if (hResult != NULL)
-      {
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         dwNumScripts = DBGetNumRows(hResult);
-         msg.setField(VID_NUM_SCRIPTS, dwNumScripts);
-         for(i = 0, dwId = VID_SCRIPT_LIST_BASE; i < dwNumScripts; i++)
-         {
-            msg.setField(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
-         }
-         DBFreeResult(hResult);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
+      g_pScriptLibrary->fillMessage(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);;
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
    sendMessage(&msg);
 }
 
@@ -8326,46 +8303,20 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
 void ClientSession::sendScript(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwScriptId;
-   TCHAR *pszCode, szQuery[256];
-
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
+
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-      _sntprintf(szQuery, 256, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) > 0)
-         {
-				TCHAR name[MAX_DB_STRING];
-
-            msg.setField(VID_NAME, DBGetField(hResult, 0, 0, name, MAX_DB_STRING));
-
-				pszCode = DBGetField(hResult, 0, 1, NULL, 0);
-            msg.setField(VID_SCRIPT_CODE, pszCode);
-            free(pszCode);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
-         }
-         DBFreeResult(hResult);
-      }
+      UINT32 id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
+      NXSL_LibraryScript *script = g_pScriptLibrary->findScript(id);
+      if (script != NULL)
+         script->fillMessage(&msg);
       else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
+         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
    sendMessage(&msg);
 }
 
@@ -8375,70 +8326,14 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
 void ClientSession::updateScript(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
+   UINT32 scriptId = 0;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      TCHAR scriptName[MAX_DB_STRING];
-      pRequest->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
-      if (IsValidScriptName(scriptName))
-      {
-         TCHAR *scriptSource = pRequest->getFieldAsString(VID_SCRIPT_CODE);
-         if (scriptSource != NULL)
-         {
-            UINT32 scriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-
-            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-            DB_STATEMENT hStmt;
-            if (scriptId == 0)
-            {
-               // New script
-               scriptId = CreateUniqueId(IDG_SCRIPT);
-               hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id) VALUES (?,?,?)"));
-            }
-            else
-            {
-               hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
-            }
-
-            if (hStmt != NULL)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
-               DBBind(hStmt, 2, DB_SQLTYPE_TEXT, scriptSource, DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, scriptId);
-
-               if (DBExecute(hStmt))
-               {
-                  ReloadScript(scriptId);
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  msg.setField(VID_SCRIPT_ID, scriptId);
-               }
-               else
-               {
-                  msg.setField(VID_RCC, RCC_DB_FAILURE);
-               }
-
-               DBFreeStatement(hStmt);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
-
-            free(scriptSource);
-            DBConnectionPoolReleaseConnection(hdb);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_INVALID_REQUEST);
-         }
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_NAME);
-      }
+      msg.setField(VID_RCC, UpdateScript(pRequest, &scriptId));
+      msg.setField(VID_SCRIPT_ID, scriptId);
    }
    else
    {
@@ -8453,42 +8348,12 @@ void ClientSession::updateScript(NXCPMessage *pRequest)
 void ClientSession::renameScript(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szQuery[4096], szName[MAX_DB_STRING];
-   UINT32 dwScriptId;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-      pRequest->getFieldAsString(VID_NAME, szName, MAX_DB_STRING);
-      if (IsValidScriptName(szName))
-      {
-         if (IsValidScriptId(dwScriptId))
-         {
-            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE script_library SET script_name=%s WHERE script_id=%d"),
-                      (const TCHAR *)DBPrepareString(hdb, szName), dwScriptId);
-            if (DBQuery(hdb, szQuery))
-            {
-               ReloadScript(dwScriptId);
-               msg.setField(VID_RCC, RCC_SUCCESS);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
-            DBConnectionPoolReleaseConnection(hdb);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
-         }
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_NAME);
-      }
+      msg.setField(VID_RCC, RenameScript(pRequest));
    }
    else
    {
@@ -8503,35 +8368,12 @@ void ClientSession::renameScript(NXCPMessage *pRequest)
 void ClientSession::deleteScript(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szQuery[256];
-   UINT32 dwScriptId;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-      if (IsValidScriptId(dwScriptId))
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
-         if (DBQuery(hdb, szQuery))
-         {
-            g_pScriptLibrary->lock();
-            g_pScriptLibrary->deleteScript(dwScriptId);
-            g_pScriptLibrary->unlock();
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
-      }
+      msg.setField(VID_RCC, DeleteScript(pRequest));
    }
    else
    {
@@ -14171,6 +14013,7 @@ void ClientSession::compileScript(NXCPMessage *request)
          msg.setField(VID_ERROR_LINE, (INT32)errorLine);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
+      free(source);
 	}
 	else
 	{

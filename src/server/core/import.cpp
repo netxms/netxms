@@ -325,64 +325,75 @@ static UINT32 ImportEvent(ConfigEntry *event)
 /**
  * Import SNMP trap configuration
  */
-static UINT32 ImportTrap(ConfigEntry *trap)
+static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
 {
+   UINT32 rcc = RCC_INTERNAL_ERROR;
 	EventTemplate *event = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
 	if (event == NULL)
-		return RCC_INTERNAL_ERROR;
+		return rcc;
 
-   NXC_TRAP_CFG_ENTRY tc;
-	memset(&tc, 0, sizeof(NXC_TRAP_CFG_ENTRY));
-	tc.dwEventCode = event->getCode();
-	nx_strncpy(tc.szDescription, trap->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
-	nx_strncpy(tc.szUserTag, trap->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
+	uuid guid = trap->getSubEntryValueAsUUID(_T("guid"));
+   if (guid.isNull())
+   {
+      guid = uuid::generate();
+      nxlog_debug(4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
+   }
+   UINT32 id = ResolveTrapGuid(guid);
+	SNMP_TrapCfg *trapCfg = new SNMP_TrapCfg(trap, guid, id, event->getCode());
 
-	event->decRefCount();
-
-	UINT32 oid[256];
-	tc.dwOidLen = (UINT32)SNMPParseOID(trap->getSubEntryValue(_T("oid"), 0, _T("")), oid, 256);
-	tc.pdwObjectId = oid;
-	if (tc.dwOidLen == 0)
-		return RCC_INTERNAL_ERROR;
-
-	ConfigEntry *parametersRoot = trap->findEntry(_T("parameters"));
-	if (parametersRoot != NULL)
+	if (trapCfg->getOidLength() == 0)
 	{
-		ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
-		if (parameters->size() > 0)
-		{
-			tc.dwNumMaps = parameters->size();
-			tc.pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * tc.dwNumMaps);
-			for(int i = 0; i < parameters->size(); i++)
-			{
-				ConfigEntry *parameter = parameters->get(i);
-
-				int position = parameter->getSubEntryValueAsInt(_T("position"), 0, -1);
-				if (position > 0)
-				{
-					// Positional parameter
-					tc.pMaps[i].pdwObjectId = NULL;
-					tc.pMaps[i].dwOidLen = (UINT32)position | 0x80000000;
-				}
-				else
-				{
-					// OID parameter
-					UINT32 temp[256];
-					tc.pMaps[i].dwOidLen = (UINT32)SNMPParseOID(parameter->getSubEntryValue(_T("oid"), 0, _T("")), temp, 256);
-					tc.pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(temp, sizeof(UINT32) * tc.pMaps[i].dwOidLen);
-				}
-				nx_strncpy(tc.pMaps[i].szDescription, parameter->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
-				tc.pMaps[i].dwFlags = parameter->getSubEntryValueAsUInt(_T("flags"), 0, 0);
-			}
-		}
-		delete parameters;
+	   delete trapCfg;
+		return rcc;
 	}
 
-	UINT32 rcc = CreateNewTrap(&tc);
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt;
+	if (id == 0)
+	{
+	   hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,trap_id,guid) VALUES (?,?,?,?,?,?)"));
+	}
+	else
+	   hStmt = DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=? WHERE trap_id=?"));
 
-	// Cleanup
-	for(UINT32 i = 0; i < tc.dwNumMaps; i++)
-		safe_free(tc.pMaps[i].pdwObjectId);
+	if (hStmt != NULL)
+	{
+	   TCHAR oid[1024];
+	   SNMPConvertOIDToText(trapCfg->getOidLength(), trapCfg->getOid()->value(), oid, 1024);
+	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
+	   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
+	   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapCfg->getDescription(), DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, trapCfg->getUserTag(), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, trapCfg->getId());
+      if (id == 0)
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
+
+      if (DBBegin(hdb))
+      {
+         if(DBExecute(hStmt) && trapCfg->saveParameterMapping(hdb))
+         {
+            AddTrapCfgToList(trapCfg);
+            trapCfg->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
+            rcc = RCC_SUCCESS;
+            DBCommit(hdb);
+         }
+         else
+         {
+            DBRollback(hdb);
+            rcc = RCC_DB_FAILURE;
+         }
+      }
+      else
+         rcc = RCC_DB_FAILURE;
+      DBFreeStatement(hStmt);
+	}
+	else
+	   rcc = RCC_DB_FAILURE;
+
+	if (rcc != RCC_SUCCESS)
+	   delete trapCfg;
+
+	DBConnectionPoolReleaseConnection(hdb);
 
 	return rcc;
 }

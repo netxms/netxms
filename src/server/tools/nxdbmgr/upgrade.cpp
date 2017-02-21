@@ -747,6 +747,98 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V437 to V438
+ */
+static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE snmp_trap_cfg ADD guid varchar(36)\n")
+            _T("UPDATE snmp_trap_cfg SET guid='5d01e7e5-edbb-46ce-b53c-f7f64d1bf8ff' WHERE trap_id=1\n")
+            _T("UPDATE snmp_trap_cfg SET guid='c5464919-fd76-4624-9c21-b6ab73d9df80' WHERE trap_id=2\n")
+            _T("UPDATE snmp_trap_cfg SET guid='44d3b32e-33c5-4a39-b2ad-990a1120155d' WHERE trap_id=3\n")
+            _T("UPDATE snmp_trap_cfg SET guid='c9660f48-a4b3-41c8-b3f9-e9a6a8129db5' WHERE trap_id=4\n")
+            _T("UPDATE snmp_trap_cfg SET guid='4b422ba6-4b45-4881-931a-ed38dc798f9f' WHERE trap_id=5\n")
+            _T("UPDATE snmp_trap_cfg SET guid='bd8b6971-a3e4-4cad-9c70-3a33e61e0913' WHERE trap_id=6\n")
+            _T("ALTER TABLE script_library ADD guid varchar(36)\n")
+            _T("UPDATE script_library SET guid='3b7bddce-3505-42ff-ac60-6a48a64bd0ae' WHERE script_id=1\n")
+            _T("UPDATE script_library SET guid='2fb9212b-97e6-40e7-b434-2df4f7e8f6aa' WHERE script_id=2\n")
+            _T("UPDATE script_library SET guid='38696a00-c519-438c-8cbd-4b3a0cba4af1' WHERE script_id=3\n")
+            _T("UPDATE script_library SET guid='efe50915-47b2-43d8-b4f4-2c09a44970c3' WHERE script_id=4\n")
+            _T("UPDATE script_library SET guid='7837580c-4054-40f2-981f-7185797fe7d7' WHERE script_id=11\n")
+            _T("UPDATE script_library SET guid='f7d1bc7e-4046-4ee4-adb2-718f7361984d' WHERE script_id=12\n")
+            _T("UPDATE script_library SET guid='048fcf32-765b-4702-9c70-f012f62d5a90' WHERE script_id=13\n")
+            _T("UPDATE script_library SET guid='d515c10f-a5c9-4f41-afcd-9ddc8845f288' WHERE script_id=14\n")
+            _T("UPDATE script_library SET guid='7cd1c471-2f14-4fae-8743-8899fed64d18' WHERE script_id=15\n")
+            _T("UPDATE script_library SET guid='befdb083-ac68-481d-a7b7-127e11c3fae0' WHERE script_id=16\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   uuid guid;
+   TCHAR buffer[MAX_DB_STRING];
+   UINT32 numRows;
+
+   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid IS NULL"));
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
+   if (hResult != NULL)
+   {
+      if (hStmt != NULL)
+      {
+         numRows = DBGetNumRows(hResult);
+         for(int i = 0; i < numRows; i++)
+         {
+            guid = uuid::generate();
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+
+            if (!SQLExecute(hStmt))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+            }
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(g_hCoreDB, _T("SELECT guid,script_id FROM script_library WHERE guid IS NULL"));
+   hStmt = DBPrepare(g_hCoreDB, _T("UPDATE script_library SET guid=? WHERE script_id=?"));
+   if (hResult != NULL)
+   {
+      if (hStmt != NULL)
+      {
+         numRows = DBGetNumRows(hResult);
+         for(int i = 0; i < numRows; i++)
+         {
+            guid = uuid::generate();
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+            if (!SQLExecute(hStmt))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+            }
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SetNotNullConstraint(_T("snmp_trap_cfg"), _T("guid")));
+   CHK_EXEC(SetNotNullConstraint(_T("script_library"), _T("guid")));
+   CHK_EXEC(SetSchemaVersion(438));
+   return TRUE;
+}
+
+/**
  * Upgrade from V436 to V437
  */
 static BOOL H_UpgradeFromV436(int currVersion, int newVersion)
@@ -11426,6 +11518,7 @@ static struct
    { 434, 435, H_UpgradeFromV434 },
    { 435, 436, H_UpgradeFromV435 },
    { 436, 437, H_UpgradeFromV436 },
+   { 437, 438, H_UpgradeFromV437 },
    { 0, 0, NULL }
 };
 

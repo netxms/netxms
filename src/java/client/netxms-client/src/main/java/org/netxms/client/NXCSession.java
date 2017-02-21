@@ -7155,11 +7155,9 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
       List<Script> scripts = new ArrayList<Script>(count);
       long varId = NXCPCodes.VID_SCRIPT_LIST_BASE;
-      for(int i = 0; i < count; i++)
+      for(int i = 0; i < count; i++, varId +=2)
       {
-         final long id = response.getFieldAsInt64(varId++);
-         final String name = response.getFieldAsString(varId++);
-         scripts.add(new Script(id, name, null));
+         scripts.add(new Script(response, varId));
       }
       return scripts;
    }
@@ -7178,8 +7176,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int) scriptId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return new Script(scriptId, response.getFieldAsString(NXCPCodes.VID_NAME),
-         response.getFieldAsString(NXCPCodes.VID_SCRIPT_CODE));
+      return new Script(response);
    }
 
    /**
