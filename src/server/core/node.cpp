@@ -1787,28 +1787,15 @@ restart_agent_check:
 /**
  * Check single element of network path
  */
-bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId)
+bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass)
 {
    Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    if (node == NULL)
       return false;
 
-   DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
-   if (node->isDown())
-   {
-      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
-                m_name, m_id, nodeType, node->getName(), node->getId());
-      sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
-      return true;
-   }
-   if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
-   {
-      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
-                m_name, m_id, nodeType, node->getName(), node->getId());
-      sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
-      return true;
-   }
-   if (node->m_lastStatusPoll < time(NULL) - 1)
+   nxlog_debug(6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
+
+   if (secondPass && (node->m_lastStatusPoll < time(NULL) - 1))
    {
       DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
                 m_name, m_id, node->getName(), node->getId());
@@ -1816,30 +1803,31 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
       poller->startExecution();
       node->statusPoll(NULL, 0, poller);
       delete poller;
-      if (node->isDown())
-      {
-         DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
-                   m_name, m_id, nodeType, node->getName(), node->getId());
-         sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
-         return true;
-      }
-      if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
-      {
-         DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
-                   m_name, m_id, nodeType, node->getName(), node->getId());
-         sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
-         return true;
-      }
+   }
+
+   if (node->isDown())
+   {
+      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
+                m_name, m_id, nodeType, node->getName(), node->getId());
+      sendPollerMsg(requestId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
+      return true;
+   }
+   if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
+   {
+      DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
+                m_name, m_id, nodeType, node->getName(), node->getId());
+      sendPollerMsg(requestId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
+      return true;
    }
    return false;
 }
 
 /**
- * Check network path between node and management server to detect possible intermediate node failure
+ * Check network path between node and management server to detect possible intermediate node failure - layer 2
  *
  * @return true if network path problems found
  */
-bool Node::checkNetworkPath(UINT32 dwRqId)
+bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
 {
    time_t now = time(NULL);
 
@@ -1847,25 +1835,100 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
    if (IsZoningEnabled() && (m_zoneId != 0))
    {
       Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
-      if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != m_id) &&
-          checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, dwRqId))
-         return true;
+      if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != m_id))
+      {
+         if (checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, requestId, secondPass))
+            return true;
+      }
    }
 
    // Check directly connected switch
-   sendPollerMsg(dwRqId, _T("Checking ethernet connectivity...\r\n"));
+   sendPollerMsg(requestId, _T("Checking ethernet connectivity...\r\n"));
    Interface *iface = findInterfaceByIP(m_ipAddress);
-   if ((iface != NULL) && (iface->getPeerNodeId() != 0))
+   if (iface != NULL)
    {
-      DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
-      if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, dwRqId))
-         return true;
+      if  (iface->getPeerNodeId() != 0)
+      {
+         nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
+         if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, requestId, secondPass))
+            return true;
+
+         Node *switchNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+         Interface *switchIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+         if ((switchNode != NULL) && (switchIface != NULL) &&
+             ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+              (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
+         {
+            nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
+                        m_name, m_id, switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId());
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), switchIface->getName(), switchNode->getName());
+            return true;
+         }
+      }
+      else
+      {
+         BYTE localMacAddr[MAC_ADDR_LENGTH];
+         memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
+         int type = 0;
+         NetObj *cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+         if (cp != NULL)
+         {
+            nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
+            if (secondPass)
+            {
+               Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+               if ((node != NULL) && !node->isDown() && (node->m_lastStatusPoll < now - 1))
+               {
+                  nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+                              m_name, m_id, node->getName(), node->getId());
+                  PollerInfo *poller = RegisterPoller(POLLER_TYPE_STATUS, node);
+                  poller->startExecution();
+                  node->statusPoll(NULL, 0, poller);
+                  delete poller;
+               }
+            }
+
+            if (cp->getObjectClass() == OBJECT_INTERFACE)
+            {
+               Interface *iface = (Interface *)cp;
+               if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
+               {
+                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
+                              m_name, m_id, iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId());
+                  sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"),
+                                iface->getName(), iface->getParentNode()->getName());
+                  return true;
+               }
+            }
+            else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
+            {
+               AccessPoint *ap = (AccessPoint *)cp;
+               if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
+               {
+                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
+                              m_name, m_id, ap->getName(), ap->getId());
+                  sendPollerMsg(requestId, POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
+                  return true;
+               }
+            }
+         }
+      }
    }
    else
    {
       DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_name, m_id);
    }
+   return false;
+}
 
+/**
+ * Check network path between node and management server to detect possible intermediate node failure - layer 3
+ *
+ * @return true if network path problems found
+ */
+bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
+{
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
    if (mgmtNode == NULL)
    {
@@ -1886,10 +1949,9 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
    // If unreachable intermediate node will be found on first pass,
    // then method will just return true. Otherwise, we will do
    // second pass, this time forcing status poll on each node in the path.
-   sendPollerMsg(dwRqId, _T("Checking network path...\r\n"));
-   bool secondPass = false;
+   sendPollerMsg(requestId, _T("Checking network path (%s pass)...\r\n"), secondPass ? _T("second") : _T("first"));
+   time_t now = time(NULL);
    bool pathProblemFound = false;
-restart:
    for(int i = 0; i < trace->getHopCount(); i++)
    {
       HOP_INFO *hop = trace->getHopInfo(i);
@@ -1907,7 +1969,7 @@ restart:
                prevHop = trace->getHopInfo(i - 1);
                nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): routing loop detected on upstream node %s [%d]"),
                            m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
-               sendPollerMsg(dwRqId, POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
+               sendPollerMsg(requestId, POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
 
                static const TCHAR *names[] =
                         { _T("protocol"), _T("destNodeId"), _T("destAddress"),
@@ -1927,23 +1989,10 @@ restart:
             break;
       }
 
-      nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
+      nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream router %s [%d]"),
                   m_name, m_id, hop->object->getName(), hop->object->getId());
-      if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_lastStatusPoll < now - 1))
+      if (checkNetworkPathElement(hop->object->getId(), _T("upstream router"), false, requestId, secondPass))
       {
-         nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
-                     m_name, m_id, hop->object->getName(), hop->object->getId());
-         PollerInfo *poller = RegisterPoller(POLLER_TYPE_STATUS, (Node *)hop->object);
-         poller->startExecution();
-         ((Node *)hop->object)->statusPoll(NULL, 0, poller);
-         delete poller;
-      }
-
-      if (((Node *)hop->object)->isDown())
-      {
-         nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
-                     m_name, m_id, hop->object->getName(), hop->object->getId());
-         sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), hop->object->getName());
          pathProblemFound = true;
          break;
       }
@@ -1954,31 +2003,50 @@ restart:
          VPNConnector *vpnConn = (VPNConnector *)FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR);
          if ((vpnConn != NULL) && (vpnConn->getStatus() == STATUS_CRITICAL))
          {
-            /* TODO: set root id */
+            /* TODO: mark as path problem */
          }
       }
       else
       {
-         iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
+         Interface *iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
          if ((iface != NULL) &&
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {
             nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is down"),
                         m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
+            sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
             break;
          }
       }
    }
-   if (!secondPass && !pathProblemFound)
-   {
-      nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
-      secondPass = true;
-      goto restart;
-   }
+
    delete trace;
    return pathProblemFound;
+}
+
+/**
+ * Check network path between node and management server to detect possible intermediate node failure
+ *
+ * @return true if network path problems found
+ */
+bool Node::checkNetworkPath(UINT32 requestId)
+{
+   if (checkNetworkPathLayer2(requestId, false))
+      return true;
+
+   if (checkNetworkPathLayer3(requestId, false))
+      return true;
+
+   nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
+
+   if (checkNetworkPathLayer2(requestId, true))
+      return true;
+
+   if (checkNetworkPathLayer3(requestId, true))
+      return true;
+
+   return false;
 }
 
 /**

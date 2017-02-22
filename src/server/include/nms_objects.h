@@ -1481,8 +1481,10 @@ protected:
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
-	bool checkNetworkPath(UINT32 dwRqId);
-	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId);
+	bool checkNetworkPath(UINT32 requestId);
+   bool checkNetworkPathLayer2(UINT32 requestId, bool secondPass);
+   bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);
+	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
 
 	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);

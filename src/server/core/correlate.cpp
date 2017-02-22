@@ -72,10 +72,10 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	}
 
 	// Check proxy nodes
-	if (IsZoningEnabled() && (pNode->getZoneId() != 0) && (pNode->getZoneId() != pNode->getId()))
+	if (IsZoningEnabled() && (pNode->getZoneId() != 0))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
-		if ((zone != NULL) && (zone->getProxyNodeId() != 0))
+		if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != pNode->getId()))
 		{
 		   if (CheckAgentDown(pNode, pEvent, zone->getProxyNodeId(), _T("zone proxy")))
 		      return;
@@ -85,10 +85,57 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 
 	// Check directly connected switch
 	Interface *iface = pNode->findInterfaceByIP(pNode->getIpAddress());
-	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
+	if (iface != NULL)
 	{
-		if (CheckNodeDown(pNode, pEvent, iface->getPeerNodeId(), _T("upstream switch")))
-			return;
+	   if  (iface->getPeerNodeId() != 0)
+	   {
+         if (CheckNodeDown(pNode, pEvent, iface->getPeerNodeId(), _T("upstream switch")))
+            return;
+
+         Node *switchNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+         Interface *switchIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+         if ((switchNode != NULL) && (switchIface != NULL) &&
+             ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+              (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
+         {
+            nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on switch %s [%d] for current node %s [%d] is down"),
+                        switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId(), pNode->getName(), pNode->getId());
+            pEvent->setRootId(switchIface->getLastDownEventId());
+            return;
+         }
+	   }
+	   else
+	   {
+         BYTE localMacAddr[MAC_ADDR_LENGTH];
+         memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
+         int type = 0;
+         NetObj *cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+         if (cp != NULL)
+         {
+            if (cp->getObjectClass() == OBJECT_INTERFACE)
+            {
+               Interface *iface = (Interface *)cp;
+               if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
+               {
+                  nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on switch %s [%d] for current node %s [%d] is down"),
+                              iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId(),
+                              pNode->getName(), pNode->getId());
+                  return;
+               }
+            }
+            else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
+            {
+               AccessPoint *ap = (AccessPoint *)cp;
+               if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
+               {
+                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] for current node %s [%d] is down"),
+                              ap->getName(), ap->getId(), pNode->getName(), pNode->getId());
+                  return;
+               }
+            }
+         }
+	   }
 	}
 
    // Trace route from management station to failed node and
@@ -137,8 +184,8 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {
-				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
-				         iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
+				nxlog_debug(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
+				            iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
             pEvent->setRootId(iface->getLastDownEventId());
 				break;
          }
