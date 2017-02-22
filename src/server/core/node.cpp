@@ -1847,7 +1847,7 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
    if (IsZoningEnabled() && (m_zoneId != 0))
    {
       Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
-      if ((zone != NULL) && (zone->getProxyNodeId() != 0) &&
+      if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != m_id) &&
           checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, dwRqId))
          return true;
    }

@@ -72,7 +72,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	}
 
 	// Check proxy nodes
-	if (IsZoningEnabled() && (pNode->getZoneId() != 0))
+	if (IsZoningEnabled() && (pNode->getZoneId() != 0) && (pNode->getZoneId() != pNode->getId()))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
 		if ((zone != NULL) && (zone->getProxyNodeId() != 0))
