@@ -18,9 +18,11 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -51,7 +53,19 @@ public class Objects extends AbstractHandler
       String areaFilter = query.get("area");
       String classFilter = query.get("class");
       String nameFilter = query.get("name");
-      if ((areaFilter != null) || (classFilter != null) || (nameFilter != null))
+      
+      Map<String, String> customAttributes = null;
+      for(String k : query.keySet())
+      {
+         if (!k.startsWith("@"))
+            continue;
+         
+         if (customAttributes == null)
+            customAttributes = new HashMap<String, String>();
+         customAttributes.put(k.substring(1), query.get(k));
+      }
+      
+      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null))
       {
          double[] area = null;
          if (areaFilter != null)
@@ -75,6 +89,12 @@ public class Objects extends AbstractHandler
                log.warn("Invalid area filter " + areaFilter);
             }
          }
+
+         String[] classes = null;
+         if ((classFilter != null) && !classFilter.isEmpty())
+         {
+            classes = classFilter.split(",");
+         }
          
          Iterator<AbstractObject> it = objects.iterator();
          while(it.hasNext())
@@ -89,9 +109,8 @@ public class Objects extends AbstractHandler
             }
 
             // Filter by class
-            if ((classFilter != null) && !classFilter.isEmpty())
+            if (classes != null)
             {
-               String[] classes = classFilter.split(",");
                boolean match = false;
                for(String c : classes)
                {
@@ -112,6 +131,26 @@ public class Objects extends AbstractHandler
             if (area != null)
             {
                if (!o.getGeolocation().isWithinArea(area[0], area[1], area[2], area[3]))
+               {
+                  it.remove();
+                  continue;
+               }
+            }
+            
+            // Filter by custom attribute
+            if (customAttributes != null)
+            {
+               boolean match = true;
+               for(Entry<String, String> e : customAttributes.entrySet())
+               {
+                  String value = o.getCustomAttributes().get(e.getKey());
+                  if ((value == null) || !Glob.matchIgnoreCase(e.getValue(), value))
+                  {
+                     match = false;
+                     break;
+                  }
+               }
+               if (!match)
                {
                   it.remove();
                   continue;
