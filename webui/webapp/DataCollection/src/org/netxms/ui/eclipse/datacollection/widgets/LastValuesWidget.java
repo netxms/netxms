@@ -117,7 +117,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 * @param validator additional visibility validator (used to suppress unneded refresh calls, may be null)
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, final AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -261,12 +261,13 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		else
 			enableFilter(false);	// Will hide filter area correctly
 		
-		clientListener = new SessionListener()
-		{
+		clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getCode() == SessionNotification.FORCE_DCI_POLL && n.getSubCode() == dcTarget.getObjectId())
+            if ((n.getCode() == SessionNotification.FORCE_DCI_POLL) &&
+                (LastValuesWidget.this.dcTarget != null) &&
+                (n.getSubCode() == LastValuesWidget.this.dcTarget.getObjectId()))
                refresh();
          }		   
 		};
