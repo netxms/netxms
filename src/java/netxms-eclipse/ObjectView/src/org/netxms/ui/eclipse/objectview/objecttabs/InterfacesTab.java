@@ -42,6 +42,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
@@ -53,6 +55,7 @@ import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfacesTabFilter;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -87,6 +90,7 @@ public class InterfacesTab extends ObjectTab
 
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
+	private SessionListener sessionListener = null;
 	private Action actionCopyToClipboard;
 	private Action actionCopyMacAddressToClipboard;
 	private Action actionCopyIpAddressToClipboard;
@@ -122,13 +126,11 @@ public class InterfacesTab extends ObjectTab
          }
       });
       filterText.addDisposeListener(new DisposeListener() {
-
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             settings.put("InterfacesTab.showFilter", initShowFilter); //$NON-NLS-1$
          }
-         
       });
       
       Action action = new Action() {
@@ -213,9 +215,41 @@ public class InterfacesTab extends ObjectTab
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
+      
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED)
+            {
+               AbstractObject object = (AbstractObject)n.getObject();
+               if ((object instanceof Interface) && object.isDirectChildOf(getObject().getObjectId()))
+               {
+                  viewer.getControl().getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        refresh();
+                     }
+                  });
+               }
+            }
+         }
+      };
+      ConsoleSharedData.getSession().addListener(sessionListener);
    }
 	
-	/**
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      ConsoleSharedData.getSession().removeListener(sessionListener);
+      super.dispose();
+   }
+
+   /**
     * @param b
     * @param defval
     * @return
@@ -225,6 +259,9 @@ public class InterfacesTab extends ObjectTab
       return (s != null) ? b : defval;
    }
 
+   /**
+    * @param action
+    */
    private void setFilterCloseAction(Action action)
    {
       filterText.setCloseAction(action);
