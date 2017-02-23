@@ -16,6 +16,7 @@
 - Events generated when interface expected state changed
 - Situations functionality is replaced with persistent storage that is included in each execution environment
 - Compression support in communication protocol
+- Switch forwarding database show correct interfaces for Mikrotik devices
 - Management console:
 	- Mutiple files can be scheduled for upload to agent at once
 	- DCIs created from templates made visually distinguishable in data collection editor

@@ -43,8 +43,8 @@ ForwardingDatabase::ForwardingDatabase(UINT32 nodeId)
  */
 ForwardingDatabase::~ForwardingDatabase()
 {
-	safe_free(m_fdb);
-	safe_free(m_portMap);
+	free(m_fdb);
+	free(m_portMap);
 }
 
 /**
@@ -69,6 +69,15 @@ UINT32 ForwardingDatabase::ifIndexFromPort(UINT32 port)
 	for(int i = 0; i < m_pmSize; i++)
 		if (m_portMap[i].port == port)
 			return m_portMap[i].ifIndex;
+
+	// Try to lookup node interfaces because correct bridge port number may be set by driver
+	Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+	if (node != NULL)
+	{
+	   Interface *iface = node->findBridgePort(port);
+	   if (iface != NULL)
+	      return iface->getIfIndex();
+	}
 	return 0;
 }
 

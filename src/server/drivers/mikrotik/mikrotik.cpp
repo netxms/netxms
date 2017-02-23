@@ -90,6 +90,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
          iface->isPhysicalPort = true;
          iface->slot = 1;
          iface->port = iface->index;
+         iface->bridgePort = iface->index;
       }
    }
 	return ifList;
