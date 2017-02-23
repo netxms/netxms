@@ -205,13 +205,13 @@ public class RuleEvents extends PropertyPage
 	 */
 	private void doApply()
 	{
-		int flags = rule.getFlags();
-		if (checkInverted.getSelection())
-			flags |= EventProcessingPolicyRule.NEGATED_EVENTS;
-		else
-			flags &= ~EventProcessingPolicyRule.NEGATED_EVENTS;
-		rule.setFlags(flags);
-		rule.setEvents(new ArrayList<Long>(events.keySet()));
+      int flags = rule.getFlags();
+      if (checkInverted.getSelection() && !events.isEmpty()) // ignore "negate" flag if event set is empty
+         flags |= EventProcessingPolicyRule.NEGATED_EVENTS;
+      else
+         flags &= ~EventProcessingPolicyRule.NEGATED_EVENTS;
+      rule.setFlags(flags);
+      rule.setEvents(new ArrayList<Long>(events.keySet()));
 		editor.setModified(true);
 	}
 

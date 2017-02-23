@@ -206,7 +206,7 @@ public class RuleSourceObjects extends PropertyPage
 	private void doApply()
 	{
 		int flags = rule.getFlags();
-		if (checkInverted.getSelection())
+		if (checkInverted.getSelection() && !objects.isEmpty()) // ignore "negate" flag if object set is empty
 			flags |= EventProcessingPolicyRule.NEGATED_SOURCE;
 		else
 			flags &= ~EventProcessingPolicyRule.NEGATED_SOURCE;
