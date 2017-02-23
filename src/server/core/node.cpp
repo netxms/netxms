@@ -1855,7 +1855,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
 
          Node *switchNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
          Interface *switchIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
-         if ((switchNode != NULL) && (switchIface != NULL) &&
+         if ((switchNode != NULL) && (switchIface != NULL) && (switchIface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
              ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
          {
@@ -1891,8 +1891,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
             if (cp->getObjectClass() == OBJECT_INTERFACE)
             {
                Interface *iface = (Interface *)cp;
-               if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
-                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
+               if ((iface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
+                   ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
+                    (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
                {
                   nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
                               m_name, m_id, iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId());
@@ -2009,7 +2010,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
       else
       {
          Interface *iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
-         if ((iface != NULL) &&
+         if ((iface != NULL) && (iface->getExpectedState() != IF_EXPECTED_STATE_IGNORE) &&
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {

@@ -855,6 +855,7 @@ public:
 	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
 	UINT32 getFlags() const { return m_flags; }
+	int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
 	int getAdminState() const { return (int)m_adminState; }
 	int getOperState() const { return (int)m_operState; }
    int getConfirmedOperState() const { return (int)m_confirmedOperState; }
