@@ -98,6 +98,10 @@ ZEROMQ_SUPPORT="no"
 ZEROMQ_REQUIRED="no"
 ZEROMQ_CPPFLAGS=""
 ZEROMQ_LDFLAGS=""
+MQTT_SUPPORT="yes"
+MQTT_REQUIRED="no"
+MQTT_CPPFLAGS=""
+MQTT_LDFLAGS=""
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
@@ -292,7 +296,7 @@ AC_ARG_WITH(tuxedo,
 fi ])
 
 AC_ARG_WITH(zeromq,
-[AS_HELP_STRING(--with-zeromq,build  with ZeroMQ)],
+[AS_HELP_STRING(--with-zeromq,build with ZeroMQ)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		ZEROMQ_BASE="$withval"
@@ -302,6 +306,18 @@ AC_ARG_WITH(zeromq,
 	ZEROMQ_SUPPORT=yes
 else
 	ZEROMQ_SUPPORT=no
+fi ])
+
+AC_ARG_WITH(mqtt,
+[AS_HELP_STRING(--with-mqtt,build with MQTT support)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		MQTT_BASE="$withval"
+		MQTT_REQUIRED=yes
+	fi
+	MQTT_SUPPORT=yes
+else
+	MQTT_SUPPORT=no
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -2983,6 +2999,7 @@ if test $? = 0; then
 	fi
 fi
 
+
 #--------------------------------------------------------------------
 # ZeroMQ
 #--------------------------------------------------------------------
@@ -3023,6 +3040,48 @@ if test $? = 0; then
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
 fi
+
+
+#--------------------------------------------------------------------
+# MQTT
+#--------------------------------------------------------------------
+
+if test "x$MQTT_SUPPORT" = "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$MQTT_BASE" != "x"; then
+		MQTT_CPPFLAGS="-I$MQTT_BASE/include"
+		MQTT_LDFLAGS="-L$MQTT_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $MQTT_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $MQTT_LDFLAGS"
+	fi
+	
+	AC_CHECK_HEADER(mosquitto.h,,[
+		if test "x$MQTT_REQUIRED" = "xyes"; then
+			AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation ***])
+		else
+			MQTT_SUPPORT="no"
+		fi
+	])
+	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ SERVER_LIBS="$SERVER_LIBS -lmosquitto" ], [
+		if test "x$MQTT_REQUIRED" = "xyes"; then
+			AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
+		else
+			MQTT_SUPPORT="no"
+		fi
+	])
+    
+	if test "x$MQTT_SUPPORT" = "xyes"; then
+		AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
 
 #--------------------------------------------------------------------
 # MongoDB
@@ -3143,6 +3202,7 @@ AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
+AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
@@ -3226,6 +3286,8 @@ AC_SUBST(TUXEDO_TPINIT)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
+AC_SUBST(MQTT_CPPFLAGS)
+AC_SUBST(MQTT_LDFLAGS)
 AC_SUBST(VMGR_CPPFLAGS)
 AC_SUBST(VMGR_LDFLAGS)
 AC_SUBST(VMGR_LIBS)
@@ -3512,6 +3574,11 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "LDAP support            : YES"
 	else
 		echo "LDAP support            : NO"
+	fi
+	if test "x${MQTT_SUPPORT}" = "xyes"; then
+		echo "MQTT support            : YES"
+	else
+		echo "MQTT support            : NO"
 	fi
 	if test "x${XMPP_SUPPORT}" = "xyes"; then
 		echo "XMPP support            : YES"
