@@ -44,6 +44,7 @@ public abstract class DataCollectionObject
 	public static final int SMCLP = 6;
    public static final int SCRIPT = 7;
    public static final int SSH = 8;
+   public static final int MQTT = 9;
 	
 	// data collection object status
 	public static final int ACTIVE = 0;

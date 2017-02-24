@@ -154,6 +154,7 @@ public class Messages extends NLS
 	public static String DciLabelProvider_SourceAgent;
 	public static String DciLabelProvider_SourceCPSNMP;
 	public static String DciLabelProvider_SourceInternal;
+   public static String DciLabelProvider_SourceMQTT;
 	public static String DciLabelProvider_SourcePush;
    public static String DciLabelProvider_SourceScript;
 	public static String DciLabelProvider_SourceSNMP;
@@ -272,6 +273,7 @@ public class Messages extends NLS
 	public static String General_SourceAgent;
 	public static String General_SourceCPSNMP;
 	public static String General_SourceInternal;
+   public static String General_SourceMQTT;
 	public static String General_SourcePush;
 	public static String General_SourceSNMP;
    public static String General_SourceSSH;

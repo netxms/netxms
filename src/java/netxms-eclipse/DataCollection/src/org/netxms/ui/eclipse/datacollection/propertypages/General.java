@@ -188,6 +188,7 @@ public class General extends DCIPropertyPageDialog
       origin.add(Messages.get().General_SMCLP);
       origin.add(Messages.get().General_Script);
       origin.add(Messages.get().General_SourceSSH);
+      origin.add(Messages.get().General_SourceMQTT);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -459,8 +460,8 @@ public class General extends DCIPropertyPageDialog
 	{
 		int index = origin.getSelectionIndex();
 		sourceNode.setEnabled(index != DataCollectionItem.PUSH);
-		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
-		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 1));
+		schedulingMode.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT));
+		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (index != DataCollectionItem.MQTT) && (schedulingMode.getSelectionIndex() == 1));
 		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
 		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);

@@ -77,6 +77,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		originTexts.put(DataCollectionItem.SMCLP, Messages.get().DciLabelProvider_SourceILO);
       originTexts.put(DataCollectionItem.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
       originTexts.put(DataCollectionItem.SSH, Messages.get().DciLabelProvider_SourceSSH);
+      originTexts.put(DataCollectionItem.MQTT, Messages.get().DciLabelProvider_SourceMQTT);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);
