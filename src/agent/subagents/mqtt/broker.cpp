@@ -88,13 +88,13 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
    broker->m_login = _tcsdup_ex(config->getSubEntryValue(_T("Login")));
    broker->m_password = _tcsdup_ex(config->getSubEntryValue(_T("Password")));
 
-   const ConfigEntry *topicRoot = config->findEntry(_T("Topics"));
-   if (topicRoot != NULL)
+   const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
+   if (metricRoot != NULL)
    {
-      ObjectArray<ConfigEntry> *topics = topicRoot->getSubEntries(_T("*"));
-      for(int i = 0; i < topics->size(); i++)
+      ObjectArray<ConfigEntry> *metrics = metricRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < metrics->size(); i++)
       {
-         ConfigEntry *e = topics->get(i);
+         ConfigEntry *e = metrics->get(i);
          Topic *t = new Topic(e->getValue());
          broker->m_topics.add(t);
 
@@ -107,7 +107,20 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
          _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %hs"), t->getPattern());
          parameters->add(&p);
       }
-      delete topics;
+      delete metrics;
+   }
+
+   const ConfigEntry *eventRoot = config->findEntry(_T("Events"));
+   if (eventRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *events = eventRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < events->size(); i++)
+      {
+         ConfigEntry *e = events->get(i);
+         Topic *t = new Topic(e->getValue(), e->getName());
+         broker->m_topics.add(t);
+      }
+      delete events;
    }
 
    return broker;

@@ -22,13 +22,14 @@
 /**
  * Topic constructor
  */
-Topic::Topic(const TCHAR *pattern)
+Topic::Topic(const TCHAR *pattern, const TCHAR *event)
 {
 #ifdef UNICODE
    m_pattern = (pattern != NULL) ? UTF8StringFromWideString(pattern) : NULL;
 #else
    m_pattern = (pattern != NULL) ? strdup(pattern) : NULL;
 #endif
+   m_event = _tcsdup_ex(event);
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
    m_timestamp = 0;
@@ -40,6 +41,7 @@ Topic::Topic(const TCHAR *pattern)
 Topic::~Topic()
 {
    free(m_pattern);
+   free(m_event);
 }
 
 /**
@@ -53,11 +55,18 @@ void Topic::processMessage(const char *topic, const char *msg)
    if (!match)
       return;
 
-   m_mutex.lock();
-   strncpy(m_lastName, topic, MAX_DB_STRING);
-   strncpy(m_lastValue, msg, MAX_RESULT_LENGTH);
-   m_timestamp = time(NULL);
-   m_mutex.unlock();
+   if (m_event != NULL)
+   {
+      AgentSendTrap(0, m_event, "mm", topic, msg);
+   }
+   else
+   {
+      m_mutex.lock();
+      strncpy(m_lastName, topic, MAX_DB_STRING);
+      strncpy(m_lastValue, msg, MAX_RESULT_LENGTH);
+      m_timestamp = time(NULL);
+      m_mutex.unlock();
+   }
 }
 
 /**

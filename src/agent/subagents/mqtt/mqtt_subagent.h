@@ -38,10 +38,11 @@ private:
    char m_lastName[MAX_DB_STRING];
    char m_lastValue[MAX_RESULT_LENGTH];
    time_t m_timestamp;
+   TCHAR *m_event;
    Mutex m_mutex;
 
 public:
-   Topic(const TCHAR *pattern);
+   Topic(const TCHAR *pattern, const TCHAR *event = NULL);
    ~Topic();
 
    const char *getPattern() const { return m_pattern; }
