@@ -102,6 +102,7 @@ MQTT_SUPPORT="yes"
 MQTT_REQUIRED="no"
 MQTT_CPPFLAGS=""
 MQTT_LDFLAGS=""
+MQTT_LIBS=""
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
@@ -640,7 +641,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -3065,7 +3066,7 @@ if test "x$MQTT_SUPPORT" = "xyes"; then
 			MQTT_SUPPORT="no"
 		fi
 	])
-	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ SERVER_LIBS="$SERVER_LIBS -lmosquitto" ], [
+	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ MQTT_LIBS="-lmosquitto" ], [
 		if test "x$MQTT_REQUIRED" = "xyes"; then
 			AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
 		else
@@ -3075,6 +3076,7 @@ if test "x$MQTT_SUPPORT" = "xyes"; then
     
 	if test "x$MQTT_SUPPORT" = "xyes"; then
 		AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
+		SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -3288,6 +3290,7 @@ AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
 AC_SUBST(MQTT_CPPFLAGS)
 AC_SUBST(MQTT_LDFLAGS)
+AC_SUBST(MQTT_LIBS)
 AC_SUBST(VMGR_CPPFLAGS)
 AC_SUBST(VMGR_LDFLAGS)
 AC_SUBST(VMGR_LIBS)
@@ -3386,6 +3389,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
 	src/agent/subagents/minix/Makefile
+	src/agent/subagents/mqtt/Makefile
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
@@ -3567,6 +3571,11 @@ if test "x$IPV6_SUPPORT" = "xyes"; then
 else
 	echo "IPv6 support            : NO"
 fi
+if test "x${MQTT_SUPPORT}" = "xyes"; then
+	echo "MQTT support            : YES"
+else
+	echo "MQTT support            : NO"
+fi
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
@@ -3574,11 +3583,6 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "LDAP support            : YES"
 	else
 		echo "LDAP support            : NO"
-	fi
-	if test "x${MQTT_SUPPORT}" = "xyes"; then
-		echo "MQTT support            : YES"
-	else
-		echo "MQTT support            : NO"
 	fi
 	if test "x${XMPP_SUPPORT}" = "xyes"; then
 		echo "XMPP support            : YES"
