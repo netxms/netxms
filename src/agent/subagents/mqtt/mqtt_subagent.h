@@ -29,12 +29,57 @@
 #include <mosquitto.h>
 
 /**
+ * Topic definition
+ */
+class Topic
+{
+private:
+   char *m_pattern;
+   char m_lastName[MAX_DB_STRING];
+   char m_lastValue[MAX_RESULT_LENGTH];
+   time_t m_timestamp;
+   Mutex m_mutex;
+
+public:
+   Topic(const TCHAR *pattern);
+   ~Topic();
+
+   const char *getPattern() const { return m_pattern; }
+   time_t getTimestamp() const { return m_timestamp; }
+
+   void processMessage(const char *topic, const char *msg);
+   bool retrieveData(TCHAR *buffer, size_t bufferLen);
+};
+
+/**
  * Broker definition
  */
 class MqttBroker
 {
 private:
+   char *m_hostname;
+   UINT16 m_port;
+   TCHAR *m_login;
+   TCHAR *m_password;
+   ObjectArray<Topic> m_topics;
+   struct mosquitto *m_handle;
+   THREAD m_loopThread;
    
+   MqttBroker();
+
+   static void messageCallback(struct mosquitto *handle, void *userData, const struct mosquitto_message *msg);
+   void processMessage(const struct mosquitto_message *msg);
+
+   void networkLoop();
+   static THREAD_RESULT THREAD_CALL networkLoopStarter(void *arg);
+
+public:
+   ~MqttBroker();
+
+   void startNetworkLoop();
+   void stopNetworkLoop();
+
+   static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters);
 };
 
 #endif

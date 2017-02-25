@@ -17,22 +17,33 @@
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
  **/
-
 #include "mqtt_subagent.h"
 
 /**
- * Add topic from config
+ * Registered brokers
  */
-static bool AddTopicFromConfig(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, const TCHAR *config)
-{
-   return true;
-}
+static ObjectArray<MqttBroker> s_brokers(8, 8, true);
 
 /**
- * Add parameters from config
+ * Add brokers and parameters from config
  */
-static void AddParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
+static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
 {
+   ObjectArray<ConfigEntry> *brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
+   for(int i = 0; i < brokers->size(); i++)
+   {
+      MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters);
+      if (b != NULL)
+      {
+         s_brokers.add(b);
+      }
+      else
+      {
+         AgentWriteLog(NXLOG_WARNING, _T("MQTT: cannot add broker %s definition from config"), brokers->get(i)->getName());
+      }
+   }
+   delete brokers;
+
    nxlog_debug(3, _T("MQTT: %d parameters added from configuration"), parameters->size());
 }
 
@@ -47,6 +58,10 @@ static BOOL SubAgentInit(Config *config)
    mosquitto_lib_version(&major, &minor, &rev);
    nxlog_debug(2, _T("MQTT: using libmosquitto %d.%d.%d"), major, minor, rev);
 
+   // Start network loops
+   for(int i = 0; i < s_brokers.size(); i++)
+      s_brokers.get(i)->startNetworkLoop();
+
    return TRUE;
 }
 
@@ -55,6 +70,10 @@ static BOOL SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
+   // Stop network loops
+   for(int i = 0; i < s_brokers.size(); i++)
+      s_brokers.get(i)->stopNetworkLoop();
+
    mosquitto_lib_cleanup();
    nxlog_debug(2, _T("MQTT subagent shutdown completed"));
 }
@@ -81,7 +100,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(MQTT)
 {
    StructArray<NETXMS_SUBAGENT_PARAM> *parameters = new StructArray<NETXMS_SUBAGENT_PARAM>();
 
-   AddParameters(parameters, config);
+   RegisterBrokers(parameters, config);
 
    m_info.numParameters = parameters->size();
    m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),

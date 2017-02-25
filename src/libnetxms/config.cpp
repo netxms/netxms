@@ -155,12 +155,12 @@ ConfigEntry::~ConfigEntry()
       next = entry->getNext();
       delete entry;
    }
-   safe_free(m_name);
-   safe_free(m_file);
+   free(m_name);
+   free(m_file);
 
    for(int i = 0; i < m_valueCount; i++)
       safe_free(m_values[i]);
-   safe_free(m_values);
+   free(m_values);
 }
 
 /**
@@ -175,7 +175,7 @@ void ConfigEntry::setName(const TCHAR *name)
 /**
  * Find entry by name
  */
-ConfigEntry* ConfigEntry::findEntry(const TCHAR *name)
+ConfigEntry* ConfigEntry::findEntry(const TCHAR *name) const
 {
    const TCHAR *realName;
    if (name[0] == _T('%'))
@@ -264,7 +264,7 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
  * Get all subentries with names matched to mask.
  * Returned list ordered by ID
  */
-ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
 {
    ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, false);
    for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
@@ -288,7 +288,7 @@ static int CompareById(const void *p1, const void *p2)
 /**
  * Get all subentries with names matched to mask ordered by id
  */
-ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask) const
 {
    ObjectArray<ConfigEntry> *list = getSubEntries(mask);
    list->sort(CompareById);
@@ -427,7 +427,7 @@ int ConfigEntry::getConcatenatedValuesLength()
  * @param defaultValue value to be returned if requested sub-entry is missing (NULL if omited)
  * @return sub-entry value or default value if requested sub-entry does not exist
  */
-const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue)
+const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const TCHAR *defaultValue) const
 {
    ConfigEntry *e = findEntry(name);
    if (e == NULL)
@@ -436,25 +436,25 @@ const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const T
    return (value != NULL) ? value : defaultValue;
 }
 
-INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue)
+INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue)
+UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue)
+INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue)
+UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -464,7 +464,7 @@ UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT6
  * Get sub-entry value as boolean
  * (consider non-zero numerical value or strings "yes", "true", "on" as true)
  */
-bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool defaultValue)
+bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
@@ -480,7 +480,7 @@ bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool d
 /**
  * Get sub-entry value as UUID
  */
-uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index)
+uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
@@ -496,7 +496,7 @@ uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index)
 /**
  * Get attribute as integer
  */
-INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue)
+INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
@@ -505,7 +505,7 @@ INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue)
 /**
  * Get attribute as unsigned integer
  */
-UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue)
+UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
@@ -514,7 +514,7 @@ UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue)
 /**
  * Get attribute as 64 bit integer
  */
-INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue)
+INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != NULL) ? _tcstoll(value, NULL, 0) : defaultValue;
@@ -523,7 +523,7 @@ INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue)
 /**
  * Get attribute as unsigned 64 bit integer
  */
-UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue)
+UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    return (value != NULL) ? _tcstoull(value, NULL, 0) : defaultValue;
@@ -533,7 +533,7 @@ UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue)
  * Get attribute as boolean
  * (consider non-zero numerical value or strings "yes", "true", "on" as true)
  */
-bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue)
+bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue) const
 {
    const TCHAR *value = getAttribute(name);
    if (value != NULL)

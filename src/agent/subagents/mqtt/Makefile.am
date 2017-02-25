@@ -1,7 +1,7 @@
 SUBAGENT = mqtt
 
 pkglib_LTLIBRARIES = mqtt.la
-mqtt_la_SOURCES = main.cpp
+mqtt_la_SOURCES = broker.cpp main.cpp topic.cpp
 mqtt_la_CPPFLAGS=-I@top_srcdir@/include @MQTT_CPPFLAGS@
 mqtt_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @MQTT_LDFLAGS@
 mqtt_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @MQTT_LIBS@

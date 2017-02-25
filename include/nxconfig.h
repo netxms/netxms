@@ -75,20 +75,20 @@ public:
 	void addValuePreallocated(TCHAR *value);
 	void setValue(const TCHAR*value);
 
-	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL);
-	INT32 getSubEntryValueAsInt(const TCHAR *name, int index = 0, INT32 defaultValue = 0);
-	UINT32 getSubEntryValueAsUInt(const TCHAR *name, int index = 0, UINT32 defaultValue = 0);
-	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
-	UINT64 getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0);
-	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
-	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0);
+	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL) const;
+	INT32 getSubEntryValueAsInt(const TCHAR *name, int index = 0, INT32 defaultValue = 0) const;
+	UINT32 getSubEntryValueAsUInt(const TCHAR *name, int index = 0, UINT32 defaultValue = 0) const;
+	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0) const;
+	UINT64 getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0) const;
+	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false) const;
+	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0) const;
 
-   const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
-	INT32 getAttributeAsInt(const TCHAR *name, INT32 defaultValue = 0);
-	UINT32 getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue = 0);
-	INT64 getAttributeAsInt64(const TCHAR *name, INT64 defaultValue = 0);
-	UINT64 getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue = 0);
-	bool getAttributeAsBoolean(const TCHAR *name, bool defaultValue = false);
+   const TCHAR *getAttribute(const TCHAR *name)  const { return m_attributes.get(name); }
+	INT32 getAttributeAsInt(const TCHAR *name, INT32 defaultValue = 0) const;
+	UINT32 getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue = 0) const;
+	INT64 getAttributeAsInt64(const TCHAR *name, INT64 defaultValue = 0) const;
+	UINT64 getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue = 0) const;
+	bool getAttributeAsBoolean(const TCHAR *name, bool defaultValue = false) const;
 
    void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); }
    void setAttributePreallocated(TCHAR *name, TCHAR *value) { m_attributes.setPreallocated(name, value); }
@@ -98,15 +98,15 @@ public:
    void setAttribute(const TCHAR *name, UINT64 value);
    void setAttribute(const TCHAR *name, bool value);
 
-	const TCHAR *getFile() { return m_file; }
-	int getLine() { return m_line; }
+	const TCHAR *getFile() const { return m_file; }
+	int getLine() const { return m_line; }
 
 	void setName(const TCHAR *name);
 
 	ConfigEntry *createEntry(const TCHAR *name);
-	ConfigEntry *findEntry(const TCHAR *name);
-	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *mask);
-	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask);
+	ConfigEntry *findEntry(const TCHAR *name) const;
+	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *mask) const;
+	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask) const;
 	void unlinkEntry(ConfigEntry *entry);
 
 	void print(FILE *file, int level, TCHAR *prefix);
