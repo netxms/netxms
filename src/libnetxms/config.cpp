@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2013 Raden Solutions
+ ** Copyright (C) 2003-2017 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -892,30 +892,45 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
    return value;
 }
 
+/**
+ * Get value as 32 bit integer
+ */
 INT32 Config::getValueAsInt(const TCHAR *path, INT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get value as unsigned 32 bit integer
+ */
 UINT32 Config::getValueAsUInt(const TCHAR *path, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get value as 64 bit integer
+ */
 INT64 Config::getValueAsInt64(const TCHAR *path, INT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get value as unsigned 64 bit integer
+ */
 UINT64 Config::getValueAsUInt64(const TCHAR *path, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
+/**
+ * Get value as boolean
+ */
 bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 {
    const TCHAR *value = getValue(path);
@@ -1219,11 +1234,23 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
             if (end != NULL)
                *end = 0;
          }
-         currentSection = m_root->findEntry(&buffer[1]);
-         if (currentSection == NULL)
+
+         ConfigEntry *parent = m_root;
+         TCHAR *curr = &buffer[1];
+         TCHAR *s;
+         do
          {
-            currentSection = new ConfigEntry(&buffer[1], m_root, this, file, sourceLine, 0);
-         }
+            s = _tcschr(curr, _T('/'));
+            if (s != NULL)
+               *s = 0;
+            currentSection = parent->findEntry(curr);
+            if (currentSection == NULL)
+            {
+               currentSection = new ConfigEntry(curr, parent, this, file, sourceLine, 0);
+            }
+            curr = s + 1;
+            parent = currentSection;
+         } while(s != NULL);
       }
       else
       {
