@@ -45,8 +45,14 @@ MqttBroker::MqttBroker() : m_topics(16, 16, true)
    m_port = 0;
    m_login = NULL;
    m_password = NULL;
-   m_handle = mosquitto_new(NULL, true, this);
    m_loopThread = INVALID_THREAD_HANDLE;
+
+   char clientId[128];
+   strcpy(clientId, "nxagentd/");
+   char *guid = uuid::generate().toString().getUTF8String();
+   strcat(clientId, guid);
+   free(guid);
+   m_handle = mosquitto_new(clientId, true, this);
 }
 
 /**
