@@ -3,6 +3,7 @@
 *
 
 - Fixed bug in NXSL string concatenation
+- AnySMS SMS driver
 - Fixed isses: NX-1111
 
 
