@@ -1219,7 +1219,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
  *     object - NetXMS node object
  *     name   - name of the parameter
  * Return value:
- *     paramater's value on success and null on failure
+ *     true on success
  */
 static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1252,6 +1252,61 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
    else
    {
       *ppResult = new NXSL_Value(0);
+   }
+   return 0;
+}
+
+/**
+ * Agent action output handler
+ */
+static void ActionOutputHandler(ActionCallbackEvent event, const TCHAR *text, void *userData)
+{
+   if (event == ACE_DATA)
+      ((String *)userData)->append(text);
+}
+
+/**
+ * Execute agent action
+ * Syntax:
+ *    AgentExecuteActionWithOutput(object, name, ...)
+ * where:
+ *     object - NetXMS node object
+ *     name   - name of the parameter
+ * Return value:
+ *     action output on success and null on failure
+ */
+static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if (argc < 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   for(int i = 1; i < argc; i++)
+      if (!argv[i]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   Node *node = (Node *)object->getData();
+   AgentConnection *conn = node->createAgentConnection();
+   if (conn != NULL)
+   {
+      const TCHAR *args[128];
+      for(int i = 2; (i < argc) && (i < 128); i++)
+         args[i - 2] = argv[i]->getValueAsCString();
+      String output;
+      UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), argc - 2, args, true, ActionOutputHandler, &output);
+      *ppResult = (rcc == ERR_SUCCESS) ? new NXSL_Value(output) : new NXSL_Value();
+      conn->decRefCount();
+      nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+   }
+   else
+   {
+      *ppResult = new NXSL_Value();
    }
    return 0;
 }
@@ -1449,6 +1504,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("map"), F_map, -1 },
    { _T("mapList"), F_mapList, -1 },
    { _T("AgentExecuteAction"), F_AgentExecuteAction, -1 },
+   { _T("AgentExecuteActionWithOutput"), F_AgentExecuteActionWithOutput, -1 },
 	{ _T("AgentReadList"), F_AgentReadList, 2 },
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
