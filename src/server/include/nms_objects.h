@@ -874,8 +874,7 @@ public:
 	bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
    bool isFake() const { return (m_index == 1) &&
                                 (m_type == IFTYPE_OTHER) &&
-                                (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
-                                (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+                                !_tcscmp(m_name, _T("unknown")); }
 
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }

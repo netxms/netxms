@@ -3133,6 +3133,13 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
          {
             Interface *pInterface = (Interface *)m_childList->get(i);
+            if (pInterface->isFake())
+            {
+               // always delete fake interfaces if we got actual interface list
+               deleteList.add(pInterface);
+               continue;
+            }
+
             if (!pInterface->isManuallyCreated())
             {
                int j;
