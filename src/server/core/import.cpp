@@ -339,9 +339,9 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
       nxlog_debug(4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
    }
    UINT32 id = ResolveTrapGuid(guid);
-	SNMP_TrapCfg *trapCfg = new SNMP_TrapCfg(trap, guid, id, event->getCode());
+	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, event->getCode());
 
-	if (trapCfg->getOidLength() == 0)
+	if (!trapCfg->getOid().isValid())
 	{
 	   delete trapCfg;
 		return rcc;
@@ -359,7 +359,7 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
 	if (hStmt != NULL)
 	{
 	   TCHAR oid[1024];
-	   SNMPConvertOIDToText(trapCfg->getOidLength(), trapCfg->getOid()->value(), oid, 1024);
+	   trapCfg->getOid().toString(oid, 1024);
 	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
 	   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
 	   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapCfg->getDescription(), DB_BIND_STATIC);

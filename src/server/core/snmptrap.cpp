@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-207 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ UINT64 g_snmpTrapsReceived = 0;
  * Static data
  */
 static MUTEX m_mutexTrapCfgAccess = NULL;
-static ObjectArray<SNMP_TrapCfg> m_trapCfgList(16, 4, true);
+static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, true);
 static BOOL m_bLogAllTraps = FALSE;
 static INT64 m_qnTrapId = 1;
 static bool s_allowVarbindConversion = true;
@@ -53,13 +53,11 @@ static UINT16 m_wTrapPort = 162;
 /**
  * Create new SNMP trap configuration object
  */
-SNMP_TrapCfg::SNMP_TrapCfg()
+SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, true)
 {
    m_guid = uuid::generate();
    m_id = CreateUniqueId(IDG_SNMP_TRAP);
-   m_objectId = new SNMP_ObjectId();
    m_eventCode = EVENT_SNMP_UNMATCHED_TRAP;
-   m_pMaps = new ObjectArray<SNMP_TrapParamMap>(4, 2, true);
    nx_strncpy(m_description, _T(""), 1);
    nx_strncpy(m_userTag, _T(""), 1);
 }
@@ -67,31 +65,28 @@ SNMP_TrapCfg::SNMP_TrapCfg()
 /**
  * Create SNMP trap configuration object from database
  */
-SNMP_TrapCfg::SNMP_TrapCfg(DB_RESULT trapResult, DB_STATEMENT stmt, int row)
+SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT stmt, int row) : m_mappings(8, 8, true)
 {
    m_id = DBGetFieldULong(trapResult, row, 0);
    TCHAR buffer[MAX_OID_LENGTH];
-   m_objectId = new SNMP_ObjectId(SNMP_ObjectId::parse(DBGetField(trapResult, row, 1, buffer, MAX_DB_STRING)));
+   m_objectId = SNMP_ObjectId::parse(DBGetField(trapResult, row, 1, buffer, MAX_DB_STRING));
    m_eventCode = DBGetFieldULong(trapResult, row, 2);
    DBGetField(trapResult, row, 3, m_description, MAX_DB_STRING);
    DBGetField(trapResult, row, 4, m_userTag, MAX_DB_STRING);
    m_guid = DBGetFieldGUID(trapResult, row, 5);
 
-   m_pMaps = new ObjectArray<SNMP_TrapParamMap>(4, 2, true);
    DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT mapResult = DBSelectPrepared(stmt);
 
    if (mapResult != NULL)
    {
       UINT32 mapCount = DBGetNumRows(mapResult);
-      SNMP_TrapParamMap *param;
       for(int i = 0; i < mapCount; i++)
       {
-         param = new SNMP_TrapParamMap(mapResult, i);
-         if (param->getOidLength() <= 0)
+         SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(mapResult, i);
+         if (!param->isPositional() && !param->getOid()->isValid())
             nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", (const TCHAR *)param->getOid()->toString(), m_id);
-         m_pMaps->add(param);
-
+         m_mappings.add(param);
       }
       DBFreeResult(mapResult);
    }
@@ -100,7 +95,7 @@ SNMP_TrapCfg::SNMP_TrapCfg(DB_RESULT trapResult, DB_STATEMENT stmt, int row)
 /**
  * Create SNMP trap configuration object from config entry
  */
-SNMP_TrapCfg::SNMP_TrapCfg(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode)
+SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode) : m_mappings(8, 8, true)
 {
    if (id == 0)
       m_id = CreateUniqueId(IDG_SNMP_TRAP);
@@ -108,25 +103,23 @@ SNMP_TrapCfg::SNMP_TrapCfg(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT
       m_id = id;
 
    m_guid = guid;
-   m_objectId = new SNMP_ObjectId(SNMP_ObjectId::parse(entry->getSubEntryValue(_T("oid"), 0, _T(""))));
+   m_objectId = SNMP_ObjectId::parse(entry->getSubEntryValue(_T("oid"), 0, _T("")));
    m_eventCode = eventCode;
    nx_strncpy(m_description, entry->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_userTag, entry->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
 
-   m_pMaps = new ObjectArray<SNMP_TrapParamMap>(4, 2, true);
    ConfigEntry *parametersRoot = entry->findEntry(_T("parameters"));
    if (parametersRoot != NULL)
    {
-      SNMP_TrapParamMap *param;
       ObjectArray<ConfigEntry> *parameters = parametersRoot->getOrderedSubEntries(_T("parameter#*"));
       if (parameters->size() > 0)
       {
          for(int i = 0; i < parameters->size(); i++)
          {
-            param = new SNMP_TrapParamMap(parameters->get(i));
-            if (param->getOidLength() <= 0)
+            SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(parameters->get(i));
+            if (!param->isPositional() && !param->getOid()->isValid())
                nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", (const TCHAR *)param->getOid()->toString(), m_id);
-            m_pMaps->add(param);
+            m_mappings.add(param);
          }
       }
       delete parameters;
@@ -136,65 +129,61 @@ SNMP_TrapCfg::SNMP_TrapCfg(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT
 /**
  * Create SNMP trap configuration object from NXCPMessage
  */
-SNMP_TrapCfg::SNMP_TrapCfg(NXCPMessage *msg)
+SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8, true)
 {
    UINT32 buffer[MAX_OID_LENGTH];
 
    m_id = msg->getFieldAsUInt32(VID_TRAP_ID);
    msg->getFieldAsInt32Array(VID_TRAP_OID, msg->getFieldAsUInt32(VID_TRAP_OID_LEN), buffer);
-   m_objectId = new SNMP_ObjectId(buffer, msg->getFieldAsUInt32(VID_TRAP_OID_LEN));
+   m_objectId = SNMP_ObjectId(buffer, msg->getFieldAsUInt32(VID_TRAP_OID_LEN));
    m_eventCode = msg->getFieldAsUInt32(VID_EVENT_CODE);
    msg->getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
    msg->getFieldAsString(VID_USER_TAG, m_userTag, MAX_USERTAG_LENGTH);
 
    // Read new mappings from message
-   UINT32 numMaps = msg->getFieldAsUInt32(VID_TRAP_NUM_MAPS);
+   int count = msg->getFieldAsInt32(VID_TRAP_NUM_MAPS);
    UINT32 base = VID_TRAP_PBASE;
-   m_pMaps = new ObjectArray<SNMP_TrapParamMap>(numMaps, 4, true);
-
-   for(int i = 0; i < numMaps; i++, base += 10)
+   for(int i = 0; i < count; i++, base += 10)
    {
-      m_pMaps->add(new SNMP_TrapParamMap(msg, base));
+      m_mappings.add(new SNMPTrapParameterMapping(msg, base));
    }
 }
 
 /**
  * Destructor for SNMP trap configuration object
  */
-SNMP_TrapCfg::~SNMP_TrapCfg()
+SNMPTrapConfiguration::~SNMPTrapConfiguration()
 {
-   delete m_objectId;
-   delete m_pMaps;
 }
 
 /**
  * Fill NXCP message with trap configuration data
  */
-void SNMP_TrapCfg::fillMessage(NXCPMessage *msg) const
+void SNMPTrapConfiguration::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_TRAP_ID, m_id);
-   msg->setField(VID_TRAP_OID_LEN, (UINT32)m_objectId->length());
-   msg->setFieldFromInt32Array(VID_TRAP_OID, (UINT32)m_objectId->length(), m_objectId->value());
+   msg->setField(VID_TRAP_OID_LEN, (UINT32)m_objectId.length());
+   msg->setFieldFromInt32Array(VID_TRAP_OID, m_objectId.length(), m_objectId.value());
    msg->setField(VID_EVENT_CODE, m_eventCode);
    msg->setField(VID_DESCRIPTION, m_description);
    msg->setField(VID_USER_TAG, m_userTag);
 
-   msg->setField(VID_TRAP_NUM_MAPS, m_pMaps->size());
+   msg->setField(VID_TRAP_NUM_MAPS, (UINT32)m_mappings.size());
    UINT32 base = VID_TRAP_PBASE;
-   for(int i = 0; i < m_pMaps->size(); i++, base += 10)
+   for(int i = 0; i < m_mappings.size(); i++, base += 10)
    {
-      m_pMaps->get(i)->fillMessage(msg, base);
+      m_mappings.get(i)->fillMessage(msg, base);
    }
 }
 
 /**
  * Fill NXCP message with trap configuration for list
  */
-void SNMP_TrapCfg::fillMessage(NXCPMessage *msg, UINT32 base) const
+void SNMPTrapConfiguration::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_description);
-   msg->setFieldFromInt32Array(base + 2, (UINT32)m_objectId->length(), m_objectId->value());
+   msg->setFieldFromInt32Array(base + 2, m_objectId.length(), m_objectId.value());
    msg->setField(base + 3, m_eventCode);
 }
 
@@ -210,7 +199,7 @@ void NotifyOnTrapCfgChangeCB(ClientSession *session, void *arg)
 /**
  * Notify clients of trap cfg change
  */
-void SNMP_TrapCfg::notifyOnTrapCfgChange(UINT32 code)
+void SNMPTrapConfiguration::notifyOnTrapCfgChange(UINT32 code)
 {
    NXCPMessage msg;
 
@@ -223,7 +212,7 @@ void SNMP_TrapCfg::notifyOnTrapCfgChange(UINT32 code)
 /**
  * SNMP trap parameter map default constructor
  */
-SNMP_TrapParamMap::SNMP_TrapParamMap()
+SNMPTrapParameterMapping::SNMPTrapParameterMapping()
 {
    m_objectId = new SNMP_ObjectId();
    m_position = 0;
@@ -234,7 +223,7 @@ SNMP_TrapParamMap::SNMP_TrapParamMap()
 /**
  * Create SNMP trap parameter map object from database
  */
-SNMP_TrapParamMap::SNMP_TrapParamMap(DB_RESULT mapResult, int row)
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(DB_RESULT mapResult, int row)
 {
    TCHAR oid[MAX_DB_STRING];
    DBGetField(mapResult, row, 0, oid, MAX_DB_STRING);
@@ -257,7 +246,7 @@ SNMP_TrapParamMap::SNMP_TrapParamMap(DB_RESULT mapResult, int row)
 /**
  * Create SNMP trap parameter map object from config entry
  */
-SNMP_TrapParamMap::SNMP_TrapParamMap(ConfigEntry *entry)
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
 {
    int position = entry->getSubEntryValueAsInt(_T("position"), 0, -1);
    if (position > 0)
@@ -278,7 +267,7 @@ SNMP_TrapParamMap::SNMP_TrapParamMap(ConfigEntry *entry)
 /**
  * Create SNMP trap parameter map object from NXCPMessage
  */
-SNMP_TrapParamMap::SNMP_TrapParamMap(NXCPMessage *msg, UINT32 base)
+SNMPTrapParameterMapping::SNMPTrapParameterMapping(NXCPMessage *msg, UINT32 base)
 {
    m_flags = msg->getFieldAsUInt32(base);
    msg->getFieldAsString(base + 1, m_description, MAX_DB_STRING);
@@ -298,7 +287,7 @@ SNMP_TrapParamMap::SNMP_TrapParamMap(NXCPMessage *msg, UINT32 base)
 /**
  * Destructor for SNMP trap parameter map object
  */
-SNMP_TrapParamMap::~SNMP_TrapParamMap()
+SNMPTrapParameterMapping::~SNMPTrapParameterMapping()
 {
    delete m_objectId;
 }
@@ -306,10 +295,10 @@ SNMP_TrapParamMap::~SNMP_TrapParamMap()
 /**
  * Fill NXCP message with trap parameter map configuration data
  */
-void SNMP_TrapParamMap::fillMessage(NXCPMessage *msg, UINT32 base) const
+void SNMPTrapParameterMapping::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
-   msg->setField(base, isPosition());
-   if (isPosition())
+   msg->setField(base, isPositional());
+   if (isPositional())
       msg->setField(base + 1, m_position);
    else
       msg->setFieldFromInt32Array(base + 1, m_objectId->length(), m_objectId->value());
@@ -323,9 +312,6 @@ void SNMP_TrapParamMap::fillMessage(NXCPMessage *msg, UINT32 base) const
  */
 void LoadTrapCfg()
 {
-   SNMP_TrapCfg *trapCfg;
-   TCHAR buffer[MAX_DB_STRING];
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Load traps
@@ -338,9 +324,10 @@ void LoadTrapCfg()
          UINT32 numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
-            trapCfg = new SNMP_TrapCfg(hResult, hStmt, i);
-            if (trapCfg->getOidLength() <= 0)
+            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(hResult, hStmt, i);
+            if (!trapCfg->getOid().isValid())
             {
+               TCHAR buffer[MAX_DB_STRING];
                nxlog_write(MSG_INVALID_TRAP_OID, NXLOG_ERROR, "s",
                            DBGetField(hResult, i, 1, buffer, MAX_DB_STRING));
             }
@@ -385,8 +372,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
    TCHAR *argList[32], szBuffer[256];
    TCHAR *names[33];
    char szFormat[] = "sssssssssssssssssssssssssssssssss";
-   SNMP_TrapCfg *trapCfg = m_trapCfgList.get(dwIndex);
-   UINT32 i, numMaps = trapCfg->getNumMaps();
+   SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
    int iResult;
 
    memset(argList, 0, sizeof(argList));
@@ -394,17 +380,19 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
    names[0] = (TCHAR *)_T("oid");
 
 	// Extract varbinds from trap and add them as event's parameters
-   for(i = 0; i < numMaps; i++)
+   int numMaps = trapCfg->getParameterMappingCount();
+   for(int i = 0; i < numMaps; i++)
    {
-      if (trapCfg->getMap(i)->isPosition())
+      const SNMPTrapParameterMapping *pm = trapCfg->getParameterMapping(i);
+      if (pm->isPositional())
       {
 			// Extract by varbind position
-         SNMP_Variable *varbind = pdu->getVariable(trapCfg->getMap(i)->getOidLength()- 1);
+         SNMP_Variable *varbind = pdu->getVariable(pm->getPosition());
          if (varbind != NULL)
          {
 				bool convertToHex = true;
 				argList[i] = _tcsdup(
-               (s_allowVarbindConversion && !(trapCfg->getMap(i)->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
+               (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                   varbind->getValueAsString(szBuffer, 256));
 				names[i + 1] = _tcsdup(varbind->getName().toString());
@@ -416,12 +404,12 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
          for(int j = 0; j < pdu->getNumVariables(); j++)
          {
             SNMP_Variable *varbind = pdu->getVariable(j);
-            iResult = varbind->getName().compare(*(trapCfg->getMap(i)->getOid()));
+            iResult = varbind->getName().compare(*(pm->getOid()));
             if ((iResult == OID_EQUAL) || (iResult == OID_LONGER))
             {
 					bool convertToHex = true;
 					argList[i] = _tcsdup(
-                  (s_allowVarbindConversion && !(trapCfg->getMap(i)->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
+                  (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                      varbind->getValueAsString(szBuffer, 256));
 	            names[i + 1] = _tcsdup(varbind->getName().toString());
@@ -448,7 +436,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
             argList[24], argList[25], argList[26], argList[27],
             argList[28], argList[29], argList[30], argList[31]);
 
-   for(i = 0; i < numMaps; i++)
+   for(int i = 0; i < numMaps; i++)
    {
       free(argList[i]);
       free(names[i + 1]);
@@ -469,7 +457,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   UINT32 dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
+   UINT32 dwBufPos, dwBufSize;
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
 	BOOL processed = FALSE;
@@ -548,12 +536,10 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       node->incSnmpTrapCount();
       if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
-         UINT32 i;
-
          // Pass trap to loaded modules
          if (!(g_flags & AF_SHUTDOWN))
          {
-            for(i = 0; i < g_dwNumModules; i++)
+            for(UINT32 i = 0; i < g_dwNumModules; i++)
             {
                if (g_pModuleList[i].pfTrapHandler != NULL)
                {
@@ -570,31 +556,34 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
          MutexLock(m_mutexTrapCfgAccess);
 
          // Try to find closest match
-         for(i = 0, dwMatchLen = 0; i < m_trapCfgList.size(); i++)
+         size_t matchLen = 0;
+         int matchIndex;
+         for(int i = 0; i < m_trapCfgList.size(); i++)
          {
-            if (m_trapCfgList.get(i)->getOidLength() > 0)
+            const SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(i);
+            if (trapCfg->getOid().length() > 0)
             {
-               iResult = pdu->getTrapId()->compare(*(m_trapCfgList.get(i)->getOid()));
+               iResult = pdu->getTrapId()->compare(trapCfg->getOid());
                if (iResult == OID_EQUAL)
                {
-                  dwMatchLen = m_trapCfgList.get(i)->getOidLength();
-                  dwMatchIdx = i;
+                  matchLen = trapCfg->getOid().length();
+                  matchIndex = i;
                   break;   // Find exact match
                }
                else if (iResult == OID_LONGER)
                {
-                  if (m_trapCfgList.get(i)->getOidLength() > dwMatchLen)
+                  if (trapCfg->getOid().length() > matchLen)
                   {
-                     dwMatchLen = m_trapCfgList.get(i)->getOidLength();
-                     dwMatchIdx = i;
+                     matchLen = trapCfg->getOid().length();
+                     matchIndex = i;
                   }
                }
             }
          }
 
-         if (dwMatchLen > 0)
+         if (matchLen > 0)
          {
-            GenerateTrapEvent(node->getId(), dwMatchIdx, pdu, srcPort);
+            GenerateTrapEvent(node->getId(), matchIndex, pdu, srcPort);
          }
          else     // Process unmatched traps
          {
@@ -607,7 +596,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
                dwBufSize = pdu->getNumVariables() * 4096 + 16;
                pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
                pszTrapArgs[0] = 0;
-               for(i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < (UINT32)pdu->getNumVariables(); i++)
+               for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
                {
                   pVar = pdu->getVariable(i);
 					   bool convertToHex = true;
@@ -1007,7 +996,7 @@ UINT32 DeleteTrap(UINT32 id)
 /**
  * Save parameter mapping to database
  */
-bool SNMP_TrapCfg::saveParameterMapping(DB_HANDLE hdb)
+bool SNMPTrapConfiguration::saveParameterMapping(DB_HANDLE hdb)
 {
    bool result = true;
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=?"));
@@ -1021,22 +1010,19 @@ bool SNMP_TrapCfg::saveParameterMapping(DB_HANDLE hdb)
 		if (hStmt != NULL)
 		{
          TCHAR oid[1024];
-			for(UINT32 i = 0; i < m_pMaps->size(); i++)
+			for(int i = 0; i < m_mappings.size(); i++)
 			{
-				if (!m_pMaps->get(i)->isPosition())
-				{
-					SNMPConvertOIDToText(m_pMaps->get(i)->getOidLength(),
-					                     m_pMaps->get(i)->getOid()->value(),
-												oid, 1024);
-				}
+			   const SNMPTrapParameterMapping *pm = m_mappings.get(i);
+				if (!pm->isPositional())
+				   pm->getOid()->toString(oid, 1024);
 				else
-					_sntprintf(oid, 1024, _T("POS:%d"), m_pMaps->get(i)->getOidLength());
+					_sntprintf(oid, 1024, _T("POS:%d"), pm->getPosition());
 
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
 				DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
-				DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_pMaps->get(i)->getDescription(), DB_BIND_STATIC);
-				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_pMaps->get(i)->getFlags());
+				DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pm->getDescription(), DB_BIND_STATIC);
+				DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pm->getFlags());
 
 				if (!DBExecute(hStmt))
 				{
@@ -1063,7 +1049,7 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (guid,trap_id,snmp_oid,event_code,description,user_tag) VALUES (?,?,'',?,'','')"));
    if (hStmt != NULL)
    {
-      SNMP_TrapCfg *trapCfg = new SNMP_TrapCfg();
+      SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration();
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getId());
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
@@ -1103,8 +1089,8 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=? WHERE trap_id=?"));
          if (hStmt != NULL)
          {
-            SNMP_TrapCfg *trapCfg = new SNMP_TrapCfg(pMsg);
-            SNMPConvertOIDToText(trapCfg->getOidLength(), trapCfg->getOid()->value(), oid, 1024);
+            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(pMsg);
+            trapCfg->getOid().toString(oid, 1024);
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapCfg->getDescription(), DB_BIND_STATIC);
@@ -1148,7 +1134,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
 void CreateTrapExportRecord(String &xml, UINT32 id)
 {
 	TCHAR szBuffer[1024];
-	SNMP_TrapCfg *trapCfg;
+	SNMPTrapConfiguration *trapCfg;
 
    MutexLock(m_mutexTrapCfgAccess);
    for(int i = 0; i < m_trapCfgList.size(); i++)
@@ -1162,33 +1148,30 @@ void CreateTrapExportRecord(String &xml, UINT32 id)
 			                       _T("\t\t\t<description>%s</description>\n")
 			                       _T("\t\t\t<userTag>%s</userTag>\n"), id,
                                 (const TCHAR *)trapCfg->getGuid().toString(),
-                                (const TCHAR *)trapCfg->getOid()->toString(),
+                                (const TCHAR *)trapCfg->getOid().toString(),
 										  (const TCHAR *)EscapeStringForXML2(trapCfg->getDescription()),
 										  (const TCHAR *)EscapeStringForXML2(trapCfg->getUserTag()));
 
 		   EventNameFromCode(trapCfg->getEventCode(), szBuffer);
 			xml.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
-			if (trapCfg->getNumMaps() > 0)
+			if (trapCfg->getParameterMappingCount() > 0)
 			{
             xml.append(_T("\t\t\t<parameters>\n"));
-				for(int j = 0; j < trapCfg->getNumMaps(); j++)
+				for(int j = 0; j < trapCfg->getParameterMappingCount(); j++)
 				{
+				   const SNMPTrapParameterMapping *pm = trapCfg->getParameterMapping(j);
 					xml.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
 			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
 					                       _T("\t\t\t\t\t<description>%s</description>\n"),
-												  j + 1, trapCfg->getMap(j)->getFlags(),
-												  (const TCHAR *)EscapeStringForXML2(trapCfg->getMap(j)->getDescription()));
-               if (!trapCfg->getMap(j)->isPosition())
+												  j + 1, pm->getFlags(),
+												  (const TCHAR *)EscapeStringForXML2(pm->getDescription()));
+               if (!pm->isPositional())
 					{
-						xml.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
-						                       SNMPConvertOIDToText(trapCfg->getMap(j)->getOidLength(),
-						                                            trapCfg->getMap(j)->getOid()->value(),
-						                                            szBuffer, 1024));
+						xml.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"), pm->getOid()->toString(szBuffer, 1024));
 					}
 					else
 					{
-						xml.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
-						                       trapCfg->getMap(j)->getOidLength());
+						xml.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"), pm->getPosition());
 					}
                xml.append(_T("\t\t\t\t</parameter>\n"));
 				}
@@ -1231,7 +1214,7 @@ UINT32 ResolveTrapGuid(const uuid& guid)
 /**
  * Add SNMP trap configuration to local list
  */
-void AddTrapCfgToList(SNMP_TrapCfg *trapCfg)
+void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg)
 {
    MutexLock(m_mutexTrapCfgAccess);
 
