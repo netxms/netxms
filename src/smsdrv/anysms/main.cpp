@@ -187,6 +187,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
                   if (code == 0)
                   {
                	   nxlog_debug(4, _T("AnySMS: success"));
+                     success = true;
                   }
                   else
                   {
