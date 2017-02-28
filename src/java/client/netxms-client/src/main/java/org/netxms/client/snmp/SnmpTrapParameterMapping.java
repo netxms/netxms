@@ -18,12 +18,10 @@
  */
 package org.netxms.client.snmp;
 
-import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
  * SNMP trap parameter mapping
- *
  */
 public class SnmpTrapParameterMapping
 {
@@ -61,6 +59,12 @@ public class SnmpTrapParameterMapping
 		objectId = oid;
 	}
 	
+   /**
+    * Create mapping from NXCP message
+    * 
+    * @param msg NXCP message
+    * @param base base field ID
+    */
    public SnmpTrapParameterMapping(NXCPMessage msg, long base)
    {
       type = msg.getFieldAsInt32(base);

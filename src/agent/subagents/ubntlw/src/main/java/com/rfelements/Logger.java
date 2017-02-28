@@ -4,13 +4,13 @@ import org.netxms.agent.SubAgent;
 
 public class Logger {
 
-    private final Class clazz;
+    private final Class<?> clazz;
 
-    private Logger(Class clazz) {
+    private Logger(Class<?> clazz) {
         this.clazz = clazz;
     }
 
-    public static Logger getInstance(Class clazz) {
+    public static Logger getInstance(Class<?> clazz) {
         return new Logger(clazz);
     }
 

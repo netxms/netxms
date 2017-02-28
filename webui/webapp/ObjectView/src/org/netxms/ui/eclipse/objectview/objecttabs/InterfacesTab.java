@@ -214,7 +214,7 @@ public class InterfacesTab extends ObjectTab
             if (n.getCode() == SessionNotification.OBJECT_CHANGED)
             {
                AbstractObject object = (AbstractObject)n.getObject();
-               if ((object instanceof Interface) && object.isDirectChildOf(getObject().getObjectId()))
+               if ((object != null) && (object instanceof Interface) && (getObject() != null) && object.isDirectChildOf(getObject().getObjectId()))
                {
                   viewer.getControl().getDisplay().asyncExec(new Runnable() {
                      @Override

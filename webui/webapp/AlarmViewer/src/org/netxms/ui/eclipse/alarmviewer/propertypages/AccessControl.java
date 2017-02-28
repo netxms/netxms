@@ -39,7 +39,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.alarmviewer.editors.AlarmCategoryEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
