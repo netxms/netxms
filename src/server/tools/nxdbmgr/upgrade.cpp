@@ -747,13 +747,27 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V439 to V440
+ */
+static BOOL H_UpgradeFromV439(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("UPDATE config SET description='Enable/disable automatic deletion of subnet objects without any nodes within.' WHERE var_name='DeleteEmptySubnets'\n")
+            _T("UPDATE config SET description='Instance polling interval (in seconds).' WHERE var_name='InstancePollingInterval'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetSchemaVersion(440));
+   return TRUE;
+}
+
+/**
  * Upgrade from V438 to V439
  */
 static BOOL H_UpgradeFromV438(int currVersion, int newVersion)
 {
 	static const TCHAR *batch =
             _T("UPDATE config SET data_type='S' WHERE var_name='LdapUserUniqueId'\n")
-            _T("UPDATE config SET data_type='S' WHERE var_name='LdapGroupUniqueId'")
+            _T("UPDATE config SET data_type='S' WHERE var_name='LdapGroupUniqueId'\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetSchemaVersion(439));
@@ -11534,6 +11548,7 @@ static struct
    { 436, 437, H_UpgradeFromV436 },
    { 437, 438, H_UpgradeFromV437 },
    { 438, 439, H_UpgradeFromV438 },
+   { 439, 440, H_UpgradeFromV439 },
    { 0, 0, NULL }
 };
 

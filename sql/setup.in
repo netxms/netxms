@@ -52,7 +52,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv4','24',1,0,'I','Default mask for synthetic IPv4 subnets.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv6','64',1,0,'I','Default mask for synthetic IPv6 subnets.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DeleteAlarmsOfDeletedObject','1',1,0,'B','Enable/disable automatic alarm removal of an object when it is deleted.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DeleteEmptySubnets','0',1,1,'B','Enable/disable automatic deletion of subnet objects without any nodes within. When enabled, empty subnets will be deleted \nby housekeeping process.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DeleteEmptySubnets','0',1,1,'B','Enable/disable automatic deletion of subnet objects without any nodes within.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DeleteEventsOfDeletedObject','1',1,0,'B','Enable/disable automatic event removal of an object when it is deleted.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DeleteUnreachableNodesPeriod','0',1,1,'B','Delete nodes which were unreachable for a number of days specified by this parameter.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DiscoveryFilter','none',1,0,'S','');
@@ -90,7 +90,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('IcmpPingSize','46',1,1,'I','Size of ICMP packets (in bytes, excluding IP header size) used for status polls.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('IcmpPingTimeout','1500',1,1,'I','Timeout for ICMP ping used for status polls (in milliseconds).');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('ImportConfigurationOnStartup','1',1,1,'B','Import configuration from local files on server startup.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('InstancePollingInterval','600',1,1,'I','Instance polling interval (in milliseconds).');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('InstancePollingInterval','600',1,1,'I','Instance polling interval (in seconds).');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('InternalCA','0',1,1,'B','Enable/disable internal certificate authority.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('IntruderLockoutThreshold','0',1,0,'I','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('IntruderLockoutTime','30',1,0,'I','');
@@ -104,7 +104,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('JobRetryCount','5',1,0,'I','Maximum mumber of job execution retries.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('KeepAliveInterval','60',1,1,'I','Interval in seconds between sending keep alive packets to connected clients.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapGroupClass','',1,0,'S','Specifies which object class represents group objects. If the found entry is not of user or group class, it will be ignored.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapGroupUniqueId','',1,0,'I','');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapGroupUniqueId','',1,0,'S','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapConnectionString','ldap://localhost:389',1,0,'S','The LdapConnectionString configuration parameter may be a comma- or whitespace-separated list of URIs containing only the \nschema, the host, and the port fields. Format: schema://host:port.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapMappingDescription','',1,0,'S','The name of an attribute whose value will be used as a user''s description.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapMappingFullName','displayName',1,0,'S','The name of an attribute whose value will be used as a user''s full name.');
@@ -117,7 +117,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapSyncUserPassword','',1,0,'S', 'User password for LDAP synchronization.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapUserClass','',1,0,'S','The object class which represents user objects. If the found entry is not of user or group class, it will be ignored.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapUserDeleteAction','1',1,0,'C','This parameter specifies what should be done while synchronizing with a deleted user/group from LDAP.');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapUserUniqueId','',1,0,'I','');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LdapUserUniqueId','',1,0,'S','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LockTimeout','60000',1,1,'I','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('LogAllSNMPTraps','0',1,1,'B','Log all SNMP traps.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('MailEncoding','utf8',1,0,'S','Encoding for e-mails generated by NetXMS server.');
