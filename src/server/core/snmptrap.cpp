@@ -170,7 +170,7 @@ SNMP_TrapCfg::~SNMP_TrapCfg()
 /**
  * Fill NXCP message with trap configuration data
  */
-void SNMP_TrapCfg::fillMessage(NXCPMessage *msg)
+void SNMP_TrapCfg::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_TRAP_ID, m_id);
    msg->setField(VID_TRAP_OID_LEN, (UINT32)m_objectId->length());
@@ -190,7 +190,7 @@ void SNMP_TrapCfg::fillMessage(NXCPMessage *msg)
 /**
  * Fill NXCP message with trap configuration for list
  */
-void SNMP_TrapCfg::fillMessage(NXCPMessage *msg, UINT32 base)
+void SNMP_TrapCfg::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_description);
@@ -306,7 +306,7 @@ SNMP_TrapParamMap::~SNMP_TrapParamMap()
 /**
  * Fill NXCP message with trap parameter map configuration data
  */
-void SNMP_TrapParamMap::fillMessage(NXCPMessage *msg, UINT32 base)
+void SNMP_TrapParamMap::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
    msg->setField(base, isPosition());
    if (isPosition())

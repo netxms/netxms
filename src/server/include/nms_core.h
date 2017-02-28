@@ -915,7 +915,7 @@ public:
 /**
  * SNMP Trap parameter map object
  */
-class LIBNXSNMP_EXPORTABLE SNMP_TrapParamMap
+class NXCORE_EXPORTABLE SNMP_TrapParamMap
 {
 private:
    SNMP_ObjectId *m_objectId;           // Trap OID
@@ -931,22 +931,21 @@ public:
    SNMP_TrapParamMap(NXCPMessage *msg, UINT32 base);
    ~SNMP_TrapParamMap();
 
-   void fillMessage(NXCPMessage *msg, UINT32 base);
+   void fillMessage(NXCPMessage *msg, UINT32 base) const;
 
-   SNMP_ObjectId *getOid() { return m_objectId; }
-   UINT32 getOidLength() { return (m_objectId == NULL) ? m_position : (UINT32)m_objectId->length(); }
-   bool isPosition() {  return m_objectId == NULL; }
+   SNMP_ObjectId *getOid() const { return m_objectId; }
+   UINT32 getOidLength() const { return (m_objectId == NULL) ? m_position : (UINT32)m_objectId->length(); }
+   bool isPosition() const {  return m_objectId == NULL; }
 
-   UINT32 getFlags() { return m_flags; }
+   UINT32 getFlags() const { return m_flags; }
 
-   TCHAR *getDescription() { return m_description; }
-
+   const TCHAR *getDescription() const { return m_description; }
 };
 
 /**
  * SNMP Trap configuration object
  */
-class LIBNXSNMP_EXPORTABLE SNMP_TrapCfg
+class NXCORE_EXPORTABLE SNMP_TrapCfg
 {
 private:
    uuid m_guid;                   // Trap guid
@@ -964,24 +963,24 @@ public:
    SNMP_TrapCfg(NXCPMessage *msg);
    ~SNMP_TrapCfg();
 
-   void fillMessage(NXCPMessage *msg);
-   void fillMessage(NXCPMessage *msg, UINT32 base);
+   void fillMessage(NXCPMessage *msg) const;
+   void fillMessage(NXCPMessage *msg, UINT32 base) const;
    bool saveParameterMapping(DB_HANDLE hdb);
    void notifyOnTrapCfgChange(UINT32 code);
 
-   const uuid& getGuid() { return m_guid; }
-   UINT32 getId() { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
+   UINT32 getId() const { return m_id; }
 
-   SNMP_ObjectId *getOid() { return m_objectId; }
-   UINT32 getOidLength() { return (UINT32)m_objectId->length(); }
+   SNMP_ObjectId *getOid() const { return m_objectId; }
+   UINT32 getOidLength() const { return (UINT32)m_objectId->length(); }
 
    SNMP_TrapParamMap *getMap(int index) { return m_pMaps->get(index); }
    UINT32 getNumMaps() { return m_pMaps->size(); }
 
-   UINT32 getEventCode() { return m_eventCode; }
+   UINT32 getEventCode() const { return m_eventCode; }
 
-   TCHAR *getDescription() { return m_description; }
-   TCHAR *getUserTag() { return m_userTag; }
+   const TCHAR *getDescription() const { return m_description; }
+   const TCHAR *getUserTag() const { return m_userTag; }
 };
 
 /**
