@@ -1108,6 +1108,13 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
     */
    public void moveSelection(RuleEditor anchor)
    {
+      if (selection.contains(anchor))
+      {
+         for(RuleEditor s : selection)
+            s.setDragged(false);
+         return;
+      }
+      
       List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
       for(RuleEditor e : ruleEditors)
       {
@@ -1126,16 +1133,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
                }
             }
          }
-         policy.deleteRule(e.getRule());
       }
-      
+
+      policy = new EventProcessingPolicy(movedRuleEditors.size());
       int i = 0;
       for(RuleEditor e : movedRuleEditors)
       {
-         policy.insertRule(e.getRule(), i);
+         policy.addRule(e.getRule());
          e.setRuleNumber(++i);
       }
-      
+
       ruleEditors = movedRuleEditors;
       anchor.setDragged(false);
 
