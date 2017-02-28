@@ -181,13 +181,21 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
             if (data->allocated > 0)
             {
                data->data[data->size] = 0;
-               if (strncmp(data->data, "err:", 4))
+               if (!strncmp(data->data, "err:", 4))
                {
-               	nxlog_debug(4, _T("AnySMS: success"));
+                  int code = strtol(data->data + 4, NULL, 10);
+                  if (code == 0)
+                  {
+               	   nxlog_debug(4, _T("AnySMS: success"));
+                  }
+                  else
+                  {
+               	   nxlog_debug(4, _T("AnySMS: error response (%d)"), code);
+                  }
                }
                else
                {
-               	nxlog_debug(4, _T("AnySMS: error response (%hs)"), data->data);
+               	nxlog_debug(4, _T("AnySMS: unexpected response (%hs)"), data->data);
                }
             }
          }
