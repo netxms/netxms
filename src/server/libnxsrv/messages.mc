@@ -1046,4 +1046,10 @@ Language=English
 Thread "%1" returned to running state
 .
 
+MessageId=
+SymbolicName=MSG_LISTENING_FOR_AGENTS
+Language=English
+Listening for agent connections on TCP socket %1:%2
+.
+
 ;#endif

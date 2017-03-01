@@ -31,7 +31,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			session.cpp slmcheck.cpp smclp.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
-			template.cpp tools.cpp tracert.cpp \
+			template.cpp tools.cpp tracert.cpp tunnel.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp

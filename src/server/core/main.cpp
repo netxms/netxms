@@ -73,6 +73,7 @@ void LoadPerfDataStorageDrivers();
 void ImportLocalConfiguration();
 void RegisterPredictionEngines();
 void ExecuteStartupScripts();
+void CloseAgentTunnels();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -113,6 +114,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
+THREAD_RESULT THREAD_CALL TunnelListener(void *arg);
 
 /**
  * Global variables
@@ -163,6 +165,7 @@ InetAddressList g_peerNodeAddrList;
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
+static THREAD s_tunnelListenerThread = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 static StringSet s_components;
 
@@ -967,6 +970,9 @@ retry_db_lock:
 	ThreadCreate(MobileDeviceListenerIPv6, 0, NULL);
 #endif
 
+	// Agent tunnels
+   s_tunnelListenerThread = ThreadCreateEx(TunnelListener, 0, NULL);
+
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
 
@@ -1033,6 +1039,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	// Wait for critical threads
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
+	ThreadJoin(s_tunnelListenerThread);
+
+	CloseAgentTunnels();
 
 	// Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag

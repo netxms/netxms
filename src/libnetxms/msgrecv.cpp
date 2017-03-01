@@ -197,6 +197,42 @@ int SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
    return RecvEx(m_socket, buffer, size, 0, timeout);
 }
 
+#ifdef _WITH_ENCRYPTION
+
+/**
+ * TLS message receiver constructor
+ */
+TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+{
+   m_socket = socket;
+   m_ssl = ssl;
+}
+
+/**
+ * TLS message receiver destructor
+ */
+TlsMessageReceiver::~TlsMessageReceiver()
+{
+}
+
+/**
+ * Read bytes from TLS connection
+ */
+int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+{
+   if (SSL_pending(m_ssl) == 0)
+   {
+      SocketPoller sp;
+      sp.add(m_socket);
+      int rc = sp.poll(timeout);
+      if (rc <= 0)
+         return rc;
+   }
+   return SSL_read(m_ssl, buffer, size);
+}
+
+#endif /* _WITH_ENCRYPTION */
+
 /**
  * Pipe message receiver constructor
  */

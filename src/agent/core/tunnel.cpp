@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ private:
    UINT16 m_port;
    TCHAR m_login[MAX_OBJECT_NAME];
    SOCKET m_socket;
+   SSL_CTX *m_context;
+   SSL *m_ssl;
    bool m_connected;
    UINT32 m_requestId;
    THREAD m_recvThread;
@@ -66,6 +68,8 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port, const TCHAR *login) : m_add
    m_port = port;
    nx_strncpy(m_login, login, MAX_OBJECT_NAME);
    m_socket = INVALID_SOCKET;
+   m_context = NULL;
+   m_ssl = NULL;
    m_connected = false;
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
@@ -80,6 +84,10 @@ Tunnel::~Tunnel()
    disconnect();
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
+   if (m_ssl != NULL)
+      SSL_free(m_ssl);
+   if (m_context != NULL)
+      SSL_CTX_free(m_context);
 }
 
 /**
@@ -108,7 +116,7 @@ THREAD_RESULT THREAD_CALL Tunnel::recvThreadStarter(void *arg)
  */
 void Tunnel::recvThread()
 {
-   SocketMessageReceiver receiver(m_socket, 8192, MAX_AGENT_MSG_SIZE);
+   TlsMessageReceiver receiver(m_socket, m_ssl, 8192, MAX_AGENT_MSG_SIZE);
    while(m_connected)
    {
       MessageReceiverResult result;
@@ -135,7 +143,7 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
       return false;
 
    NXCP_MESSAGE *data = msg->createMessage(true);
-   bool success = (SendEx(m_socket, data, ntohl(data->size), 0, NULL) == ntohl(data->size));
+   bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
    free(data);
    return success;
 }
@@ -145,9 +153,19 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
  */
 bool Tunnel::connectToServer()
 {
+   // Cleanup from previous connection attemp
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
+   if (m_ssl != NULL)
+      SSL_free(m_ssl);
+   if (m_context != NULL)
+      SSL_CTX_free(m_context);
 
+   m_socket = INVALID_SOCKET;
+   m_context = NULL;
+   m_ssl = NULL;
+
+   // Create socket and connect
    m_socket = socket(m_address.getFamily(), SOCK_STREAM, 0);
    if (m_socket == INVALID_SOCKET)
    {
@@ -163,12 +181,66 @@ bool Tunnel::connectToServer()
       return false;
    }
 
+   // Setup secure connection
+   const SSL_METHOD *method = SSLv23_method();
+   if (method == NULL)
+   {
+      nxlog_debug(4, _T("Cannot obtain TLS method for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      return false;
+   }
+
+   m_context = SSL_CTX_new(method);
+   if (method == NULL)
+   {
+      nxlog_debug(4, _T("Cannot create context for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      return false;
+   }
+   SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+
+   m_ssl = SSL_new(m_context);
+   if (m_ssl == NULL)
+   {
+      nxlog_debug(4, _T("Cannot create SSL object for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      return false;
+   }
+
+   SSL_set_connect_state(m_ssl);
+   SSL_set_bio(m_ssl, BIO_new_socket(m_socket, 0), BIO_new_socket(m_socket, 0));
+
+   int rc = SSL_do_handshake(m_ssl);
+   if (rc != 1)
+   {
+      char buffer[128];
+      nxlog_debug(4, _T("TLS handshake failed for tunnel %s@%s (%hs)"),
+               m_login, (const TCHAR *)m_address.toString(), ERR_error_string(SSL_get_error(m_ssl, rc), buffer));
+      return false;
+   }
+
+   // Check server vertificate
+   X509 *cert = SSL_get_peer_certificate(m_ssl);
+   if (cert == NULL)
+   {
+      nxlog_debug(4, _T("Server certificate not provided for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      return false;
+   }
+
+   char *subj = X509_NAME_oneline(X509_get_subject_name(cert), NULL ,0);
+   char *issuer = X509_NAME_oneline(X509_get_issuer_name(cert), NULL ,0);
+   nxlog_debug(4, _T("Tunnel %s@%s: certificate subject is %hs"), m_login, (const TCHAR *)m_address.toString(), subj);
+   nxlog_debug(4, _T("Tunnel %s@%s: certificate issuer is %hs"), m_login, (const TCHAR *)m_address.toString(), issuer);
+   OPENSSL_free(subj);
+   OPENSSL_free(issuer);
+
+   X509_free(cert);
+
+   // Setup receiver
    delete m_queue;
    m_queue = new MsgWaitQueue();
    m_recvThread = ThreadCreateEx(Tunnel::recvThreadStarter, 0, this);
 
    m_requestId = 1;
 
+   // Do handshake
    NXCPMessage msg;
    msg.setCode(CMD_SETUP_AGENT_TUNNEL);
    msg.setId(m_requestId++);

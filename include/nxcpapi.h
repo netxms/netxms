@@ -33,6 +33,10 @@
 #include <wincrypt.h>
 #endif
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
+
 /**
  * Temporary buffer structure for RecvNXCPMessage() function
  */
@@ -343,6 +347,27 @@ public:
    SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
    virtual ~SocketMessageReceiver();
 };
+
+#ifdef _WITH_ENCRYPTION
+
+/**
+ * Message receiver - SSL/TLS implementation
+ */
+class LIBNETXMS_EXPORTABLE TlsMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   SOCKET m_socket;
+   SSL *m_ssl;
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   TlsMessageReceiver(SOCKET socket, SSL *ssl, size_t initialSize, size_t maxSize);
+   virtual ~TlsMessageReceiver();
+};
+
+#endif /* _WITH_ENCRYPTION */
 
 /**
  * Message receiver - UNIX socket/named pipe implementation

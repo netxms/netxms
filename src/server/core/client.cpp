@@ -167,11 +167,11 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
          error = errno;
          if (error != EINTR)
 #endif
-            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_write(MSG_ACCEPT_ERROR, NXLOG_ERROR, "e", error);
          errorCount++;
          if (errorCount > 1000)
          {
-            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, NXLOG_WARNING, NULL);
             errorCount = 0;
          }
          ThreadSleepMs(500);
