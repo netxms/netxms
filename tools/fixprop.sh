@@ -10,7 +10,7 @@ fi
 
 tool=`pwd`/fixprop
 
-cd ../src/java/netxms-eclipse
+cd ../src/java
 
 msgs=`find . -name messages_$lang.properties | grep -v bin | xargs echo`
 bundles=`find . -name bundle_$lang.properties | grep -v bin | xargs echo`
