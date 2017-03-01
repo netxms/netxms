@@ -2662,7 +2662,33 @@ public class NXCSession
       }
       return result;
    }
-
+   
+   /**
+    * Find all zone Ids
+    * 
+    * @return list of zone Ids
+    */
+   public long[] findAllZoneIds()
+   {
+      long[] result = null;
+      synchronized(objectList)
+      {
+         AbstractObject entireNetwork = objectList.get(1L);
+         Collection<AbstractObject> objects = (entireNetwork != null) ? 
+               entireNetwork.getAllChilds(AbstractObject.OBJECT_ZONE) : objectList.values();
+         int i = 0;
+         result = new long[objects.size()];
+         for(AbstractObject o : objects)
+         {
+            if (o instanceof Zone)
+            {
+               result[i] = (((Zone)o).getObjectId());
+               i++;
+            }
+         }
+      }
+      return result;
+   }
    
    /**
     * Find object by name. If multiple objects with same name exist,

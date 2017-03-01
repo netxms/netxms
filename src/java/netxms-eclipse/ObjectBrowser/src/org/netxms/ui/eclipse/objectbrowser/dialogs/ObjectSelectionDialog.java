@@ -55,6 +55,7 @@ public class ObjectSelectionDialog extends Dialog
 	private boolean showFilterToolTip = true;
 	private boolean showFilterCloseButton = false;
 	List<Object> currentObject;
+	private String title = Messages.get().ObjectSelectionDialog_Title;
 
 	/**
 	 * Create filter for node selection - it allows node objects and possible
@@ -208,7 +209,6 @@ public class ObjectSelectionDialog extends Dialog
       this.currentObject = new ArrayList<Object>();
    }
 
-	
 	/**
 	 * Create object selection dialog.
 	 * 
@@ -237,7 +237,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().ObjectSelectionDialog_Title);
+		newShell.setText(title);
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
@@ -412,5 +412,10 @@ public class ObjectSelectionDialog extends Dialog
 	public void showFilterCloseButton(boolean showFilterCloseButton)
 	{
 	   this.showFilterCloseButton = showFilterCloseButton;
+	}
+	
+	public void setTitle(String title)
+	{
+	   this.title = title;
 	}
 }

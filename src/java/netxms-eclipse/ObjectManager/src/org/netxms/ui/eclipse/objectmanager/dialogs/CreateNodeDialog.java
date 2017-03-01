@@ -35,6 +35,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -63,7 +64,7 @@ public class CreateNodeDialog extends Dialog
 	private ObjectSelector snmpProxySelector;
    private ObjectSelector icmpProxySelector;
    private ObjectSelector sshProxySelector;
-	private ObjectSelector zoneSelector;
+	private ZoneSelector zoneSelector;
 	
 	private String objectName;
 	private String hostName;
@@ -239,9 +240,8 @@ public class CreateNodeDialog extends Dialog
       
 		if (session.isZoningEnabled())
 		{
-			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
-			zoneSelector.setObjectClass(Zone.class);
 			Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
 			zoneSelector.setObjectId((zone != null) ? zone.getObjectId() : 0);
 			gd = new GridData();

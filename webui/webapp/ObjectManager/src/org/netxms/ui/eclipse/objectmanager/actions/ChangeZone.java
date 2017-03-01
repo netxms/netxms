@@ -29,9 +29,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ZoneSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
-import org.netxms.ui.eclipse.objectmanager.dialogs.ZoneSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**

@@ -28,10 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Zone;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -44,7 +41,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class EnterIpAddressDlg extends Dialog
 {
 	private LabeledText ipAddressText;
-	private ObjectSelector objectSelector;
+	private ZoneSelector zoneSelector;
 	private InetAddress ipAddress;
 	private long zoneId;
 	private boolean zoningEnabled;
@@ -93,15 +90,13 @@ public class EnterIpAddressDlg extends Dialog
 
       if (zoningEnabled)
       {
-	      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
-	      objectSelector.setLabel(Messages.get().EnterIpAddressDlg_Zone);
-	      objectSelector.setObjectClass(Zone.class);
-	      objectSelector.setClassFilter(ObjectSelectionDialog.createZoneSelectionFilter());
+         zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
+         zoneSelector.setLabel(Messages.get().EnterIpAddressDlg_Zone);
 	      gd = new GridData();
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
 	      gd.widthHint = 300;
-	      objectSelector.setLayoutData(gd);
+	      zoneSelector.setLayoutData(gd);
       }
       
 		return dialogArea;
@@ -125,19 +120,13 @@ public class EnterIpAddressDlg extends Dialog
 		
 		if (zoningEnabled)
 		{
-			long objectId = objectSelector.getObjectId();
+			long objectId = zoneSelector.getObjectId();
 			if (objectId == 0)
 			{
 				MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
 				return;
 			}
-			AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
-			if ((object == null) || !(object instanceof Zone))
-			{
-				MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
-				return;
-			}
-			zoneId = ((Zone)object).getZoneId();
+			zoneId = objectId;
 		}
 		else
 		{
