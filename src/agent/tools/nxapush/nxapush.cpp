@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	int c;
 
-	InitNetXMSProcess();
+	InitNetXMSProcess(true);
 
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG

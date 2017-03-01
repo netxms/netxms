@@ -175,12 +175,13 @@ Condition& Condition::operator =(const Condition& src)
 /**
  * Block all signals on a thread
  */
-void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide)
+void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt)
 {
    sigset_t signals;
    sigemptyset(&signals);
    sigaddset(&signals, SIGTERM);
-   sigaddset(&signals, SIGINT);
+   if (!allowInterrupt)
+      sigaddset(&signals, SIGINT);
    sigaddset(&signals, SIGSEGV);
    sigaddset(&signals, SIGCHLD);
    sigaddset(&signals, SIGHUP);

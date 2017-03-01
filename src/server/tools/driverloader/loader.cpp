@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
    int snmpPort = 161;
    const char *community = "public";
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

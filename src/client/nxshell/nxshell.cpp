@@ -178,7 +178,7 @@ static int StartApp(int argc, char *argv[])
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
-	{ (char *)"classpath",      required_argument, NULL,        'c' },
+	{ (char *)"classpath",      required_argument, NULL,        'C' },
 	{ (char *)"help",           no_argument,       NULL,        'h' },
 	{ (char *)"host",           required_argument, NULL,        'H' },
 	{ (char *)"jre",            required_argument, NULL,        'j' },
@@ -189,7 +189,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "c:hH:j:P:u:v"
+#define SHORT_OPTIONS "C:hH:j:P:u:v"
 
 /**
  * Print usage info
@@ -208,7 +208,7 @@ static void usage(bool showVersion)
       _T("  \n")
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
-      _T("  -c, --classpath <path>      Additional Java class path.\n")
+      _T("  -C, --classpath <path>      Additional Java class path.\n")
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
@@ -216,7 +216,7 @@ static void usage(bool showVersion)
       _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
       _T("  -v, --version               Display version information.\n\n")
 #else
-      _T("  -c <path>      Additional Java class path.\n")
+      _T("  -C <path>      Additional Java class path.\n")
       _T("  -h             Display this help message.\n")
       _T("  -H <hostname>  Specify host name or IP address.\n")
       _T("  -j <path>      Specify JRE location.\n")
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 
-	InitNetXMSProcess();
+	InitNetXMSProcess(true);
 
 	opterr = 0;
    int c;
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 	{
 		switch(c)
 		{
-		   case 'c': // classpath
+		   case 'C': // classpath
 			   s_optClassPath = optarg;
 			   break;
 		   case 'h': // help

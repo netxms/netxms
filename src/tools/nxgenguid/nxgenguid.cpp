@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
 	int ch;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

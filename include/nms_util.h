@@ -1719,7 +1719,7 @@ extern "C"
 {
 #endif
 
-void LIBNETXMS_EXPORTABLE InitNetXMSProcess();
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool);
 
 #ifndef _WIN32
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
@@ -2214,7 +2214,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
-void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide);
+void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif
 

@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
    char *eptr;
    BOOL bStart = TRUE;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

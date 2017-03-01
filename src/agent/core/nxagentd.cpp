@@ -1417,7 +1417,7 @@ int main(int argc, char *argv[])
 	int uid = 0, gid = 0;
 #endif
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(false);
 
    // Check for alternate config file location
 #ifdef _WIN32

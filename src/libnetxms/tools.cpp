@@ -62,8 +62,10 @@
 
 /**
  * Common initialization for any NetXMS process
+ *
+ * @param commandLineTool set to true for command line tool initialization
  */
-void LIBNETXMS_EXPORTABLE InitNetXMSProcess()
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 {
    InitThreadLibrary();
 
@@ -101,7 +103,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess()
 #endif
 
 #ifndef _WIN32
-   BlockAllSignals(true);
+   BlockAllSignals(true, commandLineTool);
 #endif
 }
 

@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
    bool dump = false, printResult = false, compileOnly = false, binary = false;
    int runCount = 1, rc = 0;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;

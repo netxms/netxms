@@ -327,7 +327,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
  */
 int main(int argc, char* argv[])
 {
-   InitNetXMSProcess();
+   InitNetXMSProcess(false);
 
    // Check for alternate config file location
 #ifdef _WIN32

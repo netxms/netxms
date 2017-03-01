@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
    BOOL bStart = TRUE, bCmdLineOK = FALSE;
    TCHAR *command = NULL;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
 #ifdef _WIN32
    WSADATA wsaData;

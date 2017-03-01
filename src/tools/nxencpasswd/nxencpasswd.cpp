@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
    bool isAgentSecret = false;
    bool decrypt = false;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

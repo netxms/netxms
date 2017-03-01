@@ -34,6 +34,8 @@
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
+
    _tprintf(_T("NetXMS Module Info Tool Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n\n"));
    if (argc != 2)
    {

@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 #endif
 	int ch;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
 	if (argc < 2)
 	{

@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
    RSA *pServerKey = NULL;
    uuid guid;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);

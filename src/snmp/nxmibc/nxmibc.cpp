@@ -169,10 +169,10 @@ int main(int argc, char *argv[])
    DWORD dwFlags = 0, dwRet;
    int i, ch, rc = 0;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
-   _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2005-2016 Raden Solutions\n\n"));
+   _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
+            _T("Copyright (c) 2005-2017 Raden Solutions\n\n"));
 
    // Parse command line
    opterr = 1;
