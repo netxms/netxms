@@ -253,7 +253,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		try
 		{
 			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout"); //$NON-NLS-1$
-			labelProvider.setObjectFigureType(MapObjectDisplayMode.getByValue(settings.getInt(viewId + ".objectFigureType"))); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -772,7 +771,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			   setObjectDisplayMode(MapObjectDisplayMode.ICON, true);
 			}
 		};
-		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
 		actionFiguresSmallLabels = new Action(Messages.get().AbstractNetworkMapView_SmallLabels, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -781,7 +779,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             setObjectDisplayMode(MapObjectDisplayMode.SMALL_LABEL, true);
 			}
 		};
-		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.SMALL_LABEL);
 
 		actionFiguresLargeLabels = new Action(Messages.get().AbstractNetworkMapView_LargeLabels, Action.AS_RADIO_BUTTON) {
 			@Override
@@ -790,7 +787,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             setObjectDisplayMode(MapObjectDisplayMode.LARGE_LABEL, true);
 			}
 		};
-		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
 		
 		actionFiguresStatusIcons = new Action(Messages.get().AbstractNetworkMapView_StatusIcons, Action.AS_RADIO_BUTTON) {
          @Override
@@ -799,7 +795,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             setObjectDisplayMode(MapObjectDisplayMode.STATUS, true);
          }
       };
-      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -1560,5 +1555,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       actionShowStatusBackground.setEnabled(mode == MapObjectDisplayMode.ICON);
       actionShowStatusFrame.setEnabled(mode == MapObjectDisplayMode.ICON);
       actionShowStatusIcon.setEnabled(mode == MapObjectDisplayMode.ICON);
+      actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
+      actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.SMALL_LABEL);
+      actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
+      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
    }
 }
