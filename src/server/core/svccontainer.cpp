@@ -171,7 +171,10 @@ BOOL ServiceContainer::addHistoryRecord()
 	{
 		hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM slm_service_history"));
 		if (hResult == NULL)
-			return FALSE;
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return FALSE;
+      }
 		ServiceContainer::logRecordId = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : 0;
 		DBFreeResult(hResult);
 	}
@@ -189,12 +192,14 @@ BOOL ServiceContainer::addHistoryRecord()
 		if (!DBExecute(hStmt))
 		{
 			DBFreeStatement(hStmt);
+         DBConnectionPoolReleaseConnection(hdb);
 			return FALSE;
 		}
 		DbgPrintf(9, _T("ServiceContainer::addHistoryRecord() ok with id %d"), ServiceContainer::logRecordId);
 	}
 	else
 	{
+      DBConnectionPoolReleaseConnection(hdb);
 		return FALSE;
 	}
 
@@ -237,6 +242,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 		if (hResult == NULL)
 		{
 			DBFreeStatement(hStmt);
+         DBConnectionPoolReleaseConnection(hdb);
 			return percentage;
 		}
 
