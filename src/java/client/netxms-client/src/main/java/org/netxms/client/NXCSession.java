@@ -7863,7 +7863,7 @@ public class NXCSession
       
       File remoteFile = waitForFile(msg.getMessageId(), 36000000);
       if (remoteFile == null)
-         throw new NXCException(RCC.INTERNAL_ERROR);
+         throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile);
       
       try
