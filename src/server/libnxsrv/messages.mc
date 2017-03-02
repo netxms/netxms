@@ -1052,4 +1052,16 @@ Language=English
 Listening for agent connections on TCP socket %1:%2
 .
 
+MessageId=
+SymbolicName=MSG_SERVER_CERT_NOT_SET
+Language=English
+Server certificate not set
+.
+
+MessageId=
+SymbolicName=MSG_CANNOT_LOAD_SERVER_CERT
+Language=English
+Cannot load server certificate from %1 (%2)
+.
+
 ;#endif

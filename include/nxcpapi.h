@@ -358,12 +358,13 @@ class LIBNETXMS_EXPORTABLE TlsMessageReceiver : public AbstractMessageReceiver
 private:
    SOCKET m_socket;
    SSL *m_ssl;
+   MUTEX m_mutex;
 
 protected:
    virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
 
 public:
-   TlsMessageReceiver(SOCKET socket, SSL *ssl, size_t initialSize, size_t maxSize);
+   TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize);
    virtual ~TlsMessageReceiver();
 };
 
@@ -562,6 +563,8 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *pMsg,
                                                   RSA *pPrivateKey, int nNXCPVersion);
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
+RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate);
+void LIBNETXMS_EXPORTABLE RSAFree(RSA *key);
 
 #ifdef _WIN32
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const CERT_CONTEXT *pCert,

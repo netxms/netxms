@@ -202,10 +202,11 @@ int SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 /**
  * TLS message receiver constructor
  */
-TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
 {
    m_socket = socket;
    m_ssl = ssl;
+   m_mutex = mutex;
 }
 
 /**
@@ -220,15 +221,20 @@ TlsMessageReceiver::~TlsMessageReceiver()
  */
 int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
+   MutexLock(m_mutex);
    if (SSL_pending(m_ssl) == 0)
    {
+      MutexUnlock(m_mutex);
       SocketPoller sp;
       sp.add(m_socket);
       int rc = sp.poll(timeout);
       if (rc <= 0)
          return rc;
+      MutexLock(m_mutex);
    }
-   return SSL_read(m_ssl, buffer, size);
+   int bytes = SSL_read(m_ssl, buffer, size);
+   MutexUnlock(m_mutex);
+   return bytes;
 }
 
 #endif /* _WITH_ENCRYPTION */

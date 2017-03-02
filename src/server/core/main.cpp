@@ -67,6 +67,7 @@ extern Queue g_dciCacheLoaderQueue;
 void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
+bool LoadServerCertificate(RSA **serverKey);
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
@@ -377,10 +378,10 @@ static void LoadGlobalConfig()
 /**
  * Initialize cryptografic functions
  */
-static BOOL InitCryptografy()
+static bool InitCryptografy()
 {
 #ifdef _WITH_ENCRYPTION
-	BOOL bResult = FALSE;
+	bool success = false;
 
    if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
 		return FALSE;
@@ -389,58 +390,70 @@ static BOOL InitCryptografy()
    SSL_library_init();
    SSL_load_error_strings();
 
-   TCHAR szKeyFile[MAX_PATH];
-	_tcscpy(szKeyFile, g_netxmsdDataDir);
-	_tcscat(szKeyFile, DFILE_KEYS);
-	g_pServerKey = LoadRSAKeys(szKeyFile);
-	if (g_pServerKey == NULL)
-	{
-	   nxlog_debug(1, _T("Generating RSA key pair..."));
-		g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
-		if (g_pServerKey != NULL)
-		{
-			int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
-			if (fd != -1)
-			{
-				UINT32 dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
-				dwLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
-				BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
+   if (LoadServerCertificate(&g_pServerKey))
+   {
+      nxlog_debug(1, _T("Server certificate loaded"));
+   }
+   if (g_pServerKey != NULL)
+   {
+      nxlog_debug(1, _T("Using server certificate key"));
+      success = true;
+   }
+   else
+   {
+      TCHAR szKeyFile[MAX_PATH];
+      _tcscpy(szKeyFile, g_netxmsdDataDir);
+      _tcscat(szKeyFile, DFILE_KEYS);
+      g_pServerKey = LoadRSAKeys(szKeyFile);
+      if (g_pServerKey == NULL)
+      {
+         nxlog_debug(1, _T("Generating RSA key pair..."));
+         g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
+         if (g_pServerKey != NULL)
+         {
+            int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+            if (fd != -1)
+            {
+               UINT32 dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
+               dwLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
+               BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
 
-				BYTE *pBufPos = pKeyBuffer;
-				i2d_RSAPublicKey(g_pServerKey, &pBufPos);
-				i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
-				_write(fd, &dwLen, sizeof(UINT32));
-				_write(fd, pKeyBuffer, dwLen);
+               BYTE *pBufPos = pKeyBuffer;
+               i2d_RSAPublicKey(g_pServerKey, &pBufPos);
+               i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
+               _write(fd, &dwLen, sizeof(UINT32));
+               _write(fd, pKeyBuffer, dwLen);
 
-			   BYTE hash[SHA1_DIGEST_SIZE];
-				CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
-				_write(fd, hash, SHA1_DIGEST_SIZE);
+               BYTE hash[SHA1_DIGEST_SIZE];
+               CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
+               _write(fd, hash, SHA1_DIGEST_SIZE);
 
-				_close(fd);
-				free(pKeyBuffer);
-				bResult = TRUE;
-			}
+               _close(fd);
+               free(pKeyBuffer);
+               success = true;
+            }
+            else
+            {
+               nxlog_debug(0, _T("Failed to open %s for writing"), szKeyFile);
+            }
+         }
          else
          {
-            nxlog_debug(0, _T("Failed to open %s for writing"), szKeyFile);
+            nxlog_debug(0, _T("Failed to generate RSA key"));
          }
-		}
+      }
       else
       {
-         nxlog_debug(0, _T("Failed to generate RSA key"));
+         success = true;
       }
-	}
-	else
-	{
-		bResult = TRUE;
-	}
+   }
 
 	int iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
 	if ((iPolicy < 0) || (iPolicy > 3))
 		iPolicy = 1;
 	SetAgentDEP(iPolicy);
 
-	return bResult;
+	return success;
 #else
 	return TRUE;
 #endif

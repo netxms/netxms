@@ -1167,6 +1167,7 @@ typedef struct
 #define VID_ENABLE_COMPRESSION      ((UINT32)570)
 #define VID_AGENT_COMPRESSION_MODE  ((UINT32)571)
 #define VID_TRAP_TYPE               ((UINT32)572)
+#define VID_IS_ACTIVE               ((UINT32)573)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

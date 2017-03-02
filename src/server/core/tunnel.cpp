@@ -20,6 +20,297 @@
 **/
 
 #include "nxcore.h"
+#include <agent_tunnel.h>
+
+#define MAX_MSG_SIZE    268435456
+
+/**
+ * Next free tunnel ID
+ */
+static VolatileCounter s_nextTunnelId = 0;
+
+/**
+ * Agent tunnel constructor
+ */
+AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId) : RefCountObject()
+{
+   m_id = InterlockedIncrement(&s_nextTunnelId);
+   m_address = addr;
+   m_socket = sock;
+   m_context = context;
+   m_ssl = ssl;
+   m_sslLock = MutexCreate();
+   m_recvThread = INVALID_THREAD_HANDLE;
+   m_nodeId = nodeId;
+   m_state = AGENT_TUNNEL_INIT;
+   m_systemName = NULL;
+   m_platformName = NULL;
+   m_systemInfo = NULL;
+   m_agentVersion = NULL;
+}
+
+/**
+ * Agent tunnel destructor
+ */
+AgentTunnel::~AgentTunnel()
+{
+   ThreadJoin(m_recvThread);
+   SSL_CTX_free(m_context);
+   SSL_free(m_ssl);
+   MutexDestroy(m_sslLock);
+   closesocket(m_socket);
+   free(m_systemName);
+   free(m_platformName);
+   free(m_systemInfo);
+   free(m_agentVersion);
+   debugPrintf(4, _T("Tunnel destroyed"));
+}
+
+/**
+ * Debug output
+ */
+void AgentTunnel::debugPrintf(int level, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+   nxlog_debug(level, _T("[TUN-%d] %s"), m_id, buffer);
+}
+
+/**
+ * Tunnel receiver thread
+ */
+void AgentTunnel::recvThread()
+{
+   TlsMessageReceiver receiver(m_socket, m_ssl, m_sslLock, 4096, MAX_MSG_SIZE);
+   while(true)
+   {
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(60000, &result);
+      if (result != MSGRECV_SUCCESS)
+      {
+         if (result == MSGRECV_CLOSED)
+            debugPrintf(4, _T("Tunnel closed by peer"));
+         else
+            debugPrintf(4, _T("Communication error (%s)"), AbstractMessageReceiver::resultToText(result));
+         break;
+      }
+
+      if (nxlog_get_debug_level() >= 6)
+      {
+         TCHAR buffer[64];
+         debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+      }
+
+      switch(msg->getCode())
+      {
+         case CMD_KEEPALIVE:
+            break;
+         case CMD_SETUP_AGENT_TUNNEL:
+            setup(msg);
+            break;
+      }
+   }
+   debugPrintf(5, _T("Receiver thread stopped"));
+}
+
+/**
+ * Tunnel receiver thread starter
+ */
+THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
+{
+   ((AgentTunnel *)arg)->recvThread();
+   return THREAD_OK;
+}
+
+/**
+ * Send message on tunnel
+ */
+bool AgentTunnel::sendMessage(NXCPMessage *msg)
+{
+   NXCP_MESSAGE *data = msg->createMessage(true);
+   MutexLock(m_sslLock);
+   bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
+   MutexUnlock(m_sslLock);
+   free(data);
+   return success;
+}
+
+/**
+ * Start tunel
+ */
+void AgentTunnel::start()
+{
+   incRefCount();
+   debugPrintf(4, _T("Tunnel started"));
+   m_recvThread = ThreadCreateEx(AgentTunnel::recvThreadStarter, 0, this);
+}
+
+/**
+ * Process setup request
+ */
+void AgentTunnel::setup(const NXCPMessage *request)
+{
+   NXCPMessage response;
+   response.setCode(CMD_REQUEST_COMPLETED);
+   response.setId(request->getId());
+
+   if (m_state == AGENT_TUNNEL_INIT)
+   {
+      m_systemName = request->getFieldAsString(VID_SYS_NAME);
+      m_systemInfo = request->getFieldAsString(VID_SYS_DESCRIPTION);
+      m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
+      m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
+
+      m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
+      response.setField(VID_RCC, ERR_SUCCESS);
+      response.setField(VID_IS_ACTIVE, m_state == AGENT_TUNNEL_BOUND);
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_OUT_OF_STATE_REQUEST);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Incoming connection data
+ */
+struct ConnectionRequest
+{
+   SOCKET sock;
+   InetAddress addr;
+};
+
+/**
+ * Setup tunnel
+ */
+static void SetupTunnel(void *arg)
+{
+   ConnectionRequest *request = (ConnectionRequest *)arg;
+
+   SSL_CTX *context = NULL;
+   SSL *ssl = NULL;
+   AgentTunnel *tunnel = NULL;
+   int rc;
+   UINT32 nodeId = 0;
+   X509 *cert = NULL;
+
+   // Setup secure connection
+   const SSL_METHOD *method = SSLv23_method();
+   if (method == NULL)
+   {
+      nxlog_debug(4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
+      goto failure;
+   }
+
+   context = SSL_CTX_new(method);
+   if (context == NULL)
+   {
+      nxlog_debug(4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
+      goto failure;
+   }
+   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+   if (!SetupServerTlsContext(context))
+   {
+      nxlog_debug(4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());
+      goto failure;
+   }
+
+   ssl = SSL_new(context);
+   if (ssl == NULL)
+   {
+      nxlog_debug(4, _T("SetupTunnel(%s): cannot create SSL object"), (const TCHAR *)request->addr.toString());
+      goto failure;
+   }
+
+   SSL_set_accept_state(ssl);
+   SSL_set_fd(ssl, request->sock);
+
+retry:
+   rc = SSL_do_handshake(ssl);
+   if (rc != 1)
+   {
+      int sslErr = SSL_get_error(ssl, rc);
+      if (sslErr == SSL_ERROR_WANT_READ)
+      {
+         SocketPoller poller;
+         poller.add(request->sock);
+         if (poller.poll(5000) > 0)
+            goto retry;
+         nxlog_debug(4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), (const TCHAR *)request->addr.toString());
+      }
+      else
+      {
+         char buffer[128];
+         nxlog_debug(4, _T("SetupTunnel(%s): TLS handshake failed (%hs)"),
+                     (const TCHAR *)request->addr.toString(), ERR_error_string(sslErr, buffer));
+      }
+      goto failure;
+   }
+
+   cert = SSL_get_peer_certificate(ssl);
+   if (cert != NULL)
+   {
+      if (ValidateAgentCertificate(cert))
+      {
+         TCHAR cn[256];
+         if (GetCertificateCN(cert, cn, 256))
+         {
+            uuid guid = uuid::parse(cn);
+            if (!guid.isNull())
+            {
+               Node *node = (Node *)FindObjectByGUID(guid, OBJECT_NODE);
+               if (node != NULL)
+               {
+                  nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
+                  nodeId = node->getId();
+               }
+               else
+               {
+                  nxlog_debug(4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)guid.toString());
+               }
+            }
+            else
+            {
+               nxlog_debug(4, _T("SetupTunnel(%s): Certificate CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
+            }
+         }
+         else
+         {
+            nxlog_debug(4, _T("SetupTunnel(%s): Cannot get certificate CN"), (const TCHAR *)request->addr.toString());
+         }
+      }
+      else
+      {
+         nxlog_debug(4, _T("SetupTunnel(%s): Agent certificate validation failed"), (const TCHAR *)request->addr.toString());
+      }
+      X509_free(cert);
+   }
+   else
+   {
+      nxlog_debug(4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
+   }
+
+   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId);
+   tunnel->start();
+   tunnel->decRefCount();
+
+   delete request;
+   return;
+
+failure:
+   if (ssl != NULL)
+      SSL_free(ssl);
+   if (context != NULL)
+      SSL_CTX_free(context);
+   shutdown(request->sock, SHUT_RDWR);
+   closesocket(request->sock);
+   delete request;
+}
 
 /**
  * Tunnel listener
@@ -205,7 +496,10 @@ THREAD_RESULT THREAD_CALL TunnelListener(void *arg)
          InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
          nxlog_debug(5, _T("TunnelListener: incoming connection from %s"), addr.toString(buffer));
 
-         shutdown(hClientSocket, SHUT_RDWR);
+         ConnectionRequest *request = new ConnectionRequest();
+         request->sock = hClientSocket;
+         request->addr = addr;
+         ThreadPoolExecute(g_mainThreadPool, SetupTunnel, request);
       }
       else if (nRet == -1)
       {

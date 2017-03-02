@@ -129,7 +129,7 @@ static unsigned long CryptoIdCallback()
 /**
  * Create RSA key from binary representation
  */
-RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
+RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
 {
    const BYTE *bp = data;
    RSA *key = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&bp, (int)size);
@@ -147,7 +147,7 @@ RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
 /**
  * Destroy RSA key
  */
-void RSAFree(RSA *key)
+void LIBNETXMS_EXPORTABLE RSAFree(RSA *key)
 {
    RSA_free(key);
 }
@@ -159,7 +159,7 @@ void RSAFree(RSA *key)
 /**
  * Create RSA key from binary representation
  */
-RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
+RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
 {
    SecKeyCreateWithData(keyData, keyAttr);
 	return NULL;
@@ -168,7 +168,7 @@ RSA *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
 /**
  * Destroy RSA key
  */
-void RSAFree(RSA *key)
+void LIBNETXMS_EXPORTABLE RSAFree(RSA *key)
 {
    free(key);
 }

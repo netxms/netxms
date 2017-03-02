@@ -163,8 +163,8 @@ TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
+TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
-UINT32 g_dwServerCount = 0;
 UINT32 g_execTimeout = 2000;     // External process execution timeout in milliseconds
 UINT32 g_snmpTimeout = 1000;
 UINT16 g_snmpTrapPort = 162;
@@ -300,6 +300,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, NULL },
+   { _T("SystemName"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_systemName, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, NULL },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneId, NULL },
@@ -790,6 +791,20 @@ BOOL Initialize()
    {
       nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
    }
+
+   // Set system name to host name if not set in config
+   if (g_systemName[0] == 0)
+   {
+#ifdef UNICODE
+      char buffer[MAX_OBJECT_NAME];
+      gethostname(buffer, MAX_OBJECT_NAME);
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, g_systemName, MAX_OBJECT_NAME);
+#else
+      gethostname(g_systemName, MAX_OBJECT_NAME);
+#endif
+      g_systemName[MAX_OBJECT_NAME - 1] = 0;
+   }
+   nxlog_debug(2, _T("Using system name \"%s\""), g_systemName);
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{

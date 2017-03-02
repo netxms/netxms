@@ -215,14 +215,18 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_SYSLOG_MSG      5
 #define INFO_CAT_SNMP_TRAP       6
 #define INFO_CAT_AUDIT_RECORD    7
-//#define INFO_CAT_SITUATION       8
-#define INFO_CAT_LIBRARY_IMAGE   9
+#define INFO_CAT_LIBRARY_IMAGE   8
 
 /**
  * Certificate types
  */
-#define CERT_TYPE_TRUSTED_CA		0
-#define CERT_TYPE_USER				1
+enum CertificateType
+{
+   CERT_TYPE_TRUSTED_CA = 0,
+   CERT_TYPE_USER = 1,
+   CERT_TYPE_AGENT = 2,
+   CERT_TYPE_SERVER = 3
+};
 
 /**
  * Audit subsystems
@@ -1156,7 +1160,9 @@ X509 *CertificateFromLoginMessage(NXCPMessage *pMsg);
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge,
 									  BYTE *pSignature, UINT32 dwSigLen, int nMappingMethod,
 									  const TCHAR *pszMappingData);
+bool ValidateAgentCertificate(X509 *cert);
 void ReloadCertificates();
+bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
 #endif
 
 #ifndef _WIN32

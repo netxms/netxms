@@ -25,7 +25,7 @@
 
 #ifdef _WITH_ENCRYPTION
 
-// WARNING! this hack works only for d2i_X509(); be carefull when adding new code
+// WARNING! this hack works only for d2i_X509(); be careful when adding new code
 #ifdef OPENSSL_CONST
 # undef OPENSSL_CONST
 #endif
@@ -36,10 +36,55 @@
 #endif
 
 /**
- * Static data
+ * Server certificate file information
  */
-static X509_STORE *m_pTrustedCertStore = NULL;
-static MUTEX m_mutexStoreAccess = INVALID_MUTEX_HANDLE;
+TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
+char g_serverCertificatePassword[MAX_PASSWORD] = "";
+
+/**
+ * Server certificate
+ */
+static X509 *s_serverCertificate = NULL;
+static EVP_PKEY *s_serverCertificateKey = NULL;
+
+/**
+ * Trusted CA certificate store
+ */
+static X509_STORE *s_trustedCertificateStore = NULL;
+static Mutex s_certificateStoreLock;
+
+/**
+ * Get CN from certificate
+ */
+bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
+{
+   X509_NAME *subject = X509_get_subject_name(cert);
+   if (subject == NULL)
+      return false;
+
+   int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
+   if (idx == -1)
+      return false;
+
+   X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
+   if (entry == NULL)
+      return false;
+
+   ASN1_STRING *data = X509_NAME_ENTRY_get_data(entry);
+   if (data == NULL)
+      return false;
+
+   unsigned char *utf8CertCN;
+   ASN1_STRING_to_UTF8(&utf8CertCN, data);
+#ifdef UNICODE
+   MultiByteToWideChar(CP_UTF8, 0, (char *)utf8CertCN, -1, buffer, (int)size);
+#else
+   utf8_to_mb((char *)utf8CertCN, -1, buffer, (int)size);
+#endif
+   buffer[size - 1] = 0;
+   OPENSSL_free(utf8CertCN);
+   return true;
+}
 
 /**
  * Create X509 certificate structure from login message
@@ -94,35 +139,12 @@ static BOOL CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
  */
 static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
 {
-   X509_NAME *subject = X509_get_subject_name(cert);
-   if (subject == NULL)
+   TCHAR certCn[256];
+   if (!GetCertificateCN(cert, certCn, 256))
       return FALSE;
 
-   int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
-   if (idx == -1)
-      return FALSE;
-
-   X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
-   if (entry == NULL)
-      return FALSE;
-
-   ASN1_STRING *data = X509_NAME_ENTRY_get_data(entry);
-   if (data == NULL)
-      return FALSE;
-
-   unsigned char *utf8CertCN;
-   ASN1_STRING_to_UTF8(&utf8CertCN, data);
-#ifdef UNICODE
-   DbgPrintf(3, _T("Certificate CN=\"%hs\", user CN=\"%s\""), utf8CertCN, cn);
-   char *utf8UserCN = UTF8StringFromWideString(cn);
-   BOOL success = !stricmp((char *)utf8CertCN, utf8UserCN);
-   free(utf8UserCN);
-#else
-   DbgPrintf(3, _T("Certificate CN=\"%s\", user CN=\"%s\""), utf8CertCN, cn);
-   BOOL success = !stricmp((char *)utf8CertCN, cn);
-#endif
-   OPENSSL_free(utf8CertCN);
-   return success;
+   nxlog_debug(3, _T("Certificate CN=\"%s\", user CN=\"%s\""), certCn, cn);
+   return !_tcsicmp(certCn, cn);
 }
 
 /**
@@ -142,12 +164,12 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 #endif
 
 	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, pszLogin);
-	MutexLock(m_mutexStoreAccess);
+	s_certificateStoreLock.lock();
 
-	if (m_pTrustedCertStore == NULL)
+	if (s_trustedCertificateStore == NULL)
 	{
 		DbgPrintf(3, _T("Cannot validate user certificate because certificate store is not initialized"));
-		MutexUnlock(m_mutexStoreAccess);
+		s_certificateStoreLock.unlock();
 #ifdef UNICODE
 		free(certSubject);
 #endif
@@ -173,12 +195,10 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	// Validate certificate
 	if (bValid)
 	{
-		X509_STORE_CTX *pStore;
-
-		pStore = X509_STORE_CTX_new();
+		X509_STORE_CTX *pStore = X509_STORE_CTX_new();
 		if (pStore != NULL)
 		{
-			X509_STORE_CTX_init(pStore, m_pTrustedCertStore, pCert, NULL);
+			X509_STORE_CTX_init(pStore, s_trustedCertificateStore, pCert, NULL);
 			bValid = X509_verify_cert(pStore);
 			X509_STORE_CTX_free(pStore);
 			DbgPrintf(3, _T("Certificate \"%s\" for user %s - validation %s"),
@@ -214,7 +234,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 		}
 	}
 
-	MutexUnlock(m_mutexStoreAccess);
+	s_certificateStoreLock.unlock();
 
 #ifdef UNICODE
 	free(certSubject);
@@ -224,11 +244,40 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 #undef certSubject
 }
 
+/**
+ * Validate agent certificate
+ */
+bool ValidateAgentCertificate(X509 *cert)
+{
+   X509_STORE *store = X509_STORE_new();
+   if (store == NULL)
+   {
+      nxlog_debug(3, _T("ValidateAgentCertificate: cannot create certificate store"));
+   }
 
-//
-// Reload certificates from database
-//
+   X509_STORE_add_cert(store, s_serverCertificate);
+   bool valid = false;
 
+   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
+   if (ctx != NULL)
+   {
+      X509_STORE_CTX_init(ctx, store, cert, NULL);
+      valid = (X509_verify_cert(ctx) == 1);
+      X509_STORE_CTX_free(ctx);
+   }
+   else
+   {
+      TCHAR buffer[256];
+      nxlog_debug(3, _T("ValidateAgentCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
+   }
+
+   X509_STORE_free(store);
+   return valid;
+}
+
+/**
+ * Reload certificates from database
+ */
 void ReloadCertificates()
 {
 	BYTE *pBinCert;
@@ -239,14 +288,18 @@ void ReloadCertificates()
 	X509 *pCert;
 	TCHAR szBuffer[256], szSubject[256], *pszCertData;
 
-	MutexLock(m_mutexStoreAccess);
+	s_certificateStoreLock.lock();
 
-	if (m_pTrustedCertStore != NULL)
-		X509_STORE_free(m_pTrustedCertStore);
+	if (s_trustedCertificateStore != NULL)
+		X509_STORE_free(s_trustedCertificateStore);
 
-	m_pTrustedCertStore = X509_STORE_new();
-	if (m_pTrustedCertStore != NULL)
+	s_trustedCertificateStore = X509_STORE_new();
+	if (s_trustedCertificateStore != NULL)
 	{
+	   // Add server's certificate as trusted
+	   if (s_serverCertificate != NULL)
+	      X509_STORE_add_cert(s_trustedCertificateStore, s_serverCertificate);
+
 		_sntprintf(szBuffer, 256, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, szBuffer);
@@ -267,7 +320,7 @@ void ReloadCertificates()
 					free(pBinCert);
 					if (pCert != NULL)
 					{
-						if (X509_STORE_add_cert(m_pTrustedCertStore, pCert))
+						if (X509_STORE_add_cert(s_trustedCertificateStore, pCert))
 						{
 							nLoaded++;
 						}
@@ -277,6 +330,7 @@ void ReloadCertificates()
 										"ss", DBGetField(hResult, i, 1, szSubject, 256),
 										_ERR_error_tstring(ERR_get_error(), szBuffer));
 						}
+						X509_free(pCert); // X509_STORE_add_cert increments reference count
 					}
 					else
 					{
@@ -298,7 +352,7 @@ void ReloadCertificates()
 		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE, "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
 	}
 
-	MutexUnlock(m_mutexStoreAccess);
+	s_certificateStoreLock.unlock();
 }
 
 /**
@@ -306,8 +360,70 @@ void ReloadCertificates()
  */
 void InitCertificates()
 {
-	m_mutexStoreAccess = MutexCreate();
-	ReloadCertificates();
+   ReloadCertificates();
+}
+
+/**
+ * Load server certificate
+ */
+bool LoadServerCertificate(RSA **serverKey)
+{
+   if (g_serverCertificatePath[0] == 0)
+   {
+      nxlog_write(MSG_SERVER_CERT_NOT_SET, NXLOG_INFO, NULL);
+      return false;
+   }
+
+   FILE *f = _tfopen(g_serverCertificatePath, _T("r"));
+   if (f == NULL)
+   {
+      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _tcserror(errno));
+      return false;
+   }
+
+   DecryptPasswordA("system", g_serverCertificatePassword, g_serverCertificatePassword, MAX_PASSWORD);
+   s_serverCertificate = PEM_read_X509(f, NULL, NULL, g_serverCertificatePassword);
+   s_serverCertificateKey = PEM_read_PrivateKey(f, NULL, NULL, g_serverCertificatePassword);
+   fclose(f);
+
+   if ((s_serverCertificate == NULL) || (s_serverCertificateKey == NULL))
+   {
+      TCHAR buffer[1024];
+      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
+      return false;
+   }
+
+   RSA *privKey = EVP_PKEY_get1_RSA(s_serverCertificateKey);
+   RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(s_serverCertificate));
+   if ((privKey != NULL) && (pubKey != NULL))
+   {
+      // Combine into one key
+      int len = i2d_RSAPublicKey(pubKey, NULL);
+      len += i2d_RSAPrivateKey(privKey, NULL);
+      BYTE *buffer = (BYTE *)malloc(len);
+
+      BYTE *pos = buffer;
+      i2d_RSAPublicKey(pubKey, &pos);
+      i2d_RSAPrivateKey(privKey, &pos);
+
+      *serverKey = RSAKeyFromData(buffer, len, true);
+      free(buffer);
+   }
+
+   return true;
+}
+
+/**
+ * Setup server-side TLS context
+ */
+bool SetupServerTlsContext(SSL_CTX *context)
+{
+   if ((s_serverCertificate == NULL) || (s_serverCertificateKey == NULL))
+      return false;
+
+   SSL_CTX_use_certificate(context, s_serverCertificate);
+   SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);
+   return true;
 }
 
 #else		/* _WITH_ENCRYPTION */

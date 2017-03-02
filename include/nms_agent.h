@@ -115,6 +115,7 @@
 #define ERR_NO_SESSION_AGENT        ((UINT32)919)
 #define ERR_SERVER_ID_UNSET         ((UINT32)920)
 #define ERR_NO_SUCH_INSTANCE        ((UINT32)921)
+#define ERR_OUT_OF_STATE_REQUEST    ((UINT32)922)
 
 /**
  * Bulk data reconciliation DCI processing status codes
