@@ -4,7 +4,7 @@
 
 - Fixed bug in NXSL string concatenation
 - AnySMS SMS driver
-- Fixed isses: NX-1111, NX-1129
+- Fixed isses: NX-1111, NX-1129, NX-1198
 
 
 *
