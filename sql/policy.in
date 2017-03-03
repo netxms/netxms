@@ -140,6 +140,30 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (33,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database',
         '%m',5,'SYS_AGENT_LOCAL_DATABASE_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT);
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (34,'68e102a3-58d3-4112-901c-f683356ba662',7944,'Show alarm when interface with expected state UP is administratively disabled',
+        '%m',2,'IF_DOWN_%i_%5','interface = GetInterfaceObject($node, $event-&gt;parameters[5]);&#x0D;&#x0A;&#x0D;&#x0A;// if interface not found or interface expected state is not UP, do not match&#x0D;&#x0A;// otherwize (if interface expected status is UP), match&#x0D;&#x0A;return (interface != null &amp;&amp; interface-&gt;expectedState == 0);&#x0D;&#x0A;',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (35,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
+        '%m',1,'MAC_ADDRESS_CHANGED_%i_%2','',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (36,'18507220-6a16-4e13-a6ba-141d907b924a',7944,'Terminate MAC address change alarms when the interface is deleted',
+        '%m',6,'MAC_ADDRESS_CHANGED_%i_%1','',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (37,'8cca36cd-f821-43ae-8329-0eefe35df3b7',7944,'Terminate network mask alarms when an interface is deleted',
+        '%m',6,'BAD_NETMASK_%i_%1','',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (38,'404642a0-deb0-400d-b9f9-c86f5a83f7f5',7944,'Terminate network mask alarms when the mask of interface changes or IP address of interface is deleted',
+        '%m',6,'BAD_NETMASK_%i_%5','',0,EVENT_ALARM_TIMEOUT);
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (39,'b8abb037-ab4a-4e05-adc4-9425ce440e4a',7944,'Generate alarm when a routing loop is detected',
+        '%m',5,'ROUTING_LOOP_%i','',0,EVENT_ALARM_TIMEOUT);
+
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -181,3 +205,10 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (30,EVENT_SNMP_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (31,EVENT_LDAP_SYNC_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (32,EVENT_AGENT_LOG_PROBLEM);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (33,EVENT_AGENT_LOCAL_DATABASE_PROBLEM);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (34,EVENT_INTERFACE_DISABLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (35,EVENT_MAC_ADDR_CHANGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (36,EVENT_INTERFACE_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_INTERFACE_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_IF_MASK_CHANGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_IF_IPADDR_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_ROUTING_LOOP_DETECTED);

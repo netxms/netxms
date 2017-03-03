@@ -82,7 +82,7 @@ EPRule::EPRule(ConfigEntry *config)
    m_pszComment = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
    m_iAlarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_dwAlarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
-	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
+	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
 	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
