@@ -30,23 +30,25 @@ class Tunnel
 private:
    InetAddress m_address;
    UINT16 m_port;
-   TCHAR m_login[MAX_OBJECT_NAME];
    SOCKET m_socket;
    SSL_CTX *m_context;
    SSL *m_ssl;
    MUTEX m_sslLock;
    bool m_connected;
-   UINT32 m_requestId;
+   VolatileCounter m_requestId;
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
+   TCHAR m_debugId[64];
 
-   Tunnel(const InetAddress& addr, UINT16 port, const TCHAR *login);
+   Tunnel(const InetAddress& addr, UINT16 port);
 
    bool connectToServer();
    bool sendMessage(const NXCPMessage *msg);
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, 5000) : NULL; }
-   void recvThread();
 
+   void debugPrintf(int level, const TCHAR *format, ...);
+
+   void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
 
 public:
@@ -56,7 +58,6 @@ public:
    void disconnect();
 
    const InetAddress& getAddress() const { return m_address; }
-   const TCHAR *getLogin() const { return m_login; }
 
    static Tunnel *createFromConfig(TCHAR *config);
 };
@@ -64,10 +65,9 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const InetAddress& addr, UINT16 port, const TCHAR *login) : m_address(addr)
+Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
 {
    m_port = port;
-   nx_strncpy(m_login, login, MAX_OBJECT_NAME);
    m_socket = INVALID_SOCKET;
    m_context = NULL;
    m_ssl = NULL;
@@ -76,6 +76,7 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port, const TCHAR *login) : m_add
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
+   _sntprintf(m_debugId, 64, _T("TUN-%s"), (const TCHAR *)addr.toString());
 }
 
 /**
@@ -91,6 +92,19 @@ Tunnel::~Tunnel()
    if (m_context != NULL)
       SSL_CTX_free(m_context);
    MutexDestroy(m_sslLock);
+}
+
+/**
+ * Debug output
+ */
+void Tunnel::debugPrintf(int level, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+   nxlog_debug(level, _T("[%s] %s"), m_debugId, buffer);
 }
 
 /**
@@ -129,14 +143,13 @@ void Tunnel::recvThread()
          if (nxlog_get_debug_level() >= 6)
          {
             TCHAR buffer[64];
-            nxlog_debug(6, _T("[TUN-%s] Received message %s"), (const TCHAR *)m_address.toString(), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
          }
          m_queue->put(msg);
       }
       else if (result != MSGRECV_TIMEOUT)
       {
-         nxlog_debug(4, _T("Receiver thread for tunnel %s@%s stopped (%s)"), \
-                     m_login, (const TCHAR *)m_address.toString(), AbstractMessageReceiver::resultToText(result));
+         debugPrintf(4, _T("Receiver thread stopped (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
    }
@@ -150,6 +163,11 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
    if (m_socket == INVALID_SOCKET)
       return false;
 
+   if (nxlog_get_debug_level() >= 6)
+   {
+      TCHAR buffer[64];
+      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+   }
    NXCP_MESSAGE *data = msg->createMessage(true);
    MutexLock(m_sslLock);
    bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
@@ -179,7 +197,7 @@ bool Tunnel::connectToServer()
    m_socket = socket(m_address.getFamily(), SOCK_STREAM, 0);
    if (m_socket == INVALID_SOCKET)
    {
-      nxlog_debug(4, _T("Cannot create socket for tunnel %s@%s: %s"), m_login, (const TCHAR *)m_address.toString(), _tcserror(WSAGetLastError()));
+      debugPrintf(4, _T("Cannot create socket (%s)"), _tcserror(WSAGetLastError()));
       return false;
    }
 
@@ -187,7 +205,7 @@ bool Tunnel::connectToServer()
    m_address.fillSockAddr(&sa, m_port);
    if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) == -1)
    {
-      nxlog_debug(4, _T("Cannot establish connection for tunnel %s@%s: %s"), m_login, (const TCHAR *)m_address.toString(), _tcserror(WSAGetLastError()));
+      debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
       return false;
    }
 
@@ -195,14 +213,14 @@ bool Tunnel::connectToServer()
    const SSL_METHOD *method = SSLv23_method();
    if (method == NULL)
    {
-      nxlog_debug(4, _T("Cannot obtain TLS method for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      debugPrintf(4, _T("Cannot obtain TLS method"));
       return false;
    }
 
    m_context = SSL_CTX_new(method);
    if (m_context == NULL)
    {
-      nxlog_debug(4, _T("Cannot create context for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      debugPrintf(4, _T("Cannot create TLS context"));
       return false;
    }
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
@@ -210,7 +228,7 @@ bool Tunnel::connectToServer()
    m_ssl = SSL_new(m_context);
    if (m_ssl == NULL)
    {
-      nxlog_debug(4, _T("Cannot create SSL object for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      debugPrintf(4, _T("Cannot create SSL object"));
       return false;
    }
 
@@ -229,14 +247,13 @@ bool Tunnel::connectToServer()
             poller.add(m_socket);
             if (poller.poll(5000) > 0)
                continue;
-            nxlog_debug(4, _T("TLS handshake failed for tunnel %s@%s (timeout)"), m_login, (const TCHAR *)m_address.toString());
+            debugPrintf(4, _T("TLS handshake failed (timeout)"));
             return false;
          }
          else
          {
             char buffer[128];
-            nxlog_debug(4, _T("TLS handshake failed for tunnel %s@%s (%hs)"),
-                     m_login, (const TCHAR *)m_address.toString(), ERR_error_string(sslErr, buffer));
+            debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
             return false;
          }
       }
@@ -247,14 +264,14 @@ bool Tunnel::connectToServer()
    X509 *cert = SSL_get_peer_certificate(m_ssl);
    if (cert == NULL)
    {
-      nxlog_debug(4, _T("Server certificate not provided for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+      debugPrintf(4, _T("Server certificate not provided"));
       return false;
    }
 
    char *subj = X509_NAME_oneline(X509_get_subject_name(cert), NULL ,0);
    char *issuer = X509_NAME_oneline(X509_get_issuer_name(cert), NULL ,0);
-   nxlog_debug(4, _T("Tunnel %s@%s: certificate subject is %hs"), m_login, (const TCHAR *)m_address.toString(), subj);
-   nxlog_debug(4, _T("Tunnel %s@%s: certificate issuer is %hs"), m_login, (const TCHAR *)m_address.toString(), issuer);
+   debugPrintf(4, _T("Server certificate subject is %hs"), subj);
+   debugPrintf(4, _T("Server certificate issuer is %hs"), issuer);
    OPENSSL_free(subj);
    OPENSSL_free(issuer);
 
@@ -266,12 +283,12 @@ bool Tunnel::connectToServer()
    m_connected = true;
    m_recvThread = ThreadCreateEx(Tunnel::recvThreadStarter, 0, this);
 
-   m_requestId = 1;
+   m_requestId = 0;
 
    // Do handshake
    NXCPMessage msg;
    msg.setCode(CMD_SETUP_AGENT_TUNNEL);
-   msg.setId(m_requestId++);
+   msg.setId(InterlockedIncrement(&m_requestId));
    msg.setField(VID_AGENT_VERSION, NETXMS_BUILD_TAG);
    msg.setField(VID_SYS_NAME, g_systemName);
 
@@ -287,7 +304,7 @@ bool Tunnel::connectToServer()
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
    if (response == NULL)
    {
-      nxlog_debug(4, _T("Cannot establish connection for tunnel %s@%s: request timeout"), m_login, (const TCHAR *)m_address.toString());
+      debugPrintf(4, _T("Cannot configure tunnel (request timeout)"));
       disconnect();
       return false;
    }
@@ -296,7 +313,7 @@ bool Tunnel::connectToServer()
    delete response;
    if (rcc != ERR_SUCCESS)
    {
-      nxlog_debug(4, _T("Cannot establish connection for tunnel %s@%s: error %d"), m_login, (const TCHAR *)m_address.toString(), rcc);
+      debugPrintf(4, _T("Cannot configure tunnel (error %d)"), rcc);
       disconnect();
       return false;
    }
@@ -312,13 +329,13 @@ void Tunnel::checkConnection()
    if (!m_connected)
    {
       if (connectToServer())
-         nxlog_debug(3, _T("Tunnel %s@%s active"), m_login, (const TCHAR *)m_address.toString());
+         debugPrintf(3, _T("Tunnel is active"));
    }
    else
    {
       NXCPMessage msg;
       msg.setCode(CMD_KEEPALIVE);
-      msg.setId(m_requestId++);
+      msg.setId(InterlockedIncrement(&m_requestId));
       if (sendMessage(&msg))
       {
          NXCPMessage *response = waitForMessage(CMD_KEEPALIVE, msg.getId());
@@ -327,7 +344,7 @@ void Tunnel::checkConnection()
             disconnect();
             closesocket(m_socket);
             m_socket = INVALID_SOCKET;
-            nxlog_debug(3, _T("Connection test failed for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+            debugPrintf(3, _T("Connection test failed"));
          }
          else
          {
@@ -339,7 +356,7 @@ void Tunnel::checkConnection()
          disconnect();
          closesocket(m_socket);
          m_socket = INVALID_SOCKET;
-         nxlog_debug(3, _T("Connection test failed for tunnel %s@%s"), m_login, (const TCHAR *)m_address.toString());
+         debugPrintf(3, _T("Connection test failed"));
       }
    }
 }
@@ -349,14 +366,8 @@ void Tunnel::checkConnection()
  */
 Tunnel *Tunnel::createFromConfig(TCHAR *config)
 {
-   TCHAR *a = _tcschr(config, _T('@'));
-   if (a == NULL)
-      return NULL;
-
-   *a = 0;
-   a++;
    int port = AGENT_TUNNEL_PORT;
-   TCHAR *p = _tcschr(a, _T(':'));
+   TCHAR *p = _tcschr(config, _T(':'));
    if (p != NULL)
    {
       *p = 0;
@@ -368,11 +379,11 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
          return NULL;
    }
 
-   InetAddress addr = InetAddress::resolveHostName(a);
+   InetAddress addr = InetAddress::resolveHostName(config);
    if (!addr.isValidUnicast())
       return NULL;
 
-   return new Tunnel(addr, port, config);
+   return new Tunnel(addr, port);
 }
 
 /**
@@ -397,7 +408,7 @@ void ParseTunnelList(TCHAR *list)
       if (t != NULL)
       {
          s_tunnels.add(t);
-         nxlog_debug(1, _T("Added server tunnel %s@%s"), t->getLogin(), (const TCHAR *)t->getAddress().toString());
+         nxlog_debug(1, _T("Added server tunnel %s"), (const TCHAR *)t->getAddress().toString());
       }
       else
       {

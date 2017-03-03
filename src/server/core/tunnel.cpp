@@ -107,11 +107,20 @@ void AgentTunnel::recvThread()
       switch(msg->getCode())
       {
          case CMD_KEEPALIVE:
+            {
+               NXCPMessage response;
+               response.setCode(CMD_KEEPALIVE);
+               response.setId(msg->getId());
+               sendMessage(&response);
+            }
             break;
          case CMD_SETUP_AGENT_TUNNEL:
             setup(msg);
             break;
+         default:
+            break;
       }
+      delete msg;
    }
    debugPrintf(5, _T("Receiver thread stopped"));
 }
@@ -130,6 +139,11 @@ THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
  */
 bool AgentTunnel::sendMessage(NXCPMessage *msg)
 {
+   if (nxlog_get_debug_level() >= 6)
+   {
+      TCHAR buffer[64];
+      debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+   }
    NXCP_MESSAGE *data = msg->createMessage(true);
    MutexLock(m_sslLock);
    bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
@@ -167,6 +181,12 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);
       response.setField(VID_IS_ACTIVE, m_state == AGENT_TUNNEL_BOUND);
+
+      debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
+      debugPrintf(5, _T("   System name:        %s"), m_systemName);
+      debugPrintf(5, _T("   System information: %s"), m_systemInfo);
+      debugPrintf(5, _T("   Platform name:      %s"), m_platformName);
+      debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
    }
    else
    {
