@@ -7893,9 +7893,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
 
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            AgentConnection *pConn;
-
-            pConn = ((Node *)object)->createAgentConnection();
+            AgentConnection *pConn = ((Node *)object)->createAgentConnection();
             if (pConn != NULL)
             {
                TCHAR *argv[64];
@@ -7920,6 +7918,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
                {
                   rcc = pConn->execAction(action, argc, argv);
                }
+               debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
                for(int i = 0; i < argc; i++)
                   free(argv[i]);
