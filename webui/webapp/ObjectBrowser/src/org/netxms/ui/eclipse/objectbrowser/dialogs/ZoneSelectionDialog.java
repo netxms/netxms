@@ -37,7 +37,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.ZoneSelectionDialogComparator;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.ZoneSelectionDialogFilter;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -53,7 +53,7 @@ public class ZoneSelectionDialog extends Dialog
    private Zone zone;
    private FilterText filterText;
    private TableViewer zoneList;
-   private ObjectFilter filter;
+   private ZoneSelectionDialogFilter filter;
    
    /**
     * Constructor
@@ -73,15 +73,7 @@ public class ZoneSelectionDialog extends Dialog
    {
       super.configureShell(newShell);
       newShell.setText("Select Zone");
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      try
-      {
-         newShell.setSize(settings.getInt("SelectZone.cx"), settings.getInt("SelectZone.cy")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(NumberFormatException e)
-      {
-         newShell.setSize(300, 350);
-      }
+      newShell.setSize(300, 500);
    }
    
    /* (non-Javadoc)
@@ -117,7 +109,7 @@ public class ZoneSelectionDialog extends Dialog
       zoneList.setContentProvider(new ObjectTreeContentProvider(zoneIds));
       zoneList.setComparator(new ZoneSelectionDialogComparator());
       zoneList.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
-      filter = new ObjectFilter(zoneIds, null, null);
+      filter = new ZoneSelectionDialogFilter();
       if (filterString != null)
          filter.setFilterString(filterString);
       zoneList.addFilter(filter);

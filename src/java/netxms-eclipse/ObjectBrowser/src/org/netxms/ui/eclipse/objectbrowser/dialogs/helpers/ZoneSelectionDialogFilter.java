@@ -18,26 +18,37 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.dialogs.helpers;
 
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.AbstractObject;
 
 /**
- * Zone comparator
+ * Filter for Zone Selection Dialog
  */
-public class ZoneSelectionDialogComparator extends ViewerComparator
+public class ZoneSelectionDialogFilter extends ViewerFilter
 {
+   private String filterString = null;
+   
    /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
-   public int compare(Viewer viewer, Object e1, Object e2)
+   public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      int rc = ((AbstractObject)e1).getObjectName().compareToIgnoreCase(((AbstractObject)e2).getObjectName());
-      int dir = ((TableViewer)viewer).getTable().getSortDirection();
-      return (dir == SWT.UP) ? rc : -rc;
+      if ((filterString == null) || filterString.isEmpty())
+         return true;
+      else if (((AbstractObject)element).getObjectName().toLowerCase().contains(filterString))
+         return true;
+      return false;
+   }
+   
+   /**
+    * Set the filter string
+    * @param filterString
+    */
+   public void setFilterString(String filterString)
+   {
+      this.filterString = filterString.toLowerCase();
    }
 
 }
