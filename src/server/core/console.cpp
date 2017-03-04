@@ -34,6 +34,7 @@ extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
+void ShowAgentTunnels(CONSOLE_CTX console);
 
 /**
  * Format string to show value of global flag
@@ -846,6 +847,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
          }
+      }
+      else if (IsCommand(_T("TUNNELS"), szBuffer, 2))
+      {
+         ShowAgentTunnels(pCtx);
       }
       else if (IsCommand(_T("USERS"), szBuffer, 1))
       {

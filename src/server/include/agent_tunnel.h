@@ -56,8 +56,6 @@ protected:
    TCHAR *m_systemInfo;
    TCHAR *m_agentVersion;
    
-   virtual ~AgentTunnel();
-   
    void debugPrintf(int level, const TCHAR *format, ...);
    
    void recvThread();
@@ -67,9 +65,19 @@ protected:
 
 public:
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId);
+   virtual ~AgentTunnel();
    
    void start();
    bool sendMessage(NXCPMessage *msg);
+
+   UINT32 getId() const { return m_id; }
+   const InetAddress& getAddress() const { return m_address; }
+   const TCHAR *getSystemName() const { return m_systemName; }
+   const TCHAR *getSystemInfo() const { return m_systemInfo; }
+   const TCHAR *getPlatformName() const { return m_platformName; }
+   const TCHAR *getAgentVersion() const { return m_agentVersion; }
+   bool isBound() const { return m_nodeId != 0; }
+   UINT32 getNodeId() const { return m_nodeId; }
 };
 
 /**

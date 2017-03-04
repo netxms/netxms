@@ -25,6 +25,100 @@
 #define MAX_MSG_SIZE    268435456
 
 /**
+ * Tunnel registration
+ */
+static HashMap<UINT32, AgentTunnel> s_boundTunnels(false);
+static ObjectArray<AgentTunnel> s_unboundTunnels(16, 16, false);
+static Mutex s_tunnelListLock;
+
+/**
+ * Callback for closing old tunnel
+ */
+static void CloseTunnelCallback(void *arg)
+{
+   ((AgentTunnel *)arg)->decRefCount();
+}
+
+/**
+ * Register tunnel
+ */
+static void RegisterTunnel(AgentTunnel *tunnel)
+{
+   AgentTunnel *oldTunnel = NULL;
+   tunnel->incRefCount();
+   s_tunnelListLock.lock();
+   if (tunnel->isBound())
+   {
+      oldTunnel = s_boundTunnels.get(tunnel->getNodeId());
+      s_boundTunnels.set(tunnel->getNodeId(), tunnel);
+   }
+   else
+   {
+      s_unboundTunnels.add(tunnel);
+   }
+   s_tunnelListLock.unlock();
+
+   // Execute decRefCount for old tunnel on separate thread to avoid
+   // possible tunnel manager thread lock on old tunnel receiver thread join
+   if (oldTunnel != NULL)
+      ThreadPoolExecute(g_mainThreadPool, CloseTunnelCallback, oldTunnel);
+}
+
+/**
+ * Unregister tunnel
+ */
+static void UnregisterTunnel(AgentTunnel *tunnel)
+{
+   s_tunnelListLock.lock();
+   if (tunnel->isBound())
+   {
+      if (s_boundTunnels.get(tunnel->getNodeId()) == tunnel)
+         s_boundTunnels.remove(tunnel->getNodeId());
+   }
+   else
+   {
+      s_unboundTunnels.remove(tunnel);
+   }
+   s_tunnelListLock.unlock();
+
+   ThreadPoolExecute(g_mainThreadPool, CloseTunnelCallback, tunnel);
+}
+
+/**
+ * Show tunnels in console
+ */
+void ShowAgentTunnels(CONSOLE_CTX console)
+{
+   s_tunnelListLock.lock();
+
+   ConsolePrintf(console,
+            _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
+            _T("ID   | Node ID | Peer IP Address          | System Name              | Platform Name    | Agent Version\n")
+            _T("-----+---------+--------------------------+--------------------------+------------------+------------------------\n"));
+   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   while(it->hasNext())
+   {
+      AgentTunnel *t = it->next();
+      TCHAR ipAddrBuffer[64];
+      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getNodeId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
+   }
+   delete it;
+
+   ConsolePrintf(console,
+            _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
+            _T("ID   | Peer IP Address          | System Name              | Platform Name    | Agent Version\n")
+            _T("-----+--------------------------+--------------------------+------------------+------------------------\n"));
+   for(int i = 0; i < s_unboundTunnels.size(); i++)
+   {
+      const AgentTunnel *t = s_unboundTunnels.get(i);
+      TCHAR ipAddrBuffer[64];
+      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
+   }
+
+   s_tunnelListLock.unlock();
+}
+
+/**
  * Next free tunnel ID
  */
 static VolatileCounter s_nextTunnelId = 0;
@@ -54,6 +148,8 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
  */
 AgentTunnel::~AgentTunnel()
 {
+   if (m_socket != INVALID_SOCKET)
+      shutdown(m_socket, SHUT_RDWR);
    ThreadJoin(m_recvThread);
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
@@ -122,6 +218,7 @@ void AgentTunnel::recvThread()
       }
       delete msg;
    }
+   UnregisterTunnel(this);
    debugPrintf(5, _T("Receiver thread stopped"));
 }
 
@@ -157,7 +254,6 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
  */
 void AgentTunnel::start()
 {
-   incRefCount();
    debugPrintf(4, _T("Tunnel started"));
    m_recvThread = ThreadCreateEx(AgentTunnel::recvThreadStarter, 0, this);
 }
@@ -316,6 +412,7 @@ retry:
    }
 
    tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId);
+   RegisterTunnel(tunnel);
    tunnel->start();
    tunnel->decRefCount();
 
