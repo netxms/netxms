@@ -10,6 +10,7 @@
 
 serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
+	agent_tunnel.h \
 	hdlink.h \
 	local_admin.h \
 	nddrv.h \
