@@ -107,7 +107,7 @@ public class NXCPCodes
 	public static final int CMD_CREATE_ACTION = 0x0051;
 	public static final int CMD_DELETE_ACTION = 0x0052;
 	public static final int CMD_ACTION_DATA = 0x0053;
-	public static final int CMD_GET_CONTAINER_CAT_LIST = 0x0054;
+	public static final int CMD_SETUP_AGENT_TUNNEL = 0x0054;
 	public static final int CMD_EXECUTE_LIBRARY_SCRIPT = 0x0055;
 	public static final int CMD_GET_PREDICTION_ENGINES = 0x0056;
 	public static final int CMD_GET_PREDICTED_DATA = 0x0057;
@@ -237,10 +237,10 @@ public class NXCPCodes
 	public static final int CMD_GET_PERSISTENT_STORAGE = 0x00D3;
 	public static final int CMD_DELETE_PSTORAGE_VALUE = 0x00D4;
 	public static final int CMD_SET_PSTORAGE_VALUE = 0x00D5;
-//	public static final int CMD_DEL_SITUATION_INSTANCE = 0x00D6;
-//	public static final int CMD_UPDATE_SITUATION = 0x00D7;
-//	public static final int CMD_SITUATION_DATA = 0x00D8;
-//	public static final int CMD_SITUATION_CHANGE = 0x00D9;
+	public static final int CMD_GET_UNBOUND_AGENT_TUNNELS = 0x00D6;
+	public static final int CMD_BIND_AGENT_TUNNEL = 0x00D7;
+	public static final int CMD_REQUEST_CERTIFICATE = 0x00D8;
+	public static final int CMD_NEW_CERTIFICATE = 0x00D9;
 	public static final int CMD_CREATE_MAP = 0x00DA;
 	public static final int CMD_UPLOAD_FILE = 0x00DB;
 	public static final int CMD_DELETE_FILE = 0x00DC;

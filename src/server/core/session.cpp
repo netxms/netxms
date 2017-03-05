@@ -71,6 +71,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(NXCPMessage *msg);
 void FillComponentsMessage(NXCPMessage *msg);
+void GetUnboundAgentTunnels(NXCPMessage *msg);
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
 
@@ -1456,6 +1457,12 @@ void ClientSession::processingThread()
             break;
          case CMD_DELETE_REPOSITORY:
             CALL_IN_NEW_THREAD(deleteRepository, pMsg);
+            break;
+         case CMD_GET_UNBOUND_AGENT_TUNNELS:
+            getUnboundAgentTunnels(pMsg);
+            break;
+         case CMD_BIND_AGENT_TUNNEL:
+            bindAgentTunnel(pMsg);
             break;
          case CMD_GET_PREDICTION_ENGINES:
             getPredictionEngines(pMsg);
@@ -13074,11 +13081,7 @@ void ClientSession::deleteMappingTable(NXCPMessage *request)
  */
 void ClientSession::getWirelessStations(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get object id and check object class and access rights
 	Node *node = (Node *)FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -13115,11 +13118,7 @@ void ClientSession::getWirelessStations(NXCPMessage *request)
  */
 void ClientSession::getSummaryTables(UINT32 rqId)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(rqId);
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, rqId);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
@@ -13158,11 +13157,7 @@ void ClientSession::getSummaryTables(UINT32 rqId)
  */
 void ClientSession::getSummaryTableDetails(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
@@ -13229,11 +13224,7 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
  */
 void ClientSession::modifySummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
@@ -13255,11 +13246,7 @@ void ClientSession::modifySummaryTable(NXCPMessage *request)
  */
 void ClientSession::deleteSummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
 	{
@@ -13310,11 +13297,7 @@ void ClientSession::querySummaryTable(NXCPMessage *request)
  */
 void ClientSession::queryAdHocSummaryTable(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    SummaryTable *tableDefinition = new SummaryTable(request);
 
@@ -13378,11 +13361,7 @@ void ClientSession::forwardToReportingServer(NXCPMessage *request)
  */
 void ClientSession::getSubnetAddressMap(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    Subnet *subnet = (Subnet *)FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_SUBNET);
@@ -13422,11 +13401,7 @@ void ClientSession::getSubnetAddressMap(NXCPMessage *request)
  */
 void ClientSession::getEffectiveRights(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
@@ -13734,11 +13709,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
  */
 void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    Node *node = (Node *)FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -13778,11 +13749,7 @@ void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
  */
 void ClientSession::getRoutingTable(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    Node *node = (Node *)FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -13843,11 +13810,7 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
  */
 void ClientSession::getLocationHistory(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    // Get node id and check object class and access rights
    Node *node = (Node *)FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_MOBILEDEVICE);
@@ -13913,10 +13876,7 @@ void ClientSession::getLocationHistory(NXCPMessage *request)
  */
 void ClientSession::getScreenshot(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    TCHAR* sessionName = request->getFieldAsString(VID_NAME);
    if(sessionName == NULL)
@@ -13979,11 +13939,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
  */
 void ClientSession::compileScript(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
 	TCHAR *source = request->getFieldAsString(VID_SCRIPT);
 	if (source != NULL)
@@ -14027,9 +13983,7 @@ void ClientSession::compileScript(NXCPMessage *request)
  */
 void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
 	NetObj *object = FindObjectById(objectId);
@@ -14078,9 +14032,7 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
  */
 void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
 	NetObj *object = FindObjectById(objectId);
@@ -14118,9 +14070,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
  */
 void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    GetSchedulerTaskHandlers(&msg, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -14131,9 +14081,7 @@ void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
  */
 void ClientSession::getScheduledTasks(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    GetScheduledTasks(&msg, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -14144,9 +14092,7 @@ void ClientSession::getScheduledTasks(NXCPMessage *request)
  */
 void ClientSession::addScheduledTask(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    UINT32 result = CreateScehduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
@@ -14157,9 +14103,7 @@ void ClientSession::addScheduledTask(NXCPMessage *request)
  */
 void ClientSession::updateScheduledTask(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    UINT32 result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
@@ -14170,9 +14114,7 @@ void ClientSession::updateScheduledTask(NXCPMessage *request)
  */
 void ClientSession::removeScheduledTask(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    UINT32 result = RemoveScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
@@ -14183,9 +14125,7 @@ void ClientSession::removeScheduledTask(NXCPMessage *request)
  */
 void ClientSession::getPredictionEngines(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    GetPredictionEngines(&msg);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
@@ -14196,12 +14136,8 @@ void ClientSession::getPredictionEngines(NXCPMessage *request)
  */
 void ClientSession::getPredictedData(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    bool success = false;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
 
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
@@ -14239,15 +14175,43 @@ void ClientSession::getPredictedData(NXCPMessage *request)
       sendMessage(&msg);
 }
 
+/**
+ * Get list of unbound agent tunnels
+ */
+void ClientSession::getUnboundAgentTunnels(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   {
+      GetUnboundAgentTunnels(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Read list of unbound agent tunnels"));
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading list of unbound agent tunnels"));
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Bind agent tunnel to node
+ */
+void ClientSession::bindAgentTunnel(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   sendMessage(&msg);
+}
+
 #ifdef WITH_ZMQ
 /**
  * Manage subscription for ZMQ forwarder
  */
 void ClientSession::zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
    NetObj *object = FindObjectById(objectId);
@@ -14297,14 +14261,9 @@ void ClientSession::zmqManageSubscription(NXCPMessage *request, zmq::Subscriptio
 
 void ClientSession::zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request->getId());
-
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    ZmqFillSubscriptionListMessage(&msg, type);
-
    msg.setField(VID_RCC, RCC_SUCCESS);
-
    sendMessage(&msg);
 }
 

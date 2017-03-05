@@ -98,6 +98,20 @@ NXCPMessage::NXCPMessage(int version)
 }
 
 /**
+ * Create message with given code and ID
+ */
+NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version)
+{
+   m_code = code;
+   m_id = id;
+   m_fields = NULL;
+   m_flags = 0;
+   m_version = version;
+   m_data = NULL;
+   m_dataSize = 0;
+}
+
+/**
  * Create a copy of prepared CSCP message
  */
 NXCPMessage::NXCPMessage(NXCPMessage *msg)

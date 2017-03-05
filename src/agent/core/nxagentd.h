@@ -656,6 +656,7 @@ extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_szConfigPolicyDir[];
 extern TCHAR g_szLogParserDirectory[];
+extern TCHAR g_certificateDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
 extern TCHAR g_szSNMPTrapListenAddress[];
@@ -684,6 +685,7 @@ extern UINT32 g_rejectedConnections;
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
 extern ThreadPool *g_snmpProxyThreadPool;
+extern ThreadPool *g_commThreadPool;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];

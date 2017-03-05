@@ -37,6 +37,11 @@ void ClearDataCollectionConfiguration();
 ThreadPool *g_snmpProxyThreadPool = NULL;
 
 /**
+ * Communication request processing thread pool
+ */
+ThreadPool *g_commThreadPool = NULL;
+
+/**
  * Next free session ID
  */
 static VolatileCounter s_sessionId = 0;

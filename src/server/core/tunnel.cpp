@@ -85,6 +85,51 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
 }
 
 /**
+ * Bind agent tunnel
+ */
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
+{
+   AgentTunnel *tunnel = NULL;
+   s_tunnelListLock.lock();
+   for(int i = 0; i < s_unboundTunnels.size(); i++)
+   {
+      if (s_unboundTunnels.get(i)->getId() == tunnelId)
+      {
+         tunnel = s_unboundTunnels.get(i);
+         tunnel->incRefCount();
+         break;
+      }
+   }
+   s_tunnelListLock.unlock();
+
+   if (tunnel == NULL)
+   {
+      nxlog_debug(4, _T("BindAgentTunnel: unbound tunnel with ID %d not found"), tunnelId);
+      return RCC_INVALID_TUNNEL_ID;
+   }
+
+   UINT32 rcc = tunnel->bind(nodeId);
+   tunnel->decRefCount();
+   return rcc;
+}
+
+/**
+ * Get list of unbound agent tunnels into NXCP message
+ */
+void GetUnboundAgentTunnels(NXCPMessage *msg)
+{
+   s_tunnelListLock.lock();
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < s_unboundTunnels.size(); i++)
+   {
+      s_unboundTunnels.get(i)->fillMessage(msg, fieldId);
+      fieldId += 10;
+   }
+   msg->setField(VID_NUM_ELEMENTS, (UINT32)s_unboundTunnels.size());
+   s_tunnelListLock.unlock();
+}
+
+/**
  * Show tunnels in console
  */
 void ShowAgentTunnels(CONSOLE_CTX console)
@@ -135,12 +180,14 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_ssl = ssl;
    m_sslLock = MutexCreate();
    m_recvThread = INVALID_THREAD_HANDLE;
+   m_requestId = 0;
    m_nodeId = nodeId;
    m_state = AGENT_TUNNEL_INIT;
    m_systemName = NULL;
    m_platformName = NULL;
    m_systemInfo = NULL;
    m_agentVersion = NULL;
+   m_bindRequestId = 0;
 }
 
 /**
@@ -204,16 +251,19 @@ void AgentTunnel::recvThread()
       {
          case CMD_KEEPALIVE:
             {
-               NXCPMessage response;
-               response.setCode(CMD_KEEPALIVE);
-               response.setId(msg->getId());
+               NXCPMessage response(CMD_KEEPALIVE, msg->getId());
                sendMessage(&response);
             }
             break;
          case CMD_SETUP_AGENT_TUNNEL:
             setup(msg);
             break;
+         case CMD_REQUEST_CERTIFICATE:
+            processCertificateRequest(msg);
+            break;
          default:
+            m_queue.put(msg);
+            msg = NULL; // prevent message deletion
             break;
       }
       delete msg;
@@ -290,6 +340,115 @@ void AgentTunnel::setup(const NXCPMessage *request)
    }
 
    sendMessage(&response);
+}
+
+/**
+ * Bind tunnel to node
+ */
+UINT32 AgentTunnel::bind(UINT32 nodeId)
+{
+   if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0))
+      return RCC_OUT_OF_STATE_REQUEST;
+
+   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+   if (node == NULL)
+      return RCC_INVALID_OBJECT_ID;
+
+   NXCPMessage msg;
+   msg.setCode(CMD_BIND_AGENT_TUNNEL);
+   msg.setId(InterlockedIncrement(&m_requestId));
+   msg.setField(VID_SERVER_ID, g_serverId);
+   msg.setField(VID_GUID, node->getGuid());
+
+   m_bindRequestId = msg.getId();
+   m_bindGuid = node->getGuid();
+   sendMessage(&msg);
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+   if (response == NULL)
+      return RCC_TIMEOUT;
+
+   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   delete response;
+   if (rcc != ERR_SUCCESS)
+      debugPrintf(4, _T("Bind failed: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+   return AgentErrorToRCC(rcc);
+}
+
+/**
+ * Process certificate request
+ */
+void AgentTunnel::processCertificateRequest(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_NEW_CERTIFICATE, request->getId());
+
+   if ((request->getId() == m_bindRequestId) && (m_bindRequestId != 0) && (m_state == AGENT_TUNNEL_UNBOUND))
+   {
+      size_t certRequestLen;
+      const BYTE *certRequestData = request->getBinaryFieldPtr(VID_CERTIFICATE, &certRequestLen);
+      if (certRequestData != NULL)
+      {
+         X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, certRequestLen);
+         if (certRequest != NULL)
+         {
+            char *cn = m_bindGuid.toString().getUTF8String();
+            X509 *cert = IssueCertificate(certRequest, cn, 365);
+            free(cn);
+            if (cert != NULL)
+            {
+               BYTE *buffer = NULL;
+               int len = i2d_X509(cert, &buffer);
+               if (len > 0)
+               {
+                  response.setField(VID_RCC, ERR_SUCCESS);
+                  response.setField(VID_CERTIFICATE, buffer, len);
+                  OPENSSL_free(buffer);
+                  debugPrintf(4, _T("Certificate issued"));
+               }
+               else
+               {
+                  debugPrintf(4, _T("Cannot encode certificate"));
+                  response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
+               }
+               X509_free(cert);
+            }
+            else
+            {
+               debugPrintf(4, _T("Cannot issue certificate"));
+               response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
+            }
+         }
+         else
+         {
+            debugPrintf(4, _T("Cannot decode certificate request data"));
+            response.setField(VID_RCC, ERR_BAD_ARGUMENTS);
+         }
+      }
+      else
+      {
+         debugPrintf(4, _T("Missing certificate request data"));
+         response.setField(VID_RCC, ERR_BAD_ARGUMENTS);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_OUT_OF_STATE_REQUEST);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Fill NXCP message with tunnel data
+ */
+void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+{
+   msg->setField(baseId, m_id);
+   msg->setField(baseId + 1, m_nodeId);
+   msg->setField(baseId + 2, m_systemName);
+   msg->setField(baseId + 3, m_systemInfo);
+   msg->setField(baseId + 4, m_platformName);
+   msg->setField(baseId + 5, m_agentVersion);
 }
 
 /**

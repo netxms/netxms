@@ -49,18 +49,27 @@ protected:
    SSL *m_ssl;
    MUTEX m_sslLock;
    THREAD m_recvThread;
+   MsgWaitQueue m_queue;
+   VolatileCounter m_requestId;
    UINT32 m_nodeId;
    AgentTunnelState m_state;
    TCHAR *m_systemName;
    TCHAR *m_platformName;
    TCHAR *m_systemInfo;
    TCHAR *m_agentVersion;
+   UINT32 m_bindRequestId;
+   uuid m_bindGuid;
    
    void debugPrintf(int level, const TCHAR *format, ...);
    
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
    
+   bool sendMessage(NXCPMessage *msg);
+   NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return m_queue.waitForMessage(code, id, 5000); }
+
+   void processCertificateRequest(NXCPMessage *request);
+
    void setup(const NXCPMessage *request);
 
 public:
@@ -68,7 +77,7 @@ public:
    virtual ~AgentTunnel();
    
    void start();
-   bool sendMessage(NXCPMessage *msg);
+   UINT32 bind(UINT32 nodeId);
 
    UINT32 getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
@@ -78,6 +87,8 @@ public:
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
    bool isBound() const { return m_nodeId != 0; }
    UINT32 getNodeId() const { return m_nodeId; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 };
 
 /**

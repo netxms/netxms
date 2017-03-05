@@ -252,10 +252,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 		_T("CMD_GET_PERSISTENT_STORAGE"),
 		_T("CMD_DELETE_PSTORAGE_VALUE"),
 		_T("CMD_UPDATE_PSTORAGE_VALUE"),
-		_T("CMD_DEL_SITUATION_INSTANCE"), //Should be changed to new value
-		_T("CMD_UPDATE_SITUATION"), //Should be changed to new value
-		_T("CMD_SITUATION_DATA"), //Should be changed to new value
-		_T("CMD_SITUATION_CHANGE"), //Should be changed to new value
+		_T("CMD_GET_UNBOUND_AGENT_TUNNELS"),
+		_T("CMD_BIND_AGENT_TUNNEL"),
+		_T("CMD_REQUEST_CERTIFICATE"),
+		_T("CMD_NEW_CERTIFICATE"),
 		_T("CMD_CREATE_MAP"),
 		_T("CMD_UPLOAD_FILE"),
 		_T("CMD_DELETE_FILE"),

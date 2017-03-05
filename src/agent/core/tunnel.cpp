@@ -46,6 +46,12 @@ private:
    bool sendMessage(const NXCPMessage *msg);
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, 5000) : NULL; }
 
+   void processBindRequest(NXCPMessage *request);
+
+   X509_REQ *createCertificateRequest(const char *cn, EVP_PKEY **pkey);
+   bool saveCertificate(X509 *cert, EVP_PKEY *key);
+   void loadCertificate();
+
    void debugPrintf(int level, const TCHAR *format, ...);
 
    void recvThread();
@@ -145,7 +151,18 @@ void Tunnel::recvThread()
             TCHAR buffer[64];
             debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
          }
-         m_queue->put(msg);
+         switch(msg->getCode())
+         {
+            case CMD_BIND_AGENT_TUNNEL:
+               ThreadPoolExecute(g_commThreadPool, this, &Tunnel::processBindRequest, msg);
+               msg = NULL; // prevent message deletion
+               break;
+            default:
+               m_queue->put(msg);
+               msg = NULL; // prevent message deletion
+               break;
+         }
+         delete msg;
       }
       else if (result != MSGRECV_TIMEOUT)
       {
@@ -174,6 +191,74 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
    MutexUnlock(m_sslLock);
    free(data);
    return success;
+}
+
+/**
+ * Load certificate for this tunnel
+ */
+void Tunnel::loadCertificate()
+{
+   BYTE addressHash[18];
+   m_address.buildHashKey(addressHash);
+
+   TCHAR prefix[48];
+   BinToStr(addressHash, 18, prefix);
+
+   TCHAR name[MAX_PATH];
+   _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+   FILE *f = _tfopen(name, _T("r"));
+   if (f == NULL)
+   {
+      debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+      return;
+   }
+
+   X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
+   fclose(f);
+
+   if (cert == NULL)
+   {
+      debugPrintf(4, _T("Cannot load certificate from file \"%s\""), name);
+      return;
+   }
+
+   _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
+   f = _tfopen(name, _T("r"));
+   if (f == NULL)
+   {
+      debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+      X509_free(cert);
+      return;
+   }
+
+   EVP_PKEY *key = PEM_read_PrivateKey(f, NULL, NULL, (void *)"nxagentd");
+   fclose(f);
+
+   if (key == NULL)
+   {
+      debugPrintf(4, _T("Cannot load private key from file \"%s\""), name);
+      X509_free(cert);
+      return;
+   }
+
+   if (SSL_CTX_use_certificate(m_context, cert) == 1)
+   {
+      if (SSL_CTX_use_PrivateKey(m_context, key) == 1)
+      {
+         debugPrintf(4, _T("Certificate and private key loaded"));
+      }
+      else
+      {
+         debugPrintf(4, _T("Cannot set private key"));
+      }
+   }
+   else
+   {
+      debugPrintf(4, _T("Cannot set certificate"));
+   }
+
+   X509_free(cert);
+   EVP_PKEY_free(key);
 }
 
 /**
@@ -224,6 +309,7 @@ bool Tunnel::connectToServer()
       return false;
    }
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+   loadCertificate();
 
    m_ssl = SSL_new(m_context);
    if (m_ssl == NULL)
@@ -260,7 +346,7 @@ bool Tunnel::connectToServer()
       break;
    }
 
-   // Check server vertificate
+   // Check server certificate
    X509 *cert = SSL_get_peer_certificate(m_ssl);
    if (cert == NULL)
    {
@@ -359,6 +445,206 @@ void Tunnel::checkConnection()
          debugPrintf(3, _T("Connection test failed"));
       }
    }
+}
+
+/**
+ * Create certificate request
+ */
+X509_REQ *Tunnel::createCertificateRequest(const char *cn, EVP_PKEY **pkey)
+{
+   RSA *key = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, NULL);
+   if (key == NULL)
+   {
+      debugPrintf(4, _T("call to RSA_generate_key() failed"));
+      return NULL;
+   }
+
+   X509_REQ *req = X509_REQ_new();
+   if (req != NULL)
+   {
+      X509_REQ_set_version(req, 1);
+      X509_NAME *subject = X509_REQ_get_subject_name(req);
+      if (subject != NULL)
+      {
+         X509_NAME_add_entry_by_txt(subject,"O", MBSTRING_UTF8, (const BYTE *)"netxms.org", -1, -1, 0);
+         X509_NAME_add_entry_by_txt(subject,"CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0);
+
+         EVP_PKEY *ekey = EVP_PKEY_new();
+         if (ekey != NULL)
+         {
+            EVP_PKEY_assign_RSA(ekey, key);
+            key = NULL; // will be freed by EVP_PKEY_free
+            X509_REQ_set_pubkey(req, ekey);
+            if (X509_REQ_sign(req, ekey, EVP_sha256()) > 0)
+            {
+               *pkey = ekey;
+            }
+            else
+            {
+               debugPrintf(4, _T("call to X509_REQ_sign() failed"));
+               X509_REQ_free(req);
+               req = NULL;
+               EVP_PKEY_free(ekey);
+            }
+         }
+         else
+         {
+            debugPrintf(4, _T("call to EVP_PKEY_new() failed"));
+            X509_REQ_free(req);
+            req = NULL;
+         }
+      }
+      else
+      {
+         debugPrintf(4, _T("call to X509_REQ_get_subject_name() failed"));
+         X509_REQ_free(req);
+         req = NULL;
+      }
+   }
+   else
+   {
+      debugPrintf(4, _T("call to X509_REQ_new() failed"));
+   }
+
+   if (key != NULL)
+      RSA_free(key);
+   return req;
+}
+
+/**
+ * Save certificate
+ */
+bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
+{
+   BYTE addressHash[18];
+   m_address.buildHashKey(addressHash);
+
+   TCHAR prefix[48];
+   BinToStr(addressHash, 18, prefix);
+
+   TCHAR name[MAX_PATH];
+   _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+   FILE *f = _tfopen(name, _T("w"));
+   if (f == NULL)
+   {
+      debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+      return false;
+   }
+   int rc = PEM_write_X509(f, cert);
+   fclose(f);
+   if (rc != 1)
+   {
+      debugPrintf(4, _T("PEM_write_X509(\"%s\") failed"), name);
+      return false;
+   }
+
+   _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
+   f = _tfopen(name, _T("w"));
+   if (f == NULL)
+   {
+      debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+      return false;
+   }
+   rc = PEM_write_PrivateKey(f, key, EVP_des_ede3_cbc(), NULL, 0, 0, (void *)"nxagentd");
+   fclose(f);
+   if (rc != 1)
+   {
+      debugPrintf(4, _T("PEM_write_PrivateKey(\"%s\") failed"), name);
+      return false;
+   }
+
+   debugPrintf(4, _T("Certificate and private key saved"));
+   return true;
+}
+
+/**
+ * Process tunnel bind request
+ */
+void Tunnel::processBindRequest(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   uuid guid = request->getFieldAsGUID(VID_GUID);
+   char *cn = guid.toString().getUTF8String();
+
+   EVP_PKEY *key = NULL;
+   X509_REQ *req = createCertificateRequest(cn, &key);
+   free(cn);
+
+   if (req != NULL)
+   {
+      BYTE *buffer = NULL;
+      int len = i2d_X509_REQ(req, &buffer);
+      if (len > 0)
+      {
+         NXCPMessage certRequest(CMD_REQUEST_CERTIFICATE, request->getId());
+         certRequest.setField(VID_CERTIFICATE, buffer, len);
+         sendMessage(&certRequest);
+         OPENSSL_free(buffer);
+
+         NXCPMessage *certResponse = waitForMessage(CMD_NEW_CERTIFICATE, request->getId());
+         if (certResponse != NULL)
+         {
+            UINT32 rcc = certResponse->getFieldAsUInt32(VID_RCC);
+            if (rcc == ERR_SUCCESS)
+            {
+               size_t certLen;
+               const BYTE *certData = certResponse->getBinaryFieldPtr(VID_CERTIFICATE, &certLen);
+               if (certData != NULL)
+               {
+                  X509 *cert = d2i_X509(NULL, &certData, certLen);
+                  if (cert != NULL)
+                  {
+                     if (saveCertificate(cert, key))
+                     {
+                        response.setField(VID_RCC, ERR_SUCCESS);
+                     }
+                     else
+                     {
+                        response.setField(VID_RCC, ERR_IO_FAILURE);
+                     }
+                     X509_free(cert);
+                  }
+                  else
+                  {
+                     debugPrintf(4, _T("certificate data is invalid"));
+                     response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
+                  }
+               }
+               else
+               {
+                  debugPrintf(4, _T("certificate data missing in server response"));
+                  response.setField(VID_RCC, ERR_INTERNAL_ERROR);
+               }
+            }
+            else
+            {
+               debugPrintf(4, _T("certificate request failed (%d)"), rcc);
+               response.setField(VID_RCC, rcc);
+            }
+            delete certResponse;
+         }
+         else
+         {
+            debugPrintf(4, _T("timeout waiting for certificate request completion"));
+            response.setField(VID_RCC, ERR_REQUEST_TIMEOUT);
+         }
+      }
+      else
+      {
+         debugPrintf(4, _T("call to i2d_X509_REQ() failed"));
+         response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
+      }
+      X509_REQ_free(req);
+      EVP_PKEY_free(key);
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
+   }
+
+   sendMessage(&response);
+   delete request;
 }
 
 /**

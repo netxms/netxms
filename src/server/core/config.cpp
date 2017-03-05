@@ -30,6 +30,7 @@ extern char g_szCodePage[];
 extern TCHAR *g_moduleLoadList;
 extern TCHAR *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
+extern TCHAR g_serverCACertificatePath[];
 extern TCHAR g_serverCertificatePath[];
 extern char g_serverCertificatePassword[];
 
@@ -86,6 +87,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, NULL },
    { _T("PerfDataStorageDriver"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pdsLoadList, NULL },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, NULL },
+   { _T("ServerCACertificate"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCACertificatePath, NULL },
    { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificatePath, NULL },
    { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, g_serverCertificatePassword, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }

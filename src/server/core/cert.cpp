@@ -38,12 +38,14 @@
 /**
  * Server certificate file information
  */
+TCHAR g_serverCACertificatePath[MAX_PATH] = _T("");
 TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
 char g_serverCertificatePassword[MAX_PASSWORD] = "";
 
 /**
  * Server certificate
  */
+static X509 *s_serverCACertificate = NULL;
 static X509 *s_serverCertificate = NULL;
 static EVP_PKEY *s_serverCertificateKey = NULL;
 
@@ -52,6 +54,160 @@ static EVP_PKEY *s_serverCertificateKey = NULL;
  */
 static X509_STORE *s_trustedCertificateStore = NULL;
 static Mutex s_certificateStoreLock;
+
+/**
+ * Issue certificate signed with server's certificate
+ */
+X509 *IssueCertificate(X509_REQ *request, const char *cn, int days)
+{
+   nxlog_debug(4, _T("IssueCertificate: new certificate request (CN override: %hs)"), (cn != NULL) ? cn : "<not set>");
+
+   X509_NAME *requestSubject = X509_REQ_get_subject_name(request);
+   if (requestSubject == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: cannot get subject from certificate request"));
+      return NULL;
+   }
+
+   X509 *cert = X509_new();
+   if (cert == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_new() failed"));
+      return NULL;
+   }
+
+   if (X509_set_version(cert, 2) != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_set_version() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   ASN1_INTEGER *serial = M_ASN1_INTEGER_new();
+   ASN1_INTEGER_set(serial, 0);
+   int rc = X509_set_serialNumber(cert, serial);
+   M_ASN1_INTEGER_free(serial);
+   if (rc != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: cannot set certificate serial number"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   X509_NAME *subject;
+   if (cn != NULL)
+   {
+      subject = X509_NAME_dup(requestSubject);
+      if (subject != NULL)
+      {
+         int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
+         if (idx != -1)
+         {
+            X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
+            if (entry != NULL)
+            {
+               X509_NAME_ENTRY_set_data(entry, MBSTRING_UTF8, (const BYTE *)cn, -1);
+            }
+            else
+            {
+               nxlog_debug(4, _T("IssueCertificate: cannot get CN from certificate subject"));
+            }
+         }
+         else
+         {
+            nxlog_debug(4, _T("IssueCertificate: cannot find CN index in certificate subject"));
+         }
+      }
+      else
+      {
+         nxlog_debug(4, _T("IssueCertificate: call to X509_NAME_dup() failed"));
+      }
+   }
+   else
+   {
+      subject = requestSubject;
+   }
+
+   if (subject == NULL)
+   {
+      X509_free(cert);
+      return NULL;
+   }
+
+   rc = X509_set_subject_name(cert, subject);
+   if (subject != requestSubject)
+      X509_NAME_free(subject);
+   if (rc != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_set_subject_name() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   X509_NAME *issuerName = X509_get_subject_name(s_serverCertificate);
+   if (issuerName == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: cannot get CA subject name"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   if (X509_set_issuer_name(cert, issuerName) != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_set_issuer_name() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   EVP_PKEY *pubkey = X509_REQ_get_pubkey(request);
+   if (pubkey == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_REQ_get_pubkey() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   if (X509_REQ_verify(request, pubkey) != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: certificate request verification failed"));
+      EVP_PKEY_free(pubkey);
+      X509_free(cert);
+      return NULL;
+   }
+
+   rc = X509_set_pubkey(cert, pubkey);
+   EVP_PKEY_free(pubkey);
+   if (rc != 1)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_set_pubkey() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   if (X509_gmtime_adj(X509_get_notBefore(cert), 0) == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: cannot set start time"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   if (X509_gmtime_adj(X509_get_notAfter(cert), days * 86400) == NULL)
+   {
+      nxlog_debug(4, _T("IssueCertificate: cannot set end time"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   if (X509_sign(cert, s_serverCertificateKey, EVP_sha256()) == 0)
+   {
+      nxlog_debug(4, _T("IssueCertificate: call to X509_sign() failed"));
+      X509_free(cert);
+      return NULL;
+   }
+
+   nxlog_debug(4, _T("IssueCertificate: new certificate issued successfully"));
+   return cert;
+}
 
 /**
  * Get CN from certificate
@@ -255,6 +411,7 @@ bool ValidateAgentCertificate(X509 *cert)
       nxlog_debug(3, _T("ValidateAgentCertificate: cannot create certificate store"));
    }
 
+   X509_STORE_add_cert(store, s_serverCACertificate);
    X509_STORE_add_cert(store, s_serverCertificate);
    bool valid = false;
 
@@ -299,6 +456,10 @@ void ReloadCertificates()
 	   // Add server's certificate as trusted
 	   if (s_serverCertificate != NULL)
 	      X509_STORE_add_cert(s_trustedCertificateStore, s_serverCertificate);
+
+      // Add server's CA certificate as trusted
+	   if (s_serverCACertificate != NULL)
+         X509_STORE_add_cert(s_trustedCertificateStore, s_serverCACertificate);
 
 		_sntprintf(szBuffer, 256, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -368,13 +529,30 @@ void InitCertificates()
  */
 bool LoadServerCertificate(RSA **serverKey)
 {
-   if (g_serverCertificatePath[0] == 0)
+   if ((g_serverCACertificatePath[0] == 0) || (g_serverCertificatePath[0] == 0))
    {
       nxlog_write(MSG_SERVER_CERT_NOT_SET, NXLOG_INFO, NULL);
       return false;
    }
 
-   FILE *f = _tfopen(g_serverCertificatePath, _T("r"));
+   // Load server CA certificate
+   FILE *f = _tfopen(g_serverCACertificatePath, _T("r"));
+   if (f == NULL)
+   {
+      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCACertificatePath, _tcserror(errno));
+      return false;
+   }
+   s_serverCACertificate = PEM_read_X509(f, NULL, NULL, NULL);
+   fclose(f);
+   if (s_serverCACertificate == NULL)
+   {
+      TCHAR buffer[1024];
+      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCACertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
+      return false;
+   }
+
+   // Load server certificate and private key
+   f = _tfopen(g_serverCertificatePath, _T("r"));
    if (f == NULL)
    {
       nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _tcserror(errno));
@@ -421,8 +599,20 @@ bool SetupServerTlsContext(SSL_CTX *context)
    if ((s_serverCertificate == NULL) || (s_serverCertificateKey == NULL))
       return false;
 
+   X509_STORE *store = X509_STORE_new();
+   if (store == NULL)
+   {
+      nxlog_debug(3, _T("SetupServerTlsContext: cannot create certificate store"));
+      return false;
+   }
+   X509_STORE_add_cert(store, s_serverCACertificate);
+   X509_STORE_add_cert(store, s_serverCertificate);
+   SSL_CTX_set_cert_store(context, store);
    SSL_CTX_use_certificate(context, s_serverCertificate);
    SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);
+   SSL_CTX_add_client_CA(context, s_serverCertificate);
+   SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, NULL);
+   SSL_CTX_set_verify_depth(context, 0);
    return true;
 }
 

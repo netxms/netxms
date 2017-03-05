@@ -203,9 +203,15 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Object is in use and cannot be deleted"),
       _T("Script compilation error"),
       _T("Script execution error"),
-      _T("Unknown configuration variable")
+      _T("Unknown configuration variable"),
+      _T("Authentication method not supported"),
+      _T("Object with given name already exists"),
+      _T("Category is used in event processing policy"),
+      _T("Category name is empty"),
+      _T("Unable to download file from agent"),
+      _T("Invalid tunnel ID")
    };
-	return (error <= RCC_UNKNOWN_CONFIG_VARIABLE) ? errorText[error] : _T("No text message for this error");
+	return (error <= RCC_INVALID_TUNNEL_ID) ? errorText[error] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

@@ -408,7 +408,7 @@ static bool InitCryptografy()
       if (g_pServerKey == NULL)
       {
          nxlog_debug(1, _T("Generating RSA key pair..."));
-         g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
+         g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, NULL);
          if (g_pServerKey != NULL)
          {
             int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);

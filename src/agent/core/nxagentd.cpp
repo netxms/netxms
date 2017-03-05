@@ -160,6 +160,7 @@ TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szConfigPolicyDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
+TCHAR g_certificateDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
@@ -752,6 +753,12 @@ BOOL Initialize()
    nxlog_debug(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
 
+   // Initialize certificate directory
+   _sntprintf(g_certificateDirectory, MAX_PATH, _T("%s%scertificates") FS_PATH_SEPARATOR, g_szDataDirectory,
+              ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""));
+   nxlog_debug(6, _T("Certificate directory: %s"), g_certificateDirectory);
+   CreateFolder(g_certificateDirectory);
+
    nxlog_debug(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
 #ifdef _WIN32
@@ -808,6 +815,7 @@ BOOL Initialize()
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
+	   g_commThreadPool = ThreadPoolCreate(2, 32, _T("COMM"));
 	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
 	   {
 	      g_snmpProxyThreadPool = ThreadPoolCreate(2, 128, _T("SNMPPROXY"));
@@ -1137,6 +1145,7 @@ void Shutdown()
    {
       ThreadPoolDestroy(g_snmpProxyThreadPool);
    }
+   ThreadPoolDestroy(g_commThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

@@ -72,6 +72,7 @@ private:
 
 public:
    NXCPMessage(int version = NXCP_VERSION);
+   NXCPMessage(UINT16 code, UINT32 id, int version = NXCP_VERSION);
    NXCPMessage(NXCPMessage *msg);
    NXCPMessage(NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
    ~NXCPMessage();

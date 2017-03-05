@@ -757,6 +757,8 @@ private:
    void addRepository(NXCPMessage *request);
    void modifyRepository(NXCPMessage *request);
    void deleteRepository(NXCPMessage *request);
+   void getUnboundAgentTunnels(NXCPMessage *request);
+   void bindAgentTunnel(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
 #ifdef WITH_ZMQ
@@ -1163,6 +1165,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 bool ValidateAgentCertificate(X509 *cert);
 void ReloadCertificates();
 bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
+X509 *IssueCertificate(X509_REQ *request, const char *cn, int days);
 #endif
 
 #ifndef _WIN32

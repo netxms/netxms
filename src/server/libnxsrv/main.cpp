@@ -71,6 +71,8 @@ static struct
    { ERR_NO_SESSION_AGENT, _T("Session agent not available") },
    { ERR_SERVER_ID_UNSET, _T("Server ID is not set") },
    { ERR_NO_SUCH_INSTANCE, _T("No such instance") },
+   { ERR_OUT_OF_STATE_REQUEST, _T("Request is out of state") },
+   { ERR_ENCRYPTION_ERROR, _T("Encryption error") },
    { -1, NULL }
 };
 
@@ -94,6 +96,8 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
 {
    switch(err)
    {
+      case ERR_SUCCESS:
+         return RCC_SUCCESS;
       case ERR_ACCESS_DENIED:
          return RCC_ACCESS_DENIED;
       case ERR_IO_FAILURE:
@@ -106,6 +110,10 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
          return RCC_NO_SUCH_INSTANCE;
       case ERR_REQUEST_TIMEOUT:
          return RCC_TIMEOUT;
+      case ERR_ENCRYPTION_ERROR:
+         return RCC_ENCRYPTION_ERROR;
+      case ERR_OUT_OF_STATE_REQUEST:
+         return RCC_OUT_OF_STATE_REQUEST;
    }
    return RCC_AGENT_ERROR;
 }

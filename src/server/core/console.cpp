@@ -35,6 +35,7 @@ extern ThreadPool *g_schedulerThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
 
 /**
  * Format string to show value of global flag
@@ -1073,6 +1074,32 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else
       {
          ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
+      }
+   }
+   else if (IsCommand(_T("TUNNEL"), szBuffer, 2))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("BIND"), szBuffer, 1))
+      {
+         pArg = ExtractWord(pArg, szBuffer);
+         UINT32 tunnelId = _tcstoul(szBuffer, NULL, 0);
+
+         ExtractWord(pArg, szBuffer);
+         UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+
+         if ((tunnelId != 0) && (nodeId != 0))
+         {
+            UINT32 rcc = BindAgentTunnel(tunnelId, nodeId);
+            ConsolePrintf(pCtx, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing argument(s)\n\n"));
+         }
+      }
+      else
+      {
+         ConsoleWrite(pCtx, _T("ERROR: Invalid TUNNEL subcommand\n\n"));
       }
    }
    else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
