@@ -370,8 +370,17 @@ UINT32 AgentTunnel::bind(UINT32 nodeId)
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
    delete response;
-   if (rcc != ERR_SUCCESS)
+   if (rcc == ERR_SUCCESS)
+   {
+      debugPrintf(4, _T("Bind successful, resetting tunnel"));
+      msg.setCode(CMD_RESET_TUNNEL);
+      msg.setId(InterlockedIncrement(&m_requestId));
+      sendMessage(&msg);
+   }
+   else
+   {
       debugPrintf(4, _T("Bind failed: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+   }
    return AgentErrorToRCC(rcc);
 }
 
