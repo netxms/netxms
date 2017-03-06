@@ -538,7 +538,7 @@ protected:
    virtual ~AgentConnection();
 
 public:
-   AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
+   AgentConnection(const InetAddress& addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
 
    void incRefCount() { InterlockedIncrement(&m_userRefCount); }
    void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }

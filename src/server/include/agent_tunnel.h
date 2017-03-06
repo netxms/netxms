@@ -26,6 +26,41 @@
 
 #include <nms_util.h>
 
+class AgentTunnel;
+
+/**
+ * Agent tunnel communication channel
+ */
+class AgentTunnelCommChannel : public AbstractCommChannel
+{
+private:
+   AgentTunnel *m_tunnel;
+   UINT32 m_id;
+   bool m_active;
+   BYTE *m_buffer;
+   size_t m_allocated;
+   size_t m_head;
+   size_t m_size;
+   MUTEX m_bufferLock;
+   CONDITION m_dataCondition;
+
+protected:
+   virtual ~AgentTunnelCommChannel();
+
+public:
+   AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id);
+
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
+   virtual int poll(UINT32 timeout, bool write = false);
+   virtual int shutdown();
+   virtual void close();
+
+   UINT32 getId() const { return m_id; }
+
+   void putData(const BYTE *data, size_t size);
+};
+
 /**
  * Tunnel state
  */
@@ -78,6 +113,9 @@ public:
    
    void start();
    UINT32 bind(UINT32 nodeId);
+   AgentTunnelCommChannel *createChannel();
+   void closeChannel(AgentTunnelCommChannel *channel);
+   int sendChannelData(UINT32 id, const void *data, size_t len);
 
    UINT32 getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
@@ -95,5 +133,10 @@ public:
  * Setup server side TLS context
  */
 bool SetupServerTlsContext(SSL_CTX *context);
+
+/**
+ * Get tunnel for node
+ */
+AgentTunnel *GetTunnelForNode(UINT32 nodeId);
 
 #endif

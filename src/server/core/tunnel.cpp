@@ -85,6 +85,19 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
 }
 
 /**
+ * Get tunnel for node. Caller must decrease reference counter on tunnel.
+ */
+AgentTunnel *GetTunnelForNode(UINT32 nodeId)
+{
+   s_tunnelListLock.lock();
+   AgentTunnel *t = s_boundTunnels.get(nodeId);
+   if (t != NULL)
+      t->incRefCount();
+   s_tunnelListLock.unlock();
+   return t;
+}
+
+/**
  * Bind agent tunnel
  */
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
@@ -260,6 +273,12 @@ void AgentTunnel::recvThread()
             break;
          case CMD_REQUEST_CERTIFICATE:
             processCertificateRequest(msg);
+            break;
+         case CMD_CHANNEL_DATA:
+            if (msg->isBinary())
+            {
+
+            }
             break;
          default:
             m_queue.put(msg);
@@ -448,6 +467,35 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
 }
 
 /**
+ * Create channel
+ */
+AgentTunnelCommChannel *AgentTunnel::createChannel()
+{
+   return NULL;
+}
+
+/**
+ * Close channel
+ */
+void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
+{
+
+}
+
+/**
+ * Send channel data
+ */
+int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
+{
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
+   MutexLock(m_sslLock);
+   int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   MutexUnlock(m_sslLock);
+   free(msg);
+   return rc;
+}
+
+/**
  * Fill NXCP message with tunnel data
  */
 void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
@@ -458,6 +506,100 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 3, m_systemInfo);
    msg->setField(baseId + 4, m_platformName);
    msg->setField(baseId + 5, m_agentVersion);
+}
+
+/**
+ * Channel constructor
+ */
+AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
+{
+   m_tunnel = tunnel;
+   m_id = id;
+   m_active = true;
+   m_allocated = 256 * 1024;
+   m_head = 0;
+   m_size = 0;
+   m_buffer = (BYTE *)malloc(m_allocated);
+   m_bufferLock = MutexCreate();
+   m_dataCondition = ConditionCreate(TRUE);
+}
+
+/**
+ * Channel destructor
+ */
+AgentTunnelCommChannel::~AgentTunnelCommChannel()
+{
+   free(m_buffer);
+   MutexDestroy(m_bufferLock);
+   ConditionDestroy(m_dataCondition);
+}
+
+/**
+ * Send data
+ */
+int AgentTunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+{
+   return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
+}
+
+/**
+ * Receive data
+ */
+int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+{
+   if (!m_active)
+      return 0;
+
+   if (!ConditionWait(m_dataCondition, timeout))
+      return -2;
+
+   MutexLock(m_bufferLock);
+   size_t bytes = min(size, m_size);
+   memcpy(buffer, &m_buffer[m_head], bytes);
+   m_size -= bytes;
+   if (m_size == 0)
+   {
+      m_head = 0;
+      ConditionReset(m_dataCondition);
+   }
+   else
+   {
+      m_head += bytes;
+   }
+   MutexUnlock(m_bufferLock);
+   return (int)bytes;
+}
+
+/**
+ * Poll for data
+ */
+int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
+{
+   if (write)
+      return 1;
+
+   if (!m_active)
+      return -1;
+
+   return ConditionWait(m_dataCondition, timeout) ? 1 : 0;
+}
+
+/**
+ * Shutdown channel
+ */
+int AgentTunnelCommChannel::shutdown()
+{
+   m_active = false;
+   return 0;
+}
+
+/**
+ * Close channel
+ */
+void AgentTunnelCommChannel::close()
+{
+   m_active = false;
+   m_tunnel->closeChannel(this);
 }
 
 /**

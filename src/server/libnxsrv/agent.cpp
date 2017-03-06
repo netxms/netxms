@@ -72,7 +72,7 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression)
+AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression)
 {
    m_internalRefCount = 1;
    m_userRefCount = 1;

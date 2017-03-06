@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <agent_tunnel.h>
 
 /**
  * Externals
@@ -2443,8 +2444,18 @@ bool Node::confPollAgent(UINT32 dwRqId)
    bool hasChanges = false;
 
    sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-   setAgentProxy(pAgentConn);
+   AgentTunnel *tunnel = GetTunnelForNode(m_id);
+   AgentConnection *pAgentConn;
+   if (tunnel != NULL)
+   {
+      pAgentConn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      tunnel->decRefCount();
+   }
+   else
+   {
+      pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      setAgentProxy(pAgentConn);
+   }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
@@ -3749,7 +3760,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
    {
-      DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
       if (error != NULL)
          *error = ERR_CONNECT_FAILED;
       if (socketError != NULL)
@@ -3757,11 +3768,16 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       return false;
    }
 
+   // Check if tunnel is available
+   AgentTunnel *tunnel = GetTunnelForNode(m_id);
+
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
    {
-      m_agentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-      DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
+      m_agentConnection = (tunnel != NULL) ?
+               new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed()) :
+               new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
    {
@@ -3781,9 +3797,11 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    }
    if (newConnection != NULL)
       *newConnection = true;
+   m_agentConnection->setTunnel(tunnel);
    m_agentConnection->setPort(m_agentPort);
    m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
-   setAgentProxy(m_agentConnection);
+   if (tunnel == NULL)
+      setAgentProxy(m_agentConnection);
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bool success = m_agentConnection->connect(g_pServerKey, error, socketError, g_serverId);
@@ -3812,6 +3830,8 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       deleteAgentConnection();
       m_lastAgentConnectAttempt = time(NULL);
    }
+   if (tunnel != NULL)
+      tunnel->decRefCount();
    return success;
 }
 
@@ -5384,8 +5404,19 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   AgentConnectionEx *conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-   setAgentProxy(conn);
+   AgentTunnel *tunnel = GetTunnelForNode(m_id);
+   AgentConnectionEx *conn;
+   if (tunnel != NULL)
+   {
+      nxlog_debug(6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
+      conn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      tunnel->decRefCount();
+   }
+   else
+   {
+      conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
+      setAgentProxy(conn);
+   }
    conn->setCommandTimeout(g_agentCommandTimeout);
    if (!conn->connect(g_pServerKey, NULL, NULL, sendServerId ? g_serverId : 0))
    {
@@ -5396,7 +5427,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    {
       setLastAgentCommTime();
    }
-   DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
+   nxlog_debug(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
 

@@ -118,6 +118,8 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define CLF_DOWN                          0x0002
 #define CLF_QUEUED_FOR_CONFIGURATION_POLL 0x0004
 
+class AgentTunnel;
+
 /**
  * Extended agent connection
  */
@@ -125,7 +127,9 @@ class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
 {
 protected:
    UINT32 m_nodeId;
+   AgentTunnel *m_tunnel;
 
+   virtual AbstractCommChannel *createChannel();
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(NXCPMessage *msg);
    virtual void onSyslogMessage(NXCPMessage *pMsg);
@@ -139,11 +143,13 @@ protected:
    virtual ~AgentConnectionEx();
 
 public:
-   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true) :
-            AgentConnection(ipAddr, port, authMethod, secret, allowCompression) { m_nodeId = nodeId; }
+   AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
+   AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
 
    UINT32 deployPolicy(AgentPolicy *policy);
    UINT32 uninstallPolicy(AgentPolicy *policy);
+
+   void setTunnel(AgentTunnel *tunnel);
 };
 
 /**

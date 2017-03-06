@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <agent_tunnel.h>
 
 /**
  * Externals
@@ -29,10 +30,53 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
 void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, time_t timestamp, const char *msg, int msgLen);
 
 /**
+ * Create normal agent connection
+ */
+AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port, int authMethod, const TCHAR *secret, bool allowCompression) :
+         AgentConnection(ipAddr, port, authMethod, secret, allowCompression)
+{
+   m_nodeId = nodeId;
+   m_tunnel = NULL;
+}
+
+/**
+ * Create agent connection within tunnel
+ */
+AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod, const TCHAR *secret, bool allowCompression) :
+         AgentConnection(InetAddress::INVALID, 0, authMethod, secret, allowCompression)
+{
+   m_nodeId = nodeId;
+   m_tunnel = tunnel;
+   m_tunnel->incRefCount();
+}
+
+/**
  * Destructor for extended agent connection class
  */
 AgentConnectionEx::~AgentConnectionEx()
 {
+   if (m_tunnel != NULL)
+      m_tunnel->decRefCount();
+}
+
+/**
+ * Create communication channel
+ */
+AbstractCommChannel *AgentConnectionEx::createChannel()
+{
+   return (m_tunnel != NULL) ? m_tunnel->createChannel() : AgentConnection::createChannel();
+}
+
+/**
+ * Set tunnel to use
+ */
+void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
+{
+   if (m_tunnel != NULL)
+      m_tunnel->decRefCount();
+   m_tunnel = tunnel;
+   if (m_tunnel != NULL)
+      m_tunnel->incRefCount();
 }
 
 /**
