@@ -758,7 +758,7 @@ inline int _close(int fd) { return ::close(fd); }
 // Socket compatibility
 typedef int SOCKET;
 
-#define closesocket(x) close(x)
+#define closesocket(x) _close(x)
 #define WSAGetLastError() (errno)
 
 #define WSAEINTR        EINTR

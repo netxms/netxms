@@ -384,10 +384,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_BULK_TERMINATE_ALARMS"),
       _T("CMD_BULK_RESOLVE_ALARMS"),
       _T("CMD_BULK_ALARM_STATE_CHANGE"),
-      _T("CMD_GET_FOLDER_SIZE")
+      _T("CMD_GET_FOLDER_SIZE"),
+      _T("CMD_FIND_HOSTNAME_LOCATION"),
+      _T("CMD_RESET_TUNNEL"),
+      _T("CMD_CREATE_SESSION")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_FOLDER_SIZE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CREATE_SESSION))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }
@@ -666,9 +669,23 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
 }
 
 /**
- * Send file over CSCP
+ * Send file over NXCP
  */
-BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
+bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
+                                           NXCPEncryptionContext *pCtx, long offset,
+                                           void (* progressCallback)(INT64, void *), void *cbArg,
+                                           MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
+{
+   SocketCommChannel *ch = new SocketCommChannel(hSocket, false);
+   bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod);
+   ch->decRefCount();
+   return result;
+}
+
+/**
+ * Send file over NXCP
+ */
+bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
@@ -676,7 +693,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
    int hFile, iBytes;
 	INT64 bytesTransferred = 0;
    UINT32 dwPadding;
-   BOOL bResult = FALSE;
+   bool success = false;
    NXCP_MESSAGE *pMsg;
    NXCP_ENCRYPTED_MESSAGE *pEnMsg;
 
@@ -737,13 +754,13 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
                pEnMsg = pCtx->encryptMessage(pMsg);
 					if (pEnMsg != NULL)
 					{
-						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, mutex);
+					   channel->send(pEnMsg, ntohl(pEnMsg->size), mutex);
 						free(pEnMsg);
 					}
 				}
 				else
 				{
-					if (SendEx(hSocket, (char *)pMsg, (UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding, 0, mutex) <= 0)
+					if (channel->send(pMsg, (UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding, mutex) <= 0)
 						break;	// Send error
 				}
 				if (progressCallback != NULL)
@@ -755,7 +772,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 				if (bytesToRead <= 0)
 				{
 					// End of file
-					bResult = TRUE;
+				   success = true;
 					break;
 				}
 			}
@@ -769,7 +786,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
    delete compressor;
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
-   if (!bResult)
+   if (!success)
    {
       NXCP_MESSAGE msg;
 
@@ -783,28 +800,28 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
          pEnMsg = pCtx->encryptMessage(&msg);
          if (pEnMsg != NULL)
          {
-            SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, mutex);
+            channel->send(pEnMsg, ntohl(pEnMsg->size), mutex);
             free(pEnMsg);
          }
       }
       else
       {
-         SendEx(hSocket, (char *)&msg, NXCP_HEADER_SIZE, 0, mutex);
+         channel->send(&msg, NXCP_HEADER_SIZE, mutex);
       }
    }
 
-   return bResult;
+   return success;
 }
 
 /**
  * Get version of NXCP used by peer
  */
-BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
 {
    NXCP_MESSAGE msg;
    NXCPEncryptionContext *pDummyCtx = NULL;
    NXCP_BUFFER *pBuffer;
-   BOOL bRet = FALSE;
+   bool success = false;
    int nSize;
 
    msg.id = 0;
@@ -821,7 +838,7 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
           (ntohs(msg.flags) & MF_CONTROL))
       {
-         bRet = TRUE;
+         success = true;
          *pnVersion = ntohl(msg.numFields) >> 24;
       }
       else if ((nSize == 1) || (nSize == 3) || (nSize >= NXCP_HEADER_SIZE))
@@ -829,10 +846,10 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
          // We don't receive any answer or receive invalid answer -
          // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
          // and set version number to 1
-         bRet = TRUE;
+         success = true;
          *pnVersion = 1;
       }
       free(pBuffer);
    }
-   return bRet;
+   return success;
 }

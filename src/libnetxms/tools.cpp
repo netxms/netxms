@@ -1096,7 +1096,7 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, in
 	int nLeft = (int)len;
 	int nRet;
 
-	if (mutex != NULL)
+	if (mutex != INVALID_MUTEX_HANDLE)
 		MutexLock(mutex);
 
 	do
@@ -1131,7 +1131,7 @@ retry:
 		nLeft -= nRet;
 	} while (nLeft > 0);
 
-	if (mutex != NULL)
+	if (mutex != INVALID_MUTEX_HANDLE)
 		MutexUnlock(mutex);
 
 	return nLeft == 0 ? (int)len : nRet;

@@ -349,6 +349,22 @@ public:
    virtual ~SocketMessageReceiver();
 };
 
+/**
+ * Message receiver - comm channel implementation
+ */
+class LIBNETXMS_EXPORTABLE CommChannelMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   AbstractCommChannel *m_channel;
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize);
+   virtual ~CommChannelMessageReceiver();
+};
+
 #ifdef _WITH_ENCRYPTION
 
 /**
@@ -541,11 +557,15 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
 NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
                                                         const void *data, size_t dataSize,
                                                         NXCP_MESSAGE *buffer, bool allowCompression);
-BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
+bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE);
-BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
+bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 dwId, const TCHAR *pszFile,
+                                           NXCPEncryptionContext *pCtx, long offset,
+                                           void (* progressCallback)(INT64, void *), void *cbArg,
+                                           MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(UINT16 wCode, TCHAR *buffer);
 void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r);

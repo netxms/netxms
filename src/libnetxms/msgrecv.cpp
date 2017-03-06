@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -195,6 +195,31 @@ SocketMessageReceiver::~SocketMessageReceiver()
 int SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
    return RecvEx(m_socket, buffer, size, 0, timeout);
+}
+
+/**
+ * Communication channel message receiver constructor
+ */
+CommChannelMessageReceiver::CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+{
+   m_channel = channel;
+   m_channel->incRefCount();
+}
+
+/**
+ * Communication channel message receiver destructor
+ */
+CommChannelMessageReceiver::~CommChannelMessageReceiver()
+{
+   m_channel->decRefCount();
+}
+
+/**
+ * Read bytes from communication channel
+ */
+int CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
+{
+   return m_channel->recv(buffer, size, timeout);
 }
 
 #ifdef _WITH_ENCRYPTION

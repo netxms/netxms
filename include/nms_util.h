@@ -1571,6 +1571,46 @@ public:
    void reset();
 };
 
+/**
+ * Abstract communication channel
+ */
+class LIBNETXMS_EXPORTABLE AbstractCommChannel : public RefCountObject
+{
+protected:
+   virtual ~AbstractCommChannel();
+
+public:
+   AbstractCommChannel();
+
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) = 0;
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) = 0;
+   virtual int poll(UINT32 timeout, bool write = false) = 0;
+   virtual int shutdown() = 0;
+   virtual void close() = 0;
+};
+
+/**
+ * Socket communication channel
+ */
+class LIBNETXMS_EXPORTABLE SocketCommChannel : public AbstractCommChannel
+{
+private:
+   SOCKET m_socket;
+   bool m_owner;
+
+protected:
+   virtual ~SocketCommChannel();
+
+public:
+   SocketCommChannel(SOCKET socket, bool owner = true);
+
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
+   virtual int poll(UINT32 timeout, bool write = false);
+   virtual int shutdown();
+   virtual void close();
+};
+
 #endif   /* __cplusplus */
 
 /**

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -412,7 +412,9 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             DebugPrintf(5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
-            CommSession *session = new CommSession(hClientSocket, addr, masterServer, controlServer);
+            SocketCommChannel *channel = new SocketCommChannel(hClientSocket);
+            CommSession *session = new CommSession(channel, addr, masterServer, controlServer);
+            channel->decRefCount();
 			
             if (!RegisterSession(session))
             {

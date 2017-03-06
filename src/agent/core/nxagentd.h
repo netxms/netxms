@@ -310,7 +310,7 @@ class CommSession : public AbstractCommSession
 private:
    UINT32 m_id;
    UINT32 m_index;
-   SOCKET m_hSocket;
+   AbstractCommChannel *m_channel;
    Queue *m_sendQueue;
    Queue *m_processingQueue;
    THREAD m_hWriteThread;
@@ -348,7 +348,7 @@ private:
    void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getLocalFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   UINT32 upgrade(NXCPMessage *pRequest);
+   UINT32 upgrade(NXCPMessage *request);
    UINT32 setupProxyConnection(NXCPMessage *pRequest);
 
    void readThread();
@@ -363,7 +363,7 @@ private:
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer);
+   CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
    virtual ~CommSession();
 
    void run();

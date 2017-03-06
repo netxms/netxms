@@ -367,6 +367,8 @@ public class NXCPCodes
    public static final int CMD_BULK_ALARM_STATE_CHANGE = 0x0159;
    public static final int CMD_GET_FOLDER_SIZE = 0x015A;
    public static final int CMD_FIND_HOSTNAME_LOCATION = 0x015B;
+   public static final int CMD_RESET_TUNNEL = 0x015C;
+   public static final int CMD_CREATE_SESSION = 0x015D;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

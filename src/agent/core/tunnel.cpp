@@ -35,6 +35,7 @@ private:
    SSL *m_ssl;
    MUTEX m_sslLock;
    bool m_connected;
+   bool m_reset;
    VolatileCounter m_requestId;
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
@@ -79,6 +80,7 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
    m_ssl = NULL;
    m_sslLock = MutexCreate();
    m_connected = false;
+   m_reset = false;
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
@@ -151,11 +153,21 @@ void Tunnel::recvThread()
             TCHAR buffer[64];
             debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
          }
+
+         if (msg->getCode() == CMD_RESET_TUNNEL)
+         {
+            m_reset = true;
+            debugPrintf(4, _T("Receiver thread stopped (tunnel reset)"));
+            break;
+         }
+
          switch(msg->getCode())
          {
             case CMD_BIND_AGENT_TUNNEL:
                ThreadPoolExecute(g_commThreadPool, this, &Tunnel::processBindRequest, msg);
                msg = NULL; // prevent message deletion
+               break;
+            case CMD_CREATE_SESSION:
                break;
             default:
                m_queue->put(msg);
@@ -412,7 +424,17 @@ bool Tunnel::connectToServer()
  */
 void Tunnel::checkConnection()
 {
-   if (!m_connected)
+   if (m_reset)
+   {
+      m_reset = false;
+      disconnect();
+      closesocket(m_socket);
+      m_socket = INVALID_SOCKET;
+      debugPrintf(3, _T("Resetting tunnel"));
+      if (connectToServer())
+         debugPrintf(3, _T("Tunnel is active"));
+   }
+   else if (!m_connected)
    {
       if (connectToServer())
          debugPrintf(3, _T("Tunnel is active"));

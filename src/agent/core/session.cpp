@@ -113,13 +113,14 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true)
+CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
    m_sendQueue = new Queue;
    m_processingQueue = new Queue;
-   m_hSocket = hSocket;
+   m_channel = channel;
+   m_channel->incRefCount();
    m_hProxySocket = INVALID_SOCKET;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
@@ -152,8 +153,9 @@ CommSession::~CommSession()
    if (m_proxyConnection)
       InterlockedDecrement(&s_activeProxySessions);
 
-   shutdown(m_hSocket, SHUT_RDWR);
-   closesocket(m_hSocket);
+   m_channel->shutdown();
+   m_channel->close();
+   m_channel->decRefCount();
    if (m_hProxySocket != INVALID_SOCKET)
       closesocket(m_hProxySocket);
 
@@ -207,7 +209,7 @@ void CommSession::run()
 void CommSession::disconnect()
 {
 	debugPrintf(5, _T("CommSession::disconnect()"));
-   shutdown(m_hSocket, SHUT_RDWR);
+   m_channel->shutdown();
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
    m_disconnected = true;
@@ -218,7 +220,7 @@ void CommSession::disconnect()
  */
 void CommSession::readThread()
 {
-   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_AGENT_MSG_SIZE);
+   CommChannelMessageReceiver receiver(m_channel, 4096, MAX_AGENT_MSG_SIZE);
    while(!m_disconnected)
    {
       if (!m_proxyConnection)
@@ -385,9 +387,7 @@ void CommSession::readThread()
       }
       else  // m_proxyConnection
       {
-         SocketPoller sp;
-         sp.add(m_hSocket);
-         int rc = sp.poll((g_dwIdleTimeout + 1) * 1000);
+         int rc = m_channel->poll((g_dwIdleTimeout + 1) * 1000);
          if (rc <= 0)
             break;
          if (rc > 0)
@@ -396,7 +396,7 @@ void CommSession::readThread()
             m_ts = time(NULL);
 
             char buffer[32768];
-            rc = recv(m_hSocket, buffer, 32768, 0);
+            rc = m_channel->recv(buffer, 32768);
             if (rc <= 0)
                break;
             SendEx(m_hProxySocket, buffer, rc, 0, NULL);
@@ -449,7 +449,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
       NXCP_ENCRYPTED_MESSAGE *enMsg = ctx->encryptMessage(msg);
       if (enMsg != NULL)
       {
-         if (SendEx(m_hSocket, (const char *)enMsg, ntohl(enMsg->size), 0, m_socketWriteMutex) <= 0)
+         if (m_channel->send(enMsg, ntohl(enMsg->size), m_socketWriteMutex) <= 0)
          {
             success = false;
          }
@@ -458,7 +458,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
    }
    else
    {
-      if (SendEx(m_hSocket, (const char *)msg, ntohl(msg->size), 0, m_socketWriteMutex) <= 0)
+      if (m_channel->send(msg, ntohl(msg->size), m_socketWriteMutex) <= 0)
       {
          success = false;
       }
@@ -935,21 +935,21 @@ bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, boo
 {
    if (m_disconnected)
       return false;
-	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset,
-	         SendFileProgressCallback, this, m_socketWriteMutex, allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE) ? true : false;
+	return SendFileOverNXCP(m_channel, requestId, file, m_pCtx, offset,
+	         SendFileProgressCallback, this, m_socketWriteMutex, allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE);
 }
 
 /**
  * Upgrade agent from package in the file store
  */
-UINT32 CommSession::upgrade(NXCPMessage *pRequest)
+UINT32 CommSession::upgrade(NXCPMessage *request)
 {
    if (m_masterServer)
    {
       TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
 
       szPkgName[0] = 0;
-      pRequest->getFieldAsString(VID_FILE_NAME, szPkgName, MAX_PATH);
+      request->getFieldAsString(VID_FILE_NAME, szPkgName, MAX_PATH);
       BuildFullPath(szPkgName, szFullPath);
 
       //Create line in registry file with upgrade file name to delete it after system start
@@ -1131,7 +1131,7 @@ void CommSession::proxyReadThread()
          rc = recv(m_hProxySocket, buffer, 32768, 0);
          if (rc <= 0)
             break;
-         SendEx(m_hSocket, buffer, rc, 0, m_socketWriteMutex);
+         m_channel->send(buffer, rc, m_socketWriteMutex);
       }
    }
    disconnect();
