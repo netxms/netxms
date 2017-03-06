@@ -18,13 +18,12 @@ sql_DATA = dbinit_mysql.sql \
            dbschema_db2.sql
 
 ROOT_FILE = dbinit.in
-ADDITIONAL_COMMENTS_FILE = additional_comments.in
 SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in images.in traps.in country_codes.in currency_codes.in
 HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h ../src/server/include/nms_locks.h
 COMMAND = $(CPP) @SQLFLAGS@ -P -D_NETXMS_DB_SCHEMA_ -I@top_srcdir@/include -I@top_srcdir@/src/server/include
 SQUEEZE = perl -n strip.pl
 
-all: $(sql_DATA) additional_comments.sql
+all: $(sql_DATA)
 
 dbinit_mysql.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_MYSQL $(ROOT_FILE) | $(SQUEEZE) > $@
@@ -62,15 +61,11 @@ dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
-additional_comments.sql: additional_comments.in $(HEADER_FILES)
-	$(COMMAND) -DDB_POSTGRESQL additional_comments.in | $(SQUEEZE) > $@
-
 clean-local:
 	rm -f dbinit_*.sql dbschema_*.sql
 
 EXTRA_DIST = \
 	$(sql_DATA) \
 	$(SOURCE) \
-	$(ADDITIONAL_COMMENTS_FILE) \
 	change-ansi-event_log.sql \
 	strip.pl
