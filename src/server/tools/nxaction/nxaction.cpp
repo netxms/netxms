@@ -45,7 +45,7 @@ static void OutputCallback(ActionCallbackEvent e, const TCHAR *data, void *arg)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE;
+   BOOL bStart = TRUE;
    bool showOutput = false;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:e:hK:op:qs:vw:W:")) != -1)
+   while((ch = getopt(argc, argv, "a:e:hK:op:s:vw:W:")) != -1)
    {
       switch(ch)
       {
@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
 #endif
                      _T("   -o           : Show action's output.\n")
                      _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
-                     _T("   -q           : Quiet mode.\n")
                      _T("   -s <secret>  : Specify shared secret for authentication.\n")
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
@@ -132,9 +131,6 @@ int main(int argc, char *argv[])
             {
                wPort = (WORD)i;
             }
-            break;
-         case 'q':   // Quiet mode
-            bVerbose = FALSE;
             break;
          case 's':   // Shared secret
 #ifdef UNICODE
@@ -263,7 +259,7 @@ int main(int argc, char *argv[])
             conn->setConnectionTimeout(dwConnTimeout);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);
-            if (conn->connect(pServerKey, bVerbose, &dwError))
+            if (conn->connect(pServerKey, &dwError))
             {
                UINT32 dwError;
 
@@ -283,13 +279,10 @@ int main(int argc, char *argv[])
 #else
                dwError = conn->execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2], showOutput, OutputCallback);
 #endif
-               if (bVerbose)
-               {
-                  if (dwError == ERR_SUCCESS)
-                     _tprintf(_T("Action executed successfully\n"));
-                  else
-                     _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
-               }
+               if (dwError == ERR_SUCCESS)
+                  _tprintf(_T("Action executed successfully\n"));
+               else
+                  _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
             }
             else

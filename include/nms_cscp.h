@@ -581,7 +581,9 @@ typedef struct
 #define CMD_GET_FOLDER_SIZE            0x015A
 #define CMD_FIND_HOSTNAME_LOCATION     0x015B
 #define CMD_RESET_TUNNEL               0x015C
-#define CMD_CREATE_SESSION             0x015D
+#define CMD_CREATE_CHANNEL             0x015D
+#define CMD_CHANNEL_DATA               0x015E
+#define CMD_CLOSE_CHANNEL              0x015F
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1170,6 +1172,7 @@ typedef struct
 #define VID_AGENT_COMPRESSION_MODE  ((UINT32)571)
 #define VID_TRAP_TYPE               ((UINT32)572)
 #define VID_IS_ACTIVE               ((UINT32)573)
+#define VID_CHANNEL_ID              ((UINT32)574)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

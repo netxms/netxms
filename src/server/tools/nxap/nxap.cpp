@@ -81,7 +81,7 @@ static int UninstallPolicy(AgentConnection *conn, const uuid& guid)
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bVerbose = TRUE;
+   BOOL bStart = TRUE;
    int i, ch, iExitCode = 3, action = -1;
    int iAuthMethod = AUTH_NONE;
 #ifdef _WITH_ENCRYPTION
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:e:hK:lp:qs:u:vw:W:")) != -1)
+   while((ch = getopt(argc, argv, "a:e:hK:lp:s:u:vw:W:")) != -1)
    {
       switch(ch)
       {
@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
                      _T("                  (default is %s).\n")
 #endif
                      _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
-                     _T("   -q           : Quiet mode.\n")
                      _T("   -s <secret>  : Specify shared secret for authentication.\n")
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
@@ -165,9 +164,6 @@ int main(int argc, char *argv[])
             {
                wPort = (WORD)i;
             }
-            break;
-         case 'q':   // Quiet mode
-            bVerbose = FALSE;
             break;
          case 's':   // Shared secret
 #ifdef UNICODE
@@ -315,7 +311,7 @@ int main(int argc, char *argv[])
             conn->setConnectionTimeout(dwConnTimeout);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);
-            if (conn->connect(pServerKey, bVerbose, &dwError))
+            if (conn->connect(pServerKey, &dwError))
             {
 					if (action == 0)
 					{

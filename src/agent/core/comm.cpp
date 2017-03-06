@@ -80,7 +80,7 @@ void DestroySessionList()
 /**
  * Validates server's address
  */
-static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
 {
    for(int i = 0; i < g_serverList.size(); i++)
 	{
@@ -98,23 +98,21 @@ static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, 
 /**
  * Register new session in list
  */
-static BOOL RegisterSession(CommSession *pSession)
+bool RegisterSession(CommSession *session)
 {
-   UINT32 i;
-
    MutexLock(g_hSessionListAccess);
-   for(i = 0; i < g_dwMaxSessions; i++)
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
       if (g_pSessionList[i] == NULL)
       {
-         g_pSessionList[i] = pSession;
-         pSession->setIndex(i);
+         g_pSessionList[i] = session;
+         session->setIndex(i);
          MutexUnlock(g_hSessionListAccess);
-         return TRUE;
+         return true;
       }
 
    MutexUnlock(g_hSessionListAccess);
    nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
-   return FALSE;
+   return false;
 }
 
 /**

@@ -387,10 +387,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_GET_FOLDER_SIZE"),
       _T("CMD_FIND_HOSTNAME_LOCATION"),
       _T("CMD_RESET_TUNNEL"),
-      _T("CMD_CREATE_SESSION")
+      _T("CMD_CREATE_CHANNEL"),
+      _T("CMD_CHANNEL_DATA"),
+      _T("CMD_CLOSE_CHANNEL")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CREATE_SESSION))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CLOSE_CHANNEL))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }
@@ -444,7 +446,7 @@ void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResol
  *   2 Message decryption failed
  *   3 Receive timeout
  */
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
                                            NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
                                            NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
@@ -475,8 +477,8 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
 
          // Receive new portion of data from the network
          // and append it to existing data in buffer
-			iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-                       NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
+			iErr = channel->recv(&nxcpBuffer->buffer[nxcpBuffer->bufferSize],
+                       NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, dwTimeout);
          if (iErr <= 0)
             return (iErr == -2) ? 3 : iErr;
          nxcpBuffer->bufferSize += (UINT32)iErr;
@@ -516,8 +518,8 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
 	nxcpBuffer->bufferPos = 0;
    do
    {
-		iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-		              NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
+		iErr = channel->recv(&nxcpBuffer->buffer[nxcpBuffer->bufferSize],
+		                     NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, dwTimeout);
       if (iErr <= 0)
          return (iErr == -2) ? 3 : iErr;
 
@@ -589,6 +591,18 @@ decrypt_message:
    return bSkipMsg ? 1 : (int)dwMsgSize;
 }
 
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
+                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
+                                           NXCPEncryptionContext **ppCtx,
+                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
+                                           UINT32 maxMsgSize)
+{
+   SocketCommChannel *channel = new SocketCommChannel(hSocket, false);
+   int result = RecvNXCPMessageEx(channel, msgBuffer, nxcpBuffer, bufferSize, ppCtx, decryptionBuffer, dwTimeout, maxMsgSize);
+   channel->decRefCount();
+   return result;
+}
+
 int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer,
                                          NXCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
                                          NXCPEncryptionContext **ppCtx,
@@ -599,6 +613,18 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer
 	BYTE *db = decryptionBuffer;
 	return RecvNXCPMessageEx(hSocket, (msgBuffer != NULL) ? &mb : NULL, nxcpBuffer, &bs, ppCtx,
 	                         (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
+}
+
+int LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *msgBuffer,
+                                         NXCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
+                                         NXCPEncryptionContext **ppCtx,
+                                         BYTE *decryptionBuffer, UINT32 dwTimeout)
+{
+   NXCP_MESSAGE *mb = msgBuffer;
+   UINT32 bs = bufferSize;
+   BYTE *db = decryptionBuffer;
+   return RecvNXCPMessageEx(channel, (msgBuffer != NULL) ? &mb : NULL, nxcpBuffer, &bs, ppCtx,
+                            (decryptionBuffer != NULL) ? &db : NULL, dwTimeout, bufferSize);
 }
 
 /**
@@ -816,7 +842,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 /**
  * Get version of NXCP used by peer
  */
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex)
 {
    NXCP_MESSAGE msg;
    NXCPEncryptionContext *pDummyCtx = NULL;
@@ -829,11 +855,11 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
    msg.size = htonl(NXCP_HEADER_SIZE);
    msg.code = htons(CMD_GET_NXCP_CAPS);
    msg.flags = htons(MF_CONTROL);
-   if (SendEx(hSocket, &msg, NXCP_HEADER_SIZE, 0, mutex) == NXCP_HEADER_SIZE)
+   if (channel->send(&msg, NXCP_HEADER_SIZE, mutex) == NXCP_HEADER_SIZE)
    {
       pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
       RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
-      nSize = RecvNXCPMessage(hSocket, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
+      nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
       if ((nSize == NXCP_HEADER_SIZE) &&
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
           (ntohs(msg.flags) & MF_CONTROL))
@@ -851,5 +877,16 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
       }
       free(pBuffer);
    }
+   return success;
+}
+
+/**
+ * Get version of NXCP used by peer
+ */
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex)
+{
+   SocketCommChannel *channel = new SocketCommChannel(s, false);
+   bool success = NXCPGetPeerProtocolVersion(channel, pnVersion, mutex);
+   channel->decRefCount();
    return success;
 }

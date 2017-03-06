@@ -549,11 +549,20 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *pMsg,
                                          NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
                                          NXCPEncryptionContext **ppCtx,
                                          BYTE *pDecryptionBuffer, UINT32 dwTimeout);
+int LIBNETXMS_EXPORTABLE RecvNXCPMessage(AbstractCommChannel *channel, NXCP_MESSAGE *pMsg,
+                                         NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
+                                         NXCPEncryptionContext **ppCtx,
+                                         BYTE *pDecryptionBuffer, UINT32 dwTimeout);
 int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
                                            NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
                                            NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize);
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_MESSAGE **msgBuffer,
+                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
+                                           NXCPEncryptionContext **ppCtx,
+                                           BYTE **decryptionBuffer, UINT32 dwTimeout,
+                                           UINT32 maxMsgSize);
 NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, UINT16 flags,
                                                         const void *data, size_t dataSize,
                                                         NXCP_MESSAGE *buffer, bool allowCompression);
@@ -565,7 +574,8 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
                                            NXCPEncryptionContext *pCtx, long offset,
                                            void (* progressCallback)(INT64, void *), void *cbArg,
                                            MUTEX mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE);
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, MUTEX mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex);
 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(UINT16 wCode, TCHAR *buffer);
 void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r);

@@ -93,7 +93,7 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
       m_szSecret[0] = 0;
    }
    m_allowCompression = allowCompression;
-   m_hSocket = -1;
+   m_channel = NULL;
    m_tLastCommandTime = 0;
    m_dwNumDataLines = 0;
    m_ppDataLines = NULL;
@@ -170,100 +170,95 @@ void AgentConnection::printMsg(const TCHAR *format, ...)
  */
 void AgentConnection::receiverThread()
 {
-	UINT32 msgBufferSize = 1024;
-   NXCPMessage *pMsg;
-   NXCP_MESSAGE *pRawMsg;
-   NXCP_BUFFER *pMsgBuffer;
-   BYTE *pDecryptionBuffer = NULL;
-   int error;
-   TCHAR szBuffer[128];
-	SOCKET nSocket;
+   UINT32 msgBufferSize = 1024;
 
    // Initialize raw message receiving function
-   pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
+   NXCP_BUFFER *msgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
+   RecvNXCPMessage(0, NULL, msgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
-   pRawMsg = (NXCP_MESSAGE *)malloc(msgBufferSize);
+   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(msgBufferSize);
 #ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
+   BYTE *decryptionBuffer = (BYTE *)malloc(msgBufferSize);
+#else
+   BYTE *decryptionBuffer = NULL;
 #endif
 
-   // Message receiving loop
-   while(1)
+   while(true)
    {
-		// Shrink buffer after receiving large message
-		if (msgBufferSize > 131072)
-		{
-			msgBufferSize = 131072;
-		   pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
-			if (pDecryptionBuffer != NULL)
-			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
-		}
+      // Shrink buffer after receiving large message
+      if (msgBufferSize > 131072)
+      {
+         msgBufferSize = 131072;
+         rawMsg = (NXCP_MESSAGE *)realloc(rawMsg, msgBufferSize);
+         if (decryptionBuffer != NULL)
+            decryptionBuffer = (BYTE *)realloc(decryptionBuffer, msgBufferSize);
+      }
 
       // Receive raw message
-      lock();
-		nSocket = m_hSocket;
-		unlock();
-      if ((error = RecvNXCPMessageEx(nSocket, &pRawMsg, pMsgBuffer, &msgBufferSize,
-                                     &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
-											    m_dwRecvTimeout, MAX_MSG_SIZE)) <= 0)
-		{
-			if ((error != 0) && (WSAGetLastError() != WSAESHUTDOWN))
-				DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), error, WSAGetLastError());
+      int rc = RecvNXCPMessageEx(m_channel, &rawMsg, msgBuffer, &msgBufferSize,
+                                 &m_pCtx, (decryptionBuffer != NULL) ? &decryptionBuffer : NULL,
+                                 m_dwRecvTimeout, MAX_MSG_SIZE);
+      if (rc <= 0)
+      {
+         if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))
+            DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
          break;
-		}
+      }
 
       // Check if we get too large message
-      if (error == 1)
+      if (rc == 1)
       {
-         printMsg(_T("Received too large message %s (%d bytes)"),
-                  NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer),
-                  ntohl(pRawMsg->size));
+         TCHAR buffer[64];
+         printMsg(_T("Received too large message %s (%d bytes)"), NXCPMessageCodeName(ntohs(rawMsg->code), buffer), ntohl(rawMsg->size));
          continue;
       }
 
       // Check if we are unable to decrypt message
-      if (error == 2)
+      if (rc == 2)
       {
          printMsg(_T("Unable to decrypt received message"));
          continue;
       }
 
       // Check for timeout
-      if (error == 3)
+      if (rc == 3)
       {
-			if (m_fileUploadInProgress)
-				continue;	// Receive timeout may occur when uploading large files via slow links
+         if (m_fileUploadInProgress)
+            continue;   // Receive timeout may occur when uploading large files via slow links
          printMsg(_T("Timed out waiting for message"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->size) != error)
+      if ((int)ntohl(rawMsg->size) != rc)
       {
-         printMsg(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(pRawMsg->size), error);
+         printMsg(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(rawMsg->size), rc);
          continue;   // Bad packet, wait for next
       }
 
-		if (ntohs(pRawMsg->flags) & MF_BINARY)
-		{
+      if (ntohs(rawMsg->flags) & MF_BINARY)
+      {
          // Convert message header to host format
-         pRawMsg->id = ntohl(pRawMsg->id);
-         pRawMsg->code = ntohs(pRawMsg->code);
-         pRawMsg->numFields = ntohl(pRawMsg->numFields);
-         DbgPrintf(6, _T("Received raw message %s from agent at %s"),
-            NXCPMessageCodeName(pRawMsg->code, szBuffer), (const TCHAR *)m_addr.toString());
+         rawMsg->id = ntohl(rawMsg->id);
+         rawMsg->code = ntohs(rawMsg->code);
+         rawMsg->numFields = ntohl(rawMsg->numFields);
+         if (nxlog_get_debug_level() >= 6)
+         {
+            TCHAR buffer[64];
+            nxlog_debug(6, _T("Received raw message %s from agent at %s"),
+               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
+         }
 
-			if ((pRawMsg->code == CMD_FILE_DATA) && (pRawMsg->id == m_dwDownloadRequestId))
-			{
+         if ((rawMsg->code == CMD_FILE_DATA) && (rawMsg->id == m_dwDownloadRequestId))
+         {
             if (m_sendToClientMessageCallback != NULL)
             {
-               pRawMsg->code = ntohs(pRawMsg->code);
-               pRawMsg->numFields = ntohl(pRawMsg->numFields);
-               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+               rawMsg->code = ntohs(rawMsg->code);
+               rawMsg->numFields = ntohl(rawMsg->numFields);
+               m_sendToClientMessageCallback(rawMsg, m_downloadProgressCallbackArg);
 
-               if (ntohs(pRawMsg->flags) & MF_END_OF_FILE)
+               if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
                {
                   onFileDownload(true);
                }
@@ -271,7 +266,7 @@ void AgentConnection::receiverThread()
                {
                   if (m_downloadProgressCallback != NULL)
                   {
-                     m_downloadProgressCallback(pRawMsg->size - (NXCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                     m_downloadProgressCallback(rawMsg->size - (NXCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
                   }
                }
             }
@@ -279,9 +274,9 @@ void AgentConnection::receiverThread()
             {
                if (m_hCurrFile != -1)
                {
-                  if (_write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
+                  if (_write(m_hCurrFile, rawMsg->fields, rawMsg->numFields) == (int)rawMsg->numFields)
                   {
-                     if (ntohs(pRawMsg->flags) & MF_END_OF_FILE)
+                     if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
                      {
                         _close(m_hCurrFile);
                         m_hCurrFile = -1;
@@ -306,15 +301,15 @@ void AgentConnection::receiverThread()
                   onFileDownload(false);
                }
             }
-			}
+         }
 
-			if((pRawMsg->code == CMD_ABORT_FILE_TRANSFER) && (pRawMsg->id == m_dwDownloadRequestId))
-			{
+         if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == m_dwDownloadRequestId))
+         {
             if (m_sendToClientMessageCallback != NULL)
             {
-               pRawMsg->code = ntohs(pRawMsg->code);
-               pRawMsg->numFields = ntohl(pRawMsg->numFields);
-               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+               rawMsg->code = ntohs(rawMsg->code);
+               rawMsg->numFields = ntohl(rawMsg->numFields);
+               m_sendToClientMessageCallback(rawMsg, m_downloadProgressCallbackArg);
 
                onFileDownload(false);
             }
@@ -326,90 +321,90 @@ void AgentConnection::receiverThread()
 
                onFileDownload(false);
             }
-			}
-		}
-		else
-		{
-			// Create message object from raw message
-			pMsg = new NXCPMessage(pRawMsg, m_nProtocolVersion);
-			switch(pMsg->getCode())
-			{
-				case CMD_REQUEST_COMPLETED:
+         }
+      }
+      else
+      {
+         // Create message object from raw message
+         NXCPMessage *msg = new NXCPMessage(rawMsg, m_nProtocolVersion);
+         switch(msg->getCode())
+         {
+            case CMD_REQUEST_COMPLETED:
             case CMD_SESSION_KEY:
-					m_pMsgWaitQueue->put(pMsg);
-					break;
-				case CMD_TRAP:
+               m_pMsgWaitQueue->put(msg);
+               break;
+            case CMD_TRAP:
                if (g_agentConnectionThreadPool != NULL)
                {
                   incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, pMsg);
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, msg);
                }
                else
                {
-                  delete pMsg;
+                  delete msg;
                }
-					break;
+               break;
             case CMD_SYSLOG_RECORDS:
                if (g_agentConnectionThreadPool != NULL)
                {
                   incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, pMsg);
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, msg);
                }
                else
                {
-                  delete pMsg;
+                  delete msg;
                }
                break;
-				case CMD_PUSH_DCI_DATA:
-				   if (g_agentConnectionThreadPool != NULL)
-				   {
-				      incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, pMsg);
-				   }
-				   else
-				   {
-                  delete pMsg;
-				   }
-					break;
-				case CMD_DCI_DATA:
+            case CMD_PUSH_DCI_DATA:
                if (g_agentConnectionThreadPool != NULL)
                {
                   incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, pMsg);
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, msg);
+               }
+               else
+               {
+                  delete msg;
+               }
+               break;
+            case CMD_DCI_DATA:
+               if (g_agentConnectionThreadPool != NULL)
+               {
+                  incInternalRefCount();
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, msg);
                }
                else
                {
                   NXCPMessage response;
                   response.setCode(CMD_REQUEST_COMPLETED);
-                  response.setId(pMsg->getId());
+                  response.setId(msg->getId());
                   response.setField(VID_RCC, ERR_INTERNAL_ERROR);
                   sendMessage(&response);
-                  delete pMsg;
+                  delete msg;
                }
-					break;
+               break;
             case CMD_FILE_MONITORING:
-               onFileMonitoringData(pMsg);
-					delete pMsg;
+               onFileMonitoringData(msg);
+               delete msg;
                break;
             case CMD_SNMP_TRAP:
                if (g_agentConnectionThreadPool != NULL)
                {
                   incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, pMsg);
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, msg);
                }
                else
                {
-                  delete pMsg;
+                  delete msg;
                }
                break;
-				default:
-					if (processCustomMessage(pMsg))
-						delete pMsg;
-					else
-						m_pMsgWaitQueue->put(pMsg);
-					break;
-			}
-		}
+            default:
+               if (processCustomMessage(msg))
+                  delete msg;
+               else
+                  m_pMsgWaitQueue->put(msg);
+               break;
+         }
+      }
    }
 
    // Close socket and mark connection as disconnected
@@ -421,10 +416,9 @@ void AgentConnection::receiverThread()
 		onFileDownload(false);
 	}
 
-	if (error == 0)
-      shutdown(m_hSocket, SHUT_RDWR);
-   closesocket(m_hSocket);
-   m_hSocket = -1;
+	m_channel->close();
+	m_channel->decRefCount();
+	m_channel = NULL;
 	if (m_pCtx != NULL)
 	{
 		m_pCtx->decRefCount();
@@ -432,18 +426,43 @@ void AgentConnection::receiverThread()
 	}
    m_isConnected = false;
    unlock();
+}
 
-   free(pRawMsg);
-   free(pMsgBuffer);
-#ifdef _WITH_ENCRYPTION
-   free(pDecryptionBuffer);
-#endif
+/**
+ * Create channel. Default implementation creates socket channel.
+ */
+AbstractCommChannel *AgentConnection::createChannel()
+{
+   // Create socket
+   SOCKET s = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
+   if (s == INVALID_SOCKET)
+   {
+      printMsg(_T("Call to socket() failed"));
+      return NULL;
+   }
+
+   // Fill in address structure
+   SockAddrBuffer sb;
+   struct sockaddr *sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
+
+   // Connect to server
+   if ((sa == NULL) || (ConnectEx(s, sa, SA_LEN(sa), m_connectionTimeout) == -1))
+   {
+      TCHAR buffer[64];
+      printMsg(_T("Cannot establish connection with agent at %s:%d"),
+         m_bUseProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
+         (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
+      closesocket(s);
+      return NULL;
+   }
+
+   return new SocketCommChannel(s);
 }
 
 /**
  * Connect to agent
  */
-bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError, UINT64 serverId)
+bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSocketError, UINT64 serverId)
 {
    TCHAR szBuffer[256];
    bool success = false;
@@ -465,36 +484,22 @@ bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    ThreadJoin(m_hReceiverThread);
    m_hReceiverThread = INVALID_THREAD_HANDLE;
 
-   // Check if we need to close existing socket
-   if (m_hSocket != -1)
-      closesocket(m_hSocket);
-
-   struct sockaddr *sa;
-
-   // Create socket
-   m_hSocket = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
-   if (m_hSocket == INVALID_SOCKET)
+   // Check if we need to close existing channel
+   if (m_channel != NULL)
    {
-      printMsg(_T("Call to socket() failed"));
-      goto connect_cleanup;
+      m_channel->decRefCount();
+      m_channel = NULL;
    }
 
-   // Fill in address structure
-   SockAddrBuffer sb;
-   sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
-
-   // Connect to server
-	if ((sa == NULL) || (ConnectEx(m_hSocket, sa, SA_LEN(sa), m_connectionTimeout) == -1))
+   m_channel = createChannel();
+   if (m_channel == NULL)
    {
-      if (bVerbose)
-         printMsg(_T("Cannot establish connection with agent at %s:%d"),
-            m_bUseProxy ? m_proxyAddr.toString(szBuffer) : m_addr.toString(szBuffer),
-            (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
+      printMsg(_T("Cannot create communication channel"));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
 
-   if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion, m_mutexSocketWrite))
+   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
    {
       dwError = ERR_INTERNAL_ERROR;
       goto connect_cleanup;
@@ -587,17 +592,17 @@ connect_cleanup:
 			*pdwSocketError = (UINT32)WSAGetLastError();
 
       lock();
-      if (m_hSocket != -1)
-         shutdown(m_hSocket, SHUT_RDWR);
+      if (m_channel != NULL)
+         m_channel->shutdown();
       unlock();
       ThreadJoin(m_hReceiverThread);
       m_hReceiverThread = INVALID_THREAD_HANDLE;
 
       lock();
-      if (m_hSocket != -1)
+      if (m_channel != NULL)
       {
-         closesocket(m_hSocket);
-         m_hSocket = -1;
+         m_channel->close();
+         m_channel = NULL;
       }
 
 		if (m_pCtx != NULL)
@@ -627,9 +632,9 @@ void AgentConnection::disconnect()
 		onFileDownload(false);
 	}
 
-   if (m_hSocket != -1)
+   if (m_channel != NULL)
    {
-      shutdown(m_hSocket, SHUT_RDWR);
+      m_channel->shutdown();
    }
    destroyResultData();
    m_isConnected = false;
@@ -959,14 +964,14 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
    bool success;
-   NXCP_MESSAGE *pRawMsg = pMsg->createMessage(m_allowCompression);
+   NXCP_MESSAGE *rawMsg = pMsg->createMessage(m_allowCompression);
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
-      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
       if (pEnMsg != NULL)
       {
-         success = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         success = (m_channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -977,9 +982,9 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    }
    else
    {
-      success = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
+      success = (m_channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
-   free(pRawMsg);
+   free(rawMsg);
    return success;
 }
 
@@ -989,14 +994,14 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 {
    bool success;
-   NXCP_MESSAGE *pRawMsg = pMsg;
+   NXCP_MESSAGE *rawMsg = pMsg;
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
-      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
       if (pEnMsg != NULL)
       {
-         success = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         success = (m_channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -1007,7 +1012,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    }
    else
    {
-      success = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
+      success = (m_channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    return success;
 }
@@ -1367,7 +1372,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
                localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+      if (SendFileOverNXCP(m_channel, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -1890,8 +1895,8 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
 /**
  * Send custom request to agent
  */
-NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
-														  void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg)
+NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *recvFile, bool append,
+         void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
 {
    UINT32 dwRqId, rcc;
 	NXCPMessage *msg = NULL;
@@ -1955,7 +1960,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
  * Prepare for file download
  */
 UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
-                                             void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
+                                             void (* fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
 {
    if (fileResendCallback == NULL)
    {

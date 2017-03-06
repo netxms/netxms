@@ -31,6 +31,8 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 	m_session = session;
 	session->incRefCount();
 
+	m_agentConnection = NULL;
+
 	m_node = node;
 	node->incRefCount();
 
@@ -58,23 +60,25 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 }
 
 /**
- * Returns localFileName
- */
-const TCHAR *FileDownloadJob::getLocalFileName()
-{
-   return m_localFile;
-}
-
-/**
  * Destructor for download job
  */
 FileDownloadJob::~FileDownloadJob()
 {
 	m_node->decRefCount();
 	m_session->decRefCount();
+	if (m_agentConnection != NULL)
+	   m_agentConnection->decRefCount();
 	free(m_localFile);
 	free(m_remoteFile);
 	free(m_info);
+}
+
+/**
+ * Returns localFileName
+ */
+const TCHAR *FileDownloadJob::getLocalFileName()
+{
+   return m_localFile;
 }
 
 /**
@@ -117,19 +121,18 @@ ServerJobResult FileDownloadJob::run()
       m_follow = false;
    }
 
-   AgentConnection *conn = m_node->createAgentConnection();
-	if (conn != NULL)
+   m_agentConnection = m_node->createAgentConnection();
+	if (m_agentConnection != NULL)
 	{
-		NXCPMessage msg(conn->getProtocolVersion()), *response;
+		NXCPMessage msg(m_agentConnection->getProtocolVersion()), *response;
 
-		m_socket = conn->getSocket();
-		conn->setDeleteFileOnDownloadFailure(false);
+		m_agentConnection->setDeleteFileOnDownloadFailure(false);
 
 		DbgPrintf(5, _T("FileDownloadJob: Sending file stat request for file %s@%s"), m_remoteFile, m_node->getName());
 		msg.setCode(CMD_GET_FILE_DETAILS);
-		msg.setId(conn->generateRequestId());
+		msg.setId(m_agentConnection->generateRequestId());
 		msg.setField(VID_FILE_NAME, m_remoteFile);
-		response = conn->customRequest(&msg);
+		response = m_agentConnection->customRequest(&msg);
 		if (response != NULL)
 		{
 			NXCPMessage notify;
@@ -147,7 +150,7 @@ ServerJobResult FileDownloadJob::run()
 
 				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->getName());
 				msg.setCode(CMD_GET_AGENT_FILE);
-				msg.setId(conn->generateRequestId());
+				msg.setId(m_agentConnection->generateRequestId());
 				msg.setField(VID_FILE_NAME, m_remoteFile);
 
             // default - get parameters
@@ -163,7 +166,7 @@ ServerJobResult FileDownloadJob::run()
             msg.setField(VID_NAME, m_localFile);
             msg.setField(VID_ENABLE_COMPRESSION, (m_session == NULL) || m_session->isCompressionEnabled());
 
-				response = conn->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
+				response = m_agentConnection->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
 				if (response != NULL)
 				{
 					rcc = response->getFieldAsUInt32(VID_RCC);
@@ -215,7 +218,7 @@ ServerJobResult FileDownloadJob::run()
 		m_session->sendMessage(&response);
 		if (m_follow)
 		{
-         g_monitoringList.addMonitoringFile(newFile, m_node, conn);
+         g_monitoringList.addMonitoringFile(newFile, m_node, m_agentConnection);
 		}
 		else
 		{
@@ -249,8 +252,11 @@ ServerJobResult FileDownloadJob::run()
 		m_session->sendMessage(&response);
 	}
 
-	if (conn != NULL)
-	   conn->decRefCount();
+	if (m_agentConnection != NULL)
+	{
+	   m_agentConnection->decRefCount();
+	   m_agentConnection = NULL;
+	}
 	return success;
 }
 
@@ -259,7 +265,8 @@ ServerJobResult FileDownloadJob::run()
  */
 bool FileDownloadJob::onCancel()
 {
-	shutdown(m_socket, SHUT_RDWR);
+   if (m_agentConnection != NULL)
+      m_agentConnection->disconnect();
 	return true;
 }
 

@@ -3786,7 +3786,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    setAgentProxy(m_agentConnection);
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bool success = m_agentConnection->connect(g_pServerKey, FALSE, error, socketError, g_serverId);
+   bool success = m_agentConnection->connect(g_pServerKey, error, socketError, g_serverId);
    if (success)
    {
       UINT32 rcc = m_agentConnection->setServerId(g_serverId);
@@ -5387,7 +5387,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    AgentConnectionEx *conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
    setAgentProxy(conn);
    conn->setCommandTimeout(g_agentCommandTimeout);
-   if (!conn->connect(g_pServerKey, FALSE, NULL, NULL, sendServerId ? g_serverId : 0))
+   if (!conn->connect(g_pServerKey, NULL, NULL, sendServerId ? g_serverId : 0))
    {
       conn->decRefCount();
       conn = NULL;

@@ -465,7 +465,7 @@ private:
    int m_iAuthMethod;
    char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
-   SOCKET m_hSocket;
+   AbstractCommChannel *m_channel;
    UINT32 m_dwNumDataLines;
    VolatileCounter m_requestId;
    UINT32 m_dwCommandTimeout;
@@ -493,7 +493,7 @@ private:
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
-	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE*, void *);
+	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE *, void *);
 	bool m_fileUploadInProgress;
 	bool m_allowCompression;
 
@@ -513,8 +513,10 @@ protected:
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
    const InetAddress& getIpAddr() { return m_addr; }
-	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg);
+	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
+	         void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg);
 
+	virtual AbstractCommChannel *createChannel();
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(NXCPMessage *pMsg);
    virtual void onSyslogMessage(NXCPMessage *pMsg);
@@ -541,11 +543,10 @@ public:
    void incRefCount() { InterlockedIncrement(&m_userRefCount); }
    void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }
 
-   bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL, UINT64 serverId = 0);
+   bool connect(RSA *pServerKey = NULL, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL, UINT64 serverId = 0);
    void disconnect();
    bool isConnected() const { return m_isConnected; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
-	SOCKET getSocket() { return m_hSocket; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 
    bool sendMessage(NXCPMessage *pMsg);
@@ -561,8 +562,11 @@ public:
    UINT32 nop();
    UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
-   UINT32 execAction(const TCHAR *action, int argc, const TCHAR * const *argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
-   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   UINT32 execAction(const TCHAR *action, int argc, const TCHAR * const *argv, bool withOutput = false,
+            void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
+   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL,
+            void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL,
+            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
@@ -576,8 +580,9 @@ public:
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
-	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
-	                           void (*fileResendCallback)(NXCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
+	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,
+	         void (*downloadProgressCallback)(size_t, void *) = NULL,
+	         void (*fileResendCallback)(NXCP_MESSAGE *, void *) = NULL, void *cbArg = NULL);
 
    UINT32 getNumDataLines() { return m_dwNumDataLines; }
    const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

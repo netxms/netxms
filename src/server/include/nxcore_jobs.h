@@ -219,13 +219,13 @@ class FileDownloadJob : public ServerJob
 private:
 	Node *m_node;
 	ClientSession *m_session;
+	AgentConnection *m_agentConnection;
 	UINT32 m_requestId;
 	TCHAR *m_localFile;
 	TCHAR *m_remoteFile;
 	TCHAR *m_info;
 	INT64 m_fileSize;
 	INT64 m_currentSize;
-	SOCKET m_socket;
 	UINT32 m_maxFileSize;
 	bool m_follow;
 

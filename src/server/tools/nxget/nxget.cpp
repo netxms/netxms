@@ -47,11 +47,6 @@ enum Operation
 };
 
 /**
- * Verbose flag
- */
-static BOOL s_verbose = TRUE;
-
-/**
  * Get single parameter
  */
 static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
@@ -291,7 +286,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:bCe:Ehi:IK:lno:O:p:P:qr:R:s:S:t:Tvw:W:X:Z:")) != -1)
+   while((ch = getopt(argc, argv, "a:A:bCe:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -325,7 +320,6 @@ int main(int argc, char *argv[])
                      _T("   -O <port>    : Proxy agent's port number. Default is %d.\n")
                      _T("   -p <port>    : Agent's port number. Default is %d.\n")
                      _T("   -P <port>    : Network service port (to be used wth -S option).\n")
-                     _T("   -q           : Quiet mode.\n")
                      _T("   -r <string>  : Service check request string.\n")
                      _T("   -R <string>  : Service check expected response string.\n")
                      _T("   -s <secret>  : Shared secret for authentication.\n")
@@ -416,9 +410,6 @@ int main(int argc, char *argv[])
                else
                   wServicePort = (WORD)i;
             }
-            break;
-         case 'q':   // Quiet mode
-            s_verbose = FALSE;
             break;
          case 'r':   // Service check request string
 #ifdef UNICODE
@@ -646,7 +637,7 @@ int main(int argc, char *argv[])
             conn->setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)
                conn->setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
-            if (conn->connect(pServerKey, s_verbose, &dwError))
+            if (conn->connect(pServerKey, &dwError))
             {
                do
                {

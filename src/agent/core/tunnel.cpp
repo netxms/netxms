@@ -23,6 +23,51 @@
 #include "nxagentd.h"
 
 /**
+ * Check if server address is valid
+ */
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer);
+
+/**
+ * Register session
+ */
+bool RegisterSession(CommSession *session);
+
+class Tunnel;
+
+/**
+ * Tunnel communication channel
+ */
+class TunnelCommChannel : public AbstractCommChannel
+{
+private:
+   Tunnel *m_tunnel;
+   UINT32 m_id;
+   bool m_active;
+   BYTE *m_buffer;
+   size_t m_allocated;
+   size_t m_head;
+   size_t m_size;
+   MUTEX m_bufferLock;
+   CONDITION m_dataCondition;
+
+protected:
+   virtual ~TunnelCommChannel();
+
+public:
+   TunnelCommChannel(Tunnel *tunnel, UINT32 id);
+
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
+   virtual int poll(UINT32 timeout, bool write = false);
+   virtual int shutdown() { return 0; }
+   virtual void close();
+
+   UINT32 getId() const { return m_id; }
+
+   void putData(const BYTE *data, size_t size);
+};
+
+/**
  * Tunnel class
  */
 class Tunnel
@@ -40,6 +85,8 @@ private:
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
    TCHAR m_debugId[64];
+   TunnelCommChannel **m_channels;
+   MUTEX m_channelLock;
 
    Tunnel(const InetAddress& addr, UINT16 port);
 
@@ -48,6 +95,7 @@ private:
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, 5000) : NULL; }
 
    void processBindRequest(NXCPMessage *request);
+   void createSession(NXCPMessage *request);
 
    X509_REQ *createCertificateRequest(const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
@@ -63,6 +111,10 @@ public:
 
    void checkConnection();
    void disconnect();
+
+   TunnelCommChannel *createChannel();
+   void closeChannel(TunnelCommChannel *channel);
+   int sendChannelData(UINT32 id, const void *data, size_t len);
 
    const InetAddress& getAddress() const { return m_address; }
 
@@ -85,6 +137,8 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
    _sntprintf(m_debugId, 64, _T("TUN-%s"), (const TCHAR *)addr.toString());
+   m_channels = (TunnelCommChannel **)malloc(sizeof(TunnelCommChannel *) * g_dwMaxSessions);
+   m_channelLock = MutexCreate();
 }
 
 /**
@@ -92,6 +146,17 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
  */
 Tunnel::~Tunnel()
 {
+   MutexLock(m_channelLock);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if (m_channels[i] != NULL)
+      {
+         m_channels[i]->decRefCount();
+         m_channels[i] = NULL;
+      }
+   }
+   MutexUnlock(m_channelLock);
+
    disconnect();
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
@@ -100,6 +165,8 @@ Tunnel::~Tunnel()
    if (m_context != NULL)
       SSL_CTX_free(m_context);
    MutexDestroy(m_sslLock);
+   free(m_channels);
+   MutexDestroy(m_channelLock);
 }
 
 /**
@@ -167,7 +234,28 @@ void Tunnel::recvThread()
                ThreadPoolExecute(g_commThreadPool, this, &Tunnel::processBindRequest, msg);
                msg = NULL; // prevent message deletion
                break;
-            case CMD_CREATE_SESSION:
+            case CMD_CREATE_CHANNEL:
+               createSession(msg);
+               break;
+            case CMD_CHANNEL_DATA:
+               if (msg->isBinary() && (msg->getId() >= 0) && (msg->getId() < g_dwMaxSessions))
+               {
+                  MutexLock(m_channelLock);
+                  TunnelCommChannel *channel = m_channels[msg->getId()];
+                  if (channel != NULL)
+                     channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
+                  MutexUnlock(m_channelLock);
+               }
+               break;
+            case CMD_CLOSE_CHANNEL:
+               if ((msg->getId() >= 0) && (msg->getId() < g_dwMaxSessions))
+               {
+                  MutexLock(m_channelLock);
+                  TunnelCommChannel *channel = m_channels[msg->getId()];
+                  MutexUnlock(m_channelLock);
+                  if (channel != NULL)
+                     closeChannel(channel);
+               }
                break;
             default:
                m_queue->put(msg);
@@ -670,6 +758,88 @@ void Tunnel::processBindRequest(NXCPMessage *request)
 }
 
 /**
+ * Create new session
+ */
+void Tunnel::createSession(NXCPMessage *request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+
+   // Assume that peer always have minimal access, so don't check return value
+   bool masterServer, controlServer;
+   IsValidServerAddress(m_address, &masterServer, &controlServer);
+
+   TunnelCommChannel *channel = createChannel();
+   if (channel != NULL)
+   {
+      CommSession *session = new CommSession(channel, m_address, masterServer, controlServer);
+      if (RegisterSession(session))
+      {
+         response.setField(VID_RCC, ERR_SUCCESS);
+         response.setField(VID_CHANNEL_ID, channel->getId());
+         debugPrintf(9, _T("New session registered"));
+         session->run();
+      }
+      else
+      {
+         delete session;
+         response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Create channel
+ */
+TunnelCommChannel *Tunnel::createChannel()
+{
+   TunnelCommChannel *channel = NULL;
+   MutexLock(m_channelLock);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if (m_channels[i] == NULL)
+      {
+         channel = new TunnelCommChannel(this, i);
+         m_channels[i] = channel;
+         debugPrintf(5, _T("New channel created (ID=%d)"), i);
+         break;
+      }
+   }
+   MutexUnlock(m_channelLock);
+   return channel;
+}
+
+/**
+ * Close channel
+ */
+void Tunnel::closeChannel(TunnelCommChannel *channel)
+{
+   MutexLock(m_channelLock);
+   m_channels[channel->getId()] = NULL;
+   MutexUnlock(m_channelLock);
+   debugPrintf(5, _T("Channel %d closed"), channel->getId());
+   channel->decRefCount();
+}
+
+/**
+ * Send channel data
+ */
+int Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
+{
+   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
+   MutexLock(m_sslLock);
+   int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   MutexUnlock(m_sslLock);
+   free(msg);
+   return rc;
+}
+
+/**
  * Create tunnel object from configuration record
  */
 Tunnel *Tunnel::createFromConfig(TCHAR *config)
@@ -692,6 +862,108 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
       return NULL;
 
    return new Tunnel(addr, port);
+}
+
+/**
+ * Channel constructor
+ */
+TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel, UINT32 id)
+{
+   m_tunnel = tunnel;
+   m_id = id;
+   m_active = true;
+   m_allocated = 256 * 1024;
+   m_head = 0;
+   m_size = 0;
+   m_buffer = (BYTE *)malloc(m_allocated);
+   m_bufferLock = MutexCreate();
+   m_dataCondition = ConditionCreate(TRUE);
+}
+
+/**
+ * Channel destructor
+ */
+TunnelCommChannel::~TunnelCommChannel()
+{
+   free(m_buffer);
+   MutexDestroy(m_bufferLock);
+   ConditionDestroy(m_dataCondition);
+}
+
+/**
+ * Send data
+ */
+int TunnelCommChannel::send(const void *data, size_t size, MUTEX mutex)
+{
+   return m_active ? m_tunnel->sendChannelData(m_id, data, size) : -1;
+}
+
+/**
+ * Receive data
+ */
+int TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
+{
+   if (!m_active)
+      return 0;
+
+   if (!ConditionWait(m_dataCondition, timeout))
+      return -2;
+
+   MutexLock(m_bufferLock);
+   size_t bytes = min(size, m_size);
+   memcpy(buffer, &m_buffer[m_head], bytes);
+   m_size -= bytes;
+   if (m_size == 0)
+   {
+      m_head = 0;
+      ConditionReset(m_dataCondition);
+   }
+   else
+   {
+      m_head += bytes;
+   }
+   MutexUnlock(m_bufferLock);
+   return (int)bytes;
+}
+
+/**
+ * Poll for data
+ */
+int TunnelCommChannel::poll(UINT32 timeout, bool write)
+{
+   if (write)
+      return 1;
+
+   if (!m_active)
+      return -1;
+
+   return ConditionWait(m_dataCondition, timeout) ? 1 : 0;
+}
+
+/**
+ * Close channel
+ */
+void TunnelCommChannel::close()
+{
+   m_active = false;
+   m_tunnel->closeChannel(this);
+}
+
+/**
+ * Put data into buffer
+ */
+void TunnelCommChannel::putData(const BYTE *data, size_t size)
+{
+   MutexLock(m_bufferLock);
+   if (m_head + m_size + size > m_allocated)
+   {
+      m_allocated = m_head + m_size + size;
+      m_buffer = (BYTE *)realloc(m_buffer, m_allocated);
+   }
+   memcpy(&m_buffer[m_head + m_size], data, size);
+   m_size += size;
+   MutexUnlock(m_bufferLock);
+   ConditionSet(m_dataCondition);
 }
 
 /**

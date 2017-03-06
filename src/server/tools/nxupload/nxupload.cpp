@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
 				conn->setConnectionTimeout(dwConnTimeout);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);
-            if (conn->connect(pServerKey, bVerbose, &dwError))
+            if (conn->connect(pServerKey, &dwError))
             {
                UINT32 dwError;
 
