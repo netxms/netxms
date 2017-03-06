@@ -592,6 +592,22 @@ bool LoadServerCertificate(RSA **serverKey)
 }
 
 /**
+ * Certificate verification callback
+ */
+static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
+{
+   if (!success)
+   {
+      X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
+      int error = X509_STORE_CTX_get_error(ctx);
+      int depth = X509_STORE_CTX_get_error_depth(ctx);
+      nxlog_debug(4, _T("Certificate \"%hs\" verification error %d (%hs) at depth %d"),
+               cert->name, error, X509_verify_cert_error_string(error), depth);
+   }
+   return success;
+}
+
+/**
  * Setup server-side TLS context
  */
 bool SetupServerTlsContext(SSL_CTX *context)
@@ -605,14 +621,13 @@ bool SetupServerTlsContext(SSL_CTX *context)
       nxlog_debug(3, _T("SetupServerTlsContext: cannot create certificate store"));
       return false;
    }
-   X509_STORE_add_cert(store, s_serverCACertificate);
+   X509_STORE_set_verify_cb(store, CertVerifyCallback);
    X509_STORE_add_cert(store, s_serverCertificate);
+   X509_STORE_add_cert(store, s_serverCACertificate);
    SSL_CTX_set_cert_store(context, store);
    SSL_CTX_use_certificate(context, s_serverCertificate);
    SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);
-   SSL_CTX_add_client_CA(context, s_serverCertificate);
    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, NULL);
-   SSL_CTX_set_verify_depth(context, 0);
    return true;
 }
 
