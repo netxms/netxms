@@ -500,6 +500,8 @@ private:
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
+   AbstractCommChannel *acquireChannel();
+
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
    void onSnmpTrapCallback(NXCPMessage *msg);

@@ -834,6 +834,8 @@ int Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
    MutexLock(m_sslLock);
    int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   if (rc == ntohl(msg->size))
+      rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
    MutexUnlock(m_sslLock);
    free(msg);
    return rc;

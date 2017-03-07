@@ -27,8 +27,8 @@
 /**
  * Tunnel registration
  */
-static HashMap<UINT32, AgentTunnel> s_boundTunnels(false);
-static ObjectArray<AgentTunnel> s_unboundTunnels(16, 16, false);
+static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(true);
+static Array s_unboundTunnels(16, 16, false);
 static Mutex s_tunnelListLock;
 
 /**
@@ -51,6 +51,7 @@ static void RegisterTunnel(AgentTunnel *tunnel)
    {
       oldTunnel = s_boundTunnels.get(tunnel->getNodeId());
       s_boundTunnels.set(tunnel->getNodeId(), tunnel);
+      tunnel->decRefCount(); // set already increased ref count
    }
    else
    {
@@ -72,8 +73,11 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      if (s_boundTunnels.get(tunnel->getNodeId()) == tunnel)
+      AgentTunnel *curr = s_boundTunnels.get(tunnel->getNodeId());
+      if (curr == tunnel)
          s_boundTunnels.remove(tunnel->getNodeId());
+      else
+         curr->decRefCount();  // ref count was increased by get
    }
    else
    {
@@ -91,8 +95,6 @@ AgentTunnel *GetTunnelForNode(UINT32 nodeId)
 {
    s_tunnelListLock.lock();
    AgentTunnel *t = s_boundTunnels.get(nodeId);
-   if (t != NULL)
-      t->incRefCount();
    s_tunnelListLock.unlock();
    return t;
 }
@@ -106,9 +108,9 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
    s_tunnelListLock.lock();
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      if (s_unboundTunnels.get(i)->getId() == tunnelId)
+      if (((AgentTunnel *)s_unboundTunnels.get(i))->getId() == tunnelId)
       {
-         tunnel = s_unboundTunnels.get(i);
+         tunnel = (AgentTunnel *)s_unboundTunnels.get(i);
          tunnel->incRefCount();
          break;
       }
@@ -135,7 +137,7 @@ void GetUnboundAgentTunnels(NXCPMessage *msg)
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      s_unboundTunnels.get(i)->fillMessage(msg, fieldId);
+      ((AgentTunnel *)s_unboundTunnels.get(i))->fillMessage(msg, fieldId);
       fieldId += 10;
    }
    msg->setField(VID_NUM_ELEMENTS, (UINT32)s_unboundTunnels.size());
@@ -168,7 +170,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("-----+--------------------------+--------------------------+------------------+------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      const AgentTunnel *t = s_unboundTunnels.get(i);
+      const AgentTunnel *t = (AgentTunnel *)s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
    }
@@ -184,7 +186,7 @@ static VolatileCounter s_nextTunnelId = 0;
 /**
  * Agent tunnel constructor
  */
-AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId) : RefCountObject()
+AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId) : RefCountObject(), m_channels(true)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -201,6 +203,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_systemInfo = NULL;
    m_agentVersion = NULL;
    m_bindRequestId = 0;
+   m_channelLock = MutexCreate();
 }
 
 /**
@@ -208,6 +211,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
  */
 AgentTunnel::~AgentTunnel()
 {
+   m_channels.clear();
    if (m_socket != INVALID_SOCKET)
       shutdown(m_socket, SHUT_RDWR);
    ThreadJoin(m_recvThread);
@@ -219,6 +223,7 @@ AgentTunnel::~AgentTunnel()
    free(m_platformName);
    free(m_systemInfo);
    free(m_agentVersion);
+   MutexDestroy(m_channelLock);
    debugPrintf(4, _T("Tunnel destroyed"));
 }
 
@@ -277,7 +282,18 @@ void AgentTunnel::recvThread()
          case CMD_CHANNEL_DATA:
             if (msg->isBinary())
             {
-
+               MutexLock(m_channelLock);
+               AgentTunnelCommChannel *channel = m_channels.get(msg->getId());
+               MutexUnlock(m_channelLock);
+               if (channel != NULL)
+               {
+                  channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
+                  channel->decRefCount();
+               }
+               else
+               {
+                  debugPrintf(6, _T("Received channel data for non-existing channel %u"), msg->getId());
+               }
             }
             break;
          default:
@@ -471,7 +487,29 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
  */
 AgentTunnelCommChannel *AgentTunnel::createChannel()
 {
-   return NULL;
+   NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
+   sendMessage(&request);
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId());
+   if (response == NULL)
+   {
+      debugPrintf(4, _T("createChannel: request timeout"));
+      return NULL;
+   }
+
+   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc != ERR_SUCCESS)
+   {
+      delete response;
+      debugPrintf(4, _T("createChannel: agent error %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+      return NULL;
+   }
+
+   AgentTunnelCommChannel *channel = new AgentTunnelCommChannel(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
+   MutexLock(m_channelLock);
+   m_channels.set(channel->getId(), channel);
+   MutexUnlock(m_channelLock);
+   debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
+   return channel;
 }
 
 /**
@@ -479,7 +517,14 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
  */
 void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 {
+   MutexLock(m_channelLock);
+   m_channels.remove(channel->getId());
+   MutexUnlock(m_channelLock);
 
+   // Inform agent that channel is closing
+   NXCPMessage msg(CMD_CLOSE_CHANNEL, InterlockedIncrement(&m_requestId));
+   msg.setField(VID_CHANNEL_ID, channel->getId());
+   sendMessage(&msg);
 }
 
 /**
@@ -490,6 +535,8 @@ int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
    MutexLock(m_sslLock);
    int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   if (rc == ntohl(msg->size))
+      rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
    MutexUnlock(m_sslLock);
    free(msg);
    return rc;
@@ -600,6 +647,23 @@ void AgentTunnelCommChannel::close()
 {
    m_active = false;
    m_tunnel->closeChannel(this);
+}
+
+/**
+ * Put data into buffer
+ */
+void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
+{
+   MutexLock(m_bufferLock);
+   if (m_head + m_size + size > m_allocated)
+   {
+      m_allocated = m_head + m_size + size;
+      m_buffer = (BYTE *)realloc(m_buffer, m_allocated);
+   }
+   memcpy(&m_buffer[m_head + m_size], data, size);
+   m_size += size;
+   MutexUnlock(m_bufferLock);
+   ConditionSet(m_dataCondition);
 }
 
 /**

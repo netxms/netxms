@@ -94,7 +94,11 @@ protected:
    TCHAR *m_agentVersion;
    UINT32 m_bindRequestId;
    uuid m_bindGuid;
+   RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
+   MUTEX m_channelLock;
    
+   virtual ~AgentTunnel();
+
    void debugPrintf(int level, const TCHAR *format, ...);
    
    void recvThread();
@@ -109,7 +113,6 @@ protected:
 
 public:
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId);
-   virtual ~AgentTunnel();
    
    void start();
    UINT32 bind(UINT32 nodeId);

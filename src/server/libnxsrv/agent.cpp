@@ -460,6 +460,19 @@ AbstractCommChannel *AgentConnection::createChannel()
 }
 
 /**
+ * Acquire communication channel. Caller must call decRefCount to release channel.
+ */
+AbstractCommChannel *AgentConnection::acquireChannel()
+{
+   lock();
+   AbstractCommChannel *channel = m_channel;
+   if (channel != NULL)
+      channel->incRefCount();
+   unlock();
+   return channel;
+}
+
+/**
  * Connect to agent
  */
 bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSocketError, UINT64 serverId)
@@ -963,6 +976,10 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
  */
 bool AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
+   AbstractCommChannel *channel = acquireChannel();
+   if (channel == NULL)
+      return false;
+
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg->createMessage(m_allowCompression);
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
@@ -971,7 +988,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
       if (pEnMsg != NULL)
       {
-         success = (m_channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -982,9 +999,10 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    }
    else
    {
-      success = (m_channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
    free(rawMsg);
+   channel->decRefCount();
    return success;
 }
 
@@ -993,6 +1011,10 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
  */
 bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 {
+   AbstractCommChannel *channel = acquireChannel();
+   if (channel == NULL)
+      return false;
+
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg;
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
@@ -1001,7 +1023,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
       NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(rawMsg);
       if (pEnMsg != NULL)
       {
-         success = (m_channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         success = (channel->send(pEnMsg, ntohl(pEnMsg->size), m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -1012,8 +1034,9 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    }
    else
    {
-      success = (m_channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
+      success = (channel->send(rawMsg, ntohl(rawMsg->size), m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
    }
+   channel->decRefCount();
    return success;
 }
 
@@ -1368,15 +1391,24 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    if (dwResult == ERR_SUCCESS)
    {
-      nxlog_debug(5, _T("AgentConnection: sending file \"%s\" to agent %s compression"),
-               localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
-		m_fileUploadInProgress = true;
-		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_channel, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
-         dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+      AbstractCommChannel *channel = acquireChannel();
+      if (channel != NULL)
+      {
+         nxlog_debug(5, _T("AgentConnection: sending file \"%s\" to agent %s compression"),
+                  localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
+         m_fileUploadInProgress = true;
+         NXCPEncryptionContext *ctx = acquireEncryptionContext();
+         if (SendFileOverNXCP(channel, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
+            dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
+         else
+            dwResult = ERR_IO_FAILURE;
+         m_fileUploadInProgress = false;
+         channel->decRefCount();
+      }
       else
-         dwResult = ERR_IO_FAILURE;
-		m_fileUploadInProgress = false;
+      {
+         dwResult = ERR_CONNECTION_BROKEN;
+      }
    }
 
    return dwResult;
