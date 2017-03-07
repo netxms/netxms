@@ -357,9 +357,9 @@ public class IceCrypto
    /**
     * Encrypt data using given key.
     * 
-    * @param in
-    * @param key
-    * @return
+    * @param in clear text data
+    * @param key encryption key
+    * @return encrypted data
     */
    public static byte[] encrypt(byte[] in, byte[] key)
    {
@@ -394,9 +394,9 @@ public class IceCrypto
    /**
     * Encrypt data using given key.
     * 
-    * @param in
-    * @param key
-    * @return
+    * @param in encrypted data
+    * @param key encryption key
+    * @return clear text data
     */
    public static byte[] decrypt(byte[] in, byte[] key)
    {

@@ -157,7 +157,9 @@ public class GeoLocation
    }
 
 	/**
-	 * @return the type
+	 * Get location type
+	 * 
+	 * @return location type
 	 */
 	public int getType()
 	{
@@ -165,6 +167,8 @@ public class GeoLocation
 	}
 
 	/**
+	 * Get latitude
+	 * 
 	 * @return the latitude
 	 */
 	public double getLatitude()
@@ -173,6 +177,8 @@ public class GeoLocation
 	}
 
 	/**
+	 * Get longitude
+	 * 
 	 * @return the longitude
 	 */
 	public double getLongitude()
@@ -181,7 +187,9 @@ public class GeoLocation
 	}
 	
 	/**
-	 * @return
+	 * Get location accuracy (in meters)
+	 * 
+	 * @return location accuracy (in meters)
 	 */
 	public int getAccuracy()
 	{

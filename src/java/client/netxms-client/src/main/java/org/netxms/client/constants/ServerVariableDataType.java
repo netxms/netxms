@@ -51,16 +51,32 @@ public enum ServerVariableDataType
       lookupTableCode.put((int)'H', COLOR);
    }
 
+   /**
+    * Internal constructor
+    *  
+    * @param value integer value
+    */
    private ServerVariableDataType(int value)
    {
       this.value = value;
    }
 
+   /**
+    * Get integer value
+    * 
+    * @return integer value
+    */
    public int getValue()
    {
       return value;
    }
 
+   /**
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
+    */
    public static ServerVariableDataType getByValue(int value)
    {
       final ServerVariableDataType element = lookupTableValue.get(value);

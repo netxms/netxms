@@ -43,7 +43,9 @@ public enum AgentCompressionMode
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private AgentCompressionMode(int value)
    {
@@ -51,7 +53,9 @@ public enum AgentCompressionMode
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -59,8 +63,10 @@ public enum AgentCompressionMode
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static AgentCompressionMode getByValue(int value)
    {

@@ -63,43 +63,46 @@ public class SnmpTrapParameterMapping
     * Create mapping from NXCP message
     * 
     * @param msg NXCP message
-    * @param base base field ID
+    * @param baseId base field ID
     */
-   public SnmpTrapParameterMapping(NXCPMessage msg, long base)
+   public SnmpTrapParameterMapping(NXCPMessage msg, long baseId)
    {
-      type = msg.getFieldAsInt32(base);
+      type = msg.getFieldAsInt32(baseId);
       if (type == BY_POSITION)
-         position = (int)msg.getFieldAsInt64(base + 1);
+         position = (int)msg.getFieldAsInt64(baseId + 1);
       else
-         objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(base + 1));
+         objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(baseId + 1));
       
-      description = msg.getFieldAsString(base + 2);
-      flags = msg.getFieldAsInt32(base + 3);
+      description = msg.getFieldAsString(baseId + 2);
+      flags = msg.getFieldAsInt32(baseId + 3);
    }
 
 	/**
 	 * Fill NXCP message with parameter mapping's data
 	 * 
-	 * @param index mapping index
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
-	public void fillMessage(NXCPMessage msg, long base)
+	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-      msg.setFieldInt32(base, flags);
-      msg.setField(base + 1, description);
-      msg.setFieldInt32(base + 2, type);
+      msg.setFieldInt32(baseId, flags);
+      msg.setField(baseId + 1, description);
+      msg.setFieldInt32(baseId + 2, type);
 		if (type == BY_POSITION)
 		{
-			msg.setFieldInt32(base + 3, position);
+			msg.setFieldInt32(baseId + 3, position);
 		}
 		else
 		{
-         objectId.setNXCPVariable(msg, base + 3);
-			msg.setFieldInt32(base + 4, objectId.getLength());
+         objectId.setNXCPVariable(msg, baseId + 3);
+			msg.setFieldInt32(baseId + 4, objectId.getLength());
 		}
 	}
 
 	/**
-	 * @return the type
+	 * Get mapping type
+	 * 
+	 * @return mapping type
 	 */
 	public int getType()
 	{
@@ -107,7 +110,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @param type the type to set
+	 * Set mapping type
+	 * 
+	 * @param type new mapping type
 	 */
 	public void setType(int type)
 	{
@@ -115,7 +120,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @return the objectId
+	 * Get SNMP object ID
+	 * 
+	 * @return SNMP OID
 	 */
 	public SnmpObjectId getObjectId()
 	{
@@ -123,7 +130,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @param objectId the objectId to set
+	 * Set SNMP object ID
+	 * 
+	 * @param objectId SNMP OID
 	 */
 	public void setObjectId(SnmpObjectId objectId)
 	{
@@ -131,7 +140,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @return the position
+	 * Get position number
+	 * 
+	 * @return position number
 	 */
 	public int getPosition()
 	{
@@ -139,7 +150,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @param position the position to set
+	 * Set position number (first position is 1).
+	 * 
+	 * @param position new position number
 	 */
 	public void setPosition(int position)
 	{
@@ -147,7 +160,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @return the description
+	 * Get description
+	 * 
+	 * @return description
 	 */
 	public String getDescription()
 	{
@@ -155,7 +170,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @param description the description to set
+	 * Set description
+	 * 
+	 * @param description new description
 	 */
 	public void setDescription(String description)
 	{
@@ -163,7 +180,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @return the flags
+	 * Get flags
+	 * 
+	 * @return flags (bit mask)
 	 */
 	public int getFlags()
 	{
@@ -171,7 +190,9 @@ public class SnmpTrapParameterMapping
 	}
 
 	/**
-	 * @param flags the flags to set
+	 * Set flags
+	 * 
+	 * @param flags new flags
 	 */
 	public void setFlags(int flags)
 	{

@@ -47,7 +47,9 @@ public enum NodePollType
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private NodePollType(int value)
    {
@@ -55,7 +57,9 @@ public enum NodePollType
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -63,8 +67,10 @@ public enum NodePollType
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static NodePollType getByValue(int value)
    {

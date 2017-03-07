@@ -45,7 +45,9 @@ public enum AggregationFunction
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private AggregationFunction(int value)
    {
@@ -53,7 +55,9 @@ public enum AggregationFunction
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -61,8 +65,10 @@ public enum AggregationFunction
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static AggregationFunction getByValue(int value)
    {

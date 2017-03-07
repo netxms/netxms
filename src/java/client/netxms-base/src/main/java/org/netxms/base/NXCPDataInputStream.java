@@ -29,6 +29,8 @@ import java.io.InputStream;
 public class NXCPDataInputStream extends DataInputStream
 {
 	/**
+    * Create NXCP data input stream on top of existing input stream
+	 * 
 	 * @param in Input stream
 	 */
 	public NXCPDataInputStream(InputStream in)
@@ -37,6 +39,8 @@ public class NXCPDataInputStream extends DataInputStream
 	}
 
 	/**
+	 * Create NXCP data input stream for reading from existing byte array
+	 * 
 	 * @param data Byte array to read data from
 	 */
 	public NXCPDataInputStream(final byte[] data)
@@ -46,7 +50,8 @@ public class NXCPDataInputStream extends DataInputStream
 
 	/**
 	 * Read unsigned 32-bit integer from input stream
-	 * @return
+	 * 
+	 * @return unsigned 32-bit integer converted into signed 64 bit integer
 	 * @throws IOException 
 	 */
 	public long readUnsignedInt() throws IOException

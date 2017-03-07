@@ -79,8 +79,10 @@ public final class EncryptionContext
 	}
 	
 	/**
-	 * @param bs
-	 * @param bytes
+	 * Write bytes to output stream if byte array is not null
+	 * 
+	 * @param bs output stream
+	 * @param bytes byte array
 	 * @throws IOException
 	 */
 	private static void safeWriteBytes(ByteArrayOutputStream bs, byte[] bytes) throws IOException
@@ -93,7 +95,7 @@ public final class EncryptionContext
 	 * Test cipher with given ID
 	 * 
 	 * @param cipherId
-	 * @return
+	 * @return true if cipher is available and working correctly
 	 */
 	public static boolean testCipher(int cipherId)
 	{
@@ -184,6 +186,8 @@ public final class EncryptionContext
 	
 	/**
 	 * Internal constructor
+	 * 
+	 * @param cipher cipher to use
 	 */
 	protected EncryptionContext(int cipher) throws GeneralSecurityException
 	{
@@ -306,9 +310,11 @@ public final class EncryptionContext
 	}
 	
 	/**
-	 * @param inputStream
-	 * @param length
-	 * @return
+	 * Decrypt message from input stream
+	 * 
+	 * @param inputStream input stream
+	 * @param length length of encrypted message
+	 * @return decrypted message
 	 * @throws GeneralSecurityException
 	 * @throws IOException
 	 */
@@ -334,7 +340,7 @@ public final class EncryptionContext
 	/**
 	 * Get cipher
 	 * 
-	 * @return
+	 * @return cipher
 	 */
 	public int getCipher()
 	{
@@ -344,7 +350,7 @@ public final class EncryptionContext
 	/**
 	 * Get key length (in bytes)
 	 * 
-	 * @return
+	 * @return key length (in bytes)
 	 */
 	public int getKeyLength()
 	{
@@ -352,7 +358,9 @@ public final class EncryptionContext
 	}
 	
 	/**
-	 * @return
+	 * Get initialization vector length (in bytes)
+	 * 
+	 * @return initialization vector length (in bytes)
 	 */
 	public int getIvLength()
 	{

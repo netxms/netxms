@@ -47,7 +47,9 @@ public enum LinkLayerDiscoveryProtocol
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private LinkLayerDiscoveryProtocol(int value)
    {
@@ -55,7 +57,9 @@ public enum LinkLayerDiscoveryProtocol
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -63,8 +67,10 @@ public enum LinkLayerDiscoveryProtocol
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static LinkLayerDiscoveryProtocol getByValue(int value)
    {

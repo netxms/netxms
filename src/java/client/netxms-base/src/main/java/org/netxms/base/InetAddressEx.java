@@ -81,7 +81,7 @@ public class InetAddressEx
    /**
     * Check if address is a valid IPv4/IPv6 address
     * 
-    * @return
+    * @return true if address is a valid IPv4/IPv6 address
     */
    public boolean isValidAddress()
    {
@@ -91,7 +91,7 @@ public class InetAddressEx
    /**
     * Check if address is a valid unicast address
     * 
-    * @return
+    * @return true if address is a valid unicast address
     */
    public boolean isValidUnicastAddress()
    {
@@ -105,7 +105,7 @@ public class InetAddressEx
    /**
     * Get host address as text (without mask length)
     * 
-    * @return
+    * @return host address as text (without mask length)
     */
    public String getHostAddress()
    {
@@ -113,7 +113,9 @@ public class InetAddressEx
    }
 
    /**
-    * @return the address
+    * Get IP address object
+    * 
+    * @return IP address
     */
    public InetAddress getAddress()
    {
@@ -121,7 +123,9 @@ public class InetAddressEx
    }
 
    /**
-    * @return the mask
+    * Get network mask (bit length)
+    * 
+    * @return network mask bit length
     */
    public int getMask()
    {
@@ -129,7 +133,9 @@ public class InetAddressEx
    }
    
    /**
-    * @param address the address to set
+    * Set IP address
+    * 
+    * @param address IP address to set
     */
    public void setAddress(InetAddress address)
    {
@@ -137,7 +143,9 @@ public class InetAddressEx
    }
 
    /**
-    * @param mask the mask to set
+    * Set mask length
+    * 
+    * @param mask new mask length
     */
    public void setMask(int mask)
    {
@@ -147,7 +155,7 @@ public class InetAddressEx
    /**
     * Get address bytes
     * 
-    * @return
+    * @return address bytes
     */
    public byte[] getAddressBytes()
    {
@@ -166,8 +174,8 @@ public class InetAddressEx
    /**
     * Calculate number of bits in network mask
     * 
-    * @param mask
-    * @return
+    * @param mask network mask as IP address
+    * @return network mask length (in bits)
     */
    public static int bitsInMask(InetAddress mask)
    {
@@ -192,7 +200,8 @@ public class InetAddressEx
 
    /**
     * Convert bit count into mask
-    * @return
+    * 
+    * @return network mask as IP address
     */
    public InetAddress maskFromBits()
    {

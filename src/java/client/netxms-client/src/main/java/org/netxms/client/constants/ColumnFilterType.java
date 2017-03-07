@@ -44,16 +44,32 @@ public enum ColumnFilterType
       }
    }
    
+   /**
+    * Internal constructor
+    *  
+    * @param value integer value
+    */
    private ColumnFilterType(int value)
    {
       this.value = value;
    }
    
+   /**
+    * Get integer value
+    * 
+    * @return integer value
+    */
    public int getValue()
    {
       return value;
    }
    
+   /**
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
+    */
    public static ColumnFilterType getByValue(int value)
    {
       final ColumnFilterType element = lookupTable.get(value);

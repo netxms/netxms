@@ -44,7 +44,9 @@ public enum ConnectionPointType
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private ConnectionPointType(int value)
    {
@@ -52,7 +54,9 @@ public enum ConnectionPointType
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -60,8 +64,10 @@ public enum ConnectionPointType
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static ConnectionPointType getByValue(int value)
    {

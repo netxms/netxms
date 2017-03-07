@@ -587,7 +587,7 @@ public class NXCPMessageField
 	/**
 	 * Create NXCP DF structure
 	 * 
-	 * @return
+	 * @return encoded NXCP data field as byte array
 	 * @throws IOException
 	 */
 	public byte[] createNXCPDataField() throws IOException

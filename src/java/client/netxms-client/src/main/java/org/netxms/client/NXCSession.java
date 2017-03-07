@@ -5878,8 +5878,8 @@ public class NXCSession
     * NXCSession.syncAlarmCategories() first to make local copy of event template
     * database.
     *
-    * @param code Event code
-    * @return Event template object or null if not found
+    * @param name alarm category name
+    * @return alarm category with given name or null if not found
     */
    public AlarmCategory findAlarmCategoryByName(String name)
    {

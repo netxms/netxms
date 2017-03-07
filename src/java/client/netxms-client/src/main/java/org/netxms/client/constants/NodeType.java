@@ -44,7 +44,9 @@ public enum NodeType
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private NodeType(int value)
    {
@@ -52,7 +54,9 @@ public enum NodeType
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -60,8 +64,10 @@ public enum NodeType
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static NodeType getByValue(int value)
    {

@@ -44,7 +44,9 @@ public enum AccessPointState
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private AccessPointState(int value)
    {
@@ -52,7 +54,9 @@ public enum AccessPointState
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -60,8 +64,10 @@ public enum AccessPointState
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static AccessPointState getByValue(int value)
    {
@@ -69,7 +75,7 @@ public enum AccessPointState
       if (element == null)
       {
          Logger.warning(AccessPointState.class.getName(), "Unknown element " + value);
-         return UNKNOWN; // fallback
+         return UNKNOWN; // fall-back
       }
       return element;
    }

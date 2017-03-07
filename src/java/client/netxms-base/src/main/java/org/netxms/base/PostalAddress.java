@@ -13,6 +13,9 @@ public class PostalAddress
    public String streetAddress;
    public String postcode;
    
+   /**
+    * Create empty postal address
+    */
    public PostalAddress()
    {
       country = "";
@@ -21,6 +24,14 @@ public class PostalAddress
       postcode = "";
    }
    
+   /**
+    * Create postal address with given data
+    * 
+    * @param country country code/name
+    * @param city city name
+    * @param streetAddress street address
+    * @param postcode post code
+    */
    public PostalAddress(String country, String city, String streetAddress, String postcode)
    {
       this.country = country;
@@ -29,6 +40,11 @@ public class PostalAddress
       this.postcode = postcode;
    }
 
+   /**
+    * Create copy of given postal address object
+    * 
+    * @param src source object
+    */
    public PostalAddress(PostalAddress src)
    {
       country = src.country;
@@ -37,6 +53,11 @@ public class PostalAddress
       postcode = src.postcode;
    }
    
+   /**
+    * Create from NXCP message
+    *  
+    * @param msg NXCP message
+    */
    public PostalAddress(NXCPMessage msg)
    {
       country = msg.getFieldAsString(NXCPCodes.VID_COUNTRY);
@@ -45,9 +66,10 @@ public class PostalAddress
       postcode = msg.getFieldAsString(NXCPCodes.VID_POSTCODE);
    }
 
-   /**Fill NXCP message
+   /**
+    * Fill NXCP message
     * 
-    * @param msg
+    * @param msg NXCP message
     */
    public void fillMessage(NXCPMessage msg)
    {
@@ -58,9 +80,9 @@ public class PostalAddress
    }
    
    /**
-    * Get address as one line
+    * Get address as one line with elements separated by commas. Empty elements will be omitted.
     * 
-    * @return
+    * @return address as one line
     */
    public String getAddressLine()
    {
@@ -94,7 +116,9 @@ public class PostalAddress
    }
    
    /**
-    * @return
+    * Check if all elements are empty.
+    * 
+    * @return true if all elements are empty
     */
    public boolean isEmpty()
    {

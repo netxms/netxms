@@ -48,7 +48,9 @@ public enum Severity
    }
 
    /**
-    * @param value
+    * Internal constructor
+    *  
+    * @param value integer value
     */
    private Severity(int value)
    {
@@ -56,7 +58,9 @@ public enum Severity
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -64,8 +68,10 @@ public enum Severity
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element by integer value
+    * 
+    * @param value integer value
+    * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
    public static Severity getByValue(int value)
    {
