@@ -587,6 +587,14 @@ setup_encryption:
 	      m_pCtx = NULL;
 		}
 		unlock();
+
+		// Renegotiate NXCP version with actual target agent
+	   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
+	   {
+	      dwError = ERR_INTERNAL_ERROR;
+	      goto connect_cleanup;
+	   }
+
       secondPass = true;
       forceEncryption = false;
       goto setup_encryption;
