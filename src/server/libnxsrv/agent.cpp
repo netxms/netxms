@@ -1303,7 +1303,7 @@ UINT32 AgentConnection::execAction(const TCHAR *action, int argc, const TCHAR * 
             bool eos = false;
             while(!eos)
             {
-               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_dwCommandTimeout);
+               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_dwCommandTimeout * 10);
                if (response != NULL)
                {
                   eos = response->isEndOfSequence();
