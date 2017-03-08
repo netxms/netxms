@@ -747,6 +747,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V440 to V441
+ */
+static BOOL H_UpgradeFromV440(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("TopologyPollingInterval"), _T("1800"), _T("Interval in seconds between topology polls"), 'I', true, true, false, false));
+   CHK_EXEC(SetSchemaVersion(441));
+   return TRUE;
+}
+
+/**
  * Upgrade from V439 to V440
  */
 static BOOL H_UpgradeFromV439(int currVersion, int newVersion)
@@ -11549,6 +11559,7 @@ static struct
    { 437, 438, H_UpgradeFromV437 },
    { 438, 439, H_UpgradeFromV438 },
    { 439, 440, H_UpgradeFromV439 },
+   { 440, 441, H_UpgradeFromV440 },
    { 0, 0, NULL }
 };
 

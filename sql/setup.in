@@ -181,6 +181,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TileServerURL','http://tile.openstreetmap.org/',1,0,'S','The URL for the Tile server.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TopologyDiscoveryRadius','3',1,0,'I','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TopologyExpirationTime','900',1,0,'I','');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TopologyPollingInterval','1800',1,1,'I','Interval in seconds between topology polls.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TrapSourcesInAllZones','0',1,1,'B','Search all zones to match trap/syslog source address to node.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseDNSNameForDiscoveredNodes','0',1,0,'B','Enable/disable the use of DNS name instead of IP address as primary name for newly discovered nodes.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('UseFQDNForNodeNames','1',1,1,'B','Enable/disable the use of fully qualified domain names as primary names for newly discovered nodes.');
