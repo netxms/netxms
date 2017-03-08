@@ -183,7 +183,7 @@ void AgentConnection::receiverThread()
 
    // Initialize raw message receiving function
    NXCP_BUFFER *msgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   RecvNXCPMessage(0, NULL, msgBuffer, 0, NULL, NULL, 0);
+   NXCPInitBuffer(msgBuffer);
 
    // Allocate space for raw message
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(msgBufferSize);

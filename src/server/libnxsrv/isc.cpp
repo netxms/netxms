@@ -166,7 +166,7 @@ void ISC::receiverThread()
 
    // Initialize raw message receiving function
    pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
+   NXCPInitBuffer(pMsgBuffer);
 
    // Allocate space for raw message
    pRawMsg = (NXCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);

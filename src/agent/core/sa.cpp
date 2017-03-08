@@ -129,7 +129,7 @@ bool SessionAgentConnector::sendMessage(NXCPMessage *msg)
 void SessionAgentConnector::readThread()
 {
    NXCPEncryptionContext *dummyCtx = NULL;
-   RecvNXCPMessage(0, NULL, &m_msgBuffer, 0, NULL, NULL, 0);
+   NXCPInitBuffer(&m_msgBuffer);
    UINT32 rawMsgSize = 65536;
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(1)

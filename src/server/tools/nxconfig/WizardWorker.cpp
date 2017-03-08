@@ -24,27 +24,25 @@
 
 #include "stdafx.h"
 #include "nxconfig.h"
-#include <nxsrvapi.h>
+#include <nms_common.h>
+#include <nxcldefs.h>
 
+#define CORE_SERVICE_NAME     _T("NetXMSCore")
+#define CORE_EVENT_SOURCE     _T("NetXMSCore")
 
-//
-// Global data
-//
-
+/**
+ * Error message
+ */
 TCHAR g_szWizardErrorText[MAX_ERROR_TEXT] = _T("Completed successfully");
 
-
-//
-// Static data
-//
-
+/**
+ * Status window handle
+ */
 static HWND m_hStatusWnd = NULL;
 
-
-//
-// Install event source
-//
-
+/**
+ * Install event source
+ */
 static BOOL InstallEventSource(TCHAR *pszPath)
 {
    HKEY hKey;

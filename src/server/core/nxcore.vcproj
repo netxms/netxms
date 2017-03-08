@@ -877,6 +877,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tunnel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\uniroot.cpp"
 				>
 			</File>

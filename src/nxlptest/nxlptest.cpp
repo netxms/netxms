@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	UINT32 size;
 	TCHAR *inputFile = NULL;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

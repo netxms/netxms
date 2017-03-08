@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
    TCHAR *pszEnv;
 #endif
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(false);
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);

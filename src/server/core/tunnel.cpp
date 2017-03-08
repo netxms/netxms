@@ -432,7 +432,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
       const BYTE *certRequestData = request->getBinaryFieldPtr(VID_CERTIFICATE, &certRequestLen);
       if (certRequestData != NULL)
       {
-         X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, certRequestLen);
+         X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, (long)certRequestLen);
          if (certRequest != NULL)
          {
             char *cn = m_bindGuid.toString().getUTF8String();
@@ -718,7 +718,7 @@ static void SetupTunnel(void *arg)
    }
 
    SSL_set_accept_state(ssl);
-   SSL_set_fd(ssl, request->sock);
+   SSL_set_fd(ssl, (int)request->sock);
 
 retry:
    rc = SSL_do_handshake(ssl);

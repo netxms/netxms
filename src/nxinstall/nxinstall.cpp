@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
    int i, ch;
    bool dump = false, printResult = false, quiet = false;
 
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;

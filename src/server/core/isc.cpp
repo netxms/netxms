@@ -69,7 +69,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 
    pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
+   NXCPInitBuffer(pRecvBuffer);
 
    while(1)
    {

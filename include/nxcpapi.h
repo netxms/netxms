@@ -545,6 +545,7 @@ typedef bool (*NXCPMessageNameResolver)(UINT16 code, TCHAR *buffer);
 
 #ifdef __cplusplus
 
+void LIBNETXMS_EXPORTABLE NXCPInitBuffer(NXCP_BUFFER *nxcpBuffer);
 int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *pMsg,
                                          NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
                                          NXCPEncryptionContext **ppCtx,

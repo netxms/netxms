@@ -198,7 +198,7 @@ static void ProcessRequest(NXCPMessage *request)
 static void ProcessMessages()
 {
    NXCPEncryptionContext *dummyCtx = NULL;
-   RecvNXCPMessage(0, NULL, &s_msgBuffer, 0, NULL, NULL, 0);
+   NXCPInitBuffer(&s_msgBuffer);
    UINT32 rawMsgSize = 65536;
    NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(true)
@@ -333,7 +333,7 @@ static HWND GetConsoleHWND()
  */
 int main(int argc, char *argv[])
 {
-   InitNetXMSProcess();
+   InitNetXMSProcess(true);
 
    bool hideConsole = false;
 

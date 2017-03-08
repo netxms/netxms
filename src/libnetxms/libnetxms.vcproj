@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -229,7 +229,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -311,7 +311,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib ssleay32.lib crypt32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -379,6 +379,10 @@
 			</File>
 			<File
 				RelativePath=".\cc_utf8.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\cch.cpp"
 				>
 			</File>
 			<File

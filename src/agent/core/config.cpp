@@ -104,7 +104,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          {
             pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
             pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-            RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
+            NXCPInitBuffer(pBuffer);
 
             nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
                                    &pDummyCtx, NULL, 30000);

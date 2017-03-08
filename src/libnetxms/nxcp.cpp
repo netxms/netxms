@@ -435,6 +435,15 @@ void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResol
 }
 
 /**
+ * Init NXCP receiver buffer
+ */
+void LIBNETXMS_EXPORTABLE NXCPInitBuffer(NXCP_BUFFER *nxcpBuffer)
+{
+   nxcpBuffer->bufferSize = 0;
+   nxcpBuffer->bufferPos = 0;
+}
+
+/**
  * Receive raw CSCP message from network
  * If pMsg is NULL, temporary buffer will be re-initialized
  * Returns message size on success or:
@@ -858,7 +867,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
    if (channel->send(&msg, NXCP_HEADER_SIZE, mutex) == NXCP_HEADER_SIZE)
    {
       pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-      RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
+      NXCPInitBuffer(pBuffer);
       nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
       if ((nSize == NXCP_HEADER_SIZE) &&
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
