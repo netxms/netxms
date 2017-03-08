@@ -813,7 +813,6 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
 
    uuid guid;
    TCHAR buffer[MAX_DB_STRING];
-   UINT32 numRows;
 
    DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid IS NULL"));
    DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
@@ -821,7 +820,7 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
    {
       if (hStmt != NULL)
       {
-         numRows = DBGetNumRows(hResult);
+         int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
             guid = uuid::generate();
@@ -849,7 +848,7 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
    {
       if (hStmt != NULL)
       {
-         numRows = DBGetNumRows(hResult);
+         int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
             guid = uuid::generate();

@@ -60,7 +60,7 @@ DIRW *wopendir(const WCHAR *filename)
 	 tail = scanname[wcslen(scanname) - 1];
 	 if ((tail == L'/') || (tail == L'\\'))
 		scanname[wcslen(scanname) - 1] = 0;
-    if ((_wstat(filename, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
+    if ((_wstat(scanname, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
     {
         return NULL;
     }

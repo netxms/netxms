@@ -80,7 +80,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT 
 
    if (mapResult != NULL)
    {
-      UINT32 mapCount = DBGetNumRows(mapResult);
+      int mapCount = DBGetNumRows(mapResult);
       for(int i = 0; i < mapCount; i++)
       {
          SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(mapResult, i);
@@ -321,7 +321,7 @@ void LoadTrapCfg()
    {
       if (hStmt != NULL)
       {
-         UINT32 numRows = DBGetNumRows(hResult);
+         int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
             SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(hResult, hStmt, i);
@@ -950,7 +950,6 @@ static void NotifyOnTrapCfgDelete(UINT32 id)
 UINT32 DeleteTrap(UINT32 id)
 {
    UINT32 dwResult = RCC_INVALID_TRAP_ID;
-   TCHAR szQuery[256];
 
    MutexLock(m_mutexTrapCfgAccess);
 

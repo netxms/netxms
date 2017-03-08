@@ -1514,7 +1514,7 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    if (dir != NULL)
    {
       success = true;
-      while(1)
+      while(true)
       {
          file = _treaddir(dir);
          if (file == NULL)
@@ -1540,6 +1540,7 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    }
    else
    {
+printf("OPENDIR failed\n");
       success = false;
    }
 

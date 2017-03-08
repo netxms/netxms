@@ -79,7 +79,7 @@ int GetData(int argc, TCHAR *argv[])
 		}
 
 		// Create request
-		request = new SNMP_PDU(SNMP_GET_REQUEST, getpid(), m_snmpVersion);
+		request = new SNMP_PDU(SNMP_GET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
       for(i = 1; i < argc; i++)
       {
          if (SNMPIsCorrectOID(argv[i]))

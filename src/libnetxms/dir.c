@@ -60,7 +60,7 @@ DIR *opendir(const char *filename)
 	 tail = scanname[strlen(scanname) - 1];
 	 if ((tail == '/') || (tail == '\\'))
 		scanname[strlen(scanname) - 1] = 0;
-    if ((stat(filename, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
+    if ((stat(scanname, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
     {
         return NULL;
     }

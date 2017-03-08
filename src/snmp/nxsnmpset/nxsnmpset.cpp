@@ -75,7 +75,7 @@ static int SetVariables(int argc, TCHAR *argv[])
 			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
 
 		// Create request
-		request = new SNMP_PDU(SNMP_SET_REQUEST, getpid(), m_snmpVersion);
+      request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
       for(i = 1; i < argc; i += 2)
       {
          TCHAR *p = _tcschr(argv[i], _T('@'));
