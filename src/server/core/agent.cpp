@@ -90,7 +90,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    TCHAR *pszArgList[32], szBuffer[32];
    char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-   DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), getIpAddr().toString(szBuffer), m_nodeId);
+   debugPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), getIpAddr().toString(szBuffer), m_nodeId);
 	if (m_nodeId != 0)
 		pNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	if (pNode == NULL)
@@ -108,12 +108,12 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 		   if (trapId != 0)
 		   {
 			   acceptTrap = pNode->checkAgentTrapId(trapId);
-			   DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
+			   debugPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
 		   }
 		   else
 		   {
 			   acceptTrap = true;
-			   DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trap ID not provided"));
+			   debugPrintf(5, _T("AgentConnectionEx::onTrap(): trap ID not provided"));
 		   }
 
 		   if (acceptTrap)
@@ -150,12 +150,12 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
       }
       else
       {
-         DbgPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->getName(), pNode->getId());
+         debugPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->getName(), pNode->getId());
       }
    }
    else
    {
-      DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), getIpAddr().toString(szBuffer));
+      debugPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), getIpAddr().toString(szBuffer));
    }
 }
 
@@ -165,7 +165,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
 {
    TCHAR buffer[64];
-   nxlog_debug(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
+   debugPrintf(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
 
    UINT32 zoneId = msg->getFieldAsUInt32(VID_ZONE_ID);
    Node *node = NULL;
@@ -190,12 +190,12 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
       }
       else
       {
-         nxlog_debug(5, _T("AgentConnectionEx::onSyslogMessage(): message ID is invalid (node %s [%d])"), node->getName(), node->getId());
+         debugPrintf(5, _T("AgentConnectionEx::onSyslogMessage(): message ID is invalid (node %s [%d])"), node->getName(), node->getId());
       }
    }
    else
    {
-      nxlog_debug(5, _T("AgentConnectionEx::onSyslogMessage(): Cannot find node for IP address %s"), getIpAddr().toString(buffer));
+      debugPrintf(5, _T("AgentConnectionEx::onSyslogMessage(): Cannot find node for IP address %s"), getIpAddr().toString(buffer));
    }
 }
 
@@ -228,12 +228,12 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		if (requestId != 0)
 		{
 			acceptRequest = sender->checkAgentPushRequestId(requestId);
-			DbgPrintf(5, _T("AgentConnectionEx::onDataPush(): requestId is%s valid"), acceptRequest ? _T("") : _T(" not"));
+			debugPrintf(5, _T("AgentConnectionEx::onDataPush(): requestId is%s valid"), acceptRequest ? _T("") : _T(" not"));
 		}
 		else
 		{
 			acceptRequest = true;
-			DbgPrintf(5, _T("AgentConnectionEx::onDataPush(): request ID not provided"));
+			debugPrintf(5, _T("AgentConnectionEx::onDataPush(): request ID not provided"));
 		}
 
 		if (acceptRequest)
@@ -278,26 +278,15 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		      }
 		      else
 		      {
-			      DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->getName(), name);
+		         debugPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->getName(), name);
 		      }
          }
          else
          {
-		      DbgPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->getName());
+            debugPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->getName());
          }
       }
 	}
-}
-
-/**
- * Print message.
- */
-void AgentConnectionEx::printMsg(const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   nxlog_debug2(6, format, args);
-   va_end(args);
 }
 
 /**
@@ -305,7 +294,7 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
  */
 static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 {
-   DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
+   nxlog_debug(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled"));
    AgentConnection *conn = object->createAgentConnection();
    if(conn != NULL)
    {
@@ -333,7 +322,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 	   TCHAR remoteFile[MAX_PATH];
       pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
       ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
-      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
+      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
       int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
       {
@@ -359,7 +348,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 	else
 	{
 		g_monitoringList.removeDisconnectedNode(m_nodeId);
-      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
+		debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
 }
 
@@ -408,7 +397,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"),
+	debugPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"),
       getIpAddr().toString(ipStringBuffer), m_nodeId);
 
 	if (m_nodeId != 0)
@@ -422,12 +411,12 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
       if (trapId != 0)
       {
          acceptTrap = proxyNode->checkSNMPTrapId(trapId);
-         DbgPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
+         debugPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
       }
       else
       {
          acceptTrap = false;
-         DbgPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trap ID not provided"));
+         debugPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trap ID not provided"));
       }
 
       if (acceptTrap)
@@ -487,24 +476,24 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                }
                else if (pdu->getCommand() == SNMP_REPORT)
                {
-                  DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
+                  debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
                }
                delete pdu;
             }
             else if (pdu->getCommand() == SNMP_REPORT)
             {
-               DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
+               debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
             }
          }
          else
          {
-            DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): cannot find origin node with IP %s and not accepting traps from unknown sources"), originSenderIP.toString(ipStringBuffer));
+            debugPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): cannot find origin node with IP %s and not accepting traps from unknown sources"), originSenderIP.toString(ipStringBuffer));
          }
       }
    }
    else
    {
-      DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Cannot find node for IP address %s"), getIpAddr().toString(ipStringBuffer));
+      debugPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Cannot find node for IP address %s"), getIpAddr().toString(ipStringBuffer));
    }
 }
 
@@ -576,21 +565,21 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 
    if (m_nodeId == 0)
    {
-      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
       return ERR_INTERNAL_ERROR;
    }
 
 	Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == NULL)
    {
-      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
       return ERR_INTERNAL_ERROR;
    }
 
    int origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
    {
-      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
       return ERR_INTERNAL_ERROR;
    }
 
@@ -602,13 +591,13 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       if (object == NULL)
       {
          TCHAR buffer[64];
-         nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), targetId.toString(buffer));
+         debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
       if (!object->isDataCollectionTarget())
       {
          TCHAR buffer[64];
-         nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: object with GUID %s is not a data collection target"), targetId.toString(buffer));
+         debugPrintf(5, _T("AgentConnectionEx::processCollectedData: object with GUID %s is not a data collection target"), targetId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
       target = (DataCollectionTarget *)object;
@@ -622,7 +611,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    DCObject *dcObject = target->getDCObjectById(dciId);
    if (dcObject == NULL)
    {
-      nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
                   dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
@@ -630,7 +619,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    int type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
    if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
    {
-      nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch"),
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch"),
                   dcObject->getName(), dciId, target->getName(), target->getId());
       return ERR_INTERNAL_ERROR;
    }
@@ -639,7 +628,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    UINT32 status = msg->getFieldAsUInt32(VID_STATUS);
    bool success = true;
 
-   nxlog_debug(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d]"),
+   debugPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d]"),
                dcObject->getName(), dciId, type, status, target->getName(), target->getId());
 
    switch(status)
@@ -659,7 +648,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                value = new Table(msg);
                break;
             default:
-               nxlog_debug(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
+               debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
                            type, dcObject->getName(), dciId, target->getName(), target->getId());
                return ERR_INTERNAL_ERROR;
          }
@@ -712,21 +701,21 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
 
    if (m_nodeId == 0)
    {
-      DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: node ID is 0 for agent session"));
+      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: node ID is 0 for agent session"));
       return ERR_INTERNAL_ERROR;
    }
 
    Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == NULL)
    {
-      DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
       return ERR_INTERNAL_ERROR;
    }
 
    int count = request->getFieldAsInt16(VID_NUM_ELEMENTS);
    if (count > MAX_BULK_DATA_BLOCK_SIZE)
       count = MAX_BULK_DATA_BLOCK_SIZE;
-   DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
+   debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
 
    BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
    memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
@@ -736,7 +725,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       int origin = request->getFieldAsInt16(fieldId + 1);
       if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
       {
-         nxlog_debug(5, _T("AgentConnectionEx::processBulkCollectedData: unsupported data source type %d (element %d)"), origin, i);
+         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: unsupported data source type %d (element %d)"), origin, i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
       }
@@ -749,7 +738,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          if (object == NULL)
          {
             TCHAR buffer[64];
-            nxlog_debug(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target object with GUID %s (element %d)"),
+            debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target object with GUID %s (element %d)"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
             continue;
@@ -757,7 +746,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          if (!object->isDataCollectionTarget())
          {
             TCHAR buffer[64];
-            nxlog_debug(5, _T("AgentConnectionEx::processBulkCollectedData: object with GUID %s (element %d) is not a data collection target"),
+            debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: object with GUID %s (element %d) is not a data collection target"),
                         targetId.toString(buffer), i);
             status[i] = BULK_DATA_REC_FAILURE;
             continue;
@@ -773,7 +762,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       DCObject *dcObject = target->getDCObjectById(dciId);
       if (dcObject == NULL)
       {
-         nxlog_debug(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on object %s [%d] (element %d)"),
+         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on object %s [%d] (element %d)"),
                      dciId, target->getName(), target->getId(), i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
@@ -782,7 +771,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       int type = request->getFieldAsInt16(fieldId + 2);
       if ((type != DCO_TYPE_ITEM) || (dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
       {
-         nxlog_debug(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch (element %d)"),
+         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch (element %d)"),
                      dcObject->getName(), dciId, target->getName(), target->getId(), i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
@@ -790,7 +779,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
 
       void *value = request->getFieldAsString(fieldId + 5);
       UINT32 status_code = request->getFieldAsUInt32(fieldId + 6);
-      nxlog_debug(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
+      debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
                   dcObject->getName(), dciId, type, status, target->getName(), target->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
       bool success = true;

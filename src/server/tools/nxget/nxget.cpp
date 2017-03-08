@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,6 +45,14 @@ enum Operation
    CMD_TABLE          = 5,
    CMD_GET_SCREENSHOT = 6
 };
+
+/**
+ * Debug writer
+ */
+static void DebugWriter(const TCHAR *text)
+{
+   _tprintf(_T("%s\n"), text);
+}
 
 /**
  * Get single parameter
@@ -280,58 +288,60 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
 #endif
+	nxlog_set_debug_writer(DebugWriter);
 
    GetNetXMSDirectory(nxDirData, keyFile);
    _tcscat(keyFile, DFILE_KEYS);
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:A:bCe:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
+   while((ch = getopt(argc, argv, "a:A:bCD:e:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n")
                      _T("Valid options are:\n")
-                     _T("   -a <auth>    : Authentication method. Valid methods are \"none\",\n")
+                     _T("   -a auth      : Authentication method. Valid methods are \"none\",\n")
                      _T("                  \"plain\", \"md5\" and \"sha1\". Default is \"none\".\n")
-                     _T("   -A <auth>    : Authentication method for proxy agent.\n")
+                     _T("   -A auth      : Authentication method for proxy agent.\n")
                      _T("   -b           : Batch mode - get all parameters listed on command line.\n")
                      _T("   -C           : Get agent's configuration file\n")
+                     _T("   -D level     : Set debug level (default is 0).\n")
 #ifdef _WITH_ENCRYPTION
-                     _T("   -e <policy>  : Set encryption policy. Possible values are:\n")
+                     _T("   -e policy    : Set encryption policy. Possible values are:\n")
                      _T("                    0 = Encryption disabled;\n")
                      _T("                    1 = Encrypt connection only if agent requires encryption;\n")
                      _T("                    2 = Encrypt connection if agent supports encryption;\n")
                      _T("                    3 = Force encrypted connection;\n")
                      _T("                  Default value is 1.\n")
 #endif
-                     _T("   -E <file>    : Take screenshot. First parameter is file name, second (optional) is session name.\n")
+                     _T("   -E file      : Take screenshot. First parameter is file name, second (optional) is session name.\n")
                      _T("   -h           : Display help and exit.\n")
-                     _T("   -i <seconds> : Get specified parameter(s) continously with given interval.\n")
+                     _T("   -i seconds   : Get specified parameter(s) continously with given interval.\n")
                      _T("   -I           : Get list of supported parameters.\n")
 #ifdef _WITH_ENCRYPTION
-                     _T("   -K <file>    : Specify server's key file\n")
+                     _T("   -K file      : Specify server's key file\n")
                      _T("                  (default is %s).\n")
 #endif
                      _T("   -l           : Requested parameter is a list.\n")
                      _T("   -n           : Show parameter's name in result.\n")
-                     _T("   -o <proto>   : Protocol number to be used for service check.\n")
-                     _T("   -O <port>    : Proxy agent's port number. Default is %d.\n")
-                     _T("   -p <port>    : Agent's port number. Default is %d.\n")
-                     _T("   -P <port>    : Network service port (to be used wth -S option).\n")
-                     _T("   -r <string>  : Service check request string.\n")
-                     _T("   -R <string>  : Service check expected response string.\n")
-                     _T("   -s <secret>  : Shared secret for authentication.\n")
-                     _T("   -S <addr>    : Check state of network service at given address.\n")
-                     _T("   -t <type>    : Set type of service to be checked.\n")
+                     _T("   -o proto     : Protocol number to be used for service check.\n")
+                     _T("   -O port      : Proxy agent's port number. Default is %d.\n")
+                     _T("   -p port      : Agent's port number. Default is %d.\n")
+                     _T("   -P port      : Network service port (to be used wth -S option).\n")
+                     _T("   -r string    : Service check request string.\n")
+                     _T("   -R string    : Service check expected response string.\n")
+                     _T("   -s secret    : Shared secret for authentication.\n")
+                     _T("   -S addr      : Check state of network service at given address.\n")
+                     _T("   -t type      : Set type of service to be checked.\n")
 				         _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
                      _T("   -T           : Requested parameter is a table.\n")
                      _T("   -v           : Display version and exit.\n")
-                     _T("   -w <seconds> : Set command timeout (default is 5 seconds).\n")
-                     _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
-                     _T("   -X <addr>    : Use proxy agent at given address.\n")
-                     _T("   -Z <secret>  : Shared secret for proxy agent authentication.\n")
+                     _T("   -w seconds   : Set command timeout (default is 5 seconds).\n")
+                     _T("   -W seconds   : Set connection timeout (default is 30 seconds).\n")
+                     _T("   -X addr      : Use proxy agent at given address.\n")
+                     _T("   -Z secret    : Shared secret for proxy agent authentication.\n")
                      _T("\n"),
 #ifdef _WITH_ENCRYPTION
                      keyFile,
@@ -361,6 +371,9 @@ int main(int argc, char *argv[])
             break;
          case 'b':   // Batch mode
             batchMode = TRUE;
+            break;
+         case 'D':   // debug level
+            nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
             break;
          case 'i':   // Interval
             i = strtol(optarg, &eptr, 0);

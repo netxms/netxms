@@ -254,7 +254,7 @@ void Tunnel::recvThread()
                   TunnelCommChannel *channel = m_channels[msg->getId()];
                   MutexUnlock(m_channelLock);
                   if (channel != NULL)
-                     closeChannel(channel);
+                     channel->close();
                }
                break;
             default:

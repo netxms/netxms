@@ -29,7 +29,6 @@
 #define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
-
 /**
  * Constants
  */
@@ -39,6 +38,11 @@
  * Agent connection thread pool
  */
 ThreadPool LIBNXSRV_EXPORTABLE *g_agentConnectionThreadPool = NULL;
+
+/**
+ * Unique connection ID
+ */
+static VolatileCounter s_connectionId = 0;
 
 /**
  * Static data
@@ -76,6 +80,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
 {
    m_internalRefCount = 1;
    m_userRefCount = 1;
+   _sntprintf(m_debugName, 32, _T("[AC-%d]"), InterlockedIncrement(&s_connectionId));
    m_addr = addr;
    m_wPort = port;
    m_iAuthMethod = authMethod;
@@ -128,7 +133,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
  */
 AgentConnection::~AgentConnection()
 {
-   DbgPrintf(7, _T("AgentConnection destructor called (this=%p, thread=%p)"), this, (void *)m_hReceiverThread);
+   debugPrintf(7, _T("AgentConnection destructor called (this=%p, thread=%p)"), this, (void *)m_hReceiverThread);
 
    ThreadDetach(m_hReceiverThread);
 
@@ -152,17 +157,21 @@ AgentConnection::~AgentConnection()
 }
 
 /**
- * Print message. This method is virtual and can be overrided in
- * derived classes. Default implementation will print message to stdout.
+ * Write debug output
  */
-void AgentConnection::printMsg(const TCHAR *format, ...)
+void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
 {
-   va_list args;
+   if (nxlog_get_debug_level() < level)
+      return;
 
+   va_list args;
    va_start(args, format);
-   _vtprintf(format, args);
+
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   nxlog_debug(level, _T("%s %s"), m_debugName, buffer);
+
    va_end(args);
-   _tprintf(_T("\n"));
 }
 
 /**
@@ -202,7 +211,7 @@ void AgentConnection::receiverThread()
       if (rc <= 0)
       {
          if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))
-            DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
+            debugPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
          break;
       }
 
@@ -210,14 +219,14 @@ void AgentConnection::receiverThread()
       if (rc == 1)
       {
          TCHAR buffer[64];
-         printMsg(_T("Received too large message %s (%d bytes)"), NXCPMessageCodeName(ntohs(rawMsg->code), buffer), ntohl(rawMsg->size));
+         debugPrintf(6, _T("Received too large message %s (%d bytes)"), NXCPMessageCodeName(ntohs(rawMsg->code), buffer), ntohl(rawMsg->size));
          continue;
       }
 
       // Check if we are unable to decrypt message
       if (rc == 2)
       {
-         printMsg(_T("Unable to decrypt received message"));
+         debugPrintf(6, _T("Unable to decrypt received message"));
          continue;
       }
 
@@ -226,14 +235,14 @@ void AgentConnection::receiverThread()
       {
          if (m_fileUploadInProgress)
             continue;   // Receive timeout may occur when uploading large files via slow links
-         printMsg(_T("Timed out waiting for message"));
+         debugPrintf(6, _T("Timed out waiting for message"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(rawMsg->size) != rc)
       {
-         printMsg(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(rawMsg->size), rc);
+         debugPrintf(6, _T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(rawMsg->size), rc);
          continue;   // Bad packet, wait for next
       }
 
@@ -246,7 +255,7 @@ void AgentConnection::receiverThread()
          if (nxlog_get_debug_level() >= 6)
          {
             TCHAR buffer[64];
-            nxlog_debug(6, _T("Received raw message %s from agent at %s"),
+            debugPrintf(6, _T("Received raw message %s from agent at %s"),
                NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
          }
 
@@ -322,6 +331,21 @@ void AgentConnection::receiverThread()
                onFileDownload(false);
             }
          }
+      }
+      else if (ntohs(rawMsg->flags) & MF_CONTROL)
+      {
+         // Convert message header to host format
+         rawMsg->id = ntohl(rawMsg->id);
+         rawMsg->code = ntohs(rawMsg->code);
+         rawMsg->flags = ntohs(rawMsg->flags);
+         rawMsg->numFields = ntohl(rawMsg->numFields);
+         if (nxlog_get_debug_level() >= 6)
+         {
+            TCHAR buffer[64];
+            debugPrintf(6, _T("Received control message %s from agent at %s"),
+               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
+         }
+         m_pMsgWaitQueue->put(rawMsg);
       }
       else
       {
@@ -437,7 +461,7 @@ AbstractCommChannel *AgentConnection::createChannel()
    SOCKET s = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
    {
-      printMsg(_T("Call to socket() failed"));
+      debugPrintf(6, _T("Call to socket() failed"));
       return NULL;
    }
 
@@ -449,7 +473,7 @@ AbstractCommChannel *AgentConnection::createChannel()
    if ((sa == NULL) || (ConnectEx(s, sa, SA_LEN(sa), m_connectionTimeout) == -1))
    {
       TCHAR buffer[64];
-      printMsg(_T("Cannot establish connection with agent at %s:%d"),
+      debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
          m_bUseProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
          (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
       closesocket(s);
@@ -507,16 +531,18 @@ bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSock
    m_channel = createChannel();
    if (m_channel == NULL)
    {
-      printMsg(_T("Cannot create communication channel"));
+      debugPrintf(6, _T("Cannot create communication channel"));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
 
    if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
    {
+      debugPrintf(6, _T("Protocol version negotiation failed"));
       dwError = ERR_INTERNAL_ERROR;
       goto connect_cleanup;
    }
+   debugPrintf(6, _T("Using NXCP version %d"), m_nProtocolVersion);
 
    // Start receiver thread
    incInternalRefCount();
@@ -554,7 +580,7 @@ setup_encryption:
          forceEncryption = true;
          goto setup_encryption;
       }
-      printMsg(_T("Authentication to agent %s failed (%s)"), m_addr.toString(szBuffer),
+      debugPrintf(5, _T("Authentication to agent %s failed (%s)"), m_addr.toString(szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -570,7 +596,7 @@ setup_encryption:
       }
       if (dwError != ERR_UNKNOWN_COMMAND) // Older agents may not support enable IPv6 command
       {
-         printMsg(_T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
+         debugPrintf(5, _T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
          goto connect_cleanup;
       }
    }
@@ -588,11 +614,41 @@ setup_encryption:
 		}
 		unlock();
 
+		debugPrintf(6, _T("Proxy connection established"));
+
 		// Renegotiate NXCP version with actual target agent
-	   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, m_mutexSocketWrite))
+	   NXCP_MESSAGE msg;
+	   NXCPEncryptionContext *pDummyCtx = NULL;
+	   NXCP_BUFFER *pBuffer;
+	   bool success = false;
+	   int nSize;
+
+	   msg.id = 0;
+	   msg.numFields = 0;
+	   msg.size = htonl(NXCP_HEADER_SIZE);
+	   msg.code = htons(CMD_GET_NXCP_CAPS);
+	   msg.flags = htons(MF_CONTROL);
+	   if (m_channel->send(&msg, NXCP_HEADER_SIZE, m_mutexSocketWrite) == NXCP_HEADER_SIZE)
 	   {
-	      dwError = ERR_INTERNAL_ERROR;
-	      goto connect_cleanup;
+	      NXCP_MESSAGE *rsp = m_pMsgWaitQueue->waitForRawMessage(CMD_NXCP_CAPS, 0, m_dwCommandTimeout);
+	      if (rsp != NULL)
+	      {
+	         m_nProtocolVersion = rsp->numFields >> 24;
+	      }
+	      else
+	      {
+	         // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
+	         // and set version number to 1
+	         success = true;
+	         m_nProtocolVersion = 1;
+	      }
+         debugPrintf(6, _T("Using NXCP version %d after re-negotioation"), m_nProtocolVersion);
+	   }
+	   else
+	   {
+	      debugPrintf(6, _T("Protocol version re-negotiation failed - cannot send CMD_GET_NXCP_CAPS message"));
+         dwError = ERR_CONNECTION_BROKEN;
+         goto connect_cleanup;
 	   }
 
       secondPass = true;

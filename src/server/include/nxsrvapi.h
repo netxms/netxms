@@ -460,6 +460,7 @@ class LIBNXSRV_EXPORTABLE AgentConnection
 private:
    VolatileCounter m_userRefCount;
    VolatileCounter m_internalRefCount;
+   TCHAR m_debugName[32];
    InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
@@ -500,7 +501,12 @@ private:
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
-   AbstractCommChannel *acquireChannel();
+   UINT32 setupEncryption(RSA *pServerKey);
+   UINT32 authenticate(BOOL bProxyData);
+   UINT32 setupProxyConnection();
+   UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
+            void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg);
+   void destroyResultData();
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
@@ -509,35 +515,32 @@ private:
    void onSyslogMessageCallback(NXCPMessage *msg);
 
 protected:
-   void destroyResultData();
-   UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
-   UINT32 setupEncryption(RSA *pServerKey);
-   UINT32 authenticate(BOOL bProxyData);
-   UINT32 setupProxyConnection();
-   const InetAddress& getIpAddr() { return m_addr; }
-	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
-	         void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg);
+   virtual ~AgentConnection();
 
-	virtual AbstractCommChannel *createChannel();
-   virtual void printMsg(const TCHAR *format, ...);
+   virtual AbstractCommChannel *createChannel();
    virtual void onTrap(NXCPMessage *pMsg);
    virtual void onSyslogMessage(NXCPMessage *pMsg);
-	virtual void onDataPush(NXCPMessage *msg);
-	virtual void onFileMonitoringData(NXCPMessage *msg);
-	virtual void onSnmpTrap(NXCPMessage *pMsg);
-	virtual void onFileDownload(bool success);
-	virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual void onDataPush(NXCPMessage *msg);
+   virtual void onFileMonitoringData(NXCPMessage *msg);
+   virtual void onSnmpTrap(NXCPMessage *pMsg);
+   virtual void onFileDownload(bool success);
+   virtual UINT32 processCollectedData(NXCPMessage *msg);
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
-	virtual bool processCustomMessage(NXCPMessage *pMsg);
+   virtual bool processCustomMessage(NXCPMessage *pMsg);
+
+   const InetAddress& getIpAddr() const { return m_addr; }
+
+	void debugPrintf(int level, const TCHAR *format, ...);
 
    void lock() { MutexLock(m_mutexDataLock); }
    void unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
+   AbstractCommChannel *acquireChannel();
+
+   UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
 
    void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
    void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }
-
-   virtual ~AgentConnection();
 
 public:
    AgentConnection(const InetAddress& addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);

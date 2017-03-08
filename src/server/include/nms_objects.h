@@ -130,7 +130,6 @@ protected:
    AgentTunnel *m_tunnel;
 
    virtual AbstractCommChannel *createChannel();
-   virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(NXCPMessage *msg);
    virtual void onSyslogMessage(NXCPMessage *pMsg);
    virtual void onDataPush(NXCPMessage *msg);
