@@ -137,7 +137,7 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
    _sntprintf(m_debugId, 64, _T("TUN-%s"), (const TCHAR *)addr.toString());
-   m_channels = (TunnelCommChannel **)malloc(sizeof(TunnelCommChannel *) * g_dwMaxSessions);
+   m_channels = (TunnelCommChannel **)calloc(g_dwMaxSessions, sizeof(TunnelCommChannel *));
    m_channelLock = MutexCreate();
 }
 

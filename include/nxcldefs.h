@@ -173,11 +173,8 @@
 #define ALARM_HELPDESK_CLOSED    2
 
 /**
- * Node flags
+ * Node capabilities
  */
-#define NF_SYSTEM_FLAGS           0x003FFF7F
-#define NF_USER_FLAGS             0xFFC00080
-
 #define NF_IS_SNMP                0x00000001
 #define NF_IS_NATIVE_AGENT        0x00000002
 #define NF_IS_BRIDGE              0x00000004
@@ -185,7 +182,6 @@
 #define NF_IS_LOCAL_MGMT          0x00000010
 #define NF_IS_PRINTER             0x00000020
 #define NF_IS_OSPF                0x00000040
-#define NF_REMOTE_AGENT           0x00000080
 #define NF_IS_CPSNMP              0x00000100  /* CheckPoint SNMP agent on port 260 */
 #define NF_IS_CDP                 0x00000200
 #define NF_IS_NDP                 0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
@@ -201,6 +197,14 @@
 #define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
 #define NF_IS_WIFI_CONTROLLER     0x00100000  /* Node is wireless network controller */
 #define NF_IS_SMCLP               0x00200000  /* Node supports SMCLP protocol */
+
+/**
+ * Node flags
+ */
+#define NF_SYSTEM_FLAGS           0x003FFF7F
+#define NF_USER_FLAGS             0xFFC00080
+
+#define NF_REMOTE_AGENT           0x00000080
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000
 #define NF_DISABLE_SNMP           0x01000000
