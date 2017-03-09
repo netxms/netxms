@@ -161,7 +161,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 
       TCHAR buffer[64];
       DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
-      return false;
+      return ERR_INTERNAL_ERROR;
    }
 
    t->incRefCount();

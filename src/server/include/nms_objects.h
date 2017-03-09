@@ -1556,7 +1556,7 @@ public:
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() const { return m_flags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
-	LONG getSNMPVersion() const { return m_snmpVersion; }
+	INT16 getSNMPVersion() const { return m_snmpVersion; }
 	UINT16 getSNMPPort() const { return m_snmpPort; }
 	const TCHAR *getSNMPObjectId() const { return m_szObjectId; }
 	const TCHAR *getAgentVersion() const { return m_szAgentVersion; }
