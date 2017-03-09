@@ -1403,7 +1403,7 @@ restart_agent_check:
    }
 
    // Check native agent connectivity
-   if ((m_flags & NF_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)) && m_ipAddress.isValidUnicast())
+   if ((m_flags & NF_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
       DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_name);
       poller->setStatus(_T("check agent"));
@@ -2436,9 +2436,8 @@ NodeType Node::detectNodeType()
  */
 bool Node::confPollAgent(UINT32 dwRqId)
 {
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_name, m_flags, m_dwDynamicFlags);
-   if (((m_flags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) ||
-       !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_NXCP))
+   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_name, m_flags, m_dwDynamicFlags);
+   if (((m_flags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
       return false;
 
    bool hasChanges = false;
@@ -2453,11 +2452,17 @@ bool Node::confPollAgent(UINT32 dwRqId)
    }
    else
    {
+      if (!m_ipAddress.isValidUnicast())
+      {
+         sendPollerMsg(dwRqId, POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
+         nxlog_debug(5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
+         return false;
+      }
       pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       setAgentProxy(pAgentConn);
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
+   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
    UINT32 rcc;
@@ -2474,14 +2479,14 @@ bool Node::confPollAgent(UINT32 dwRqId)
          {
             m_agentAuthMethod = AUTH_SHA1_HASH;
             nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
-            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
+            nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
          }
       }
    }
 
    if (rcc == ERR_SUCCESS)
    {
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
+      nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
       lockProperties();
       m_flags |= NF_IS_NATIVE_AGENT;
       if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -2623,10 +2628,10 @@ bool Node::confPollAgent(UINT32 dwRqId)
    }
    else
    {
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
+      nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
    }
    pAgentConn->decRefCount();
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
+   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
    return hasChanges;
 }
 
@@ -3770,6 +3775,11 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    // Check if tunnel is available
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
+   if ((tunnel == NULL) && !m_ipAddress.isValidUnicast())
+   {
+      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): node primary IP is invalid and there are no active tunnels"), m_name, m_id);
+      return false;
+   }
 
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
