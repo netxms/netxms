@@ -343,7 +343,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 	}
 	pAgentConn->setCommandTimeout(g_agentCommandTimeout);
    UINT32 rcc;
-   if (!pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+   if (!pAgentConn->connect(g_pServerKey, &rcc))
    {
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
@@ -353,7 +353,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
          DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
 
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
-         pAgentConn->connect(g_pServerKey, FALSE, &rcc);
+         pAgentConn->connect(g_pServerKey, &rcc);
       }
    }
    if (rcc == ERR_SUCCESS)

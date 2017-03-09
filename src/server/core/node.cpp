@@ -2461,7 +2461,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 
    // Try to connect to agent
    UINT32 rcc;
-   if (!pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+   if (!pAgentConn->connect(g_pServerKey, &rcc))
    {
       // If there are authentication problem, try default shared secret
       if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
@@ -2470,7 +2470,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
          DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
-         if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
+         if (pAgentConn->connect(g_pServerKey, &rcc))
          {
             m_agentAuthMethod = AUTH_SHA1_HASH;
             nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
