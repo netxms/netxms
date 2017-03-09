@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,23 +99,28 @@ void ShutdownTrapSender()
  */
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
 {
-   int i;
-   NXCPMessage msg;
+   if (nxlog_get_debug_level() >= 5)
+   {
+      String argsText;
+      for(int i = 0; i < iNumArgs; i++)
+      {
+         argsText.append(_T(", arg["));
+         argsText.append(i);
+         argsText.append(_T("]=\""));
+         argsText.append(CHECK_NULL(ppArgList[i]));
+         argsText.append(_T('"'));
+      }
+      nxlog_debug(5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d%s"),
+                  dwEventCode, CHECK_NULL(eventName), iNumArgs, (const TCHAR *)argsText);
+   }
 
-	DebugPrintf(5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
-	            dwEventCode, CHECK_NULL(eventName), iNumArgs, 
-					(iNumArgs > 0) ? ppArgList[0] : _T("(null)"),
-					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),
-					(iNumArgs > 2) ? ppArgList[2] : _T("(null)"));
-
-   msg.setCode(CMD_TRAP);
-   msg.setId(0);
+   NXCPMessage msg(CMD_TRAP, 0);
 	msg.setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
    msg.setField(VID_EVENT_CODE, dwEventCode);
 	if (eventName != NULL)
 		msg.setField(VID_EVENT_NAME, eventName);
    msg.setField(VID_NUM_ARGS, (WORD)iNumArgs);
-   for(i = 0; i < iNumArgs; i++)
+   for(int i = 0; i < iNumArgs; i++)
       msg.setField(VID_EVENT_ARG_BASE + i, ppArgList[i]);
    if (s_trapQueue != NULL)
 	{
