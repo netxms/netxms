@@ -266,9 +266,16 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
-         nxlog_debug(7, _T("TlsMessageReceiver: SSL_read error (ssl_err=%d errno=%d)"), err, errno);
-         if (err == SSL_ERROR_WANT_READ)
+         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
+         {
             doRead = true;
+         }
+         else
+         {
+            nxlog_debug(7, _T("TlsMessageReceiver: SSL_read error (ssl_err=%d errno=%d)"), err, errno);
+            if (err == SSL_ERROR_SSL)
+               LogOpenSSLErrorStack(7);
+         }
       }
    }
    MutexUnlock(m_mutex);

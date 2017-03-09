@@ -1899,6 +1899,8 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *p
 
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 
+void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level);
+
 void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 

@@ -847,3 +847,17 @@ void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
       buffer[i] = (BYTE)(rand() % 256);
 #endif
 }
+
+/**
+ * Log OpenSSL error stack
+ */
+void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level)
+{
+#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
+   nxlog_debug(level, _T("OpenSSL error stack:"));
+   long err;
+   char buffer[128];
+   while((err = ERR_get_error()) != 0)
+      nxlog_debug(level, _T("   %hs"), ERR_error_string(err, buffer));
+#endif
+}

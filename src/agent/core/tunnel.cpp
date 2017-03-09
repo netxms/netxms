@@ -91,6 +91,7 @@ private:
    Tunnel(const InetAddress& addr, UINT16 port);
 
    bool connectToServer();
+   int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage *msg);
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, 5000) : NULL; }
 
@@ -273,6 +274,41 @@ void Tunnel::recvThread()
 }
 
 /**
+ * Write to SSL
+ */
+int Tunnel::sslWrite(const void *data, size_t size)
+{
+   bool canRetry;
+   int bytes;
+   MutexLock(m_sslLock);
+   do
+   {
+      canRetry = false;
+      bytes = SSL_write(m_ssl, data, (int)size);
+      if (bytes <= 0)
+      {
+         int err = SSL_get_error(m_ssl, bytes);
+         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
+         {
+            SocketPoller sp(true);
+            sp.add(m_socket);
+            if (sp.poll(5000) > 0)
+               canRetry = true;
+         }
+         else
+         {
+            debugPrintf(7, _T("SSL_write error (bytes=%d ssl_err=%d errno=%d)"), bytes, err, errno);
+            if (err == SSL_ERROR_SSL)
+               LogOpenSSLErrorStack(7);
+         }
+      }
+   }
+   while(canRetry);
+   MutexUnlock(m_sslLock);
+   return bytes;
+}
+
+/**
  * Send message
  */
 bool Tunnel::sendMessage(const NXCPMessage *msg)
@@ -285,10 +321,8 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
       TCHAR buffer[64];
       debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
    }
-   NXCP_MESSAGE *data = msg->createMessage(true);
-   MutexLock(m_sslLock);
-   bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
-   MutexUnlock(m_sslLock);
+   NXCP_MESSAGE *data = msg->createMessage(false);
+   bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
    free(data);
    return success;
 }
@@ -832,11 +866,9 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
 int Tunnel::sendChannelData(UINT32 id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
-   MutexLock(m_sslLock);
-   int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   int rc = sslWrite(msg, ntohl(msg->size));
    if (rc == ntohl(msg->size))
       rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
-   MutexUnlock(m_sslLock);
    free(msg);
    return rc;
 }
