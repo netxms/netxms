@@ -366,7 +366,9 @@ mibs_DATA = \
 	IPV6-STATIC-ROUTE-MIB.txt \
 	IPV6-TC.txt \
 	IPX.txt \
+	JUNIPER-IF-MIB.txt \
 	JUNIPER-IVE-MIB.txt \
+	JUNIPER-SMI.txt \
 	JVM-MANAGEMENT-MIB.txt \
 	JWAC-MIB.txt \
 	L2PROTOCOL-TUNNEL-MIB.txt \
