@@ -345,7 +345,7 @@ void AgentConnection::receiverThread()
             debugPrintf(6, _T("Received control message %s from agent at %s"),
                NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
          }
-         m_pMsgWaitQueue->put(rawMsg);
+         m_pMsgWaitQueue->put((NXCP_MESSAGE *)nx_memdup(rawMsg, ntohl(rawMsg->size)));
       }
       else
       {
@@ -450,6 +450,14 @@ void AgentConnection::receiverThread()
 	}
    m_isConnected = false;
    unlock();
+
+   free(rawMsg);
+   free(msgBuffer);
+#ifdef _WITH_ENCRYPTION
+   free(decryptionBuffer);
+#endif
+
+   debugPrintf(6, _T("Receiver thread stopped"));
 }
 
 /**
@@ -634,6 +642,7 @@ setup_encryption:
 	      if (rsp != NULL)
 	      {
 	         m_nProtocolVersion = rsp->numFields >> 24;
+	         free(rsp);
 	      }
 	      else
 	      {
@@ -701,6 +710,7 @@ connect_cleanup:
  */
 void AgentConnection::disconnect()
 {
+   debugPrintf(6, _T("disconnect() called"));
    lock();
 	if (m_hCurrFile != -1)
 	{
@@ -716,6 +726,7 @@ void AgentConnection::disconnect()
    destroyResultData();
    m_isConnected = false;
    unlock();
+   debugPrintf(6, _T("Disconnect completed"));
 }
 
 /**
