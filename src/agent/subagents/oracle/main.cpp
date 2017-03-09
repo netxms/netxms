@@ -140,9 +140,9 @@ static TableDescriptor s_tqTableSpaces =
       { DCI_DT_STRING, _T("Logging") },
       { DCI_DT_INT64, _T("Total") },
       { DCI_DT_INT64, _T("Used") },
-      { DCI_DT_INT, _T("Used %") },
+      { DCI_DT_FLOAT, _T("Used %") },
       { DCI_DT_INT64, _T("Free") },
-      { DCI_DT_INT, _T("Free %") },
+      { DCI_DT_FLOAT, _T("Free %") },
       { DCI_DT_INT, _T("Data Files") }
    }
 };
