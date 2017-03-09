@@ -104,6 +104,7 @@ protected:
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
    
+   int sslWrite(const void *data, size_t size);
    bool sendMessage(NXCPMessage *msg);
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return m_queue.waitForMessage(code, id, 5000); }
 

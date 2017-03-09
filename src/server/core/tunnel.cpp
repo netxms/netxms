@@ -317,6 +317,41 @@ THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
 }
 
 /**
+ * Write to SSL
+ */
+int AgentTunnel::sslWrite(const void *data, size_t size)
+{
+   bool canRetry;
+   int bytes;
+   MutexLock(m_sslLock);
+   do
+   {
+      canRetry = false;
+      bytes = SSL_write(m_ssl, data, (int)size);
+      if (bytes <= 0)
+      {
+         int err = SSL_get_error(m_ssl, bytes);
+         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
+         {
+            SocketPoller sp(true);
+            sp.add(m_socket);
+            if (sp.poll(5000) > 0)
+               canRetry = true;
+         }
+         else
+         {
+            debugPrintf(7, _T("SSL_write error (bytes=%d ssl_err=%d errno=%d)"), bytes, err, errno);
+            if (err == SSL_ERROR_SSL)
+               LogOpenSSLErrorStack(7);
+         }
+      }
+   }
+   while(canRetry);
+   MutexUnlock(m_sslLock);
+   return bytes;
+}
+
+/**
  * Send message on tunnel
  */
 bool AgentTunnel::sendMessage(NXCPMessage *msg)
@@ -327,9 +362,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
       debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
    }
    NXCP_MESSAGE *data = msg->createMessage(true);
-   MutexLock(m_sslLock);
-   bool success = (SSL_write(m_ssl, data, ntohl(data->size)) == ntohl(data->size));
-   MutexUnlock(m_sslLock);
+   bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
    free(data);
    return success;
 }
@@ -535,11 +568,9 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
-   MutexLock(m_sslLock);
-   int rc = SSL_write(m_ssl, msg, ntohl(msg->size));
+   int rc = sslWrite(msg, ntohl(msg->size));
    if (rc == ntohl(msg->size))
       rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
-   MutexUnlock(m_sslLock);
    free(msg);
    return rc;
 }
@@ -602,6 +633,9 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
    if (!ConditionWait(m_dataCondition, timeout))
       return -2;
 
+   if (!m_active)
+      return 0;   // closed while waiting
+
    MutexLock(m_bufferLock);
    size_t bytes = min(size, m_size);
    memcpy(buffer, &m_buffer[m_head], bytes);
@@ -639,6 +673,7 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 int AgentTunnelCommChannel::shutdown()
 {
    m_active = false;
+   ConditionSet(m_dataCondition);
    return 0;
 }
 
@@ -648,6 +683,7 @@ int AgentTunnelCommChannel::shutdown()
 void AgentTunnelCommChannel::close()
 {
    m_active = false;
+   ConditionSet(m_dataCondition);
    m_tunnel->closeChannel(this);
 }
 
