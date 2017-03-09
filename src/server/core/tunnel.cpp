@@ -517,6 +517,8 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
  */
 void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 {
+   debugPrintf(4, _T("closeChannel: request to close channel %d"), channel->getId());
+
    MutexLock(m_channelLock);
    m_channels.remove(channel->getId());
    MutexUnlock(m_channelLock);

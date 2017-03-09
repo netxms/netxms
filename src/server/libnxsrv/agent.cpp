@@ -150,6 +150,10 @@ AgentConnection::~AgentConnection()
 		_close(m_hCurrFile);
 		onFileDownload(false);
 	}
+   else if (m_sendToClientMessageCallback != NULL)
+   {
+      onFileDownload(false);
+   }
 
    MutexDestroy(m_mutexDataLock);
 	MutexDestroy(m_mutexSocketWrite);
@@ -269,6 +273,7 @@ void AgentConnection::receiverThread()
 
                if (ntohs(rawMsg->flags) & MF_END_OF_FILE)
                {
+                  m_sendToClientMessageCallback = NULL;
                   onFileDownload(true);
                }
                else
@@ -319,6 +324,7 @@ void AgentConnection::receiverThread()
                rawMsg->code = ntohs(rawMsg->code);
                rawMsg->numFields = ntohl(rawMsg->numFields);
                m_sendToClientMessageCallback(rawMsg, m_downloadProgressCallbackArg);
+               m_sendToClientMessageCallback = NULL;
 
                onFileDownload(false);
             }
@@ -439,6 +445,11 @@ void AgentConnection::receiverThread()
 		m_hCurrFile = -1;
 		onFileDownload(false);
 	}
+   else if (m_sendToClientMessageCallback != NULL)
+   {
+      m_sendToClientMessageCallback = NULL;
+      onFileDownload(false);
+   }
 
 	m_channel->close();
 	m_channel->decRefCount();
@@ -717,6 +728,11 @@ void AgentConnection::disconnect()
 		_close(m_hCurrFile);
 		m_hCurrFile = -1;
 		onFileDownload(false);
+	}
+	else if (m_sendToClientMessageCallback != NULL)
+	{
+      m_sendToClientMessageCallback = NULL;
+      onFileDownload(false);
 	}
 
    if (m_channel != NULL)
