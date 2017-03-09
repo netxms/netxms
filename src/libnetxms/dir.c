@@ -44,8 +44,8 @@ SOFTWARE.
 DIR *opendir(const char *filename)
 {
     DIR            *p;
-    long            len;
-    long            idx;
+    size_t          len;
+    size_t          idx;
 	 char            tail;
     char            scannamespc[PATHLEN];
     char           *scanname = scannamespc;
@@ -53,22 +53,35 @@ DIR *opendir(const char *filename)
     WIN32_FIND_DATAA FindData;
     HANDLE          fh;
 
-    /*
-     * check to see if filename is a directory 
-     */
+    if (*filename == 0)
+       return NULL;  // empty file name
+
+    // check to see if filename is a directory 
     strcpy(scanname, filename);
-	 tail = scanname[strlen(scanname) - 1];
+    len = strlen(scanname);
+	 tail = scanname[len - 1];
 	 if ((tail == '/') || (tail == '\\'))
-		scanname[strlen(scanname) - 1] = 0;
+    {
+        scanname[len - 1] = 0;
+        len--;
+    }
+    if (scanname[0] == 0)
+       return NULL;
+    if (scanname[len - 1] == ':')
+    {
+        scanname[len] = '\\';
+        scanname[len + 1] = 0;
+    }
     if ((stat(scanname, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
     {
         return NULL;
     }
 
-    /*
-     * Create the search pattern 
-     */
-	strcat(scanname, "\\*");
+    // create search pattern
+    if (scanname[len] != '\\')
+       scanname[len] = '\\';
+    scanname[len + 1] = '*';
+    scanname[len + 2] = 0;
 
     /*
      * do the FindFirstFile call 
@@ -82,7 +95,7 @@ DIR *opendir(const char *filename)
     /*
      * Get us a DIR structure 
      */
-    p = (DIR *) malloc(sizeof(DIR));
+    p = (DIR *)malloc(sizeof(DIR));
     if (p == NULL)
         return NULL;
 
@@ -90,12 +103,13 @@ DIR *opendir(const char *filename)
      * now allocate the first part of the string table for
      * * the filenames that we find.
      */
-    idx = (int)strlen(FindData.cFileName) + 1;
-    p->start = (char *) malloc(idx);
+    idx = strlen(FindData.cFileName) + 1;
+    p->start = (char *)malloc(idx);
     /*
      * New(1304, p->start, idx, char);
      */
-    if (p->start == NULL) {
+    if (p->start == NULL)
+    {
         free(p);
         return NULL;
     }
@@ -112,9 +126,9 @@ DIR *opendir(const char *filename)
      * * the variable idx should point one past the null terminator
      * * of the previous string found.
      */
-    while (FindNextFileA(fh, &FindData))
+    while(FindNextFileA(fh, &FindData))
     {
-        len = (int)strlen(FindData.cFileName);
+        len = strlen(FindData.cFileName);
         /*
          * bump the string table size by enough for the
          * * new name and it's null terminator
@@ -132,7 +146,7 @@ DIR *opendir(const char *filename)
         idx += len + 1;
     }
     FindClose(fh);
-    p->size = idx;
+    p->size = (long)idx;
     p->curr = p->start;
     return p;
 }

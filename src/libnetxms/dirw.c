@@ -44,8 +44,8 @@ SOFTWARE.
 DIRW *wopendir(const WCHAR *filename)
 {
     DIRW            *p;
-    long            len;
-    long            idx;
+    size_t           len;
+    size_t           idx;
 	 WCHAR            tail;
     WCHAR            scannamespc[PATHLEN];
     WCHAR           *scanname = scannamespc;
@@ -53,22 +53,35 @@ DIRW *wopendir(const WCHAR *filename)
     WIN32_FIND_DATA FindData;
     HANDLE          fh;
 
-    /*
-     * check to see if filename is a directory 
-     */
+    if (*filename == 0)
+       return NULL;  // empty file name
+
+    // check to see if filename is a directory 
     wcscpy(scanname, filename);
-	 tail = scanname[wcslen(scanname) - 1];
+    len = wcslen(scanname);
+	 tail = scanname[len - 1];
 	 if ((tail == L'/') || (tail == L'\\'))
-		scanname[wcslen(scanname) - 1] = 0;
+    {
+        scanname[len - 1] = 0;
+        len--;
+    }
+    if (scanname[0] == 0)
+       return NULL;
+    if (scanname[len - 1] == L':')
+    {
+        scanname[len] = L'\\';
+        scanname[len + 1] = 0;
+    }
     if ((_wstat(scanname, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
     {
         return NULL;
     }
 
-    /*
-     * Create the search pattern 
-     */
-	wcscat(scanname, L"\\*");
+    // create search pattern
+    if (scanname[len] != L'\\')
+       scanname[len] = L'\\';
+    scanname[len + 1] = L'*';
+    scanname[len + 2] = 0;
 
     /*
      * do the FindFirstFile call 
@@ -90,7 +103,7 @@ DIRW *wopendir(const WCHAR *filename)
      * now allocate the first part of the string table for
      * * the filenames that we find.
      */
-    idx = (int)wcslen(FindData.cFileName) + 1;
+    idx = wcslen(FindData.cFileName) + 1;
     p->start = (WCHAR *)malloc(idx * sizeof(WCHAR));
     /*
      * New(1304, p->start, idx, char);
@@ -111,7 +124,7 @@ DIRW *wopendir(const WCHAR *filename)
      */
     while(FindNextFileW(fh, &FindData))
     {
-        len = (int)wcslen(FindData.cFileName);
+        len = wcslen(FindData.cFileName);
         /*
          * bump the string table size by enough for the
          * * new name and it's null terminator
@@ -134,7 +147,7 @@ DIRW *wopendir(const WCHAR *filename)
         idx += len + 1;
     }
     FindClose(fh);
-    p->size = idx;
+    p->size = (long)idx;
     p->curr = p->start;
     return p;
 }
