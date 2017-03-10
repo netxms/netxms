@@ -55,6 +55,7 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.ServerVariableDataType;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -433,7 +434,9 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void addVariable()
 	{
-		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null);
+		final VariableEditDialog dlg = 
+		      new VariableEditDialog(getSite().getShell(), 
+		            new ServerVariable(null, "", false, ServerVariableDataType.STRING, ""));
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
