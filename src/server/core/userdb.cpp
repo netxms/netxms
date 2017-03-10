@@ -1061,13 +1061,17 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
    {
-      TCHAR name[MAX_USER_NAME];
+      TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
 
       UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
       if (fields & USER_MODIFY_LOGIN_NAME)
       {
          msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
-         if (!IsValidObjectName(name))
+         if (IsValidObjectName(name))
+         {
+            nx_strncpy(prevName, object->getName(), MAX_USER_NAME);
+         }
+         else
          {
             dwResult = RCC_INVALID_OBJECT_NAME;
          }
@@ -1078,6 +1082,26 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
          object->modifyFromMessage(msg);
          SendUserDBUpdate(USER_DB_MODIFY, id, object);
          dwResult = RCC_SUCCESS;
+      }
+
+      if ((dwResult == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
+      {
+         // update login names hash map if login name was modified
+         if (_tcscmp(prevName, object->getName()))
+         {
+            if (object->isGroup())
+            {
+               nxlog_debug(4, _T("Group rename: %s -> %s"), prevName, object->getName());
+               s_groups.remove(prevName);
+               s_groups.set(object->getName(), (Group *)object);
+            }
+            else
+            {
+               nxlog_debug(4, _T("User rename: %s -> %s"), prevName, object->getName());
+               s_users.remove(prevName);
+               s_users.set(object->getName(), (User *)object);
+            }
+         }
       }
    }
 
