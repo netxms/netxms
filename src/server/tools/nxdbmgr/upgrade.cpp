@@ -747,6 +747,22 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V441 to V442
+ */
+static BOOL H_UpgradeFromV441(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_urls (")
+      _T("  object_id integer not null,")
+      _T("  url_id integer not null,")
+      _T("  url varchar(2000) null,")
+      _T("  description varchar(2000) null,")
+      _T("  PRIMARY KEY(object_id,url_id))")));
+   CHK_EXEC(SetSchemaVersion(442));
+   return TRUE;
+}
+
+/**
  * Upgrade from V440 to V441
  */
 static BOOL H_UpgradeFromV440(int currVersion, int newVersion)
@@ -11559,6 +11575,7 @@ static struct
    { 438, 439, H_UpgradeFromV438 },
    { 439, 440, H_UpgradeFromV439 },
    { 440, 441, H_UpgradeFromV440 },
+   { 441, 442, H_UpgradeFromV441 },
    { 0, 0, NULL }
 };
 

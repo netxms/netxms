@@ -955,6 +955,10 @@ public class NXCPCodes
    public static final long VID_HOSTNAME = 569;
    public static final long VID_ENABLE_COMPRESSION = 570;
    public static final long VID_AGENT_COMPRESSION_MODE = 571;
+   public static final long VID_TRAP_TYPE = 572;
+   public static final long VID_IS_ACTIVE = 573;
+   public static final long VID_CHANNEL_ID = 574;
+   public static final long VID_NUM_URLS = 575;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -969,15 +973,6 @@ public class NXCPCodes
 	public static final long VID_EVENT_ARG_BASE = 0x00008000L;
 	public static final long VID_EVENT_ARG_LAST = 0x00008FFFL;
 	public static final long VID_TRAP_PBASE = 0x00009000L;
-	/* Unused
-	public static final long VID_TRAP_PLEN_LAST = 0x000093FFL;
-	public static final long VID_TRAP_PNAME_BASE = 0x00009400L;
-	public static final long VID_TRAP_PNAME_LAST = 0x000097FFL;
-	public static final long VID_TRAP_PDESCR_BASE = 0x00009800L;
-	public static final long VID_TRAP_PDESCR_LAST = 0x00009BFFL;
-	public static final long VID_TRAP_PFLAGS_BASE = 0x00009C00L;
-	public static final long VID_TRAP_PFLAGS_LAST = 0x00009FFFL;
-	*/
 	public static final long VID_PARENT_ID_BASE = 0x00003000L;
 	public static final long VID_PARENT_ID_LAST = 0x00003FFFL;
 	public static final long VID_CHILD_ID_BASE = 0x80000000L;
@@ -986,6 +981,7 @@ public class NXCPCodes
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
    public static final long VID_OVERVIEW_DCI_LIST_BASE = 0x72000000L;
    public static final long VID_TOOLTIP_DCI_LIST_BASE = 0x73000000L;
+   public static final long VID_URL_LIST_BASE = 0x74000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;

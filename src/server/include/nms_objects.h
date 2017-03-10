@@ -435,6 +435,28 @@ public:
 };
 
 /**
+ * Object-associated URL
+ */
+class NXCORE_EXPORTABLE ObjectUrl
+{
+private:
+   UINT32 m_id;
+   TCHAR *m_url;
+   TCHAR *m_description;
+
+public:
+   ObjectUrl(NXCPMessage *msg, UINT32 baseId);
+   ObjectUrl(DB_RESULT hResult, int row);
+   ~ObjectUrl();
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId);
+
+   UINT32 getId() const { return m_id; }
+   const TCHAR *getUrl() const { return m_url; }
+   const TCHAR *getDescription() const { return m_description; }
+};
+
+/**
  * Base class for network objects
  */
 class NXCORE_EXPORTABLE NetObj
@@ -475,6 +497,7 @@ protected:
    ClientSession *m_pollRequestor;
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
+	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
 
    ObjectArray<NetObj> *m_childList;     // Array of pointers to child objects
    ObjectArray<NetObj> *m_parentList;    // Array of pointers to parent objects

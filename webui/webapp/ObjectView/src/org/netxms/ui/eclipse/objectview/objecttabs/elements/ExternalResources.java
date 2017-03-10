@@ -1,0 +1,137 @@
+/**
+ * 
+ */
+package org.netxms.ui.eclipse.objectview.objecttabs.elements;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.widgets.Hyperlink;
+import org.netxms.client.ObjectUrl;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+
+/**
+ * @author victor
+ *
+ */
+public class ExternalResources extends OverviewPageElement
+{
+   private Composite content;
+   private List<Element> elements = new ArrayList<Element>();
+   
+   /**
+    * @param parent
+    * @param anchor
+    * @param objectTab
+    */
+   public ExternalResources(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
+   {
+      super(parent, anchor, objectTab);
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
+    */
+   @Override
+   protected String getTitle()
+   {
+      return "External Resources";
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   public boolean isApplicableForObject(AbstractObject object)
+   {
+      return object.hasUrls();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#createClientArea(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createClientArea(Composite parent)
+   {
+      content = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      content.setLayout(layout);
+      content.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+      return content;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
+    */
+   @Override
+   protected void onObjectChange()
+   {
+      for(Element e : elements)
+         e.dispose();
+      elements.clear();
+      for(ObjectUrl u : getObject().getUrls())
+         elements.add(new Element(content, u));
+      content.layout();
+   }
+   
+   /**
+    * Open URL
+    * 
+    * @param url URL to open
+    */
+   private void openUrl(URL url)
+   {
+      final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+      launcher.openURL(url.toExternalForm());
+   }
+   
+   /**
+    * Display element
+    */
+   private class Element
+   {
+      ObjectUrl url;
+      Hyperlink link;
+      Label description;
+      
+      Element(Composite parent, ObjectUrl url)
+      {
+         this.url = url;
+         
+         link = new Hyperlink(parent, SWT.NONE);
+         link.setBackground(content.getBackground());
+         link.setForeground(SharedColors.getColor(SharedColors.COMMAND_BOX_TEXT, link.getDisplay()));
+         link.setText(url.getUrl().toExternalForm());
+         link.addHyperlinkListener(new HyperlinkAdapter() {
+            @Override
+            public void linkActivated(HyperlinkEvent e)
+            {
+               openUrl(Element.this.url.getUrl());
+            }
+            
+         });
+         
+         description = new Label(parent, SWT.NONE);
+         description.setBackground(content.getBackground());
+         description.setText(url.getDescription());
+      }
+      
+      void dispose()
+      {
+         link.dispose();
+         description.dispose();
+      }
+   }
+}

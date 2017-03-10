@@ -177,6 +177,18 @@ CREATE TABLE object_properties
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
+/**
+ * Object URLs
+ */
+CREATE TABLE object_urls
+(
+  object_id integer not null,
+  url_id integer not null,
+  url varchar(2000) null,
+  description varchar(2000) null,
+  PRIMARY KEY(object_id,url_id)
+) TABLE_TYPE;
+
 /*
 ** Object custom attributes
 */

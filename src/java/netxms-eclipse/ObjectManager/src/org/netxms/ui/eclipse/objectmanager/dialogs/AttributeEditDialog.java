@@ -20,35 +20,33 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Object's custom attribute edit dialog
- *
  */
 public class AttributeEditDialog extends Dialog
 {
-	private Text textName;
-	private Text textValue;
-	private String attrName;
-	private String attrValue;
+	private LabeledText textName;
+	private LabeledText textValue;
+	private String name;
+	private String value;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AttributeEditDialog(Shell parentShell, String attrName, String attrValue)
+	public AttributeEditDialog(Shell parentShell, String name, String value)
 	{
 		super(parentShell);
-		this.attrName = attrName;
-		this.attrValue = attrValue;
+		this.name = name;
+		this.value = value;
 	}
 
 	/* (non-Javadoc)
@@ -59,36 +57,35 @@ public class AttributeEditDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
-		FillLayout layout = new FillLayout();
-      layout.type = SWT.VERTICAL;
-      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+		GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.get().AttributeEditDialog_Name);
-      
-      textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      textName.setTextLimit(63);
-      if (attrName != null)
+      textName = new LabeledText(dialogArea, SWT.NONE);
+      textName.setLabel(Messages.get().AttributeEditDialog_Name);
+      textName.getTextControl().setTextLimit(63);
+      if (name != null)
       {
-      	textName.setText(attrName);
+      	textName.setText(name);
       	textName.setEditable(false);
       }
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textName.setLayoutData(gd);
       
-      label = new Label(dialogArea, SWT.NONE);
-      label.setText(""); //$NON-NLS-1$
-
-      label = new Label(dialogArea, SWT.NONE);
-      label.setText(Messages.get().AttributeEditDialog_Value);
-
-      textValue = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      textValue.setTextLimit(255);
-      textValue.getShell().setMinimumSize(300, 0);
-      if (attrValue != null)
-      	textValue.setText(attrValue);
+      textValue = new LabeledText(dialogArea, SWT.NONE);
+      textValue.setLabel(Messages.get().AttributeEditDialog_Value);
+      textValue.getTextControl().setTextLimit(255);
+      if (value != null)
+      	textValue.setText(value);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 300;
+      textValue.setLayoutData(gd);
       
-      if (attrName != null)
+      if (name != null)
       	textValue.setFocus();
       
 		return dialogArea;
@@ -101,29 +98,24 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((attrName == null) ? Messages.get().AttributeEditDialog_AddAttr : Messages.get().AttributeEditDialog_ModifyAttr);
+		newShell.setText((name == null) ? Messages.get().AttributeEditDialog_AddAttr : Messages.get().AttributeEditDialog_ModifyAttr);
 	}
-	
 	
 	/**
 	 * Get variable name
-	 * 
 	 */
-	public String getAttrName()
+	public String getName()
 	{
-		return attrName;
+		return name;
 	}
-	
 	
 	/**
 	 * Get variable value
-	 * 
 	 */
-	public String getAttrValue()
+	public String getValue()
 	{
-		return attrValue;
+		return value;
 	}
-
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
@@ -131,8 +123,8 @@ public class AttributeEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		attrName = textName.getText();
-		attrValue = textValue.getText();
+		name = textName.getText().trim();
+		value = textValue.getText();
 		super.okPressed();
 	}
 }

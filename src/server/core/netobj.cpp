@@ -85,6 +85,7 @@ NetObj::NetObj()
    m_moduleData = NULL;
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
+   m_urls = new ObjectArray<ObjectUrl>(4, 4, true);
 }
 
 /**
@@ -105,6 +106,7 @@ NetObj::~NetObj()
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
+   delete m_urls;
 }
 
 /**
@@ -175,6 +177,8 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_properties WHERE object_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_urls WHERE object_id=?"));
 
    // Delete events
    if (success && ConfigReadInt(_T("DeleteEventsOfDeletedObject"), 1))
@@ -354,6 +358,35 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
       }
    }
 
+   // Load associated URLs
+   if (success)
+   {
+      hStmt = DBPrepare(hdb, _T("SELECT url_id,url,description FROM object_urls WHERE object_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               m_urls->add(new ObjectUrl(hResult, i));
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
 	if (success)
 		success = loadTrustedNodes(hdb);
 
@@ -483,9 +516,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    // Save dashboard associations
    if (success)
    {
-      TCHAR szQuery[512];
-      _sntprintf(szQuery, 512, _T("DELETE FROM dashboard_associations WHERE object_id=%d"), m_id);
-      success = DBQuery(hdb, szQuery);
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
       if (success && (m_dashboards->size() > 0))
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"));
@@ -495,6 +526,33 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
             for(int i = 0; (i < m_dashboards->size()) && success; i++)
             {
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
+   // Save URL associations
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
+      if (success && (m_urls->size() > 0))
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_urls->size()) && success; i++)
+            {
+               const ObjectUrl *url = m_urls->get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, url->getId());
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, url->getUrl(), DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, url->getDescription(), DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -1042,6 +1100,17 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_STREET_ADDRESS, m_postalAddress->getStreetAddress());
    pMsg->setField(VID_POSTCODE, m_postalAddress->getPostCode());
 
+   pMsg->setField(VID_NUM_URLS, (UINT32)m_urls->size());
+   UINT32 fieldId = VID_URL_LIST_BASE;
+   for(int i = 0; i < m_urls->size(); i++)
+   {
+      const ObjectUrl *url = m_urls->get(i);
+      pMsg->setField(fieldId++, url->getId());
+      pMsg->setField(fieldId++, url->getUrl());
+      pMsg->setField(fieldId++, url->getDescription());
+      fieldId += 7;
+   }
+
    if (m_moduleData != NULL)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
@@ -1247,6 +1316,19 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_DASHBOARDS))
    {
       pRequest->getFieldAsInt32Array(VID_DASHBOARDS, m_dashboards);
+   }
+
+   // Update URL list
+   if (pRequest->isFieldExist(VID_NUM_URLS))
+   {
+      m_urls->clear();
+      int count = pRequest->getFieldAsInt32(VID_NUM_URLS);
+      UINT32 fieldId = VID_URL_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         m_urls->add(new ObjectUrl(pRequest, fieldId));
+         fieldId += 10;
+      }
    }
 
    return RCC_SUCCESS;

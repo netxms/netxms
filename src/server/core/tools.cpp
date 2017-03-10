@@ -361,3 +361,42 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostna
    }
    return ipAddr;
 }
+
+/**
+ * Create object URL from NXCP message
+ */
+ObjectUrl::ObjectUrl(NXCPMessage *msg, UINT32 baseId)
+{
+   m_id = msg->getFieldAsUInt32(baseId);
+   m_url = msg->getFieldAsString(baseId + 1);
+   m_description = msg->getFieldAsString(baseId + 2);
+}
+
+/**
+ * Create object URL from database result set
+ */
+ObjectUrl::ObjectUrl(DB_RESULT hResult, int row)
+{
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_url = DBGetField(hResult, row, 1, NULL, 0);
+   m_description = DBGetField(hResult, row, 2, NULL, 0);
+}
+
+/**
+ * Object URL destructor
+ */
+ObjectUrl::~ObjectUrl()
+{
+   free(m_url);
+   free(m_description);
+}
+
+/**
+ * Fill NXCP message
+ */
+void ObjectUrl::fillMessage(NXCPMessage *msg, UINT32 baseId)
+{
+   msg->setField(baseId, m_id);
+   msg->setField(baseId + 1, m_url);
+   msg->setField(baseId + 2, m_description);
+}

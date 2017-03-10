@@ -153,14 +153,14 @@ public class CustomAttributes extends PropertyPage
 				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null);
 				if (dlg.open() == Window.OK)
 				{
-					if (attributes.containsKey(dlg.getAttrName()))
+					if (attributes.containsKey(dlg.getName()))
 					{
 						MessageDialogHelper.openWarning(CustomAttributes.this.getShell(), Messages.get().CustomAttributes_Warning, 
-						      String.format(Messages.get().CustomAttributes_WarningAlreadyExist, dlg.getAttrName()));
+						      String.format(Messages.get().CustomAttributes_WarningAlreadyExist, dlg.getName()));
 					}
 					else
 					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
+						attributes.put(dlg.getName(), dlg.getValue());
 				      viewer.setInput(attributes.entrySet());
 				      CustomAttributes.this.isModified = true;
 					}
@@ -191,7 +191,7 @@ public class CustomAttributes extends PropertyPage
 					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), element.getValue());
 					if (dlg.open() == Window.OK)
 					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
+						attributes.put(dlg.getName(), dlg.getValue());
 				      viewer.setInput(attributes.entrySet());
 				      CustomAttributes.this.isModified = true;
 					}

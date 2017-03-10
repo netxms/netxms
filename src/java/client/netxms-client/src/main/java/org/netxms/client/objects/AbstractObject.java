@@ -37,6 +37,7 @@ import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectUrl;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.services.ServiceManager;
 
@@ -140,6 +141,7 @@ public abstract class AbstractObject
 	protected final HashSet<Long> children = new HashSet<Long>(0);
 	protected final List<Long> dashboards = new ArrayList<Long>(0);
 	protected final Map<String, String> customAttributes = new HashMap<String, String>(0);
+	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
 	protected Map<String, Object> moduleData = null;
 	
 	@Internal private int effectiveRights = 0;
@@ -262,6 +264,13 @@ public abstract class AbstractObject
 			customAttributes.put(msg.getFieldAsString(id), msg.getFieldAsString(id + 1));
 		}
 		
+		// URLs
+      count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_URLS);
+      for(i = 0, id = NXCPCodes.VID_URL_LIST_BASE; i < count; i++, id += 10)
+      {
+         urls.add(new ObjectUrl(msg, id));
+      }
+      
 		// Access list
 		inheritAccessRights = msg.getFieldAsBoolean(NXCPCodes.VID_INHERIT_RIGHTS);
 		count = msg.getFieldAsInt32(NXCPCodes.VID_ACL_SIZE);
@@ -333,6 +342,26 @@ public abstract class AbstractObject
 	public AccessListElement[] getAccessList()
 	{
 		return accessList.toArray(new AccessListElement[accessList.size()]);
+	}
+	
+	/**
+	 * Get associated URLs
+	 * 
+	 * @return associated URLs
+	 */
+	public List<ObjectUrl> getUrls()
+	{
+	   return new ArrayList<ObjectUrl>(urls);
+	}
+	
+	/**
+	 * Check if object has associated URLs 
+	 * 
+	 * @return true if object has associated URLs
+	 */
+	public boolean hasUrls()
+	{
+	   return !urls.isEmpty();
 	}
 
 	/**

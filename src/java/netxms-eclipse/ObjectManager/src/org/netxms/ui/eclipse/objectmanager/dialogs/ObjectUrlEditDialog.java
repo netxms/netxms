@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -25,28 +27,28 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Object's custom attribute edit dialog
+ * Object's associated URL edit dialog
  */
-public class AttributeEditDialog extends Dialog
+public class ObjectUrlEditDialog extends Dialog
 {
-	private LabeledText textName;
-	private LabeledText textValue;
-	private String name;
-	private String value;
+	private LabeledText textUrl;
+	private LabeledText textDescription;
+	private URL url;
+	private String description;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AttributeEditDialog(Shell parentShell, String name, String value)
+	public ObjectUrlEditDialog(Shell parentShell, URL url, String description)
 	{
 		super(parentShell);
-		this.name = name;
-		this.value = value;
+		this.url = url;
+		this.description = description;
 	}
 
 	/* (non-Javadoc)
@@ -61,32 +63,26 @@ public class AttributeEditDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel(Messages.get().AttributeEditDialog_Name);
-      textName.getTextControl().setTextLimit(63);
-      if (name != null)
-      {
-      	textName.setText(name);
-      	textName.setEditable(false);
-      }
+      textUrl = new LabeledText(dialogArea, SWT.NONE);
+      textUrl.setLabel("URL");
+      textUrl.getTextControl().setTextLimit(2000);
+      if (url != null)
+      	textUrl.setText(url.toExternalForm());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      textName.setLayoutData(gd);
+      textUrl.setLayoutData(gd);
       
-      textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel(Messages.get().AttributeEditDialog_Value);
-      textValue.getTextControl().setTextLimit(255);
-      if (value != null)
-      	textValue.setText(value);
+      textDescription = new LabeledText(dialogArea, SWT.NONE);
+      textDescription.setLabel("Description");
+      textDescription.getTextControl().setTextLimit(2000);
+      if (description != null)
+      	textDescription.setText(description);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = 300;
-      textValue.setLayoutData(gd);
-      
-      if (name != null)
-      	textValue.setFocus();
+      gd.widthHint = 500;
+      textDescription.setLayoutData(gd);
       
 		return dialogArea;
 	}
@@ -98,23 +94,23 @@ public class AttributeEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((name == null) ? Messages.get().AttributeEditDialog_AddAttr : Messages.get().AttributeEditDialog_ModifyAttr);
+		newShell.setText((url == null) ? "Create URL" : "Edit URL");
 	}
 	
 	/**
-	 * Get variable name
+	 * Get URL
 	 */
-	public String getName()
+	public URL getUrl()
 	{
-		return name;
+		return url;
 	}
 	
 	/**
-	 * Get variable value
+	 * Get description
 	 */
-	public String getValue()
+	public String getDescription()
 	{
-		return value;
+		return description;
 	}
 	
 	/* (non-Javadoc)
@@ -123,8 +119,16 @@ public class AttributeEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		name = textName.getText().trim();
-		value = textValue.getText();
+		try
+      {
+         url = new URL(textUrl.getText().trim());
+      }
+      catch(MalformedURLException e)
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Entered URL is invalid. Please enter valid URL.");
+         return;
+      }
+		description = textDescription.getText();
 		super.okPressed();
 	}
 }

@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Capabilities;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.ExternalResources;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.LastValues;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
@@ -105,6 +106,8 @@ public class ObjectOverview extends ObjectTab
 		elements.add(e);
 		e = new AvailabilityChart(leftColumn, e, this);
 		elements.add(e);
+      e = new ExternalResources(leftColumn, e, this);
+      elements.add(e);
 		e = new Comments(leftColumn, e, this);
 		elements.add(e);
 		e = new Capabilities(rightColumn, null, this);

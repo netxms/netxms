@@ -117,6 +117,7 @@ public class NXCObjectModificationData
    public static final int SSH_PASSWORD           = 66;
    public static final int ZONE_PROXY             = 67;
    public static final int AGENT_COMPRESSION_MODE = 68;
+   public static final int URL_LIST               = 69;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -209,6 +210,7 @@ public class NXCObjectModificationData
 	private String sshLogin;
 	private String sshPassword;
 	private long zoneProxy;
+	private List<ObjectUrl> urls;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1735,5 +1737,24 @@ public class NXCObjectModificationData
    {
       this.zoneProxy = zoneProxy;
       fieldSet.add(ZONE_PROXY);
+   }
+
+   /**
+    * @return urls
+    */
+   public List<ObjectUrl> getUrls()
+   {
+      return urls;
+   }
+
+   /**
+    * Set URL list
+    * 
+    * @param urls new URL list
+    */
+   public void setUrls(List<ObjectUrl> urls)
+   {
+      this.urls = urls;
+      fieldSet.add(URL_LIST);
    }
 }

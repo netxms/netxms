@@ -4631,6 +4631,17 @@ public class NXCSession
          }
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.URL_LIST))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_NUM_URLS, data.getUrls().size());
+         long fieldId = NXCPCodes.VID_URL_LIST_BASE;
+         for(ObjectUrl u : data.getUrls())
+         {
+            u.fillMessage(msg, fieldId);
+            fieldId += 10;
+         }
+      }
+
       if (data.isFieldSet(NXCObjectModificationData.SCRIPT))
       {
          msg.setField(NXCPCodes.VID_SCRIPT, data.getScript());

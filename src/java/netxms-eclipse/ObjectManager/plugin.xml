@@ -377,6 +377,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ExternalResources"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.ExternalResources"
+              name="External Resources">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AbstractObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
