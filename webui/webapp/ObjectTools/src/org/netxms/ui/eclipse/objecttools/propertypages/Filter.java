@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,10 +47,12 @@ public class Filter extends PropertyPage
 	private Button checkMatchNodeOS;
 	private Button checkMatchWorkstationOS;
 	private Button checkMatchTemplate;
+   private Button checkMatchCustomAttributes;
 	private Text textOID;
 	private Text textNodeOS;
 	private Text textWorkstationOS;
 	private Text textTemplate;
+   private Text textCustomAttributes;
 	private ObjectToolDetails objectTool = null;
 
 	/* (non-Javadoc)
@@ -206,6 +208,34 @@ public class Filter extends PropertyPage
       textTemplate.setLayoutData(gd);
       textTemplate.setEnabled(checkMatchTemplate.getSelection());
 		
+      checkMatchCustomAttributes = new Button(dialogArea, SWT.CHECK);
+      checkMatchCustomAttributes.setText("The following custom attribute(s) should exist");
+      checkMatchCustomAttributes.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH) != 0);
+      checkMatchCustomAttributes.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            textCustomAttributes.setEnabled(checkMatchCustomAttributes.getSelection());
+            if (checkMatchCustomAttributes.getSelection())
+               textCustomAttributes.setFocus();
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+      textCustomAttributes = new Text(dialogArea, SWT.BORDER);
+      textCustomAttributes.setText(filter.toolCustomAttributes);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalIndent = 20;
+      textCustomAttributes.setLayoutData(gd);
+      textCustomAttributes.setEnabled(checkMatchCustomAttributes.getSelection());
+      
 		return dialogArea;
 	}
 
@@ -238,7 +268,7 @@ public class Filter extends PropertyPage
       else
          removeFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
-      setFilter(textNodeOS.getText(), ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
+      setFilter(textNodeOS.getText().trim(), ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
       if ((checkMatchWorkstationOS != null) && checkMatchWorkstationOS.getSelection())
          addFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
@@ -246,15 +276,22 @@ public class Filter extends PropertyPage
          removeFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
       
       if (textWorkstationOS != null)
-         setFilter(textWorkstationOS.getText(), ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
+         setFilter(textWorkstationOS.getText().trim(), ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
 
       if (checkMatchTemplate.getSelection())
          addFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       else
          removeFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       
-      setFilter(textTemplate.getText(), ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);    
-   }
+      setFilter(textTemplate.getText().trim(), ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);    
+
+      if (checkMatchCustomAttributes.getSelection())
+         addFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
+      else
+         removeFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
+      
+      setFilter(textCustomAttributes.getText().trim(), ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);    
+	}
 	
 	private void setFilter(String filterText, int filterType)
 	{

@@ -28,6 +28,9 @@ public class ObjectMenuFilter
    public String toolTemplate;
    
    @Element(required=false)
+   public String toolCustomAttributes;
+   
+   @Element(required=false)
    public String snmpOid;
 
    @Element(required=false)
@@ -39,6 +42,7 @@ public class ObjectMenuFilter
    public static final int REQUIRES_NODE_OS_MATCH           = 0x00000008;
    public static final int REQUIRES_TEMPLATE_MATCH          = 0x00000010;
    public static final int REQUIRES_WORKSTATION_OS_MATCH    = 0x00000020;
+   public static final int REQUIRES_CUSTOM_ATTRIBUTE_MATCH  = 0x00000040;
    
    /**
     * Create ObjectToolFilter object from XML document
@@ -72,6 +76,7 @@ public class ObjectMenuFilter
       toolNodeOS = "";
       toolWorkstationOS = "";
       toolTemplate = "";
+      toolCustomAttributes = "";
       snmpOid = "";
    }
    
@@ -102,10 +107,11 @@ public class ObjectMenuFilter
 	      boolean match = false;
 	      String[] substrings = toolNodeOS.split(",");
 	      for(int i = 0; i < substrings.length; i++)
-	      {;
+	      {
 	         if (Pattern.matches(substrings[i], node.getPlatformName()))
 	         {
 	            match = true;
+	            break;
 	         }
 	      }
 	      if (!match)
@@ -117,10 +123,11 @@ public class ObjectMenuFilter
          boolean match = false;
          String[] substrings = toolWorkstationOS.split(",");
          for(int i = 0; i < substrings.length; i++)
-         {;
+         {
             if (Pattern.matches(substrings[i], System.getProperty("os.name")))
             {
                match = true;
+               break;
             }
          }
          if (!match)
@@ -139,34 +146,65 @@ public class ObjectMenuFilter
                if (Pattern.matches(substrings[i], parent.getObjectName()))
                {
                   match = true;
+                  break;
                }
             }
+            if (match)
+               break;
          }
          if (!match)
             return false;  // Does not belong to those templates
       }
       
+      if ((flags & REQUIRES_CUSTOM_ATTRIBUTE_MATCH) != 0)
+      {
+         boolean match = false;
+         String[] substrings = toolCustomAttributes.split(",");
+         for(String attr : node.getCustomAttributes().keySet())
+         {
+            for(int i = 0; i < substrings.length; i++)
+            {
+               if (Pattern.matches(substrings[i], attr))
+               {
+                  match = true;
+                  break;
+               }
+            }
+            if (match)
+               break;
+         }
+         if (!match)
+            return false;
+      }
+
       return true;
    }
    
+   /**
+    * @param filterText
+    * @param filterType
+    */
    public void setFilter(String filterText, int filterType)
    {
       switch(filterType)
       {
-         case ObjectMenuFilter.REQUIRES_OID_MATCH:
-            snmpOid = filterText;
+         case ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH:
+            toolCustomAttributes = filterText;
             break;
          case ObjectMenuFilter.REQUIRES_NODE_OS_MATCH:
             toolNodeOS = filterText;
             break;
-         case ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH:
-            toolWorkstationOS = filterText;
+         case ObjectMenuFilter.REQUIRES_OID_MATCH:
+            snmpOid = filterText;
             break;
          case ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH:
             toolTemplate = filterText;
             break;
+         case ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH:
+            toolWorkstationOS = filterText;
+            break;
          default:
-            //do nothing no sutch filter   
+            break;
       }
    }
 }
