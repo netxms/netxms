@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
-   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
    private SessionListener listener = null;
    private Display display;
@@ -109,12 +109,12 @@ public class AlarmNotifier
     */
    private void checkSounds()
    {
-      for(int i = 0; i < 5; i++)
+      for(String s : SEVERITY_TEXT)
       {
-         getSoundAndDownloadIfRequired(SEVERITY_TEXT[i]);
+         getSoundAndDownloadIfRequired(s);
       }
    }
-   
+
    /**
     * Get sound name for given severity
     * 
@@ -142,6 +142,9 @@ public class AlarmNotifier
    private String getSoundAndDownloadIfRequired(final String severity)
    {
       String soundName = getSoundName("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
+      if (soundName.isEmpty())
+         return null;
+      
       if (!isSoundExists(soundName))
       {
          try
@@ -172,10 +175,15 @@ public class AlarmNotifier
                      dest.close();
                }
             }
+            else
+            {
+               Activator.logError("Cannot download sound file " + soundName + " from server");
+               soundName = null; // download failure
+            }
          }
          catch(final Exception e)
          {
-            soundName = ""; //$NON-NLS-1$
+            soundName = null;
             display.syncExec(new Runnable() {
                @Override
                public void run()

@@ -70,10 +70,10 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
    private ServerFile[] serverFiles = null;
    private IPreferenceStore ps;
    private URL workspaceUrl;
-   private Set<String> melodyList = new HashSet<String>();
-   private List<String> currentMelodyList = new ArrayList<String>();
-   private Set<String> oldMelodyList = new HashSet<String>();
-   private List<String> newMelodyList = new ArrayList<String>();
+   private Set<String> soundList = new HashSet<String>();
+   private List<String> currentSoundList = new ArrayList<String>();
+   private Set<String> oldSoundList = new HashSet<String>();
+   private List<String> newSoundList = new ArrayList<String>();
    private List<Combo> comboList = new ArrayList<Combo>();
    private List<Button> buttonList = new ArrayList<Button>();
    
@@ -109,10 +109,11 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       Combo newCombo = null;
       Button button = null;
 
-      for(int i = 0; i < 5; i++)
+      for(int i = 0; i < 6; i++)
       {
+         final String soundId = (i < 5) ? StatusDisplayInfo.getStatusText(i) : "Outstanding alarm reminder";
          newCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
-               StatusDisplayInfo.getStatusText(i), WidgetHelper.DEFAULT_LAYOUT_DATA);
+               soundId, WidgetHelper.DEFAULT_LAYOUT_DATA);
          newCombo.setEnabled(false);
          comboList.add(i, newCombo);
          button = new Button(dialogArea, SWT.PUSH);
@@ -183,24 +184,24 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
 
             for(ServerFile s : serverFiles)
             {
-               melodyList.add(s.getName());
+               soundList.add(s.getName());
             }
-            melodyList.add(""); //$NON-NLS-1$
+            soundList.add(""); //$NON-NLS-1$
 
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < 6; i++)
             {
-               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.SEVERITY_TEXT[i])); //$NON-NLS-1$
+               currentSoundList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.SEVERITY_TEXT[i])); //$NON-NLS-1$
             }
-            melodyList.addAll(currentMelodyList);
+            soundList.addAll(currentSoundList);
 
             Combo newCombo = null;
 
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < 6; i++)
             {
                newCombo = comboList.get(i);
                newCombo.setEnabled(true);
-               newCombo.setItems(melodyList.toArray(new String[melodyList.size()]));
-               newCombo.select(newCombo.indexOf(currentMelodyList.get(i)));
+               newCombo.setItems(soundList.toArray(new String[soundList.size()]));
+               newCombo.select(newCombo.indexOf(currentSoundList.get(i)));
             }
 
             return Status.OK_STATUS;
@@ -216,7 +217,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
    private void getMelodyAndDownloadIfRequired(String melodyName)
    {
       URL workspaceUrl = Platform.getInstanceLocation().getURL();
-      if (!isMelodyExists(melodyName, workspaceUrl))
+      if (!isSoundFileExist(melodyName, workspaceUrl))
       {
          try
          {
@@ -270,7 +271,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
     * @param workspaceUrl
     * @return
     */
-   private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
+   private static boolean isSoundFileExist(String melodyName, URL workspaceUrl)
    {
       if (!melodyName.isEmpty() && (workspaceUrl != null))
       {
@@ -293,21 +294,21 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       if (isApply)
          setValid(false);
 
-      for(int i = 0; i < 5; i++)
+      for(int i = 0; i < comboList.size(); i++)
       {
-         newMelodyList.add(comboList.get(i).getText());
+         newSoundList.add(comboList.get(i).getText());
       }
       new UIJob(Messages.get().AlarmMelody_SaveClientSelection) {
          @Override
          public IStatus runInUIThread(IProgressMonitor monitor)
          {
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < newSoundList.size(); i++)
             {
-               changeMelody(newMelodyList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
+               changeSound(newSoundList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
             }
-            for(String oldName : oldMelodyList)
+            for(String oldName : oldSoundList)
             {
-               if (!currentMelodyList.contains(oldName))
+               if (!currentSoundList.contains(oldName))
                {
                   File file = new File(workspaceUrl.getPath(), oldName);
                   file.delete();
@@ -321,18 +322,25 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       }.schedule();
    }
 
-   private void changeMelody(final String melodyName, final String severity, final int id)
+   /**
+    * Change sound for given alarm severity
+    * 
+    * @param soundName
+    * @param severity
+    * @param id
+    */
+   private void changeSound(final String soundName, final String severity, final int id)
    {
-      String oldMelodyName = currentMelodyList.get(id);
-      if (!melodyName.equals(oldMelodyName))
+      String oldSoundName = currentSoundList.get(id);
+      if (!soundName.equals(oldSoundName))
       {
          try
          {
-            if (!checkMelodyExists(melodyName, workspaceUrl))
-               downloadSoundFile(session, melodyName, workspaceUrl);
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, melodyName); //$NON-NLS-1$
-            currentMelodyList.set(id, melodyName);
-            oldMelodyList.add(oldMelodyName);
+            if (!checkMelodyExists(soundName, workspaceUrl))
+               downloadSoundFile(session, soundName, workspaceUrl);
+            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, soundName); //$NON-NLS-1$
+            currentSoundList.set(id, soundName);
+            oldSoundList.add(oldSoundName);
          }
          catch(final Exception e)
          {
@@ -353,6 +361,11 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       }
    }
 
+   /**
+    * @param melodyName
+    * @param workspaceUrl
+    * @return
+    */
    private static boolean checkMelodyExists(String melodyName, URL workspaceUrl)
    {
       if (workspaceUrl != null && melodyName != null && !melodyName.equals("")) //$NON-NLS-1$

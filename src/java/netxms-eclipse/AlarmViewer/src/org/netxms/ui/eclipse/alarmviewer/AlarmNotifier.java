@@ -26,6 +26,7 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
@@ -58,7 +59,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class AlarmNotifier
 {
-   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
    private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
@@ -67,6 +68,7 @@ public class AlarmNotifier
    private static NXCSession session;
    private static IPreferenceStore ps;
    private static URL workspaceUrl;
+   private static LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
 
    /**
     * Initialize alarm notifier
@@ -76,7 +78,7 @@ public class AlarmNotifier
       AlarmNotifier.session = session;
       ps = Activator.getDefault().getPreferenceStore();
       workspaceUrl = Platform.getInstanceLocation().getURL();
-      // Check that required alarm melodies are present locally.
+
       checkSounds();
 
       lastReminderTime = System.currentTimeMillis();
@@ -148,7 +150,7 @@ public class AlarmNotifier
       };
       session.addListener(listener);
 
-      Thread thread = new Thread(new Runnable() {
+      Thread reminderThread = new Thread(new Runnable() {
          @Override
          public void run()
          {
@@ -171,8 +173,8 @@ public class AlarmNotifier
                      @Override
                      public void run()
                      {
-                        AlarmReminderDialog dlg = new AlarmReminderDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                              .getShell());
+                        soundQueue.offer(SEVERITY_TEXT[SEVERITY_TEXT.length - 1]);
+                        AlarmReminderDialog dlg = new AlarmReminderDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
                         dlg.open();
                      }
                   });
@@ -181,8 +183,56 @@ public class AlarmNotifier
             }
          }
       }, "AlarmReminderThread"); //$NON-NLS-1$
-      thread.setDaemon(true);
-      thread.start();
+      reminderThread.setDaemon(true);
+      reminderThread.start();
+      
+      Thread playerThread = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            while(true)
+            {
+               String soundId;
+               try
+               {
+                  soundId = soundQueue.take();
+               }
+               catch(InterruptedException e)
+               {
+                  continue;
+               }
+               
+               Clip sound = null;
+               try
+               {
+                  String fileName = getSoundAndDownloadIfRequired(soundId);
+                  if (fileName != null)
+                  {
+                     sound = (Clip)AudioSystem.getLine(new Line.Info(Clip.class));
+                     sound.open(AudioSystem.getAudioInputStream(new File(workspaceUrl.getPath(), fileName).getAbsoluteFile()));
+                     sound.start();
+                     while(!sound.isRunning())
+                        Thread.sleep(10);
+                     while(sound.isRunning())
+                     {
+                        Thread.sleep(10);
+                     }
+                  }
+               }
+               catch(Exception e)
+               {
+                  Activator.logError("Exception in alarm sound player", e); //$NON-NLS-1$
+               }
+               finally
+               {
+                  if ((sound != null) && sound.isOpen())
+                     sound.close();
+               }
+            }
+         }
+      }, "AlarmSoundPlayer");
+      playerThread.setDaemon(true);
+      playerThread.start();
    }
 
    /**
@@ -190,9 +240,9 @@ public class AlarmNotifier
     */
    private static void checkSounds()
    {
-      for(int i = 0; i < 5; i++)
+      for(String s : SEVERITY_TEXT)
       {
-         getSoundAndDownloadIfRequired(SEVERITY_TEXT[i]);
+         getSoundAndDownloadIfRequired(s);
       }
    }
 
@@ -203,6 +253,9 @@ public class AlarmNotifier
    private static String getSoundAndDownloadIfRequired(String severity)
    {
       String soundName = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
+      if (soundName.isEmpty())
+         return null;
+      
       if (!isSoundExist(soundName, workspaceUrl))
       {
          try
@@ -233,10 +286,15 @@ public class AlarmNotifier
                      dest.close();
                }
             }
+            else
+            {
+               Activator.logError("Cannot download sound file " + soundName + " from server");
+               soundName = null; // download failure
+            }
          }
          catch(final Exception e)
          {
-            soundName = ""; //$NON-NLS-1$
+            soundName = null;
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
             Display.getDefault().asyncExec(new Runnable() {
                @Override
@@ -301,43 +359,13 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      String fileName;
       try
       {
-         fileName = getSoundAndDownloadIfRequired(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
       }
       catch(ArrayIndexOutOfBoundsException e)
       {
          Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
-         fileName = null;
-      }
-      
-      if ((fileName != null) && !fileName.isEmpty())
-      {
-         try
-         {
-            Clip sound = (Clip) AudioSystem.getLine(new Line.Info(Clip.class));
-            sound.open(AudioSystem.getAudioInputStream(new File(workspaceUrl.getPath(), fileName).getAbsoluteFile()));
-            sound.start();
-            while(!sound.isRunning())
-               Thread.sleep(10);
-            while(sound.isRunning())
-            {
-               Thread.sleep(10);
-            }
-            sound.close();
-         }
-         catch(final Exception e)
-         {
-            Display.getDefault().asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  MessageDialogHelper.openError(Display.getDefault().getActiveShell(), Messages.get().AlarmNotifier_ErrorPlayingSound,
-                        Messages.get().AlarmNotifier_ErrorPlayingSoundDescription + e.getMessage());
-               }
-            });
-         }
       }
 
       if (outstandingAlarms == 0)

@@ -98,6 +98,16 @@ public class Activator extends AbstractUIPlugin
     * 
     * @param msg
     */
+   public static void logError(String msg)
+   {
+      log(Status.ERROR, msg, null);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
    public static void logError(String msg, Exception e)
    {
       log(Status.ERROR, msg, e);
