@@ -46,7 +46,7 @@ public class WebSvcApplication extends Application
    {
       CorsService corsService = new CorsService();
       corsService.setAllowedOrigins(new HashSet<String>(Arrays.asList("*")));
-      corsService.setAllowedHeaders(new HashSet<String>(Arrays.asList("Content-Type", "X-NXCookie")));
+      corsService.setAllowedHeaders(new HashSet<String>(Arrays.asList("Content-Type", "X-SessionId", "X-Login", "X-Password")));
       corsService.setDefaultAllowedMethods(new HashSet<Method>(
                                                 Arrays.asList(Method.POST, Method.GET, Method.OPTIONS,
                                                               Method.PUT, Method.DELETE)));
