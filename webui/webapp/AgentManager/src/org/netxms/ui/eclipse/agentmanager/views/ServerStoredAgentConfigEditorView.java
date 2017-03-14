@@ -200,7 +200,8 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      filterEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
+      filterEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, 
+            "Variables:\r\n\t$1\tIP address\r\n\t$2\tplatform name\r\n\t$3\tmajor agent version number\r\n\t$4\tminor agent version number\r\n\t$5\trelease number\r\n\r\nReturn value: true if this configuration should be sent to agent");
       section.setClient(filterEditor);
       filterEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override

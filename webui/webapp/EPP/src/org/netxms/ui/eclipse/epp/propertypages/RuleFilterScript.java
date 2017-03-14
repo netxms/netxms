@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 
 /**
  * "Filtering Script" property page
- *
  */
 public class RuleFilterScript extends PropertyPage
 {
@@ -49,7 +48,8 @@ public class RuleFilterScript extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		dialogArea.setLayout(new FillLayout());
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
+            "Global variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\nLocal variables:\r\n\tEVENT_CODE\t\tevent's code\r\n\tSEVERITY\t\tevent's severity as number\r\n\tSEVERITY_TEXT\tevent's severity as text\r\n\tOBJECT_ID\t\tevent source object's ID\r\n\tEVENT_TEXT\t\tevent's message text\r\n\tUSER_TAG\t\tevent's user tag\r\n\r\nReturn value: true to pass event through rule filter");
 		scriptEditor.setText(rule.getScript());
 		
 		return dialogArea;

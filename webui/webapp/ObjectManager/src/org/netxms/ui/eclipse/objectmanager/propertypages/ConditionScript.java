@@ -69,7 +69,7 @@ public class ConditionScript extends PropertyPage
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(Messages.get().ConditionScript_Script);
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, "Variables:\r\n\t$values\tarray containing values for configured DCIs (in same order as DCIs are listed in configuration)\r\n\r\nReturn value: true/false to indicate if condition is active or not");
 		filterSource.setText(object.getScript());
 		
 		GridData gd = new GridData();

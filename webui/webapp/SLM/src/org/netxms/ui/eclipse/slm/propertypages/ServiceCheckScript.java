@@ -70,7 +70,7 @@ public class ServiceCheckScript extends PropertyPage
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(Messages.get().ServiceCheckScript_CheckScript);
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, "Variables:\r\n\t$node\tnode object for node links, null for other checks\r\n\r\nReturn value: OK/FAIL to indicate check result.");
 		filterSource.setText(object.getScript());
 		
 		GridData gd = new GridData();
