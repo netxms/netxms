@@ -176,8 +176,8 @@ public abstract class AbstractHandler extends ServerResource
          String login = getRequest().getHeaders().getFirstValue("X-Login");
          String password = getRequest().getHeaders().getFirstValue("X-Password");
          log.debug("Cannot find session token - re-authenticating (login=" + login + ")");
-         token = login(login, password);
-         getResponse().getHeaders().add(new Header("X-SessionId", token.getGuid().toString()));
+         token = login(login, password);         
+         getResponse().getHeaders().add(new Header("X-SessionId", token.getGuid().toString()));         
       }
       
       if (token != null)
@@ -208,7 +208,8 @@ public abstract class AbstractHandler extends ServerResource
       }
       
       String sid = getRequest().getHeaders().getFirstValue("X-SessionId");
-      if (sid != null && !sid.equals("0"))
+      log.debug("sid: " + sid);
+      if (sid != null && !sid.equals("null") && !sid.equals("0"))
       {
          UUID guid = UUID.fromString(sid);
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);

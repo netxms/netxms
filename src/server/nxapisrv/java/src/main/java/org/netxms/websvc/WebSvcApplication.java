@@ -50,6 +50,7 @@ public class WebSvcApplication extends Application
       corsService.setDefaultAllowedMethods(new HashSet<Method>(
                                                 Arrays.asList(Method.POST, Method.GET, Method.OPTIONS,
                                                               Method.PUT, Method.DELETE)));
+      corsService.setExposedHeaders(new HashSet<String>(Arrays.asList("X-SessionId")));
       getServices().add(corsService);
       setStatusService(new WebSvcStatusService());
    }

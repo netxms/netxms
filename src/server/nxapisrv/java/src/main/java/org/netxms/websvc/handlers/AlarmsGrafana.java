@@ -54,7 +54,7 @@ public class AlarmsGrafana extends AbstractHandler
       Map<Long, Alarm> alarms = session.getAlarms();
       for( Alarm a : alarms.values())
       {
-         r.add("<td style=\"background:rgb(0, 192, 0)\">" + a.getCurrentSeverity().name() + "</td>");
+         r.add(a.getCurrentSeverity().name());
          r.add(states[a.getState()]);
          object = getSession().findObjectById(a.getSourceObjectId());
          if (object == null)
