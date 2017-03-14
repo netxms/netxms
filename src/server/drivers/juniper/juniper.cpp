@@ -91,7 +91,7 @@ static UINT32 SlotWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
    {
       InterfaceList *ifList = (InterfaceList *)arg;
       InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(var->getName().length() - 1));
-      if (iface != NULL)
+      if ((iface != NULL) && (iface->type == IFTYPE_ETHERNET_CSMACD))
       {
          iface->isPhysicalPort = true;
          iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
@@ -110,7 +110,7 @@ static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
    {
       InterfaceList *ifList = (InterfaceList *)arg;
       InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(var->getName().length() - 1));
-      if (iface != NULL)
+      if ((iface != NULL) && (iface->type == IFTYPE_ETHERNET_CSMACD))
       {
          iface->isPhysicalPort = true;
          iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1

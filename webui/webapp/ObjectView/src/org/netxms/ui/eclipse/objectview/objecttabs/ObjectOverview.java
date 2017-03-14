@@ -148,7 +148,7 @@ public class ObjectOverview extends ObjectTab
 		viewArea.setRedraw(false);
 		for(OverviewPageElement element : elements)
 		{
-			if (element.isApplicableForObject(object))
+			if ((object != null) && element.isApplicableForObject(object))
 			{
 				element.setObject(object);
 			}
