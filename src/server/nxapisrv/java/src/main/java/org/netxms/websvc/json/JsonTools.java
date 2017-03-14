@@ -20,6 +20,8 @@ package org.netxms.websvc.json;
 
 import java.net.InetAddress;
 import java.util.Date;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.MacAddress;
@@ -48,6 +50,10 @@ public class JsonTools
    {
       if (object instanceof JsonObject)
          return ((JsonObject)object).toString();
+      if (object instanceof JSONObject)
+         return ((JSONObject)object).toString();
+      if (object instanceof JSONArray)
+         return ((JSONArray)object).toString();
       if (object instanceof ResponseContainer)
          return ((ResponseContainer)object).toJson();
       

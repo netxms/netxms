@@ -19,7 +19,6 @@
 package org.netxms.websvc.handlers;
 
 import org.json.JSONObject;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
@@ -45,7 +44,7 @@ public class Sessions extends AbstractHandler
    @Override
    @Post
    public Representation onPost(Representation entity) throws Exception
-   {
+   {	   
       if (entity == null)
       {
          log.warn("No POST data in login call");
@@ -61,18 +60,14 @@ public class Sessions extends AbstractHandler
          return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
       }
       
-      NXCSession session = new NXCSession("127.0.0.1");
-      session.connect();
-      session.login(login, password);
-      
-      SessionToken token = SessionStore.getInstance(getServletContext()).registerSession(session);
+      SessionToken token = login(login, password);
 
       log.info("Logged in to NetXMS server, assigned session id " + token.getGuid());
       getCookieSettings().add(new CookieSetting("session_handle", token.getGuid().toString()));
       
       JSONObject response = new JSONObject();
       response.put("session", token.getGuid().toString());
-      response.put("serverVersion", session.getServerVersion());
+      response.put("serverVersion", getSession().getServerVersion());
       return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
    }
 

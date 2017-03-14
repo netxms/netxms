@@ -18,12 +18,17 @@
  */
 package org.netxms.websvc;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import org.netxms.websvc.handlers.Alarms;
+import org.netxms.websvc.handlers.AlarmsGrafana;
 import org.netxms.websvc.handlers.Objects;
 import org.netxms.websvc.handlers.Sessions;
 import org.restlet.Application;
 import org.restlet.Restlet;
+import org.restlet.data.Method;
 import org.restlet.routing.Router;
+import org.restlet.service.CorsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +44,13 @@ public class WebSvcApplication extends Application
     */
    public WebSvcApplication()
    {
+      CorsService corsService = new CorsService();
+      corsService.setAllowedOrigins(new HashSet<String>(Arrays.asList("*")));
+      corsService.setAllowedHeaders(new HashSet<String>(Arrays.asList("Content-Type", "X-NXCookie")));
+      corsService.setDefaultAllowedMethods(new HashSet<Method>(
+                                                Arrays.asList(Method.POST, Method.GET, Method.OPTIONS,
+                                                              Method.PUT, Method.DELETE)));
+      getServices().add(corsService);
       setStatusService(new WebSvcStatusService());
    }
    
@@ -52,6 +64,7 @@ public class WebSvcApplication extends Application
       Router router = new Router(getContext());
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
+      router.attach("/grafana/alarms", AlarmsGrafana.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{id}", Objects.class);
       router.attach("/sessions", Sessions.class);

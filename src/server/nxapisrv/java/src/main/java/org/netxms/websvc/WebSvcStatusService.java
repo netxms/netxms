@@ -27,10 +27,10 @@ public class WebSvcStatusService extends StatusService
    private Logger log = LoggerFactory.getLogger(WebSvcStatusService.class);
    
    /* (non-Javadoc)
-    * @see org.restlet.service.StatusService#getStatus(java.lang.Throwable, org.restlet.Request, org.restlet.Response)
+    * @see org.restlet.service.StatusService#toStatus(java.lang.Throwable, org.restlet.Request, org.restlet.Response)
     */
    @Override
-   public Status getStatus(Throwable throwable, Request request, Response response)
+   public Status toStatus(Throwable throwable, Request request, Response response)
    {
       if (throwable != null)
       {
@@ -41,14 +41,14 @@ public class WebSvcStatusService extends StatusService
          }
          log.error("Exception in request handler", throwable);
       }
-      return super.getStatus(throwable, request, response);
+      return super.toStatus(throwable, request, response);
    }
 
    /* (non-Javadoc)
-    * @see org.restlet.service.StatusService#getStatus(java.lang.Throwable, org.restlet.resource.Resource)
+    * @see org.restlet.service.StatusService#toStatus(java.lang.Throwable, org.restlet.resource.Resource)
     */
    @Override
-   public Status getStatus(Throwable throwable, Resource resource)
+   public Status toStatus(Throwable throwable, Resource resource)
    {
       if (throwable != null)
       {
@@ -59,7 +59,7 @@ public class WebSvcStatusService extends StatusService
          }
          log.error("Exception in request handler", throwable);
       }
-      return super.getStatus(throwable, resource);
+      return super.toStatus(throwable, resource);
    }
    
    /**
@@ -73,7 +73,7 @@ public class WebSvcStatusService extends StatusService
       switch(rcc)
       {
          case RCC.ACCESS_DENIED:
-            return Status.CLIENT_ERROR_FORBIDDEN;
+            return Status.CLIENT_ERROR_UNAUTHORIZED;
          case RCC.INCOMPATIBLE_OPERATION:
             return Status.CLIENT_ERROR_METHOD_NOT_ALLOWED;
          case RCC.INTERNAL_ERROR:

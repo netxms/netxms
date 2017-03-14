@@ -30,6 +30,7 @@ import org.netxms.websvc.SessionToken;
 import org.netxms.websvc.WebSvcStatusService;
 import org.netxms.websvc.json.JsonTools;
 import org.restlet.Application;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -48,7 +49,7 @@ import com.google.gson.JsonObject;
  */
 public abstract class AbstractHandler extends ServerResource
 {
-   private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
+   protected Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
    private NXCSession session = null;
    
@@ -136,12 +137,13 @@ public abstract class AbstractHandler extends ServerResource
     * @return
     */
    @Delete
-   public Representation onDelete() throws Exception
+   public Representation onDelete(Representation entity) throws Exception
    {
       String id = getEntityId();
+      
       log.debug("DELETE: entityId = " + id);
       if (attachToSession())
-      {
+      {    	 
          Object response = (id != null) ? delete(id) : createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
          return new StringRepresentation(JsonTools.jsonFromObject(response), MediaType.APPLICATION_JSON);
       }
@@ -166,30 +168,53 @@ public abstract class AbstractHandler extends ServerResource
     * 
     * @return true if attached successfully
     */
-   private boolean attachToSession()
+   protected boolean attachToSession() throws Exception
    {
-      SessionToken token = null;
+      SessionToken token = findSessionToken();
+      if ((token == null) && (getRequest().getHeaders().getFirstValue("X-Login") != null))
+      {
+         String login = getRequest().getHeaders().getFirstValue("X-Login");
+         String password = getRequest().getHeaders().getFirstValue("X-Password");
+         log.debug("Cannot find session token - re-authenticating (login=" + login + ")");
+         token = login(login, password);
+         getResponse().getHeaders().add(new Header("X-SessionId", token.getGuid().toString()));
+      }
+      
+      if (token != null)
+      {
+         log.debug("Handler attached to session " + token.getGuid());
+         sessionToken = token;
+         session = token.getSession();
+      }
+      else
+      {
+         log.debug("Session token not found and new session cannot be created");
+      }
+      return session != null;
+   }
+   
+   /**
+    * Find session token for this session
+    * 
+    * @return session token or null
+    */
+   protected SessionToken findSessionToken()
+   {
       String cookie = getCookies().getValues("session_handle");
       if (cookie != null)
       {
          UUID guid = UUID.fromString(cookie);
-         token = SessionStore.getInstance(getServletContext()).getSessionToken(guid);
-         if (token != null)
-         {
-            log.debug("Handler attached to session " + guid);
-            sessionToken = token;
-            session = token.getSession();
-         }
-         else
-         {
-            log.debug("Session token with GUID " + guid + " not found");
-         }
+         return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
-      else
+      
+      String sid = getRequest().getHeaders().getFirstValue("X-SessionId");
+      if (sid != null && !sid.equals("0"))
       {
-         log.debug("Session handle cookie missing in request");
+         UUID guid = UUID.fromString(sid);
+         return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
-      return session != null;
+      
+      return null;
    }
    
    /**
@@ -299,5 +324,19 @@ public abstract class AbstractHandler extends ServerResource
    protected Object delete(String id) throws Exception
    {
       return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
+   }
+   
+   /**
+    * Login to NetXMS server
+    * @param login
+    * @param password
+    * @return SessionToken
+    */
+   protected SessionToken login(String login, String password) throws Exception
+   {
+      session = new NXCSession("127.0.0.1");
+      session.connect();
+      session.login(login, (password == null) ? "" : password);
+      return SessionStore.getInstance(getServletContext()).registerSession(session);
    }
 }
