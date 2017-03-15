@@ -86,6 +86,16 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const UINT32 *oid, size_t oidLen) c
 /**
  * Find OID index entry by OID
  */
+SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const SNMP_ObjectId& oid) const
+{
+   SNMP_SnapshotIndexEntry *entry;
+   HASH_FIND(hh, m_index, oid.value(), (unsigned int)(oid.length() * sizeof(UINT32)), entry);
+   return entry;
+}
+
+/**
+ * Find OID index entry by OID
+ */
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 {
    UINT32 binOid[MAX_OID_LEN];
@@ -142,6 +152,15 @@ SNMP_Variable *SNMP_Snapshot::get(const TCHAR *oid) const
 /**
  * Get variable
  */
+SNMP_Variable *SNMP_Snapshot::get(const SNMP_ObjectId& oid) const
+{
+   SNMP_SnapshotIndexEntry *entry = find(oid);
+   return (entry != NULL) ? entry->var : NULL;
+}
+
+/**
+ * Get variable
+ */
 SNMP_Variable *SNMP_Snapshot::get(const UINT32 *oid, size_t oidLen) const
 {
    SNMP_SnapshotIndexEntry *entry = find(oid, oidLen);
@@ -158,6 +177,14 @@ SNMP_Variable *SNMP_Snapshot::getNext(const TCHAR *oid) const
    if (oidLen == 0)
       return NULL;
    return getNext(binOid, oidLen);
+}
+
+/**
+ * Get next variable for given OID
+ */
+SNMP_Variable *SNMP_Snapshot::getNext(const SNMP_ObjectId& oid) const
+{
+   return getNext(oid.value(), oid.length());
 }
 
 /**

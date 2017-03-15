@@ -82,44 +82,6 @@ void JuniperDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, String
 }
 
 /**
- * Handler for walking slot numbers
- */
-static UINT32 SlotWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
-{
-   int slot = var->getValueAsInt();
-   if (slot > 0)
-   {
-      InterfaceList *ifList = (InterfaceList *)arg;
-      InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(var->getName().length() - 1));
-      if ((iface != NULL) && (iface->type == IFTYPE_ETHERNET_CSMACD))
-      {
-         iface->isPhysicalPort = true;
-         iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
-      }
-   }
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
- * Handler for walking port numbers
- */
-static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
-{
-   int port = var->getValueAsInt();
-   if (port > 0)
-   {
-      InterfaceList *ifList = (InterfaceList *)arg;
-      InterfaceInfo *iface = ifList->findByIfIndex(var->getName().getElement(var->getName().length() - 1));
-      if ((iface != NULL) && (iface->type == IFTYPE_ETHERNET_CSMACD))
-      {
-         iface->isPhysicalPort = true;
-         iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
-      }
-   }
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
@@ -132,11 +94,31 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	if (ifList == NULL)
 		return NULL;
 
-	// Slot numbers
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1.1"), SlotWalkHandler, ifList);
+	// Update physical port locations
+	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
+	for(int i = 0; i < ifList->size(); i++)
+	{
+	   InterfaceInfo *iface = ifList->get(i);
+	   if (iface->type != IFTYPE_ETHERNET_CSMACD)
+	      continue;
 
-   // Port numbers
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1.3"), PortWalkHandler, ifList);
+	   SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
+	   oid.extend(iface->index);
+	   int slot = chassisTable->getAsInt32(oid);
+
+      oid.changeElement(oid.length() - 2, 2);
+      int pic = chassisTable->getAsInt32(oid);
+
+	   oid.changeElement(oid.length() - 2, 3);
+      int port = chassisTable->getAsInt32(oid);
+
+      if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
+         continue;
+
+      iface->isPhysicalPort = true;
+      iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
+      iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
+	}
 
 	return ifList;
 }
