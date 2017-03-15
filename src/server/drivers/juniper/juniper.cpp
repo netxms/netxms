@@ -96,31 +96,87 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 
 	// Update physical port locations
 	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
-	for(int i = 0; i < ifList->size(); i++)
+	if (chassisTable != NULL)
 	{
-	   InterfaceInfo *iface = ifList->get(i);
-	   if (iface->type != IFTYPE_ETHERNET_CSMACD)
-	      continue;
+      for(int i = 0; i < ifList->size(); i++)
+      {
+         InterfaceInfo *iface = ifList->get(i);
+         if (iface->type != IFTYPE_ETHERNET_CSMACD)
+            continue;
 
-	   SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
-	   oid.extend(iface->index);
-	   int slot = chassisTable->getAsInt32(oid);
+         SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
+         oid.extend(iface->index);
+         int slot = chassisTable->getAsInt32(oid);
 
-      oid.changeElement(oid.length() - 2, 2);
-      int pic = chassisTable->getAsInt32(oid);
+         oid.changeElement(oid.length() - 2, 2);
+         int pic = chassisTable->getAsInt32(oid);
 
-	   oid.changeElement(oid.length() - 2, 3);
-      int port = chassisTable->getAsInt32(oid);
+         oid.changeElement(oid.length() - 2, 3);
+         int port = chassisTable->getAsInt32(oid);
 
-      if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
-         continue;
+         if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
+            continue;
 
-      iface->isPhysicalPort = true;
-      iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
-      iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
+         iface->isPhysicalPort = true;
+         iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
+         iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
+      }
+      delete chassisTable;
 	}
-
 	return ifList;
+}
+
+/**
+ * Get VLANs
+ */
+VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+{
+   SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
+   if (vlanTable == NULL)
+      return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
+
+   SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1"));
+   if (portTable == NULL)
+   {
+      delete vlanTable;
+      return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
+   }
+
+   VlanList *vlans = new VlanList();
+   SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1.5"));
+   const SNMP_Variable *v;
+   while((v = vlanTable->getNext(oid)) != NULL)
+   {
+      VlanInfo *vlan = new VlanInfo(v->getValueAsInt(), VLAN_PRM_IFINDEX);
+      vlans->add(vlan);
+
+      oid = v->getName();
+      oid.changeElement(oid.length() - 2, 2);   // VLAN name
+      const SNMP_Variable *name = vlanTable->get(oid);
+      if (name != NULL)
+      {
+         TCHAR buffer[256];
+         vlan->setName(name->getValueAsString(buffer, 256));
+      }
+
+      // VLAN ports
+      UINT32 vlanId = oid.getElement(oid.length() - 1);
+      SNMP_ObjectId baseOid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1.5"));
+      baseOid.extend(vlanId);
+      const SNMP_Variable *p = NULL;
+      while((p = portTable->getNext((p != NULL) ? p->getName() : baseOid)) != NULL)
+      {
+         if (p->getName().compare(baseOid) != OID_LONGER)
+            break;
+         vlan->add(p->getName().getElement(p->getName().length() - 1));
+      }
+
+      oid = v->getName();
+   }
+
+   delete vlanTable;
+   delete portTable;
+   return vlans;
 }
 
 /**
