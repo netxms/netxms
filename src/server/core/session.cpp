@@ -9255,8 +9255,6 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
    WORD wMajor, wMinor, wRelease;
    int i, nNumRows;
    DB_RESULT hResult;
-   NXSL_Program *pScript;
-   NXSL_Value *ppArgList[5], *pValue;
    UINT32 dwCfgId;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -9281,10 +9279,10 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
          // Compile script
          pszText = DBGetField(hResult, i, 2, NULL, 0);
          DecodeSQLString(pszText);
-         pScript = (NXSL_Program *)NXSLCompile(pszText, szError, 256, NULL);
+         NXSL_VM *vm = NXSLCompileAndCreateVM(pszText, szError, 256, new NXSL_ServerEnv());
          free(pszText);
 
-         if (pScript != NULL)
+         if (vm != NULL)
          {
             // Set arguments:
             // $1 - IP address
@@ -9292,6 +9290,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             // $3 - major version number
             // $4 - minor version number
             // $5 - release number
+            NXSL_Value *ppArgList[5];
             ppArgList[0] = new NXSL_Value(SockaddrToStr(m_clientAddr, szBuffer));
             ppArgList[1] = new NXSL_Value(szPlatform);
             ppArgList[2] = new NXSL_Value((LONG)wMajor);
@@ -9300,10 +9299,9 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
 
             // Run script
             DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
-            NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv);
-            if (vm->load(pScript) && vm->run(5, ppArgList))
+            if (vm->run(5, ppArgList))
             {
-               pValue = vm->getResult();
+               NXSL_Value *pValue = vm->getResult();
                if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
@@ -9326,7 +9324,6 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
                _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
                PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
             }
-            delete pScript;
             delete vm;
          }
          else

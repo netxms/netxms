@@ -3761,11 +3761,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
       for(int i = 0; i < count; i++)
       {
          TCHAR *oid = DBGetField(hResult, i, 1, NULL, 0);
-         if (oid == NULL || !_tcscmp(oid, _T(" ")))
-         {
-            oid = _tcsdup(_T(""));
-         }
-         else
+         if ((oid != NULL) && (*oid != 0))
          {
             TCHAR *newConfig = (TCHAR *)malloc((_tcslen(oid) + 512) * sizeof(TCHAR));
             _tcscpy(newConfig, _T("<objectToolFilter>"));
@@ -3788,6 +3784,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
                   return FALSE;
             }
          }
+         free(oid);
       }
    }
    CHK_EXEC(SQLDropColumn(_T("object_tools"), _T("matching_oid"))); //delete old column

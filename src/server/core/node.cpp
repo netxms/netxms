@@ -1952,7 +1952,6 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
    // then method will just return true. Otherwise, we will do
    // second pass, this time forcing status poll on each node in the path.
    sendPollerMsg(requestId, _T("Checking network path (%s pass)...\r\n"), secondPass ? _T("second") : _T("first"));
-   time_t now = time(NULL);
    bool pathProblemFound = false;
    for(int i = 0; i < trace->getHopCount(); i++)
    {
