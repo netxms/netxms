@@ -22,13 +22,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Map;
 import org.json.JSONException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class AlarmsGrafana extends AbstractHandler
+public class GrafanaAlarms extends AbstractHandler
 {
    private String[] states = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
    
@@ -37,7 +38,15 @@ public class AlarmsGrafana extends AbstractHandler
     */
    @Override
    public Object getCollection(Map<String, String> query) throws Exception
-   {      
+   {
+      NXCSession session = getSession();
+      if (!session.isObjectsSynchronized())
+         session.syncObjects();
+      
+      if (query.containsKey("node") && query.get("node").equals("Select source"))
+      {
+         
+      }
       JsonObject root = new JsonObject();
 
       JsonArray columns = new JsonArray();
@@ -59,7 +68,7 @@ public class AlarmsGrafana extends AbstractHandler
       AbstractObject object = null;
       AbstractUserObject user = null;
       
-      Map<Long, Alarm> alarms = getSession().getAlarms();
+      Map<Long, Alarm> alarms = session.getAlarms();
       for( Alarm a : alarms.values())
       {
          r.add(a.getCurrentSeverity().name());
