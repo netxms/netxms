@@ -192,6 +192,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 		{
 			case ASN.COUNTER32:
 			case ASN.GAUGE32:
+         case ASN.TIMETICKS:
 			case ASN.UINTEGER32:
 				return DataCollectionItem.DT_UINT;
 			case ASN.COUNTER64:

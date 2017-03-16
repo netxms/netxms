@@ -20,6 +20,7 @@ public class Messages extends NLS
 	public static String LoginListener_JobError;
 	public static String LoginListener_JobTitle;
 	public static String MibExplorer_CopyName;
+   public static String MibExplorer_CopySymbolicName;
 	public static String MibExplorer_CopyToClipboard;
 	public static String MibExplorer_CopyType;
 	public static String MibExplorer_CopyValue;

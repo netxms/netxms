@@ -114,6 +114,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionSetNode;
 	private Action actionCopy;
 	private Action actionCopyName;
+   private Action actionCopySymbolicName;
 	private Action actionCopyType;
 	private Action actionCopyValue;
 	private Action actionSelect;
@@ -400,9 +401,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 							sb.append(newLine);
 						sb.append(selection[i].getText(0));
 						sb.append(" ["); //$NON-NLS-1$
-						sb.append(selection[i].getText(1));
-						sb.append("] = "); //$NON-NLS-1$
 						sb.append(selection[i].getText(2));
+						sb.append("] = "); //$NON-NLS-1$
+						sb.append(selection[i].getText(3));
 					}
 					WidgetHelper.copyToClipboard(sb.toString());
 				}
@@ -417,11 +418,19 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			}
 		};
 
+      actionCopySymbolicName = new Action(Messages.get().MibExplorer_CopySymbolicName) {
+         @Override
+         public void run()
+         {
+            copyColumnToClipboard(1);
+         }
+      };
+
 		actionCopyType = new Action(Messages.get().MibExplorer_CopyType) {
 			@Override
 			public void run()
 			{
-				copyColumnToClipboard(1);
+				copyColumnToClipboard(2);
 			}
 		};
 
@@ -429,7 +438,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 			@Override
 			public void run()
 			{
-				copyColumnToClipboard(2);
+				copyColumnToClipboard(3);
 			}
 		};
 		
@@ -602,6 +611,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		
 		manager.add(actionCopy);
 		manager.add(actionCopyName);
+      manager.add(actionCopySymbolicName);
 		manager.add(actionCopyType);
 		manager.add(actionCopyValue);
 		manager.add(actionExportToCsv);
