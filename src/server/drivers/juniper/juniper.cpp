@@ -70,18 +70,6 @@ bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-void JuniperDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
-{
-}
-
-/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport

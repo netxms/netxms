@@ -20,6 +20,7 @@
 - Compression support in communication protocol
 - Switch forwarding database show correct interfaces for Mikrotik devices
 - Driver for Juniper Networks switches
+- Driver for Extreme Networks switches
 - Management console:
 	- Mutiple files can be scheduled for upload to agent at once
 	- DCIs created from templates made visually distinguishable in data collection editor

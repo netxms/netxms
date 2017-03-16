@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Juniper Networks switches
+** Driver for Extreme Networks switches
 ** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,12 +17,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: juniper.h
+** File: extreme.h
 **
 **/
 
-#ifndef _juniper_h_
-#define _juniper_h_
+#ifndef _extreme_h_
+#define _extreme_h_
 
 #include <nddrv.h>
 
@@ -30,7 +30,7 @@
 /**
  * Driver's class
  */
-class JuniperDriver : public NetworkDeviceDriver
+class ExtremeDriver : public NetworkDeviceDriver
 {
 public:
 	virtual const TCHAR *getName();
@@ -39,7 +39,6 @@ public:
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
 };
