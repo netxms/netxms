@@ -637,11 +637,6 @@ setup_encryption:
 
 		// Renegotiate NXCP version with actual target agent
 	   NXCP_MESSAGE msg;
-	   NXCPEncryptionContext *pDummyCtx = NULL;
-	   NXCP_BUFFER *pBuffer;
-	   bool success = false;
-	   int nSize;
-
 	   msg.id = 0;
 	   msg.numFields = 0;
 	   msg.size = htonl(NXCP_HEADER_SIZE);
@@ -659,7 +654,6 @@ setup_encryption:
 	      {
 	         // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
 	         // and set version number to 1
-	         success = true;
 	         m_nProtocolVersion = 1;
 	      }
          debugPrintf(6, _T("Using NXCP version %d after re-negotioation"), m_nProtocolVersion);

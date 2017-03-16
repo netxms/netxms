@@ -224,9 +224,9 @@ size_t DeflateStreamCompressor::compress(const BYTE *in, size_t inSize, BYTE *ou
    if (m_stream == NULL)
       return 0;
 
-   m_stream->avail_in = inSize;
+   m_stream->avail_in = (uInt)inSize;
    m_stream->next_in = (BYTE *)in;
-   m_stream->avail_out = maxOutSize;
+   m_stream->avail_out = (uInt)maxOutSize;
    m_stream->next_out = out;
    if (deflate(m_stream, Z_SYNC_FLUSH) != Z_OK)
    {
@@ -244,9 +244,9 @@ size_t DeflateStreamCompressor::decompress(const BYTE *in, size_t inSize, const 
    if (m_stream == NULL)
       return 0;
 
-   m_stream->avail_in = inSize;
+   m_stream->avail_in = (uInt)inSize;
    m_stream->next_in = (BYTE *)in;
-   m_stream->avail_out = m_bufferSize;
+   m_stream->avail_out = (uInt)m_bufferSize;
    m_stream->next_out = m_buffer;
    int rc = inflate(m_stream, Z_SYNC_FLUSH);
    if ((rc != Z_OK) && (rc != Z_STREAM_END))
@@ -263,5 +263,5 @@ size_t DeflateStreamCompressor::decompress(const BYTE *in, size_t inSize, const 
  */
 size_t DeflateStreamCompressor::compressBufferSize(size_t dataSize)
 {
-   return (m_stream != NULL) ? deflateBound(m_stream, dataSize) : 0;
+   return (m_stream != NULL) ? deflateBound(m_stream, (uLong)dataSize) : 0;
 }

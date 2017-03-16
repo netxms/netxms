@@ -262,7 +262,7 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
          MutexLock(m_mutex);
       }
       doRead = false;
-      bytes = SSL_read(m_ssl, buffer, size);
+      bytes = SSL_read(m_ssl, buffer, (int)size);
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
