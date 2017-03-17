@@ -79,6 +79,7 @@ public:
 	int getAccuracy() const { return m_accuracy; }
 	time_t getTimestamp() const { return m_timestamp; }
    bool sameLocation(double lat, double lon, int oldAccurasy) const;
+	int calculateDistance(GeoLocation &location) const;
 
 	void fillMessage(NXCPMessage &msg) const;
 

@@ -428,3 +428,19 @@ GeoLocation GeoLocation::parseAgentData(const TCHAR *data)
       return GeoLocation();   // parsing error or location is unknown
    return GeoLocation(GL_GPS, lat, lon, acc, timestamp);
 }
+
+int GeoLocation::calculateDistance(GeoLocation &location) const
+{
+   const double R = 6371000; // Earth radius in meters
+
+   double f1 = DegreesToRadians(location.m_lat);
+   double f2 = DegreesToRadians(m_lat);
+   double df = DegreesToRadians(m_lat - location.m_lat);
+   double dl = DegreesToRadians(m_lon - location.m_lon);
+
+   double a = pow(sin(df / 2), 2) + cos(f1) * cos(f2) * pow(sin(dl / 2), 2);
+   double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+   double distance = R * c;
+   return (int)(distance+0.5);
+}

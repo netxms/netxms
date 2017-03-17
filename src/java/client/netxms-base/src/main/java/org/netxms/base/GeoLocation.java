@@ -483,4 +483,24 @@ public class GeoLocation
          return false;
       return true;
    }
+   
+   /**
+    * Calculates distance between two location points
+    * 
+    * @param location second location object 
+    * @return the distance between two objects
+    */
+   public int calculateDistance(GeoLocation location)
+   {
+      final int R = 6371; // Radius of the earth
+
+      Double latDistance = Math.toRadians(location.latitude - latitude);
+      Double lonDistance = Math.toRadians(location.longitude - longitude);
+      Double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+              + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(location.latitude))
+              * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+      Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return (int)Math.round(R * c * 1000); // convert to meters
+   }
 }

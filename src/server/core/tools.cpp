@@ -400,3 +400,75 @@ void ObjectUrl::fillMessage(NXCPMessage *msg, UINT32 baseId)
    msg->setField(baseId + 1, m_url);
    msg->setField(baseId + 2, m_description);
 }
+
+/**
+ * Distance array sorting callback
+ */
+int DistanceSortCallback(const void *obj1, const void *obj2)
+{
+   return ((ObjectsDistance *)obj1)->m_distance - ((ObjectsDistance *)obj2)->m_distance;
+}
+
+/**
+ * Calculate nearest objects from current one
+ * Object ref count will be automatically decreased on array delete
+ */
+ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDistance, bool (* filter)(NetObj *object, void *data), void *sortData, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2))
+{
+   NetObj *currObj = FindObjectById(currObjectId);
+   currObj->incRefCount();
+   GeoLocation currLocation = currObj->getGeoLocation();
+   if(currLocation.getType() == GL_UNSET)
+   {
+      currObj->decRefCount();
+      return NULL;
+   }
+
+   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, filter, sortData);
+   ObjectArray<ObjectsDistance> *result = new ObjectArray<ObjectsDistance>(16, 16, true);
+	for(int i = 0; i < objects->size(); i++)
+	{
+	   NetObj *object = objects->get(i);
+      GeoLocation location = object->getGeoLocation();
+      //leave objects that contain location
+      if(currLocation.getType() == GL_UNSET)
+      {
+         object->decRefCount();
+         continue;
+      }
+
+      //leave object only in given distance
+      int distance = currLocation.calculateDistance(location);
+      if(distance > maxDistance)
+      {
+         object->decRefCount();
+         continue;
+      }
+
+      //remove current object from list
+      if(object->getId() == currObjectId)
+      {
+         object->decRefCount();
+         continue;
+      }
+
+      //Filter objects by real path calculation
+      if(calculateRealDistance != NULL)
+      {
+         distance = calculateRealDistance(location, currLocation);
+         if(distance > maxDistance)
+         {
+            object->decRefCount();
+            continue;
+         }
+      }
+
+      result->add(new ObjectsDistance(object, distance));
+   }
+
+   //Sort filtered objects
+   result->sort(DistanceSortCallback);
+
+   currObj->decRefCount();
+   return result;
+}

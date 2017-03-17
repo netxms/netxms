@@ -1276,6 +1276,29 @@ private:
    void unlock();
 };
 
+/**********************
+ * Distance calculation
+ **********************/
+
+/**
+ * Class stores object and distance to it from provided node
+ */
+class ObjectsDistance
+{
+public:
+   NetObj *m_obj;
+   int m_distance;
+
+   ObjectsDistance(NetObj *obj, int distance) { m_obj = obj; m_distance = distance; }
+   ~ObjectsDistance() { m_obj->decRefCount(); }
+};
+
+/**
+ * Calculate nearest objects from current one
+ * Object ref count will be automatically decreased on array delete
+ */
+ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDistance, bool (* filter)(NetObj *object, void *data), void *sortData, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2));
+
 /**
  * Global variables
  */
