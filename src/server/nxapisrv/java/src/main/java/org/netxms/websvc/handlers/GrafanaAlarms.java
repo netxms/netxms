@@ -31,7 +31,7 @@ import com.google.gson.JsonObject;
 
 public class GrafanaAlarms extends AbstractHandler
 {
-   private String[] states = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
+   private static final String[] STATES = { "Outstanding", "Acknowledged", "Resolved", "Terminated" };
    
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
@@ -72,7 +72,7 @@ public class GrafanaAlarms extends AbstractHandler
       for( Alarm a : alarms.values())
       {
          r.add(a.getCurrentSeverity().name());
-         r.add(states[a.getState()]);
+         r.add(STATES[a.getState()]);
          
          object = getSession().findObjectById(a.getSourceObjectId());
          if (object == null)

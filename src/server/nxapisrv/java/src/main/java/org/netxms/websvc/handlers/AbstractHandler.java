@@ -49,7 +49,7 @@ import com.google.gson.JsonObject;
  */
 public abstract class AbstractHandler extends ServerResource
 {
-   protected Logger log = LoggerFactory.getLogger(AbstractHandler.class);
+   private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
    private NXCSession session = null;
    

@@ -65,9 +65,9 @@ public class WebSvcApplication extends Application
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
+      router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{id}", Objects.class);
-      router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       return router;

@@ -39,6 +39,9 @@ public class GrafanaDataCollection extends AbstractHandler
 {
    private List<AbstractObject> objects;
    
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+    */
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
