@@ -1002,8 +1002,8 @@ void DCTable::createExportRecord(String &str)
                           (const TCHAR *)EscapeStringForXML2(m_description),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod),
-								  (const TCHAR *)EscapeStringForXML2(m_instance);
+								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
+								  (const TCHAR *)EscapeStringForXML2(m_instance));
 
 	if (m_transformationScriptSource != NULL)
 	{
