@@ -430,13 +430,17 @@ bool Tunnel::connectToServer()
       return false;
    }
 
-   m_context = SSL_CTX_new(method);
+   m_context = SSL_CTX_new((SSL_METHOD *)method);
    if (m_context == NULL)
    {
       debugPrintf(4, _T("Cannot create TLS context"));
       return false;
    }
+#ifdef SSL_OP_NO_COMPRESSION
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+#else
+   SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
    loadCertificate();
 
    m_ssl = SSL_new(m_context);

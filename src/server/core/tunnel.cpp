@@ -735,13 +735,17 @@ static void SetupTunnel(void *arg)
       goto failure;
    }
 
-   context = SSL_CTX_new(method);
+   context = SSL_CTX_new((SSL_METHOD *)method);
    if (context == NULL)
    {
       nxlog_debug(4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
+#ifdef SSL_OP_NO_COMPRESSION
    SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+#else
+   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
    if (!SetupServerTlsContext(context))
    {
       nxlog_debug(4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());
