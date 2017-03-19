@@ -78,29 +78,28 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	return nRet;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
+/**
+ * Handler for FileSystem.MountPoints list
+ */
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   struct statfs *mntbuf;
+   int mntsize;
 
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/09/27 09:18:02  alk
-DISK_* params fixed
+   if ((mntsize = getmntinfo(&mntbuf, MNT_NOWAIT)) == 0)
+   {
+      AgentWriteDebugLog(4, _T("FreeBSD: H_MountPoints: getmntinfo error"));
+      return SYSINFO_RC_ERROR;
+   }
 
-Revision 1.2  2007/04/18 20:26:29  victor
+   for (int i = 0; i < mntsize; i++)
+   {
+#ifdef UNICODE
+      value->addPreallocated(WideStringFromMBString(mntbuf[i].f_mntonname));
+#else
+      value->add(mntbuf[i].f_mntonname);
+#endif
+   }
 
-FreeBSD agent improved
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/
+   return SYSINFO_RC_SUCCESS;
+}

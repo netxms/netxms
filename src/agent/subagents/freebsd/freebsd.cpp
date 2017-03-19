@@ -212,6 +212,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
+	{ _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
 	{ _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,       NULL },
 	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },

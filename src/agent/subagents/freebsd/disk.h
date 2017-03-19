@@ -33,5 +33,6 @@ enum
 };
 
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_MountPoints(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __DISK_H__
