@@ -591,6 +591,8 @@ bool LoadServerCertificate(RSA **serverKey)
    return true;
 }
 
+#if HAVE_X509_STORE_SET_VERIFY_CB
+
 /**
  * Certificate verification callback
  */
@@ -607,6 +609,8 @@ static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
    return success;
 }
 
+#endif /* HAVE_X509_STORE_SET_VERIFY_CB */
+
 /**
  * Setup server-side TLS context
  */
@@ -621,7 +625,9 @@ bool SetupServerTlsContext(SSL_CTX *context)
       nxlog_debug(3, _T("SetupServerTlsContext: cannot create certificate store"));
       return false;
    }
+#if HAVE_X509_STORE_SET_VERIFY_CB
    X509_STORE_set_verify_cb(store, CertVerifyCallback);
+#endif
    X509_STORE_add_cert(store, s_serverCertificate);
    X509_STORE_add_cert(store, s_serverCACertificate);
    SSL_CTX_set_cert_store(context, store);

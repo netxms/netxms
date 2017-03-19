@@ -1612,6 +1612,8 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 				else
 					AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 				fi
+
+				AC_CHECK_FUNCS([X509_STORE_set_verify_cb])
 			],
 			[
 				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
