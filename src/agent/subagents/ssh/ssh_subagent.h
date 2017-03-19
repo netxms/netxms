@@ -20,7 +20,7 @@
 **
 **/
 
-#ifndef _ssh_subagent_h
+#ifndef _ssh_subagent_h_
 #define _ssh_subagent_h_
 
 #include <nms_common.h>

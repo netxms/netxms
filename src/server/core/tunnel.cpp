@@ -852,12 +852,10 @@ THREAD_RESULT THREAD_CALL TunnelListener(void *arg)
    SOCKET hSocket = socket(AF_INET, SOCK_STREAM, 0);
 #ifdef WITH_IPV6
    SOCKET hSocket6 = socket(AF_INET6, SOCK_STREAM, 0);
+   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
+#else
+   if (hSocket == INVALID_SOCKET)
 #endif
-   if ((hSocket == INVALID_SOCKET)
-#ifdef WITH_IPV6
-       && (hSocket6 == INVALID_SOCKET)
-#endif
-      )
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("TunnelListener"));
       return THREAD_OK;

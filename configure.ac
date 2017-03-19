@@ -1499,8 +1499,14 @@ else
 			[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
 				yes
 			#endif
-			], AC_MSG_RESULT(yes)
-			PTHREAD_LIBS="-pthread",
+			], [
+				AC_MSG_RESULT(yes)
+				PTHREAD_LIBS="-pthread"
+				if test "x$CXX" = "xc++"; then
+					# Quash clang's "-pthread unused during compilation" warnings
+					PTHREAD_LDFLAGS="-Wc,-Qunused-arguments"
+				fi
+			],
 			AC_MSG_RESULT(no))
 		if test "x$PTHREAD_LIBS" = "xerror"; then
 			AC_CHECK_LIB(pthread, pthread_attr_init,
@@ -3170,7 +3176,7 @@ else
 	LDFLAGS_SUFFIX="$LDFLAGS_SUFFIX -R $RUNTIME_PREFIX/lib"
 fi
 
-LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
+LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $PTHREAD_LDFLAGS $LDFLAGS_SUFFIX"
 
 if test "x${ENABLE_WERROR}" = "xyes"; then
 	CPPFLAGS="$CPPFLAGS -Werror"

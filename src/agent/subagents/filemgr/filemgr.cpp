@@ -227,10 +227,12 @@ static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false
    for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
       if (!_tcsncmp(g_rootFileManagerFolders->get(i)->getFolder(), folder, _tcslen(g_rootFileManagerFolders->get(i)->getFolder())))
+      {
          if (isModify && g_rootFileManagerFolders->get(i)->isReadOnly())
             return false;
          else
             return true;
+      }
    }
 
    return false;
