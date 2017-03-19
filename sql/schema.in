@@ -654,9 +654,9 @@ CREATE TABLE dc_tables
   transformation_script SQL_TEXT null,
   comments SQL_TEXT null,
   instance varchar(255) null,
-  instd_method integer not null.
+  instd_method integer not null,
   instd_data varchar(255) null,
-  instd_filter SQL TEXT null,
+  instd_filter SQL_TEXT null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
