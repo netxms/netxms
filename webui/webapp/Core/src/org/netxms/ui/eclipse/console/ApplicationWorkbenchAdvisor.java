@@ -257,8 +257,11 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			if (session.isPasswordExpired())
 			{
 				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
-				if (dlg.open() == Window.OK)
+				while(true)
 				{
+   				if (dlg.open() != Window.OK)
+   				   return;
+   
 					final String currentPassword = password;
 					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override
@@ -284,6 +287,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
 						pd.run(false, false, job);
 						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
+						return;
 					}
 					catch(InvocationTargetException e)
 					{
@@ -293,7 +297,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 					{
 						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
 					}
-				}
+   			}
 			}
 		}
 	}
