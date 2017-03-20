@@ -43,10 +43,11 @@ UINT64 g_snmpTrapsReceived = 0;
 /**
  * Static data
  */
-static MUTEX m_mutexTrapCfgAccess = NULL;
+static Mutex s_trapCfgLock;
 static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, true);
 static BOOL m_bLogAllTraps = FALSE;
-static INT64 m_qnTrapId = 1;
+static Mutex s_trapCountersLock;
+static INT64 s_trapId = 1; // Next free trap ID
 static bool s_allowVarbindConversion = true;
 static UINT16 m_wTrapPort = 162;
 
@@ -346,7 +347,6 @@ void LoadTrapCfg()
  */
 void InitTraps()
 {
-	m_mutexTrapCfgAccess = MutexCreate();
 	LoadTrapCfg();
 	m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
 	s_allowVarbindConversion = ConfigReadInt(_T("AllowTrapVarbindsConversion"), 1) ? true : false;
@@ -356,7 +356,7 @@ void InitTraps()
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
-			m_qnTrapId = DBGetFieldInt64(hResult, 0, 0) + 1;
+		   s_trapId = DBGetFieldInt64(hResult, 0, 0) + 1;
 		DBFreeResult(hResult);
 	}
 	DBConnectionPoolReleaseConnection(hdb);
@@ -465,7 +465,9 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
 
    DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
              pdu->getTrapId()->toString(&szBuffer[96], 4000), srcAddr.toString(szBuffer));
-   g_snmpTrapsReceived++;
+   s_trapCountersLock.lock();
+   g_snmpTrapsReceived++; // FIXME: change to 64 bit volatile counter
+   s_trapCountersLock.unlock();
 
 	if (isInformRq)
 	{
@@ -505,10 +507,13 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       }
 
       // Write new trap to database
+		s_trapCountersLock.lock();
+		UINT64 trapId = s_trapId++; // FIXME: change to 64 bit volatile counter
+		s_trapCountersLock.unlock();
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
-                 m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
+                 trapId, dwTimeStamp, srcAddr.toString(szBuffer),
                  (node != NULL) ? node->getId() : (UINT32)0, pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
       QueueSQLRequest(szQuery);
@@ -517,7 +522,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       msg.setCode(CMD_TRAP_LOG_RECORDS);
       msg.setField(VID_NUM_RECORDS, (UINT32)1);
       msg.setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
-      msg.setField(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
+      msg.setField(VID_TRAP_LOG_MSG_BASE, trapId);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != NULL) ? node->getId() : (UINT32)0);
@@ -525,8 +530,6 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
       free(pszTrapArgs);
-
-      m_qnTrapId++;
    }
 
    // Process trap if it is coming from host registered in database
@@ -553,7 +556,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
          }
 
          // Find if we have this trap in our list
-         MutexLock(m_mutexTrapCfgAccess);
+         s_trapCfgLock.lock();
 
          // Try to find closest match
          size_t matchLen = 0;
@@ -613,7 +616,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
                free(pszTrapArgs);
             }
          }
-         MutexUnlock(m_mutexTrapCfgAccess);
+         s_trapCfgLock.unlock();
       }
       else
       {
@@ -909,14 +912,14 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
    msg.setCode(CMD_TRAP_CFG_RECORD);
    msg.setId(dwRqId);
 
-   MutexLock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.lock();
    for(int i = 0; i < m_trapCfgList.size(); i++)
    {
       m_trapCfgList.get(i)->fillMessage(&msg);
       pSession->sendMessage(&msg);
       msg.deleteAllFields();
    }
-   MutexUnlock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.unlock();
 
    msg.setField(VID_TRAP_ID, (UINT32)0);
    pSession->sendMessage(&msg);
@@ -927,11 +930,11 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
  */
 void CreateTrapCfgMessage(NXCPMessage *msg)
 {
-   MutexLock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.lock();
 	msg->setField(VID_NUM_TRAPS, m_trapCfgList.size());
    for(int i = 0, id = VID_TRAP_INFO_BASE; i < m_trapCfgList.size(); i++, id += 10)
       m_trapCfgList.get(i)->fillMessage(msg, id);
-   MutexUnlock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.unlock();
 }
 
 static void NotifyOnTrapCfgDelete(UINT32 id)
@@ -951,7 +954,7 @@ UINT32 DeleteTrap(UINT32 id)
 {
    UINT32 dwResult = RCC_INVALID_TRAP_ID;
 
-   MutexLock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.lock();
 
    for(int i = 0; i < m_trapCfgList.size(); i++)
    {
@@ -988,7 +991,7 @@ UINT32 DeleteTrap(UINT32 id)
       }
    }
 
-   MutexUnlock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.unlock();
    return dwResult;
 }
 
@@ -1135,7 +1138,7 @@ void CreateTrapExportRecord(String &xml, UINT32 id)
 	TCHAR szBuffer[1024];
 	SNMPTrapConfiguration *trapCfg;
 
-   MutexLock(m_mutexTrapCfgAccess);
+	s_trapCfgLock.lock();
    for(int i = 0; i < m_trapCfgList.size(); i++)
    {
       trapCfg = m_trapCfgList.get(i);
@@ -1180,7 +1183,7 @@ void CreateTrapExportRecord(String &xml, UINT32 id)
 			break;
 		}
 	}
-   MutexUnlock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.unlock();
 }
 
 /**
@@ -1215,7 +1218,7 @@ UINT32 ResolveTrapGuid(const uuid& guid)
  */
 void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg)
 {
-   MutexLock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.lock();
 
    for(int i = 0; i < m_trapCfgList.size(); i++)
    {
@@ -1226,5 +1229,5 @@ void AddTrapCfgToList(SNMPTrapConfiguration *trapCfg)
    }
    m_trapCfgList.add(trapCfg);
 
-   MutexUnlock(m_mutexTrapCfgAccess);
+   s_trapCfgLock.unlock();
 }
