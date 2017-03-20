@@ -70,10 +70,10 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT 
 {
    m_id = DBGetFieldULong(trapResult, row, 0);
    TCHAR buffer[MAX_OID_LENGTH];
-   m_objectId = SNMP_ObjectId::parse(DBGetField(trapResult, row, 1, buffer, MAX_DB_STRING));
+   m_objectId = SNMP_ObjectId::parse(DBGetField(trapResult, row, 1, buffer, MAX_OID_LENGTH));
    m_eventCode = DBGetFieldULong(trapResult, row, 2);
    DBGetField(trapResult, row, 3, m_description, MAX_DB_STRING);
-   DBGetField(trapResult, row, 4, m_userTag, MAX_DB_STRING);
+   DBGetField(trapResult, row, 4, m_userTag, MAX_USERTAG_LENGTH);
    m_guid = DBGetFieldGUID(trapResult, row, 5);
 
    DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
