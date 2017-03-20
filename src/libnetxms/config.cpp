@@ -1540,7 +1540,6 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    }
    else
    {
-printf("OPENDIR failed\n");
       success = false;
    }
 
