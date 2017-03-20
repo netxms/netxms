@@ -317,9 +317,9 @@ void LoadTrapCfg()
 
    // Load traps
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag,guid FROM snmp_trap_cfg"));
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"));
    if (hResult != NULL)
    {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"));
       if (hStmt != NULL)
       {
          int numRows = DBGetNumRows(hResult);

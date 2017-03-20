@@ -155,6 +155,9 @@ AgentConnection::~AgentConnection()
       onFileDownload(false);
    }
 
+	if (m_channel != NULL)
+	   m_channel->decRefCount();
+
    MutexDestroy(m_mutexDataLock);
 	MutexDestroy(m_mutexSocketWrite);
 	ConditionDestroy(m_condFileDownload);
@@ -183,6 +186,7 @@ void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
  */
 void AgentConnection::receiverThread()
 {
+   AbstractCommChannel *channel = m_channel;
    UINT32 msgBufferSize = 1024;
 
    // Initialize raw message receiving function
@@ -209,7 +213,7 @@ void AgentConnection::receiverThread()
       }
 
       // Receive raw message
-      int rc = RecvNXCPMessageEx(m_channel, &rawMsg, msgBuffer, &msgBufferSize,
+      int rc = RecvNXCPMessageEx(channel, &rawMsg, msgBuffer, &msgBufferSize,
                                  &m_pCtx, (decryptionBuffer != NULL) ? &decryptionBuffer : NULL,
                                  m_dwRecvTimeout, MAX_MSG_SIZE);
       if (rc <= 0)
@@ -451,9 +455,8 @@ void AgentConnection::receiverThread()
       onFileDownload(false);
    }
 
-	m_channel->close();
-	m_channel->decRefCount();
-	m_channel = NULL;
+	channel->close();
+	channel->decRefCount();
 	if (m_pCtx != NULL)
 	{
 		m_pCtx->decRefCount();
@@ -565,6 +568,7 @@ bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSock
 
    // Start receiver thread
    incInternalRefCount();
+   m_channel->incRefCount();  // for receiver thread
    m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
 
    // Setup encryption
@@ -693,6 +697,7 @@ connect_cleanup:
       if (m_channel != NULL)
       {
          m_channel->close();
+         m_channel->decRefCount();
          m_channel = NULL;
       }
 
@@ -732,6 +737,8 @@ void AgentConnection::disconnect()
    if (m_channel != NULL)
    {
       m_channel->shutdown();
+      m_channel->decRefCount();
+      m_channel = NULL;
    }
    destroyResultData();
    m_isConnected = false;
