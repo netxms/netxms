@@ -439,7 +439,7 @@ User::User() : UserDatabaseObject()
 	m_fullName[0] = 0;
 	_tcscpy(m_description, _T("Built-in system account"));
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
-	m_graceLogins = MAX_GRACE_LOGINS;
+	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
@@ -457,7 +457,7 @@ User::User() : UserDatabaseObject()
 User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
 	m_fullName[0] = 0;
-	m_graceLogins = MAX_GRACE_LOGINS;
+	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
@@ -614,7 +614,7 @@ bool User::validatePassword(const TCHAR *password)
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
    CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
-	m_graceLogins = MAX_GRACE_LOGINS;
+	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
 		m_flags &= ~UF_CHANGE_PASSWORD;
@@ -709,7 +709,7 @@ void User::increaseAuthFailures()
 void User::enable()
 {
 	m_authFailures = 0;
-	m_graceLogins = MAX_GRACE_LOGINS;
+	m_graceLogins = ConfigReadInt(_T("GraceLoginCount"), 5);
 	m_disabledUntil = 0;
 	m_flags &= ~(UF_DISABLED | UF_INTRUDER_LOCKOUT);
 	m_flags |= UF_MODIFIED;

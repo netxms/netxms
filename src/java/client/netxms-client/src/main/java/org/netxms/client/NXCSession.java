@@ -3355,6 +3355,19 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_VALUE);
    }
+   
+   /**
+    * Get server public configuration variable as a int
+    * 
+    * @param name configuration variable name
+    * @return value of requested configuration variable
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int getPublicServerVariableAsInt(String name) throws IOException, NXCException
+   {
+      return Integer.parseInt(getPublicServerVariable(name));
+   }
 
    /**
     * Get server public configuration variable as boolen value

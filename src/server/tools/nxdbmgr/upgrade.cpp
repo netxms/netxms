@@ -746,7 +746,17 @@ static bool SetSchemaVersion(int version)
    return SQLQuery(query);
 }
 
-/*
+/**
+ * Upgrade from V443 to V444
+ */
+static BOOL H_UpgradeFromV443(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("GraceLoginCount"), _T("5"), _T("User's grace login count"), 'S', true, true, false, false));
+   CHK_EXEC(SetSchemaVersion(444));
+   return TRUE;
+}
+
+/**
  * Upgrade from V442 to V443
  */
 static BOOL H_UpgradeFromV442(int currVersion, int newVersion)
@@ -11592,6 +11602,7 @@ static struct
    { 440, 441, H_UpgradeFromV440 },
    { 441, 442, H_UpgradeFromV441 },
    { 442, 443, H_UpgradeFromV442 },
+   { 443, 444, H_UpgradeFromV443 },
    { 0, 0, NULL }
 };
 
