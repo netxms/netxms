@@ -486,6 +486,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
 		UINT64 userRights;
+		UINT32 graceLogins;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
@@ -496,7 +497,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &userRights, &changePasswd, &intruderLockout,
-													 &closeOtherSessions, false);
+													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -510,7 +511,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &userRights,
 														 &changePasswd, &intruderLockout,
-														 &closeOtherSessions, false);
+														 &closeOtherSessions, false, &graceLogins);
 					X509_free(pCert);
 				}
 				else

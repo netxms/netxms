@@ -249,6 +249,7 @@ public class NXCSession
    private AuthenticationType authenticationMethod;
    private long userSystemRights;
    private boolean passwordExpired;
+   private int graceLogins;
 
    // Internal communication data
    private Socket socket = null;
@@ -1955,6 +1956,7 @@ public class NXCSession
       sessionId = response.getFieldAsInt32(NXCPCodes.VID_SESSION_ID);
       userSystemRights = response.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
       passwordExpired = response.getFieldAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
+      graceLogins = response.getFieldAsInt32(NXCPCodes.VID_GRACE_LOGINS);
       zoningEnabled = response.getFieldAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
 
@@ -2408,6 +2410,16 @@ public class NXCSession
    public boolean isPasswordExpired()
    {
       return passwordExpired;
+   }
+   
+   /**
+    * Get number of remaining grace logins
+    * 
+    * @return number of remaining grace logins
+    */
+   public int getGraceLogins()
+   {
+      return graceLogins;
    }
    
    /**

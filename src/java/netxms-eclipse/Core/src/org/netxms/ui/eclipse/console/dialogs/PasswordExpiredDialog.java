@@ -39,13 +39,19 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class PasswordExpiredDialog extends Dialog
 {
+   private int graceLogins;
 	private Text textPassword1;
 	private Text textPassword2;
 	private String password;
 
-	public PasswordExpiredDialog(Shell parentShell)
+	/**
+	 * @param parentShell
+	 * @param graceLogins
+	 */
+	public PasswordExpiredDialog(Shell parentShell, int graceLogins)
 	{
 		super(parentShell);
+		this.graceLogins = graceLogins;
 	}
 
 	/* (non-Javadoc)
@@ -76,7 +82,7 @@ public class PasswordExpiredDialog extends Dialog
 		editArea.setLayout(editAreaLayout);
 		
 		Label msg = new Label(editArea, SWT.WRAP);
-		msg.setText(Messages.get().PasswordExpiredDialog_passwd_expired); //$NON-NLS-1$
+		msg.setText(String.format(Messages.get().PasswordExpiredDialog_passwd_expired, graceLogins)); //$NON-NLS-1$
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

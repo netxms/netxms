@@ -751,7 +751,7 @@ static bool SetSchemaVersion(int version)
  */
 static BOOL H_UpgradeFromV443(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("GraceLoginCount"), _T("5"), _T("User's grace login count"), 'S', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("GraceLoginCount"), _T("5"), _T("User's grace login count"), 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(444));
    return TRUE;
 }

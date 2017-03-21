@@ -316,7 +316,8 @@ void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId)
  */
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions, bool ssoAuth)
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions,
+							   bool ssoAuth, UINT32 *graceLogins)
 {
    UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid = FALSE;
@@ -477,6 +478,7 @@ result:
             {
                *pdwSystemRights = GetEffectiveSystemRights(user);
                *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
+               *graceLogins = user->getGraceLogins();
                user->updateLastLogin();
                dwResult = RCC_SUCCESS;
             }

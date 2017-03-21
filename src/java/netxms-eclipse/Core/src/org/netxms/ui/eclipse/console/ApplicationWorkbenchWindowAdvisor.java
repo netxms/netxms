@@ -376,7 +376,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
     */
    private void requestPasswordChange(final String currentPassword, final NXCSession session)
    {
-      final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+      final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null, session.getGraceLogins());
 
       while(true)
       {

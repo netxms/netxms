@@ -1847,6 +1847,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
+      UINT32 graceLogins = 0;
       bool closeOtherSessions = false;
       pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
@@ -1861,7 +1862,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &m_dwSystemAccess, &changePasswd, &intruderLockout,
-													 &closeOtherSessions, false);
+													 &closeOtherSessions, false, &graceLogins);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -1875,7 +1876,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &m_dwSystemAccess,
 														 &changePasswd, &intruderLockout,
-														 &closeOtherSessions, false);
+														 &closeOtherSessions, false, &graceLogins);
 					X509_free(pCert);
 				}
 				else
@@ -1894,7 +1895,7 @@ void ClientSession::login(NXCPMessage *pRequest)
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
 				   dwResult = AuthenticateUser(szLogin, NULL, 0, NULL, NULL, &m_dwUserId,
 													    &m_dwSystemAccess, &changePasswd, &intruderLockout,
-													    &closeOtherSessions, true);
+													    &closeOtherSessions, true, &graceLogins);
             }
             else
             {
@@ -1945,6 +1946,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
+         msg.setField(VID_GRACE_LOGINS, graceLogins);
 
          if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
          {

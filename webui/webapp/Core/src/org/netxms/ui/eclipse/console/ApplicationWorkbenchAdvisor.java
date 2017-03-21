@@ -256,7 +256,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			// Suggest user to change password if it is expired
 			if (session.isPasswordExpired())
 			{
-				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
+				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null, session.getGraceLogins());
 				while(true)
 				{
    				if (dlg.open() != Window.OK)

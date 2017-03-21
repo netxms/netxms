@@ -1174,6 +1174,7 @@ typedef struct
 #define VID_IS_ACTIVE               ((UINT32)573)
 #define VID_CHANNEL_ID              ((UINT32)574)
 #define VID_NUM_URLS                ((UINT32)575)
+#define VID_GRACE_LOGINS            ((UINT32)576)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

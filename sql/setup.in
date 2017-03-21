@@ -85,7 +85,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('ExternalAuditTag','netxmsd-audit',1,1,'S','Syslog tag to be used in audit log records sent to external server.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('FirstFreeObjectId','100',0,1,'I','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('FixedStatusValue','0',1,1,'I','');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('GraceLoginCount','5',1,0,'S','User grace login count');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('GraceLoginCount','5',1,0,'I','User grace login count');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('HelpDeskLink','none',1,1,'S','');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('HousekeeperStartTime','02:00',1,1,'S','Timer when housekeeper starts. Housekeeper deletes old log lines, old DCI data, cleans removed objects and does VACUUM for \nPostgreSQL.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('IcmpPingSize','46',1,1,'I','Size of ICMP packets (in bytes, excluding IP header size) used for status polls.');
