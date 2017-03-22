@@ -1,8 +1,8 @@
 TARGET = libnetxms.dll
 TYPE = dll
 SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
-	cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp dir.c \
-	dirw.c dload.cpp geolocation.cpp getopt.c hash.cpp \
+	cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp dir.cpp \
+	dirw.cpp dload.cpp geolocation.cpp getopt.c hash.cpp \
 	hashmapbase.cpp ice.c icmp.cpp \
 	inetaddr.cpp log.cpp lz4.c main.cpp md5.cpp message.cpp \
 	msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp pa.cpp \

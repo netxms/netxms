@@ -1654,16 +1654,13 @@ typedef struct dirent
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
    int             d_namlen;       /* Name length */
-   char            d_name[257];    /* file name */
+   char            d_name[MAX_PATH];    /* file name */
 } _DIRECT;
 
 typedef struct _dir_struc
 {
-   char           *start;  /* Starting position */
-   char           *curr;   /* Current position */
-   long            size;   /* Size of string table */
-   long            nfiles; /* number if filenames in table */
-   struct dirent   dirstr; /* Directory structure to return */
+   HANDLE handle;
+   struct dirent dirstr; /* Directory structure to return */
 } DIR;
 
 #ifdef UNICODE
@@ -1672,15 +1669,12 @@ typedef struct dirent_w
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
    int             d_namlen;       /* Name length */
-   WCHAR           d_name[257];    /* file name */
+   WCHAR           d_name[MAX_PATH];    /* file name */
 } _DIRECTW;
 
 typedef struct _dir_struc_w
 {
-   WCHAR          *start;  /* Starting position */
-   WCHAR          *curr;   /* Current position */
-   long            size;   /* Size of string table */
-   long            nfiles; /* number if filenames in table */
+   HANDLE handle;
    struct dirent_w dirstr; /* Directory structure to return */
 } DIRW;
 
@@ -2120,9 +2114,9 @@ WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base);
 
 #ifdef _WIN32
 #ifdef UNICODE
-DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
-struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
-int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
+DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path);
+struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p);
+int LIBNETXMS_EXPORTABLE wclosedir(DIRW *p);
 
 #define _topendir wopendir
 #define _treaddir wreaddir
@@ -2133,9 +2127,9 @@ int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
 #define _tclosedir closedir
 #endif
 
-DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
-struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
-int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
+DIR LIBNETXMS_EXPORTABLE *opendir(const char *path);
+struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p);
+int LIBNETXMS_EXPORTABLE closedir(DIR *p);
 
 #else	/* not _WIN32 */
 

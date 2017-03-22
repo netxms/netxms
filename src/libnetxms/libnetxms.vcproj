@@ -394,11 +394,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\dir.c"
+				RelativePath=".\dir.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\dirw.c"
+				RelativePath=".\dirw.cpp"
 				>
 			</File>
 			<File

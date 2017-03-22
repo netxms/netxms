@@ -38,6 +38,6 @@ endif
 EXTRA_DIST = \
 	libnetxms.vcproj \
 	libnetxms.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
-	dir.c dirw.c \
+	dir.cpp dirw.cpp \
 	seh.cpp StackWalker.cpp StackWalker.h \
 	ldcw.s

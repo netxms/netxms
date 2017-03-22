@@ -339,6 +339,9 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
  */
 static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFolder, bool allowMultipart, AbstractCommSession *session)
 {
+   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" (root=%s, multipart=%s)"), 
+      folder, rootFolder ? _T("true") : _T("false"), allowMultipart ? _T("true") : _T("false"));
+
    NXCPMessage *msg;
    if (allowMultipart)
    {
@@ -364,7 +367,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
          if (FillMessageFolderContent(g_rootFileManagerFolders->get(i)->getFolder(), g_rootFileManagerFolders->get(i)->getFolder(), msg, fieldId))
          {
             count++;
-            fieldId+=10;
+            fieldId += 10;
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
@@ -375,6 +378,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
          session->sendMessage(msg);
          delete msg;
       }
+      nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder); 
       return;
    }
 
@@ -387,9 +391,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
       while((d = _treaddir(dir)) != NULL)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-         {
             continue;
-         }
 
          TCHAR fullName[MAX_PATH];
          _tcscpy(fullName, folder);
@@ -428,6 +430,8 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
 
    if (allowMultipart)
       delete msg;
+
+   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder); 
 }
 
 /**
