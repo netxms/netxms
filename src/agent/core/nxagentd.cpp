@@ -434,16 +434,15 @@ bool ServerInfo::match(const InetAddress &addr)
  */
 static HWND GetConsoleHWND()
 {
-	HWND hWnd;
-	DWORD wpid, cpid;
-
-   cpid = GetCurrentProcessId();
-   while(1)
+   DWORD cpid = GetCurrentProcessId();
+	HWND hWnd = NULL;
+   while(true)
    {
-	   hWnd = FindWindowEx(NULL, NULL, _T("ConsoleWindowClass"), NULL);
+	   hWnd = FindWindowEx(NULL, hWnd, _T("ConsoleWindowClass"), NULL);
       if (hWnd == NULL)
          break;
 
+   	DWORD wpid;
       GetWindowThreadProcessId(hWnd, &wpid);
 	   if (cpid == wpid)
          break;
