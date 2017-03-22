@@ -37,19 +37,35 @@ Var
 
 #include "..\..\install\windows\firewall.iss"
 
+Procedure ExecAndLog(execName, options, workingDir: String);
+Var
+  iResult : Integer;
+Begin
+  Log('Executing ' + execName + ' ' + options);
+  Log('   Working directory: ' + workingDir);
+  Exec(execName, options, workingDir, 0, ewWaitUntilTerminated, iResult);
+  Log('   Result: ' + IntToStr(iResult));
+End;
+
 Procedure StopService;
 Var
   strExecName : String;
-  iResult : Integer;
 Begin
   strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
   If FileExists(strExecName) Then
   Begin
-    Exec(strExecName, '-K', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
-    Exec(strExecName, '-S', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
-    Exec('taskkill.exe', '/IM nxagentd.exe /F /T', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
-    Exec('taskkill.exe', '/IM nxsagent.exe /F /T', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+    Log('Stopping agent service');
+    ExecAndLog(strExecName, '-K', ExpandConstant('{app}\bin'));
+    ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
+    ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
+    ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{app}\bin'));
   End;
+End;
+
+Function PrepareToInstall(var NeedsRestart: Boolean): String;
+Begin
+  StopService;
+  Result := '';
 End;
 
 Function BoolToStr(Val: Boolean): String;
@@ -274,5 +290,17 @@ Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
   If CurUninstallStep=usPostUninstall Then Begin
      RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  End;
+End;
+
+Procedure DeinitializeSetup();
+Var
+  strExecName : String;
+Begin
+  strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
+  If FileExists(strExecName) Then
+  Begin
+    Log('Starting agent service');
+    ExecAndLog(strExecName, '-s', ExpandConstant('{app}\bin'));
   End;
 End;
