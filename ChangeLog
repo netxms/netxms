@@ -1,4 +1,13 @@
 *
+* 2.1-RC1
+*
+
+- Management console:
+	- Node's zone name shown in alarm browser and object overview when zoning is enabled
+- Fixed issues: NX-1222
+
+
+*
 * 2.1-M3
 *
 

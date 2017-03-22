@@ -20,11 +20,14 @@ package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
@@ -46,12 +49,14 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	private Image commentsImage;
 	private boolean blinkState = true;
 	private WorkbenchLabelProvider wbLabelProvider;
+	private TableViewer viewer;
 	
 	/**
 	 * Default constructor 
 	 */
-	public AlarmListLabelProvider()
+	public AlarmListLabelProvider(TableViewer viewer)
 	{
+	   this.viewer = viewer;
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
@@ -70,7 +75,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		switch(columnIndex)
+		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusImage(((Alarm)element).getCurrentSeverity());
@@ -95,7 +100,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		switch(columnIndex)
+      switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
 			case AlarmList.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(((Alarm)element).getCurrentSeverity());
@@ -106,6 +111,16 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 			case AlarmList.COLUMN_SOURCE:
 				AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(((Alarm)element).getSourceObjectId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+         case AlarmList.COLUMN_ZONE:
+            if (session.isZoningEnabled())
+            {
+               Node node = session.findObjectById(((Alarm)element).getSourceObjectId(), Node.class);
+               if (node == null)
+                  return "";
+               Zone zone = session.findZone(node.getZoneId());
+               return (zone != null) ? zone.getObjectName() : Long.toString(node.getZoneId());
+            }
+            return "";
 			case AlarmList.COLUMN_MESSAGE:
 				return ((Alarm)element).getMessage();
 			case AlarmList.COLUMN_COUNT:

@@ -124,7 +124,7 @@ public class GeneralInfo extends TableElement
 				if (iface.getIpAddressList().size() > 0)
 				{
 					if (session.isZoningEnabled())
-						addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(iface.getZoneId()));
+						addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(iface.getZoneId()));
 					addPair(Messages.get().GeneralInfo_IPAddr, iface.getIpAddressList().get(0).toString());
 					for(int i = 1; i < iface.getIpAddressList().size(); i++)
 	               addPair("", iface.getIpAddressList().get(i).toString()); //$NON-NLS-1$
@@ -136,7 +136,7 @@ public class GeneralInfo extends TableElement
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;
 				if (session.isZoningEnabled())
-					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(node.getZoneId()));
+					addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(node.getZoneId()));
 				addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
 				addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
 				if (node.hasAgent())
@@ -197,7 +197,7 @@ public class GeneralInfo extends TableElement
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
-					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(subnet.getZoneId()));
+					addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(subnet.getZoneId()));
             addPair(Messages.get().GeneralInfo_IPAddress, subnet.getNetworkAddress().toString());
 				break;
 			case AbstractObject.OBJECT_ZONE:
@@ -244,5 +244,19 @@ public class GeneralInfo extends TableElement
 	protected String getTitle()
 	{
 		return Messages.get().GeneralInfo_Title;
+	}
+	
+	/**
+	 * Get zone name
+	 * 
+	 * @param zoneId
+	 * @return
+	 */
+	private String getZoneName(long zoneId)
+	{
+	   Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+	   if (zone == null)
+	      return Long.toString(zoneId);
+	   return String.format("%d (%s)", zoneId, zone.getObjectName());
 	}
 }

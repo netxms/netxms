@@ -101,13 +101,14 @@ public class AlarmList extends CompositeWithMessageBar
    public static final int COLUMN_SEVERITY = 0;
    public static final int COLUMN_STATE = 1;
    public static final int COLUMN_SOURCE = 2;
-   public static final int COLUMN_MESSAGE = 3;
-   public static final int COLUMN_COUNT = 4;
-   public static final int COLUMN_COMMENTS = 5;
-   public static final int COLUMN_HELPDESK_REF = 6;
-	public static final int COLUMN_ACK_BY = 7;
-	public static final int COLUMN_CREATED = 8;
-	public static final int COLUMN_LASTCHANGE = 9;
+   public static final int COLUMN_ZONE = 3;
+   public static final int COLUMN_MESSAGE = 4;
+   public static final int COLUMN_COUNT = 5;
+   public static final int COLUMN_COMMENTS = 6;
+   public static final int COLUMN_HELPDESK_REF = 7;
+	public static final int COLUMN_ACK_BY = 8;
+	public static final int COLUMN_CREATED = 9;
+	public static final int COLUMN_LASTCHANGE = 10;
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
@@ -154,7 +155,8 @@ public class AlarmList extends CompositeWithMessageBar
 		final String[] names = { 
 		      Messages.get().AlarmList_ColumnSeverity, 
 		      Messages.get().AlarmList_ColumnState, 
-		      Messages.get().AlarmList_ColumnSource, 
+		      Messages.get().AlarmList_ColumnSource,
+		      "Zone",
 		      Messages.get().AlarmList_ColumnMessage, 
 		      Messages.get().AlarmList_ColumnCount, 
 		      Messages.get().AlarmList_Comments, 
@@ -163,11 +165,13 @@ public class AlarmList extends CompositeWithMessageBar
 		      Messages.get().AlarmList_ColumnCreated, 
 		      Messages.get().AlarmList_ColumnLastChange
 		   };
-		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
+		final int[] widths = { 100, 100, 150, 130, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+      if (!session.isZoningEnabled())
+         alarmViewer.getColumnById(COLUMN_ZONE).dispose();
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
-		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
+		alarmViewer.setLabelProvider(new AlarmListLabelProvider(alarmViewer));
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
