@@ -118,6 +118,13 @@ extern const TCHAR *g_szMessages[];
 #endif
 
 /**
+ * OpenSSL APPLINK
+ */
+#ifdef _WIN32
+#include <openssl/applink.c>
+#endif
+
+/**
  * Valid options for getopt()
  */
 #if defined(_WIN32)
