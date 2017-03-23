@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
@@ -44,10 +44,6 @@ static bool DeleteDataTables()
 		{
          UINT32 id = DBGetFieldULong(hResult, i, 0);
 			_sntprintf(query, 256, _T("DROP TABLE idata_%d"), id);
-			CHK_EXEC(SQLQuery(query));
-			_sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), id);
-			CHK_EXEC(SQLQuery(query));
-			_sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), id);
 			CHK_EXEC(SQLQuery(query));
 			_sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
 			CHK_EXEC(SQLQuery(query));
