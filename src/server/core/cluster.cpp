@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -343,9 +343,10 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
             lockProperties();
 				for(UINT32 i = 0; (i < m_dwNumResources) && success; i++)
 				{
-		         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pResourceList[i].szName, DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_pResourceList[i].ipAddr.toString(), DB_BIND_TRANSIENT);
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_pResourceList[i].dwCurrOwner);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_pResourceList[i].dwId);
+		         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_pResourceList[i].szName, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_pResourceList[i].ipAddr.toString(), DB_BIND_TRANSIENT);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_pResourceList[i].dwCurrOwner);
                success = DBExecute(hStmt);
 				}
 				unlockProperties();
