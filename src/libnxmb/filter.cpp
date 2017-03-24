@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus Library
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,19 +38,17 @@ NXMBFilter::~NXMBFilter()
 
 bool NXMBFilter::isAllowed(NXMBMessage &msg)
 { 
-	return TRUE;
+	return true;
 }
 
 bool NXMBFilter::isOwnedByDispatcher()
 {
-	return TRUE;
+	return true;
 }
 
-
-//
-// Filter by message type implementation
-//
-
+/**
+ * Filter by message type implementation
+ */
 NXMBTypeFilter::NXMBTypeFilter()
                :NXMBFilter()
 {

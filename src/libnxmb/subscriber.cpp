@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus Library
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
  */
 NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
 {
-	m_id = _tcsdup(CHECK_NULL(id));
+	m_id = _tcsdup_ex(id);
 }
 
 /**
@@ -36,7 +36,7 @@ NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
  */
 NXMBSubscriber::~NXMBSubscriber()
 {
-	safe_free(m_id);
+	free(m_id);
 }
 
 /**
