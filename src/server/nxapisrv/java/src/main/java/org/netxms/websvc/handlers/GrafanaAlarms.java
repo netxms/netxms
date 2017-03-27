@@ -20,9 +20,11 @@ package org.netxms.websvc.handlers;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.json.JSONException;
-import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
@@ -39,14 +41,24 @@ public class GrafanaAlarms extends AbstractHandler
    @Override
    public Object getCollection(Map<String, String> query) throws Exception
    {
-      NXCSession session = getSession();
-      if (!session.isObjectsSynchronized())
-         session.syncObjects();
+      if (!getSession().isObjectsSynchronized())
+         getSession().syncObjects();
       
-      if (query.containsKey("node") && query.get("node").equals("Select source"))
+      if (query.containsKey("source") && query.get("source").equals("Select alarm source"))
       {
+         Set<Integer> classFilter = new HashSet<Integer>(5);
+         classFilter.add(AbstractObject.OBJECT_NODE);
+         classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+         classFilter.add(AbstractObject.OBJECT_RACK);
+         classFilter.add(AbstractObject.OBJECT_CLUSTER);
+         AbstractObject[] objects = getSession().getTopLevelObjects(classFilter);
+         Map<Long, String> result = new HashMap<Long, String>();
+         for(AbstractObject o : objects)
+               result.put(o.getObjectId(), o.getObjectName());
          
+         return result;
       }
+      
       JsonObject root = new JsonObject();
 
       JsonArray columns = new JsonArray();
@@ -68,7 +80,7 @@ public class GrafanaAlarms extends AbstractHandler
       AbstractObject object = null;
       AbstractUserObject user = null;
       
-      Map<Long, Alarm> alarms = session.getAlarms();
+      Map<Long, Alarm> alarms = getSession().getAlarms();
       for( Alarm a : alarms.values())
       {
          r.add(a.getCurrentSeverity().name());

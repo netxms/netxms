@@ -24,8 +24,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONArray;
-import org.json.JSONTokener;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
@@ -33,7 +31,9 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class GrafanaDataCollection extends AbstractHandler
 {
@@ -54,9 +54,9 @@ public class GrafanaDataCollection extends AbstractHandler
       {
          return getGraphData(query);
       }
-      else if (query.containsKey("node"))
+      else if (query.containsKey("target"))
       {
-         return getDciList(query.get("node"));
+         return getDciList(query.get("target"));
       }
       
       return getNodeList();     
@@ -71,8 +71,12 @@ public class GrafanaDataCollection extends AbstractHandler
     */
    private JsonArray getGraphData(Map<String, String> query) throws Exception
    {
-      JSONTokener tokener = new JSONTokener(query.get("targets"));
-      JSONArray targets = new JSONArray(tokener);
+      JsonParser parser = new JsonParser();
+      JsonElement element = parser.parse(query.get("targets"));
+      if (!element.isJsonArray())
+         return new JsonArray();
+      
+      JsonArray targets = element.getAsJsonArray();
       
       DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
       Date from = format.parse(query.get("from").substring(1, query.get("from").length()-1));
@@ -80,10 +84,13 @@ public class GrafanaDataCollection extends AbstractHandler
       
       JsonObject root;
       JsonArray result = new JsonArray();
-      for(int i = 0; i < targets.length(); i++)
+      for(JsonElement e : targets)
       {
-         long nodeId = findNodeByName(targets.getJSONObject(i).getString("node"));
-         DciData data = getSession().getCollectedData(nodeId, findDciByDescription(targets.getJSONObject(i).getString("dci"), nodeId), from, to, 0);
+         if (!e.getAsJsonObject().has("target"))
+            continue;
+         
+         long nodeId = findNodeByName(e.getAsJsonObject().get("target").getAsString());
+         DciData data = getSession().getCollectedData(nodeId, findDciByDescription(e.getAsJsonObject().get("dci").getAsString(), nodeId), from, to, 0);
          root = new JsonObject();
          JsonArray datapoints = new JsonArray();
          JsonArray datapoint;         
@@ -94,7 +101,7 @@ public class GrafanaDataCollection extends AbstractHandler
             datapoint.add(r.getTimestamp().getTime());
             datapoints.add(datapoint);
          }
-         root.addProperty("target", targets.getJSONObject(i).getString("dci"));
+         root.addProperty("target", e.getAsJsonObject().get("dci").getAsString());
          root.add("datapoints", datapoints);
          result.add(root);
       }
