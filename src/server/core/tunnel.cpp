@@ -129,6 +129,31 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
 }
 
 /**
+ * Bind agent tunnel from node
+ */
+UINT32 UnbindAgentTunnel(UINT32 nodeId)
+{
+   Node *node = FindObjectById(nodeId, OBJECT_NODE);
+   if (node == NULL)
+      return RCC_INVALID_OBJECT_ID;
+
+   if (node->getTunnelId().isNull())
+      return RCC_SUCCESS;  // tunnel is not set
+
+   node->setTunnelId(uuid::NULL_UUID);
+
+   AgentTunnel *tunnel = GetTunnelForNode(nodeId);
+   if (tunnel != NULL)
+   {
+      nxlog_debug(4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
+      tunnel->shutdown();
+      tunnel->decRefCount();
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
  * Get list of unbound agent tunnels into NXCP message
  */
 void GetUnboundAgentTunnels(NXCPMessage *msg)
@@ -212,8 +237,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
 AgentTunnel::~AgentTunnel()
 {
    m_channels.clear();
-   if (m_socket != INVALID_SOCKET)
-      shutdown(m_socket, SHUT_RDWR);
+   shutdown();
    ThreadJoin(m_recvThread);
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
@@ -377,6 +401,15 @@ void AgentTunnel::start()
 }
 
 /**
+ * Shutdown tunnel
+ */
+void AgentTunnel::shutdown()
+{
+   if (m_socket != INVALID_SOCKET)
+      ::shutdown(m_socket, SHUT_RDWR);
+}
+
+/**
  * Process setup request
  */
 void AgentTunnel::setup(const NXCPMessage *request)
@@ -427,6 +460,8 @@ UINT32 AgentTunnel::bind(UINT32 nodeId)
    msg.setId(InterlockedIncrement(&m_requestId));
    msg.setField(VID_SERVER_ID, g_serverId);
    msg.setField(VID_GUID, node->getGuid());
+   m_guid = uuid::generate();
+   msg.setField(VID_TUNNEL_GUID, m_guid);
 
    m_bindRequestId = msg.getId();
    m_bindGuid = node->getGuid();
@@ -468,7 +503,10 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
          X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, (long)certRequestLen);
          if (certRequest != NULL)
          {
-            char *cn = m_bindGuid.toString().getUTF8String();
+            String cnBuilder = m_bindGuid.toString();
+            cnBuilder.append(_T('@'));
+            cnBuilder.append(m_guid.toString());
+            char *cn = cnBuilder.getUTF8String();
             X509 *cert = IssueCertificate(certRequest, cn, 365);
             free(cn);
             if (cert != NULL)
@@ -481,6 +519,12 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                   response.setField(VID_CERTIFICATE, buffer, len);
                   OPENSSL_free(buffer);
                   debugPrintf(4, _T("Certificate issued"));
+
+                  Node *node = FindObjectByGUID(m_bindGuid, OBJECT_NODE);
+                  if (node != NULL)
+                  {
+                     node->setTunnelId(m_guid);
+                  }
                }
                else
                {
@@ -705,6 +749,21 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 }
 
 /**
+ * Parse tunnel certificate CN
+ */
+static bool ParseTunnelCertificateCN(TCHAR *cn, uuid& nodeGuid, uuid& tunnelGuid)
+{
+   TCHAR *p = _tcschr(cn, _T('@'));
+   if (p == NULL)
+      return false;
+   *p = 0;
+   p++;
+   nodeGuid = uuid::parse(cn);
+   tunnelGuid = uuid::parse(p);
+   return !nodeGuid.isNull() && !tunnelGuid.isNull();
+}
+
+/**
  * Incoming connection data
  */
 struct ConnectionRequest
@@ -792,23 +851,33 @@ retry:
          TCHAR cn[256];
          if (GetCertificateCN(cert, cn, 256))
          {
-            uuid guid = uuid::parse(cn);
-            if (!guid.isNull())
+            nxlog_debug(4, _T("SetupTunnel(%s): certificate CN: %s"), (const TCHAR *)request->addr.toString(), cn);
+            uuid nodeGuid, tunnelGuid;
+            if (ParseTunnelCertificateCN(cn, nodeGuid, tunnelGuid))
             {
-               Node *node = (Node *)FindObjectByGUID(guid, OBJECT_NODE);
+               Node *node = (Node *)FindObjectByGUID(nodeGuid, OBJECT_NODE);
                if (node != NULL)
                {
-                  nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
-                  nodeId = node->getId();
+                  if (tunnelGuid.equals(node->getTunnelId()))
+                  {
+                     nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
+                     nodeId = node->getId();
+                  }
+                  else
+                  {
+                     nxlog_debug(4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
+                              (const TCHAR *)request->addr.toString(), (const TCHAR *)tunnelGuid.toString(),
+                              node->getName(), node->getId());
+                  }
                }
                else
                {
-                  nxlog_debug(4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)guid.toString());
+                  nxlog_debug(4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)nodeGuid.toString());
                }
             }
             else
             {
-               nxlog_debug(4, _T("SetupTunnel(%s): Certificate CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
+               nxlog_debug(4, _T("SetupTunnel(%s): Certificate CN is not a valid tunnel ID"), (const TCHAR *)request->addr.toString());
             }
          }
          else

@@ -7948,3 +7948,17 @@ void Node::setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64
    }
    m_routingLoopEvents->add(new RoutingLoopEvent(address, nodeId, eventId));
 }
+
+/**
+ * Set tunnel ID
+ */
+void Node::setTunnelId(const uuid& tunnelId)
+{
+   lockProperties();
+   m_tunnelId = tunnelId;
+   setModified(false);
+   unlockProperties();
+
+   TCHAR buffer[128];
+   nxlog_debug(4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
+}

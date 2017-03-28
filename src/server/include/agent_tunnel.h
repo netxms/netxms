@@ -78,6 +78,7 @@ class AgentTunnel : public RefCountObject
 {
 protected:
    INT32 m_id;
+   uuid m_guid;
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -116,6 +117,7 @@ public:
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId);
    
    void start();
+   void shutdown();
    UINT32 bind(UINT32 nodeId);
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);

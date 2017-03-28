@@ -1383,6 +1383,7 @@ private:
 protected:
    InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
+	uuid m_tunnelId;
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
@@ -1607,6 +1608,7 @@ public:
    UINT32 getSshProxy() const { return m_sshProxy; }
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
+   const uuid& getTunnelId() const { return m_tunnelId; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1622,6 +1624,7 @@ public:
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
+	void setTunnelId(const uuid& tunnelId);
 	void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();

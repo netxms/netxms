@@ -36,6 +36,7 @@ extern ThreadPool *g_schedulerThreadPool;
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
+UINT32 UnbindAgentTunnel(UINT32 nodeId);
 
 /**
  * Format string to show value of global flag
@@ -1091,6 +1092,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             UINT32 rcc = BindAgentTunnel(tunnelId, nodeId);
             ConsolePrintf(pCtx, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing argument(s)\n\n"));
+         }
+      }
+      else if (IsCommand(_T("UNBIND"), szBuffer, 1))
+      {
+         ExtractWord(pArg, szBuffer);
+         UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+
+         if (nodeId != 0)
+         {
+            UINT32 rcc = UnbindAgentTunnel(nodeId);
+            ConsolePrintf(pCtx, _T("Unbind tunnel from node %d: RCC = %d\n\n"), nodeId, rcc);
          }
          else
          {
