@@ -398,7 +398,7 @@ static bool SetNotNullConstraint(const TCHAR *table, const TCHAR *column)
 /**
  * Resize varchar column
  */
-static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
+static bool ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
 {
 	TCHAR query[1024];
 
@@ -422,7 +422,7 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, b
 			break;
 	}
 
-	return (query[0] != 0) ? SQLQuery(query) : TRUE;
+	return (query[0] != 0) ? SQLQuery(query) : true;
 }
 
 /**
@@ -744,6 +744,16 @@ static bool SetSchemaVersion(int version)
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), version);
    return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V444 to V445
+ */
+static BOOL H_UpgradeFromV444(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD tunnel_id varchar(36) null")));
+   CHK_EXEC(SetSchemaVersion(445));
+   return TRUE;
 }
 
 /**
@@ -11603,6 +11613,7 @@ static struct
    { 441, 442, H_UpgradeFromV441 },
    { 442, 443, H_UpgradeFromV442 },
    { 443, 444, H_UpgradeFromV443 },
+   { 444, 445, H_UpgradeFromV444 },
    { 0, 0, NULL }
 };
 

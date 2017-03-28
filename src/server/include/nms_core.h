@@ -1164,8 +1164,12 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 									  const TCHAR *pszMappingData);
 bool ValidateAgentCertificate(X509 *cert);
 void ReloadCertificates();
+bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size);
 bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
-X509 *IssueCertificate(X509_REQ *request, const char *cn, int days);
+bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size);
+bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
+bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
+X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);
 #endif
 
 #ifndef _WIN32

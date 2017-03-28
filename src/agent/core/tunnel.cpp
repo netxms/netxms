@@ -99,7 +99,7 @@ private:
    void processChannelCloseRequest(NXCPMessage *request);
    void createSession(NXCPMessage *request);
 
-   X509_REQ *createCertificateRequest(const char *cn, EVP_PKEY **pkey);
+   X509_REQ *createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
    void loadCertificate();
 
@@ -592,7 +592,7 @@ void Tunnel::checkConnection()
 /**
  * Create certificate request
  */
-X509_REQ *Tunnel::createCertificateRequest(const char *cn, EVP_PKEY **pkey)
+X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
 {
    RSA *key = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, NULL);
    if (key == NULL)
@@ -608,8 +608,10 @@ X509_REQ *Tunnel::createCertificateRequest(const char *cn, EVP_PKEY **pkey)
       X509_NAME *subject = X509_REQ_get_subject_name(req);
       if (subject != NULL)
       {
-         X509_NAME_add_entry_by_txt(subject,"O", MBSTRING_UTF8, (const BYTE *)"netxms.org", -1, -1, 0);
-         X509_NAME_add_entry_by_txt(subject,"CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0);
+         if (country != NULL)
+            X509_NAME_add_entry_by_txt(subject, "C", MBSTRING_UTF8, (const BYTE *)country, -1, -1, 0);
+         X509_NAME_add_entry_by_txt(subject, "O", MBSTRING_UTF8, (const BYTE *)((org != NULL) ? org : "netxms.org"), -1, -1, 0);
+         X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0);
 
          EVP_PKEY *ekey = EVP_PKEY_new();
          if (ekey != NULL)
@@ -709,8 +711,11 @@ void Tunnel::processBindRequest(NXCPMessage *request)
    uuid guid = request->getFieldAsGUID(VID_GUID);
    char *cn = guid.toString().getUTF8String();
 
+   char *country = request->getFieldAsUtf8String(VID_COUNTRY);
+   char *org = request->getFieldAsUtf8String(VID_ORGANIZATION);
+
    EVP_PKEY *key = NULL;
-   X509_REQ *req = createCertificateRequest(cn, &key);
+   X509_REQ *req = createCertificateRequest(country, org, cn, &key);
    free(cn);
 
    if (req != NULL)

@@ -303,7 +303,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_id,rack_image,rack_position,rack_height,")
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
-      _T("port_rows,port_numbering_scheme,agent_comp_mode FROM nodes WHERE id=?"));
+      _T("port_rows,port_numbering_scheme,agent_comp_mode,")
+      _T("tunnel_id FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -396,6 +397,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_portRowCount = DBGetFieldULong(hResult, 0, 45);
    m_portNumberingScheme = DBGetFieldULong(hResult, 0, 46);
    m_agentCompressionMode = (INT16)DBGetFieldLong(hResult, 0, 47);
+   m_tunnelId = DBGetFieldGUID(hResult, 0, 48);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -493,7 +495,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
          _T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
          _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
-         _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=? WHERE id=?"));
+         _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=? WHERE id=?"));
    }
    else
    {
@@ -503,8 +505,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
         _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
         _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,id) ")
-        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,tunnel_id,id) ")
+        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
    {
@@ -572,7 +574,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portRowCount);
    DBBind(hStmt, 48, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
    DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
-   DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_tunnelId);
+   DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, m_id);
 
    BOOL bResult = DBExecute(hStmt);
    DBFreeStatement(hStmt);

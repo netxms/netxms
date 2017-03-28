@@ -58,9 +58,10 @@ static Mutex s_certificateStoreLock;
 /**
  * Issue certificate signed with server's certificate
  */
-X509 *IssueCertificate(X509_REQ *request, const char *cn, int days)
+X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days)
 {
-   nxlog_debug(4, _T("IssueCertificate: new certificate request (CN override: %hs)"), (cn != NULL) ? cn : "<not set>");
+   nxlog_debug(4, _T("IssueCertificate: new certificate request (CN override: %hs, OU override: %hs)"),
+            (cn != NULL) ? cn : "<not set>", (ou != NULL) ? ou : "<not set>");
 
    X509_NAME *requestSubject = X509_REQ_get_subject_name(request);
    if (requestSubject == NULL)
@@ -95,27 +96,26 @@ X509 *IssueCertificate(X509_REQ *request, const char *cn, int days)
    }
 
    X509_NAME *subject;
-   if (cn != NULL)
+   if ((cn != NULL) || (ou != NULL))
    {
       subject = X509_NAME_dup(requestSubject);
       if (subject != NULL)
       {
-         int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
-         if (idx != -1)
+         if (ou != NULL)
          {
-            X509_NAME_ENTRY *entry = X509_NAME_get_entry(subject, idx);
-            if (entry != NULL)
-            {
-               X509_NAME_ENTRY_set_data(entry, MBSTRING_UTF8, (const BYTE *)cn, -1);
-            }
-            else
-            {
-               nxlog_debug(4, _T("IssueCertificate: cannot get CN from certificate subject"));
-            }
+            int idx = X509_NAME_get_index_by_NID(subject, NID_organizationalUnitName, -1);
+            if (idx != -1)
+               X509_NAME_delete_entry(subject, idx);
+            if (!X509_NAME_add_entry_by_txt(subject, "OU", MBSTRING_UTF8, (const BYTE *)ou, -1, -1, 0))
+               nxlog_debug(4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for OU=%hs"), ou);
          }
-         else
+         if (cn != NULL)
          {
-            nxlog_debug(4, _T("IssueCertificate: cannot find CN index in certificate subject"));
+            int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
+            if (idx != -1)
+               X509_NAME_delete_entry(subject, idx);
+            if (!X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0))
+               nxlog_debug(4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for CN=%hs"), cn);
          }
       }
       else
@@ -205,20 +205,22 @@ X509 *IssueCertificate(X509_REQ *request, const char *cn, int days)
       return NULL;
    }
 
-   nxlog_debug(4, _T("IssueCertificate: new certificate issued successfully"));
+   char subjectName[1024];
+   X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
+   nxlog_debug(4, _T("IssueCertificate: new certificate with subject \"%hs\" issued successfully"), subjectName);
    return cert;
 }
 
 /**
  * Get CN from certificate
  */
-bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
+bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size)
 {
    X509_NAME *subject = X509_get_subject_name(cert);
    if (subject == NULL)
       return false;
 
-   int idx = X509_NAME_get_index_by_NID(subject, NID_commonName, -1);
+   int idx = X509_NAME_get_index_by_NID(subject, nid, -1);
    if (idx == -1)
       return false;
 
@@ -230,16 +232,52 @@ bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
    if (data == NULL)
       return false;
 
-   unsigned char *utf8CertCN;
-   ASN1_STRING_to_UTF8(&utf8CertCN, data);
+   unsigned char *text;
+   ASN1_STRING_to_UTF8(&text, data);
 #ifdef UNICODE
-   MultiByteToWideChar(CP_UTF8, 0, (char *)utf8CertCN, -1, buffer, (int)size);
+   MultiByteToWideChar(CP_UTF8, 0, (char *)text, -1, buffer, (int)size);
 #else
-   utf8_to_mb((char *)utf8CertCN, -1, buffer, (int)size);
+   utf8_to_mb((char *)text, -1, buffer, (int)size);
 #endif
    buffer[size - 1] = 0;
-   OPENSSL_free(utf8CertCN);
+   OPENSSL_free(text);
    return true;
+}
+
+/**
+ * Get CN from certificate
+ */
+bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size)
+{
+   return GetCertificateSubjectField(cert, NID_commonName, buffer, size);
+}
+
+/**
+ * Get OU from certificate
+ */
+bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size)
+{
+   return GetCertificateSubjectField(cert, NID_organizationalUnitName, buffer, size);
+}
+
+/**
+ * Get country name from server certificate
+ */
+bool GetServerCertificateCountry(TCHAR *buffer, size_t size)
+{
+   if (s_serverCertificate == NULL)
+      return false;
+   return GetCertificateSubjectField(s_serverCertificate, NID_countryName, buffer, size);
+}
+
+/**
+ * Get organization name from server certificate
+ */
+bool GetServerCertificateOrganization(TCHAR *buffer, size_t size)
+{
+   if (s_serverCertificate == NULL)
+      return false;
+   return GetCertificateSubjectField(s_serverCertificate, NID_organizationName, buffer, size);
 }
 
 /**

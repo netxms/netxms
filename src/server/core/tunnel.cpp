@@ -133,7 +133,7 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
  */
 UINT32 UnbindAgentTunnel(UINT32 nodeId)
 {
-   Node *node = FindObjectById(nodeId, OBJECT_NODE);
+   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    if (node == NULL)
       return RCC_INVALID_OBJECT_ID;
 
@@ -463,6 +463,12 @@ UINT32 AgentTunnel::bind(UINT32 nodeId)
    m_guid = uuid::generate();
    msg.setField(VID_TUNNEL_GUID, m_guid);
 
+   TCHAR buffer[256];
+   if (GetServerCertificateCountry(buffer, 256))
+      msg.setField(VID_COUNTRY, buffer);
+   if (GetServerCertificateOrganization(buffer, 256))
+      msg.setField(VID_ORGANIZATION, buffer);
+
    m_bindRequestId = msg.getId();
    m_bindGuid = node->getGuid();
    sendMessage(&msg);
@@ -503,11 +509,10 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
          X509_REQ *certRequest = d2i_X509_REQ(NULL, &certRequestData, (long)certRequestLen);
          if (certRequest != NULL)
          {
-            String cnBuilder = m_bindGuid.toString();
-            cnBuilder.append(_T('@'));
-            cnBuilder.append(m_guid.toString());
-            char *cn = cnBuilder.getUTF8String();
-            X509 *cert = IssueCertificate(certRequest, cn, 365);
+            char *ou = m_bindGuid.toString().getUTF8String();
+            char *cn = m_guid.toString().getUTF8String();
+            X509 *cert = IssueCertificate(certRequest, ou, cn, 365);
+            free(ou);
             free(cn);
             if (cert != NULL)
             {
@@ -520,7 +525,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                   OPENSSL_free(buffer);
                   debugPrintf(4, _T("Certificate issued"));
 
-                  Node *node = FindObjectByGUID(m_bindGuid, OBJECT_NODE);
+                  Node *node = (Node *)FindObjectByGUID(m_bindGuid, OBJECT_NODE);
                   if (node != NULL)
                   {
                      node->setTunnelId(m_guid);
@@ -749,21 +754,6 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 }
 
 /**
- * Parse tunnel certificate CN
- */
-static bool ParseTunnelCertificateCN(TCHAR *cn, uuid& nodeGuid, uuid& tunnelGuid)
-{
-   TCHAR *p = _tcschr(cn, _T('@'));
-   if (p == NULL)
-      return false;
-   *p = 0;
-   p++;
-   nodeGuid = uuid::parse(cn);
-   tunnelGuid = uuid::parse(p);
-   return !nodeGuid.isNull() && !tunnelGuid.isNull();
-}
-
-/**
  * Incoming connection data
  */
 struct ConnectionRequest
@@ -848,12 +838,13 @@ retry:
    {
       if (ValidateAgentCertificate(cert))
       {
-         TCHAR cn[256];
-         if (GetCertificateCN(cert, cn, 256))
+         TCHAR ou[256], cn[256];
+         if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
          {
-            nxlog_debug(4, _T("SetupTunnel(%s): certificate CN: %s"), (const TCHAR *)request->addr.toString(), cn);
-            uuid nodeGuid, tunnelGuid;
-            if (ParseTunnelCertificateCN(cn, nodeGuid, tunnelGuid))
+            nxlog_debug(4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), (const TCHAR *)request->addr.toString(), ou, cn);
+            uuid nodeGuid = uuid::parse(ou);
+            uuid tunnelGuid = uuid::parse(cn);
+            if (!nodeGuid.isNull() && !tunnelGuid.isNull())
             {
                Node *node = (Node *)FindObjectByGUID(nodeGuid, OBJECT_NODE);
                if (node != NULL)
@@ -877,12 +868,12 @@ retry:
             }
             else
             {
-               nxlog_debug(4, _T("SetupTunnel(%s): Certificate CN is not a valid tunnel ID"), (const TCHAR *)request->addr.toString());
+               nxlog_debug(4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
             }
          }
          else
          {
-            nxlog_debug(4, _T("SetupTunnel(%s): Cannot get certificate CN"), (const TCHAR *)request->addr.toString());
+            nxlog_debug(4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), (const TCHAR *)request->addr.toString());
          }
       }
       else
