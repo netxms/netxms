@@ -97,11 +97,15 @@ public class GrafanaDataCollection extends AbstractHandler
          for(DciDataRow r : data.getValues())
          {
             datapoint = new JsonArray();
-            datapoint.add(r.getValueAsLong());
+            datapoint.add(r.getValueAsDouble());
             datapoint.add(r.getTimestamp().getTime());
             datapoints.add(datapoint);
          }
-         root.addProperty("target", e.getAsJsonObject().get("dci").getAsString());
+         if (e.getAsJsonObject().has("legend") && !e.getAsJsonObject().get("legend").getAsString().equals(""))
+            root.addProperty("target", e.getAsJsonObject().get("legend").getAsString());
+         else
+            root.addProperty("target", e.getAsJsonObject().get("dci").getAsString());
+         
          root.add("datapoints", datapoints);
          result.add(root);
       }
