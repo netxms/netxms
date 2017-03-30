@@ -11090,6 +11090,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
 
    // Get node id and check object class and access rights
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   TCHAR *script = request->getFieldAsString(VID_SCRIPT);
    if (object != NULL)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -11102,7 +11103,6 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
-            TCHAR *script = request->getFieldAsString(VID_SCRIPT);
             if (script != NULL)
             {
                // Do macro expansion if target object is a node
@@ -11127,7 +11127,6 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                   }
 
                   TCHAR *expScript = ((Node *)object)->expandText(script, inputFields, m_loginName);
-                  free(script);
                   script = expScript;
                   delete inputFields;
                }
@@ -11144,6 +11143,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      {
                         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
                      }
+                     WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(&msg);
                      success = true;
@@ -11165,6 +11165,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
          }
          else  // User doesn't have CONTROL rights on object
          {
+			   WriteAuditLog(AUDIT_OBJECTS, false, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script execution failed. No access rights to the object."), CHECK_NULL(script));
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -11177,6 +11178,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+   free(script);
 
    // start execution
    if (success)
