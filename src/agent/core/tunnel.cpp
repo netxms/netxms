@@ -43,6 +43,7 @@ private:
    Tunnel *m_tunnel;
    UINT32 m_id;
    bool m_active;
+   bool m_closed;
    BYTE *m_buffer;
    size_t m_allocated;
    size_t m_head;
@@ -59,7 +60,7 @@ public:
    virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
    virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
    virtual int poll(UINT32 timeout, bool write = false);
-   virtual int shutdown() { return 0; }
+   virtual int shutdown();
    virtual void close();
 
    UINT32 getId() const { return m_id; }
@@ -148,17 +149,6 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
  */
 Tunnel::~Tunnel()
 {
-   MutexLock(m_channelLock);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-   {
-      if (m_channels[i] != NULL)
-      {
-         m_channels[i]->decRefCount();
-         m_channels[i] = NULL;
-      }
-   }
-   MutexUnlock(m_channelLock);
-
    disconnect();
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
@@ -194,6 +184,25 @@ void Tunnel::disconnect()
    m_connected = false;
    ThreadJoin(m_recvThread);
    delete_and_null(m_queue);
+
+   Array channels(g_dwMaxSessions, 16, false);
+   MutexLock(m_channelLock);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if (m_channels[i] != NULL)
+      {
+         channels.add(m_channels[i]);
+         m_channels[i]->incRefCount();
+      }
+   }
+   MutexUnlock(m_channelLock);
+
+   for(int i = 0; i < channels.size(); i++)
+   {
+      AbstractCommChannel *c = (AbstractCommChannel *)channels.get(i);
+      c->close();
+      c->decRefCount();
+   }
 }
 
 /**
@@ -262,6 +271,7 @@ void Tunnel::recvThread()
       else if (result != MSGRECV_TIMEOUT)
       {
          debugPrintf(4, _T("Receiver thread stopped (%s)"), AbstractMessageReceiver::resultToText(result));
+         m_reset = true;
          break;
       }
    }
@@ -272,6 +282,9 @@ void Tunnel::recvThread()
  */
 int Tunnel::sslWrite(const void *data, size_t size)
 {
+   if (!m_connected || m_reset)
+      return -1;
+
    bool canRetry;
    int bytes;
    MutexLock(m_sslLock);
@@ -307,7 +320,7 @@ int Tunnel::sslWrite(const void *data, size_t size)
  */
 bool Tunnel::sendMessage(const NXCPMessage *msg)
 {
-   if (m_socket == INVALID_SOCKET)
+   if (!m_connected || m_reset)
       return false;
 
    if (nxlog_get_debug_level() >= 6)
@@ -821,6 +834,7 @@ void Tunnel::createSession(NXCPMessage *request)
          delete session;
          response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
       }
+      channel->decRefCount();
    }
    else
    {
@@ -843,6 +857,7 @@ TunnelCommChannel *Tunnel::createChannel()
       {
          channel = new TunnelCommChannel(this, i);
          m_channels[i] = channel;
+         channel->incRefCount();
          debugPrintf(5, _T("New channel created (ID=%d)"), i);
          break;
       }
@@ -875,9 +890,12 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
 {
    MutexLock(m_channelLock);
    if (m_channels[channel->getId()] == channel)
+   {
+      debugPrintf(5, _T("Channel %d closed"), channel->getId());
       m_channels[channel->getId()] = NULL;
+      channel->decRefCount();
+   }
    MutexUnlock(m_channelLock);
-   channel->decRefCount();
 }
 
 /**
@@ -926,6 +944,7 @@ TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel, UINT32 id)
    m_tunnel = tunnel;
    m_id = id;
    m_active = true;
+   m_closed = false;
    m_allocated = 256 * 1024;
    m_head = 0;
    m_size = 0;
@@ -942,7 +961,6 @@ TunnelCommChannel::~TunnelCommChannel()
    free(m_buffer);
    MutexDestroy(m_bufferLock);
    ConditionDestroy(m_dataCondition);
-   m_tunnel->debugPrintf(5, _T("Channel %d closed"), m_id);
 }
 
 /**
@@ -999,13 +1017,25 @@ int TunnelCommChannel::poll(UINT32 timeout, bool write)
 }
 
 /**
+ * Shutdown channel
+ */
+int TunnelCommChannel::shutdown()
+{
+   m_active = false;
+   ConditionSet(m_dataCondition);
+   return 0;
+}
+
+/**
  * Close channel
  */
 void TunnelCommChannel::close()
 {
-   m_active = false;
-   ConditionSet(m_dataCondition);
+   if (m_closed)
+      return;  // already closed
+   shutdown();
    m_tunnel->closeChannel(this);
+   m_closed = true;
 }
 
 /**

@@ -5425,6 +5425,8 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    }
    else
    {
+      if (!m_ipAddress.isValidUnicast())
+         return NULL;
       conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       setAgentProxy(conn);
    }
