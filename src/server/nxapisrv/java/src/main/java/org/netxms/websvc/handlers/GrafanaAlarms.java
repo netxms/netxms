@@ -29,7 +29,9 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class GrafanaAlarms extends AbstractHandler
 {
@@ -44,7 +46,7 @@ public class GrafanaAlarms extends AbstractHandler
       if (!getSession().isObjectsSynchronized())
          getSession().syncObjects();
       
-      if (query.containsKey("source") && query.get("source").equals("Select alarm source"))
+      if (query.isEmpty())
       {
          Set<Integer> classFilter = new HashSet<Integer>(5);
          classFilter.add(AbstractObject.OBJECT_NODE);
@@ -80,36 +82,56 @@ public class GrafanaAlarms extends AbstractHandler
       AbstractObject object = null;
       AbstractUserObject user = null;
       
+      JsonParser parser = new JsonParser();
+      JsonElement element = parser.parse(query.get("targets"));
+      if (!element.isJsonArray())
+         return new JsonArray();
+      
+      JsonArray targets = element.getAsJsonArray();
+      JsonObject alarmSource;
+      long sourceId = 0;
       Map<Long, Alarm> alarms = getSession().getAlarms();
-      for( Alarm a : alarms.values())
+
+      for(JsonElement e : targets)
       {
-         r.add(a.getCurrentSeverity().name());
-         r.add(STATES[a.getState()]);
-         
-         object = getSession().findObjectById(a.getSourceObjectId());
-         if (object == null)
-            r.add(a.getSourceObjectId());
-         else
-            r.add(object.getObjectName());
-         
-         r.add(a.getMessage());
-         r.add(a.getRepeatCount());
-         r.add(a.getHelpdeskReference());
-         
-         user = getSession().findUserDBObjectById(a.getAckByUser());
-         if (user == null)
-            r.add("");
-         else
-            r.add(user.getName());
-         
-         r.add(df.format(a.getCreationTime()));
-         r.add(df.format(a.getLastChangeTime()));
-         rows.add(r);
-         r = new JsonArray();
-      }
-      
-      root.add("rows", rows);
-      
+         for( Alarm a : alarms.values())
+         {
+            if (e.getAsJsonObject().has("alarmSource"))
+            {
+               alarmSource = e.getAsJsonObject().getAsJsonObject("alarmSource");
+               if (alarmSource.size() > 0)
+                  sourceId = Long.parseLong(alarmSource.get("id").getAsString());
+            }
+            
+            if (sourceId == 0 || a.getSourceObjectId() == sourceId)
+            {            
+               r.add(a.getCurrentSeverity().name());
+               r.add(STATES[a.getState()]);
+               
+               object = getSession().findObjectById(a.getSourceObjectId());
+               if (object == null)
+                  r.add(a.getSourceObjectId());
+               else
+                  r.add(object.getObjectName());
+               
+               r.add(a.getMessage());
+               r.add(a.getRepeatCount());
+               r.add(a.getHelpdeskReference());
+               
+               user = getSession().findUserDBObjectById(a.getAckByUser());
+               if (user == null)
+                  r.add("");
+               else
+                  r.add(user.getName());
+               
+               r.add(df.format(a.getCreationTime()));
+               r.add(df.format(a.getLastChangeTime()));
+               rows.add(r);
+               r = new JsonArray();
+            }               
+         }
+      }      
+      root.add("rows", rows);      
       root.addProperty("type", "table");
 
       JsonArray wrapper = new JsonArray();

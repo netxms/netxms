@@ -24,12 +24,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.netxms.client.NXCException;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.client.objects.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,6 +40,7 @@ import com.google.gson.JsonParser;
 public class GrafanaDataCollection extends AbstractHandler
 {
    private List<AbstractObject> objects;
+   private Logger log = LoggerFactory.getLogger(GrafanaDataCollection.class);
    
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
@@ -82,15 +85,21 @@ public class GrafanaDataCollection extends AbstractHandler
       Date from = format.parse(query.get("from").substring(1, query.get("from").length()-1));
       Date to = format.parse(query.get("to").substring(1, query.get("to").length()-1));
       
-      JsonObject root;
+      JsonObject root, dciTarget, dci;
       JsonArray result = new JsonArray();
       for(JsonElement e : targets)
       {
-         if (!e.getAsJsonObject().has("target"))
+         if (!e.getAsJsonObject().has("dciTarget") || !e.getAsJsonObject().has("dci"))
             continue;
          
-         long nodeId = findNodeByName(e.getAsJsonObject().get("target").getAsString());
-         DciData data = getSession().getCollectedData(nodeId, findDciByDescription(e.getAsJsonObject().get("dci").getAsString(), nodeId), from, to, 0);
+         dciTarget = e.getAsJsonObject().getAsJsonObject("dciTarget");
+         dci = e.getAsJsonObject().getAsJsonObject("dci");
+         
+         if (dciTarget.size() == 0 || dci.size() == 0)
+            continue;
+         
+         DciData data = getSession().getCollectedData(Long.parseLong(dciTarget.get("id").getAsString()),
+                                                      Long.parseLong(dci.get("id").getAsString()), from, to, 0);
          root = new JsonObject();
          JsonArray datapoints = new JsonArray();
          JsonArray datapoint;         
@@ -104,7 +113,7 @@ public class GrafanaDataCollection extends AbstractHandler
          if (e.getAsJsonObject().has("legend") && !e.getAsJsonObject().get("legend").getAsString().equals(""))
             root.addProperty("target", e.getAsJsonObject().get("legend").getAsString());
          else
-            root.addProperty("target", e.getAsJsonObject().get("dci").getAsString());
+            root.addProperty("target", dci.get("name").getAsString());
          
          root.add("datapoints", datapoints);
          result.add(root);
@@ -131,56 +140,25 @@ public class GrafanaDataCollection extends AbstractHandler
    /**
     * Get list of dci`s for a node
     * 
-    * @param node
+    * @param id
     * @return dci list
     */
-   private Map<Long, String> getDciList(String node) throws Exception
+   private Map<Long, String> getDciList(String id) throws Exception
    {
       Map<Long, String> result = new HashMap<Long, String>();
-      for(AbstractObject o : objects)
+      try
       {
-         if (o.getObjectName().equals(node))
+         DciValue[] values = getSession().getLastValues(Long.parseLong(id));
+         for(DciValue v : values)
          {
-            DciValue[] values = getSession().getLastValues(o.getObjectId());
-            for(DciValue v : values)
-            {
-               result.put(v.getId(), v.getDescription());
-            };
+            result.put(v.getId(), v.getDescription());
          }
       }
-      return result;
-   }
-   
-   /**
-    * Find node ID by object name
-    * 
-    * @param name
-    * @return node ID
-    */
-   private long findNodeByName(String name)
-   {
-      for(AbstractObject o : objects)
+      catch (NXCException e)
       {
-         if (o instanceof Node && o.getObjectName().equals(name))
-            return o.getObjectId();
-      }      
-      return 0;
-   }
-   
-   /**
-    * Find DCI ID by name
-    * 
-    * @param name
-    * @return DCI ID
-    */
-   private long findDciByDescription(String name, long nodeId) throws Exception
-   {
-      DciValue[] values = getSession().getLastValues(nodeId);
-      for(DciValue v : values)
-      {
-         if (v.getDescription().equals(name))
-            return v.getId();
+         log.debug("DCI not found");
       }
-      return 0;
+
+      return result;
    }
 }
