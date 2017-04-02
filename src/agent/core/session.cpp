@@ -249,7 +249,10 @@ void CommSession::readThread()
          // Receive error
          if (msg == NULL)
          {
-            debugPrintf(5, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+            if (result == MSGRECV_CLOSED)
+               debugPrintf(5, _T("Communication channel closed by peer"));
+            else
+               debugPrintf(5, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
             break;
          }
 

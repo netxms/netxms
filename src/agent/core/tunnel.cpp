@@ -43,7 +43,7 @@ private:
    Tunnel *m_tunnel;
    UINT32 m_id;
    bool m_active;
-   bool m_closed;
+   VolatileCounter m_closed;
    BYTE *m_buffer;
    size_t m_allocated;
    size_t m_head;
@@ -944,7 +944,7 @@ TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel, UINT32 id)
    m_tunnel = tunnel;
    m_id = id;
    m_active = true;
-   m_closed = false;
+   m_closed = 0;
    m_allocated = 256 * 1024;
    m_head = 0;
    m_size = 0;
@@ -1031,11 +1031,10 @@ int TunnelCommChannel::shutdown()
  */
 void TunnelCommChannel::close()
 {
-   if (m_closed)
-      return;  // already closed
+   if (InterlockedIncrement(&m_closed) > 1)
+      return;  // already closed or close in progress
    shutdown();
    m_tunnel->closeChannel(this);
-   m_closed = true;
 }
 
 /**
