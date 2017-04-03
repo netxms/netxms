@@ -303,11 +303,11 @@ public class ScriptLibrary extends ViewPart
 	 */
 	private void refreshScriptList()
 	{
-		new ConsoleJob(Messages.get().ScriptLibrary_LoadJobTitle, this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get(getSite().getShell().getDisplay()).ScriptLibrary_LoadJobTitle, this, Activator.PLUGIN_ID, null, getSite().getShell().getDisplay()) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().ScriptLibrary_LoadJobError;
+				return Messages.get(getDisplay()).ScriptLibrary_LoadJobError;
 			}
 
 			@Override
@@ -456,7 +456,7 @@ public class ScriptLibrary extends ViewPart
 			@Override
 			protected void jobFinalize()
 			{
-				refreshScriptList();
+			   refreshScriptList();
 			}
 
 			@Override
