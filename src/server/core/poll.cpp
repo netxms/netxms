@@ -237,57 +237,70 @@ static bool PollerQueueElementComparator(void *key, void *element)
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
 {
 	TCHAR buffer[64];
-
-	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), ipAddr.toString(buffer), ifIndex);
-   if (ipAddr.isValid() && !ipAddr.isBroadcast() && !ipAddr.isLoopback() && !ipAddr.isMulticast() &&
-	    (FindNodeByIP(node->getZoneId(), ipAddr) == NULL) && !IsClusterIP(node->getZoneId(), ipAddr) && 
-		 (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) == NULL))
+	nxlog_debug(6, _T("DiscoveryPoller(): checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
+   if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
-      Interface *pInterface = node->findInterfaceByIndex(ifIndex);
-      if (pInterface != NULL)
-		{
-         const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
-         if (interfaceAddress.isValidUnicast())
-         {
-			   DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
-               pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
-            if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
-            {
-               NEW_NODE *pInfo;
-				   TCHAR buffer[64];
+      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
+      return;
+   }
 
-               pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->ipAddr = ipAddr;
-               pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
-				   pInfo->zoneId = node->getZoneId();
-				   pInfo->ignoreFilter = FALSE;
-				   if (macAddr == NULL)
-					   memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-				   else
-					   memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-				   DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
-				             pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-               g_nodePollerQueue.put(pInfo);
-            }
-			   else
-			   {
-               DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
-			   }
+   Node *curr = FindNodeByIP(node->getZoneId(), ipAddr);
+   if (curr != NULL)
+   {
+      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address already known at node %s [%d])"),
+               ipAddr.toString(buffer), curr->getName(), curr->getId());
+      return;
+   }
+
+   if (IsClusterIP(node->getZoneId(), ipAddr))
+   {
+      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
+   {
+      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   Interface *pInterface = node->findInterfaceByIndex(ifIndex);
+   if (pInterface != NULL)
+   {
+      const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+      if (interfaceAddress.isValidUnicast())
+      {
+         nxlog_debug(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
+            pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
+         if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
+         {
+            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+            pInfo->ipAddr = ipAddr;
+            pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
+            pInfo->zoneId = node->getZoneId();
+            pInfo->ignoreFilter = FALSE;
+            if (macAddr == NULL)
+               memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+            else
+               memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
+            DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
+                      pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+            g_nodePollerQueue.put(pInfo);
          }
          else
          {
-   			DbgPrintf(6, _T("DiscoveryPoller(): interface object found but IP address not found"));
+            nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
          }
-		}
-		else
-		{
-			DbgPrintf(6, _T("DiscoveryPoller(): interface object not found"));
-		}
+      }
+      else
+      {
+         nxlog_debug(6, _T("DiscoveryPoller(): interface object found but IP address not found"));
+      }
    }
-	else
-	{
-		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), ipAddr.toString(buffer));
-	}
+   else
+   {
+      nxlog_debug(6, _T("DiscoveryPoller(): interface object not found"));
+   }
 }
 
 /**
