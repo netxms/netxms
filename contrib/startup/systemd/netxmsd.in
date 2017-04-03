@@ -1,0 +1,10 @@
+[Unit]
+Description=NetXMS Server
+
+[Service]
+Type=forking
+ExecStart=~BINDIR~/netxmsd -d
+PIDFile=/var/run/netxmsd.pid
+
+[Install]
+WantedBy=multi-user.target

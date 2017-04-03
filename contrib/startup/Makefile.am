@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-SUBDIRS = debian gentoo hp-ux redhat suse ubuntu solaris
+SUBDIRS = debian gentoo hp-ux redhat suse systemd ubuntu solaris

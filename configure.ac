@@ -3352,6 +3352,7 @@ AC_CONFIG_FILES([
 	contrib/mibs/Makefile
 	contrib/music/Makefile
 	contrib/startup/Makefile
+	contrib/startup/systemd/Makefile
 	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
 	contrib/startup/hp-ux/Makefile
