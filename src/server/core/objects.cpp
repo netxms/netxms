@@ -1022,7 +1022,29 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 
 	data.objClass = objClass;
 	data.name = name;
-	return g_idxObjectById.find(ObjectNameComparator, &data);
+	ObjectIndex *index;
+	switch(objClass)
+	{
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+	   case OBJECT_NODE:
+	      index = &g_idxNodeById;
+	      break;
+      case OBJECT_ZONE:
+         index = &g_idxZoneByGUID;
+         break;
+	   default:
+         index = &g_idxObjectById;
+         break;
+	}
+	return index->find(ObjectNameComparator, &data);
 }
 
 /**
