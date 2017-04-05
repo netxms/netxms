@@ -995,9 +995,40 @@ const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
 }
 
 /**
+ * Generic object finding method
+ */
+NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass)
+{
+   ObjectIndex *index;
+   switch(objClass)
+   {
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+      case OBJECT_NODE:
+         index = &g_idxNodeById;
+         break;
+      case OBJECT_ZONE:
+         index = &g_idxZoneByGUID;
+         break;
+      default:
+         index = &g_idxObjectById;
+         break;
+   }
+   NetObj *object = index->find(comparator, userData);
+   return ((object == NULL) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : NULL);
+}
+
+/**
  * Callback data for FindObjectByName
  */
-struct __find_object_data
+struct __find_object_by_name_data
 {
 	int objClass;
 	const TCHAR *name;
@@ -1008,7 +1039,7 @@ struct __find_object_data
  */
 static bool ObjectNameComparator(NetObj *object, void *data)
 {
-	struct __find_object_data *fd = (struct __find_object_data *)data;
+	struct __find_object_by_name_data *fd = (struct __find_object_by_name_data *)data;
 	return ((fd->objClass == -1) || (fd->objClass == object->getObjectClass())) &&
 	       !object->isDeleted() && !_tcsicmp(object->getName(), fd->name);
 }
@@ -1018,41 +1049,29 @@ static bool ObjectNameComparator(NetObj *object, void *data)
  */
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 {
-	struct __find_object_data data;
-
+	struct __find_object_by_name_data data;
 	data.objClass = objClass;
 	data.name = name;
-	ObjectIndex *index;
-	switch(objClass)
-	{
-      case OBJECT_ACCESSPOINT:
-         index = &g_idxAccessPointById;
-         break;
-      case OBJECT_CLUSTER:
-         index = &g_idxClusterById;
-         break;
-      case OBJECT_MOBILEDEVICE:
-         index = &g_idxMobileDeviceById;
-         break;
-	   case OBJECT_NODE:
-	      index = &g_idxNodeById;
-	      break;
-      case OBJECT_ZONE:
-         index = &g_idxZoneByGUID;
-         break;
-	   default:
-         index = &g_idxObjectById;
-         break;
-	}
-	return index->find(ObjectNameComparator, &data);
+	return FindObject(ObjectNameComparator, &data, objClass);
 }
+
+/**
+ * Callback data for FindObjectByGUID
+ */
+struct __find_object_by_guid_data
+{
+   int objClass;
+   uuid guid;
+};
 
 /**
  * GUID comparator for FindObjectByGUID
  */
 static bool ObjectGuidComparator(NetObj *object, void *data)
 {
-   return !object->isDeleted() && object->getGuid().equals(*((const uuid *)data));
+   struct __find_object_by_guid_data *fd = (struct __find_object_by_guid_data *)data;
+   return ((fd->objClass == -1) || (fd->objClass == object->getObjectClass())) &&
+          !object->isDeleted() && object->getGuid().equals(fd->guid);
 }
 
 /**
@@ -1060,8 +1079,10 @@ static bool ObjectGuidComparator(NetObj *object, void *data)
  */
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass)
 {
-	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, (void *)&guid);
-	return (object != NULL) ? (((objClass == -1) || (objClass == object->getObjectClass())) ? object : NULL) : NULL;
+   struct __find_object_by_guid_data data;
+   data.objClass = objClass;
+   data.guid = guid;
+   return FindObject(ObjectGuidComparator, &data, objClass);
 }
 
 /**

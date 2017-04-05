@@ -2677,8 +2677,9 @@ void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
 NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
-NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
-NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass);
+NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass = -1);
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass = -1);
+NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr);
