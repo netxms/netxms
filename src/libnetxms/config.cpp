@@ -706,7 +706,7 @@ Config::~Config()
  */
 void Config::onError(const TCHAR *errorMessage)
 {
-   nxlog_debug(1, _T("Configuration loading error: %s\n"), errorMessage);
+   nxlog_debug(1, _T("Configuration loading error: %s"), errorMessage);
 }
 
 /**
