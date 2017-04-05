@@ -1533,10 +1533,10 @@ public:
    const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
    const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
 
-   void setCountry(const TCHAR *country) { safe_free(m_country); m_country = _tcsdup_ex(country); }
-   void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }
-   void setStreetAddress(const TCHAR *streetAddress) { safe_free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
-   void setPostCode(const TCHAR *postcode) { safe_free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
+   void setCountry(const TCHAR *country) { free(m_country); m_country = _tcsdup_ex(country); }
+   void setCity(const TCHAR *city) { free(m_city); m_city = _tcsdup_ex(city); }
+   void setStreetAddress(const TCHAR *streetAddress) { free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
+   void setPostCode(const TCHAR *postcode) { free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
 };
 
 /**
