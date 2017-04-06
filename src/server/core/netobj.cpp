@@ -919,7 +919,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
    }
 
-   // If DCI status is calculated for object apply DCI object's statud
+   // If DCI status is calculated for object apply DCI object's status
    if (mostCriticalDCI != STATUS_UNKNOWN)
    {
       if (m_status == STATUS_UNKNOWN)

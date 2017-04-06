@@ -1590,8 +1590,7 @@ restart_agent_check:
                for(int i = 0; i < m_childList->size(); i++)
                {
                   NetObj *curr = m_childList->get(i);
-                  if (((curr->getObjectClass() == OBJECT_INTERFACE) || (curr->getObjectClass() == OBJECT_NETWORKSERVICE)) &&
-                      (curr->getStatus() == STATUS_CRITICAL))
+                  if ((curr->getObjectClass() == OBJECT_INTERFACE) || (curr->getObjectClass() == OBJECT_NETWORKSERVICE))
                   {
                      curr->resetStatus();
                   }
