@@ -115,6 +115,8 @@ public class FilterText extends Composite
                   @Override
                   public void run()
                   {
+                     if (text.isDisposed())
+                        return;
                      if (lastModifyEvent == e)
                         callModifyListeners(e);
                   }

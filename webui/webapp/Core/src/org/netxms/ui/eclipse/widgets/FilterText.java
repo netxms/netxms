@@ -72,6 +72,7 @@ public class FilterText extends Composite
 		super(parent, style);		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 5;
+         
 		setLayout(layout);
 		
 		final Label label = new Label(this, SWT.NONE);
@@ -98,9 +99,6 @@ public class FilterText extends Composite
 		text = new Text(textArea, SWT.NONE);
 		text.setTextLimit(64);
 		text.setMessage(Messages.get().FilterText_FilterIsEmpty);
-		if (tooltip != null) {
-		   text.setToolTipText(tooltip);
-		}
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -117,6 +115,8 @@ public class FilterText extends Composite
                   @Override
                   public void run()
                   {
+                     if (text.isDisposed())
+                        return;
                      if (lastModifyEvent == e)
                         callModifyListeners(e);
                   }
@@ -155,15 +155,13 @@ public class FilterText extends Composite
 		buttonArea.setLayout(buttonLayout);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
-		gd.widthHint = 1;
-		gd.heightHint = 1;
 		buttonArea.setLayoutData(gd);
 		
 		clearButton = new Label(this, SWT.NONE);
 		clearButton.setBackground(getBackground());
 		clearButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		clearButton.setImage(SharedIcons.IMG_CLEAR);
-		clearButton.setToolTipText("Clear");
+		clearButton.setToolTipText(Messages.get().FilterText_Clear);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		clearButton.setLayoutData(gd);
@@ -231,8 +229,8 @@ public class FilterText extends Composite
 	
 	private void clearFilter()
    {
-	   if (text.getText().equals("") != true)
-	      text.setText("");
+	   if (text.getText().equals("") != true) //$NON-NLS-1$
+	      text.setText(""); //$NON-NLS-1$
    }
 	
 	/**
@@ -276,9 +274,6 @@ public class FilterText extends Composite
 				}
 			});
 		}
-		
-		((GridData)buttonArea.getLayoutData()).widthHint = (attrButtons.size() > 0) ? SWT.DEFAULT : 1;
-		((GridData)buttonArea.getLayoutData()).heightHint = (attrButtons.size() > 0) ? SWT.DEFAULT : 1;
 		
 		layout(true, true);
 	}
