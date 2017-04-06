@@ -4351,7 +4351,7 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
-            msg.setFieldInt32(NXCPCodes.VID_SEED_OBJECT, (int) data.getSeedObjectId());
+            msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
             msg.setFieldInt32(NXCPCodes.VID_FLAGS, (int) data.getFlags());
             break;
          case AbstractObject.OBJECT_NETWORKSERVICE:
@@ -4934,6 +4934,11 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.ZONE_PROXY))
       {
          msg.setFieldInt32(NXCPCodes.VID_ZONE_PROXY, (int)data.getZoneProxy());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.SEED_OBJECTS))
+      {
+         msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
       }
             
       modifyCustomObject(data, userData, msg);

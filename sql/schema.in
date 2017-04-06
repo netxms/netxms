@@ -1337,7 +1337,6 @@ CREATE TABLE network_maps
   id integer not null,
   map_type integer not null,
   layout integer not null,
-  seed integer not null,
   radius integer not null,
   background varchar(36) null,
   bg_latitude varchar(20) null,
@@ -1382,6 +1381,16 @@ CREATE TABLE network_map_links
 ) TABLE_TYPE;
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
+
+/**
+ * Seed nodes of network maps
+ */
+CREATE TABLE network_map_seed_nodes
+(
+  map_id integer not null,
+  seed_node_id integer not null,
+  PRIMARY KEY(map_id,seed_node_id)
+) TABLE_TYPE;
 
 /**
  * Image Library

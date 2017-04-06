@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
@@ -58,7 +59,7 @@ public class NetworkMap extends GenericObject
 	private UUID background;
 	private GeoLocation backgroundLocation;
 	private int backgroundZoom;
-	private long seedObjectId;
+	private Long seedObjectIds[];
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
 	private MapObjectDisplayMode objectDisplayMode;
@@ -81,7 +82,7 @@ public class NetworkMap extends GenericObject
 		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
 		backgroundZoom = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_ZOOM);
-		seedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_SEED_OBJECT);
+		seedObjectIds = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_SEED_OBJECTS);
 		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
 		objectDisplayMode = MapObjectDisplayMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_MODE));
@@ -117,7 +118,7 @@ public class NetworkMap extends GenericObject
 	public void prepareCopy(NXCObjectCreationData cd, NXCObjectModificationData md)
 	{
 	   cd.setMapType(mapType);
-	   cd.setSeedObjectId(seedObjectId);
+	   cd.setSeedObjectIds(Arrays.asList(seedObjectIds));
 	   
 	   md.setMapLayout(layout);
 	   md.setMapBackground(background, backgroundLocation, backgroundZoom, backgroundColor);
@@ -169,11 +170,11 @@ public class NetworkMap extends GenericObject
 	}
 
 	/**
-	 * @return the seedObjectId
+	 * @return the seedObjectIds
 	 */
-	public long getSeedObjectId()
+	public Long[] getSeedObjectIds()
 	{
-		return seedObjectId;
+		return seedObjectIds;
 	}
 	
 	/**

@@ -957,7 +957,7 @@ typedef struct
 #define VID_FILE_SIZE               ((UINT32)356)
 #define VID_MAP_TYPE                ((UINT32)357)
 #define VID_LAYOUT                  ((UINT32)358)
-#define VID_SEED_OBJECT             ((UINT32)359)
+#define VID_SEED_OBJECTS            ((UINT32)359)
 #define VID_BACKGROUND              ((UINT32)360)
 #define VID_NUM_ELEMENTS            ((UINT32)361)
 #define VID_INTERFACE_ID            ((UINT32)362)

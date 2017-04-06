@@ -118,6 +118,7 @@ public class NXCObjectModificationData
    public static final int ZONE_PROXY             = 67;
    public static final int AGENT_COMPRESSION_MODE = 68;
    public static final int URL_LIST               = 69;
+   public static final int SEED_OBJECTS           = 70;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -211,6 +212,7 @@ public class NXCObjectModificationData
 	private String sshPassword;
 	private long zoneProxy;
 	private List<ObjectUrl> urls;
+   private List<Long> seedObjectIds;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1756,5 +1758,22 @@ public class NXCObjectModificationData
    {
       this.urls = urls;
       fieldSet.add(URL_LIST);
+   }
+   
+   /**
+    * @return the seedObjectIds
+    */
+   public Long[] getSeedObjectIds()
+   {
+      return seedObjectIds.toArray(new Long[seedObjectIds.size()]);
+   }
+   
+   /**
+    * @param seedObjectIds the seed node object Ids to set
+    */
+   public void setSeedObjectIds(List<Long> seedObjectIds)
+   {
+      this.seedObjectIds = seedObjectIds;
+      fieldSet.add(SEED_OBJECTS);
    }
 }

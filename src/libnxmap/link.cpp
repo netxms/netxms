@@ -61,10 +61,10 @@ NetworkMapLink::NetworkMapLink(NXCPMessage *msg, UINT32 baseId)
  */
 NetworkMapLink::~NetworkMapLink()
 {
-	safe_free(m_name);
-	safe_free(m_connectorName1);
-	safe_free(m_connectorName2);
-	safe_free(m_config);
+	free(m_name);
+	free(m_connectorName1);
+	free(m_connectorName2);
+	free(m_config);
 }
 
 
@@ -103,6 +103,20 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
 {
 	safe_free(m_connectorName2);
 	m_connectorName2 = (name != NULL) ? _tcsdup(name) : NULL;
+}
+
+/**
+ * Swap connector information
+ */
+void NetworkMapLink::swap()
+{
+   UINT32 te = m_element1;
+   m_element1 = m_element2;
+   m_element2 = te;
+
+   TCHAR *tn = m_connectorName1;
+   m_connectorName1 = m_connectorName2;
+   m_connectorName2 = tn;
 }
 
 /**

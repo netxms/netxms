@@ -747,6 +747,51 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V445 to V446
+ */
+static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE network_map_seed_nodes (")
+      _T("  map_id integer not null,")
+      _T("  seed_node_id integer not null,")
+      _T("PRIMARY KEY(map_id,seed_node_id))")));
+
+   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id,seed FROM network_maps"));
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
+   if (hResult != NULL)
+   {
+      if (hStmt != NULL)
+      {
+         int nRows = DBGetNumRows(hResult);
+         for(int i = 0; i < nRows; i++)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+
+            if (!SQLExecute(hStmt))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+            }
+         }
+
+         CHK_EXEC(SQLDropColumn(_T("network_maps"), _T("seed")));
+         DBFreeStatement(hStmt);
+      }
+      DBFreeResult(hResult);
+   }
+
+
+   CHK_EXEC(SetSchemaVersion(446));
+   return TRUE;
+}
+
+/**
  * Upgrade from V444 to V445
  */
 static BOOL H_UpgradeFromV444(int currVersion, int newVersion)
@@ -11614,6 +11659,7 @@ static struct
    { 442, 443, H_UpgradeFromV442 },
    { 443, 444, H_UpgradeFromV443 },
    { 444, 445, H_UpgradeFromV444 },
+   { 445, 446, H_UpgradeFromV445 },
    { 0, 0, NULL }
 };
 

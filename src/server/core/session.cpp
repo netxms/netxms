@@ -5126,9 +5126,13 @@ void ClientSession::createObject(NXCPMessage *request)
                            NetObjInsert(object, true, false);
                            break;
                         case OBJECT_NETWORKMAP:
-                           object = new NetworkMap((int)request->getFieldAsUInt16(VID_MAP_TYPE), request->getFieldAsUInt32(VID_SEED_OBJECT));
-                           object->setName(objectName);
-                           NetObjInsert(object, true, false);
+                           {
+                              IntegerArray<UINT32> seeds;
+                              request->getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
+                              object = new NetworkMap((int)request->getFieldAsUInt16(VID_MAP_TYPE), &seeds);
+                              object->setName(objectName);
+                              NetObjInsert(object, true, false);
+                           }
                            break;
                         case OBJECT_NETWORKMAPGROUP:
                            object = new NetworkMapGroup(objectName);

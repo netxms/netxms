@@ -742,7 +742,7 @@ public class NXCPCodes
 	public static final long VID_FILE_SIZE = 356;
 	public static final long VID_MAP_TYPE = 357;
 	public static final long VID_LAYOUT = 358;
-	public static final long VID_SEED_OBJECT = 359;
+	public static final long VID_SEED_OBJECTS = 359;
 	public static final long VID_BACKGROUND = 360;
 	public static final long VID_NUM_ELEMENTS = 361;
 	public static final long VID_INTERFACE_ID = 362;

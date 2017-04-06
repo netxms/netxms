@@ -2347,7 +2347,7 @@ class NXCORE_EXPORTABLE NetworkMap : public NetObj
 {
 protected:
 	int m_mapType;
-	UINT32 m_seedObject;
+	IntegerArray<UINT32> *m_seedObjects;
 	int m_discoveryRadius;
 	int m_layout;
 	UINT32 m_flags;
@@ -2368,7 +2368,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
-	void updateObjects(nxmap_ObjList *objects);
+	void updateObjects(ObjectArray<nxmap_ObjList> *lists);
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
 
@@ -2376,7 +2376,7 @@ protected:
 
 public:
    NetworkMap();
-	NetworkMap(int type, UINT32 seed);
+	NetworkMap(int type, IntegerArray<UINT32> *seeds);
    virtual ~NetworkMap();
 
    virtual int getObjectClass() const { return OBJECT_NETWORKMAP; }

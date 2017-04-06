@@ -20,6 +20,8 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
@@ -49,7 +51,7 @@ public class NXCObjectCreationData
    private long icmpProxyId;
    private long sshProxyId;
 	private int mapType;
-	private long seedObjectId;
+	private List<Long> seedObjectIds;
 	private long zoneId;
 	private int serviceType;
 	private int ipProtocol;
@@ -105,7 +107,7 @@ public class NXCObjectCreationData
 		icmpProxyId = 0;
 		sshProxyId = 0;
 		mapType = 0;
-		seedObjectId = 0;
+		seedObjectIds = new ArrayList<Long>();
 		zoneId = 0;
 		serviceType = NetworkService.CUSTOM;
 		ipProtocol = 6;
@@ -302,11 +304,11 @@ public class NXCObjectCreationData
 	}
 
 	/**
-	 * @return the seedObjectId
+	 * @return the seedObjectIds
 	 */
-	public long getSeedObjectId()
+	public Long[] getSeedObjectIds()
 	{
-		return seedObjectId;
+		return seedObjectIds.toArray(new Long[seedObjectIds.size()]);
 	}
 
 	/**
@@ -314,7 +316,16 @@ public class NXCObjectCreationData
 	 */
 	public void setSeedObjectId(long seedObjectId)
 	{
-		this.seedObjectId = seedObjectId;
+		seedObjectIds.clear();
+		seedObjectIds.add(seedObjectId);
+	}
+	
+	/**
+	 * @param seedObjectIds the seed node object Ids to set
+	 */
+	public void setSeedObjectIds(List<Long> seedObjectIds)
+	{
+	   this.seedObjectIds = seedObjectIds;
 	}
 
 	/**

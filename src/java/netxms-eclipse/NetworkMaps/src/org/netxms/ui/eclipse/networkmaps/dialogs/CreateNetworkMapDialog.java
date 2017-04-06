@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -108,6 +109,7 @@ public class CreateNetworkMapDialog extends Dialog
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel(Messages.get().CreateNetworkMapDialog_SeedNode);
       seedObjectSelector.setObjectClass(Node.class);
+      seedObjectSelector.setClassFilter(ObjectSelectionDialog.createNodeSelectionFilter(false));
       seedObjectSelector.setEnabled(false);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

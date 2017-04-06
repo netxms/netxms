@@ -305,6 +305,7 @@ public:
 	void setConnector2Name(const TCHAR *name);
 	void setFlags(UINT32 flags) { m_flags = flags; }
 	void setConfig(const TCHAR *name);
+	void swap();
 };
 
 
