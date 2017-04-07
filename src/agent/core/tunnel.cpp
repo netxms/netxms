@@ -74,8 +74,9 @@ public:
 class Tunnel
 {
 private:
-   InetAddress m_address;
+   TCHAR *m_hostname;
    UINT16 m_port;
+   InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
    SSL *m_ssl;
@@ -89,7 +90,7 @@ private:
    TunnelCommChannel **m_channels;
    MUTEX m_channelLock;
 
-   Tunnel(const InetAddress& addr, UINT16 port);
+   Tunnel(const TCHAR *hostname, UINT16 port);
 
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
@@ -117,7 +118,7 @@ public:
    void closeChannel(TunnelCommChannel *channel);
    int sendChannelData(UINT32 id, const void *data, size_t len);
 
-   const InetAddress& getAddress() const { return m_address; }
+   const TCHAR *getHostname() const { return m_hostname; }
 
    void debugPrintf(int level, const TCHAR *format, ...);
 
@@ -127,8 +128,9 @@ public:
 /**
  * Tunnel constructor
  */
-Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
+Tunnel::Tunnel(const TCHAR *hostname, UINT16 port)
 {
+   m_hostname = _tcsdup(hostname);
    m_port = port;
    m_socket = INVALID_SOCKET;
    m_context = NULL;
@@ -139,7 +141,7 @@ Tunnel::Tunnel(const InetAddress& addr, UINT16 port) : m_address(addr)
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
-   _sntprintf(m_debugId, 64, _T("TUN-%s"), (const TCHAR *)addr.toString());
+   _sntprintf(m_debugId, 64, _T("TUN-%s"), m_hostname);
    m_channels = (TunnelCommChannel **)calloc(g_dwMaxSessions, sizeof(TunnelCommChannel *));
    m_channelLock = MutexCreate();
 }
@@ -159,6 +161,7 @@ Tunnel::~Tunnel()
    MutexDestroy(m_sslLock);
    free(m_channels);
    MutexDestroy(m_channelLock);
+   free(m_hostname);
 }
 
 /**
@@ -339,11 +342,17 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
  */
 void Tunnel::loadCertificate()
 {
-   BYTE addressHash[18];
-   m_address.buildHashKey(addressHash);
+   BYTE addressHash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+   char *un = MBStringFromWideString(m_hostname);
+   CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
+   free(un);
+#else
+   CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
+#endif
 
    TCHAR prefix[48];
-   BinToStr(addressHash, 18, prefix);
+   BinToStr(addressHash, SHA1_DIGEST_SIZE, prefix);
 
    TCHAR name[MAX_PATH];
    _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
@@ -351,7 +360,24 @@ void Tunnel::loadCertificate()
    if (f == NULL)
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
-      return;
+      if (errno == ENOENT)
+      {
+         // Try fallback file
+         m_address.buildHashKey(addressHash);
+         BinToStr(addressHash, 18, prefix);
+         _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+
+         f = _tfopen(name, _T("r"));
+         if (f == NULL)
+         {
+            debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
+            return;
+         }
+      }
+      else
+      {
+         return;
+      }
    }
 
    X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
@@ -418,6 +444,13 @@ bool Tunnel::connectToServer()
    m_socket = INVALID_SOCKET;
    m_context = NULL;
    m_ssl = NULL;
+
+   m_address = InetAddress::resolveHostName(m_hostname);
+   if (!m_address.isValidUnicast())
+   {
+      debugPrintf(4, _T("Server address cannot be resolved or is not valid"));
+      return false;
+   }
 
    // Create socket and connect
    m_socket = socket(m_address.getFamily(), SOCK_STREAM, 0);
@@ -673,11 +706,17 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
  */
 bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 {
-   BYTE addressHash[18];
-   m_address.buildHashKey(addressHash);
+   BYTE addressHash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+   char *un = MBStringFromWideString(m_hostname);
+   CalculateSHA1Hash((BYTE *)un, strlen(un), addressHash);
+   free(un);
+#else
+   CalculateSHA1Hash((BYTE *)m_hostname, strlen(m_hostname), addressHash);
+#endif
 
    TCHAR prefix[48];
-   BinToStr(addressHash, 18, prefix);
+   BinToStr(addressHash, SHA1_DIGEST_SIZE, prefix);
 
    TCHAR name[MAX_PATH];
    _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
@@ -928,12 +967,7 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
       if ((port < 1) || (port > 65535))
          return NULL;
    }
-
-   InetAddress addr = InetAddress::resolveHostName(config);
-   if (!addr.isValidUnicast())
-      return NULL;
-
-   return new Tunnel(addr, port);
+   return new Tunnel(config, port);
 }
 
 /**
@@ -1076,7 +1110,7 @@ void ParseTunnelList(TCHAR *list)
       if (t != NULL)
       {
          s_tunnels.add(t);
-         nxlog_debug(1, _T("Added server tunnel %s"), (const TCHAR *)t->getAddress().toString());
+         nxlog_debug(1, _T("Added server tunnel %s"), t->getHostname());
       }
       else
       {
