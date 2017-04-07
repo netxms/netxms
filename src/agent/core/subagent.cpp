@@ -325,13 +325,15 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
  */
 BOOL ProcessCmdBySubAgent(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
 {
-   BOOL bResult = FALSE;
-   UINT32 i;
-
-   for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
+   BOOL processed = FALSE;
+   for(UINT32 i = 0; (i < m_dwNumSubAgents) && (!processed); i++)
    {
       if (m_pSubAgentList[i].pInfo->commandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
+      {
+         processed = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
+         session->debugPrintf(7, _T("Command %sprocessed by sub-agent %s"), 
+            processed ? _T("") : _T("not "), m_pSubAgentList[i].pInfo->name);
+      }
    }
-   return bResult;
+   return processed;
 }
