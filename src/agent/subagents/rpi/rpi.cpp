@@ -108,6 +108,30 @@ static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHA
    return ERR_SUCCESS;
 }
 
+/**
+ *  CPU Temperature 
+ */
+static LONG H_CpuTemperature(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   FILE *cpuTemp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+   UINT32 rc = SYSINFO_RC_ERROR;
+   if (cpuTemp == NULL)
+      return rc;
+
+   char buffer[10];
+   if (fgets(buffer, 10, cpuTemp) != NULL)
+   {
+      float result;
+      if(sscanf(buffer, "%f", &result))
+      {
+         result = result / 1000.0;
+         ret_double(value, result, 1);
+         rc = SYSINFO_RC_SUCCESS;
+      }
+   }
+   fclose(cpuTemp);
+   return rc;
+}
 
 /**
  * Parse coma separated lines from configuration
@@ -179,7 +203,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") },
 	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
-	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") }
+	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") },
+	{ _T("System.CPU.Temperature"), H_CpuTemperature, _T("T"), DCI_DT_FLOAT, _T("CPU: temperature") }
 };
 
 /**
