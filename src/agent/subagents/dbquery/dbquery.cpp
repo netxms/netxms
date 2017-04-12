@@ -86,8 +86,8 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 static void SubAgentShutdown()
 {
-   safe_free(m_info.parameters);
-   safe_free(m_info.tables);
+   free(m_info.parameters);
+   free(m_info.tables);
    ConditionSet(g_condShutdown);
    StopPollingThreads();
    ShutdownConnections();
