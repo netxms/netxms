@@ -9,7 +9,7 @@ import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
-import org.achartengine.renderer.SimpleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
@@ -100,7 +100,7 @@ public class PieChartElement extends AbstractDashboardElement
 		ChartDciConfig[] items = config.getDciList();
 		for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 		{
-			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
+			XYSeriesRenderer r = new XYSeriesRenderer();
 			int color = items[i].getColorAsInt();
 			if (color == -1)
 				color = Colors.DEFAULT_ITEM_COLORS[i];

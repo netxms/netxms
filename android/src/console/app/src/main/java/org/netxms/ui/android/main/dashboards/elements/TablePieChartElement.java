@@ -10,7 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.achartengine.ChartFactory;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
-import org.achartengine.renderer.SimpleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 import org.netxms.client.Table;
 import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.dashboards.configs.TablePieChartConfig;
@@ -92,7 +92,7 @@ public class TablePieChartElement extends AbstractDashboardElement
 
 		for (int i = 0; i < count && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 		{
-			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
+			XYSeriesRenderer r = new XYSeriesRenderer();
 			r.setColor(Colors.DEFAULT_ITEM_COLORS[i] | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 		}

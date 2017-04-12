@@ -5,6 +5,7 @@ package org.netxms.ui.android.service.tasks;
 
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersion;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
@@ -106,7 +107,7 @@ public class ConnectTask extends Thread
 					try
 					{
 						Log.d(TAG, "calling session.connect()");
-						session.connect();
+						session.connect(new int[] { ProtocolVersion.INDEX_FULL });
 						Log.d(TAG, "calling session.login()");
 						session.login(login, password);
 						Log.d(TAG, "calling session.subscribe()");

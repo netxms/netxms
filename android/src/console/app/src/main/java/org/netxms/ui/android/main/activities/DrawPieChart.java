@@ -7,7 +7,7 @@ import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
-import org.achartengine.renderer.SimpleSeriesRenderer;
+import org.achartengine.renderer.XYSeriesRenderer;
 
 
 /**
@@ -38,7 +38,7 @@ public class DrawPieChart extends AbstractComparisonChart
 		renderer.setZoomEnabled(false);
 		for(int color : colorList)
 		{
-			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
+			XYSeriesRenderer r = new XYSeriesRenderer();
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 		}
