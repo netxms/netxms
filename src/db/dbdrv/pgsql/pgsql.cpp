@@ -212,6 +212,13 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *sz
 		wcscpy(errorText, L"Database name is empty");
 		return NULL;
 	}
+
+	if (szHost == NULL || *szHost == 0)
+	{
+		wcscpy(errorText, L"Host name is empty");
+		return NULL;
+	}
+
 	if((port = (char *)strchr(szHost, ':'))!=NULL)
 	{
 		port[0]=0;
