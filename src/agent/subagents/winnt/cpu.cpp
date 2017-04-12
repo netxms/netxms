@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,6 +72,11 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
          UINT64 user = curr[i].UserTime.QuadPart - prev[i].UserTime.QuadPart;
          UINT64 interrupt = curr[i].Reserved1[1].QuadPart - prev[i].Reserved1[1].QuadPart;
          UINT64 total = kernel + user;  // kernel time includes idle time
+
+         // There were reports of agent reporting extremely high CPU usage
+         // That could happen when idle count is greater than total count
+         if (idle > kernel)
+            idle = kernel;
 
          s_interruptCount[i] = curr[i].Reserved2;
          s_interruptCount[s_cpuCount] += curr[i].Reserved2;
