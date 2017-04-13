@@ -35,6 +35,7 @@ LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IsSubagentLoaded(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -546,35 +547,94 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 }
 
 /**
- * Add external parameter
+ * Add external parameter or list
  */
-BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to be TCHAR
+bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList)
 {
-   TCHAR *pszCmdLine, *pszArg;
+   TCHAR *cmdLine = _tcschr(config, _T(':'));
+   if (cmdLine == NULL)
+      return false;
 
-   pszCmdLine = _tcschr(pszCfgLine, _T(':'));
-   if (pszCmdLine == NULL)
-      return FALSE;
+   *cmdLine = 0;
+   cmdLine++;
+   Trim(config);
+   Trim(cmdLine);
+   if ((*config == 0) || (*cmdLine == 0))
+      return false;
 
-   *pszCmdLine = 0;
-   pszCmdLine++;
-   StrStrip(pszCfgLine);
-   StrStrip(pszCmdLine);
-   if ((*pszCfgLine == 0) || (*pszCmdLine == 0))
-      return FALSE;
-
-	pszArg = (TCHAR *)malloc((_tcslen(pszCmdLine) + 2) * sizeof(TCHAR));
-	pszArg[0] = bShellExec ? _T('S') : _T('E');
-	_tcscpy(&pszArg[1], pszCmdLine);
-   if (bIsList)
+	TCHAR *arg = (TCHAR *)malloc((_tcslen(cmdLine) + 2) * sizeof(TCHAR));
+	arg[0] = shellExec ? _T('S') : _T('E');
+	_tcscpy(&arg[1], cmdLine);
+   if (isList)
    {
-      AddList(pszCfgLine, H_ExternalList, pszArg);
+      AddList(config, H_ExternalList, arg);
    }
    else
    {
-      AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, _T(""));
+      AddParameter(config, H_ExternalParameter, arg, DCI_DT_STRING, _T(""));
    }
-   return TRUE;
+   return true;
+}
+
+/**
+ * Add external table
+ */
+bool AddExternalTable(TCHAR *config, bool shellExec)
+{
+   TCHAR *options = _tcschr(config, _T(':'));
+   if (options == NULL)
+      return false;
+   *options = 0;
+   options++;
+
+   TCHAR *cmdLine = _tcschr(options, _T(':'));
+   if (cmdLine == NULL)
+      return false;
+   *cmdLine = 0;
+   cmdLine++;
+
+   Trim(config);
+   Trim(options);
+   Trim(cmdLine);
+   if ((*config == 0) || (*options == 0) || (*cmdLine == 0))
+      return false;
+
+   TCHAR instanceColumns[256] = _T("");
+   ExtractNamedOptionValue(options, _T("instanceColumns"), instanceColumns, 256);
+
+   TCHAR description[256] = _T("");
+   ExtractNamedOptionValue(options, _T("description"), description, 256);
+
+   TCHAR separator[16] = _T(",");
+   ExtractNamedOptionValue(options, _T("separator"), separator, 16);
+   if (separator[0] == _T('\\'))
+   {
+      switch(separator[1])
+      {
+         case 'n':
+            separator[0] = _T('\n');
+            break;
+         case 'r':
+            separator[0] = _T('\r');
+            break;
+         case 's':
+            separator[0] = _T(' ');
+            break;
+         case 't':
+            separator[0] = _T('\t');
+            break;
+         case 'u':
+            separator[0] = (TCHAR)_tcstoul(&separator[2], NULL, 10);
+            break;
+      }
+   }
+
+   TCHAR *arg = (TCHAR *)malloc((_tcslen(cmdLine) + 3) * sizeof(TCHAR));
+   arg[0] = separator[0];
+   arg[1] = shellExec ? _T('S') : _T('E');
+   _tcscpy(&arg[2], cmdLine);
+   AddTable(config, H_ExternalTable, arg, instanceColumns, description, 0, NULL);
+   return true;
 }
 
 /**

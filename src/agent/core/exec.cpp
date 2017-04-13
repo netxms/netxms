@@ -567,6 +567,51 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 }
 
 /**
+ * Handler function for external (user-defined) tables
+ */
+LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mode=%c cmd=\"%s\""), cmd, arg[0], arg[1], &arg[2]);
+   StringList output;
+   LONG status = RunExternal(cmd, &arg[1], &output);
+   if (status == SYSINFO_RC_SUCCESS)
+   {
+      if (output.size() > 0)
+      {
+         int numColumns = 0;
+         TCHAR **columns = SplitString(output.get(0), arg[0], &numColumns);
+         for(int n = 0; n < numColumns; n++)
+         {
+            value->addColumn(columns[n]);
+            free(columns[n]);
+         }
+         free(columns);
+
+         for(int i = 1; i < output.size(); i++)
+         {
+            value->addRow();
+            int count = 0;
+            TCHAR **data = SplitString(output.get(i), arg[0], &count);
+            for(int n = 0; n < count; n++)
+            {
+               if (n < numColumns)
+                  value->setPreallocated(n, data[n]);
+               else
+                  free(data[n]);
+            }
+            free(data);
+         }
+      }
+      else
+      {
+         session->debugPrintf(4, _T("H_ExternalTable(\"%s\"): empty output from command"), cmd);
+         status = SYSINFO_RC_ERROR;
+      }
+   }
+   return status;
+}
+
+/**
  * Execute external command via shell
  */
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)

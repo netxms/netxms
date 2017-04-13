@@ -338,4 +338,16 @@ Language=English
 [VCS-%1] %2
 .
 
+MessageId=
+SymbolicName=MSG_ADD_EXT_LIST_FAILED
+Language=English
+Unable to add external list "%1"
+.
+
+MessageId=
+SymbolicName=MSG_ADD_EXT_TABLE_FAILED
+Language=English
+Unable to add external table "%1"
+.
+
 ;#endif

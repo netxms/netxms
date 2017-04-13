@@ -551,7 +551,8 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
               const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
               int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
-BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
+bool AddExternalParameter(TCHAR *config, bool shellExec, bool isList);
+bool AddExternalTable(TCHAR *config, bool shellExec);
 UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);
 UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *session);
 UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *session);

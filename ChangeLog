@@ -2,6 +2,7 @@
 * 2.1-RC1
 *
 
+- External tables in agent
 - Management console:
 	- Node's zone name shown in alarm browser and object overview when zoning is enabled
 - Fixed issues: NX-1222

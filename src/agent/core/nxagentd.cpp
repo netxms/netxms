@@ -210,12 +210,13 @@ static TCHAR *m_pszServerList = NULL;
 static TCHAR *m_pszControlServerList = NULL;
 static TCHAR *m_pszMasterServerList = NULL;
 static TCHAR *m_pszSubagentList = NULL;
-static TCHAR *m_pszExtParamList = NULL;
-static TCHAR *m_pszExtListsList = NULL;
-static TCHAR *m_pszShExtParamList = NULL;
-static TCHAR *m_pszParamProviderList = NULL;
-static TCHAR *m_pszExtSubagentList = NULL;
-static TCHAR *m_pszAppAgentList = NULL;
+static TCHAR *s_externalParametersConfig = NULL;
+static TCHAR *s_externalShellExecParametersConfig = NULL;
+static TCHAR *s_externalParameterProvidersConfig = NULL;
+static TCHAR *s_externalListsConfig = NULL;
+static TCHAR *s_externalTablesConfig = NULL;
+static TCHAR *s_externalSubAgentsList = NULL;
+static TCHAR *s_appAgentsList = NULL;
 static TCHAR *s_serverConnectionList = NULL;
 static UINT32 s_enabledCiphers = 0xFFFF;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
@@ -252,7 +253,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList, NULL },
    { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList, NULL },
-   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszAppAgentList, NULL },
+   { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &s_appAgentsList, NULL },
    { _T("BackgroundLogWriter"), CT_BOOLEAN, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, NULL },
    { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
@@ -276,12 +277,13 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, NULL },
-   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
+   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalListsConfig, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
-   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
-   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList, NULL },
-   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList, NULL },
-   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList, NULL },
+   { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParametersConfig, NULL },
+   { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, NULL },
+   { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, NULL },
+   { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalSubAgentsList, NULL },
+   { _T("ExternalTable"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalTablesConfig, NULL },
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
@@ -873,7 +875,7 @@ BOOL Initialize()
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          LoadSubAgent(pItem);
       }
       free(m_pszSubagentList);
@@ -887,7 +889,7 @@ BOOL Initialize()
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddActionFromConfig(pItem, FALSE))
             nxlog_write(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
@@ -901,7 +903,7 @@ BOOL Initialize()
 
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddActionFromConfig(pItem, TRUE))
             nxlog_write(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
@@ -909,78 +911,93 @@ BOOL Initialize()
    }
 
    // Parse external parameters list
-   if (m_pszExtParamList != NULL)
+   if (s_externalParametersConfig != NULL)
    {
-      for(pItem = pEnd = m_pszExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalParametersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddExternalParameter(pItem, FALSE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
-      free(m_pszExtParamList);
+      free(s_externalParametersConfig);
    }
-   if (m_pszShExtParamList != NULL)
+   if (s_externalShellExecParametersConfig != NULL)
    {
-      for(pItem = pEnd = m_pszShExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalShellExecParametersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddExternalParameter(pItem, TRUE, FALSE))
             nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
-      free(m_pszShExtParamList);
+      free(s_externalShellExecParametersConfig);
    }
 
    // Parse external lists
-   if (m_pszExtListsList != NULL)
+   if (s_externalListsConfig != NULL)
    {
-      for(pItem = pEnd = m_pszExtListsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalListsConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddExternalParameter(pItem, FALSE, TRUE))
-            nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+            nxlog_write(MSG_ADD_EXT_LIST_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
-      free(m_pszExtListsList);
+      free(s_externalListsConfig);
+   }
+
+   // Parse external tables
+   if (s_externalTablesConfig != NULL)
+   {
+      for(pItem = pEnd = s_externalTablesConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = _tcschr(pItem, _T('\n'));
+         if (pEnd != NULL)
+            *pEnd = 0;
+         Trim(pItem);
+         if (!AddExternalTable(pItem, false))
+            nxlog_write(MSG_ADD_EXT_TABLE_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(s_externalTablesConfig);
    }
 
    // Parse external parameters providers list
-   if (m_pszParamProviderList != NULL)
+   if (s_externalParameterProvidersConfig != NULL)
    {
-      for(pItem = pEnd = m_pszParamProviderList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = s_externalParameterProvidersConfig; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = _tcschr(pItem, _T('\n'));
          if (pEnd != NULL)
             *pEnd = 0;
-         StrStrip(pItem);
+         Trim(pItem);
          if (!AddParametersProvider(pItem))
             nxlog_write(MSG_ADD_PARAM_PROVIDER_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
-      free(m_pszParamProviderList);
+      free(s_externalParameterProvidersConfig);
    }
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
       // Parse external subagents list
-	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszExtSubagentList != NULL))
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_externalSubAgentsList != NULL))
       {
-         for(pItem = pEnd = m_pszExtSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+         for(pItem = pEnd = s_externalSubAgentsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
          {
             pEnd = _tcschr(pItem, _T('\n'));
             if (pEnd != NULL)
                *pEnd = 0;
-            StrStrip(pItem);
+            Trim(pItem);
             if (!AddExternalSubagent(pItem))
                nxlog_write(MSG_ADD_EXTERNAL_SUBAGENT_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
          }
-         free(m_pszExtSubagentList);
+         free(s_externalSubAgentsList);
       }
 
       // Additional external subagents implicitly defined by EXT:* config sections
@@ -994,17 +1011,17 @@ BOOL Initialize()
       delete entries;
 
       // Parse application agents list
-	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (m_pszAppAgentList != NULL))
+	   if (!(g_dwFlags & AF_SUBAGENT_LOADER) && (s_appAgentsList != NULL))
       {
-         for(pItem = pEnd = m_pszAppAgentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+         for(pItem = pEnd = s_appAgentsList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
          {
             pEnd = _tcschr(pItem, _T('\n'));
             if (pEnd != NULL)
                *pEnd = 0;
-            StrStrip(pItem);
+            Trim(pItem);
             RegisterApplicationAgent(pItem);
          }
-         free(m_pszAppAgentList);
+         free(s_appAgentsList);
       }
    }
 
