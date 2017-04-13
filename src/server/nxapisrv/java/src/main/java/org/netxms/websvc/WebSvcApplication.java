@@ -20,6 +20,7 @@ package org.netxms.websvc;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import org.netxms.websvc.handlers.AccessIntegrationTools;
 import org.netxms.websvc.handlers.Alarms;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
@@ -70,6 +71,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{id}", Objects.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
+      router.attach("/authenticate", AccessIntegrationTools.class);
       return router;
    }
 }

@@ -49,6 +49,7 @@ import com.google.gson.JsonObject;
  */
 public abstract class AbstractHandler extends ServerResource
 {
+   public static String serverAddress = "127.0.0.1";
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
    private NXCSession session = null;
@@ -335,7 +336,7 @@ public abstract class AbstractHandler extends ServerResource
     */
    protected SessionToken login(String login, String password) throws Exception
    {
-      session = new NXCSession("127.0.0.1");
+      session = new NXCSession(serverAddress);
       session.connect();
       session.login(login, (password == null) ? "" : password);
       return SessionStore.getInstance(getServletContext()).registerSession(session);

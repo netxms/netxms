@@ -49,6 +49,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_MANAGE_REPOSITORIES     = 0x1000000000L;
    public static final long SYSTEM_ACCESS_VIEW_REPOSITORIES       = 0x2000000000L;
    public static final long SYSTEM_ACCESS_VIEW_ALL_ALARMS         = 0x4000000000L;
+   public static final long SYSTEM_ACCESS_EXTERNAL_INTEGRATION    = 0x8000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;

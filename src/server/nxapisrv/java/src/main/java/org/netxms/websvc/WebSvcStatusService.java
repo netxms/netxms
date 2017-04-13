@@ -78,6 +78,8 @@ public class WebSvcStatusService extends StatusService
             return Status.CLIENT_ERROR_METHOD_NOT_ALLOWED;
          case RCC.INTERNAL_ERROR:
             return Status.SERVER_ERROR_INTERNAL;
+         case RCC.SUCCESS:
+            return Status.SUCCESS_OK;
          case RCC.INVALID_ACTION_ID:
          case RCC.INVALID_ALARM_ID:
          case RCC.INVALID_ALARM_NOTE_ID:

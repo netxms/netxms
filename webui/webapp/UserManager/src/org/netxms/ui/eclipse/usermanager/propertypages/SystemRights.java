@@ -97,7 +97,8 @@ public class SystemRights extends PropertyPage
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, Messages.get().SystemRights_ManageAllScheduledTasks);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, Messages.get().SystemRights_ScheduleScriptTask);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, Messages.get().SystemRights_ScheduleFileUploadTask); 
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, Messages.get().SystemRights_ScheduleObjectMaint); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, Messages.get().SystemRights_ScheduleObjectMaint);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, "External tool integration account"); 
 		
 		return dialogArea;
 	}
