@@ -3,6 +3,7 @@
 *
 
 - External tables in agent
+- Script source for table DCIs
 - Management console:
 	- Node's zone name shown in alarm browser and object overview when zoning is enabled
 - Fixed issues: NX-1222

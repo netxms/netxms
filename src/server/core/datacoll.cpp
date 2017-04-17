@@ -207,6 +207,9 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 				   *error = DCE_NOT_SUPPORTED;
             }
             break;
+         case DS_SCRIPT:
+            *error = dcTarget->getScriptTable(table->getName(), &result);
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;

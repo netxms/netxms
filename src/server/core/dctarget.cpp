@@ -601,9 +601,9 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 }
 
 /**
- * Get parameter value from NXSL script
+ * Run data collection script. Returns pointer to NXSL VM after successful run and NULL on failure.
  */
-UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param)
 {
    TCHAR name[256];
    nx_strncpy(name, param, 256);
@@ -616,19 +616,18 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
    if (p != NULL)
    {
       if (name[_tcslen(name) - 1] != _T(')'))
-         return DCE_NOT_SUPPORTED;
+         return NULL;
       name[_tcslen(name) - 1] = 0;
 
       if (!ParseValueList(&p, args))
       {
          // argument parsing error
          args.clear();
-         return DCE_NOT_SUPPORTED;
+         return NULL;
       }
    }
 
-   UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv());
    if (vm != NULL)
    {
       vm->setGlobalVariable(_T("$object"), createNXSLObject());
@@ -637,34 +636,45 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
       }
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
-      if (vm->run(&args))
+      if (!vm->run(&args))
       {
-         NXSL_Value *value = vm->getResult();
-         if (value->isNull())
-         {
-            // NULL value is an error indicator
-            rc = DCE_COLLECTION_ERROR;
-         }
-         else
-         {
-            const TCHAR *dciValue = value->getValueAsCString();
-            nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
-            rc = DCE_SUCCESS;
-         }
+         DbgPrintf(4, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         delete_and_null(vm);
       }
-      else
-      {
-			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
-         rc = DCE_COLLECTION_ERROR;
-      }
-      delete vm;
    }
    else
    {
       args.setOwner(true);
    }
-   DbgPrintf(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != NULL) ? _T("success") : _T("failure"));
+   return vm;
+}
+
+/**
+ * Get parameter value from NXSL script
+ */
+UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+{
+   UINT32 rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = runDataCollectionScript(param);
+   if (vm != NULL)
+   {
+      NXSL_Value *value = vm->getResult();
+      if (value->isNull())
+      {
+         // NULL value is an error indicator
+         rc = DCE_COLLECTION_ERROR;
+      }
+      else
+      {
+         const TCHAR *dciValue = value->getValueAsCString();
+         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+         rc = DCE_SUCCESS;
+      }
+      delete vm;
+   }
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 
@@ -673,74 +683,58 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
  */
 UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list)
 {
-   TCHAR name[256];
-   nx_strncpy(name, param, 256);
-   Trim(name);
-
-   ObjectArray<NXSL_Value> args(16, 16, false);
-
-   // Can be in form parameter(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
-   {
-      if (name[_tcslen(name) - 1] != _T(')'))
-         return DCE_NOT_SUPPORTED;
-      name[_tcslen(name) - 1] = 0;
-
-      if (!ParseValueList(&p, args))
-      {
-         // argument parsing error
-         args.clear();
-         return DCE_NOT_SUPPORTED;
-      }
-   }
-
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   NXSL_VM *vm = runDataCollectionScript(param);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), createNXSLObject());
-      if (getObjectClass() == OBJECT_NODE)
+      rc = DCE_SUCCESS;
+      NXSL_Value *value = vm->getResult();
+      if (value->isArray())
       {
-         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+         *list = value->getValueAsArray()->toStringList();
       }
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
-      if (vm->run(&args))
+      else if (value->isString())
       {
-         rc = DCE_SUCCESS;
-         NXSL_Value *value = vm->getResult();
-         if (value->isArray())
-         {
-            *list = value->getValueAsArray()->toStringList();
-         }
-         else if (value->isString())
-         {
-            *list = new StringList;
-            (*list)->add(value->getValueAsCString());
-         }
-         else if (value->isNull())
-         {
-            rc = DCE_COLLECTION_ERROR;
-         }
-         else
-         {
-            *list = new StringList;
-         }
+         *list = new StringList;
+         (*list)->add(value->getValueAsCString());
+      }
+      else if (value->isNull())
+      {
+         rc = DCE_COLLECTION_ERROR;
       }
       else
       {
-         DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         *list = new StringList;
+      }
+      delete vm;
+   }
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
+   return rc;
+}
+
+/**
+ * Get table from NXSL script
+ */
+UINT32 DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result)
+{
+   UINT32 rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = runDataCollectionScript(param);
+   if (vm != NULL)
+   {
+      NXSL_Value *value = vm->getResult();
+      if (value->isObject(_T("Table")))
+      {
+         *result = (Table *)value->getValueAsObject()->getData();
+         (*result)->incRefCount();
+         rc = DCE_SUCCESS;
+      }
+      else
+      {
          rc = DCE_COLLECTION_ERROR;
       }
       delete vm;
    }
-   else
-   {
-      args.setOwner(true);
-      DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): script \"%s\" not found"), m_name, param, name);
-   }
-   DbgPrintf(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
+   nxlog_debug(7, _T("DataCollectionTarget(%s)->getScriptTable(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 

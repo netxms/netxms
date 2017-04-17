@@ -1041,6 +1041,8 @@ protected:
 
    NetObj *objectFromParameter(const TCHAR *param);
 
+   NXSL_VM *runDataCollectionScript(const TCHAR *param);
+
    void applyUserTemplates();
    void updateContainerMembership();
 
@@ -1064,6 +1066,7 @@ public:
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual UINT32 getScriptTable(const TCHAR *param, Table **result);
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
