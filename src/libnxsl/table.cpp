@@ -67,14 +67,41 @@ NXSL_METHOD_DEFINITION(Table, addRow)
 }
 
 /**
- * addColumn(name) method
+ * addColumn(name, [type], [displayName], [isInstance]) method
  */
 NXSL_METHOD_DEFINITION(Table, addColumn)
 {
+   if ((argc < 1) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = new NXSL_Value((INT32)((Table *)object->getData())->addColumn(argv[0]->getValueAsCString()));
+   int dataType = DCI_DT_STRING;
+   if (argc >= 2)
+   {
+      if (!argv[1]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+      dataType = argv[1]->getValueAsInt32();
+   }
+
+   const TCHAR *displayName = NULL;
+   if (argc >= 3)
+   {
+      if (!argv[2]->isString())
+         return NXSL_ERR_NOT_STRING;
+      displayName = argv[2]->getValueAsCString();
+   }
+
+   bool isInstance = false;
+   if (argc >= 4)
+   {
+      if (!argv[3]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+      isInstance = (argv[1]->getValueAsInt32() != 0);
+   }
+
+   *result = new NXSL_Value((INT32)((Table *)object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
    return 0;
 }
 
@@ -164,7 +191,7 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
 {
    setName(_T("Table"));
 
-   NXSL_REGISTER_METHOD(Table, addColumn, 1);
+   NXSL_REGISTER_METHOD(Table, addColumn, -1);
    NXSL_REGISTER_METHOD(Table, addRow, 0);
    NXSL_REGISTER_METHOD(Table, deleteColumn, 1);
    NXSL_REGISTER_METHOD(Table, deleteRow, 1);
