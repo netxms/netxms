@@ -112,6 +112,8 @@ static void Help()
 		      _T("nxmibc [options] source1 ... sourceN\n\n")
 		      _T("Valid options:\n")
 		      _T("   -d <dir>  : Include all MIB files from given directory to compilation\n")
+            _T("   -r        : Scan sub-directories \n")
+            _T("   -e <ext>  : Specify file extensions (default extension: \"txt\") \n")
 		      _T("   -o <file> : Set output file name (default is netxms.mib)\n")
 		      _T("   -P        : Pause before exit\n")
 		      _T("   -s        : Strip descriptions from MIB objects\n")
@@ -132,7 +134,7 @@ static void AddFileToList(char *pszFile)
 /**
  * Scan directory for MIB files
  */
-static void ScanDirectory(const char *pszPath)
+static void ScanDirectory(const char *pszPath, const char *extensions, bool recursive)
 {
    DIR *pDir;
    struct dirent *pFile;
@@ -148,11 +150,14 @@ static void ScanDirectory(const char *pszPath)
             break;
          if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
          {
-				int len = (int)strlen(pFile->d_name);
-            if ((len > 4) && (!stricmp(&pFile->d_name[len - 4], ".txt")))
+            snprintf(szBuffer, MAX_PATH, "%s" FS_PATH_SEPARATOR_A "%s", pszPath, pFile->d_name);
+            if (recursive && pFile->d_type == DT_DIR)
+               ScanDirectory(szBuffer, extensions, recursive);
+            else
             {
-               sprintf(szBuffer, "%s" FS_PATH_SEPARATOR_A "%s", pszPath, pFile->d_name);
-               AddFileToList(szBuffer);
+               char *extension = strrchr(pFile->d_name, '.');
+               if ((extension != NULL) && (strstr(extensions, extension) != NULL))
+                  AddFileToList(szBuffer);
             }
          }
       }
@@ -165,6 +170,10 @@ static void ScanDirectory(const char *pszPath)
  */
 int main(int argc, char *argv[])
 {
+   char paths[24][MAX_PATH];
+   char extensions[64] = ".txt ";
+   bool recursive = false;
+   bool scanDir = false;
    SNMP_MIBObject *pRoot;
    DWORD dwFlags = 0, dwRet;
    int i, ch, rc = 0;
@@ -176,15 +185,28 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "d:ho:Psz")) != -1)
+   int index = 0;
+   while((ch = getopt(argc, argv, "rd:ho:e:Psz")) != -1)
    {
       switch(ch)
       {
+         case 'e':
+         {
+            char buffer[8];
+            snprintf(buffer, 8, ".%s ", optarg);
+            strcat(extensions, buffer);
+         }
+            break;
          case 'h':   // Display help and exit
             Help();
             break;
          case 'd':
-            ScanDirectory(optarg);
+         {
+            char buffer[MAX_PATH];
+            strncpy(paths[index], optarg, MAX_PATH);
+            scanDir = true;
+            index++;
+         }
             break;
          case 'o':
             strncpy(m_szOutFile, optarg, MAX_PATH);
@@ -192,6 +214,9 @@ int main(int argc, char *argv[])
             break;
 			case 'P':
             s_pauseBeforeExit = true;
+            break;
+         case 'r':
+            recursive = true;
             break;
          case 's':
             dwFlags |= SMT_SKIP_DESCRIPTIONS;
@@ -203,6 +228,14 @@ int main(int argc, char *argv[])
             return 255;
          default:
             break;
+      }
+   }
+
+   if (scanDir)
+   {
+      for(int i = 0; i < index; i++)
+      {
+         ScanDirectory(paths[i], extensions, recursive);
       }
    }
 
