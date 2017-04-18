@@ -478,7 +478,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							}
 							StrStrip(scriptName);
 
-							NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+							NXSL_VM *vm = CreateServerScriptVM(scriptName);
 							if (vm != NULL)
 							{
 								if (pObject->getObjectClass() == OBJECT_NODE)

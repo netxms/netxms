@@ -1028,7 +1028,7 @@ bool Node::isMyIP(const InetAddress& addr)
  */
 bool Node::filterInterface(InterfaceInfo *info)
 {
-   NXSL_VM *vm = g_pScriptLibrary->createVM(_T("Hook::CreateInterface"), new NXSL_ServerEnv);
+   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"));
    if (vm == NULL)
    {
       DbgPrintf(7, _T("Node::filterInterface(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
@@ -7199,7 +7199,7 @@ TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const
                      scriptName[i] = 0;
                      StrStrip(scriptName);
 
-                     NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+                     NXSL_VM *vm = CreateServerScriptVM(scriptName);
                      if (vm != NULL)
                      {
                         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
@@ -7398,7 +7398,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 {
    TCHAR scriptName[MAX_PATH] = _T("Hook::");
    nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName);
    if (vm == NULL)
    {
       DbgPrintf(7, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);

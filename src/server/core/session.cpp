@@ -8301,7 +8301,7 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
    msg.setId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      g_pScriptLibrary->fillMessage(&msg);
+      GetServerScriptLibrary()->fillMessage(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);;
    }
    else
@@ -8321,7 +8321,7 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       UINT32 id = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-      NXSL_LibraryScript *script = g_pScriptLibrary->findScript(id);
+      NXSL_LibraryScript *script = GetServerScriptLibrary()->findScript(id);
       if (script != NULL)
          script->fillMessage(&msg);
       else
@@ -11139,7 +11139,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                if (args->size() > 0)
                {
                   NXSL_Environment *env = withOutput ? new NXSL_ClientSessionEnv(this, &msg) : new NXSL_ServerEnv();
-                  vm = g_pScriptLibrary->createVM(args->get(0), env);
+                  vm = GetServerScriptLibrary()->createVM(args->get(0), env);
                   if (vm != NULL)
                   {
                      vm->setGlobalVariable(_T("$object"), object->createNXSLObject());

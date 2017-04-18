@@ -633,7 +633,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
    }
    else
    {
-      NXSL_VM *vm = g_pScriptLibrary->createVM(szFilter, new NXSL_ServerEnv);
+      NXSL_VM *vm = CreateServerScriptVM(szFilter);
       if (vm != NULL)
       {
          DbgPrintf(4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);

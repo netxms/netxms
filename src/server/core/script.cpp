@@ -25,7 +25,23 @@
 /**
  * Script library
  */
-NXSL_Library *g_pScriptLibrary = NULL;
+static NXSL_Library s_scriptLibrary;
+
+/**
+ * Get server's script library
+ */
+NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary()
+{
+   return &s_scriptLibrary;
+}
+
+/**
+ * Create NXSL VM from library script
+ */
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name)
+{
+   return s_scriptLibrary.createVM(name, new NXSL_ServerEnv());
+}
 
 /**
  * Load scripts from database
@@ -36,7 +52,6 @@ void LoadScripts()
    NXSL_LibraryScript *pScript;
    TCHAR buffer[MAX_DB_STRING];
 
-   g_pScriptLibrary = new NXSL_Library();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
    if (hResult != NULL)
@@ -48,7 +63,7 @@ void LoadScripts()
                   DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, NULL, 0));
          if (pScript->isValid())
          {
-            g_pScriptLibrary->addScript(pScript);
+            s_scriptLibrary.addScript(pScript);
             DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
          }
          else
@@ -105,18 +120,18 @@ void ReloadScript(UINT32 id)
       return;
    }
 
-   g_pScriptLibrary->lock();
-   g_pScriptLibrary->deleteScript(id);
+   s_scriptLibrary.lock();
+   s_scriptLibrary.deleteScript(id);
    if (script->isValid())
    {
-      g_pScriptLibrary->addScript(script);
+      s_scriptLibrary.addScript(script);
    }
    else
    {
       nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", id, script->getName(), script->getError());
       delete script;
    }
-   g_pScriptLibrary->unlock();
+   s_scriptLibrary.unlock();
 }
 
 /**
@@ -295,9 +310,9 @@ UINT32 DeleteScript(const NXCPMessage *request)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
          if (DBExecute(hStmt))
          {
-            g_pScriptLibrary->lock();
-            g_pScriptLibrary->deleteScript(id);
-            g_pScriptLibrary->unlock();
+            s_scriptLibrary.lock();
+            s_scriptLibrary.deleteScript(id);
+            s_scriptLibrary.unlock();
             rcc = RCC_SUCCESS;
          }
          DBFreeStatement(hStmt);
@@ -437,7 +452,7 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
       }
    }
 
-   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   NXSL_VM *vm = s_scriptLibrary.createVM(name, new NXSL_ServerEnv());
    if (vm != NULL)
    {
       if(object != NULL)

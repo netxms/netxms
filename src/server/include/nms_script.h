@@ -211,6 +211,16 @@ public:
 class ScheduleParameters;
 
 /**
+ * Get server script library
+ */
+NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();
+
+/**
+ * Create NXSL VM from library script
+ */
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name);
+
+/**
  * Functions
  */
 void LoadScripts();
@@ -225,8 +235,6 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
 /**
  * Global variables
  */
-extern NXSL_Library *g_pScriptLibrary;
-
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClusterClass g_nxslClusterClass;

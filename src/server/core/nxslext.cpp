@@ -1567,7 +1567,7 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 {
 	m_console = NULL;
-	setLibrary(g_pScriptLibrary);
+	setLibrary(GetServerScriptLibrary());
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
@@ -1661,7 +1661,7 @@ NXSL_VM *FindHookScript(const TCHAR *hookName)
 {
 	TCHAR scriptName[MAX_PATH] = _T("Hook::");
 	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	NXSL_VM *vm = CreateServerScriptVM(scriptName);
 	if (vm == NULL)
 		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
    return vm;

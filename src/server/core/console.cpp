@@ -927,12 +927,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
       bool libraryLocked = true;
       bool destroyCompiledScript = false;
-      g_pScriptLibrary->lock();
+      NXSL_Library *scriptLibrary = GetServerScriptLibrary();
+      scriptLibrary->lock();
 
-      NXSL_Program *compiledScript = g_pScriptLibrary->findNxslProgram(szBuffer);
+      NXSL_Program *compiledScript = scriptLibrary->findNxslProgram(szBuffer);
       if (compiledScript == NULL)
       {
-         g_pScriptLibrary->unlock();
+         scriptLibrary->unlock();
          libraryLocked = false;
          destroyCompiledScript = true;
          char *script;
@@ -970,7 +971,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             if (libraryLocked)
             {
-               g_pScriptLibrary->unlock();
+               scriptLibrary->unlock();
                libraryLocked = false;
             }
 
@@ -1004,7 +1005,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             delete compiledScript;
       }
       if (libraryLocked)
-         g_pScriptLibrary->unlock();
+         scriptLibrary->unlock();
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {

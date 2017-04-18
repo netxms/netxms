@@ -348,7 +348,7 @@ static bool ForwardEvent(const TCHAR *server, Event *event)
 static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 {
 	BOOL success = FALSE;
-	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	NXSL_VM *vm = CreateServerScriptVM(scriptName);
 	if (vm != NULL)
 	{
 		NetObj *object = FindObjectById(event->getSourceId());

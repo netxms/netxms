@@ -627,7 +627,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param)
       }
    }
 
-   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv());
+   NXSL_VM *vm = CreateServerScriptVM(name);
    if (vm != NULL)
    {
       vm->setGlobalVariable(_T("$object"), createNXSLObject());
@@ -766,7 +766,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
    }
 
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   NXSL_VM *vm = CreateServerScriptVM(name);
    if (vm != NULL)
    {
       vm->setGlobalVariable(_T("$object"), createNXSLObject());

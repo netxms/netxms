@@ -351,7 +351,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_VM *vm = g_pScriptLibrary->createVM(&macro[7], new NXSL_ServerEnv);
+			NXSL_VM *vm = CreateServerScriptVM(&macro[7]);
 			if (vm != NULL)
 			{
 				if (m_owner != NULL)
@@ -467,7 +467,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
          {
             *closingBracker = 0;
 
-            NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+            NXSL_VM *vm = CreateServerScriptVM(scriptName);
             if (vm != NULL)
             {
                vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_owner)));
@@ -493,7 +493,6 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
                }
                delete vm;
             }
-            g_pScriptLibrary->unlock();
          }
          else
          {

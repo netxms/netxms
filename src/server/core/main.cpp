@@ -1096,8 +1096,6 @@ void NXCORE_EXPORTABLE Shutdown()
    MsgWaitQueue::shutdown();
    WatchdogShutdown();
 
-	delete g_pScriptLibrary;
-
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
 
