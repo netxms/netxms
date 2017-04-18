@@ -13,7 +13,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.1.0",
  org.netxms.ui.eclipse.eventmanager;bundle-version="2.0.1",
  org.netxms.ui.eclipse.usermanager;bundle-version="2.0.8"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.logviewer.views,
+Export-Package: org.netxms.ui.eclipse.logviewer,
+ org.netxms.ui.eclipse.logviewer.views,
  org.netxms.ui.eclipse.logviewer.views.helpers

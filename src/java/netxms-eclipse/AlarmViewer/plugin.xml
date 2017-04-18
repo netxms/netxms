@@ -41,6 +41,12 @@
             id="org.netxms.ui.eclipse.alarmviewer.view.alarm_category_configurator"
             name="Alarm Category Configurator">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.alarmviewer.views.AlarmLogViewer"
+            id="org.netxms.ui.eclipse.alarmviewer.views.alarm_log_viewer"
+            name="Alarm log viewer">
+      </view>
    </extension>
 
    <extension
@@ -65,6 +71,11 @@
             description="Toggle Filter"
             id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter"
             name="Toggle Filter">
+      </command>
+      <command
+            description="Open alarm log"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.openAlarmLog"
+            name="Open alarm log">
       </command>
    </extension>
    
@@ -96,6 +107,21 @@
              tooltip="Open Alarm Category Configurator">
        </action>
     </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.alarm_log"
+          label="Alarm Log"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmLog"
+             definitionId="org.netxms.ui.eclipse.alarmviewer.commands.openAlarmLog"
+             icon="icons/AlarmLog.png"
+             id="org.netxms.ui.eclipse.alarmviewer.actions.openAlarmLog"
+             label="Alarm log"
+             menubarPath="view/logs"
+             toolbarPath="logs/additions"
+             tooltip="Open alarm log">
+       </action>
+    </actionSet>
    </extension>
 
    <extension
@@ -116,6 +142,12 @@
             contextId="org.netxms.ui.eclipse.alarmviewer.context.AlarmCategoryConfigurator"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.openAlarmLog"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="Alt+F8">
       </key>
    </extension>
 

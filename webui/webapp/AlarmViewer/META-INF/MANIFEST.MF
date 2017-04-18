@@ -18,5 +18,6 @@ Export-Package: org.netxms.ui.eclipse.alarmviewer.actions,
  org.netxms.ui.eclipse.alarmviewer.objecttabs,
  org.netxms.ui.eclipse.alarmviewer.views,
  org.netxms.ui.eclipse.alarmviewer.widgets
-Import-Package: org.netxms.ui.eclipse.usermanager.dialogs,
+Import-Package: org.netxms.ui.eclipse.logviewer.views,
+ org.netxms.ui.eclipse.usermanager.dialogs,
  org.netxms.ui.eclipse.usermanager.views.helpers

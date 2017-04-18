@@ -79,14 +79,14 @@ public class LogViewer extends ViewPart
 	
 	private static final int PAGE_SIZE = 400;
 		
-	private NXCSession session;
+	protected NXCSession session;
 	private FilterBuilder filterBuilder;
-	private TableViewer viewer;
+	protected TableViewer viewer;
 	private String logName;
 	private Log logHandle;
 	private LogFilter filter;
    private LogFilter delayedQueryFilter = null;
-	private Image titleImage = null;
+   private Image titleImage = null;
 	private Table resultSet;
 	private boolean noData = false;
    private Action actionRefresh;
@@ -105,7 +105,6 @@ public class LogViewer extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
 		setPartName(Messages.getString("LogViewer_" + logName)); //$NON-NLS-1$

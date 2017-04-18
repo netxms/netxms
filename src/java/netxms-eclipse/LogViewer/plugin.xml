@@ -44,12 +44,6 @@
             name="%command.name.TrapLog">
       </command>
       <command
-            categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="%command.description.AlarmLog"
-            id="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
-            name="%command.name.AlarmLog">
-      </command>
-      <command
             description="%command.description.MoreData"
             id="org.netxms.ui.eclipse.logviewer.commands.get_more_data"
             name="%command.name.MoreData">
@@ -115,16 +109,6 @@
 			   class="org.netxms.ui.eclipse.logviewer.actions.OpenAuditLog"
 			   definitionId="org.netxms.ui.eclipse.logviewer.commands.openAuditLog">
 		   </action>
-     <action
-           class="org.netxms.ui.eclipse.logviewer.actions.OpenAlarmLog"
-           definitionId="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
-           icon="icons/AlarmLog.png"
-           id="org.netxms.ui.eclipse.logviewer.actions.openAlarmLog"
-           label="%action.label.AlarmLog"
-           menubarPath="view/logs"
-           toolbarPath="logs/additions"
-           tooltip="%action.tooltip.AlarmLog">
-     </action>
 	   </actionSet>
    </extension>
 
@@ -145,11 +129,6 @@
             contextId="org.netxms.ui.eclipse.logviewer.context.LogViewer"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F2">
-      </key>
-      <key
-            commandId="org.netxms.ui.eclipse.logviewer.commands.openAlarmLog"
-            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Alt+F8">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.logviewer.commands.get_more_data"

@@ -78,9 +78,9 @@ public class LogViewer extends ViewPart
 	
 	private static final int PAGE_SIZE = 400;
 		
-	private NXCSession session;
+	protected NXCSession session;
 	private FilterBuilder filterBuilder;
-	private TableViewer viewer;
+	protected TableViewer viewer;
 	private String logName;
 	private Log logHandle;
 	private LogFilter filter;
