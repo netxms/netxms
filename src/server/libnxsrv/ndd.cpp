@@ -537,7 +537,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 }
 
 /**
- * Get interface status. Both states must be set to UNKNOWN if cannot be read from device.
+ * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  * 
  * @param snmp SNMP transport
  * @param attributes node's custom attributes
