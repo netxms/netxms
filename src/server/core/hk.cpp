@@ -259,7 +259,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
       {
-         if (g_pModuleList[i].pfStatusPollHook != NULL)
+         if (g_pModuleList[i].pfHousekeeperHook != NULL)
          {
             DbgPrintf(5, _T("Housekeeper: calling hook in module %s"), g_pModuleList[i].szName);
             g_pModuleList[i].pfHousekeeperHook();
