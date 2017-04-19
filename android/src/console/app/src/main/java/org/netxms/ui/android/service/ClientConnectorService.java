@@ -30,7 +30,7 @@ import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
 import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
-import org.netxms.ui.android.service.tasks.ExecActionTask;
+import org.netxms.ui.android.service.tasks.ExecObjectToolTask;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -1327,14 +1327,14 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Execute agent action. Communication with server will be done in separate worker thread.
+	 * Execute object tool. Communication with server will be done in separate worker thread.
 	 * 
-	 * @param objectId
-	 * @param action
+	 * @param nodeId
+	 * @param tool
 	 */
-	public void executeAction(long objectId, String action)
+	public void executeObjectTool(long nodeId, ObjectTool tool)
 	{
-		new ExecActionTask().execute(new Object[] { session, objectId, action, this });
+		new ExecObjectToolTask().execute(new Object[] { session, nodeId, tool, this });
 	}
 
 	/**

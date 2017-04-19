@@ -197,6 +197,7 @@ public class NodeBrowser extends AbstractClientActivity
 						case ObjectTool.TYPE_INTERNAL:
 						case ObjectTool.TYPE_ACTION:
 						case ObjectTool.TYPE_SERVER_COMMAND:
+						case ObjectTool.TYPE_SERVER_SCRIPT:
 							if (tool.isApplicableForNode((Node)selectedObject))
 								subMenu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
 							break;
@@ -297,18 +298,18 @@ public class NodeBrowser extends AbstractClientActivity
 						{
 							if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 							{
-								String message = tool.getConfirmationText().replaceAll("%OBJECT_NAME%", selectedObject.getObjectName()).replaceAll("%OBJECT_IP_ADDR%", ((Node)selectedObject).getPrimaryIP().getHostAddress());
+								String message = tool.getConfirmationText().replaceAll("%n", selectedObject.getObjectName()).replaceAll("%a", ((Node)selectedObject).getPrimaryIP().getHostAddress());
 								new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert).setTitle(R.string.confirm_tool_execution).setMessage(message).setCancelable(true).setPositiveButton(R.string.yes, new OnClickListener()
 								{
 									@Override
 									public void onClick(DialogInterface dialog, int which)
 									{
-										service.executeAction(selectedObject.getObjectId(), tool.getData());
+										service.executeObjectTool(selectedObject.getObjectId(), tool);
 									}
 								}).setNegativeButton(R.string.no, null).show();
 								break;
 							}
-							service.executeAction(selectedObject.getObjectId(), tool.getData());
+							service.executeObjectTool(selectedObject.getObjectId(), tool);
 							break;
 						}
 					}
