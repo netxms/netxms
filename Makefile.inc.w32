@@ -66,6 +66,10 @@ LDFLAGS = $(LDFLAGS) /DLL /IMPLIB:$(IMPLIB)
 CPPFLAGS = $(CPPFLAGS) /D_USRDLL
 LDFLAGS = $(LDFLAGS) /DLL
 !endif
+!if "$(TYPE)" == "hdlink"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
 !if "$(TYPE)" == "ndd"
 BINDIR = $(BINDIR)\ndd
 CPPFLAGS = $(CPPFLAGS) /D_USRDLL
@@ -127,7 +131,7 @@ $(BINFILE): pom.xml
 $(BINFILE): objdir $(OBJ) $(RESOBJ)
    @if not exist $(BINDIR) mkdir $(BINDIR)
    @echo "    LD " $(TARGET)
-   $(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(RESOBJ) $(LIBS)
+   @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(RESOBJ) $(LIBS)
 	@rm -f $(MANIFEST)
 
 .PHONY: objdir

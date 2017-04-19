@@ -1,0 +1,8 @@
+TARGET = redmine.hdlink
+TYPE = hdlink
+COMPONENT = server
+SOURCES = redmine.cpp
+
+LIBS = nxcore.lib libnxsrv.lib libnetxms.lib jansson.lib libcurl.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

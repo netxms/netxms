@@ -1,0 +1,8 @@
+TARGET = jira.hdlink
+TYPE = hdlink
+COMPONENT = server
+SOURCES = jira.cpp
+
+LIBS = nxcore.lib libnxsrv.lib libnetxms.lib jansson.lib libcurl.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

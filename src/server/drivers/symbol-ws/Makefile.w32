@@ -1,0 +1,8 @@
+TARGET = symbol-ws.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = symbol-ws.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

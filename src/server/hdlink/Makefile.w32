@@ -1,0 +1,3 @@
+SUBDIRS = jira redmine
+
+include ..\..\..\Makefile.inc.w32

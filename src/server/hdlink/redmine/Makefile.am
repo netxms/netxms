@@ -12,7 +12,8 @@ redmine_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	redmine.h
+	redmine.h \
+	Makefile.w32
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(HDLINK).a $(DESTDIR)$(pkglibdir)/$(HDLINK)@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$(HDLINK).a ; fi

@@ -1,0 +1,7 @@
+TARGET = winnt.nsm
+TYPE = nsm
+SOURCES = cpu.cpp main.cpp net.cpp procinfo.cpp prod.cpp system.cpp
+
+LIBS = libnxagent.lib libnetxms.lib netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib ntdll.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

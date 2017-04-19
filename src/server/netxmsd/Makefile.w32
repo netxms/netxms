@@ -1,0 +1,8 @@
+TARGET = netxmsd.exe
+TYPE = exe
+COMPONENT = server
+SOURCES = netxmsd.cpp winsrv.cpp
+
+LIBS = nxcore.lib libnxsrv.lib libnetxms.lib dbghelp.lib
+	  
+include ..\..\..\Makefile.inc.w32

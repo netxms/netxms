@@ -1,4 +1,5 @@
 SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
-	dell-pwc dlink ers8000 extreme h3c ignitenet juniper
+	dell-pwc dlink ers8000 extreme h3c hpsw ignitenet juniper mikrotik \
+	netscreen ntws ping3 procurve qtech-olt symbol-ws tb ubnt
 
 include ..\..\..\Makefile.inc.w32

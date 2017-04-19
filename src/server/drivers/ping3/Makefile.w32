@@ -1,0 +1,8 @@
+TARGET = ping3.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = ping3.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
