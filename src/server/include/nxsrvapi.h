@@ -480,7 +480,7 @@ private:
    THREAD m_hReceiverThread;
    NXCPEncryptionContext *m_pCtx;
    int m_iEncryptionPolicy;
-   BOOL m_bUseProxy;
+   bool m_useProxy;
    InetAddress m_proxyAddr;
    WORD m_wPort;
    WORD m_wProxyPort;
@@ -538,6 +538,9 @@ protected:
    AbstractCommChannel *acquireChannel();
 
    UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
+
+   void setProxyMode() { m_useProxy = true; }
+   bool isProxyMode() { return m_useProxy; }
 
    void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
    void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }

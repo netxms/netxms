@@ -37,6 +37,7 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, W
 {
    m_nodeId = nodeId;
    m_tunnel = NULL;
+   m_proxyTunnel = NULL;
 }
 
 /**
@@ -48,6 +49,7 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int aut
    m_nodeId = nodeId;
    m_tunnel = tunnel;
    m_tunnel->incRefCount();
+   m_proxyTunnel = NULL;
 }
 
 /**
@@ -57,6 +59,8 @@ AgentConnectionEx::~AgentConnectionEx()
 {
    if (m_tunnel != NULL)
       m_tunnel->decRefCount();
+   if (m_proxyTunnel != NULL)
+      m_proxyTunnel->decRefCount();
 }
 
 /**
@@ -64,7 +68,11 @@ AgentConnectionEx::~AgentConnectionEx()
  */
 AbstractCommChannel *AgentConnectionEx::createChannel()
 {
-   return (m_tunnel != NULL) ? m_tunnel->createChannel() : AgentConnection::createChannel();
+   if (m_tunnel != NULL)
+      return m_tunnel->createChannel();
+   if (isProxyMode() && (m_proxyTunnel != NULL))
+      return m_proxyTunnel->createChannel();
+   return AgentConnection::createChannel();
 }
 
 /**
@@ -77,6 +85,19 @@ void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
    m_tunnel = tunnel;
    if (m_tunnel != NULL)
       m_tunnel->incRefCount();
+}
+
+/**
+ * Set proxy tunnel to use
+ */
+void AgentConnectionEx::setProxy(AgentTunnel *tunnel)
+{
+   if (m_proxyTunnel != NULL)
+      m_proxyTunnel->decRefCount();
+   m_proxyTunnel = tunnel;
+   if (m_proxyTunnel != NULL)
+      m_proxyTunnel->incRefCount();
+   setProxyMode();
 }
 
 /**

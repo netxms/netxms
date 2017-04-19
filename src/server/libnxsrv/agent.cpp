@@ -112,7 +112,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
    m_hReceiverThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
-   m_bUseProxy = FALSE;
+   m_useProxy = false;
    m_iProxyAuth = AUTH_NONE;
    m_wProxyPort = 4700;
    m_dwRecvTimeout = 420000;  // 7 minutes
@@ -480,7 +480,7 @@ void AgentConnection::receiverThread()
 AbstractCommChannel *AgentConnection::createChannel()
 {
    // Create socket
-   SOCKET s = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
+   SOCKET s = socket(m_useProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
    {
       debugPrintf(6, _T("Call to socket() failed"));
@@ -489,15 +489,15 @@ AbstractCommChannel *AgentConnection::createChannel()
 
    // Fill in address structure
    SockAddrBuffer sb;
-   struct sockaddr *sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
+   struct sockaddr *sa = m_useProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
 
    // Connect to server
    if ((sa == NULL) || (ConnectEx(s, sa, SA_LEN(sa), m_connectionTimeout) == -1))
    {
       TCHAR buffer[64];
       debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
-         m_bUseProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
-         (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
+               m_useProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
+               (int)(m_useProxy ? m_wProxyPort : m_wPort));
       closesocket(s);
       return NULL;
    }
@@ -595,7 +595,7 @@ setup_encryption:
    }
 
    // Authenticate itself to agent
-   if ((dwError = authenticate(m_bUseProxy && !secondPass)) != ERR_SUCCESS)
+   if ((dwError = authenticate(m_useProxy && !secondPass)) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -624,7 +624,7 @@ setup_encryption:
       }
    }
 
-   if (m_bUseProxy && !secondPass)
+   if (m_useProxy && !secondPass)
    {
       dwError = setupProxyConnection();
       if (dwError != ERR_SUCCESS)
@@ -1913,7 +1913,7 @@ void AgentConnection::setProxy(InetAddress addr, WORD wPort, int iAuthMethod, co
    {
       m_szProxySecret[0] = 0;
    }
-   m_bUseProxy = TRUE;
+   setProxyMode();
 }
 
 /**

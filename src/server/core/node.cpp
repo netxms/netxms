@@ -2445,7 +2445,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 
    sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
-   AgentConnection *pAgentConn;
+   AgentConnectionEx *pAgentConn;
    if (tunnel != NULL)
    {
       pAgentConn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
@@ -5427,7 +5427,11 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
       if (!m_ipAddress.isValidUnicast())
          return NULL;
       conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-      setAgentProxy(conn);
+      if (!setAgentProxy(conn))
+      {
+         conn->decRefCount();
+         return NULL;
+      }
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
    if (!conn->connect(g_pServerKey, NULL, NULL, sendServerId ? g_serverId : 0))
@@ -5876,7 +5880,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
 /**
  * Set proxy information for agent's connection
  */
-void Node::setAgentProxy(AgentConnection *pConn)
+bool Node::setAgentProxy(AgentConnectionEx *conn)
 {
    UINT32 proxyNode = m_agentProxy;
 
@@ -5889,14 +5893,27 @@ void Node::setAgentProxy(AgentConnection *pConn)
       }
    }
 
-   if (proxyNode != 0)
+   if (proxyNode == 0)
+      return true;
+
+   Node *node = (Node *)g_idxNodeById.get(proxyNode);
+   if (node == NULL)
    {
-      Node *node = (Node *)g_idxNodeById.get(proxyNode);
-      if (node != NULL)
-      {
-         pConn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
-      }
+      nxlog_debug(4, _T("Node::setAgentProxy(%s [%d]): cannot find proxy node [%d]"), m_name, m_id, proxyNode);
+      return false;
    }
+
+   AgentTunnel *tunnel = GetTunnelForNode(proxyNode);
+   if (tunnel != NULL)
+   {
+      conn->setProxy(tunnel);
+      tunnel->decRefCount();
+   }
+   else
+   {
+      conn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
+   }
+   return true;
 }
 
 /**

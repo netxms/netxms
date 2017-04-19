@@ -128,6 +128,7 @@ class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
 protected:
    UINT32 m_nodeId;
    AgentTunnel *m_tunnel;
+   AgentTunnel *m_proxyTunnel;
 
    virtual AbstractCommChannel *createChannel();
    virtual void onTrap(NXCPMessage *msg);
@@ -149,6 +150,9 @@ public:
    UINT32 uninstallPolicy(AgentPolicy *policy);
 
    void setTunnel(AgentTunnel *tunnel);
+
+   using AgentConnection::setProxy;
+   void setProxy(AgentTunnel *tunnel);
 };
 
 /**
@@ -1496,7 +1500,7 @@ protected:
 	BOOL resolveName(BOOL useOnlyDNS);
 	void setPrimaryIPAddress(const InetAddress& addr);
 
-   void setAgentProxy(AgentConnection *conn);
+   bool setAgentProxy(AgentConnectionEx *conn);
    bool isAgentCompressionAllowed();
 
    UINT32 getInterfaceCount(Interface **ppInterface);
