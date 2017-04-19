@@ -49,119 +49,115 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 		'%m',2,'BAD_NETMASK_%i_%2','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (11,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
-		'%m',1,'','',0,EVENT_ALARM_TIMEOUT);
-
-INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (12,'062228ef-c155-4669-a90a-603cae13240e',7944,'Generate alarm when server enconters NXSL script execution error',
+	VALUES (11,'062228ef-c155-4669-a90a-603cae13240e',7944,'Generate alarm when server enconters NXSL script execution error',
 		'%m',2,'SCRIPT_ERR_%1_%2','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (13,'943f5474-5614-44e1-820c-b8fe17bc4d0b',7944,'Show alarm when connection with backend database is lost',
+	VALUES (12,'943f5474-5614-44e1-820c-b8fe17bc4d0b',7944,'Show alarm when connection with backend database is lost',
 		'%m',4,'DB_CONN','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (14,'9ce6b59e-e274-4c94-b314-4b4652c10c74',7944,'Terminate DB connection loss alarm when connection restored',
+	VALUES (13,'9ce6b59e-e274-4c94-b314-4b4652c10c74',7944,'Terminate DB connection loss alarm when connection restored',
 		'%m',6,'DB_CONN','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (15,'e3120a33-216e-e048-aa3b-4f1a9f3f10fc',7944,'Show alarm when NetXMS server network connection is lost',
+	VALUES (14,'e3120a33-216e-e048-aa3b-4f1a9f3f10fc',7944,'Show alarm when NetXMS server network connection is lost',
 		'%m',4,'NET_CONN_LOST','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (16,'bdc76d2e-967e-bf44-95a1-a229ef8b3ff4',7944,'Terminate NetXMS server network connection loss alarm when connection restored',
+	VALUES (15,'bdc76d2e-967e-bf44-95a1-a229ef8b3ff4',7944,'Terminate NetXMS server network connection loss alarm when connection restored',
 		'%m',6,'NET_CONN_LOST','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (17,'226de02d-9eb2-4ea1-a92c-2bdb1718f2ec',7944,'Show alarm when DCI status changes to DISABLED or UNSUPPORTED',
+	VALUES (16,'226de02d-9eb2-4ea1-a92c-2bdb1718f2ec',7944,'Show alarm when DCI status changes to DISABLED or UNSUPPORTED',
 		'%m',5,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (18,'02a21afe-c942-4953-8b5d-f463c597cff8',7944,'Terminate DCI status alarms when DCI status returns to ACTIVE',
+	VALUES (17,'02a21afe-c942-4953-8b5d-f463c597cff8',7944,'Terminate DCI status alarms when DCI status returns to ACTIVE',
 		'%m',6,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (19,'47fd5c32-b6c9-48b8-99fb-c389dde63bee',7944,'Generate alarm on threshold violation',
+	VALUES (18,'47fd5c32-b6c9-48b8-99fb-c389dde63bee',7944,'Generate alarm on threshold violation',
 		'%m',5,'DC_THRESHOLD_%i_%<dciId>','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (20,'dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce',7944,'Terminate threshold violation alarms',
+	VALUES (19,'dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce',7944,'Terminate threshold violation alarms',
 		'%m',6,'DC_THRESHOLD_%i_%<dciId>','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (21,'d3acabe8-717d-4ceb-bb7f-498d5af898f2',7944,'Generate alarm on table threshold violation',
+	VALUES (20,'d3acabe8-717d-4ceb-bb7f-498d5af898f2',7944,'Generate alarm on table threshold violation',
 		'%m',5,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (22,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
+	VALUES (21,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
 		'%m',6,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (23,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly',
+	VALUES (22,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly',
         '%m',5,'SYS_THREAD_HANG_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (24,'f0c5a6b2-7427-45e5-8333-7d60d2b408e6',7944,'Terminate the alarm when one of the system threads which previously hanged or stoped unexpectedly returned to the running state',
+	VALUES (23,'f0c5a6b2-7427-45e5-8333-7d60d2b408e6',7944,'Terminate the alarm when one of the system threads which previously hanged or stoped unexpectedly returned to the running state',
         '%m',6,'SYS_THREAD_HANG_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (25,'ed3397a8-a496-4534-839b-5a6fc77c167c',7944,'Generate an alarm when the object enters the maintanance mode',
+	VALUES (24,'ed3397a8-a496-4534-839b-5a6fc77c167c',7944,'Generate an alarm when the object enters the maintanance mode',
         '%m',5,'MAINTENANCE_MODE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-	VALUES (26,'20a0f4a5-d90e-4961-ba88-a65b9ee45d07',7944,'Terminate the alarm when the object leaves the maintanance mode',
+	VALUES (25,'20a0f4a5-d90e-4961-ba88-a65b9ee45d07',7944,'Terminate the alarm when the object leaves the maintanance mode',
         '%m',6,'MAINTENANCE_MODE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (27,'c6f66840-4758-420f-a27d-7bbf7b66a511',7944,'Generate an alarm if the NetXMS agent on the node stops responding',
+    VALUES (26,'c6f66840-4758-420f-a27d-7bbf7b66a511',7944,'Generate an alarm if the NetXMS agent on the node stops responding',
         '%m',5,'AGENT_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (28,'9fa60260-c2ec-4371-b4e4-f5346b1d8400',7944,'Terminate the alarm if the NetXMS agent on the node start responding again',
+    VALUES (27,'9fa60260-c2ec-4371-b4e4-f5346b1d8400',7944,'Terminate the alarm if the NetXMS agent on the node start responding again',
         '%m',6,'AGENT_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (29,'20ef861f-b8e4-4e04-898e-e57d13863661',7944,'Generate an alarm if the SNMP agent on the node stops responding',
+    VALUES (28,'20ef861f-b8e4-4e04-898e-e57d13863661',7944,'Generate an alarm if the SNMP agent on the node stops responding',
         '%m',5,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (30,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again',
+    VALUES (29,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again',
         '%m',6,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (31,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization',
+    VALUES (30,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization',
         '%m',5,'SYS_LDAP_SYNC_ERROR_%2','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (32,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with agent log',
+    VALUES (31,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with agent log',
         '%m',5,'SYS_AGENT_LOG_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (33,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database',
+    VALUES (32,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database',
         '%m',5,'SYS_AGENT_LOCAL_DATABASE_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (34,'68e102a3-58d3-4112-901c-f683356ba662',7944,'Show alarm when interface with expected state UP is administratively disabled',
+    VALUES (33,'68e102a3-58d3-4112-901c-f683356ba662',7944,'Show alarm when interface with expected state UP is administratively disabled',
         '%m',2,'IF_DOWN_%i_%5','interface = GetInterfaceObject($node, $event-&gt;parameters[5]);&#x0D;&#x0A;&#x0D;&#x0A;// if interface not found or interface expected state is not UP, do not match&#x0D;&#x0A;// otherwize (if interface expected status is UP), match&#x0D;&#x0A;return (interface != null &amp;&amp; interface-&gt;expectedState == 0);&#x0D;&#x0A;',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (35,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
+    VALUES (34,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
         '%m',1,'MAC_ADDRESS_CHANGED_%i_%2','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (36,'18507220-6a16-4e13-a6ba-141d907b924a',7944,'Terminate MAC address change alarms when the interface is deleted',
+    VALUES (35,'18507220-6a16-4e13-a6ba-141d907b924a',7944,'Terminate MAC address change alarms when the interface is deleted',
         '%m',6,'MAC_ADDRESS_CHANGED_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (37,'8cca36cd-f821-43ae-8329-0eefe35df3b7',7944,'Terminate network mask alarms when an interface is deleted',
+    VALUES (36,'8cca36cd-f821-43ae-8329-0eefe35df3b7',7944,'Terminate network mask alarms when an interface is deleted',
         '%m',6,'BAD_NETMASK_%i_%1','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (38,'404642a0-deb0-400d-b9f9-c86f5a83f7f5',7944,'Terminate network mask alarms when the mask of interface changes or IP address of interface is deleted',
+    VALUES (37,'404642a0-deb0-400d-b9f9-c86f5a83f7f5',7944,'Terminate network mask alarms when the mask of interface changes or IP address of interface is deleted',
         '%m',6,'BAD_NETMASK_%i_%5','',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
-    VALUES (39,'b8abb037-ab4a-4e05-adc4-9425ce440e4a',7944,'Generate alarm when a routing loop is detected',
+    VALUES (38,'b8abb037-ab4a-4e05-adc4-9425ce440e4a',7944,'Generate alarm when a routing loop is detected',
         '%m',5,'ROUTING_LOOP_%i','',0,EVENT_ALARM_TIMEOUT);
 
 
@@ -181,34 +177,33 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_INTERFACE_DEL
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_IF_EXPECTED_STATE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_IF_EXPECTED_STATE_IGNORE);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (10,EVENT_INCORRECT_NETMASK);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_MAC_ADDR_CHANGED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_SCRIPT_ERROR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DB_CONNECTION_LOST);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_DB_CONNECTION_RESTORED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_NETWORK_CONNECTION_LOST);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_NETWORK_CONNECTION_RESTORED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_DCI_DISABLED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_DCI_UNSUPPORTED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_DCI_ACTIVE);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (19,EVENT_THRESHOLD_REACHED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (20,EVENT_THRESHOLD_REARMED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (21,EVENT_TABLE_THRESHOLD_ACTIVATED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (22,EVENT_TABLE_THRESHOLD_DEACTIVATED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (23,EVENT_THREAD_HANGS);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (24,EVENT_THREAD_RUNNING);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (25,EVENT_MAINTENANCE_MODE_ENTERED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (26,EVENT_MAINTENANCE_MODE_LEFT);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (27,EVENT_AGENT_FAIL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (28,EVENT_AGENT_OK);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (29,EVENT_SNMP_FAIL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (30,EVENT_SNMP_OK);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (31,EVENT_LDAP_SYNC_ERROR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (32,EVENT_AGENT_LOG_PROBLEM);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (33,EVENT_AGENT_LOCAL_DATABASE_PROBLEM);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (34,EVENT_INTERFACE_DISABLED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (35,EVENT_MAC_ADDR_CHANGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_SCRIPT_ERROR);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_DB_CONNECTION_LOST);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DB_CONNECTION_RESTORED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_NETWORK_CONNECTION_LOST);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_NETWORK_CONNECTION_RESTORED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_DCI_DISABLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_DCI_UNSUPPORTED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_DCI_ACTIVE);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_THRESHOLD_REACHED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (19,EVENT_THRESHOLD_REARMED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (20,EVENT_TABLE_THRESHOLD_ACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (21,EVENT_TABLE_THRESHOLD_DEACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (22,EVENT_THREAD_HANGS);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (23,EVENT_THREAD_RUNNING);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (24,EVENT_MAINTENANCE_MODE_ENTERED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (25,EVENT_MAINTENANCE_MODE_LEFT);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (26,EVENT_AGENT_FAIL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (27,EVENT_AGENT_OK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (28,EVENT_SNMP_FAIL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (29,EVENT_SNMP_OK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (30,EVENT_LDAP_SYNC_ERROR);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (31,EVENT_AGENT_LOG_PROBLEM);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (32,EVENT_AGENT_LOCAL_DATABASE_PROBLEM);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (33,EVENT_INTERFACE_DISABLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (34,EVENT_MAC_ADDR_CHANGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (35,EVENT_INTERFACE_DELETED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (36,EVENT_INTERFACE_DELETED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_INTERFACE_DELETED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_IF_MASK_CHANGED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_IF_IPADDR_DELETED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_ROUTING_LOOP_DETECTED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_IF_MASK_CHANGED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_IF_IPADDR_DELETED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_ROUTING_LOOP_DETECTED);
