@@ -8,7 +8,7 @@ ignitenet_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \
 		      ../../libnxsrv/libnxsrv.la
 
-EXTRA_DIST = \	
+EXTRA_DIST = \
 	ignitenet.vcproj \
 	ignitenet.h \
 	Makefile.w32
