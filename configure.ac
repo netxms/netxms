@@ -1894,7 +1894,7 @@ fi
 if test "x$DISABLE_SSH" != "xyes"; then
 	AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
 	if test "x$HAVE_LIBSSH" = "xyes"; then
-		AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
+		AC_CHECK_LIB(ssh, ssh_new, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
 	fi
 
 	if test "x$HAVE_LIBSSH" = "xyes"; then
