@@ -179,6 +179,21 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId)
 	return varId;
 }
 
+/*
+ * Get child components as NXSL Array
+ */
+NXSL_Array *Component::getChildrenForNXSL()
+{
+   NXSL_Array *components = new NXSL_Array();
+
+   for(int i = 0; i < m_childs.size(); i++)
+   {
+      components->set(i, new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, m_childs.get(i))));
+   }
+
+   return components;
+}
+
 /**
  * Physical entity tree walk callback
  */

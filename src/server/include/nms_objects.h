@@ -328,6 +328,14 @@ public:
 
 	UINT32 getIndex() { return m_index; }
 	UINT32 getParentIndex() { return m_parentIndex; }
+	NXSL_Array *getChildrenForNXSL();
+
+	UINT32 getClass() { return m_class; }
+	const TCHAR *getFirmware() { return m_firmware; }
+   const TCHAR *getModel() { return m_model; }
+   const TCHAR *getName() { return m_name; }
+   const TCHAR *getSerial() { return m_serial; }
+   const TCHAR *getVendor() { return m_vendor; }
 
 	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 

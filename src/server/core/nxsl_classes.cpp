@@ -438,6 +438,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       TCHAR buffer[64];
       value = new NXSL_Value(BinToStr(node->getBridgeId(), MAC_ADDR_LENGTH, buffer));
    }
+   else if (!_tcscmp(attr, _T("components")))
+   {
+      value = new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, node->getComponents()->getRoot()));
+   }
    else if (!_tcscmp(attr, _T("driver")))
    {
       value = new NXSL_Value(node->getDriverName());
@@ -1552,11 +1556,51 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL class ComponentClass: constructor
+ */
+NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
+{
+   setName(_T("Component"));
+}
+
+NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   const UINT32 classCount = 12;
+   static String className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
+                                    _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
+                                    _T("module"), _T("port"), _T("stack") };
+   NXSL_Value *value = NULL;
+   Component *component = (Component *)object->getData();
+   if (!_tcscmp(attr, _T("class")))
+   {
+      if (component->getClass() >= classCount)
+         value = new NXSL_Value(className[2]); // Unknown class
+      else
+         value = new NXSL_Value(className[component->getClass()]);
+   }
+   if (!_tcscmp(attr, _T("children")))
+            value = new NXSL_Value(component->getChildrenForNXSL());
+   if (!_tcscmp(attr, _T("firmware")))
+      value = new NXSL_Value(component->getFirmware());
+   if (!_tcscmp(attr, _T("model")))
+      value = new NXSL_Value(component->getModel());
+   if (!_tcscmp(attr, _T("name")))
+         value = new NXSL_Value(component->getName());
+   if (!_tcscmp(attr, _T("serial")))
+         value = new NXSL_Value(component->getSerial());
+   if (!_tcscmp(attr, _T("vendor")))
+         value = new NXSL_Value(component->getVendor());
+
+   return value;
+}
+
+/**
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
+NXSL_ComponentClass g_nxslComponentClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
