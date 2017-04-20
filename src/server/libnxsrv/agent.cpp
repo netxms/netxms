@@ -1913,7 +1913,7 @@ void AgentConnection::setProxy(InetAddress addr, WORD wPort, int iAuthMethod, co
    {
       m_szProxySecret[0] = 0;
    }
-   setProxyMode();
+   m_useProxy = true;
 }
 
 /**

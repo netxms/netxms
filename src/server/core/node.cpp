@@ -5906,7 +5906,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    AgentTunnel *tunnel = GetTunnelForNode(proxyNode);
    if (tunnel != NULL)
    {
-      conn->setProxy(tunnel);
+      conn->setProxy(tunnel, node->m_agentAuthMethod, node->m_szSharedSecret);
       tunnel->decRefCount();
    }
    else

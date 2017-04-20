@@ -90,14 +90,14 @@ void AgentConnectionEx::setTunnel(AgentTunnel *tunnel)
 /**
  * Set proxy tunnel to use
  */
-void AgentConnectionEx::setProxy(AgentTunnel *tunnel)
+void AgentConnectionEx::setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret)
 {
    if (m_proxyTunnel != NULL)
       m_proxyTunnel->decRefCount();
    m_proxyTunnel = tunnel;
    if (m_proxyTunnel != NULL)
       m_proxyTunnel->incRefCount();
-   setProxyMode();
+   setProxy(InetAddress::INVALID, 0, authMethod, secret);
 }
 
 /**

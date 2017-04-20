@@ -152,7 +152,7 @@ public:
    void setTunnel(AgentTunnel *tunnel);
 
    using AgentConnection::setProxy;
-   void setProxy(AgentTunnel *tunnel);
+   void setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret);
 };
 
 /**

@@ -539,9 +539,6 @@ protected:
 
    UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
 
-   void setProxyMode() { m_useProxy = true; }
-   bool isProxyMode() { return m_useProxy; }
-
    void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
    void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }
 
@@ -554,6 +551,7 @@ public:
    bool connect(RSA *pServerKey = NULL, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL, UINT64 serverId = 0);
    void disconnect();
    bool isConnected() const { return m_isConnected; }
+   bool isProxyMode() { return m_useProxy; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 
