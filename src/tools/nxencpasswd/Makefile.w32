@@ -1,0 +1,7 @@
+TARGET = nxencpasswd.exe
+TYPE = exe
+SOURCES = nxencpasswd.cpp
+
+LIBS = libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

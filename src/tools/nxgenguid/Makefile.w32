@@ -1,0 +1,7 @@
+TARGET = nxgenguid.exe
+TYPE = exe
+SOURCES = nxgenguid.cpp
+
+LIBS = libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32
