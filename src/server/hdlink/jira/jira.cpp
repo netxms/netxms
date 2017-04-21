@@ -208,8 +208,8 @@ UINT32 JiraLink::connect()
    {
       DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
-
    free(request);
+   free(data->data);
    free(data);
 
    return rcc;
@@ -269,6 +269,7 @@ bool JiraLink::checkConnection()
       {
          DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
       }
+      free(data->data);
       free(data);
    }
 
@@ -297,44 +298,17 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    lock();
    DbgPrintf(4, _T("Jira: create helpdesk issue with description \"%s\""), description);
 
-   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-   memset(data, 0, sizeof(RequestData));
-   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
-
-   curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
-
    // Build request
    json_t *root = json_object();
    json_t *fields = json_object();
    json_t *project = json_object();
 
-
    char projectCode[JIRA_MAX_PROJECT_CODE_LEN];
    ConfigReadStrUTF8(_T("JiraProjectCode"), projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
-   json_object_set_new(project, "key", json_string(projectCode));
-   json_object_set_new(fields, "project", project);
-#ifdef UNICODE
-   char *mbdescr = UTF8StringFromWideString(description);
-   json_object_set_new(fields, "summary", json_string(mbdescr));
-   json_object_set_new(fields, "description", json_string(mbdescr));
-   free(mbdescr);
-#else
-   json_object_set_new(fields, "summary", json_string(description));
-   json_object_set_new(fields, "description", json_string(description));
-#endif
-   json_t *issuetype = json_object();
-
-
-   char issueType[JIRA_MAX_ISSUE_TYPE_LEN];
-   ConfigReadStrUTF8(_T("JiraIssueType"), issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
-   json_object_set_new(issuetype, "name", json_string(issueType));
-   json_object_set_new(fields, "issuetype", issuetype);
-
 
    TCHAR projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
    ConfigReadStr(_T("JiraProjectComponent"), projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
    ObjectArray<ProjectComponent> *projectComponents = getProjectComponents(projectCode);
-
    if ((projectComponent[0] != 0) && (projectComponents != NULL))
    {
       for(int i = 0; i < projectComponents->size(); i++)
@@ -353,6 +327,30 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
          }
       }
    }
+
+   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+   memset(data, 0, sizeof(RequestData));
+   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+   curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
+   json_object_set_new(project, "key", json_string(projectCode));
+   json_object_set_new(fields, "project", project);
+#ifdef UNICODE
+   char *mbdescr = UTF8StringFromWideString(description);
+   json_object_set_new(fields, "summary", json_string(mbdescr));
+   json_object_set_new(fields, "description", json_string(mbdescr));
+   free(mbdescr);
+#else
+   json_object_set_new(fields, "summary", json_string(description));
+   json_object_set_new(fields, "description", json_string(description));
+#endif
+   json_t *issuetype = json_object();
+
+   char issueType[JIRA_MAX_ISSUE_TYPE_LEN];
+   ConfigReadStrUTF8(_T("JiraIssueType"), issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
+   json_object_set_new(issuetype, "name", json_string(issueType));
+   json_object_set_new(fields, "issuetype", issuetype);
+
    json_object_set_new(root, "fields", fields);
    char *request = json_dumps(root, 0);
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
@@ -411,6 +409,7 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
       DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
    free(request);
+   free(data->data);
    free(data);
    delete projectComponents;
 
@@ -438,7 +437,6 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
    RequestData *data = (RequestData *)malloc(sizeof(RequestData));
    memset(data, 0, sizeof(RequestData));
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
-
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
 
    // Build request
@@ -486,6 +484,7 @@ UINT32 JiraLink::addComment(const TCHAR *hdref, const TCHAR *comment)
       DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
    free(request);
+   free(data->data);
    free(data);
 
    unlock();
@@ -575,6 +574,7 @@ ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *projec
    {
       DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
    }
+   free(data->data);
    free(data);
 
    return components;
