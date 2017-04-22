@@ -504,7 +504,10 @@ void ZmqPublishEvent(const Event *event)
       if (message != NULL)
       {
          MutexLock(m_socketLock);
-         (void)zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT);
+         if (zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT) != 0)
+         {
+            DbgPrintf(7, _T("ZeroMQ: publish event failed (%d)"), errno);
+         }
          MutexUnlock(m_socketLock);
          free(message);
       }
@@ -545,7 +548,10 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
       if (message != NULL)
       {
          MutexLock(m_socketLock);
-         (void)zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT);
+         if (zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT) != 0)
+         {
+            DbgPrintf(7, _T("ZeroMQ: publish collected data failed (%d)"), errno);
+         }
          MutexUnlock(m_socketLock);
          free(message);
       }
