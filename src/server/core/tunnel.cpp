@@ -320,6 +320,9 @@ void AgentTunnel::recvThread()
                }
             }
             break;
+         case CMD_CLOSE_CHANNEL:    // channel close notification
+            processChannelClose(msg->getFieldAsUInt32(VID_CHANNEL_ID));
+            break;
          default:
             m_queue.put(msg);
             msg = NULL; // prevent message deletion
@@ -328,6 +331,15 @@ void AgentTunnel::recvThread()
       delete msg;
    }
    UnregisterTunnel(this);
+
+   // shutdown all channels
+   MutexLock(m_channelLock);
+   Iterator<AgentTunnelCommChannel> *it = m_channels.iterator();
+   while(it->hasNext())
+      it->next()->shutdown();
+   delete it;
+   MutexUnlock(m_channelLock);
+
    debugPrintf(5, _T("Receiver thread stopped"));
 }
 
@@ -592,6 +604,23 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    MutexUnlock(m_channelLock);
    debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
    return channel;
+}
+
+/**
+ * Process channel close notification from agent
+ */
+void AgentTunnel::processChannelClose(UINT32 channelId)
+{
+   debugPrintf(4, _T("processChannelClose: notification of channel %d closure"), channelId);
+
+   MutexLock(m_channelLock);
+   AgentTunnelCommChannel *ch = m_channels.get(channelId);
+   MutexUnlock(m_channelLock);
+   if (ch != NULL)
+   {
+      ch->shutdown();
+      ch->decRefCount();
+   }
 }
 
 /**

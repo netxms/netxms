@@ -309,7 +309,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
 NXCPMessage::~NXCPMessage()
 {
    deleteAllFields();
-   safe_free(m_data);
+   free(m_data);
 }
 
 /**

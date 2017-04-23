@@ -26,7 +26,7 @@
 /**
  * Abstract communication channel constructor
  */
-AbstractCommChannel::AbstractCommChannel()
+AbstractCommChannel::AbstractCommChannel() : RefCountObject()
 {
 }
 

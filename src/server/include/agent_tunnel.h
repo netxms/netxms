@@ -110,6 +110,7 @@ protected:
    NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return m_queue.waitForMessage(code, id, 5000); }
 
    void processCertificateRequest(NXCPMessage *request);
+   void processChannelClose(UINT32 channelId);
 
    void setup(const NXCPMessage *request);
 
