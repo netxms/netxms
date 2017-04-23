@@ -2612,22 +2612,32 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
             msg.setField(dwId++, DBGetField(hResult, i, 4, szBuffer, MAX_CONFIG_VALUE));
          }
          DBFreeResult(hResult);
-      }
-      hResult = DBSelect(hdb, _T("SELECT var_name,var_value,var_description FROM config_values"));
-      if (hResult != NULL)
-      {
-         dwNumRecords = DBGetNumRows(hResult);
-         msg.setField(VID_NUM_VALUES, dwNumRecords);
-         for(i = 0; i < dwNumRecords; i++)
+
+         hResult = DBSelect(hdb, _T("SELECT var_name,var_value,var_description FROM config_values"));
+         if (hResult != NULL)
          {
-            msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-            msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
-            msg.setField(dwId++, DBGetField(hResult, i, 2, szBuffer, MAX_DB_STRING));
+            dwNumRecords = DBGetNumRows(hResult);
+            msg.setField(VID_NUM_VALUES, dwNumRecords);
+            for(i = 0; i < dwNumRecords; i++)
+            {
+               msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
+               msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
+               msg.setField(dwId++, DBGetField(hResult, i, 2, szBuffer, MAX_DB_STRING));
+            }
+            DBFreeResult(hResult);
+
+            msg.setField(VID_RCC, RCC_SUCCESS);
          }
-         DBFreeResult(hResult);
+         else
+         {
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
-      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {

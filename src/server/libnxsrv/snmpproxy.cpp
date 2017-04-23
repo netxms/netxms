@@ -50,10 +50,10 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
  */
 int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
-   BYTE *pBuffer;
    int nRet = -1;
 	NXCPMessage msg(m_agentConnection->getProtocolVersion());
 
+   BYTE *pBuffer;
    size_t size = pdu->encode(&pBuffer, m_securityContext);
    if (size != 0)
    {
@@ -61,7 +61,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 		msg.setField(VID_IP_ADDRESS, m_ipAddr);
 		msg.setField(VID_PORT, m_port);
 		msg.setField(VID_PDU_SIZE, (UINT32)size);
-		msg.setField(VID_PDU, pBuffer, (UINT32)size);
+		msg.setField(VID_PDU, pBuffer, size);
       free(pBuffer);
 
       if (m_waitForResponse)

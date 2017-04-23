@@ -103,11 +103,11 @@ static void CpuUsageCollector()
 		}
 		else if (buffer[0] == 'i' && buffer[1] == 'n' && buffer[2] == 't' && buffer[3] == 'r')
 		{
-         sscanf(buffer, "intr %llu", &m_cpuInterrupts);
+         ret = sscanf(buffer, "intr %llu", &m_cpuInterrupts);
 		}
 		else if (buffer[0] == 'c' && buffer[1] == 't' && buffer[2] == 'x' && buffer[3] == 't')
       {
-         sscanf(buffer, "ctxt %llu", &m_cpuContextSwitches);
+         ret = sscanf(buffer, "ctxt %llu", &m_cpuContextSwitches);
       }
 		else
 		   continue;

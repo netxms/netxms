@@ -1019,7 +1019,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       pArg = ExtractWord(pArg, szBuffer);
       dwNode1 = _tcstoul(szBuffer, NULL, 0);
 
-      pArg = ExtractWord(pArg, szBuffer);
+      ExtractWord(pArg, szBuffer);
       dwNode2 = _tcstoul(szBuffer, NULL, 0);
 
       if ((dwNode1 != 0) && (dwNode2 != 0))

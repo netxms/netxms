@@ -566,7 +566,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
                         int readSize = min(pos, 4);
                         lseek(fh, -readSize, SEEK_CUR);
                         int bytes = _read(fh, buffer, readSize);
-                        if (!memcmp(buffer, "\x00\x00\x00\x00", readSize))
+                        if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
                         {
                            LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);
                            lseek(fh, 0, SEEK_SET);
