@@ -1232,6 +1232,7 @@ static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage 
 
          TCHAR *cfg = DBGetField(hResult, i, 3, NULL, 0);
          msg->setField(fieldId++, cfg);
+         free(cfg);
 
          int seq = DBGetFieldLong(hResult, i, 4);
          if (seq == -1)
