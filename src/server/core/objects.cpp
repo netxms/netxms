@@ -877,7 +877,12 @@ Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
 {
    if ((sysName == NULL) || (sysName[0] == 0))
       return NULL;
-   return (Node *)g_idxNodeById.find(SysNameComparator, (void *)sysName);
+
+   // return NULL if multiple nodes with same sysName found
+   ObjectArray<NetObj> *objects = g_idxNodeById.findObjects(SysNameComparator, (void *)sysName);
+   Node *node = (objects->size() == 1) ? (Node *)objects->get(0) : NULL;
+   delete objects;
+   return node;
 }
 
 /**
