@@ -1,5 +1,6 @@
 package com.radensolutions.jira;
 
+import java.io.Exception;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -36,6 +37,27 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
         log.debug("Register listener");
         eventPublisher.register(this);
     }
+    
+    private String getUserName(IssueEvent issueEvent)
+    {
+    	try
+    	{
+	        Method method = issueEvent.getClass().getMethod("getUser", null);
+	        if(method != null)
+	        {
+	        	Object user = method.invoke(issueEvent, null);
+	        	if(user.getClass().getName().equals("User"))
+	        		return ((com.atlassian.crowd.embedded.api.User)user).getName();
+	        	if(user.getClass().getName().equals("ApplicationUser"))
+	        		return ((com.atlassian.jira.user.ApplicationUser)user).getName();
+	        }
+    	}
+    	catch(Exception ex)
+    	{
+    		log.debug(ex.printStackTrace());
+    	}
+        return null;
+    }
 
     @EventListener
     public void onIssueEvent(IssueEvent issueEvent) {
@@ -49,20 +71,13 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
 
         log.debug("Issue {} event: {}", issue.getId(), eventTypeId);
 
-        String name = "";
-        Method method = issueEvent.getClass().getMethod("getUser", null);
-        if(method != null)
+        String name = getUserName(issueEvent);   
+        if(name == null)
         {
-            name = method.invoke(issueEvent, null).getName();
+            log.debug("Not possible to get user name");
+            return;
         }
-        else
-        {
-            if()
-            {
-            }
-        }
-        
-         = issueEvent.getUser().getName();
+        		
         if (name.equalsIgnoreCase(settingsManager.getJiraAccount())) {
             log.debug("Ignoring own change");
             return;
