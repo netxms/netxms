@@ -168,7 +168,7 @@ public class AlarmList extends CompositeWithMessageBar
 		final int[] widths = { 100, 100, 150, 130, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
-         alarmViewer.getColumnById(COLUMN_ZONE).dispose();
+         alarmViewer.removeColumnById(COLUMN_ZONE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider(alarmViewer));

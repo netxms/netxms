@@ -38,7 +38,7 @@ public class SortableTableViewer extends TableViewer
 	public static final int DEFAULT_STYLE = -1;
 	
 	private boolean initialized = false;
-	private TableColumn[] columns;
+	private List<TableColumn> columns;
 	private TableSortingListener sortingListener;
 	
 	/**
@@ -54,6 +54,7 @@ public class SortableTableViewer extends TableViewer
 	                           int style)
 	{
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
+		columns = new ArrayList<TableColumn>(16);
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
 		createColumns(names, widths, defaultSortingColumn, defaultSortDir);
@@ -88,19 +89,19 @@ public class SortableTableViewer extends TableViewer
 		
 		sortingListener = new TableSortingListener(this);
 		
-		columns = new TableColumn[names.length];
 		for(int i = 0; i < names.length; i++)
 		{
-			columns[i] = new TableColumn(getTable(), SWT.LEFT);
-			columns[i].setText(names[i]);
+			TableColumn c = new TableColumn(getTable(), SWT.LEFT);
+			columns.add(c);
+			c.setText(names[i]);
 			if (widths != null)
-				columns[i].setWidth(widths[i]);
-			columns[i].setData("ID", new Integer(i)); //$NON-NLS-1$
-			columns[i].addSelectionListener(sortingListener);
+				c.setWidth(widths[i]);
+			c.setData("ID", Integer.valueOf(i)); //$NON-NLS-1$
+			c.addSelectionListener(sortingListener);
 		}
 
 		if ((defaultSortingColumn >= 0) && (defaultSortingColumn < names.length))
-			getTable().setSortColumn(columns[defaultSortingColumn]);
+			getTable().setSortColumn(columns.get(defaultSortingColumn));
 		getTable().setSortDirection(defaultSortDir);
 	}
 	
@@ -111,14 +112,32 @@ public class SortableTableViewer extends TableViewer
 	 */
 	public TableColumn getColumnById(int id)
 	{
-		for(int i = 0; i < columns.length; i++)
+	   for(TableColumn c : columns)
 		{
-			if ((Integer)columns[i].getData("ID") == id) //$NON-NLS-1$
+			if (!c.isDisposed() && ((Integer)c.getData("ID") == id)) //$NON-NLS-1$
 			{
-				return columns[i];
+				return c;
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Remove column by ID
+	 * 
+	 * @param id column ID
+	 */
+	public void removeColumnById(int id)
+	{
+      for(TableColumn c : columns)
+      {
+         if (!c.isDisposed() && ((Integer)c.getData("ID") == id)) //$NON-NLS-1$
+         {
+            columns.remove(c);
+            c.dispose();
+            return;
+         }
+      }
 	}
 
 	/**
@@ -134,8 +153,8 @@ public class SortableTableViewer extends TableViewer
 	 */
 	public void disableSorting()
 	{
-		for(int i = 0; i < columns.length; i++)
-			columns[i].removeSelectionListener(sortingListener);
+      for(TableColumn c : columns)
+			c.removeSelectionListener(sortingListener);
 		getTable().setSortColumn(null);
 	}
 

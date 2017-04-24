@@ -158,7 +158,7 @@ public class AlarmList extends CompositeWithMessageBar
 		final int[] widths = { 100, 100, 150, 130, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
-         alarmViewer.getColumnById(COLUMN_ZONE).dispose();
+         alarmViewer.removeColumnById(COLUMN_ZONE);
       WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 
       alarmViewer.setLabelProvider(new AlarmListLabelProvider(alarmViewer));
@@ -312,32 +312,32 @@ public class AlarmList extends CompositeWithMessageBar
       };
       actionComments.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Comments"); //$NON-NLS-1$
 
-      actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
-         @Override
-         public void run()
-         {
-            openAlarmDetailsView(AlarmDetails.ID);
-         }
-      };
-      actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails"); //$NON-NLS-1$
+		actionShowAlarmDetails = new Action(Messages.get().AlarmList_ActionAlarmDetails) {
+			@Override
+			public void run()
+			{
+				openAlarmDetailsView(AlarmDetails.ID);
+			}
+		};
+		actionShowAlarmDetails.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.AlarmDetails"); //$NON-NLS-1$
 
-      actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
-         @Override
-         public void run()
-         {
-            acknowledgeAlarms(false, 0);
-         }
-      };
-      actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge"); //$NON-NLS-1$
+		actionAcknowledge = new Action(Messages.get().AlarmList_Acknowledge, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
+			@Override
+			public void run()
+			{
+				acknowledgeAlarms(false, 0);
+			}
+		};
+		actionAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Acknowledge"); //$NON-NLS-1$
 
 		actionStickyAcknowledge = new Action(Messages.get().AlarmList_StickyAck, Activator.getImageDescriptor("icons/acknowledged_sticky.png")) { //$NON-NLS-1$
-         @Override
-         public void run()
-         {
-            acknowledgeAlarms(true, 0);
-         }
-      };
-      actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
+			@Override
+			public void run()
+			{
+				acknowledgeAlarms(true, 0);
+			}
+		};
+		actionStickyAcknowledge.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.StickyAcknowledge"); //$NON-NLS-1$
 
 		actionResolve = new Action(Messages.get().AlarmList_Resolve, Activator.getImageDescriptor("icons/resolved.png")) { //$NON-NLS-1$
 			@Override
@@ -430,24 +430,24 @@ public class AlarmList extends CompositeWithMessageBar
          settings.put("AlarmList.ackMenuEntry2", 24 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry3", 2 * 24 * 60 * 60); //$NON-NLS-1$
          return;
-      }
-      timeAcknowledge = new ArrayList<Action>(menuSize);
+	   }
+	   timeAcknowledge = new ArrayList<Action>(menuSize);
       for(int i = 0; i < menuSize; i++)
       {
          final int time = settings.getInt("AlarmList.ackMenuEntry" + Integer.toString(i)); //$NON-NLS-1$
-         if (time == 0)
-            continue;
-         String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
-         Action action = new Action(title, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
-            @Override
-            public void run()
-            {
-               acknowledgeAlarms(true, time);
-            }
-         };
+	      if (time == 0)
+	         continue;
+	      String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
+	      Action action = new Action(title, Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$
+	         @Override
+	         public void run()
+	         {
+	            acknowledgeAlarms(true, time);
+	         }
+	      };
          action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge" + Integer.toString(i) + "ID"); //$NON-NLS-1$ //$NON-NLS-2$
-         timeAcknowledge.add(action);
-      }
+	      timeAcknowledge.add(action);
+	   }
    }
 
    /**
