@@ -1,6 +1,7 @@
 package com.radensolutions.jira;
 
-import java.io.Exception;
+import java.lang.Exception;
+import java.lang.reflect.Method;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -46,15 +47,15 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
 	        if(method != null)
 	        {
 	        	Object user = method.invoke(issueEvent, null);
-	        	if(user.getClass().getName().equals("User"))
+	        	if(user instanceof com.atlassian.crowd.embedded.api.User)
 	        		return ((com.atlassian.crowd.embedded.api.User)user).getName();
-	        	if(user.getClass().getName().equals("ApplicationUser"))
+	        	if(user instanceof com.atlassian.jira.user.ApplicationUser)
 	        		return ((com.atlassian.jira.user.ApplicationUser)user).getName();
 	        }
     	}
     	catch(Exception ex)
     	{
-    		log.debug(ex.printStackTrace());
+    		log.debug(ex.getMessage());
     	}
         return null;
     }
