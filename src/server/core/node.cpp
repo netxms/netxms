@@ -4158,14 +4158,14 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
  */
 UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
-   UINT32 dwTries = 3;
-
    if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_NXCP) ||
        !(m_flags & NF_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
+
+   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   int retry = 3;
 
    agentLock();
 
@@ -4175,7 +4175,7 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
          goto end_loop;
 
    // Get parameter from agent
-   while(dwTries-- > 0)
+   while(retry-- > 0)
    {
       dwError = m_agentConnection->getParameter(szParam, dwBufSize, szBuffer);
       switch(dwError)

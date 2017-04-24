@@ -911,13 +911,13 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
    UINT32 dwRetCode;
    if (sendMessage(&msg))
    {
-      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if (pResponse != NULL)
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (response != NULL)
       {
-         dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
+         dwRetCode = response->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == ERR_SUCCESS)
-            pResponse->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
-         delete pResponse;
+            response->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
+         delete response;
       }
       else
       {
