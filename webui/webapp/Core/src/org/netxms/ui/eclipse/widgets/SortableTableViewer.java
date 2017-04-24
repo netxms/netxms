@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
@@ -38,7 +40,7 @@ public class SortableTableViewer extends TableViewer
 	public static final int DEFAULT_STYLE = -1;
 	
 	private boolean initialized = false;
-	private List<TableColumn> columns;
+	private List<TableColumn> columns = new ArrayList<TableColumn>(16);
 	private TableSortingListener sortingListener;
 	
 	/**
@@ -54,7 +56,6 @@ public class SortableTableViewer extends TableViewer
 	                           int style)
 	{
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
-		columns = new ArrayList<TableColumn>(16);
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
 		createColumns(names, widths, defaultSortingColumn, defaultSortDir);
