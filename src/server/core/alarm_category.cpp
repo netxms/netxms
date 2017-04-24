@@ -42,7 +42,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
 
-   bool checkAccess(UINT32 userId) const { return m_acl.contains(userId); }
+   bool checkAccess(UINT32 userId);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
    void modifyFromMessage(const NXCPMessage *msg);
@@ -174,6 +174,16 @@ bool AlarmCategory::saveToDatabase() const
 
    DBConnectionPoolReleaseConnection(hdb);
    return success;
+}
+
+bool AlarmCategory::checkAccess(UINT32 userId)
+{
+   for(int i = 0; i < m_acl.size(); i++)
+   {
+      if (((m_acl.get(i) & GROUP_FLAG) && CheckUserMembership(userId, m_acl.get(i))) || (m_acl.get(i) == userId))
+         return true;
+   }
+   return false;
 }
 
 /**
