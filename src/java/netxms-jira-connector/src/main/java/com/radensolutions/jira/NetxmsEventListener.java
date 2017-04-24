@@ -49,7 +49,20 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
 
         log.debug("Issue {} event: {}", issue.getId(), eventTypeId);
 
-        String name = issueEvent.getUser().getName();
+        String name = "";
+        Method method = issueEvent.getClass().getMethod("getUser", null);
+        if(method != null)
+        {
+            name = method.invoke(issueEvent, null).getName();
+        }
+        else
+        {
+            if()
+            {
+            }
+        }
+        
+         = issueEvent.getUser().getName();
         if (name.equalsIgnoreCase(settingsManager.getJiraAccount())) {
             log.debug("Ignoring own change");
             return;
