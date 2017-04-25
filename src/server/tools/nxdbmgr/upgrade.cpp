@@ -759,6 +759,8 @@ static BOOL H_UpgradeFromV446(int currVersion, int newVersion)
       _T("  layout_data varchar(4000) null,")
       _T("PRIMARY KEY(device_oid))")));
 
+   CHK_EXEC(_T("ALTER TABLE nodes ADD lldp_id varchar(63)"));
+
    CHK_EXEC(SetSchemaVersion(447));
    return TRUE;
 }
