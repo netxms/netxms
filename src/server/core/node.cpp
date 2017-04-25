@@ -2733,6 +2733,11 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
    NDD_MODULE_LAYOUT layout;
    m_driver->getModuleLayout(pTransport, &m_customAttributes, m_driverData, 1, &layout); // TODO module set to 1
+   if (layout.numberingScheme == NDD_PN_UNKNOWN)
+   {
+      // Try to find port numbering information in database
+      LookupDevicePortLayout(SNMP_ObjectId::parse(m_szObjectId), &layout);
+   }
    m_portRowCount = layout.rows;
    m_portNumberingScheme = layout.numberingScheme;
 

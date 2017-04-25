@@ -5,6 +5,7 @@
 - External tables in agent
 - Script source for table DCIs
 - Driver for IgniteNet devices
+- Network device database (allows some device specific information to be provided without drivers)
 - Management console:
 	- Node's zone name shown in alarm browser and object overview when zoning is enabled
 - Fixed issues: NX-1222, NX-1239

@@ -1,0 +1,7 @@
+/*
+** Device database
+**
+** ex: syntax=sql
+*/
+
+INSERT INTO port_layouts (device_oid,numbering_scheme,row_count) VALUES ('.1.3.6.1','4','2');

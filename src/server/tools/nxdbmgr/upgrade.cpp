@@ -747,6 +747,23 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V446 to V447
+ */
+static BOOL H_UpgradeFromV446(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE port_layouts (")
+      _T("  device_oid varchar(255) not null,")
+      _T("  numbering_scheme char(1) not null,")
+      _T("  row_count char(1) not null,")
+      _T("  layout_data varchar(4000) null,")
+      _T("PRIMARY KEY(device_oid))")));
+
+   CHK_EXEC(SetSchemaVersion(447));
+   return TRUE;
+}
+
+/**
  * Upgrade from V445 to V446
  */
 static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
@@ -785,7 +802,6 @@ static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
       }
       DBFreeResult(hResult);
    }
-
 
    CHK_EXEC(SetSchemaVersion(446));
    return TRUE;
@@ -11660,6 +11676,7 @@ static struct
    { 443, 444, H_UpgradeFromV443 },
    { 444, 445, H_UpgradeFromV444 },
    { 445, 446, H_UpgradeFromV445 },
+   { 446, 447, H_UpgradeFromV446 },
    { 0, 0, NULL }
 };
 

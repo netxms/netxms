@@ -1076,6 +1076,8 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport);
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
 
+bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
+
 void CheckForMgmtNode();
 Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
                                     UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,

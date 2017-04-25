@@ -1646,9 +1646,9 @@ CREATE TABLE zmq_subscription
   PRIMARY KEY(object_id, subscription_type)
 ) TABLE_TYPE;
 
-/*
-** Currency codes
-*/
+/**
+ * Currency codes
+ */
 CREATE TABLE currency_codes
 (
 	numeric_code char(3) not null,
@@ -1658,9 +1658,9 @@ CREATE TABLE currency_codes
 	PRIMARY KEY(numeric_code)
 ) TABLE_TYPE;
 
-/*
-** Country codes
-*/
+/**
+ * Country codes
+ */
 CREATE TABLE country_codes
 (
 	numeric_code char(3) not null,
@@ -1670,9 +1670,9 @@ CREATE TABLE country_codes
 	PRIMARY KEY(numeric_code)
 ) TABLE_TYPE;
 
-/*
-** Config repositories
-*/
+/**
+ * Config repositories
+ */
 CREATE TABLE config_repositories
 (
 	id integer not null,
@@ -1682,3 +1682,14 @@ CREATE TABLE config_repositories
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+/**
+ * Network equipment port layouts
+ */
+CREATE TABLE port_layouts
+(
+   device_oid varchar(255) not null,
+   numbering_scheme char(1) not null,
+   row_count char(1) not null,
+   layout_data varchar(4000) null,
+   PRIMARY KEY(device_oid)
+) TABLE_TYPE;
