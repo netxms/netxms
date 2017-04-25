@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,10 +43,16 @@ static bool DeleteDataTables()
 		for(i = 0; i < count; i++)
 		{
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-			_sntprintf(query, 256, _T("DROP TABLE idata_%d"), id);
-			CHK_EXEC(SQLQuery(query));
-			_sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
-			CHK_EXEC(SQLQuery(query));
+         if (IsDataTableExist(_T("idata_%d"), id))
+         {
+            _sntprintf(query, 256, _T("DROP TABLE idata_%d"), id);
+            CHK_EXEC(SQLQuery(query));
+         }
+         if (IsDataTableExist(_T("tdata_%d"), id))
+         {
+            _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
+            CHK_EXEC(SQLQuery(query));
+         }
 		}
 		DBFreeResult(hResult);
 	}
