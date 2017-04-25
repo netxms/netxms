@@ -181,9 +181,10 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 			             macAddrText, node->getName(), (int)node->getId());
          }
       }
-
-      node->decRefCount();
 	}
+
+	for(int i = 0; i < nodes->size(); i++)
+	   nodes->get(i)->decRefCount();
 	delete nodes;
 
 	if ((cp == NULL) && (bestMatchNode != NULL))
