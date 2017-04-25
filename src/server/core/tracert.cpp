@@ -41,7 +41,7 @@ NetworkPath::~NetworkPath()
 	for(int i = 0; i < m_hopCount; i++)
 		if (m_path[i].object != NULL)
 			m_path[i].object->decRefCount();
-	safe_free(m_path);
+	free(m_path);
 }
 
 /**

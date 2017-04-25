@@ -418,7 +418,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
    NetObj *currObj = FindObjectById(currObjectId);
    currObj->incRefCount();
    GeoLocation currLocation = currObj->getGeoLocation();
-   if(currLocation.getType() == GL_UNSET)
+   if (currLocation.getType() == GL_UNSET)
    {
       currObj->decRefCount();
       return NULL;
@@ -430,30 +430,29 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
 	{
 	   NetObj *object = objects->get(i);
       GeoLocation location = object->getGeoLocation();
-      //leave objects that contain location
-      if(currLocation.getType() == GL_UNSET)
+      if (currLocation.getType() == GL_UNSET)
       {
          object->decRefCount();
          continue;
       }
 
-      //leave object only in given distance
+      // leave object only in given distance
       int distance = currLocation.calculateDistance(location);
-      if(distance > maxDistance)
+      if (distance > maxDistance)
       {
          object->decRefCount();
          continue;
       }
 
-      //remove current object from list
-      if(object->getId() == currObjectId)
+      // remove current object from list
+      if (object->getId() == currObjectId)
       {
          object->decRefCount();
          continue;
       }
 
-      //Filter objects by real path calculation
-      if(calculateRealDistance != NULL)
+      // Filter objects by real path calculation
+      if (calculateRealDistance != NULL)
       {
          distance = calculateRealDistance(location, currLocation);
          if(distance > maxDistance)
@@ -466,7 +465,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
       result->add(new ObjectsDistance(object, distance));
    }
 
-   //Sort filtered objects
+   // Sort filtered objects
    result->sort(DistanceSortCallback);
 
    currObj->decRefCount();

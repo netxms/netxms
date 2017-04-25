@@ -267,7 +267,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 				}
 				else
 				{
-               // Change item's status to _T("not supported")
+               // Change item's status to "not supported"
                pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
                target->decRefCount();
                target = NULL;
