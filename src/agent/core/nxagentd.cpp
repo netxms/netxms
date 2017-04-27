@@ -1851,7 +1851,7 @@ int main(int argc, char *argv[])
                {
 #ifdef UNICODE
                   int len = strlen(__buffer);
-                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, s_executableName, len);
+                  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, __buffer, len, s_executableName, MAX_PATH);
 #endif
                }
 #endif
