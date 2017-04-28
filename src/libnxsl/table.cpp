@@ -98,7 +98,7 @@ NXSL_METHOD_DEFINITION(Table, addColumn)
    {
       if (!argv[3]->isInteger())
          return NXSL_ERR_NOT_INTEGER;
-      isInstance = (argv[1]->getValueAsInt32() != 0);
+      isInstance = (argv[3]->getValueAsInt32() != 0);
    }
 
    *result = new NXSL_Value((INT32)((Table *)object->getData())->addColumn(argv[0]->getValueAsCString(), dataType, displayName, isInstance));
