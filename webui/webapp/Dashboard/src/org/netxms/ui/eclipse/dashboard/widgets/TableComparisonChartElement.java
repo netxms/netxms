@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -30,6 +31,8 @@ import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableCell;
+import org.netxms.client.TableRow;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataChart;
@@ -145,16 +148,48 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	 * 
 	 * @param data
 	 */
-	private void updateChart(Table data)
+	private void updateChart(final Table data)
 	{
 		String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : ""; // FIXME //$NON-NLS-1$
 		if (instanceColumn == null)
 			return;
 		
-		int icIndex = data.getColumnIndex(instanceColumn);
-		int dcIndex = data.getColumnIndex(config.getDataColumn());
+		final int icIndex = data.getColumnIndex(instanceColumn);
+		final int dcIndex = data.getColumnIndex(config.getDataColumn());
 		if ((icIndex == -1) || (dcIndex == -1))
 			return;	// at least one column is missing
+		
+		if (config.isSortOnDataColumn())
+		{
+		   data.sort(new Comparator<TableRow>() {
+            @Override
+            public int compare(TableRow row1, TableRow row2)
+            {
+               TableCell c1 = row1.get(dcIndex);
+               TableCell c2 = row2.get(dcIndex);
+
+               String s1 = (c1 != null) ? c1.getValue() : "";
+               String s2 = (c2 != null) ? c2.getValue() : "";
+               
+               int result = 0;
+               try
+               {
+                  double value1 = Double.parseDouble(s1);
+                  double value2 = Double.parseDouble(s2);
+                  result = Double.compare(value1, value2);
+               }
+               catch(NumberFormatException e)
+               {
+                  result = s1.compareToIgnoreCase(s2);
+               }
+               return config.isSortDescending() ? -result : result;
+            }
+         });
+		   
+		   // Sorting may reorder instances, so clear everything
+		   instanceMap.clear();
+		   chart.removeAllParameters();
+		}
 
 		boolean rebuild = false;
 		for(int i = 0; i < data.getRowCount(); i++)

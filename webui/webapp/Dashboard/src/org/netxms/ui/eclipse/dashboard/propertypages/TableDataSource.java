@@ -41,6 +41,8 @@ public class TableDataSource extends PropertyPage
 	private LabeledText instanceColumn;
 	private LabeledText dataColumn;
 	private Button checkIgnoreZeroValues;
+   private Button checkSortOnDataColumn;
+   private Button checkSortDescending;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -86,6 +88,14 @@ public class TableDataSource extends PropertyPage
 		checkIgnoreZeroValues.setText(Messages.get().TableDataSource_IgnoreZero);
 		checkIgnoreZeroValues.setSelection(config.isIgnoreZeroValues());
 
+      checkSortOnDataColumn = new Button(dialogArea, SWT.CHECK);
+      checkSortOnDataColumn.setText("&Sort table on data column");
+      checkSortOnDataColumn.setSelection(config.isSortOnDataColumn());
+
+      checkSortDescending = new Button(dialogArea, SWT.CHECK);
+      checkSortDescending.setText("Sort &descending");
+      checkSortDescending.setSelection(config.isSortDescending());
+
 		return dialogArea;
 	}
 
@@ -100,6 +110,8 @@ public class TableDataSource extends PropertyPage
 		config.setInstanceColumn(instanceColumn.getText().trim());
 		config.setDataColumn(dataColumn.getText().trim());
 		config.setIgnoreZeroValues(checkIgnoreZeroValues.getSelection());
+		config.setSortOnDataColumn(checkSortOnDataColumn.getSelection());
+		config.setSortDescending(checkSortDescending.getSelection());
 		return true;
 	}
 }

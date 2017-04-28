@@ -19,6 +19,8 @@
 package org.netxms.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.netxms.base.NXCPCodes;
@@ -150,6 +152,16 @@ public class Table
 		{
 			varId = data.get(i).fillMessage(msg, varId, extendedFormat);
 		}
+	}
+	
+	/**
+	 * Sort table rows using provided comparator
+	 * 
+	 * @param comparator comparator for table rows
+	 */
+	public void sort(Comparator<TableRow> comparator)
+	{
+	   Collections.sort(data, comparator);
 	}
 
 	/**

@@ -628,6 +628,15 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 		return parameters.size() - 1;
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#removeAllParameters()
+    */
+   @Override
+   public void removeAllParameters()
+   {
+      parameters.clear();
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, double, boolean)
 	 */

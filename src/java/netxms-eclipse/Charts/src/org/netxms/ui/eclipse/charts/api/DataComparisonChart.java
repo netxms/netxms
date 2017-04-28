@@ -44,6 +44,11 @@ public interface DataComparisonChart extends DataChart
 	public abstract int addParameter(GraphItem parameter, double value);
 	
 	/**
+	 * Remove all parameters from chart
+	 */
+	public abstract void removeAllParameters();
+	
+	/**
 	 * Update value for parameter
 	 * 
 	 * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)

@@ -194,6 +194,15 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       parameters.add(new DataComparisonElement(dci, value, null));
       return parameters.size() - 1;
    }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#removeAllParameters()
+    */
+   @Override
+   public void removeAllParameters()
+   {
+      parameters.clear();
+   }
 
 	/* (non-Javadoc)
     * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, double, boolean)

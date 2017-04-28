@@ -73,7 +73,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	private Series valueSeries = null;
 	private boolean transposed = false;
 	private boolean labelsVisible = false;
-	private double rotation = 0.0;
+	private double rotation = 0.0;  
 	
 	/**
 	 * @param parent
@@ -341,6 +341,15 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		return parameters.size() - 1;
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#removeAllParameters()
+    */
+   @Override
+   public void removeAllParameters()
+   {
+      parameters.clear();
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, double, boolean)
 	 */

@@ -66,6 +66,12 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 		
 	@Element(required = false)
 	private boolean ignoreZeroValues = false;
+	
+   @Element(required = false)
+	private boolean sortOnDataColumn = false;
+	
+   @Element(required = false)
+	private boolean sortDescending = false;
 
    @Element(required = false)
    private boolean autoScale = true;
@@ -308,6 +314,38 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;
+   }
+
+   /**
+    * @return the sortOnDataColumn
+    */
+   public boolean isSortOnDataColumn()
+   {
+      return sortOnDataColumn;
+   }
+
+   /**
+    * @param sortOnDataColumn the sortOnDataColumn to set
+    */
+   public void setSortOnDataColumn(boolean sortOnDataColumn)
+   {
+      this.sortOnDataColumn = sortOnDataColumn;
+   }
+
+   /**
+    * @return the sortDescending
+    */
+   public boolean isSortDescending()
+   {
+      return sortDescending;
+   }
+
+   /**
+    * @param sortDescending the sortDescending to set
+    */
+   public void setSortDescending(boolean sortDescending)
+   {
+      this.sortDescending = sortDescending;
    }
 
    /* (non-Javadoc)
