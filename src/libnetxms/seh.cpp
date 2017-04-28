@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -55,11 +55,9 @@ static DWORD m_dwLogMessageCode = 0;
 static BOOL m_printToScreen = FALSE;
 static BOOL m_writeFullDump = FALSE;
 
-
-//
-// Output for stack walker
-//
-
+/**
+ * Output for stack walker
+ */
 void NxStackWalker::OnOutput(LPCSTR pszText)
 {
 	if (m_pfWriter != NULL)
@@ -278,8 +276,10 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 
 		// NetXMS and OS version
 		GetWindowsVersionString(szWindowsVersion, 256);
-		_ftprintf(m_pExInfoFile, _T("\nNetXMS Version: ") NETXMS_VERSION_STRING _T(".") NETXMS_VERSION_BUILD_STRING _T("\n")
-		                         _T("OS Version: %s\n"), szWindowsVersion);
+		_ftprintf(m_pExInfoFile, 
+         _T("\nNetXMS Version: ") NETXMS_VERSION_STRING
+         _T("\nNetXMS Build Tag: ") NETXMS_BUILD_TAG
+		   _T("\nOS Version: %s\n"), szWindowsVersion);
 
 		// Processor architecture
 		_ftprintf(m_pExInfoFile, _T("Processor architecture: "));

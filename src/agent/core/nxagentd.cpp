@@ -153,7 +153,7 @@ extern const TCHAR *g_szMessages[];
 /**
  * Global variables
  */
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP;
 UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
