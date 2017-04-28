@@ -39,7 +39,7 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
         eventPublisher.register(this);
     }
     
-    private String getUserName(IssueEvent issueEvent)
+    private String getUserName(IssueEvent issueEvent) 
     {
     	try
     	{
@@ -55,7 +55,7 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
     	}
     	catch(Exception ex)
     	{
-    		log.debug(ex.getMessage());
+    		log.debug("Failed to get username: ", ex);
     	}
         return null;
     }
