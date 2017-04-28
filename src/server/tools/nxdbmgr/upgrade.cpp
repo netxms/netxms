@@ -747,6 +747,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V447 to V448
+ */
+static BOOL H_UpgradeFromV447(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD lldp_id varchar(63)")));
+   CHK_EXEC(SetSchemaVersion(448));
+   return TRUE;
+}
+
+/**
  * Upgrade from V446 to V447
  */
 static BOOL H_UpgradeFromV446(int currVersion, int newVersion)
@@ -11679,6 +11689,7 @@ static struct
    { 444, 445, H_UpgradeFromV444 },
    { 445, 446, H_UpgradeFromV445 },
    { 446, 447, H_UpgradeFromV446 },
+   { 447, 448, H_UpgradeFromV447 },
    { 0, 0, NULL }
 };
 
