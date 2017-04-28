@@ -2690,15 +2690,20 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
  */
 static bool CheckJvmPath(const char *base, const char *libdir, const char *arch, char *jvm, const TCHAR *description)
 {
-   snprintf(jvm, MAX_PATH, "%s%s/lib/%s/server/libjvm.so", base, libdir, arch);
-   nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-   if (_access(jvm, 0) == 0)
-      return true;
+   static const char *jreType[] = { "server", "default", "j9vm", "classic", NULL };
+   
+   for(int i = 0; jreType[i] != NULL; i++)
+   {
+      snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm.so", base, libdir, arch, jreType[i]);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      if (_access(jvm, 0) == 0)
+         return true;
 
-   snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/server/libjvm.so", base, libdir, arch);
-   nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-   if (_access(jvm, 0) == 0)
-      return true;
+      snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm.so", base, libdir, arch, jreType[i]);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      if (_access(jvm, 0) == 0)
+         return true;
+   }
 
    if (!strcmp(arch, "x86_64"))
       return CheckJvmPath(base, libdir, "amd64", jvm, description);

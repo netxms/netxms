@@ -179,6 +179,7 @@ static int StartApp(int argc, char *argv[])
 static struct option longOptions[] =
 {
 	{ (char *)"classpath",      required_argument, NULL,        'C' },
+	{ (char *)"debug",          no_argument,       NULL,        'D' },
 	{ (char *)"help",           no_argument,       NULL,        'h' },
 	{ (char *)"host",           required_argument, NULL,        'H' },
 	{ (char *)"jre",            required_argument, NULL,        'j' },
@@ -189,7 +190,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:hH:j:P:u:v"
+#define SHORT_OPTIONS "C:DhH:j:P:u:v"
 
 /**
  * Print usage info
@@ -209,6 +210,7 @@ static void usage(bool showVersion)
       _T("Options:\n")
 #if HAVE_GETOPT_LONG
       _T("  -C, --classpath <path>      Additional Java class path.\n")
+      _T("  -D, --debug                 Show additional debug output.\n")
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
@@ -217,6 +219,7 @@ static void usage(bool showVersion)
       _T("  -v, --version               Display version information.\n\n")
 #else
       _T("  -C <path>      Additional Java class path.\n")
+      _T("  -D             Show additional debug output.\n")
       _T("  -h             Display this help message.\n")
       _T("  -H <hostname>  Specify host name or IP address.\n")
       _T("  -j <path>      Specify JRE location.\n")
@@ -225,6 +228,14 @@ static void usage(bool showVersion)
       _T("  -v             Display version information.\n\n")
 #endif
       );
+}
+
+/**
+ * Debug writer
+ */
+static void DebugWriter(const TCHAR *msg)
+{
+   _tprintf(_T("DBG: %s\n"), msg);
 }
 
 /**
@@ -249,6 +260,10 @@ int main(int argc, char *argv[])
 		   case 'C': // classpath
 			   s_optClassPath = optarg;
 			   break;
+         case 'D': // Additional debug
+            nxlog_set_debug_writer(DebugWriter);
+            nxlog_set_debug_level(9);
+            break;
 		   case 'h': // help
 			   usage(true);
 			   exit(0);
@@ -256,7 +271,7 @@ int main(int argc, char *argv[])
 		   case 'H': // host
 			   s_optHost = optarg;
 			   break;
-		   case 'j': // host
+		   case 'j': // JRE
 			   s_optJre = optarg;
 			   break;
 		   case 'P': // password
