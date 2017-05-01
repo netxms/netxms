@@ -144,7 +144,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    {
       _sntprintf(eventIdText, 16, _T("%u"), eventId);
       _sntprintf(severityText, 16, _T("%u"), severity);
-      count += 4;
+      count += 3;
    }
 
    TCHAR **list = (TCHAR **)malloc(sizeof(TCHAR *) * count);
