@@ -132,13 +132,14 @@ LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractC
  */
 static DWORD AdapterNameToIndex(const TCHAR *name)
 {
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    DWORD ifIndex = 0;
    ULONG size = 0;
-   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
    IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
-   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, buffer, &size) == ERROR_SUCCESS)
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
 #ifdef UNICODE
       char mbname[256];
@@ -172,12 +173,13 @@ static const bool AdapterIndexToName(DWORD index, TCHAR *name)
 {
    bool result = false;
 
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    ULONG size = 0;
-   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return false;
 
    IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
-   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, buffer, &size) == ERROR_SUCCESS)
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
       {
