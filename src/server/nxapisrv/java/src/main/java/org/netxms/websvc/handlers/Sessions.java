@@ -48,7 +48,7 @@ public class Sessions extends AbstractHandler
       if (entity == null)
       {
          log.warn("No POST data in login call");
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(createErrorResponse(RCC.INVALID_REQUEST).toString(), MediaType.APPLICATION_JSON);
       }
       
       JSONObject request = new JsonRepresentation(entity).getJsonObject();
@@ -57,7 +57,7 @@ public class Sessions extends AbstractHandler
       if ((login == null) || (password == null))
       {
          log.warn("Login or password not specified in login call");
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(createErrorResponse(RCC.INVALID_REQUEST).toString(), MediaType.APPLICATION_JSON);
       }
       
       SessionToken token = login(login, password);
