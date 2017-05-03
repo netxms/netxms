@@ -123,7 +123,7 @@ public class ObjectFilter extends ViewerFilter
 			   }
             return false;
 			case COMMENTS:
-				return object.getComments().toLowerCase().contains(filterString);
+				return object.getComments().toLowerCase().contains(filterString.toLowerCase());
 		}
 		
 		return false;
