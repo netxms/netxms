@@ -25,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.websvc.ApiProperties;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
 import org.netxms.websvc.WebSvcStatusService;
@@ -49,7 +50,8 @@ import com.google.gson.JsonObject;
  */
 public abstract class AbstractHandler extends ServerResource
 {
-   public static String serverAddress = "127.0.0.1";
+   static ApiProperties properties = new ApiProperties();
+   protected static String serverAddress = properties.getNXServerAddress();
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    private SessionToken sessionToken = null;
    private NXCSession session = null;
