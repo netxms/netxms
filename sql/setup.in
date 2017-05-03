@@ -162,6 +162,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SNMPTrapPort','162',1,1,'I','Port used for SNMP traps.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SMTPFromAddr','netxms@localhost',1,0,'S','The address used for sending mail from.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SMTPFromName','NetXMS Server',1,0,'S','The name used as the sender.');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SMTPPort','25',1,0,'I','Port used by SMTP server');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SMTPRetryCount','1',1,0,'I','Number of retries for sending mail.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SMTPServer','localhost',1,0,'S','An SMTP server used for sending mail.');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('StatusCalculationAlgorithm','1',1,1,'I','');

@@ -1875,7 +1875,7 @@ inline bool DecryptPasswordFailW(const WCHAR *encryptedPasswd, WCHAR *decryptedP
  */
 bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encryptedPasswd, WCHAR *decryptedPasswd, size_t bufferLenght)
 {
-   //check that lenght is correct
+   //check that length is correct
 	if (wcslen(encryptedPasswd) != 44)
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 

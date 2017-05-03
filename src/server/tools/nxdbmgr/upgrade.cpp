@@ -747,6 +747,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V448 to V449
+ */
+static BOOL H_UpgradeFromV448(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SMTPPort"), _T("25"), _T("Port used by SMTP server"), 'I', true, false, false, false));
+   CHK_EXEC(SetSchemaVersion(449));
+   return TRUE;
+}
+
+/**
  * Upgrade from V447 to V448
  */
 static BOOL H_UpgradeFromV447(int currVersion, int newVersion)
@@ -11688,6 +11698,7 @@ static struct
    { 445, 446, H_UpgradeFromV445 },
    { 446, 447, H_UpgradeFromV446 },
    { 447, 448, H_UpgradeFromV447 },
+   { 448, 449, H_UpgradeFromV448 },
    { 0, 0, NULL }
 };
 
