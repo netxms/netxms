@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -101,4 +102,16 @@ public class Container extends GenericObject
 	{
 		return flags;
 	}
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, autoBindFilter);
+      return strings;
+   }
 }

@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import java.util.Date;
+import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -154,4 +155,22 @@ public class MobileDevice extends DataCollectionTarget
 	{
 		return lastReportTime;
 	}
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, deviceId);
+      addString(strings, model);
+      addString(strings, osName);
+      addString(strings, osVersion);
+      addString(strings, serialNumber);
+      addString(strings, userId);
+      addString(strings, vendor);
+      return strings;
+   }
 }

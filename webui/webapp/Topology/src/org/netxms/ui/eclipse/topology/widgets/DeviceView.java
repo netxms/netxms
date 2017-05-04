@@ -124,11 +124,11 @@ public class DeviceView extends DashboardComposite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getRowCount(), ((Node)object).getNumberingScheme());
+				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}
-			
+
 			PortInfo p = new PortInfo(iface);
 			ports.put(iface.getObjectId(), p);
 			sv.addPort(p);

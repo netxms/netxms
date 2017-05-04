@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.util.Set;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -155,5 +156,18 @@ public class AccessPoint extends DataCollectionTarget
    public AccessPointState getState()
    {
       return state;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, model);
+      addString(strings, serialNumber);
+      addString(strings, vendor);
+      return strings;
    }
 }

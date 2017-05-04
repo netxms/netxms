@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
@@ -137,8 +138,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    protected String sshLogin;
    protected String sshPassword;
    protected long sshProxyId;
-   protected int rows;
-   protected int numberingScheme;
+   protected int portRowCount;
+   protected int portNumberingScheme;
 	
 	/**
 	 * Create new node object.
@@ -207,8 +208,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       sshLogin = msg.getFieldAsString(NXCPCodes.VID_SSH_LOGIN);
       sshPassword = msg.getFieldAsString(NXCPCodes.VID_SSH_PASSWORD);
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
-      rows = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
-      numberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
+      portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
+      portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -727,13 +728,40 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       return sshProxyId;
    }
    
-   public int getRowCount()
+   /**
+    * @return
+    */
+   public int getPortRowCount()
    {
-      return rows;
+      return portRowCount;
    }
    
-   public int getNumberingScheme()
+   /**
+    * @return
+    */
+   public int getPortNumberingScheme()
    {
-      return numberingScheme;
+      return portNumberingScheme;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, primaryName);
+      addString(strings, primaryIP.getHostAddress());
+      addString(strings, nodeSubType);
+      addString(strings, snmpAuthName);
+      addString(strings, snmpOID);
+      addString(strings, snmpSysContact);
+      addString(strings, snmpSysLocation);
+      addString(strings, snmpSysName);
+      addString(strings, sshLogin);
+      addString(strings, systemDescription);
+      addString(strings, platformName);
+      return strings;
    }
 }

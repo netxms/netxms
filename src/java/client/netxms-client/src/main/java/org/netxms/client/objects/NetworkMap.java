@@ -21,6 +21,7 @@ package org.netxms.client.objects;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
@@ -260,5 +261,17 @@ public class NetworkMap extends GenericObject
    public MapObjectDisplayMode getObjectDisplayMode()
    {
       return objectDisplayMode;
+   }
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, filter);
+      return strings;
    }
 }

@@ -946,4 +946,41 @@ public abstract class AbstractObject
    {
       return inMaintenanceMode;
    }
+   
+   /**
+    * Add string to string set
+    * 
+    * @param strings
+    * @param s
+    */
+   protected static void addString(Set<String> strings, String s)
+   {
+      if (s == null)
+         return;
+      String ts = s.trim();
+      if (!ts.isEmpty())
+         strings.add(ts);
+   }
+   
+   /**
+    * Get all strings in object
+    * 
+    * @return set of all strings in object
+    */
+   public Set<String> getStrings()
+   {
+      Set<String> strings = new HashSet<String>();
+      addString(strings, comments);
+      addString(strings, objectName);
+      if ((postalAddress != null) && !postalAddress.isEmpty())
+         strings.add(postalAddress.getAddressLine());
+      for(String s : customAttributes.values())
+         addString(strings, s);
+      for(ObjectUrl u : urls)
+      {
+         addString(strings, u.getUrl().toString());
+         addString(strings, u.getDescription());
+      }
+      return strings;
+   }
 }

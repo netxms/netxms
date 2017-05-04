@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -842,5 +843,19 @@ public class Interface extends GenericObject
    public static String getIfTypeName(int ifType)
    {
       return ifTypeNames.get(ifType);
+   }
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, alias);
+      addString(strings, description);
+      addString(strings, ifTypeNames.get(ifType));
+      return strings;
    }
 }

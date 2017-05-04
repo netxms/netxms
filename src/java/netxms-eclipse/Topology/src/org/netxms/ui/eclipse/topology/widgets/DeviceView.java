@@ -113,9 +113,7 @@ public class DeviceView extends DashboardComposite
 			public int compare(Interface arg0, Interface arg1)
 			{
 				if (arg0.getSlot() == arg1.getSlot())
-				{
 					return arg0.getPort() - arg1.getPort();
-				}
 				return arg0.getSlot() - arg1.getSlot();
 			}
 		});
@@ -126,7 +124,7 @@ public class DeviceView extends DashboardComposite
 			SlotView sv = slots.get(slot);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getRowCount(), ((Node)object).getNumberingScheme());
+				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
 				sv.setPortStatusVisible(portStatusVisible);
 				slots.put(slot, sv);
 			}

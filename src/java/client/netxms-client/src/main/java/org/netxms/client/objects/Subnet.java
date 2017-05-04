@@ -19,6 +19,7 @@
 package org.netxms.client.objects;
 
 import java.net.InetAddress;
+import java.util.Set;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -103,4 +104,16 @@ public class Subnet extends GenericObject
 	{
 		return zoneId;
 	}
+
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#getStrings()
+    */
+   @Override
+   public Set<String> getStrings()
+   {
+      Set<String> strings = super.getStrings();
+      addString(strings, networkAddress.getHostAddress());
+      return strings;
+   }
 }
