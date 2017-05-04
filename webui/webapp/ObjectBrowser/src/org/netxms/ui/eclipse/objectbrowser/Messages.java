@@ -43,8 +43,6 @@ public class Messages extends NLS
 	public String ObjectStatusIndicator_HideUnmanaged;
 	public String ObjectStatusIndicator_ShowIcons;
 	public String ObjectTree_JobTitle;
-	public String OpenObjectBrowser_Error;
-	public String OpenObjectBrowser_ErrorText;
    public String ObjectBrowser_MoveDashboard;
    public String ObjectBrowser_MoveMap;
    public String ObjectBrowser_MovePolicy;
