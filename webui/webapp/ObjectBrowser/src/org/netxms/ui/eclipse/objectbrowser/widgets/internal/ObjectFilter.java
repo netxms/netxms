@@ -86,8 +86,8 @@ public class ObjectFilter extends ViewerFilter
 		
 		switch(mode)
 		{
-			case NAME:
-				return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().contains(filterString);
+         case COMMENTS:
+            return object.getComments().toLowerCase().contains(filterString);
 			case IP_ADDRESS:
 			   if (object instanceof AbstractNode)
 			   {
@@ -115,6 +115,8 @@ public class ObjectFilter extends ViewerFilter
                return ((AccessPoint)object).getIpAddress().getHostAddress().startsWith(filterString);
             }
 			   return false;
+         case NAME:
+            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().contains(filterString);
 			case OBJECT_ID:
 			   if (object instanceof AbstractObject)
 			   {
@@ -122,8 +124,6 @@ public class ObjectFilter extends ViewerFilter
 			      return String.valueOf(objectID).startsWith(filterString);
 			   }
             return false;
-			case COMMENTS:
-				return object.getComments().toLowerCase().contains(filterString);
 		}
 		
 		return false;
@@ -180,7 +180,10 @@ public class ObjectFilter extends ViewerFilter
 			if (filterString.charAt(0) == '/')
 			{
 				mode = COMMENTS;
-				this.filterString = filterString.substring(1);
+            String newFilterString = filterString.substring(1).toLowerCase();
+            if ((this.filterString != null) && newFilterString.startsWith(this.filterString))
+               fullSearch = false;
+            this.filterString = newFilterString;
 			}
 			else if (filterString.charAt(0) == '>')
 			{
@@ -203,9 +206,8 @@ public class ObjectFilter extends ViewerFilter
 				else
 				{
 					String newFilterString = filterString.toLowerCase();
-					if (this.filterString != null)
-						if (newFilterString.startsWith(this.filterString))
-							fullSearch = false;
+					if ((this.filterString != null) && newFilterString.startsWith(this.filterString))
+					   fullSearch = false;
 					this.filterString = newFilterString;
 				}
 			}
