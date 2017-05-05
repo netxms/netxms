@@ -17,6 +17,15 @@
             class="org.netxms.ui.eclipse.objectbrowser.views.ObjectBrowser"
             id="org.netxms.ui.eclipse.view.navigation.objectbrowser">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder"
+            icon="icons/find.gif"
+            id="org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder"
+            name="Find Object"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -42,6 +51,15 @@
             id="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
             name="Rename">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_finder"
+            name="Open Object Finder">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectbrowser.commands.start_search"
+            name="Start search">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -58,6 +76,21 @@
 			   definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
 		   </action>
 	   </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.object_finder"
+          label="Object Finder"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectFinder"
+             definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_finder"
+             icon="icons/find.gif"
+             id="org.netxms.ui.eclipse.objectbrowser.actions.openObjectFinder"
+             label="&amp;Find object"
+             menubarPath="tools/additions"
+             style="push"
+             tooltip="Open object finder">
+       </action>
+    </actionSet>
    </extension>
 
    <extension
@@ -85,6 +118,17 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_finder"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F12">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.start_search"
+            contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectFinder"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
    </extension>
 
   <extension
@@ -108,6 +152,11 @@
      <context
            id="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
            name="%context.ObjectBrowser.name"
+           parentId="org.eclipse.ui.contexts.window">
+     </context>
+     <context
+           id="org.netxms.ui.eclipse.objectbrowser.context.ObjectFinder"
+           name="Object Finder"
            parentId="org.eclipse.ui.contexts.window">
      </context>
   </extension>
