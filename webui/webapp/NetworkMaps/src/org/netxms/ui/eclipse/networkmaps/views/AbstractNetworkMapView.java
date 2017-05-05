@@ -110,6 +110,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -1391,27 +1392,16 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			return;
 
 		AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
-		if (object != null)
+		try
 		{
-			try
-			{
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-						.showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
-
-				if (!selectionListeners.isEmpty())
-				{
-					SelectionChangedEvent event = new SelectionChangedEvent(AbstractNetworkMapView.this, currentSelection);
-					for(ISelectionChangedListener l : selectionListeners)
-					{
-						l.selectionChanged(event);
-					}
-				}
-			}
-			catch(PartInitException e)
-			{
-				MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error,
-						String.format(Messages.get().AbstractNetworkMapView_OpenObjDetailsError, e.getLocalizedMessage()));
-			}
+			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+					.showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
+         CommandBridge.getInstance().execute("TabbedObjectView/changeObject", object.getObjectId());
+		}
+		catch(PartInitException e)
+		{
+			MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error,
+					String.format(Messages.get().AbstractNetworkMapView_OpenObjDetailsError, e.getLocalizedMessage()));
 		}
 	}
 

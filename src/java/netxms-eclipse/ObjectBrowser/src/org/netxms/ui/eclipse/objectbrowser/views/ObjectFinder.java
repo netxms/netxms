@@ -33,6 +33,7 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -52,6 +53,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
@@ -63,12 +66,14 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectSearchResultComparator;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectSearchResultLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -141,6 +146,7 @@ public class ObjectFinder extends ViewPart
    private Text ipRangeStart;
    private Text ipRangeEnd;
    private Action actionStartSearch;
+   private Action actionShowObjectDetails;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -338,6 +344,14 @@ public class ObjectFinder extends ViewPart
       actionStartSearch.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.start_search"); //$NON-NLS-1$
       final ActionHandler showFilterHandler = new ActionHandler(actionStartSearch);
       handlerService.activateHandler(actionStartSearch.getActionDefinitionId(), showFilterHandler);
+
+      actionShowObjectDetails = new Action("Show object details") {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+      };
    }
    
    /**
@@ -380,6 +394,10 @@ public class ObjectFinder extends ViewPart
          public void menuAboutToShow(IMenuManager mgr)
          {
             ObjectContextMenu.fill(mgr, getSite(), results);
+            if (((IStructuredSelection)results.getSelection()).size() == 1)
+            {
+               mgr.insertAfter(GroupMarkers.MB_PROPERTIES, actionShowObjectDetails);
+            }
          }
       });
 
@@ -542,6 +560,29 @@ public class ObjectFinder extends ViewPart
       }
       
       return false;
+   }
+
+   /**
+    * Show details for selected object
+    */
+   private void showObjectDetails()
+   {
+      IStructuredSelection selection = (IStructuredSelection)results.getSelection();
+      if (selection.size() != 1)
+         return;
+
+      AbstractObject object = (AbstractObject)selection.getFirstElement();
+      try
+      {
+         PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+               .showView("org.netxms.ui.eclipse.objectview.view.tabbed_object_view"); //$NON-NLS-1$
+         CommandBridge.getInstance().execute("TabbedObjectView/changeObject", object.getObjectId());
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(getSite().getShell(), "Error",
+               String.format("Cannot open object details view (%s)", e.getLocalizedMessage()));
+      }
    }
    
    /**
