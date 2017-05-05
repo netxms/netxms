@@ -34,11 +34,6 @@ public class ObjectSearchResultComparator extends ViewerComparator
       int result;
       switch(column)
       {
-         case ObjectFinder.COL_CLASS:
-            String c1 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object1, column);
-            String c2 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object2, column);
-            result = c1.compareToIgnoreCase(c2);
-            break;
          case ObjectFinder.COL_ID:
             result = Long.signum(object1.getObjectId() - object2.getObjectId());
             break;
@@ -50,10 +45,12 @@ public class ObjectSearchResultComparator extends ViewerComparator
          case ObjectFinder.COL_NAME:
             result = object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
             break;
+         case ObjectFinder.COL_CLASS:
+         case ObjectFinder.COL_PARENT:
          case ObjectFinder.COL_ZONE:
-            String z1 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object1, column);
-            String z2 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object2, column);
-            result = z1.compareToIgnoreCase(z2);
+            String t1 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object1, column);
+            String t2 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object2, column);
+            result = t1.compareToIgnoreCase(t2);
             break;
          default:
             result = 0;

@@ -11,7 +11,10 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.views.ObjectFinder;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -65,6 +68,8 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
             return null;
          case ObjectFinder.COL_NAME:
             return wbLabelProvider.getText(element);
+         case ObjectFinder.COL_PARENT:
+            return getParentNames((AbstractObject)element);
          case ObjectFinder.COL_ZONE:
             if (object instanceof AbstractNode)
             {
@@ -75,6 +80,27 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
             return null;
       }
       return null;
+   }
+   
+   /**
+    * Get list of parent object names
+    * 
+    * @param object
+    * @return
+    */
+   private static String getParentNames(AbstractObject object)
+   {
+      StringBuilder sb = new StringBuilder();
+      for(AbstractObject o : object.getParentsAsArray())
+      {
+         if ((o instanceof AbstractNode) || (o instanceof Container) || (o instanceof Rack) || (o instanceof Cluster))
+         {
+            if (sb.length() > 0)
+               sb.append(", ");
+            sb.append(o.getObjectName());
+         }
+      }
+      return sb.toString();
    }
 
    /* (non-Javadoc)

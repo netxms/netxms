@@ -87,7 +87,8 @@ public class ObjectFinder extends ViewPart
    public static final int COL_CLASS = 1;
    public static final int COL_NAME = 2;
    public static final int COL_IP_ADDRESS = 3;
-   public static final int COL_ZONE = 4;
+   public static final int COL_PARENT = 4;
+   public static final int COL_ZONE = 5;
    
    private static final int SEARCH_MODE_NORMAL = 0;
    private static final int SEARCH_MODE_PATTERN = 1;
@@ -261,7 +262,7 @@ public class ObjectFinder extends ViewPart
       ipRangeEnd.addTraverseListener(traverseListener);
       
       /*** Search button ***/
-      Button searchButton = new Button(conditionGroup, SWT.PUSH | SWT.DEFAULT);
+      Button searchButton = new Button(conditionGroup, SWT.PUSH);
       searchButton.setText("&Search");
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -280,8 +281,8 @@ public class ObjectFinder extends ViewPart
          }
       });
       
-      final String[] names = { "ID", "Class", "Name", "IP Address", "Zone" };
-      final int[] widths = { 90, 120, 300, 300, 200 };
+      final String[] names = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
+      final int[] widths = { 90, 120, 300, 250, 300, 200 };
       results = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       if (!ConsoleSharedData.getSession().isZoningEnabled())
          results.removeColumnById(COL_ZONE);
