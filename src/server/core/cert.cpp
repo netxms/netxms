@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2007-2010 Victor Kirhenshtein
+** Copyright (C) 2007-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,14 +38,15 @@
 /**
  * Server certificate file information
  */
-TCHAR g_serverCACertificatePath[MAX_PATH] = _T("");
+TCHAR *g_serverCACertificatesPath = NULL;
 TCHAR g_serverCertificatePath[MAX_PATH] = _T("");
+TCHAR g_serverCertificateKeyPath[MAX_PATH] = _T("");
 char g_serverCertificatePassword[MAX_PASSWORD] = "";
 
 /**
  * Server certificate
  */
-static X509 *s_serverCACertificate = NULL;
+static ObjectArray<X509> s_serverCACertificates(8, 8, false);
 static X509 *s_serverCertificate = NULL;
 static EVP_PKEY *s_serverCertificateKey = NULL;
 
@@ -449,7 +450,8 @@ bool ValidateAgentCertificate(X509 *cert)
       nxlog_debug(3, _T("ValidateAgentCertificate: cannot create certificate store"));
    }
 
-   X509_STORE_add_cert(store, s_serverCACertificate);
+   for(int i = 0; i < s_serverCACertificates.size(); i++)
+      X509_STORE_add_cert(store, s_serverCACertificates.get(i));
    X509_STORE_add_cert(store, s_serverCertificate);
    bool valid = false;
 
@@ -475,14 +477,6 @@ bool ValidateAgentCertificate(X509 *cert)
  */
 void ReloadCertificates()
 {
-	BYTE *pBinCert;
-	OPENSSL_CONST BYTE *p;
-	DB_RESULT hResult;
-	int i, nRows, nLoaded;
-	UINT32 dwLen;
-	X509 *pCert;
-	TCHAR szBuffer[256], szSubject[256], *pszCertData;
-
 	s_certificateStoreLock.lock();
 
 	if (s_trustedCertificateStore != NULL)
@@ -496,59 +490,64 @@ void ReloadCertificates()
 	      X509_STORE_add_cert(s_trustedCertificateStore, s_serverCertificate);
 
       // Add server's CA certificate as trusted
-	   if (s_serverCACertificate != NULL)
-         X509_STORE_add_cert(s_trustedCertificateStore, s_serverCACertificate);
+	   for(int i = 0; i < s_serverCACertificates.size(); i++)
+	      X509_STORE_add_cert(s_trustedCertificateStore, s_serverCACertificates.get(i));
 
+	   TCHAR szBuffer[256];
 		_sntprintf(szBuffer, 256, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, szBuffer);
+		DB_RESULT hResult = DBSelect(hdb, szBuffer);
 		if (hResult != NULL)
 		{
-			nRows = DBGetNumRows(hResult);
-			for(i = 0, nLoaded = 0; i < nRows; i++)
+		   int loaded = 0;
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
 			{
-				pszCertData = DBGetField(hResult, i, 0, NULL, 0);
-				if (pszCertData != NULL)
+				TCHAR *certData = DBGetField(hResult, i, 0, NULL, 0);
+				if (certData != NULL)
 				{
-					dwLen = (UINT32)_tcslen(pszCertData);
-					pBinCert = (BYTE *)malloc(dwLen);
-					StrToBin(pszCertData, pBinCert, dwLen);
-					free(pszCertData);
-					p = pBinCert;
-					pCert = d2i_X509(NULL, &p, dwLen);
-					free(pBinCert);
-					if (pCert != NULL)
+					size_t len = _tcslen(certData);
+					BYTE *binCert = (BYTE *)malloc(len);
+					StrToBin(certData, binCert, len);
+					free(certData);
+               OPENSSL_CONST BYTE *p = binCert;
+					X509 *cert = d2i_X509(NULL, &p, len);
+					free(binCert);
+					if (cert != NULL)
 					{
-						if (X509_STORE_add_cert(s_trustedCertificateStore, pCert))
+						if (X509_STORE_add_cert(s_trustedCertificateStore, cert))
 						{
-							nLoaded++;
+							loaded++;
 						}
 						else
 						{
+						   TCHAR subject[256];
 							nxlog_write(MSG_CANNOT_ADD_CERT, EVENTLOG_ERROR_TYPE,
-										"ss", DBGetField(hResult, i, 1, szSubject, 256),
+										"ss", DBGetField(hResult, i, 1, subject, 256),
 										_ERR_error_tstring(ERR_get_error(), szBuffer));
 						}
-						X509_free(pCert); // X509_STORE_add_cert increments reference count
+						X509_free(cert); // X509_STORE_add_cert increments reference count
 					}
 					else
 					{
+                  TCHAR subject[256];
 						nxlog_write(MSG_CANNOT_LOAD_CERT, EVENTLOG_ERROR_TYPE,
-									"ss", DBGetField(hResult, i, 1, szSubject, 256),
+									"ss", DBGetField(hResult, i, 1, subject, 256),
 									_ERR_error_tstring(ERR_get_error(), szBuffer));
 					}
 				}
 			}
 			DBFreeResult(hResult);
 
-			if (nLoaded > 0)
-				nxlog_write(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", nLoaded);
+			if (loaded > 0)
+				nxlog_write(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", loaded);
 		}
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
-		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE, "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
+	   TCHAR buffer[256];
+		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE, "s", _ERR_error_tstring(ERR_get_error(), buffer));
 	}
 
 	s_certificateStoreLock.unlock();
@@ -567,30 +566,41 @@ void InitCertificates()
  */
 bool LoadServerCertificate(RSA **serverKey)
 {
-   if ((g_serverCACertificatePath[0] == 0) || (g_serverCertificatePath[0] == 0))
+   if (g_serverCertificatePath[0] == 0)
    {
       nxlog_write(MSG_SERVER_CERT_NOT_SET, NXLOG_INFO, NULL);
       return false;
    }
 
-   // Load server CA certificate
-   FILE *f = _tfopen(g_serverCACertificatePath, _T("r"));
-   if (f == NULL)
+   // Load server CA certificates
+   TCHAR *curr = g_serverCACertificatesPath;
+   TCHAR *next = _tcschr(curr, _T('\n'));
+   while(next != NULL)
    {
-      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCACertificatePath, _tcserror(errno));
-      return false;
-   }
-   s_serverCACertificate = PEM_read_X509(f, NULL, NULL, NULL);
-   fclose(f);
-   if (s_serverCACertificate == NULL)
-   {
-      TCHAR buffer[1024];
-      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCACertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
-      return false;
+      *next = 0;
+
+      FILE *f = _tfopen(curr, _T("r"));
+      if (f == NULL)
+      {
+         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", curr, _tcserror(errno));
+         return false;
+      }
+      X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
+      fclose(f);
+      if (cert == NULL)
+      {
+         TCHAR buffer[1024];
+         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", curr, _ERR_error_tstring(ERR_get_error(), buffer));
+         return false;
+      }
+      s_serverCACertificates.add(cert);
+
+      curr = next + 1;
+      next = _tcschr(curr, _T('\n'));
    }
 
    // Load server certificate and private key
-   f = _tfopen(g_serverCertificatePath, _T("r"));
+   FILE *f = _tfopen(g_serverCertificatePath, _T("r"));
    if (f == NULL)
    {
       nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _tcserror(errno));
@@ -599,6 +609,17 @@ bool LoadServerCertificate(RSA **serverKey)
 
    DecryptPasswordA("system", g_serverCertificatePassword, g_serverCertificatePassword, MAX_PASSWORD);
    s_serverCertificate = PEM_read_X509(f, NULL, NULL, g_serverCertificatePassword);
+   if (g_serverCertificateKeyPath[0] != 0)
+   {
+      // Server key is in separate file
+      fclose(f);
+      f = _tfopen(g_serverCertificateKeyPath, _T("r"));
+      if (f == NULL)
+      {
+         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificateKeyPath, _tcserror(errno));
+         return false;
+      }
+   }
    s_serverCertificateKey = PEM_read_PrivateKey(f, NULL, NULL, g_serverCertificatePassword);
    fclose(f);
 
@@ -667,7 +688,8 @@ bool SetupServerTlsContext(SSL_CTX *context)
    X509_STORE_set_verify_cb(store, CertVerifyCallback);
 #endif
    X509_STORE_add_cert(store, s_serverCertificate);
-   X509_STORE_add_cert(store, s_serverCACertificate);
+   for(int i = 0; i < s_serverCACertificates.size(); i++)
+      X509_STORE_add_cert(store, s_serverCACertificates.get(i));
    SSL_CTX_set_cert_store(context, store);
    SSL_CTX_use_certificate(context, s_serverCertificate);
    SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);
