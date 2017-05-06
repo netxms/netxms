@@ -77,6 +77,12 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
                Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
                return (zone != null) ? zone.getObjectName() + " (" + Long.toString(zoneId) + ")" : Long.toString(zoneId); 
             }
+            else if (object instanceof Interface)
+            {
+               long zoneId = ((Interface)object).getZoneId();
+               Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+               return (zone != null) ? zone.getObjectName() + " (" + Long.toString(zoneId) + ")" : Long.toString(zoneId); 
+            }
             return null;
       }
       return null;
