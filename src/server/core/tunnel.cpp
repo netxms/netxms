@@ -76,7 +76,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
       AgentTunnel *curr = s_boundTunnels.get(tunnel->getNodeId());
       if (curr == tunnel)
          s_boundTunnels.remove(tunnel->getNodeId());
-      else
+      else if (curr != NULL)
          curr->decRefCount();  // ref count was increased by get
    }
    else
@@ -935,10 +935,16 @@ failure:
 }
 
 /**
+ * Tunnel listener lock
+ */
+static Mutex s_tunnelListenerLock;
+
+/**
  * Tunnel listener
  */
 THREAD_RESULT THREAD_CALL TunnelListener(void *arg)
 {
+   s_tunnelListenerLock.lock();
    UINT16 port = (UINT16)ConfigReadULong(_T("AgentTunnelListenPort"), 4703);
 
    // Create socket(s)
@@ -1142,6 +1148,7 @@ THREAD_RESULT THREAD_CALL TunnelListener(void *arg)
    closesocket(hSocket6);
 #endif
    nxlog_debug(1, _T("Tunnel listener thread terminated"));
+   s_tunnelListenerLock.unlock();
    return THREAD_OK;
 }
 
@@ -1150,4 +1157,32 @@ THREAD_RESULT THREAD_CALL TunnelListener(void *arg)
  */
 void CloseAgentTunnels()
 {
+   nxlog_debug(2, _T("Closing active agent tunnels..."));
+
+   // Wait for listener thread
+   s_tunnelListenerLock.lock();
+   s_tunnelListenerLock.unlock();
+
+   s_tunnelListLock.lock();
+   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   while(it->hasNext())
+   {
+      AgentTunnel *t = it->next();
+      t->shutdown();
+   }
+   for(int i = 0; i < s_unboundTunnels.size(); i++)
+      ((AgentTunnel *)s_unboundTunnels.get(i))->shutdown();
+   s_tunnelListLock.unlock();
+
+   bool wait = true;
+   while(wait)
+   {
+      ThreadSleepMs(500);
+      s_tunnelListLock.lock();
+      if ((s_boundTunnels.size() == 0) && (s_unboundTunnels.size() == 0))
+         wait = false;
+      s_tunnelListLock.unlock();
+   }
+
+   nxlog_debug(2, _T("All agent tunnels unregistered"));
 }
