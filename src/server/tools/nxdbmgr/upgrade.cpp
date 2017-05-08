@@ -747,6 +747,22 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V450 to V451
+ */
+static BOOL H_UpgradeFromV450(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_access_snapshot (")
+      _T("  user_id integer not null,")
+      _T("  object_id integer not null,")
+      _T("  access_rights integer not null,")
+      _T("PRIMARY KEY(user_id,object_id))")));
+
+   CHK_EXEC(SetSchemaVersion(451));
+   return TRUE;
+}
+
+/**
  * Upgrade from V449 to V450
  */
 static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
@@ -11724,6 +11740,7 @@ static struct
    { 447, 448, H_UpgradeFromV447 },
    { 448, 449, H_UpgradeFromV448 },
    { 449, 450, H_UpgradeFromV449 },
+   { 450, 451, H_UpgradeFromV450 },
    { 0, 0, NULL }
 };
 

@@ -1707,3 +1707,14 @@ CREATE TABLE port_layouts
    layout_data varchar(4000) null,
    PRIMARY KEY(device_oid)
 ) TABLE_TYPE;
+
+/**
+ * Snapshot for object access rights
+ */
+CREATE TABLE object_access_snapshot
+(
+   user_id integer not null,
+   object_id integer not null,
+   access_rights integer not null,
+   PRIMARY KEY(user_id,object_id)
+) TABLE_TYPE;
