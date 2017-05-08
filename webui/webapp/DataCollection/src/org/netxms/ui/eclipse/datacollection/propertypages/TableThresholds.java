@@ -292,6 +292,10 @@ public class TableThresholds extends DCIPropertyPageDialog
 		column.setText(Messages.get().TableThresholds_Condition);
 		column.setWidth(200);
 		
+      column = new TableColumn(table, SWT.LEFT);
+      column.setText("Samples");
+      column.setWidth(90);
+      
 		column = new TableColumn(table, SWT.LEFT);
 		column.setText(Messages.get().TableThresholds_ActivationEvent);
 		column.setWidth(140);
@@ -336,7 +340,6 @@ public class TableThresholds extends DCIPropertyPageDialog
 			if (dlg.open() == Window.OK)
 			{
 				thresholdList.update(t, null);
-				editor.modify();
 			}
 		}
 	}
@@ -353,7 +356,6 @@ public class TableThresholds extends DCIPropertyPageDialog
 			thresholds.add(t);
 	      thresholdList.setInput(thresholds.toArray());
 	      thresholdList.setSelection(new StructuredSelection(t));
-			editor.modify();
 		}
 	}
 	

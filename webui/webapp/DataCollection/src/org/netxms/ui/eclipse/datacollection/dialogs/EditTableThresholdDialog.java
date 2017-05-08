@@ -32,6 +32,7 @@ import org.netxms.ui.eclipse.datacollection.propertypages.TableColumns.TableColu
 import org.netxms.ui.eclipse.datacollection.widgets.TableConditionsEditor;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
  * Table threshold editing dialog
@@ -41,6 +42,7 @@ public class EditTableThresholdDialog extends Dialog
 	private TableThreshold threshold;
 	private EventSelector activationEvent;
 	private EventSelector deactivationEvent;
+	private LabeledSpinner sampleCount;
 	private TableConditionsEditor conditionsEditor;
 	private TableColumnDataProvider columnCallback;
 	
@@ -87,6 +89,11 @@ public class EditTableThresholdDialog extends Dialog
 		deactivationEvent.setEventCode(threshold.getDeactivationEvent());
 		deactivationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
+		sampleCount = new LabeledSpinner(dialogArea, SWT.NONE);
+		sampleCount.setLabel("Sample count");
+		sampleCount.setRange(1, 100000);
+		sampleCount.setSelection(threshold.getSampleCount());
+		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().EditTableThresholdDialog_Conditions);
 		
 		conditionsEditor = new TableConditionsEditor(dialogArea, SWT.BORDER, columnCallback);
@@ -107,6 +114,7 @@ public class EditTableThresholdDialog extends Dialog
 	{
 		threshold.setActivationEvent((int)activationEvent.getEventCode());
 		threshold.setDeactivationEvent((int)deactivationEvent.getEventCode());
+		threshold.setSampleCount(sampleCount.getSelection());
 		threshold.setConditions(conditionsEditor.getConditions());
 		super.okPressed();
 	}	

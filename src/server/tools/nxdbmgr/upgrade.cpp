@@ -747,6 +747,30 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V449 to V450
+ */
+static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE dct_thresholds ADD sample_count integer\n")
+            _T("UPDATE dct_thresholds SET sample_count=1\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   SetNotNullConstraint(_T("dct_thresholds"), _T("sample_count"));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE dct_threshold_instances (")
+      _T("  threshold_id integer not null,")
+      _T("  instance varchar(1024) not null,")
+      _T("  match_count integer not null,")
+      _T("  is_active char(1) not null,")
+      _T("PRIMARY KEY(threshold_id,instance))")));
+
+   CHK_EXEC(SetSchemaVersion(450));
+   return TRUE;
+}
+
+/**
  * Upgrade from V448 to V449
  */
 static BOOL H_UpgradeFromV448(int currVersion, int newVersion)
@@ -11699,6 +11723,7 @@ static struct
    { 446, 447, H_UpgradeFromV446 },
    { 447, 448, H_UpgradeFromV447 },
    { 448, 449, H_UpgradeFromV448 },
+   { 449, 450, H_UpgradeFromV449 },
    { 0, 0, NULL }
 };
 

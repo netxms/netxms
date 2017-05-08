@@ -49,12 +49,12 @@ public class TableThresholdLabelProvider extends LabelProvider implements ITable
 		{
 			case 0:
 				return thresholdIcon;
-			case 1:
+			case 2:
 			{
 				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getActivationEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
 			}
-			case 2:
+			case 3:
 			{
 				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getDeactivationEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
@@ -74,11 +74,13 @@ public class TableThresholdLabelProvider extends LabelProvider implements ITable
 			case 0:
 				return ((TableThreshold)element).getConditionAsText();
 			case 1:
+			   return Integer.toString(((TableThreshold)element).getSampleCount());
+			case 2:
 			{
 				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getActivationEvent());
 				return eventLabelProvider.getText(event);
 			}
-			case 2:
+			case 3:
 			{
 				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getDeactivationEvent());
 				return eventLabelProvider.getText(event);

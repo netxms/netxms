@@ -32,6 +32,7 @@ public class TableThreshold
 	private long id;
 	private int activationEvent;
 	private int deactivationEvent;
+	private int sampleCount;
 	private List<List<TableCondition>> conditions;
 	private long nextVarId;
 	
@@ -43,6 +44,7 @@ public class TableThreshold
 		id = 0;
 		activationEvent = 69;
 		deactivationEvent = 70;
+		sampleCount = 1;
 		conditions = new ArrayList<List<TableCondition>>(0);
 	}
 	
@@ -56,6 +58,7 @@ public class TableThreshold
 		id = src.id;
 		activationEvent = src.activationEvent;
 		deactivationEvent = src.deactivationEvent;
+		sampleCount = src.sampleCount;
 		conditions = new ArrayList<List<TableCondition>>(src.conditions.size());
 		for(List<TableCondition> sl : src.conditions)
 		{
@@ -74,25 +77,26 @@ public class TableThreshold
 	 */
 	protected TableThreshold(NXCPMessage msg, long baseId)
 	{
-		long varId = baseId;
-		id = msg.getFieldAsInt64(varId++);
-		activationEvent = msg.getFieldAsInt32(varId++);
-		deactivationEvent = msg.getFieldAsInt32(varId++);
+		long fieldId = baseId;
+		id = msg.getFieldAsInt64(fieldId++);
+		activationEvent = msg.getFieldAsInt32(fieldId++);
+		deactivationEvent = msg.getFieldAsInt32(fieldId++);
+      sampleCount = msg.getFieldAsInt32(fieldId++);
 		
-		int groupCount = msg.getFieldAsInt32(varId++);
+		int groupCount = msg.getFieldAsInt32(fieldId++);
 		conditions = new ArrayList<List<TableCondition>>(groupCount);
 		for(int i = 0; i < groupCount; i++)
 		{
-			int condCount = msg.getFieldAsInt32(varId++);
+			int condCount = msg.getFieldAsInt32(fieldId++);
 			List<TableCondition> list = new ArrayList<TableCondition>(condCount);
 			for(int j = 0; j < condCount; j++)
 			{
-				list.add(new TableCondition(msg, varId));
-				varId += 3;
+				list.add(new TableCondition(msg, fieldId));
+				fieldId += 3;
 			}
 			conditions.add(list);
 		}
-		nextVarId = varId;
+		nextVarId = fieldId;
 	}
 	
 	/**
@@ -104,24 +108,25 @@ public class TableThreshold
 	 */
 	protected long fillMessage(NXCPMessage msg, long baseId)
 	{
-		long varId = baseId;
+		long fieldId = baseId;
 		
-		msg.setFieldInt32(varId++, (int)id);
-		msg.setFieldInt32(varId++, activationEvent);
-		msg.setFieldInt32(varId++, deactivationEvent);
-		msg.setFieldInt32(varId++, conditions.size());
+		msg.setFieldInt32(fieldId++, (int)id);
+		msg.setFieldInt32(fieldId++, activationEvent);
+		msg.setFieldInt32(fieldId++, deactivationEvent);
+      msg.setFieldInt32(fieldId++, sampleCount);
+		msg.setFieldInt32(fieldId++, conditions.size());
 		for(List<TableCondition> l : conditions)
 		{
-			msg.setFieldInt32(varId++, l.size());
+			msg.setFieldInt32(fieldId++, l.size());
 			for(TableCondition c : l)
 			{
-				msg.setField(varId++, c.getColumn());
-				msg.setFieldInt16(varId++, c.getOperation());
-				msg.setField(varId++, c.getValue());
+				msg.setField(fieldId++, c.getColumn());
+				msg.setFieldInt16(fieldId++, c.getOperation());
+				msg.setField(fieldId++, c.getValue());
 			}
 		}
 		
-		return varId;
+		return fieldId;
 	}
 	
 	/**
@@ -202,6 +207,22 @@ public class TableThreshold
 	}
 
 	/**
+    * @return the sampleCount
+    */
+   public int getSampleCount()
+   {
+      return sampleCount;
+   }
+
+   /**
+    * @param sampleCount the sampleCount to set
+    */
+   public void setSampleCount(int sampleCount)
+   {
+      this.sampleCount = sampleCount;
+   }
+
+   /**
 	 * @return the conditions
 	 */
 	public List<List<TableCondition>> getConditions()

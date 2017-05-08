@@ -698,6 +698,7 @@ CREATE TABLE dct_thresholds
   sequence_number integer not null,
   activation_event integer not null,
   deactivation_event integer not null,
+  sample_count integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -713,6 +714,18 @@ CREATE TABLE dct_threshold_conditions
   check_operation integer not null,
   check_value varchar(255) null,
   PRIMARY KEY(threshold_id,group_id,sequence_number)
+) TABLE_TYPE;
+
+/*
+** Table threshold instances
+*/
+CREATE TABLE dct_threshold_instances
+(
+  threshold_id integer not null,
+  instance varchar(1024) not null,
+  match_count integer not null,
+  is_active char(1) not null,
+  PRIMARY KEY(threshold_id,instance)
 ) TABLE_TYPE;
 
 /*

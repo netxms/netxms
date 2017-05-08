@@ -515,6 +515,29 @@ public:
 };
 
 /**
+ * Threshold instance
+ */
+class NXCORE_EXPORTABLE DCTableThresholdInstance
+{
+private:
+   TCHAR *m_name;
+   int m_matchCount;
+   bool m_active;
+
+public:
+   DCTableThresholdInstance(const TCHAR *name, int matchCount, bool active);
+   DCTableThresholdInstance(const DCTableThresholdInstance *src);
+   ~DCTableThresholdInstance();
+
+   const TCHAR *getName() const { return m_name; }
+   int getMatchCount() const { return m_matchCount; }
+   bool isActive() const { return m_active; }
+
+   void incMatchCount() { m_matchCount++; }
+   void setActive() { m_active = true; }
+};
+
+/**
  * Threshold definition for tabe DCI
  */
 class NXCORE_EXPORTABLE DCTableThreshold
@@ -524,9 +547,11 @@ private:
    ObjectArray<DCTableConditionGroup> *m_groups;
    UINT32 m_activationEvent;
    UINT32 m_deactivationEvent;
-   StringSet *m_activeKeys;
+   int m_sampleCount;
+   StringObjectMap<DCTableThresholdInstance> *m_instances;
 
    void loadConditions(DB_HANDLE hdb);
+   void loadInstances(DB_HANDLE hdb);
 
 public:
    DCTableThreshold();
@@ -547,6 +572,7 @@ public:
    UINT32 getId() const { return m_id; }
    UINT32 getActivationEvent() const { return m_activationEvent; }
    UINT32 getDeactivationEvent() const { return m_deactivationEvent; }
+   int getSampleCount() const { return m_sampleCount; }
 };
 
 /**

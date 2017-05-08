@@ -53,21 +53,21 @@ public class DataCollectionTable extends DataCollectionObject
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ColumnDefinition>(count);
-		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
+		long fieldId = NXCPCodes.VID_DCI_COLUMN_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			columns.add(new ColumnDefinition(msg, varId));
-			varId += 10;
+			columns.add(new ColumnDefinition(msg, fieldId));
+			fieldId += 10;
 		}
 
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<TableThreshold>(count);
-		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			final TableThreshold t = new TableThreshold(msg, varId);
+			final TableThreshold t = new TableThreshold(msg, fieldId);
 			thresholds.add(t);
-			varId = t.getNextVarId();
+			fieldId = t.getNextVarId();
 		}
 	}
 

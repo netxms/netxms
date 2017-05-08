@@ -605,7 +605,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
  */
 bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event,sample_count FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
    if (hStmt == NULL)
       return false;
 
@@ -631,6 +631,17 @@ bool DCTable::loadThresholds(DB_HANDLE hdb)
 bool DCTable::saveThresholds(DB_HANDLE hdb)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_thresholds->get(i)->getId());
+      DBExecute(hStmt);
+   }
+   DBFreeStatement(hStmt);
+
+   hStmt = DBPrepare(hdb, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=?"));
    if (hStmt == NULL)
       return false;
 

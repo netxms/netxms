@@ -8,6 +8,7 @@
 - Network device database (allows some device specific information to be provided without drivers)
 - Server certificate's key can be stored in separate file
 - Multiple CA certificates can be specified in server configuration file
+- Number of samples can be configured for table thresholds
 - Management console:
 	- Node's zone name shown in alarm browser and object overview when zoning is enabled
 	- Sorting option in table based charts on dashboards (to implement "Top N" style charts)
