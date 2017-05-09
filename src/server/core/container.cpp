@@ -360,7 +360,8 @@ AutoBindDecision Container::isSuitableForObject(NetObj *object)
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();
-      result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
+      if (!value->isNull())
+         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
    }
    else
    {
