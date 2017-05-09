@@ -119,7 +119,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
-   if (IsCommand(_T("DEBUG"), szBuffer, 2))
+   else if (IsCommand(_T("DEBUG"), szBuffer, 2))
    {
       // Get argument
       ExtractWord(pArg, szBuffer);
@@ -920,6 +920,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          else
             ConsoleWrite(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
       }
+   }
+   else if (IsCommand(_T("SNAPSHOT"), szBuffer, 4))
+   {
+      // create access snapshot
+      ExtractWord(pArg, szBuffer);
+      UINT32 userId = _tcstoul(szBuffer, NULL, 0);
+      bool success = CreateObjectAccessSnapshot(userId, OBJECT_NODE);
+      ConsolePrintf(pCtx, _T("Object access snapshot creation for user %d %s\n\n"), userId, success ? _T("successful") : _T("failed"));
    }
    else if (IsCommand(_T("EXEC"), szBuffer, 3))
    {

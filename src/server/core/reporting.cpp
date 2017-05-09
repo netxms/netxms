@@ -68,6 +68,9 @@ void RemovePendingFileTransferRequests(ClientSession *session)
  */
 class RSConnector : public ISC
 {
+private:
+   void createObjectAccessSnapshot(NXCPMessage *request);
+
 protected:
    virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
    virtual bool onMessage(NXCPMessage *msg);
@@ -99,10 +102,14 @@ static void NotifyUserSessions(ClientSession *session, void *arg)
  */
 bool RSConnector::onMessage(NXCPMessage *msg)
 {
-   if (msg->getCode() == CMD_RS_NOTIFY)
+   switch(msg->getCode())
    {
-      EnumerateClientSessions(NotifyUserSessions, msg);
-      return true;
+      case CMD_RS_NOTIFY:
+         EnumerateClientSessions(NotifyUserSessions, msg);
+         return true;
+      case CMD_GET_OBJECT_ACCESS_SNAPSHOT:
+         createObjectAccessSnapshot(msg);
+         return true;
    }
    return false;
 }
@@ -131,6 +138,17 @@ void RSConnector::onBinaryMessage(NXCP_MESSAGE *rawMsg)
       }
    }
    MutexUnlock(s_fileRequestLock);
+}
+
+/**
+ * Process request for object access snapshot creation
+ */
+void RSConnector::createObjectAccessSnapshot(NXCPMessage *request)
+{
+   bool success = CreateObjectAccessSnapshot(request->getFieldAsUInt32(VID_USER_ID), request->getFieldAsInt32(VID_OBJECT_CLASS));
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
+   sendMessage(&response);
 }
 
 /**

@@ -2189,3 +2189,95 @@ bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2)
    NetObj *p = FindObjectById(object1);
    return (p != NULL) ? p->isChild(object2) : false;
 }
+
+/**
+ * Callback data for CreateObjectAccessSnapshot
+ */
+struct CreateObjectAccessSnapshot_CallbackData
+{
+   UINT32 userId;
+   StructArray<ACL_ELEMENT> *accessList;
+};
+
+/**
+ * Callback for CreateObjectAccessSnapshot
+ */
+static void CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
+{
+   CreateObjectAccessSnapshot_CallbackData *data = (CreateObjectAccessSnapshot_CallbackData *)arg;
+   UINT32 accessRights = object->getUserRights(data->userId);
+   if (accessRights != 0)
+   {
+      ACL_ELEMENT e;
+      e.dwUserId = object->getId();
+      e.dwAccessRights = accessRights;
+      data->accessList->add(&e);
+   }
+}
+
+/**
+ * Create access snapshot for given user and object class
+ */
+bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
+{
+   ObjectIndex *index;
+   switch(objClass)
+   {
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+      case OBJECT_NODE:
+         index = &g_idxNodeById;
+         break;
+      case OBJECT_ZONE:
+         index = &g_idxZoneByGUID;
+         break;
+      default:
+         index = &g_idxObjectById;
+         break;
+   }
+
+   StructArray<ACL_ELEMENT> accessList;
+   CreateObjectAccessSnapshot_CallbackData data;
+   data.userId = userId;
+   data.accessList = &accessList;
+   index->forEach(CreateObjectAccessSnapshot_Callback, &data);
+
+   bool success = false;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (DBBegin(hdb))
+   {
+      success = ExecuteQueryOnObject(hdb, userId, _T("DELETE FROM object_access_snapshot WHERE user_id=?"));
+      if (success && (accessList.size() > 0))
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_access_snapshot (user_id,object_id,access_rights) VALUES (?,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+            for(int i = 0; (i < accessList.size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, accessList.get(i)->dwUserId);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, accessList.get(i)->dwAccessRights);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}

@@ -2720,6 +2720,8 @@ bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
+bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass);
+
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 
 bool IsValidParentClass(int childClass, int parentClass);
