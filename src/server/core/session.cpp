@@ -39,7 +39,7 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
-// WARNING! this hack works only for d2i_X509(); be carefull when adding new code
+// WARNING! this hack works only for d2i_X509(); be careful when adding new code
 #ifdef OPENSSL_CONST
 # undef OPENSSL_CONST
 #endif
@@ -71,9 +71,14 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(NXCPMessage *msg);
 void FillComponentsMessage(NXCPMessage *msg);
-void GetUnboundAgentTunnels(NXCPMessage *msg);
+
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
+
+void GetUnboundAgentTunnels(NXCPMessage *msg);
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
+UINT32 UnbindAgentTunnel(UINT32 nodeId);
+
 
 /**
  * Node poller start data
@@ -1463,6 +1468,9 @@ void ClientSession::processingThread()
             break;
          case CMD_BIND_AGENT_TUNNEL:
             bindAgentTunnel(pMsg);
+            break;
+         case CMD_UNBIND_AGENT_TUNNEL:
+            unbindAgentTunnel(pMsg);
             break;
          case CMD_GET_PREDICTION_ENGINES:
             getPredictionEngines(pMsg);
@@ -14216,7 +14224,46 @@ void ClientSession::getUnboundAgentTunnels(NXCPMessage *request)
 void ClientSession::bindAgentTunnel(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   {
+      UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
+      UINT32 tunnelId = request->getFieldAsUInt32(VID_TUNNEL_ID);
+      UINT32 rcc = BindAgentTunnel(tunnelId, nodeId);
+      msg.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel bound to node"));
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on binding agent tunnel"));
+   }
+   sendMessage(&msg);
+}
 
+/**
+ * Unbind agent tunnel from node
+ */
+void ClientSession::unbindAgentTunnel(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+   {
+      UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
+      UINT32 rcc = UnbindAgentTunnel(nodeId);
+      msg.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel unbound from node"));
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on unbinding agent tunnel"));
+   }
    sendMessage(&msg);
 }
 

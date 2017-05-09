@@ -370,6 +370,9 @@ public class NXCPCodes
    public static final int CMD_RESET_TUNNEL = 0x015C;
    public static final int CMD_CREATE_SESSION = 0x015D;
    public static final int CMD_CHANNEL_DATA = 0x015E;
+   public static final int CMD_CLOSE_CHANNEL = 0x015F;
+   public static final int CMD_CREATE_OBJECT_ACCESS_SNAPSHOT = 0x0160;
+   public static final int CMD_UNBIND_AGENT_TUNNEL = 0x0161;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -960,6 +963,9 @@ public class NXCPCodes
    public static final long VID_CHANNEL_ID = 574;
    public static final long VID_NUM_URLS = 575;
    public static final long VID_GRACE_LOGINS = 576;
+   public static final long VID_TUNNEL_GUID = 577;
+   public static final long VID_ORGANIZATION = 578;
+   public static final long VID_TUNNEL_ID = 579;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

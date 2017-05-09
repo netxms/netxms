@@ -659,11 +659,16 @@ int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
 void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
    msg->setField(baseId, m_id);
-   msg->setField(baseId + 1, m_nodeId);
-   msg->setField(baseId + 2, m_systemName);
-   msg->setField(baseId + 3, m_systemInfo);
-   msg->setField(baseId + 4, m_platformName);
-   msg->setField(baseId + 5, m_agentVersion);
+   msg->setField(baseId + 1, m_guid);
+   msg->setField(baseId + 2, m_nodeId);
+   msg->setField(baseId + 3, m_address);
+   msg->setField(baseId + 4, m_systemName);
+   msg->setField(baseId + 5, m_systemInfo);
+   msg->setField(baseId + 6, m_platformName);
+   msg->setField(baseId + 7, m_agentVersion);
+   MutexLock(m_channelLock);
+   msg->setField(baseId + 8, m_channels.size());
+   MutexUnlock(m_channelLock);
 }
 
 /**

@@ -107,7 +107,7 @@ bool RSConnector::onMessage(NXCPMessage *msg)
       case CMD_RS_NOTIFY:
          EnumerateClientSessions(NotifyUserSessions, msg);
          return true;
-      case CMD_GET_OBJECT_ACCESS_SNAPSHOT:
+      case CMD_CREATE_OBJECT_ACCESS_SNAPSHOT:
          createObjectAccessSnapshot(msg);
          return true;
    }

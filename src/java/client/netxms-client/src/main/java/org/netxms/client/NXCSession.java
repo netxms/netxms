@@ -9488,8 +9488,8 @@ public class NXCSession
    /**
     * Get list of registered prediction engines
     * 
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<PredictionEngine> getPredictionEngines() throws IOException, NXCException
    {
@@ -9559,5 +9559,60 @@ public class NXCSession
       }
       while((rowsReceived == MAX_DCI_DATA_ROWS) && (timeTo > timeFrom));
       return data;
+   }
+   
+   /**
+    * Get list of unbound agent tunnels
+    * 
+    * @return list of unbound agent tunnels
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AgentTunnel> getUnboundAgentTunnels() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UNBOUND_AGENT_TUNNELS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AgentTunnel> tunnels = new ArrayList<AgentTunnel>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         tunnels.add(new AgentTunnel(response, fieldId));
+         fieldId += 64;
+      }
+      return tunnels;
+   }
+   
+   /**
+    * Bind agent tunnel to node
+    * 
+    * @param tunnelId tunnel ID
+    * @param nodeId node ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void bindAgentTunnel(int tunnelId, long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_BIND_AGENT_TUNNEL);
+      msg.setFieldInt32(NXCPCodes.VID_TUNNEL_ID, tunnelId);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Unbind agent tunnel to node
+    * 
+    * @param nodeId node ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void unbindAgentTunnel(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UNBIND_AGENT_TUNNEL);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 }

@@ -759,6 +759,7 @@ private:
    void deleteRepository(NXCPMessage *request);
    void getUnboundAgentTunnels(NXCPMessage *request);
    void bindAgentTunnel(NXCPMessage *request);
+   void unbindAgentTunnel(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
 #ifdef WITH_ZMQ

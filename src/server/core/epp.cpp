@@ -487,12 +487,10 @@ bool EPRule::matchScript(Event *pEvent)
    return bRet;
 }
 
-
-
 /**
  * Callback for execution set action on persistent storage
  */
-static EnumerationCallbackResult ExecutePstorageSetAct(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult ExecutePstorageSetAction(const TCHAR *key, const void *value, void *data)
 {
    Event *pEvent = (Event *)data;
    TCHAR *psValue = pEvent->expandText(key);
@@ -536,8 +534,8 @@ bool EPRule::processEvent(Event *pEvent)
          }
 
 			// Update persistent storage if needed
-			if(m_pstorageSetActions.size() > 0)
-            m_pstorageSetActions.forEach(ExecutePstorageSetAct, pEvent);
+			if (m_pstorageSetActions.size() > 0)
+            m_pstorageSetActions.forEach(ExecutePstorageSetAction, pEvent);
 			for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
          {
             TCHAR *psKey = pEvent->expandText(m_pstorageDeleteActions.get(i));
