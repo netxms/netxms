@@ -777,7 +777,7 @@ static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE dct_threshold_instances (")
       _T("  threshold_id integer not null,")
-      _T("  instance varchar(1024) not null,")
+      _T("  instance varchar(255) not null,")
       _T("  match_count integer not null,")
       _T("  is_active char(1) not null,")
       _T("PRIMARY KEY(threshold_id,instance))")));

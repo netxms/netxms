@@ -722,7 +722,7 @@ CREATE TABLE dct_threshold_conditions
 CREATE TABLE dct_threshold_instances
 (
   threshold_id integer not null,
-  instance varchar(1024) not null,
+  instance varchar(255) not null,
   match_count integer not null,
   is_active char(1) not null,
   PRIMARY KEY(threshold_id,instance)
