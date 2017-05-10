@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2013 Raden Solutions
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -50,6 +50,9 @@ struct dirent_w *wreaddir(DIRW *dirp)
 	MultiByteToWideChar(CP_UTF8, 0, d->d_name, -1, dirp->dirstr.d_name, 257);
 	dirp->dirstr.d_name[256] = 0;
 	dirp->dirstr.d_ino = d->d_ino;
+#if HAVE_DIRENT_D_TYPE
+	dirp->dirstr.d_type = d->d_type;
+#endif
 	return &dirp->dirstr;
 }
 

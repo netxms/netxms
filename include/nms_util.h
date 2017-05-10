@@ -1701,6 +1701,9 @@ typedef struct _dir_struc_w
 typedef struct dirent_w
 {
    long            d_ino;  /* inode number */
+#if HAVE_DIRENT_D_TYPE
+   unsigned char   d_type; /* file type */
+#endif
    WCHAR           d_name[257];    /* file name */
 } _DIRECTW;
 

@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.1-M3], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.1-RC1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -1676,6 +1676,36 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 	AC_DEFINE(HAVE_ALLOCA,0,Define to 1 if alloca function is available)
 ])
 AC_LANG_POP([C++])
+
+
+#--------------------------------------------------------------------
+# Checks for d_type in struct dirent
+#--------------------------------------------------------------------
+
+AC_MSG_CHECKING(for d_type in struct dirent)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+]],[[
+	struct dirent d;
+	return d.d_type;
+]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_DIRENT_D_TYPE,1,Define to 1 if struct dirent has member d_type)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_DIRENT_D_TYPE,0,Define to 1 if struct dirent has member d_type)
+])
+AC_CHECK_DECLS([DT_DIR, DT_REG, DT_UNKNOWN],,,[
+#if HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+])
 
 
 #--------------------------------------------------------------------
