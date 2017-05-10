@@ -8,6 +8,7 @@ import org.netxms.base.CommonRCC;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class SessionImpl implements Session {
     /* (non-Javadoc)
     * @see com.radensolutions.reporting.service.Session#processMessage(org.netxms.base.NXCPMessage)
     */
-   @Override
+    @Override
     public MessageProcessingResult processMessage(NXCPMessage message) {
         NXCPMessage reply = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, message.getMessageId());
         File file = null;
@@ -84,9 +85,9 @@ public class SessionImpl implements Session {
     }
 
     /**
-    * @param reply
-    */
-   private void listReports(NXCPMessage reply) {
+     * @param reply
+     */
+    private void listReports(NXCPMessage reply) {
         final List<UUID> list = reportManager.listReports();
         reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
         for (int i = 0, listSize = list.size(); i < listSize; i++) {
@@ -144,6 +145,7 @@ public class SessionImpl implements Session {
             final int jobType = request.getFieldAsInt32(NXCPCodes.VID_RS_JOB_TYPE);
             final long timestamp = request.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP);
             final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+            sendUpdateObjectAccessSnapshot(userId);
             if (timestamp == 0) {
                 final UUID jobId = scheduler.execute(jobUuid, userId, reportUuid, parameters);
                 if (jobId != null) {
@@ -174,6 +176,9 @@ public class SessionImpl implements Session {
         for (JobDetail jobDetail : jobDetailList) {
             Map<String, Object> jobDataMap = jobDetail.getJobDataMap().getWrappedMap();
             try {
+                if (!jobDataMap.containsKey("startDate")) {
+                    continue;
+                }
                 if (reportId.equals(jobDataMap.get("reportId")) && ((Integer) jobDataMap.get("userId") == userId || userId == 0)) {
                     reply.setField(varId, (UUID) jobDataMap.get("jobId"));
                     reply.setField(varId + 1, (UUID) jobDataMap.get("reportId"));
@@ -272,5 +277,16 @@ public class SessionImpl implements Session {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }    
+    }
+
+    public void sendUpdateObjectAccessSnapshot(int userId) {
+        NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_CREATE_OBJECT_ACCESS_SNAPSHOT);
+        msg.setFieldInt32(NXCPCodes.VID_OBJECT_CLASS, AbstractObject.OBJECT_NODE);
+        msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
+        try {
+            connector.sendBroadcast(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
