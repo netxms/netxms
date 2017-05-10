@@ -25,6 +25,8 @@
 
 #ifdef _WIN32
 #include <conio.h>
+#else
+#include <nxstat.h>
 #endif
 
 /**
@@ -122,6 +124,21 @@ static void Help()
 }
 
 /**
+ * Check if given file entry is a directory
+ */
+static bool IsDirectory(struct _tdirent *d, const TCHAR *filePath)
+{
+#if HAVE_DIRENT_D_TYPE
+   return d->d_type == DT_DIR;
+#else
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(filePath, &st) == -1)
+      return false;
+   return S_ISDIR(st.st_mode);
+#endif
+}
+
+/**
  * Scan directory for MIB files
  */
 static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive)
@@ -136,11 +153,11 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
             break;
          if (_tcscmp(pFile->d_name, _T(".")) && _tcscmp(pFile->d_name, _T("..")))
          {
-            TCHAR szBuffer[MAX_PATH];
-            _sntprintf(szBuffer, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, pFile->d_name);
-            if (recursive && (pFile->d_type == DT_DIR))
+            TCHAR filePath[MAX_PATH];
+            _sntprintf(filePath, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, pFile->d_name);
+            if (recursive && IsDirectory(pFile, filePath))
             {
-               ScanDirectory(szBuffer, extensions, recursive);
+               ScanDirectory(filePath, extensions, recursive);
             }
             else
             {
@@ -149,7 +166,7 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
                _tcslwr(extension);
 #endif
                if ((extension != NULL) && extensions->contains(extension + 1))
-                  s_fileList.add(szBuffer);
+                  s_fileList.add(filePath);
             }
          }
       }
