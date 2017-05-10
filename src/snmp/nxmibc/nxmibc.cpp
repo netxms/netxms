@@ -145,6 +145,9 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
             else
             {
                TCHAR *extension = _tcsrchr(pFile->d_name, _T('.'));
+#ifdef _WIN32
+               _tcslwr(extension);
+#endif
                if ((extension != NULL) && extensions->contains(extension + 1))
                   s_fileList.add(szBuffer);
             }
@@ -181,10 +184,18 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'e':
+#ifdef _WIN32
+#ifdef UNICODE
+            extensions.addPreallocated(_wcslwr(WideStringFromMBStringSysLocale(optarg)));
+#else
+            extensions.add(strlwr(optarg));
+#endif
+#else
 #ifdef UNICODE
             extensions.addPreallocated(WideStringFromMBStringSysLocale(optarg));
 #else
             extensions.add(optarg);
+#endif
 #endif
             break;
          case 'h':   // Display help and exit
