@@ -1141,7 +1141,7 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
    }
 
    nxlog_debug(3, _T("Tunnel manager started"));
-   while(!AgentSleepAndCheckForShutdown(30000))
+   do
    {
       for(int i = 0; i < s_tunnels.size(); i++)
       {
@@ -1149,6 +1149,7 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
          t->checkConnection();
       }
    }
+   while(!AgentSleepAndCheckForShutdown(30000));
    nxlog_debug(3, _T("Tunnel manager stopped"));
    return THREAD_OK;
 }

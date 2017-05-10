@@ -88,7 +88,6 @@ MsgWaitQueue::~MsgWaitQueue()
    m_housekeeperLock.unlock();
 
    clear();
-   safe_free(m_elements);
 
 #if defined(_WIN32)
    DeleteCriticalSection(&m_mutex);
@@ -117,7 +116,7 @@ void MsgWaitQueue::clear()
 
       if (m_elements[i].isBinary)
       {
-         safe_free(m_elements[i].msg);
+         free(m_elements[i].msg);
       }
       else
       {
@@ -342,7 +341,7 @@ void MsgWaitQueue::housekeeperRun()
          {
             if (m_elements[i].isBinary)
             {
-               safe_free(m_elements[i].msg);
+               free(m_elements[i].msg);
             }
             else
             {

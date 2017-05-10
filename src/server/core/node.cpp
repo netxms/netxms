@@ -3809,16 +3809,18 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          if (newConnection != NULL)
             *newConnection = false;
          setLastAgentCommTime();
+         if (tunnel != NULL)
+            tunnel->decRefCount();
          return true;
       }
 
       // Close current connection or clean up after broken connection
       m_agentConnection->disconnect();
-      DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
+      m_agentConnection->setTunnel(tunnel);
+      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
    }
    if (newConnection != NULL)
       *newConnection = true;
-   m_agentConnection->setTunnel(tunnel);
    m_agentConnection->setPort(m_agentPort);
    m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    if (tunnel == NULL)

@@ -100,8 +100,6 @@ protected:
    
    virtual ~AgentTunnel();
 
-   void debugPrintf(int level, const TCHAR *format, ...);
-   
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
    
@@ -134,6 +132,8 @@ public:
    UINT32 getNodeId() const { return m_nodeId; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+
+   void debugPrintf(int level, const TCHAR *format, ...);
 };
 
 /**

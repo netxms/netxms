@@ -75,13 +75,19 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    {
       AgentTunnel *curr = s_boundTunnels.get(tunnel->getNodeId());
       if (curr == tunnel)
+      {
          s_boundTunnels.remove(tunnel->getNodeId());
+         tunnel->debugPrintf(4, _T("Tunnel unregistered"));
+      }
       else if (curr != NULL)
+      {
          curr->decRefCount();  // ref count was increased by get
+      }
    }
    else
    {
       s_unboundTunnels.remove(tunnel);
+      tunnel->debugPrintf(4, _T("Tunnel unregistered"));
    }
    s_tunnelListLock.unlock();
 
@@ -599,6 +605,7 @@ AgentTunnelCommChannel *AgentTunnel::createChannel()
    }
 
    AgentTunnelCommChannel *channel = new AgentTunnelCommChannel(this, response->getFieldAsUInt32(VID_CHANNEL_ID));
+   delete response;
    MutexLock(m_channelLock);
    m_channels.set(channel->getId(), channel);
    MutexUnlock(m_channelLock);
@@ -1175,6 +1182,7 @@ void CloseAgentTunnels()
       AgentTunnel *t = it->next();
       t->shutdown();
    }
+   delete it;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
       ((AgentTunnel *)s_unboundTunnels.get(i))->shutdown();
    s_tunnelListLock.unlock();
