@@ -40,14 +40,14 @@ import java.util.jar.Manifest;
 public class FileSystemReportManager implements ReportManager
 //        , ApplicationContextAware
 {
-    public static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
-    public static final String DEFINITIONS_DIRECTORY = "definitions";
-    public static final String FILE_SUFIX_DEFINITION = ".jrxml";
-    public static final String MAIN_REPORT_DEFINITION = "main" + FILE_SUFIX_DEFINITION;
-    public static final String FILE_SUFIX_COMPILED = ".jasper";
-    public static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFIX_COMPILED;
-    public static final String FILE_SUFIX_FILLED = ".jrprint";
-    Logger log = LoggerFactory.getLogger(FileSystemReportManager.class);
+    private static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
+    private static final String DEFINITIONS_DIRECTORY = "definitions";
+    private static final String FILE_SUFIX_DEFINITION = ".jrxml";
+    private static final String FILE_SUFIX_COMPILED = ".jasper";
+    private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFIX_COMPILED;
+    private static final String FILE_SUFIX_FILLED = ".jrprint";
+
+    private static final Logger log = LoggerFactory.getLogger(FileSystemReportManager.class);
 
     @Value("#{serverSettings.workspace}")
     private String workspace;
@@ -529,8 +529,8 @@ public class FileSystemReportManager implements ReportManager
      * Prepare Excel sheet name. Excel sheet name doesn't contain special chars: / \ ? * ] [ Maximum sheet name length is 31 and
      * sheet names must not begin or end with ' (apostrophe)
      *
-     * @param sheetName
-     * @return
+     * @param sheetName proposed sheet name
+     * @return valid sheet name
      */
     private String prepareXlsSheetName(String sheetName) {
         int length = Math.min(31, sheetName.length());
