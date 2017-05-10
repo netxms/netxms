@@ -70,7 +70,11 @@ extern FILE *mpin, *mpout;
 extern int g_nCurrLine;
 
 static MP_MODULE *m_pModule;
-static char *m_pszCurrentFilename;
+#ifdef UNICODE
+static char s_currentFilename[MAX_PATH];
+#else
+static const char *s_currentFilename;
+#endif
 
 int mperror(const char *pszMsg);
 int mplex(void);
@@ -1421,13 +1425,17 @@ Begin:
 
 %%
 
-MP_MODULE *ParseMIB(char *pszFilename)
+MP_MODULE *ParseMIB(const TCHAR *fileName)
 {
    m_pModule = NULL;
-   mpin = fopen(pszFilename, "r");
+   mpin = _tfopen(fileName, _T("r"));
    if (mpin != NULL)
    {
-	   m_pszCurrentFilename = pszFilename;
+#ifdef UNICODE
+	  WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR |WC_COMPOSITECHECK, fileName, -1, s_currentFilename, MAX_PATH, NULL, NULL);
+#else
+	  s_currentFilename = fileName;
+#endif
       g_nCurrLine = 1;
       InitStateStack();
       /*mpdebug=1;*/
@@ -1437,7 +1445,13 @@ MP_MODULE *ParseMIB(char *pszFilename)
    }
    else
    {
-      Error(ERR_CANNOT_OPEN_FILE, pszFilename, strerror(errno));
+#ifdef UNICODE
+      char *name = MBStringFromWideString(fileName);
+      Error(ERR_CANNOT_OPEN_FILE, name, strerror(errno));
+      free(name);
+#else
+      Error(ERR_CANNOT_OPEN_FILE, fileName, strerror(errno));
+#endif
       return NULL;
    }
    return m_pModule;
@@ -1450,6 +1464,6 @@ extern "C" int mpwrap()
 
 int mperror(const char *pszMsg)
 {
-   Error(ERR_PARSER_ERROR, m_pszCurrentFilename, pszMsg, g_nCurrLine);
+   Error(ERR_PARSER_ERROR, s_currentFilename, pszMsg, g_nCurrLine);
    return 0;
 }

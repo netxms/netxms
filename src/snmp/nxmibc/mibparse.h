@@ -211,7 +211,7 @@ extern "C" {
 #endif
 
 void InitStateStack();
-MP_MODULE *ParseMIB(char *pszFilename);
+MP_MODULE *ParseMIB(const TCHAR *fileName);
 
 #ifdef __cplusplus
 }

@@ -37,14 +37,13 @@
 /**
  * Externals
  */
-int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot);
+int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot);
 
 /**
  * Static data
  */
 static char m_szOutFile[MAX_PATH] = "netxms.mib";
-static int m_iNumFiles = 0;
-static char **m_ppFileList = NULL;
+static StringList s_fileList;
 static bool s_pauseBeforeExit = false;
 
 /**
@@ -123,45 +122,35 @@ static void Help()
 }
 
 /**
- * Add file to compilation list
- */
-static void AddFileToList(char *pszFile)
-{
-   m_ppFileList = (char **)realloc(m_ppFileList, sizeof(char *) * (m_iNumFiles + 1));
-   m_ppFileList[m_iNumFiles++] = strdup(pszFile);
-}
-
-/**
  * Scan directory for MIB files
  */
-static void ScanDirectory(const char *pszPath, const char *extensions, bool recursive)
+static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive)
 {
-   DIR *pDir;
-   struct dirent *pFile;
-   char szBuffer[MAX_PATH];
-
-   pDir = opendir(pszPath);
+   _TDIR *pDir = _topendir(path);
    if (pDir != NULL)
    {
-      while(1)
+      while(true)
       {
-         pFile = readdir(pDir);
+         struct _tdirent *pFile = _treaddir(pDir);
          if (pFile == NULL)
             break;
-         if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
+         if (_tcscmp(pFile->d_name, _T(".")) && _tcscmp(pFile->d_name, _T("..")))
          {
-            snprintf(szBuffer, MAX_PATH, "%s" FS_PATH_SEPARATOR_A "%s", pszPath, pFile->d_name);
-            if (recursive && pFile->d_type == DT_DIR)
+            TCHAR szBuffer[MAX_PATH];
+            _sntprintf(szBuffer, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, pFile->d_name);
+            if (recursive && (pFile->d_type == DT_DIR))
+            {
                ScanDirectory(szBuffer, extensions, recursive);
+            }
             else
             {
-               char *extension = strrchr(pFile->d_name, '.');
-               if ((extension != NULL) && (strstr(extensions, extension) != NULL))
-                  AddFileToList(szBuffer);
+               TCHAR *extension = _tcsrchr(pFile->d_name, _T('.'));
+               if ((extension != NULL) && extensions->contains(extension + 1))
+                  s_fileList.add(szBuffer);
             }
          }
       }
-      closedir(pDir);
+      _tclosedir(pDir);
    }
 }
 
@@ -170,8 +159,6 @@ static void ScanDirectory(const char *pszPath, const char *extensions, bool recu
  */
 int main(int argc, char *argv[])
 {
-   char paths[24][MAX_PATH];
-   char extensions[64] = ".txt ";
    bool recursive = false;
    bool scanDir = false;
    SNMP_MIBObject *pRoot;
@@ -183,30 +170,33 @@ int main(int argc, char *argv[])
    _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
             _T("Copyright (c) 2005-2017 Raden Solutions\n\n"));
 
+   StringList paths;
+   StringSet extensions;
+   extensions.add(_T("txt"));
+
    // Parse command line
    opterr = 1;
-   int index = 0;
    while((ch = getopt(argc, argv, "rd:ho:e:Psz")) != -1)
    {
       switch(ch)
       {
          case 'e':
-         {
-            char buffer[8];
-            snprintf(buffer, 8, ".%s ", optarg);
-            strcat(extensions, buffer);
-         }
+#ifdef UNICODE
+            extensions.addPreallocated(WideStringFromMBStringSysLocale(optarg));
+#else
+            extensions.add(optarg);
+#endif
             break;
          case 'h':   // Display help and exit
             Help();
             break;
          case 'd':
-         {
-            char buffer[MAX_PATH];
-            strncpy(paths[index], optarg, MAX_PATH);
+#ifdef UNICODE
+            paths.addPreallocated(_wcslwr(WideStringFromMBStringSysLocale(optarg)));
+#else
+            paths.add(strlwr(optarg));
+#endif
             scanDir = true;
-            index++;
-         }
             break;
          case 'o':
             strncpy(m_szOutFile, optarg, MAX_PATH);
@@ -233,18 +223,24 @@ int main(int argc, char *argv[])
 
    if (scanDir)
    {
-      for(int i = 0; i < index; i++)
+      for(int i = 0; i < paths.size(); i++)
       {
-         ScanDirectory(paths[i], extensions, recursive);
+         ScanDirectory(paths.get(i), &extensions, recursive);
       }
    }
 
    for(i = optind; i < argc; i++)
-      AddFileToList(argv[i]);
-   
-   if (m_iNumFiles > 0)
    {
-      ParseMIBFiles(m_iNumFiles, m_ppFileList, &pRoot);
+#ifdef UNICODE
+      s_fileList.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
+#else
+      s_fileList.add(argv[i]);
+#endif
+   }
+
+   if (s_fileList.size() > 0)
+   {
+      ParseMIBFiles(&s_fileList, &pRoot);
 
       if (pRoot != NULL)
       {

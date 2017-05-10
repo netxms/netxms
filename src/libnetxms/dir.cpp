@@ -71,6 +71,7 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
 
    p->handle = handle;
    p->dirstr.d_ino = 0;
+   p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
    strncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
    p->dirstr.d_namlen = (int)strlen(p->dirstr.d_name);
    return p;
@@ -96,6 +97,7 @@ struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *p)
       return NULL;
 
    p->dirstr.d_ino++;
+   p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
    strncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
    p->dirstr.d_namlen = (int)strlen(p->dirstr.d_name);
    return &p->dirstr;

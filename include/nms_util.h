@@ -1650,9 +1650,14 @@ typedef struct __CODE_TO_TEXT
 
 #ifdef _WIN32
 
+#define DT_UNKNOWN   0
+#define DT_REG       1
+#define DT_DIR       2
+
 typedef struct dirent
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
+   unsigned char   d_type; /* file type */
    int             d_namlen;       /* Name length */
    char            d_name[MAX_PATH];    /* file name */
 } _DIRECT;
@@ -1668,6 +1673,7 @@ typedef struct _dir_struc
 typedef struct dirent_w
 {
    long            d_ino;  /* inode number (not used by MS-DOS) */
+   unsigned char   d_type; /* file type */
    int             d_namlen;       /* Name length */
    WCHAR           d_name[MAX_PATH];    /* file name */
 } _DIRECTW;

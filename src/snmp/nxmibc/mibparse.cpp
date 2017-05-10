@@ -384,17 +384,18 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 /**
  * Interface to parser
  */
-int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
+int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **ppRoot)
 {
    int i, nRet;
    SNMP_MIBObject *pRoot;
 
    _tprintf(_T("Parsing source files:\n"));
    ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, true);
-   for(i = 0; i < nNumFiles; i++)
+   for(i = 0; i < fileList->size(); i++)
    {
-      _tprintf(_T("   %hs\n"), ppszFileList[i]);
-      MP_MODULE *pModule = ParseMIB(ppszFileList[i]);
+      const TCHAR *file = fileList->get(i);
+      _tprintf(_T("   %s\n"), file);
+      MP_MODULE *pModule = ParseMIB(file);
       if (pModule == NULL)
       {
          nRet = SNMP_MPE_PARSE_ERROR;

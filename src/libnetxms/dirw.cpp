@@ -71,6 +71,7 @@ DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
 
    p->handle = handle;
    p->dirstr.d_ino = 0;
+   p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
    wcsncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
    p->dirstr.d_namlen = (int)wcslen(p->dirstr.d_name);
    return p;
@@ -96,6 +97,7 @@ struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *p)
       return NULL;
 
    p->dirstr.d_ino++;
+   p->dirstr.d_type = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
    wcsncpy_s(p->dirstr.d_name, MAX_PATH, fd.cFileName, _TRUNCATE);
    p->dirstr.d_namlen = (int)wcslen(p->dirstr.d_name);
    return &p->dirstr;
