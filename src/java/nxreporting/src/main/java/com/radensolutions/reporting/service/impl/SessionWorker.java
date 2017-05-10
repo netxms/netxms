@@ -96,7 +96,7 @@ class SessionWorker implements Runnable {
 
     public boolean sendMessage(NXCPMessage message) {
         try {
-            outputStream.write(message.createNXCPMessage(true));
+            outputStream.write(message.createNXCPMessage(false));
             outputStream.flush();
             return true;
         } catch (IOException e) {
