@@ -203,9 +203,9 @@ int main(int argc, char *argv[])
             break;
          case 'd':
 #ifdef UNICODE
-            paths.addPreallocated(_wcslwr(WideStringFromMBStringSysLocale(optarg)));
+            paths.addPreallocated(WideStringFromMBStringSysLocale(optarg));
 #else
-            paths.add(strlwr(optarg));
+            paths.add(optarg);
 #endif
             scanDir = true;
             break;
