@@ -450,7 +450,7 @@ typedef struct
 #define CMD_GET_PERSISTENT_STORAGE        0x00D3
 #define CMD_DELETE_PSTORAGE_VALUE         0x00D4
 #define CMD_SET_PSTORAGE_VALUE            0x00D5
-#define CMD_GET_UNBOUND_AGENT_TUNNELS     0x00D6
+#define CMD_GET_AGENT_TUNNELS             0x00D6
 #define CMD_BIND_AGENT_TUNNEL             0x00D7
 #define CMD_REQUEST_CERTIFICATE           0x00D8
 #define CMD_NEW_CERTIFICATE               0x00D9

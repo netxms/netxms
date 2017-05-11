@@ -757,7 +757,7 @@ private:
    void addRepository(NXCPMessage *request);
    void modifyRepository(NXCPMessage *request);
    void deleteRepository(NXCPMessage *request);
-   void getUnboundAgentTunnels(NXCPMessage *request);
+   void getAgentTunnels(NXCPMessage *request);
    void bindAgentTunnel(NXCPMessage *request);
    void unbindAgentTunnel(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);

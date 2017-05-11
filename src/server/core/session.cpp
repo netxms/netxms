@@ -75,7 +75,7 @@ void FillComponentsMessage(NXCPMessage *msg);
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
 
-void GetUnboundAgentTunnels(NXCPMessage *msg);
+void GetAgentTunnels(NXCPMessage *msg);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId);
 
@@ -1463,8 +1463,8 @@ void ClientSession::processingThread()
          case CMD_DELETE_REPOSITORY:
             CALL_IN_NEW_THREAD(deleteRepository, pMsg);
             break;
-         case CMD_GET_UNBOUND_AGENT_TUNNELS:
-            getUnboundAgentTunnels(pMsg);
+         case CMD_GET_AGENT_TUNNELS:
+            getAgentTunnels(pMsg);
             break;
          case CMD_BIND_AGENT_TUNNEL:
             bindAgentTunnel(pMsg);
@@ -14199,21 +14199,21 @@ void ClientSession::getPredictedData(NXCPMessage *request)
 }
 
 /**
- * Get list of unbound agent tunnels
+ * Get list of agent tunnels
  */
-void ClientSession::getUnboundAgentTunnels(NXCPMessage *request)
+void ClientSession::getAgentTunnels(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
-      GetUnboundAgentTunnels(&msg);
+      GetAgentTunnels(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
-      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Read list of unbound agent tunnels"));
+      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Read list of agent tunnels"));
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading list of unbound agent tunnels"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading list of agent tunnels"));
    }
    sendMessage(&msg);
 }

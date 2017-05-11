@@ -55,6 +55,16 @@ public class AgentTunnel
       agentVersion = msg.getFieldAsString(baseId + 7);
       activeChannelCount = msg.getFieldAsInt32(baseId + 8);
    }
+   
+   /**
+    * Check if tunnel is bound
+    * 
+    * @return true if tunnel is bound
+    */
+   public boolean isBound()
+   {
+      return nodeId != 0;
+   }
 
    /**
     * @return the id

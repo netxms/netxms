@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 package org.netxms.ui.eclipse.agentmanager.actions;
 
 import org.netxms.ui.eclipse.actions.OpenView;
-import org.netxms.ui.eclipse.agentmanager.views.PackageManager;
+import org.netxms.ui.eclipse.agentmanager.views.TunnelManager;
 
 /**
- * Open package manager view
+ * Open tunnel manager view
  */
-public class OpenPackageManager extends OpenView
+public class OpenTunnelManager extends OpenView
 {
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.actions.OpenView#getViewId()
@@ -32,6 +32,6 @@ public class OpenPackageManager extends OpenView
    @Override
    protected String getViewId()
    {
-      return PackageManager.ID;
+      return TunnelManager.ID;
    }
 }

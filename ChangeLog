@@ -14,6 +14,7 @@
 	- Node's zone name shown in alarm browser and object overview when zoning is enabled
 	- Sorting option in table based charts on dashboards (to implement "Top N" style charts)
 	- Full text object search
+	- Agent tunnel manager view
 - Fixed issues: NX-386, NX-1127, NX-1128, NX-1210, NX-1211, NX-1222, NX-1231, NX-1239, NX-1240, NX-1242 
 
 

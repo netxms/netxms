@@ -45,6 +45,14 @@
             name="%view.Screenshot"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.agentmanager.views.TunnelManager"
+            icon="icons/tunnel_manager.png"
+            id="org.netxms.ui.eclipse.agentmanager.views.TunnelManager"
+            name="Agent Tunnel Manager"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -98,6 +106,17 @@
                toolbarPath="config/additions"
                tooltip="%actionDescription.openPackageManager">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenTunnelManager"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_tunnel_manager"
+               icon="icons/tunnel_manager.png"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_tunnel_manager"
+               label="%action.openTunnelManager"
+               menubarPath="config/additions"
+               style="push"
+               toolbarPath="config/additions"
+               tooltip="%actionDescription.openTunnelManager">
+         </action>
       </actionSet>
    </extension>
    <extension
@@ -121,6 +140,12 @@
       <command
             id="org.netxms.ui.eclipse.agentmanager.commands.copy_screenshot"
             name="Copy screenshot">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="%actionDescription.openTunnelManager"
+            id="org.netxms.ui.eclipse.agentmanager.commands.open_tunnel_manager"
+            name="%action.openTunnelManager">
       </command>
    </extension>
    <extension

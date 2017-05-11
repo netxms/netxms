@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -252,7 +252,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 		_T("CMD_GET_PERSISTENT_STORAGE"),
 		_T("CMD_DELETE_PSTORAGE_VALUE"),
 		_T("CMD_UPDATE_PSTORAGE_VALUE"),
-		_T("CMD_GET_UNBOUND_AGENT_TUNNELS"),
+		_T("CMD_GET_AGENT_TUNNELS"),
 		_T("CMD_BIND_AGENT_TUNNEL"),
 		_T("CMD_REQUEST_CERTIFICATE"),
 		_T("CMD_NEW_CERTIFICATE"),

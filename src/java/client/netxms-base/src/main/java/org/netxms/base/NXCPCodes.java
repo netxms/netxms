@@ -237,7 +237,7 @@ public class NXCPCodes
 	public static final int CMD_GET_PERSISTENT_STORAGE = 0x00D3;
 	public static final int CMD_DELETE_PSTORAGE_VALUE = 0x00D4;
 	public static final int CMD_SET_PSTORAGE_VALUE = 0x00D5;
-	public static final int CMD_GET_UNBOUND_AGENT_TUNNELS = 0x00D6;
+	public static final int CMD_GET_AGENT_TUNNELS = 0x00D6;
 	public static final int CMD_BIND_AGENT_TUNNEL = 0x00D7;
 	public static final int CMD_REQUEST_CERTIFICATE = 0x00D8;
 	public static final int CMD_NEW_CERTIFICATE = 0x00D9;

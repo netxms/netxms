@@ -160,18 +160,28 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId)
 }
 
 /**
- * Get list of unbound agent tunnels into NXCP message
+ * Get list of agent tunnels into NXCP message
  */
-void GetUnboundAgentTunnels(NXCPMessage *msg)
+void GetAgentTunnels(NXCPMessage *msg)
 {
    s_tunnelListLock.lock();
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       ((AgentTunnel *)s_unboundTunnels.get(i))->fillMessage(msg, fieldId);
-      fieldId += 10;
+      fieldId += 64;
    }
-   msg->setField(VID_NUM_ELEMENTS, (UINT32)s_unboundTunnels.size());
+
+   Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
+   while(it->hasNext())
+   {
+      it->next()->fillMessage(msg, fieldId);
+      fieldId += 64;
+   }
+   delete it;
+
+   msg->setField(VID_NUM_ELEMENTS, (UINT32)(s_unboundTunnels.size() + s_boundTunnels.size()));
    s_tunnelListLock.unlock();
 }
 

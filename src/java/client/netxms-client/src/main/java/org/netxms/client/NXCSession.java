@@ -9562,15 +9562,15 @@ public class NXCSession
    }
    
    /**
-    * Get list of unbound agent tunnels
+    * Get list of agent tunnels
     * 
-    * @return list of unbound agent tunnels
+    * @return list of agent tunnels
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AgentTunnel> getUnboundAgentTunnels() throws IOException, NXCException
+   public List<AgentTunnel> getAgentTunnels() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UNBOUND_AGENT_TUNNELS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_TUNNELS);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
