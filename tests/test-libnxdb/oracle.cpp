@@ -39,7 +39,11 @@ void TestOracleBatch()
    DB_STATEMENT hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), buffer);
    AssertNotNullEx(hStmt, buffer);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)0);
+#ifdef UNICODE
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, WideStringFromMBString(__FILE__), DB_BIND_DYNAMIC);
+#else
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, __FILE__, DB_BIND_STATIC);
+#endif
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)42);
    AssertTrueEx(DBExecuteEx(hStmt, buffer), buffer);
    DBFreeStatement(hStmt);

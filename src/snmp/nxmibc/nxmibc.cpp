@@ -87,13 +87,13 @@ static void Pause()
 /**
  * Display error text and abort compilation
  */
-extern "C" void Error(int nError, char *pszModule, ...)
+extern "C" void Error(int nError, const char *module, ...)
 {
    va_list args;
    static const TCHAR *severityText[] = { _T("INFO"), _T("WARNING"), _T("ERROR") };
 
-   _tprintf(_T("%hs: %s %03d: "), pszModule, severityText[m_errorList[nError].nSeverity], nError);
-   va_start(args, pszModule);
+   _tprintf(_T("%hs: %s %03d: "), module, severityText[m_errorList[nError].nSeverity], nError);
+   va_start(args, module);
    _vtprintf(m_errorList[nError].pszText, args);
    va_end(args);
    _tprintf(_T("\n"));

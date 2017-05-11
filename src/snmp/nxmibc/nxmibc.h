@@ -58,7 +58,7 @@
 extern "C" {
 #endif
 
-void Error(int nError, char *pszModule, ...);
+void Error(int nError, const char *pszModule, ...);
 
 #ifdef __cplusplus
 }
