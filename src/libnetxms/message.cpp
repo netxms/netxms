@@ -938,6 +938,14 @@ NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
                memcpy((BYTE *)msg + NXCP_HEADER_SIZE, &msg->size, 4); // Save size of uncompressed message
                msg->size = htonl((UINT32)compMsgSize);
             }
+            else
+            {
+               free(compressedMsg);
+            }
+         }
+         else
+         {
+            free(compressedMsg);
          }
          deflateEnd(&stream);
       }

@@ -6538,7 +6538,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    }
    else
    {
-      sendPollerMsg(dwRqId, POLLER_ERROR _T("Link layer topology retrieved\r\n"));
+      sendPollerMsg(dwRqId, POLLER_ERROR _T("Cannot get link layer topology\r\n"));
    }
 
    // Read list of associated wireless stations
@@ -7120,12 +7120,10 @@ ForwardingDatabase *Node::getSwitchForwardingDatabase()
  */
 LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 {
-   LinkLayerNeighbors *nbs;
-
    MutexLock(m_mutexTopoAccess);
    if (m_linkLayerNeighbors != NULL)
       m_linkLayerNeighbors->incRefCount();
-   nbs = m_linkLayerNeighbors;
+   LinkLayerNeighbors *nbs = m_linkLayerNeighbors;
    MutexUnlock(m_mutexTopoAccess);
    return nbs;
 }
