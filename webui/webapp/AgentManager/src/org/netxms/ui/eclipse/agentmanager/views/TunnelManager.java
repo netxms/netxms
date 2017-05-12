@@ -25,10 +25,13 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -43,6 +46,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -75,10 +79,20 @@ public class TunnelManager extends ViewPart
    {
       final String[] names = { "ID", "State", "Node", "IP address", "Channels", "System name", "Platform", "System information", "Agent version" };
       final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 300, 150 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());
       viewer.setComparator(new TunnelListComparator());
+      
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, "TunnelManager");
+      viewer.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(viewer, settings, "TunnelManager");
+         }
+      });
       
       createActions();
       contributeToActionBars();
