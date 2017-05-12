@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,59 +16,64 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.topology.views.helpers;
+package org.netxms.ui.eclipse.agentmanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.AgentTunnel;
 import org.netxms.client.NXCSession;
-import org.netxms.client.topology.FdbEntry;
+import org.netxms.ui.eclipse.agentmanager.views.TunnelManager;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView;
+import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Comparator for FDB records
+ * Tunnel list comparator
  */
-public class FDBComparator extends ViewerComparator
+public class TunnelListComparator extends ViewerComparator
 {
-   private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-   
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
-      FdbEntry fdb1 = (FdbEntry)e1;
-      FdbEntry fdb2 = (FdbEntry)e2;
-      
+      AgentTunnel t1 = (AgentTunnel)e1;
+      AgentTunnel t2 = (AgentTunnel)e2;
       int result;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
       {
-         case SwitchForwardingDatabaseView.COLUMN_INTERFACE:
-            result = fdb1.getInterfaceName().compareToIgnoreCase(fdb2.getInterfaceName());
+         case TunnelManager.COL_AGENT_VERSION:
+            result = t1.getAgentVersion().compareToIgnoreCase(t2.getAgentVersion());
             break;
-         case SwitchForwardingDatabaseView.COLUMN_MAC_ADDRESS:
-            result = fdb1.getAddress().compareTo(fdb2.getAddress());
+         case TunnelManager.COL_CHANNELS:
+            result = t1.getActiveChannelCount() - t2.getActiveChannelCount();
             break;
-         case SwitchForwardingDatabaseView.COLUMN_NODE:
-            String n1 = (fdb1.getNodeId() != 0) ? session.getObjectName(fdb1.getNodeId()) : ""; //$NON-NLS-1$
-            String n2 = (fdb2.getNodeId() != 0) ? session.getObjectName(fdb2.getNodeId()) : ""; //$NON-NLS-1$
-            result = n1.compareToIgnoreCase(n2);
+         case TunnelManager.COL_ID:
+            result = t1.getId() - t2.getId();
             break;
-         case SwitchForwardingDatabaseView.COLUMN_PORT:
-            result = fdb1.getPort() - fdb2.getPort();
+         case TunnelManager.COL_IP_ADDRESS:
+            result = ComparatorHelper.compareInetAddresses(t1.getAddress(), t2.getAddress());
             break;
-         case SwitchForwardingDatabaseView.COLUMN_VLAN:
-            result = fdb1.getVlanId() - fdb2.getVlanId();
+         case TunnelManager.COL_NODE:
+            NXCSession session = ConsoleSharedData.getSession();
+            result = session.getObjectName(t1.getNodeId()).compareToIgnoreCase(session.getObjectName(t2.getNodeId()));
             break;
-         case SwitchForwardingDatabaseView.COLUMN_TYPE:
-            result = fdb1.getType() - fdb2.getType();
+         case TunnelManager.COL_PLATFORM:
+            result = t1.getPlatformName().compareToIgnoreCase(t2.getPlatformName());
+            break;
+         case TunnelManager.COL_STATE:
+            result = (t1.isBound() ? 1 : 0) - (t2.isBound() ? 1 : 0);
+            break;
+         case TunnelManager.COL_SYSINFO:
+            result = t1.getSystemInformation().compareToIgnoreCase(t2.getSystemInformation());
+            break;
+         case TunnelManager.COL_SYSNAME:
+            result = t1.getSystemName().compareToIgnoreCase(t2.getSystemName());
             break;
          default:
             result = 0;
-            break;
       }
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }

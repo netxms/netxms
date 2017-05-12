@@ -37,6 +37,7 @@ import org.netxms.client.AgentTunnel;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.TunnelListComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.TunnelListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -77,6 +78,7 @@ public class TunnelManager extends ViewPart
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());
+      viewer.setComparator(new TunnelListComparator());
       
       createActions();
       contributeToActionBars();

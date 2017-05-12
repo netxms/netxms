@@ -63,6 +63,6 @@ public class RoutingTableComparator extends ViewerComparator
             result = 0;
             break;
       }
-      return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.DOWN) ? result : -result;
+      return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }
 }
