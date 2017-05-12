@@ -479,6 +479,9 @@ bool EPRule::matchScript(Event *pEvent)
    }
    else
    {
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
+      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pScript->getErrorText(), 0);
       nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_id + 1, m_pScript->getErrorText());
    }
    free(ppValueList);
