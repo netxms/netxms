@@ -1548,7 +1548,7 @@ restart_agent_check:
       ppPollList[i]->decRefCount();
    }
    delete pTransport;
-   safe_free(ppPollList);
+   free(ppPollList);
    DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_name);
 
    // Check if entire node is down
@@ -4039,7 +4039,10 @@ UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableCo
       {
          rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, *table);
          if (rc != SNMP_ERR_SUCCESS)
+         {
+            delete_and_null(*table);
             break;
+         }
       }
    }
    delete snmp;
@@ -6216,7 +6219,7 @@ nxmap_ObjList *Node::getL2Topology()
  */
 nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
 {
-   nxmap_ObjList *pResult;
+   nxmap_ObjList *result;
    int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
 
    MutexLock(m_mutexTopoAccess);
@@ -6224,22 +6227,22 @@ nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool include
    {
       MutexUnlock(m_mutexTopoAccess);
 
-      pResult = new nxmap_ObjList;
-      BuildL2Topology(*pResult, this, nDepth, includeEndNodes);
+      result = new nxmap_ObjList;
+      BuildL2Topology(*result, this, nDepth, includeEndNodes);
 
       MutexLock(m_mutexTopoAccess);
       delete m_pTopology;
-      m_pTopology = new nxmap_ObjList(pResult);
+      m_pTopology = new nxmap_ObjList(result);
       m_topologyRebuildTimestamp = time(NULL);
    }
    else
    {
-      pResult = NULL;
+      result = NULL;
       delete_and_null(m_pTopology);
       *pdwStatus = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }
    MutexUnlock(m_mutexTopoAccess);
-   return pResult;
+   return result;
 }
 
 /**

@@ -660,56 +660,56 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
  */
 void NetworkMap::updateContent()
 {
-   DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): map type %d"), m_name, m_id, m_mapType);
-   nxmap_ObjList *objectList;
-   ObjectArray<nxmap_ObjList> objects;
-   UINT32 status;
-   Node *seed;
+   nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): map type %d"), m_name, m_id, m_mapType);
+   ObjectArray<nxmap_ObjList> objects(m_seedObjects->size(), 8, true);
    for(int i = 0; i < m_seedObjects->size(); i++)
    {
-      seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
+      Node *seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
       if (seed != NULL)
       {
+         UINT32 status;
+         nxmap_ObjList *topology;
          switch(m_mapType)
          {
             case MAP_TYPE_LAYER2_TOPOLOGY:
-            {
-               objectList = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               if (objectList != NULL)
-                  objects.add(objectList);
+               topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+               if (topology != NULL)
+                  objects.add(topology);
                else
-                  DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_name, m_id, m_seedObjects->get(i));;
+                  nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_name, m_id, m_seedObjects->get(i));;
                break;
-            }
             case MAP_TYPE_IP_TOPOLOGY:
-            {
-               objectList = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               if (objectList != NULL)
-                  objects.add(objectList);
+               topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+               if (topology != NULL)
+                  objects.add(topology);
                else
-                  DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_name, m_id, m_seedObjects->get(i));
+                  nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_name, m_id, m_seedObjects->get(i));
                break;
-            }
             default:
                break;
          }
       }
       else
-         DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
+      {
+         nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
+      }
    }
    if (objects.size() > 0)
    {
-      updateObjects(&objects);
-      DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
+      for(int i = 0; i < objects.size(); i++)
+         updateObjects(objects.get(i));
+      nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
    }
    else
-      DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): failed"), m_name, m_id);
+   {
+      nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): failed"), m_name, m_id);
+   }
 }
 
 /**
  * Update objects from given list
  */
-void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
+void NetworkMap::updateObjects(nxmap_ObjList *objects)
 {
    bool modified = false;
 
@@ -718,19 +718,16 @@ void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
    // Filter out disallowed objects
    if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != NULL))
    {
-      for(int j = 0; j < objects->size(); j++)
+      for(int j = 0; j < objects->getNumObjects(); j++)
       {
-         if (objects->get(j)->getNumObjects() > 0)
+         IntegerArray<UINT32> *idList = objects->getObjects();
+         for(int i = 0; i < idList->size(); i++)
          {
-            IntegerArray<UINT32> *idList = objects->get(j)->getObjects();
-            for(int i = 0; i < idList->size(); i++)
+            NetObj *object = FindObjectById(idList->get(i));
+            if ((object == NULL) || !isAllowedOnMap(object))
             {
-               NetObj *object = FindObjectById(idList->get(i));
-               if ((object == NULL) || !isAllowedOnMap(object))
-               {
-                  idList->remove(i);
-                  i--;
-               }
+               idList->remove(i);
+               i--;
             }
          }
       }
@@ -747,19 +744,16 @@ void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
       UINT32 objID1 = objectIdFromElementId(link->getElement1());
       UINT32 objID2 = objectIdFromElementId(link->getElement2());
       bool linkExists = false;
-      for(int j = 0; j < objects->size(); j++)
+      if (objects->isLinkExist(objID1, objID2))
       {
-         if (objects->get(j)->isLinkExist(objID1, objID2))
-         {
-            linkExists = true;
-            break;
-         }
-         if (objects->get(j)->isLinkExist(objID2, objID1))
-         {
-            link->swap();
-            linkExists = true;
-            break;
-         }
+         linkExists = true;
+         break;
+      }
+      if (objects->isLinkExist(objID2, objID1))
+      {
+         link->swap();
+         linkExists = true;
+         break;
       }
       if (!linkExists)
       {
@@ -777,13 +771,10 @@ void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
       if ((e->getType() != MAP_ELEMENT_OBJECT) || !(e->getFlags() & AUTO_GENERATED))
          continue;
       bool objectExists = false;
-      for(int j = 0; j < objects->size(); j++)
+      if (objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
       {
-         if (objects->get(j)->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
-         {
-            objectExists = true;
-            break;
-         }
+         objectExists = true;
+         break;
       }
       if (!objectExists)
       {
@@ -795,65 +786,59 @@ void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
    }
 
    // add new objects
-   for(int k = 0; k < objects->size(); k++)
+   for(int i = 0; i < objects->getNumObjects(); i++)
    {
-      for(int i = 0; i < objects->get(k)->getNumObjects(); i++)
+      bool found = false;
+      for(int j = 0; j < m_elements->size(); j++)
       {
-         bool found = false;
-         for(int j = 0; j < m_elements->size(); j++)
+         NetworkMapElement *e = m_elements->get(j);
+         if (e->getType() != MAP_ELEMENT_OBJECT)
+            continue;
+         if (((NetworkMapObject *)e)->getObjectId() == objects->getObjects()->get(i))
          {
-            NetworkMapElement *e = m_elements->get(j);
-            if (e->getType() != MAP_ELEMENT_OBJECT)
-               continue;
-            if (((NetworkMapObject *)e)->getObjectId() == objects->get(k)->getObjects()->get(i))
-            {
-               found = true;
-               break;
-            }
+            found = true;
+            break;
          }
-         if (!found)
-         {
-            NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objects->get(k)->getObjects()->get(i), 1);
-            m_elements->add(e);
-            modified = true;
-            DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: new object %d added"), m_name, objects->get(k)->getObjects()->get(i));
-         }
+      }
+      if (!found)
+      {
+         NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objects->getObjects()->get(i), 1);
+         m_elements->add(e);
+         modified = true;
+         nxlog_debug(5, _T("NetworkMap(%s)/updateObjects: new object %d added"), m_name, objects->getObjects()->get(i));
       }
    }
 
    // add new links
-   for(int k = 0; k < objects->size(); k++)
+   for(int i = 0; i < objects->getNumLinks(); i++)
    {
-      for(int i = 0; i < objects->get(k)->getNumLinks(); i++)
+      bool found = false;
+      for(int j = 0; j < m_links->size(); j++)
       {
-         bool found = false;
-         for(int j = 0; j < m_links->size(); j++)
+         NetworkMapLink *l = m_links->get(j);
+         UINT32 obj1 = objectIdFromElementId(l->getElement1());
+         UINT32 obj2 = objectIdFromElementId(l->getElement2());
+         if ((objects->getLinks()->get(i)->id1 == obj1) && (objects->getLinks()->get(i)->id2 == obj2))
          {
-            NetworkMapLink *l = m_links->get(j);
-            UINT32 obj1 = objectIdFromElementId(l->getElement1());
-            UINT32 obj2 = objectIdFromElementId(l->getElement2());
-            if ((objects->get(k)->getLinks()->get(i)->id1 == obj1) && (objects->get(k)->getLinks()->get(i)->id2 == obj2))
-            {
-               found = true;
-               break;
-            }
+            found = true;
+            break;
          }
-         if (!found)
+      }
+      if (!found)
+      {
+         UINT32 e1 = elementIdFromObjectId(objects->getLinks()->get(i)->id1);
+         UINT32 e2 = elementIdFromObjectId(objects->getLinks()->get(i)->id2);
+         // Element ID can be 0 if link points to object removed by filter
+         if ((e1 != 0) && (e2 != 0))
          {
-            UINT32 e1 = elementIdFromObjectId(objects->get(k)->getLinks()->get(i)->id1);
-            UINT32 e2 = elementIdFromObjectId(objects->get(k)->getLinks()->get(i)->id2);
-            // Element ID can be 0 if link points to object removed by filter
-            if ((e1 != 0) && (e2 != 0))
-            {
-               NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->get(k)->getLinks()->get(i)->type);
-               l->setConnector1Name(objects->get(k)->getLinks()->get(i)->port1);
-               l->setConnector2Name(objects->get(k)->getLinks()->get(i)->port2);
-               l->setConfig(objects->get(k)->getLinks()->get(i)->config);
-               l->setFlags(AUTO_GENERATED);
-               m_links->add(l);
-               modified = true;
-               DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
-            }
+            NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
+            l->setConnector1Name(objects->getLinks()->get(i)->port1);
+            l->setConnector2Name(objects->getLinks()->get(i)->port2);
+            l->setConfig(objects->getLinks()->get(i)->config);
+            l->setFlags(AUTO_GENERATED);
+            m_links->add(l);
+            modified = true;
+            DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
          }
       }
    }
@@ -862,7 +847,7 @@ void NetworkMap::updateObjects(ObjectArray<nxmap_ObjList> *objects)
       setModified();
 
    unlockProperties();
-   DbgPrintf(5, _T("NetworkMap(%s): updateObjects completed"), m_name);
+   nxlog_debug(5, _T("NetworkMap(%s): updateObjects completed"), m_name);
 }
 
 /**

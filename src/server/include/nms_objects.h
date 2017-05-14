@@ -2383,7 +2383,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
-	void updateObjects(ObjectArray<nxmap_ObjList> *lists);
+	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
 

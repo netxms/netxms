@@ -1563,12 +1563,15 @@ NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
    setName(_T("Component"));
 }
 
+/**
+ * NXSL class ComponentClass: get attribute
+ */
 NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
    const UINT32 classCount = 12;
-   static String className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
-                                    _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
-                                    _T("module"), _T("port"), _T("stack") };
+   static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
+                                                 _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
+                                                 _T("module"), _T("port"), _T("stack") };
    NXSL_Value *value = NULL;
    Component *component = (Component *)object->getData();
    if (!_tcscmp(attr, _T("class")))
@@ -1578,19 +1581,30 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       else
          value = new NXSL_Value(className[component->getClass()]);
    }
-   if (!_tcscmp(attr, _T("children")))
-            value = new NXSL_Value(component->getChildrenForNXSL());
-   if (!_tcscmp(attr, _T("firmware")))
+   else if (!_tcscmp(attr, _T("children")))
+   {
+      value = new NXSL_Value(component->getChildrenForNXSL());
+   }
+   else if (!_tcscmp(attr, _T("firmware")))
+   {
       value = new NXSL_Value(component->getFirmware());
-   if (!_tcscmp(attr, _T("model")))
+   }
+   else if (!_tcscmp(attr, _T("model")))
+   {
       value = new NXSL_Value(component->getModel());
-   if (!_tcscmp(attr, _T("name")))
-         value = new NXSL_Value(component->getName());
-   if (!_tcscmp(attr, _T("serial")))
-         value = new NXSL_Value(component->getSerial());
-   if (!_tcscmp(attr, _T("vendor")))
-         value = new NXSL_Value(component->getVendor());
-
+   }
+   else if (!_tcscmp(attr, _T("name")))
+   {
+      value = new NXSL_Value(component->getName());
+   }
+   else if (!_tcscmp(attr, _T("serial")))
+   {
+      value = new NXSL_Value(component->getSerial());
+   }
+   else if (!_tcscmp(attr, _T("vendor")))
+   {
+      value = new NXSL_Value(component->getVendor());
+   }
    return value;
 }
 
