@@ -4215,11 +4215,11 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             break;
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
-            DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
+            nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
             deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
-            DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
+            nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
          case ERR_INTERNAL_ERROR:
             dwResult = DCE_COLLECTION_ERROR;
@@ -4230,7 +4230,7 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
+   nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
    return dwResult;
 }
 

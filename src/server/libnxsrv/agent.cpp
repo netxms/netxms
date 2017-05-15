@@ -916,7 +916,17 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
       {
          dwRetCode = response->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == ERR_SUCCESS)
-            response->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
+         {
+            if (response->isFieldExist(VID_VALUE))
+            {
+               response->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
+            }
+            else
+            {
+               dwRetCode = ERR_MALFORMED_RESPONSE;
+               debugPrintf(3, _T("Malformed response to CMD_GET_PARAMETER"));
+            }
+         }
          delete response;
       }
       else
