@@ -5,6 +5,7 @@
 - Fixed bug in NXSL string concatenation
 - AnySMS SMS driver
 - JMX subagent backported from 2.1 branch
+- Bind9 subagent backported from 2.1 branch
 - Fixed isses: NX-1111, NX-1129, NX-1198
 
 
