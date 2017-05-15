@@ -6,7 +6,6 @@ netxmsd_LDADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../../libnxsl/libnxsl.la \
-	../../libnxmap/libnxmap.la \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../agent/libnxagent/libnxagent.la \

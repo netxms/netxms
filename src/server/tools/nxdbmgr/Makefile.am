@@ -5,7 +5,6 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp export.cpp import.cpp \
 nxdbmgr_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 nxdbmgr_LDADD = ../../../libnetxms/libnetxms.la \
                 ../../../db/libnxdb/libnxdb.la \
-                ../../../libnxmap/libnxmap.la \
                 ../../libnxsrv/libnxsrv.la \
                 ../../../snmp/libnxsnmp/libnxsnmp.la
 
