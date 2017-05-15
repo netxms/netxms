@@ -289,8 +289,8 @@ static void RunCommand(void *arg)
  */
 static bool ForwardEvent(const TCHAR *server, Event *event)
 {
-      InetAddress addr = InetAddress::resolveHostName(server);
-      if (!addr.isValidUnicast())
+   InetAddress addr = InetAddress::resolveHostName(server);
+   if (!addr.isValidUnicast())
 	{
 		DbgPrintf(2, _T("ForwardEvent: unable to resolve host name %s"), server);
 		return false;
