@@ -511,7 +511,7 @@ void ReloadCertificates()
 					StrToBin(certData, binCert, len);
 					free(certData);
                OPENSSL_CONST BYTE *p = binCert;
-					X509 *cert = d2i_X509(NULL, &p, len);
+					X509 *cert = d2i_X509(NULL, &p, (long)len);
 					free(binCert);
 					if (cert != NULL)
 					{

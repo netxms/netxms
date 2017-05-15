@@ -503,7 +503,7 @@ bool Tunnel::connectToServer()
    }
 
    SSL_set_connect_state(m_ssl);
-   SSL_set_fd(m_ssl, m_socket);
+   SSL_set_fd(m_ssl, (int)m_socket);
 
    while(true)
    {
@@ -797,7 +797,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
                const BYTE *certData = certResponse->getBinaryFieldPtr(VID_CERTIFICATE, &certLen);
                if (certData != NULL)
                {
-                  X509 *cert = d2i_X509(NULL, &certData, certLen);
+                  X509 *cert = d2i_X509(NULL, &certData, (long)certLen);
                   if (cert != NULL)
                   {
                      if (saveCertificate(cert, key))
@@ -896,7 +896,7 @@ TunnelCommChannel *Tunnel::createChannel()
 {
    TunnelCommChannel *channel = NULL;
    MutexLock(m_channelLock);
-   if (m_channels.size() < g_dwMaxSessions)
+   if (m_channels.size() < (int)g_dwMaxSessions)
    {
       channel = new TunnelCommChannel(this);
       m_channels.set(channel->getId(), channel);

@@ -986,19 +986,16 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   uuid guid;
-   TCHAR buffer[MAX_DB_STRING];
-
    DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid IS NULL"));
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
    if (hResult != NULL)
    {
+      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
       if (hStmt != NULL)
       {
          int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
-            guid = uuid::generate();
+            uuid guid = uuid::generate();
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
 
@@ -1018,15 +1015,15 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
    }
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT guid,script_id FROM script_library WHERE guid IS NULL"));
-   hStmt = DBPrepare(g_hCoreDB, _T("UPDATE script_library SET guid=? WHERE script_id=?"));
    if (hResult != NULL)
    {
+      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE script_library SET guid=? WHERE script_id=?"));
       if (hStmt != NULL)
       {
          int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
-            guid = uuid::generate();
+            uuid guid = uuid::generate();
             DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
             if (!SQLExecute(hStmt))

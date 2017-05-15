@@ -131,8 +131,7 @@ void StopWatchdog()
  */
 int WatchdogMain(DWORD pid)
 {
-	TCHAR cmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
-
+	TCHAR szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 	if (g_szPlatformSuffix[0] != 0)
 	{
 		_sntprintf(szPlatformSuffixOption, MAX_PSUFFIX_LENGTH + 16, _T("-P \"%s\" "), g_szPlatformSuffix);
@@ -163,8 +162,6 @@ int WatchdogMain(DWORD pid)
          CloseHandle(hProcess);
       }
    }
-#elif defined(_NETWARE)
-   /* not implemented for NetWare */
 #else
 	openlog("nxagentd-watchdog", LOG_PID, LOG_DAEMON);
 	while(1)
@@ -174,6 +171,8 @@ int WatchdogMain(DWORD pid)
          break;
    }
 	syslog(LOG_WARNING, "restarting agent");
+	
+   TCHAR cmdLine[4096];
    _sntprintf(cmdLine, 4096, _T("\"") PREFIX _T("/bin/nxagentd\" -c \"%s\" %s%s%s%s-D %d %s"),
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 	           (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),

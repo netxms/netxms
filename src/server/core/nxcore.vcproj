@@ -737,6 +737,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\netmap_element.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\netmap_link.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\netmap_objlist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\netobj.cpp"
 				>
 			</File>

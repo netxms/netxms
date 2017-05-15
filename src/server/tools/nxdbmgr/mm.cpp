@@ -22,8 +22,6 @@
 **/
 
 #include "nxdbmgr.h"
-#include <netxms_maps.h>
-
 
 /**
  * Generate new object ID
@@ -99,17 +97,15 @@ static BOOL MigrateObjects(DWORD mapId, DWORD submapId, DWORD mapObjectId)
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
 	{
-		DWORD id = DBGetFieldULong(hResult, i, 0);
-
-		NetworkMapObject *object = new NetworkMapObject(id, id);
-		object->setPosition(DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
-
+		UINT32 id = DBGetFieldULong(hResult, i, 0);
 		Config *config = new Config();
 		config->setTopLevelTag(_T("element"));
-		object->updateConfig(config);
+   	config->setValue(_T("/objectId"), id);
+	   config->setValue(_T("/type"), 1);   // MAP_ELEMENT_OBJECT
+	   config->setValue(_T("/posX"), DBGetFieldLong(hResult, i, 1));
+	   config->setValue(_T("/posY"), DBGetFieldLong(hResult, i, 2));
 		String data = DBPrepareString(g_hCoreDB, config->createXml());
 		delete config;
-		delete object;
 
 		_sntprintf(query, 8192, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data) VALUES (%d,%d,1,%s)"),
 		           (int)mapObjectId, (int)id, (const TCHAR *)data);
