@@ -23,7 +23,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
 			market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
 			modules.cpp mt.cpp ndd.cpp ndp.cpp \
-			netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
+			netinfo.cpp netmap.cpp netmap_element.cpp netmap_link.cpp \
+			netmap_objlist.cpp netobj.cpp netsrv.cpp \
 			node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp poll.cpp ps.cpp rack.cpp radius.cpp \
@@ -40,7 +41,6 @@ libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @Z
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
-	../../libnxmap/libnxmap.la \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \

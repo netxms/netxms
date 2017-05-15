@@ -661,32 +661,34 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 void NetworkMap::updateContent()
 {
    nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): map type %d"), m_name, m_id, m_mapType);
-   ObjectArray<nxmap_ObjList> objects(m_seedObjects->size(), 8, true);
+   NetworkMapObjectList objects;
    for(int i = 0; i < m_seedObjects->size(); i++)
    {
       Node *seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
       if (seed != NULL)
       {
          UINT32 status;
-         nxmap_ObjList *topology;
+         NetworkMapObjectList *topology;
          switch(m_mapType)
          {
             case MAP_TYPE_LAYER2_TOPOLOGY:
                topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               if (topology != NULL)
-                  objects.add(topology);
-               else
-                  nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_name, m_id, m_seedObjects->get(i));;
                break;
             case MAP_TYPE_IP_TOPOLOGY:
                topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               if (topology != NULL)
-                  objects.add(topology);
-               else
-                  nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_name, m_id, m_seedObjects->get(i));
                break;
             default:
+               topology = NULL;
                break;
+         }
+         if (topology != NULL)
+         {
+            objects.merge(topology);
+            delete topology;
+         }
+         else
+         {
+            nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): cannot get topology information for node %s [%d]"), m_name, m_id, seed->getName(), seed->getId());
          }
       }
       else
@@ -694,22 +696,14 @@ void NetworkMap::updateContent()
          nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
       }
    }
-   if (objects.size() > 0)
-   {
-      for(int i = 0; i < objects.size(); i++)
-         updateObjects(objects.get(i));
-      nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
-   }
-   else
-   {
-      nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): failed"), m_name, m_id);
-   }
+   updateObjects(&objects);
+   nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
 }
 
 /**
  * Update objects from given list
  */
-void NetworkMap::updateObjects(nxmap_ObjList *objects)
+void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 {
    bool modified = false;
 

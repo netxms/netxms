@@ -14,6 +14,7 @@ serverinclude_HEADERS = \
 	hdlink.h \
 	local_admin.h \
 	nddrv.h \
+	netxms_maps.h \
 	netxms_mt.h \
 	nms_actions.h \
 	nms_alarm.h \

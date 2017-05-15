@@ -25,7 +25,7 @@
 /**
  * Build layer 2 topology for switch
  */
-void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes)
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes)
 {
 	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections

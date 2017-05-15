@@ -1,7 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Network Maps Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,11 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: element.cpp
+** File: netmap_element.cpp
 **
 **/
 
-#include "libnxmap.h"
+#include "nxcore.h"
 
 /**************************
  * Network Map Element

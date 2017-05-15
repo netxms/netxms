@@ -1,7 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Network Maps Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,20 +16,15 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: objlist.cpp
+** File: netmap_objlist.cpp
 **
 **/
 
-#include "libnxmap.h"
+#include "nxcore.h"
 
 /**
- * ObjLink class implementation
+ * Create empty object link
  */
-
-/**
- * Constructors
- */
-
 ObjLink::ObjLink()
 {
    id1 = 0;
@@ -43,6 +37,9 @@ ObjLink::ObjLink()
 	flags = 0;
 }
 
+/**
+ * Create new object link
+ */
 ObjLink::ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags)
 {
    this->id1 = id1;
@@ -65,48 +62,52 @@ ObjLink::ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, 
 	this->flags = flags;
 }
 
-ObjLink::ObjLink(ObjLink* old)
+/**
+ * Object link copy constructor
+ */
+ObjLink::ObjLink(const ObjLink *src)
 {
-   id1 = old->id1;
-   id2 = old->id2;
-   type = old->type;
-   _tcscpy(port1, old->port1);
-	_tcscpy(port2, old->port2);
-	portIdCount = old->portIdCount;
+   id1 = src->id1;
+   id2 = src->id2;
+   type = src->type;
+   _tcscpy(port1, src->port1);
+	_tcscpy(port2, src->port2);
+	portIdCount = src->portIdCount;
 
 	for(int i = 0; i < portIdCount; i++)
 	{
-      this->portIdArray1[i] = old->portIdArray1[i];
-      this->portIdArray2[i] = old->portIdArray2[i];
+      this->portIdArray1[i] = src->portIdArray1[i];
+      this->portIdArray2[i] = src->portIdArray2[i];
 	}
 
-   if(old->config != NULL)
-      config = _tcsdup(old->config);
+   if(src->config != NULL)
+      config = _tcsdup(src->config);
    else
       config = NULL;
-	flags = old->flags;
+	flags = src->flags;
 }
 
+/**
+ * Object link destructor
+ */
 ObjLink::~ObjLink()
 {
-   safe_free(config);
+   free(config);
 }
 
 /**
- * nxmap_ObjList class implementation
+ * Create empty object list
  */
-
-/**
- * Constructors
- */
-
-nxmap_ObjList::nxmap_ObjList()
+NetworkMapObjectList::NetworkMapObjectList()
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
 }
 
-nxmap_ObjList::nxmap_ObjList(NXCPMessage *msg)
+/**
+ * Create object list from NXCP message
+ */
+NetworkMapObjectList::NetworkMapObjectList(NXCPMessage *msg)
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
@@ -132,7 +133,7 @@ nxmap_ObjList::nxmap_ObjList(NXCPMessage *msg)
 /**
  * Copy constructor
  */
-nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *src)
+NetworkMapObjectList::NetworkMapObjectList(NetworkMapObjectList *src)
 {
    int i;
 
@@ -148,16 +149,36 @@ nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *src)
 /**
  * Destructor
  */
-nxmap_ObjList::~nxmap_ObjList()
+NetworkMapObjectList::~NetworkMapObjectList()
 {
    delete m_objectList;
    delete m_linkList;
 }
 
 /**
+ * Merge two lists
+ */
+void NetworkMapObjectList::merge(const NetworkMapObjectList *src)
+{
+   int i;
+
+   for(i = 0; i < src->m_objectList->size(); i++)
+   {
+      if (!isObjectExist(src->m_objectList->get(i)))
+         m_objectList->add(src->m_objectList->get(i));
+   }
+   for(i = 0; i < src->m_linkList->size(); i++)
+   {
+      ObjLink *l = src->m_linkList->get(i);
+      if (!isLinkExist(l->id1, l->id2))
+         m_linkList->add(new ObjLink(l));
+   }
+}
+
+/**
  * Clear list
  */
-void nxmap_ObjList::clear()
+void NetworkMapObjectList::clear()
 {
    m_linkList->clear();
    m_objectList->clear();
@@ -176,7 +197,7 @@ static int CompareObjectId(const void *e1, const void *e2)
 /**
  * Add object to list
  */
-void nxmap_ObjList::addObject(UINT32 id)
+void NetworkMapObjectList::addObject(UINT32 id)
 {
    if (!isObjectExist(id))
    {
@@ -188,7 +209,7 @@ void nxmap_ObjList::addObject(UINT32 id)
 /**
  * Remove object from list
  */
-void nxmap_ObjList::removeObject(UINT32 id)
+void NetworkMapObjectList::removeObject(UINT32 id)
 {
    m_objectList->remove(id);
 
@@ -205,7 +226,7 @@ void nxmap_ObjList::removeObject(UINT32 id)
 /**
  * Link two objects
  */
-void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2, int linkType, const TCHAR *linkName)
+void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, const TCHAR *linkName)
 {
    bool linkExists = false;
    if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
@@ -245,7 +266,7 @@ static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port
 /**
  * Link two objects with named links
  */
-void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2)
+void NetworkMapObjectList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2)
 {
    bool linkExists = false;
    if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
@@ -320,7 +341,7 @@ void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, co
 /**
  * Create NXCP message
  */
-void nxmap_ObjList::createMessage(NXCPMessage *msg)
+void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 {
 	// Object list
 	msg->setField(VID_NUM_OBJECTS, m_objectList->size());
@@ -346,7 +367,7 @@ void nxmap_ObjList::createMessage(NXCPMessage *msg)
 /**
  * Check if link between two given objects exist
  */
-bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
+bool NetworkMapObjectList::isLinkExist(UINT32 objectId1, UINT32 objectId2) const
 {
    for(int i = 0; i < m_linkList->size(); i++)
    {
@@ -360,7 +381,7 @@ bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
 /**
  * Check if given object exist
  */
-bool nxmap_ObjList::isObjectExist(UINT32 objectId)
+bool NetworkMapObjectList::isObjectExist(UINT32 objectId) const
 {
    return bsearch(&objectId, m_objectList->getBuffer(), m_objectList->size(), sizeof(UINT32), CompareObjectId) != NULL;
 }

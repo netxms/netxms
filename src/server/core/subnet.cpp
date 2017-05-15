@@ -234,7 +234,7 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 /**
  * Build IP topology
  */
-void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
+void Subnet::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
 {
 	ObjectArray<Node> nodes;
 	lockChildList(false);

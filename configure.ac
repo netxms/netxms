@@ -640,7 +640,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
@@ -850,7 +850,7 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxcc server smsdrv nxscript"
+	MODULES="$MODULES libnxsl libnxcc server smsdrv nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	SMSDRV_DIRS="$SMSDRV_DIRS nxagent"
@@ -944,9 +944,9 @@ fi
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
-		MODULES="$MODULES appagent libnxmap client libnxmb"
+		MODULES="$MODULES appagent client libnxmb"
 	else
-		MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv snmp"
+		MODULES="$MODULES appagent client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv snmp"
 	fi
 fi
 
@@ -3481,7 +3481,6 @@ AC_CONFIG_FILES([
 	src/libnetxms/Makefile
 	src/libnxcc/Makefile
 	src/libnxlp/Makefile
-	src/libnxmap/Makefile
 	src/libnxmb/Makefile
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile

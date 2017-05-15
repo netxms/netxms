@@ -94,7 +94,7 @@ Node::Node() : DataCollectionTarget()
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
    m_vrrpInfo = NULL;
-   m_pTopology = NULL;
+   m_topology = NULL;
    m_topologyRebuildTimestamp = 0;
    m_iPendingStatus = -1;
    m_iPollCount = 0;
@@ -196,7 +196,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
    m_vrrpInfo = NULL;
-   m_pTopology = NULL;
+   m_topology = NULL;
    m_topologyRebuildTimestamp = 0;
    m_iPendingStatus = -1;
    m_iPollCount = 0;
@@ -253,7 +253,7 @@ Node::~Node()
    if (m_linkLayerNeighbors != NULL)
       m_linkLayerNeighbors->decRefCount();
    delete m_vrrpInfo;
-   delete m_pTopology;
+   delete m_topology;
    delete m_jobQueue;
    delete m_snmpSecurity;
    if (m_fdb != NULL)
@@ -6195,20 +6195,20 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
  * Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
  * Will return NULL if there are no topology information or it is expired
  */
-nxmap_ObjList *Node::getL2Topology()
+NetworkMapObjectList *Node::getL2Topology()
 {
-   nxmap_ObjList *pResult;
+   NetworkMapObjectList *pResult;
    UINT32 dwExpTime;
 
    dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
    MutexLock(m_mutexTopoAccess);
-   if ((m_pTopology == NULL) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(NULL)))
+   if ((m_topology == NULL) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(NULL)))
    {
       pResult = NULL;
    }
    else
    {
-      pResult = new nxmap_ObjList(m_pTopology);
+      pResult = new NetworkMapObjectList(m_topology);
    }
    MutexUnlock(m_mutexTopoAccess);
    return pResult;
@@ -6217,9 +6217,9 @@ nxmap_ObjList *Node::getL2Topology()
 /**
  * Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
  */
-nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
+NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
 {
-   nxmap_ObjList *result;
+   NetworkMapObjectList *result;
    int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
 
    MutexLock(m_mutexTopoAccess);
@@ -6227,18 +6227,18 @@ nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool include
    {
       MutexUnlock(m_mutexTopoAccess);
 
-      result = new nxmap_ObjList;
+      result = new NetworkMapObjectList();
       BuildL2Topology(*result, this, nDepth, includeEndNodes);
 
       MutexLock(m_mutexTopoAccess);
-      delete m_pTopology;
-      m_pTopology = new nxmap_ObjList(result);
+      delete m_topology;
+      m_topology = new NetworkMapObjectList(result);
       m_topologyRebuildTimestamp = time(NULL);
    }
    else
    {
       result = NULL;
-      delete_and_null(m_pTopology);
+      delete_and_null(m_topology);
       *pdwStatus = RCC_NO_L2_TOPOLOGY_SUPPORT;
    }
    MutexUnlock(m_mutexTopoAccess);
@@ -6248,10 +6248,10 @@ nxmap_ObjList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool include
 /**
  * Build IP topology
  */
-nxmap_ObjList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
+NetworkMapObjectList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
 {
    int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
-   nxmap_ObjList *pResult = new nxmap_ObjList;
+   NetworkMapObjectList *pResult = new NetworkMapObjectList();
    buildIPTopologyInternal(*pResult, nDepth, 0, false, includeEndNodes);
    return pResult;
 }
@@ -6259,7 +6259,7 @@ nxmap_ObjList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool include
 /**
  * Build IP topology
  */
-void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes)
+void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes)
 {
    if (topology.isObjectExist(m_id))
    {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,46 +23,29 @@
 #ifndef _netxms_maps_h_
 #define _netxms_maps_h_
 
-#ifdef _WIN32
-#ifdef LIBNXMAP_EXPORTS
-#define LIBNXMAP_EXPORTABLE __declspec(dllexport)
-#else
-#define LIBNXMAP_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXMAP_EXPORTABLE
-#endif
-
 #include <nxconfig.h>
-
 
 /**
  * Constants
  */
-
 #define MAX_CONNECTOR_NAME		128
 #define MAX_PORT_COUNT			16
 #define MAX_BEND_POINTS       16
 
-
 /**
  * User access rights
  */
-
 #define MAP_ACCESS_READ       0x0001
 #define MAP_ACCESS_WRITE      0x0002
 #define MAP_ACCESS_ACL        0x0004
 #define MAP_ACCESS_DELETE     0x0008
 
-
 /**
  * Object link types
  */
-
 #define LINK_TYPE_NORMAL      0
 #define LINK_TYPE_VPN         1
 #define LINK_TYPE_MULTILINK   2
-
 
 /**
  * Link between objects
@@ -83,25 +66,26 @@ public:
 
    ObjLink();
    ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags);
-   ObjLink(ObjLink* old);
+   ObjLink(const ObjLink *src);
    ~ObjLink();
  };
 
-
 /**
- * Connected object list - used as source for nxSubmap::DoLayout
+ * Connected object list
  */
-class LIBNXMAP_EXPORTABLE nxmap_ObjList
+class NetworkMapObjectList
 {
 protected:
    IntegerArray<UINT32> *m_objectList;
    ObjectArray<ObjLink> *m_linkList;
 
 public:
-   nxmap_ObjList();
-   nxmap_ObjList(nxmap_ObjList *src);
-   nxmap_ObjList(NXCPMessage *msg);
-   ~nxmap_ObjList();
+   NetworkMapObjectList();
+   NetworkMapObjectList(NetworkMapObjectList *src);
+   NetworkMapObjectList(NXCPMessage *msg);
+   ~NetworkMapObjectList();
+
+   void merge(const NetworkMapObjectList *src);
 
    void addObject(UINT32 id);
    void linkObjects(UINT32 id1, UINT32 id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = NULL);
@@ -109,15 +93,15 @@ public:
    void removeObject(UINT32 id);
    void clear();
 
-   int getNumObjects() { return m_objectList->size(); }
+   int getNumObjects() const { return m_objectList->size(); }
    IntegerArray<UINT32> *getObjects() { return m_objectList; }
-   int getNumLinks() { return m_linkList->size(); }
+   int getNumLinks() const { return m_linkList->size(); }
    ObjectArray<ObjLink> *getLinks() { return m_linkList; }
 
 	void createMessage(NXCPMessage *pMsg);
 
-	bool isLinkExist(UINT32 objectId1, UINT32 objectId2);
-	bool isObjectExist(UINT32 objectId);
+	bool isLinkExist(UINT32 objectId1, UINT32 objectId2) const;
+	bool isObjectExist(UINT32 objectId) const;
 };
 
 /**
@@ -151,7 +135,7 @@ public:
 /**
  * Generic map element
  */
-class LIBNXMAP_EXPORTABLE NetworkMapElement
+class NetworkMapElement
 {
 protected:
 	UINT32 m_id;
@@ -181,7 +165,7 @@ public:
 /**
  * Object map element
  */
-class LIBNXMAP_EXPORTABLE NetworkMapObject : public NetworkMapElement
+class NetworkMapObject : public NetworkMapElement
 {
 protected:
 	UINT32 m_objectId;
@@ -201,7 +185,7 @@ public:
 /**
  * Decoration map element
  */
-class LIBNXMAP_EXPORTABLE NetworkMapDecoration : public NetworkMapElement
+class NetworkMapDecoration : public NetworkMapElement
 {
 protected:
 	LONG m_decorationType;
@@ -230,7 +214,7 @@ public:
 /**
  * DCI map conatainer
  */
-class LIBNXMAP_EXPORTABLE NetworkMapDCIContainer : public NetworkMapElement
+class NetworkMapDCIContainer : public NetworkMapElement
 {
 protected:
 	TCHAR* m_xmlDCIList;
@@ -250,7 +234,7 @@ public:
 /**
  * DCI map image
  */
-class LIBNXMAP_EXPORTABLE NetworkMapDCIImage : public NetworkMapElement
+class NetworkMapDCIImage : public NetworkMapElement
 {
 protected:
 	TCHAR* m_config;
@@ -270,7 +254,7 @@ public:
 /**
  * Link on map
  */
-class LIBNXMAP_EXPORTABLE NetworkMapLink
+class NetworkMapLink
 {
 protected:
 	UINT32 m_element1;
@@ -307,6 +291,5 @@ public:
 	void setConfig(const TCHAR *name);
 	void swap();
 };
-
 
 #endif

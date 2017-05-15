@@ -10423,22 +10423,20 @@ void ClientSession::queryL2Topology(NXCPMessage *pRequest)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-				nxmap_ObjList *pTopology;
-
-				pTopology = ((Node *)object)->getL2Topology();
-				if (pTopology == NULL)
+			   NetworkMapObjectList *topology = ((Node *)object)->getL2Topology();
+				if (topology == NULL)
 				{
-					pTopology = ((Node *)object)->buildL2Topology(&dwResult, -1, true);
+				   topology = ((Node *)object)->buildL2Topology(&dwResult, -1, true);
 				}
 				else
 				{
 					dwResult = RCC_SUCCESS;
 				}
-				if (pTopology != NULL)
+				if (topology != NULL)
 				{
 					msg.setField(VID_RCC, RCC_SUCCESS);
-					pTopology->createMessage(&msg);
-					delete pTopology;
+					topology->createMessage(&msg);
+					delete topology;
 				}
 				else
 				{

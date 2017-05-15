@@ -1470,7 +1470,7 @@ protected:
 	int m_adoptedApCount;
 	int m_totalApCount;
 	BYTE m_baseBridgeAddress[MAC_ADDR_LENGTH];	// Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
-	nxmap_ObjList *m_pTopology;
+	NetworkMapObjectList *m_topology;
 	time_t m_topologyRebuildTimestamp;
 	ServerJobQueue *m_jobQueue;
 	ComponentTree *m_components;		// Hardware components
@@ -1542,7 +1542,7 @@ protected:
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
 
-	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
+	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
 	virtual bool isDataCollectionDisabled();
    virtual void collectProxyInfo(ProxyInfo *info);
@@ -1760,14 +1760,14 @@ public:
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
       UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
 
-	nxmap_ObjList *getL2Topology();
-	nxmap_ObjList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
+   NetworkMapObjectList *getL2Topology();
+   NetworkMapObjectList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
 	ForwardingDatabase *getSwitchForwardingDatabase();
 	NetObj *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
 
-	nxmap_ObjList *buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
+	NetworkMapObjectList *buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
@@ -1919,7 +1919,7 @@ inline void Node::lockForRoutePoll()
  */
 class NXCORE_EXPORTABLE Subnet : public NetObj
 {
-	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
+	friend void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
 protected:
    InetAddress m_ipAddress;
@@ -1930,7 +1930,7 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
 
-   void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
+   void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
 public:
    Subnet();
@@ -2383,7 +2383,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
-	void updateObjects(nxmap_ObjList *objects);
+	void updateObjects(NetworkMapObjectList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
 

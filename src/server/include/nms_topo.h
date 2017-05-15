@@ -267,7 +267,7 @@ public:
 //
 
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
-void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes);
+void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
 NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type);
 
