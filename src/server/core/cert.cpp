@@ -46,7 +46,7 @@ char g_serverCertificatePassword[MAX_PASSWORD] = "";
 /**
  * Server certificate
  */
-static ObjectArray<X509> s_serverCACertificates(8, 8, false);
+static ObjectRefArray<X509> s_serverCACertificates(8, 8);
 static X509 *s_serverCertificate = NULL;
 static EVP_PKEY *s_serverCertificateKey = NULL;
 
@@ -85,10 +85,18 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       return NULL;
    }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   ASN1_INTEGER *serial = ASN1_INTEGER_new();
+#else
    ASN1_INTEGER *serial = M_ASN1_INTEGER_new();
+#endif
    ASN1_INTEGER_set(serial, 0);
    int rc = X509_set_serialNumber(cert, serial);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   ASN1_INTEGER_free(serial);
+#else
    M_ASN1_INTEGER_free(serial);
+#endif
    if (rc != 1)
    {
       nxlog_debug(4, _T("IssueCertificate: cannot set certificate serial number"));
@@ -348,14 +356,15 @@ static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
 BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
 									  UINT32 dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
 {
-	EVP_PKEY *pKey;
-	BYTE hash[SHA1_DIGEST_SIZE];
-	BOOL bValid = FALSE;
+   BOOL bValid = FALSE;
 
+   char subjectName[1024];
+   X509_NAME_oneline(X509_get_subject_name(pCert), subjectName, 1024);
 #ifdef UNICODE
-	WCHAR *certSubject = WideStringFromMBString(CHECK_NULL_A(pCert->name));
+   WCHAR certSubject[1024];
+   MultiByteToWideChar(CP_UTF8, 0, subjectName, -1, certSubject, 1024);
 #else
-#define certSubject (CHECK_NULL(pCert->name))
+   const char *certSubject = subjectName;
 #endif
 
 	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, pszLogin);
@@ -365,24 +374,22 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	{
 		DbgPrintf(3, _T("Cannot validate user certificate because certificate store is not initialized"));
 		s_certificateStoreLock.unlock();
-#ifdef UNICODE
-		free(certSubject);
-#endif
 		return FALSE;
 	}
 
 	// Validate signature
-	pKey = X509_get_pubkey(pCert);
+	EVP_PKEY *pKey = X509_get_pubkey(pCert);
 	if (pKey != NULL)
 	{
+      BYTE hash[SHA1_DIGEST_SIZE];
 		CalculateSHA1Hash(pChallenge, CLIENT_CHALLENGE_SIZE, hash);
-		switch(pKey->type)
+		switch(EVP_PKEY_id(pKey))
 		{
 			case EVP_PKEY_RSA:
-				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, pKey->pkey.rsa);
+				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, EVP_PKEY_get1_RSA(pKey));
 				break;
 			default:
-				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), pKey->type, certSubject, pszLogin);
+				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject, pszLogin);
 				break;
 		}
 	}
@@ -431,12 +438,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 
 	s_certificateStoreLock.unlock();
 
-#ifdef UNICODE
-	free(certSubject);
-#endif
-
 	return bValid;
-#undef certSubject
 }
 
 /**
@@ -662,8 +664,10 @@ static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
       X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
       int error = X509_STORE_CTX_get_error(ctx);
       int depth = X509_STORE_CTX_get_error_depth(ctx);
+      char subjectName[1024];
+      X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
       nxlog_debug(4, _T("Certificate \"%hs\" verification error %d (%hs) at depth %d"),
-               cert->name, error, X509_verify_cert_error_string(error), depth);
+             subjectName, error, X509_verify_cert_error_string(error), depth);
    }
    return success;
 }

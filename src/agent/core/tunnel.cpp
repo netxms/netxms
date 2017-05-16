@@ -646,12 +646,30 @@ void Tunnel::checkConnection()
  */
 X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
 {
-   RSA *key = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, NULL);
+   RSA *key = RSA_new();
    if (key == NULL)
    {
-      debugPrintf(4, _T("call to RSA_generate_key() failed"));
+      debugPrintf(4, _T("call to RSA_new() failed"));
       return NULL;
    }
+
+   BIGNUM *bn = BN_new();
+   if (bn == NULL)
+   {
+      debugPrintf(4, _T("call to BN_new() failed"));
+      RSA_free(key);
+      return NULL;
+   }
+
+   BN_set_word(bn, RSA_F4);
+   if (RSA_generate_key_ex(key, NETXMS_RSA_KEYLEN, bn, NULL) == -1)
+   {
+      debugPrintf(4, _T("call to RSA_generate_key_ex() failed"));
+      RSA_free(key);
+      BN_free(bn);
+      return NULL;
+   }
+   BN_free(bn);
 
    X509_REQ *req = X509_REQ_new();
    if (req != NULL)

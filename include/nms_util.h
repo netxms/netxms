@@ -666,6 +666,32 @@ public:
 };
 
 /**
+ * Template class for dynamic array which holds references to objects with inaccessible destructors
+ */
+template <class T> class ObjectRefArray : public Array
+{
+private:
+	static void destructor(void *object) { }
+
+public:
+	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
+	virtual ~ObjectRefArray() { }
+
+	int add(T *object) { return Array::add((void *)object); }
+	T *get(int index) const { return (T*)Array::get(index); }
+   int indexOf(T *object) const { return Array::indexOf((void *)object); }
+   bool contains(T *object) const { return indexOf(object) >= 0; }
+	void set(int index, T *object) { Array::set(index, (void *)object); }
+	void replace(int index, T *object) { Array::replace(index, (void *)object); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *object) { Array::remove((void *)object); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *object) { Array::unlink((void *)object); }
+
+   Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
+};
+
+/**
  * Template class for dynamic array which holds scalar values
  */
 template <class T> class IntegerArray : public Array

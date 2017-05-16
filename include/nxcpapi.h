@@ -262,8 +262,8 @@ private:
 #ifdef _WITH_ENCRYPTION
    MUTEX m_encryptorLock;
 #if WITH_OPENSSL
-   EVP_CIPHER_CTX m_encryptor;
-   EVP_CIPHER_CTX m_decryptor;
+   EVP_CIPHER_CTX *m_encryptor;
+   EVP_CIPHER_CTX *m_decryptor;
 #elif WITH_COMMONCRYPTO
    CCCryptorRef m_encryptor;
    CCCryptorRef m_decryptor;

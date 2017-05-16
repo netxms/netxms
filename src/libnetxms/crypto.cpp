@@ -186,7 +186,9 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    BYTE random[8192];
    int i;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
    CRYPTO_malloc_init();
+#endif
    ERR_load_CRYPTO_strings();
    OpenSSL_add_all_algorithms();
    RAND_seed(random, 8192);
@@ -557,8 +559,15 @@ NXCPEncryptionContext::NXCPEncryptionContext()
    m_keyLength = 0;
    m_cipher = -1;
 #ifdef _WITH_ENCRYPTION
-   EVP_CIPHER_CTX_init(&m_encryptor);
-   EVP_CIPHER_CTX_init(&m_decryptor);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   m_encryptor = EVP_CIPHER_CTX_new();
+   m_decryptor = EVP_CIPHER_CTX_new();
+#else
+   m_encryptor = (EVP_CIPHER_CTX *)malloc(sizeof(EVP_CIPHER_CTX));
+   m_decryptor = (EVP_CIPHER_CTX *)malloc(sizeof(EVP_CIPHER_CTX));
+   EVP_CIPHER_CTX_init(m_encryptor);
+   EVP_CIPHER_CTX_init(m_decryptor);
+#endif
    m_encryptorLock = MutexCreate();
 #endif
 }
@@ -570,8 +579,15 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
 {
    free(m_sessionKey);
 #ifdef _WITH_ENCRYPTION
-   EVP_CIPHER_CTX_cleanup(&m_encryptor);
-   EVP_CIPHER_CTX_cleanup(&m_decryptor);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   EVP_CIPHER_CTX_free(m_encryptor);
+   EVP_CIPHER_CTX_free(m_decryptor);
+#else
+   EVP_CIPHER_CTX_cleanup(m_encryptor);
+   EVP_CIPHER_CTX_cleanup(m_decryptor);
+   free(m_encryptor);
+   free(m_decryptor);
+#endif
    MutexDestroy(m_encryptorLock);
 #endif
 }
@@ -650,9 +666,9 @@ bool NXCPEncryptionContext::initCipher(int cipher)
    if (s_ciphers[cipher] == NULL)
       return false;   // Unsupported cipher
 
-   if (!EVP_EncryptInit_ex(&m_encryptor, s_ciphers[cipher](), NULL, NULL, NULL))
+   if (!EVP_EncryptInit_ex(m_encryptor, s_ciphers[cipher](), NULL, NULL, NULL))
       return false;
-   if (!EVP_DecryptInit_ex(&m_decryptor, s_ciphers[cipher](), NULL, NULL, NULL))
+   if (!EVP_DecryptInit_ex(m_decryptor, s_ciphers[cipher](), NULL, NULL, NULL))
       return false;
 
    switch(cipher)
@@ -679,12 +695,12 @@ bool NXCPEncryptionContext::initCipher(int cipher)
          return false;
    }
 
-   if (!EVP_CIPHER_CTX_set_key_length(&m_encryptor, m_keyLength) || !EVP_CIPHER_CTX_set_key_length(&m_decryptor, m_keyLength))
+   if (!EVP_CIPHER_CTX_set_key_length(m_encryptor, m_keyLength) || !EVP_CIPHER_CTX_set_key_length(m_decryptor, m_keyLength))
       return false;
 
    // This check is needed because at least some OpenSSL versions return no error
    // from EVP_CIPHER_CTX_set_key_length but still not change key length
-   if ((EVP_CIPHER_CTX_key_length(&m_encryptor) != m_keyLength) || (EVP_CIPHER_CTX_key_length(&m_decryptor) != m_keyLength))
+   if ((EVP_CIPHER_CTX_key_length(m_encryptor) != m_keyLength) || (EVP_CIPHER_CTX_key_length(m_decryptor) != m_keyLength))
       return false;
 
    m_cipher = cipher;
@@ -761,7 +777,7 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 #ifdef _WITH_ENCRYPTION
    MutexLock(m_encryptorLock);
 
-   if (!EVP_EncryptInit_ex(&m_encryptor, NULL, NULL, m_sessionKey, m_iv))
+   if (!EVP_EncryptInit_ex(m_encryptor, NULL, NULL, m_sessionKey, m_iv))
    {
       MutexUnlock(m_encryptorLock);
       return NULL;
@@ -769,7 +785,7 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 
    UINT32 msgSize = ntohl(msg->size);
    NXCP_ENCRYPTED_MESSAGE *emsg = 
-      (NXCP_ENCRYPTED_MESSAGE *)malloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&m_encryptor)) + 8);
+      (NXCP_ENCRYPTED_MESSAGE *)malloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(m_encryptor)) + 8);
    emsg->code = htons(CMD_ENCRYPTED_MESSAGE);
    emsg->reserved = 0;
 
@@ -778,11 +794,11 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
    header.dwReserved = 0;
 
    int dataSize;
-   EVP_EncryptUpdate(&m_encryptor, emsg->data, &dataSize, (BYTE *)&header, NXCP_EH_ENCRYPTED_BYTES);
+   EVP_EncryptUpdate(m_encryptor, emsg->data, &dataSize, (BYTE *)&header, NXCP_EH_ENCRYPTED_BYTES);
    msgSize = dataSize;
-   EVP_EncryptUpdate(&m_encryptor, emsg->data + msgSize, &dataSize, (BYTE *)msg, ntohl(msg->size));
+   EVP_EncryptUpdate(m_encryptor, emsg->data + msgSize, &dataSize, (BYTE *)msg, ntohl(msg->size));
    msgSize += dataSize;
-   EVP_EncryptFinal_ex(&m_encryptor, emsg->data + msgSize, &dataSize);
+   EVP_EncryptFinal_ex(m_encryptor, emsg->data + msgSize, &dataSize);
    msgSize += dataSize + NXCP_EH_UNENCRYPTED_BYTES;
 
    MutexUnlock(m_encryptorLock);
@@ -810,14 +826,14 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer)
 {
 #ifdef _WITH_ENCRYPTION
-   if (!EVP_DecryptInit_ex(&m_decryptor, NULL, NULL, m_sessionKey, m_iv))
+   if (!EVP_DecryptInit_ex(m_decryptor, NULL, NULL, m_sessionKey, m_iv))
       return false;
 
    msg->size = ntohl(msg->size);
    int dataSize;
-   EVP_DecryptUpdate(&m_decryptor, decryptionBuffer, &dataSize, msg->data,
+   EVP_DecryptUpdate(m_decryptor, decryptionBuffer, &dataSize, msg->data,
                      msg->size - NXCP_EH_UNENCRYPTED_BYTES - msg->padding);
-   EVP_DecryptFinal(&m_decryptor, decryptionBuffer + dataSize, &dataSize);
+   EVP_DecryptFinal(m_decryptor, decryptionBuffer + dataSize, &dataSize);
 
    NXCP_MESSAGE *clearMsg = (NXCP_MESSAGE *)(decryptionBuffer + NXCP_EH_ENCRYPTED_BYTES);
    UINT32 msgSize = ntohl(clearMsg->size);

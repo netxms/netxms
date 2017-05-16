@@ -226,11 +226,22 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
                }
                else
                {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+                  char addrText[128];
+                  BIO_set_conn_hostname(out, addr.toStringA(addrText));
+#else		  
                   UINT32 addrV4 = htonl(addr.getAddressV4());
                   BIO_set_conn_ip(out, &addrV4);
+#endif
                }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	       char portText[32];
+	       snprintf(portText, 32, "%d", (int)nPort);
+               BIO_set_conn_port(out, portText);
+#else
                int intPort = nPort;
                BIO_set_conn_int_port(out, &intPort);
+#endif
                out = BIO_push(ssl_bio, out);
 
                if (BIO_do_connect(out) > 0)

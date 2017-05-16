@@ -28,7 +28,7 @@
  * Tunnel registration
  */
 static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(true);
-static Array s_unboundTunnels(16, 16, false);
+static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
 /**
@@ -114,9 +114,9 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
    s_tunnelListLock.lock();
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      if (((AgentTunnel *)s_unboundTunnels.get(i))->getId() == tunnelId)
+      if (s_unboundTunnels.get(i)->getId() == tunnelId)
       {
-         tunnel = (AgentTunnel *)s_unboundTunnels.get(i);
+         tunnel = s_unboundTunnels.get(i);
          tunnel->incRefCount();
          break;
       }
@@ -169,7 +169,7 @@ void GetAgentTunnels(NXCPMessage *msg)
 
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      ((AgentTunnel *)s_unboundTunnels.get(i))->fillMessage(msg, fieldId);
+      s_unboundTunnels.get(i)->fillMessage(msg, fieldId);
       fieldId += 64;
    }
 
@@ -211,7 +211,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("-----+--------------------------+--------------------------+------------------+------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      const AgentTunnel *t = (AgentTunnel *)s_unboundTunnels.get(i);
+      const AgentTunnel *t = s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
    }
@@ -1194,7 +1194,7 @@ void CloseAgentTunnels()
    }
    delete it;
    for(int i = 0; i < s_unboundTunnels.size(); i++)
-      ((AgentTunnel *)s_unboundTunnels.get(i))->shutdown();
+      s_unboundTunnels.get(i)->shutdown();
    s_tunnelListLock.unlock();
 
    bool wait = true;
