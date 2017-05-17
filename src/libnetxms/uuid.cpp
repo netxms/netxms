@@ -241,6 +241,27 @@ TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out)
    return out;
 }
 
+#ifdef UNICODE
+
+/**
+ * Convert packed UUID to string (non-UNICODE version)
+ */
+char LIBNETXMS_EXPORTABLE *_uuid_to_stringA(const uuid_t uu, char *out)
+{
+   struct __uuid uuid;
+
+   uuid_unpack(uu, &uuid);
+   snprintf(out, 64,
+      "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+      uuid.time_low, uuid.time_mid, uuid.time_hi_and_version,
+      uuid.clock_seq >> 8, uuid.clock_seq & 0xFF,
+      uuid.node[0], uuid.node[1], uuid.node[2],
+      uuid.node[3], uuid.node[4], uuid.node[5]);
+   return out;
+}
+
+#endif
+
 #ifndef _WIN32
 
 static int get_random_fd()

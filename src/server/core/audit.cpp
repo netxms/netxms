@@ -166,7 +166,21 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSucce
 }
 
 /**
- * Write audit record
+ * Write audit record with old and new values in JSON format
+ */
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                               const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                               json_t *oldValue, json_t *newValue,
+                                               const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLogWithJsonValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, format, args);
+   va_end(args);
+}
+
+/**
+ * Write audit record with old and new values
  */
 void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                                 const TCHAR *workstation, int sessionId, UINT32 objectId,
@@ -222,4 +236,27 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 		extText += (const TCHAR *)text;
 		SendSyslogRecord((const TCHAR *)extText);
 	}
+}
+
+/**
+ * Write audit record with old and new values
+ */
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                                    const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                                    json_t *oldValue, json_t *newValue,
+                                                    const TCHAR *format, va_list args)
+{
+   char *js1 = (oldValue != NULL) ? json_dumps(oldValue, 0) : strdup("");
+   char *js2 = (newValue != NULL) ? json_dumps(newValue, 0) : strdup("");
+#ifdef UNICODE
+   WCHAR *js1w = WideStringFromUTF8String(js1);
+   WCHAR *js2w = WideStringFromUTF8String(js2);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, format, args);
+   free(js1w);
+   free(js2w);
+#else
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1, js2, format, args);
+#endif
+   free(js1);
+   free(js2);
 }

@@ -56,13 +56,10 @@ endif
 if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
-
-if ZEROMQ_SUPPORT
 if USE_INTERNAL_JANSSON
 libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
 libnxcore_la_LIBADD += -ljansson
-endif
 endif
 
 EXTRA_DIST = \

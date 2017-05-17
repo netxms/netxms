@@ -24,6 +24,7 @@
 #define _nms_events_h_
 
 #include <nxevent.h>
+#include <jansson.h>
 
 
 //
@@ -60,6 +61,8 @@ public:
    UINT32 getFlags() const { return m_flags; }
    const TCHAR *getMessageTemplate() const { return m_messageTemplate; }
    const TCHAR *getDescription() const { return m_description; }
+
+   json_t *toJson() const;
 };
 
 /**

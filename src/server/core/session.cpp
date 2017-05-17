@@ -395,6 +395,17 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, U
 }
 
 /**
+ * Write audit log with old and new values for changed entity
+ */
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLogWithJsonValues2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, oldValue, newValue, format, args);
+   va_end(args);
+}
+
+/**
  * Check channel subscription
  */
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
@@ -1989,8 +2000,7 @@ void ClientSession::login(NXCPMessage *pRequest)
          msg.setField(VID_MESSAGE_OF_THE_DAY, buffer);
 
          debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
-			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
-            _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
+			writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
 
 			if (closeOtherSessions)
 			{
@@ -2001,12 +2011,12 @@ void ClientSession::login(NXCPMessage *pRequest)
       else
       {
          msg.setField(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
+			writeAuditLog(AUDIT_SECURITY, false, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_clientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
+				writeAuditLog(AUDIT_SECURITY, false, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
 			m_dwUserId = INVALID_INDEX;   // reset user ID to avoid incorrect count of logged in sessions for that user
@@ -2188,23 +2198,26 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
+   UINT32 eventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
+
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      // Check if event with specific code exists
-      UINT32 dwEventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
-		bool bEventExist = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), dwEventCode);
+		bool bEventExist = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), eventCode);
 
       // Check that we are not trying to create event below 100000
-      if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
+      if (bEventExist || (eventCode >= FIRST_USER_EVENT_ID))
       {
          // Prepare and execute SQL query
          TCHAR name[MAX_EVENT_NAME];
          pRequest->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
          if (IsValidObjectName(name, TRUE))
          {
+            EventTemplate *evt = FindEventTemplateByCode(eventCode);
+            json_t *oldValue = (evt != NULL) ? evt->toJson() : NULL;
+
             DB_STATEMENT hStmt;
             if (bEventExist)
             {
@@ -2222,7 +2235,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
                DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsInt32(VID_FLAGS));
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_MESSAGE), DB_BIND_DYNAMIC, MAX_EVENT_MSG_LENGTH - 1);
                DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pRequest->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, dwEventCode);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, eventCode);
                if (!bEventExist)
                {
                   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
@@ -2237,6 +2250,11 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
 					   nmsg.setCode(CMD_EVENT_DB_UPDATE);
 					   nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
 					   EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+
+					   evt = FindEventTemplateByCode(eventCode);
+					   json_t *newValue = (evt != NULL) ? evt->toJson() : NULL;
+					   writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, eventCode);
+					   json_decref(newValue);
                }
                else
                {
@@ -2248,6 +2266,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
             {
                msg.setField(VID_RCC, RCC_DB_FAILURE);
             }
+            json_decref(oldValue);
          }
          else
          {
@@ -2263,6 +2282,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify event template [%d]"), eventCode);
    }
 
    // Send response
@@ -2301,7 +2321,7 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
 
          msg.setField(VID_RCC, RCC_SUCCESS);
 
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Event template %d deleted"), dwEventCode);
+			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event template [%d] deleted"), dwEventCode);
       }
       else
       {
@@ -2312,6 +2332,7 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete event template [%d]"), dwEventCode);
    }
 
    // Send response

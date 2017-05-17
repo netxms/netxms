@@ -31,6 +31,11 @@ void LIBNETXMS_EXPORTABLE _uuid_generate(uuid_t out);
 bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu);
 int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu);
 TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out);
+#ifdef UNICODE
+char LIBNETXMS_EXPORTABLE *_uuid_to_stringA(const uuid_t uu, char *out);
+#else
+#define _uuid_to_stringA _uuid_to_string
+#endif
 
 #ifdef __cplusplus
 
@@ -53,6 +58,7 @@ public:
    bool isNull() const { return _uuid_is_null(m_value); }
    TCHAR *toString(TCHAR *buffer) const { return _uuid_to_string(m_value, buffer); }
    String toString() const { TCHAR buffer[64]; return String(_uuid_to_string(m_value, buffer)); }
+   char *toStringA(char *buffer) const { return _uuid_to_stringA(m_value, buffer); }
 
    /**
     * Generate new UUID

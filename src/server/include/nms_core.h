@@ -785,6 +785,7 @@ public:
 
    void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *format, ...);
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
 
    int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
@@ -1150,6 +1151,13 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(String &str);
 
+json_t *json_string_w(const WCHAR *s);
+#ifdef UNICODE
+#define json_string_t json_string_w
+#else
+#define json_string_t json_string
+#endif
+
 void InitAuditLog();
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
@@ -1161,10 +1169,18 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSucce
                                                const TCHAR *workstation, int sessionId, UINT32 objectId,
                                                const TCHAR *oldValue, const TCHAR *newValue,
                                                const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                                   const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                                   json_t *oldValue, json_t *newValue,
+                                                   const TCHAR *format, ...);
 void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                                 const TCHAR *workstation, int sessionId, UINT32 objectId,
                                                 const TCHAR *oldValue, const TCHAR *newValue,
                                                 const TCHAR *format, va_list args);
+void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                                    const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                                    json_t *oldValue, json_t *newValue,
+                                                    const TCHAR *format, va_list args);
 
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
 UINT32 ImportConfig(Config *config, UINT32 flags);
