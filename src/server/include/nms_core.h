@@ -208,14 +208,9 @@ typedef void * HSNMPSESSION;
 /**
  * Information categories for UPDATE_INFO structure
  */
-#define INFO_CAT_EVENT           1
 #define INFO_CAT_OBJECT_CHANGE   2
 #define INFO_CAT_ALARM           3
 #define INFO_CAT_ACTION          4
-#define INFO_CAT_SYSLOG_MSG      5
-#define INFO_CAT_SNMP_TRAP       6
-#define INFO_CAT_AUDIT_RECORD    7
-#define INFO_CAT_LIBRARY_IMAGE   8
 
 /**
  * Certificate types
@@ -441,9 +436,6 @@ private:
    THREAD m_hProcessingThread;
    THREAD m_hUpdateThread;
 	MUTEX m_mutexSocketWrite;
-   MUTEX m_mutexSendEvents;
-   MUTEX m_mutexSendSyslog;
-   MUTEX m_mutexSendTrapLog;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
@@ -512,9 +504,7 @@ private:
    DECLARE_THREAD_STARTER(queryL2Topology)
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
-   DECLARE_THREAD_STARTER(sendEventLog)
    DECLARE_THREAD_STARTER(sendMib)
-   DECLARE_THREAD_STARTER(sendSyslog)
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
    DECLARE_THREAD_STARTER(getRepositories)
    DECLARE_THREAD_STARTER(addRepository)
@@ -536,7 +526,6 @@ private:
    void login(NXCPMessage *pRequest);
    void sendAllObjects(NXCPMessage *pRequest);
    void sendSelectedObjects(NXCPMessage *pRequest);
-   void sendEventLog(NXCPMessage *pRequest);
    void getConfigurationVariables(UINT32 dwRqId);
    void getPublicConfigurationVariable(NXCPMessage *request);
    void setConfigurationVariable(NXCPMessage *pRequest);
@@ -634,7 +623,6 @@ private:
    void generateObjectToolId(UINT32 dwRqId);
    void execTableTool(NXCPMessage *pRequest);
    void changeSubscription(NXCPMessage *pRequest);
-   void sendSyslog(NXCPMessage *pRequest);
    void sendServerStats(UINT32 dwRqId);
    void sendScriptList(UINT32 dwRqId);
    void sendScript(NXCPMessage *pRequest);
@@ -643,7 +631,6 @@ private:
    void deleteScript(NXCPMessage *pRequest);
    void SendSessionList(UINT32 dwRqId);
    void KillSession(NXCPMessage *pRequest);
-   void SendTrapLog(NXCPMessage *pRequest);
    void StartSnmpWalk(NXCPMessage *pRequest);
    void resolveDCINames(NXCPMessage *pRequest);
    UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);

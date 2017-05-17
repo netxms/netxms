@@ -119,13 +119,8 @@ void InitAuditLog()
  */
 static void SendNewRecord(ClientSession *session, void *arg)
 {
-   if (!session->isAuthenticated() || !session->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
-      return;
-
-   UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-   pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
-   pUpdate->pData = new NXCPMessage((NXCPMessage *)arg);
-   session->queueUpdate(pUpdate);
+   if (session->isAuthenticated() && session->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
+      session->postMessage((NXCPMessage *)arg);
 }
 
 /**

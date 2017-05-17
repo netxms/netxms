@@ -34,7 +34,7 @@ public class NXCPCodes
 	public static final int CMD_MODIFY_OBJECT = 0x0008;
 	public static final int CMD_OBJECT_LIST_END = 0x0009;
 	public static final int CMD_OBJECT_UPDATE = 0x000A;
-	public static final int CMD_GET_EVENTS = 0x000B;
+	//unused: public static final int CMD_GET_EVENTS = 0x000B;
 	public static final int CMD_EVENTLOG_RECORDS = 0x000C;
 	public static final int CMD_GET_CONFIG_VARLIST = 0x000D;
 	public static final int CMD_SET_CONFIG_VARIABLE = 0x000E;
@@ -162,7 +162,7 @@ public class NXCPCodes
 	public static final int CMD_TABLE_DATA = 0x0088;
 	public static final int CMD_CANCEL_JOB = 0x0089;
 	public static final int CMD_CHANGE_SUBSCRIPTION = 0x008A;
-	public static final int CMD_GET_SYSLOG = 0x008B;
+	//unused: public static final int CMD_GET_SYSLOG = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS = 0x008C;
 	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
 	public static final int CMD_DEPLOY_AGENT_POLICY = 0x008E;
@@ -182,7 +182,7 @@ public class NXCPCodes
 	public static final int CMD_RENAME_SCRIPT = 0x009C;
 	public static final int CMD_GET_SESSION_LIST = 0x009D;
 	public static final int CMD_KILL_SESSION = 0x009E;
-	public static final int CMD_GET_TRAP_LOG = 0x009F;
+//unused:	public static final int CMD_GET_TRAP_LOG = 0x009F;
 	public static final int CMD_TRAP_LOG_RECORDS = 0x00A0;
 	public static final int CMD_START_SNMP_WALK = 0x00A1;
 	public static final int CMD_SNMP_WALK_DATA = 0x00A2;

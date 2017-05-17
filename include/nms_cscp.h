@@ -247,7 +247,7 @@ typedef struct
 #define CMD_MODIFY_OBJECT                 0x0008
 #define CMD_OBJECT_LIST_END               0x0009
 #define CMD_OBJECT_UPDATE                 0x000A
-#define CMD_GET_EVENTS                    0x000B
+//unused: #define CMD_GET_EVENTS                    0x000B
 #define CMD_EVENTLOG_RECORDS              0x000C
 #define CMD_GET_CONFIG_VARLIST            0x000D
 #define CMD_SET_CONFIG_VARIABLE           0x000E
@@ -375,7 +375,7 @@ typedef struct
 #define CMD_TABLE_DATA                    0x0088
 #define CMD_CANCEL_JOB                    0x0089
 #define CMD_CHANGE_SUBSCRIPTION           0x008A
-#define CMD_GET_SYSLOG                    0x008B
+//unused: #define CMD_GET_SYSLOG                    0x008B
 #define CMD_SYSLOG_RECORDS                0x008C
 #define CMD_JOB_CHANGE_NOTIFICATION       0x008D
 #define CMD_DEPLOY_AGENT_POLICY           0x008E
@@ -395,7 +395,7 @@ typedef struct
 #define CMD_RENAME_SCRIPT                 0x009C
 #define CMD_GET_SESSION_LIST              0x009D
 #define CMD_KILL_SESSION                  0x009E
-#define CMD_GET_TRAP_LOG                  0x009F
+//unused: #define CMD_GET_TRAP_LOG                  0x009F
 #define CMD_TRAP_LOG_RECORDS              0x00A0
 #define CMD_START_SNMP_WALK               0x00A1
 #define CMD_SNMP_WALK_DATA                0x00A2

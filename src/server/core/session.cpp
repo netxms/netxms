@@ -101,17 +101,6 @@ typedef struct
 } PROCTHREAD_START_DATA;
 
 /**
- *
- */
-struct LIBRARY_IMAGE_UPDATE_INFO
-{
-  uuid guid;
-  bool removed;
-
-  LIBRARY_IMAGE_UPDATE_INFO(const uuid& _guid, bool _removed) { guid = _guid; removed = _removed; }
-};
-
-/**
  * Callback to delete agent connections for loading files in destructor
  */
 static void DeleteCallback(NetObj* obj, void *data)
@@ -182,9 +171,7 @@ DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(queryL2Topology)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryServerLog)
-DEFINE_THREAD_STARTER(sendEventLog)
 DEFINE_THREAD_STARTER(sendMib)
-DEFINE_THREAD_STARTER(sendSyslog)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 DEFINE_THREAD_STARTER(getRepositories)
 DEFINE_THREAD_STARTER(addRepository)
@@ -249,9 +236,6 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hUpdateThread = INVALID_THREAD_HANDLE;
 	m_mutexSocketWrite = MutexCreate();
-   m_mutexSendEvents = MutexCreate();
-   m_mutexSendSyslog = MutexCreate();
-   m_mutexSendTrapLog = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
@@ -302,11 +286,8 @@ ClientSession::~ClientSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
-	safe_free(m_clientAddr);
+	free(m_clientAddr);
 	MutexDestroy(m_mutexSocketWrite);
-   MutexDestroy(m_mutexSendEvents);
-   MutexDestroy(m_mutexSendSyslog);
-   MutexDestroy(m_mutexSendTrapLog);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
@@ -667,32 +648,6 @@ void ClientSession::updateThread()
 
       switch(pUpdate->dwCategory)
       {
-         case INFO_CAT_EVENT:
-            MutexLock(m_mutexSendEvents);
-            sendMessage((NXCPMessage *)pUpdate->pData);
-            MutexUnlock(m_mutexSendEvents);
-            delete (NXCPMessage *)pUpdate->pData;
-            break;
-         case INFO_CAT_SYSLOG_MSG:
-            MutexLock(m_mutexSendSyslog);
-            msg.setCode(CMD_SYSLOG_RECORDS);
-            CreateMessageFromSyslogMsg(&msg, (NX_SYSLOG_RECORD *)pUpdate->pData);
-            sendMessage(&msg);
-            MutexUnlock(m_mutexSendSyslog);
-            free(pUpdate->pData);
-            break;
-         case INFO_CAT_SNMP_TRAP:
-            MutexLock(m_mutexSendTrapLog);
-            sendMessage((NXCPMessage *)pUpdate->pData);
-            MutexUnlock(m_mutexSendTrapLog);
-            delete (NXCPMessage *)pUpdate->pData;
-            break;
-         case INFO_CAT_AUDIT_RECORD:
-            MutexLock(m_mutexSendAuditLog);
-            sendMessage((NXCPMessage *)pUpdate->pData);
-            MutexUnlock(m_mutexSendAuditLog);
-            delete (NXCPMessage *)pUpdate->pData;
-            break;
          case INFO_CAT_OBJECT_CHANGE:
             MutexLock(m_mutexSendObjects);
             msg.setCode(CMD_OBJECT_UPDATE);
@@ -733,17 +688,6 @@ void ClientSession::updateThread()
             MutexUnlock(m_mutexSendActions);
             msg.deleteAllFields();
             free(pUpdate->pData);
-            break;
-         case INFO_CAT_LIBRARY_IMAGE:
-            {
-               LIBRARY_IMAGE_UPDATE_INFO *info = (LIBRARY_IMAGE_UPDATE_INFO *)pUpdate->pData;
-               msg.setCode(CMD_IMAGE_LIBRARY_UPDATE);
-               msg.setField(VID_GUID, info->guid);
-               msg.setField(VID_FLAGS, (UINT32)(info->removed ? 1 : 0));
-               sendMessage(&msg);
-               msg.deleteAllFields();
-               delete info;
-            }
             break;
          default:
             break;
@@ -799,9 +743,6 @@ void ClientSession::processingThread()
             break;
          case CMD_GET_SELECTED_OBJECTS:
             sendSelectedObjects(pMsg);
-            break;
-         case CMD_GET_EVENTS:
-            CALL_IN_NEW_THREAD(sendEventLog, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             getConfigurationVariables(pMsg->getId());
@@ -1123,9 +1064,6 @@ void ClientSession::processingThread()
          case CMD_CHANGE_SUBSCRIPTION:
             changeSubscription(pMsg);
             break;
-         case CMD_GET_SYSLOG:
-            CALL_IN_NEW_THREAD(sendSyslog, pMsg);
-            break;
          case CMD_GET_SERVER_STATS:
             sendServerStats(pMsg->getId());
             break;
@@ -1149,9 +1087,6 @@ void ClientSession::processingThread()
             break;
          case CMD_KILL_SESSION:
             KillSession(pMsg);
-            break;
-         case CMD_GET_TRAP_LOG:
-            SendTrapLog(pMsg);
             break;
          case CMD_START_SNMP_WALK:
             StartSnmpWalk(pMsg);
@@ -2505,120 +2440,6 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
 }
 
 /**
- * Send event log records to client
- */
-void ClientSession::sendEventLog(NXCPMessage *pRequest)
-{
-   NXCPMessage msg;
-   DB_RESULT hTempResult;
-   UINT32 dwRqId, dwMaxRecords, dwNumRows, dwId;
-   TCHAR szQuery[1024], szBuffer[1024];
-   WORD wRecOrder;
-
-   dwRqId = pRequest->getId();
-   dwMaxRecords = pRequest->getFieldAsUInt32(VID_MAX_RECORDS);
-   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
-
-   // Prepare confirmation message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   MutexLock(m_mutexSendEvents);
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   // Retrieve events from database
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-         dwNumRows = 0;
-         hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM event_log"));
-         if (hTempResult != NULL)
-         {
-            if (DBGetNumRows(hTempResult) > 0)
-            {
-               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-            }
-            DBFreeResult(hTempResult);
-         }
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message,user_tag FROM event_log ")
-                    _T("ORDER BY event_id LIMIT %u OFFSET %u"),
-                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
-         break;
-      case DB_SYNTAX_MSSQL:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT TOP %u event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message,user_tag FROM event_log ")
-                    _T("ORDER BY event_id DESC"), dwMaxRecords);
-         break;
-      case DB_SYNTAX_ORACLE:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message,user_tag FROM event_log ")
-                    _T("WHERE ROWNUM <= %u ORDER BY event_id DESC"), dwMaxRecords);
-         break;
-      case DB_SYNTAX_DB2:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message,user_tag FROM event_log ")
-                    _T("ORDER BY event_id DESC FETCH FIRST %u ROWS ONLY"), dwMaxRecords);
-         break;
-      default:
-         szQuery[0] = 0;
-         break;
-   }
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
-   if (hResult != NULL)
-   {
-      msg.setField(VID_RCC, RCC_SUCCESS);
-   	sendMessage(&msg);
-   	msg.deleteAllFields();
-	   msg.setCode(CMD_EVENTLOG_RECORDS);
-
-      for(dwId = VID_EVENTLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
-      {
-         if (dwNumRows == 10)
-         {
-            msg.setField(VID_NUM_RECORDS, dwNumRows);
-            msg.setField(VID_RECORDS_ORDER, wRecOrder);
-            sendMessage(&msg);
-            msg.deleteAllFields();
-            dwNumRows = 0;
-            dwId = VID_EVENTLOG_MSG_BASE;
-         }
-         msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
-         msg.setField(dwId++, DBGetFieldULong(hResult, 1));
-         msg.setField(dwId++, DBGetFieldULong(hResult, 2));
-         msg.setField(dwId++, DBGetFieldULong(hResult, 3));
-         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 4));
-         DBGetField(hResult, 5, szBuffer, 1024);
-         msg.setField(dwId++, szBuffer);
-         DBGetField(hResult, 6, szBuffer, 1024);
-         msg.setField(dwId++, szBuffer);
-         msg.setField(dwId++, (UINT32)0);	// Do not send parameters
-      }
-      DBFreeResult(hResult);
-
-      // Send remaining records with End-Of-Sequence notification
-      msg.setField(VID_NUM_RECORDS, dwNumRows);
-      msg.setField(VID_RECORDS_ORDER, wRecOrder);
-      msg.setEndOfSequence();
-      sendMessage(&msg);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_DB_FAILURE);
-   	sendMessage(&msg);
-	}
-
-   DBConnectionPoolReleaseConnection(hdb);
-   MutexUnlock(m_mutexSendEvents);
-}
-
-/**
  * Send all configuration variables to client
  */
 void ClientSession::getConfigurationVariables(UINT32 dwRqId)
@@ -2896,21 +2717,15 @@ void ClientSession::kill()
  */
 void ClientSession::onNewEvent(Event *pEvent)
 {
-   UPDATE_INFO *pUpdate;
-   NXCPMessage *msg;
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
    {
       NetObj *object = FindObjectById(pEvent->getSourceId());
-      //If can't find object - just send to all events, if object found send to thous who have rights
-      if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      // If can't find object - just send to all events, if object found send to thous who have rights
+      if ((object == NULL) || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-         pUpdate->dwCategory = INFO_CAT_EVENT;
-         msg = new NXCPMessage;
-         msg->setCode(CMD_EVENTLOG_RECORDS);
-         pEvent->prepareMessage(msg);
-         pUpdate->pData = msg;
-         m_pUpdateQueue->put(pUpdate);
+         NXCPMessage msg(CMD_EVENTLOG_RECORDS, 0);
+         pEvent->prepareMessage(&msg);
+         postMessage(&msg);
       }
    }
 }
@@ -8510,128 +8325,14 @@ void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
       NetObj *object = FindObjectById(pRec->dwSourceObject);
-      //If can't find object - just send to all events, if object found send to thous who have rights
+      // If can't find object - just send to all events, if object found send to thous who have rights
       if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-         pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
-         pUpdate->pData = nx_memdup(pRec, sizeof(NX_SYSLOG_RECORD));
-         m_pUpdateQueue->put(pUpdate);
+         NXCPMessage msg(CMD_SYSLOG_RECORDS, 0);
+         CreateMessageFromSyslogMsg(&msg, pRec);
+         postMessage(&msg);
       }
    }
-}
-
-/**
- * Get latest syslog records
- */
-void ClientSession::sendSyslog(NXCPMessage *pRequest)
-{
-   NXCPMessage msg;
-   UINT32 dwMaxRecords, dwNumRows, dwId;
-   DB_RESULT hTempResult;
-   TCHAR szQuery[1024], szBuffer[1024];
-   WORD wRecOrder;
-
-   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
-   dwMaxRecords = pRequest->getFieldAsUInt32(VID_MAX_RECORDS);
-
-   // Prepare confirmation message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   MutexLock(m_mutexSendSyslog);
-
-   // Retrieve events from database
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-         dwNumRows = 0;
-         hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM syslog"));
-         if (hTempResult != NULL)
-         {
-            if (DBGetNumRows(hTempResult) > 0)
-            {
-               dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-            }
-            DBFreeResult(hTempResult);
-         }
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("ORDER BY msg_id LIMIT %u OFFSET %u"),
-                    dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
-         break;
-      case DB_SYNTAX_MSSQL:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT TOP %d msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("ORDER BY msg_id DESC"), dwMaxRecords);
-         break;
-      case DB_SYNTAX_ORACLE:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("WHERE ROWNUM <= %u ORDER BY msg_id DESC"), dwMaxRecords);
-         break;
-      case DB_SYNTAX_DB2:
-         _sntprintf(szQuery, 1024,
-                    _T("SELECT msg_id,msg_timestamp,facility,severity,")
-                    _T("source_object_id,hostname,msg_tag,msg_text FROM syslog ")
-                    _T("ORDER BY msg_id DESC FETCH FIRST %u ROWS ONLY"), dwMaxRecords);
-         break;
-      default:
-         szQuery[0] = 0;
-         break;
-   }
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
-   if (hResult != NULL)
-   {
-		msg.setField(VID_RCC, RCC_SUCCESS);
-		sendMessage(&msg);
-		msg.deleteAllFields();
-		msg.setCode(CMD_SYSLOG_RECORDS);
-
-      // Send records, up to 10 per message
-      for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
-      {
-         if (dwNumRows == 10)
-         {
-            msg.setField(VID_NUM_RECORDS, dwNumRows);
-            msg.setField(VID_RECORDS_ORDER, wRecOrder);
-            sendMessage(&msg);
-            msg.deleteAllFields();
-            dwNumRows = 0;
-            dwId = VID_SYSLOG_MSG_BASE;
-         }
-         msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
-         msg.setField(dwId++, DBGetFieldULong(hResult, 1));
-         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 2));
-         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 3));
-         msg.setField(dwId++, DBGetFieldULong(hResult, 4));
-         msg.setField(dwId++, DBGetField(hResult, 5, szBuffer, 1024));
-         msg.setField(dwId++, DBGetField(hResult, 6, szBuffer, 1024));
-         msg.setField(dwId++, DBGetField(hResult, 7, szBuffer, 1024));
-      }
-      DBFreeResult(hResult);
-
-      // Send remaining records with End-Of-Sequence notification
-      msg.setField(VID_NUM_RECORDS, dwNumRows);
-      msg.setField(VID_RECORDS_ORDER, wRecOrder);
-      msg.setEndOfSequence();
-      sendMessage(&msg);
-   }
-   else
-   {
-		msg.setField(VID_RCC, RCC_DB_FAILURE);
-		sendMessage(&msg);
-	}
-
-   MutexUnlock(m_mutexSendSyslog);
-   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -8639,136 +8340,19 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
  */
 void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
 {
-   UPDATE_INFO *pUpdate;
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
    {
       NetObj *object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
-      //If can't find object - just send to all events, if object found send to thous who have rights
-      if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      // If can't find object - just send to all events, if object found send to thous who have rights
+      if ((object == NULL) || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-         pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
-         pUpdate->pData = new NXCPMessage(pMsg);
-         m_pUpdateQueue->put(pUpdate);
+         postMessage(pMsg);
       }
    }
 }
 
 /**
- * Send collected trap log
- */
-void ClientSession::SendTrapLog(NXCPMessage *pRequest)
-{
-   NXCPMessage msg;
-   TCHAR szBuffer[4096], szQuery[1024];
-   UINT32 dwId, dwNumRows, dwMaxRecords;
-   DB_RESULT hTempResult;
-   WORD wRecOrder;
-
-   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
-   dwMaxRecords = pRequest->getFieldAsUInt32(VID_MAX_RECORDS);
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   if (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG)
-   {
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&msg);
-      msg.deleteAllFields();
-      msg.setCode(CMD_TRAP_LOG_RECORDS);
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      MutexLock(m_mutexSendTrapLog);
-
-      // Retrieve trap log records from database
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-            dwNumRows = 0;
-            hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM snmp_trap_log"));
-            if (hTempResult != NULL)
-            {
-               if (DBGetNumRows(hTempResult) > 0)
-               {
-                  dwNumRows = DBGetFieldULong(hTempResult, 0, 0);
-               }
-               DBFreeResult(hTempResult);
-            }
-            _sntprintf(szQuery, 1024,
-                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
-                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
-                       _T("ORDER BY trap_id LIMIT %u OFFSET %u"),
-                       dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
-            break;
-         case DB_SYNTAX_MSSQL:
-            _sntprintf(szQuery, 1024,
-                       _T("SELECT TOP %u trap_id,trap_timestamp,ip_addr,object_id,")
-                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
-                       _T("ORDER BY trap_id DESC"), dwMaxRecords);
-            break;
-         case DB_SYNTAX_ORACLE:
-            _sntprintf(szQuery, 1024,
-                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
-                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
-                       _T("WHERE ROWNUM <= %u ORDER BY trap_id DESC"),
-                       dwMaxRecords);
-         case DB_SYNTAX_DB2:
-            _sntprintf(szQuery, 1024,
-                       _T("SELECT trap_id,trap_timestamp,ip_addr,object_id,")
-                       _T("trap_oid,trap_varlist FROM snmp_trap_log ")
-                       _T("ORDER BY trap_id DESC FETCH FIRST %u ROWS ONLY"),
-                       dwMaxRecords);
-            break;
-         default:
-            szQuery[0] = 0;
-            break;
-      }
-
-      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
-      if (hResult != NULL)
-      {
-         // Send events, one per message
-         for(dwId = VID_TRAP_LOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
-         {
-            if (dwNumRows == 10)
-            {
-               msg.setField(VID_NUM_RECORDS, dwNumRows);
-               msg.setField(VID_RECORDS_ORDER, wRecOrder);
-               sendMessage(&msg);
-               msg.deleteAllFields();
-               dwNumRows = 0;
-               dwId = VID_TRAP_LOG_MSG_BASE;
-            }
-            msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
-            msg.setField(dwId++, DBGetFieldULong(hResult, 1));
-            msg.setField(dwId++, DBGetFieldIPAddr(hResult, 2));
-            msg.setField(dwId++, DBGetFieldULong(hResult, 3));
-            msg.setField(dwId++, DBGetField(hResult, 4, szBuffer, 256));
-            msg.setField(dwId++, DBGetField(hResult, 5, szBuffer, 4096));
-         }
-         DBFreeResult(hResult);
-
-         // Send remaining records with End-Of-Sequence notification
-         msg.setField(VID_NUM_RECORDS, dwNumRows);
-         msg.setField(VID_RECORDS_ORDER, wRecOrder);
-         msg.setEndOfSequence();
-      }
-
-      MutexUnlock(m_mutexSendTrapLog);
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(&msg);
-}
-
-/**
- *SNMP walker thread's startup parameters
+ * SNMP walker thread's startup parameters
  */
 typedef struct
 {
@@ -12063,13 +11647,13 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
  */
 void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
 {
-  if (guid.isNull() || !isAuthenticated())
-     return;
+   if (guid.isNull() || !isAuthenticated())
+      return;
 
-   UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-   pUpdate->dwCategory = INFO_CAT_LIBRARY_IMAGE;
-   pUpdate->pData = new LIBRARY_IMAGE_UPDATE_INFO(guid, removed);
-   m_pUpdateQueue->put(pUpdate);
+   NXCPMessage msg(CMD_IMAGE_LIBRARY_UPDATE, 0);
+   msg.setField(VID_GUID, guid);
+   msg.setField(VID_FLAGS, (UINT32)(removed ? 1 : 0));
+   postMessage(&msg);
 }
 
 /**
