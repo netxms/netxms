@@ -384,6 +384,17 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 obje
 }
 
 /**
+ * Write audit log with old and new values for changed entity
+ */
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLogWithValues2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, oldValue, newValue, format, args);
+   va_end(args);
+}
+
+/**
  * Check channel subscription
  */
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
@@ -2708,23 +2719,21 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
  */
 void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_CONFIG_VALUE];
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   TCHAR name[MAX_OBJECT_NAME];
+   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
-   // Check user rights
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      pRequest->getFieldAsString(VID_NAME, szName, MAX_OBJECT_NAME);
-      pRequest->getFieldAsString(VID_VALUE, szValue, MAX_CONFIG_VALUE);
-      if (ConfigWriteStr(szName, szValue, true))
+      TCHAR oldValue[MAX_CONFIG_VALUE], newValue[MAX_CONFIG_VALUE];
+      pRequest->getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
+      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
+      if (ConfigWriteStr(name, newValue, true))
 		{
          msg.setField(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
-							  _T("Server configuration variable \"%s\" set to \"%s\""), szName, szValue);
+			writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
+							            _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
 		}
       else
 		{
@@ -2733,6 +2742,7 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
    }
    else
    {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -2745,21 +2755,17 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
  */
 void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   TCHAR name[MAX_OBJECT_NAME];
+   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
-   // Check user rights
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      TCHAR name[MAX_OBJECT_NAME];
-      pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       if (ConfigDelete(name))
 		{
          msg.setField(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Server configuration variable \"%s\" deleted"), name);
+			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Server configuration variable \"%s\" deleted"), name);
 		}
       else
 		{
@@ -2768,6 +2774,7 @@ void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
    }
    else
    {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on delete server configuration variable \"%s\""), name);
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -2780,29 +2787,28 @@ void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
  */
 void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   TCHAR name[MAX_OBJECT_NAME], *value;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
-	msg.setId(pRequest->getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
-
+   TCHAR name[MAX_OBJECT_NAME];
+   pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-      pRequest->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-		value = pRequest->getFieldAsString(VID_VALUE);
-		if (value != NULL)
+		TCHAR *newValue = pRequest->getFieldAsString(VID_VALUE);
+		if (newValue != NULL)
 		{
-			if (ConfigWriteCLOB(name, value, TRUE))
+		   TCHAR *oldValue = ConfigReadCLOB(name, _T(""));
+			if (ConfigWriteCLOB(name, newValue, TRUE))
 			{
 				msg.setField(VID_RCC, RCC_SUCCESS);
-				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
-								  _T("Server configuration variable \"%s\" set to \"%s\""), name, value);
-				free(value);
+				writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
+								            _T("Server configuration variable (long) \"%s\" changed"), name);
 			}
 			else
 			{
 				msg.setField(VID_RCC, RCC_DB_FAILURE);
 			}
+			free(oldValue);
+			free(newValue);
 		}
 		else
 		{
@@ -2811,6 +2817,7 @@ void ClientSession::setConfigCLOB(NXCPMessage *pRequest)
 	}
 	else
 	{
+	   writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
 		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
@@ -2860,7 +2867,7 @@ void ClientSession::kill()
 
    // We shutdown socket connection, which will cause
    // read thread to stop, and other threads will follow
-   shutdown(m_hSocket, 2);
+   shutdown(m_hSocket, SHUT_RDWR);
 }
 
 /**

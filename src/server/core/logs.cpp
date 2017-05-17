@@ -58,6 +58,8 @@ static NXCORE_LOG s_logs[] =
          { _T("session_id"), _T("Session"), LC_INTEGER },
 			{ _T("workstation"), _T("Workstation"), LC_TEXT },
 			{ _T("message"), _T("Message"), LC_TEXT },
+         { _T("old_value"), _T("Old value"), LC_TEXT },
+         { _T("new_value"), _T("New value"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},

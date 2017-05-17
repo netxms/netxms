@@ -117,17 +117,15 @@ void InitAuditLog()
 /**
  * Handler for EnumerateSessions()
  */
-static void SendNewRecord(ClientSession *pSession, void *pArg)
+static void SendNewRecord(ClientSession *session, void *arg)
 {
-   UPDATE_INFO *pUpdate;
+   if (!session->isAuthenticated() || !session->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
+      return;
 
-   if (pSession->isAuthenticated() && pSession->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
-	{
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
-      pUpdate->pData = new NXCPMessage((NXCPMessage *)pArg);
-      pSession->queueUpdate(pUpdate);
-	}
+   UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+   pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
+   pUpdate->pData = new NXCPMessage((NXCPMessage *)arg);
+   session->queueUpdate(pUpdate);
 }
 
 /**
@@ -139,7 +137,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32
 {
    va_list args;
    va_start(args, format);
-   WriteAuditLog2(subsys, isSuccess, userId, workstation, sessionId, objectId, format, args);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, NULL, NULL, format, args);
    va_end(args);
 }
 
@@ -150,11 +148,36 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT3
                                       const TCHAR *workstation, int sessionId, UINT32 objectId,
                                       const TCHAR *format, va_list args)
 {
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, NULL, NULL, format, args);
+}
+
+/**
+ * Write audit record with old and new values
+ */
+void NXCORE_EXPORTABLE WriteAuditLogWithValues(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                               const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                               const TCHAR *oldValue, const TCHAR *newValue,
+                                               const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, format, args);
+   va_end(args);
+}
+
+/**
+ * Write audit record
+ */
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                                const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                                const TCHAR *oldValue, const TCHAR *newValue,
+                                                const TCHAR *format, va_list args)
+{
 	String text;
 	text.appendFormattedStringV(format, args);
 
 	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16];
-   const TCHAR *values[9] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text };
+   const TCHAR *values[11] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text, oldValue, newValue };
    _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&m_recordId));
    _sntprintf(_time, 32, _T("%d"), (UINT32)time(NULL));
    _sntprintf(success, 2, _T("%d"), isSuccess);
@@ -162,8 +185,11 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT3
    _sntprintf(_sessionId, 16, _T("%d"), sessionId);
    _sntprintf(_objectId, 16, _T("%d"), objectId);
 
-   static int sqlTypes[9] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT};
-	QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
+   static int sqlTypes[11] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT };
+   if ((oldValue != NULL) && (newValue != NULL))
+      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message,old_value,new_value) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), 11, sqlTypes, values);
+   else
+      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
 
 	NXCPMessage msg;
 	msg.setCode(CMD_AUDIT_RECORD);

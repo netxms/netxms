@@ -1265,6 +1265,8 @@ CREATE TABLE audit_log
   session_id integer not null,
   object_id integer not null,
   message SQL_TEXT null,
+  old_value SQL_TEXT null,
+  new_value SQL_TEXT null,
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
