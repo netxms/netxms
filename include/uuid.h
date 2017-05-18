@@ -59,6 +59,7 @@ public:
    TCHAR *toString(TCHAR *buffer) const { return _uuid_to_string(m_value, buffer); }
    String toString() const { TCHAR buffer[64]; return String(_uuid_to_string(m_value, buffer)); }
    char *toStringA(char *buffer) const { return _uuid_to_stringA(m_value, buffer); }
+   json_t *toJson() const { char buffer[64]; return json_string(toStringA(buffer)); }
 
    /**
     * Generate new UUID

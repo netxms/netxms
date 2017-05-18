@@ -37,6 +37,7 @@
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+#include <jansson.h>
 
 #if HAVE_POLL_H
 #include <poll.h>
@@ -712,6 +713,8 @@ public:
    void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
+
+   json_t *toJson() const { json_t *a = json_array(); for(int i = 0; i < m_size; i++) json_array_append_new(a, json_integer(get(i))); return a; }
 };
 
 /**
@@ -1440,6 +1443,8 @@ public:
 #else
    char *toStringA(char *buffer) const { return toString(buffer); }
 #endif
+
+   json_t *toJson() const;
 
    BYTE *buildHashKey(BYTE *key) const;
 
@@ -2287,6 +2292,15 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
+#endif
+
+
+// JSON helpers
+json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
+#ifdef UNICODE
+#define json_string_t json_string_w
+#else
+#define json_string_t json_string
 #endif
 
 #endif

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2223,4 +2223,12 @@ NXSL_Value *NetObj::getCustomAttributesForNXSL() const
 NXSL_Value *NetObj::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this));
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *NetObj::toJson()
+{
+   return NULL;
 }

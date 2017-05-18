@@ -164,6 +164,24 @@ char *InetAddress::toStringA(char *buffer) const
 #endif
 
 /**
+ * Convert to JSON object
+ */
+json_t *InetAddress::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "family", json_integer(m_family));
+
+   char buffer[64];
+   if (m_family == AF_INET)
+      json_object_set_new(root, "address", json_string(IpToStrA(m_addr.v4, buffer)));
+   else if (m_family == AF_INET)
+      json_object_set_new(root, "address", json_string(Ip6ToStrA(m_addr.v6, buffer)));
+
+   json_object_set_new(root, "prefixLength", json_integer(m_maskBits));
+   return root;
+}
+
+/**
  * Build hash key. Supplied array must be at least 18 bytes long.
  */
 BYTE *InetAddress::buildHashKey(BYTE *key) const

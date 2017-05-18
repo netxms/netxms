@@ -64,8 +64,7 @@ json_t *EventTemplate::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "code", json_integer(m_code));
-   char guidText[64];
-   json_object_set_new(root, "guid", json_string(m_guid.toStringA(guidText)));
+   json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "severity", json_integer(m_severity));
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "message", json_string_t(m_messageTemplate));

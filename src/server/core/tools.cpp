@@ -471,14 +471,3 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
    currObj->decRefCount();
    return result;
 }
-
-/**
- * Create JSON string from wide character string
- */
-json_t *json_string_w(const WCHAR *s)
-{
-   char *us = UTF8StringFromWideString(s);
-   json_t *js = json_string(us);
-   free(us);
-   return js;
-}

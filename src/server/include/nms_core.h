@@ -1130,13 +1130,6 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(String &str);
 
-json_t *json_string_w(const WCHAR *s);
-#ifdef UNICODE
-#define json_string_t json_string_w
-#else
-#define json_string_t json_string
-#endif
-
 void InitAuditLog();
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                      const TCHAR *workstation, int sessionId, UINT32 objectId,

@@ -26,6 +26,7 @@
 #include <nms_agent.h>
 #include <netxms_maps.h>
 #include <geolocation.h>
+#include <jansson.h>
 #include "nxcore_jobs.h"
 #include "nms_topo.h"
 
@@ -683,6 +684,8 @@ public:
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
+
+   virtual json_t *toJson();
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
