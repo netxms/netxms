@@ -41,6 +41,8 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.Dashboard;
@@ -68,6 +70,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView"; //$NON-NLS-1$
 	
 	private NXCSession session;
+   private SessionListener clientListener;
 	private Dashboard dashboard;
 	private boolean readOnly = true;
 	private IntermediateSelectionProvider selectionProvider;
@@ -163,8 +166,38 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		activateContext();
 		createActions();
 		contributeToActionBars();
-	}
+		
+		clientListener = new SessionListener() {         
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED && dashboard.getObjectId() == n.getSubCode())
+            {
+               parentComposite.getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     rebuildDashboard(true);
+                  }
+               });
+            }
+         }
+      };
+      
+      session.addListener(clientListener);
+   }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if ((session != null) && (clientListener != null))
+         session.removeListener(clientListener);
+      super.dispose();
+   }
+   
 	/**
     * Activate context
     */
