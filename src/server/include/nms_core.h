@@ -206,11 +206,6 @@ typedef void * HSNMPSESSION;
 #define SESSION_STATE_PROCESSING 2
 
 /**
- * Information categories for UPDATE_INFO structure
- */
-#define INFO_CAT_OBJECT_CHANGE   2
-
-/**
  * Certificate types
  */
 enum CertificateType
@@ -418,9 +413,8 @@ class NXCORE_EXPORTABLE ClientSession
 {
 private:
    SOCKET m_hSocket;
-   Queue *m_pSendQueue;
-   Queue *m_pMessageQueue;
-   Queue *m_pUpdateQueue;
+   Queue *m_sendQueue;
+   Queue *m_requestQueue;
    int m_id;
    int m_state;
    WORD m_wCurrentCmd;
@@ -432,7 +426,6 @@ private:
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
-   THREAD m_hUpdateThread;
 	MUTEX m_mutexSocketWrite;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
@@ -467,7 +460,6 @@ private:
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL updateThreadStarter(void *);
    static void pollerThreadStarter(void *);
 
    DECLARE_THREAD_STARTER(cancelFileMonitoring)
@@ -512,7 +504,6 @@ private:
    void readThread();
    void writeThread();
    void processingThread();
-   void updateThread();
    void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
 
    void debugPrintf(int level, const TCHAR *format, ...);
@@ -755,6 +746,7 @@ private:
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
+   void sendObjectUpdate(NetObj *object);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -765,7 +757,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { if (!isTerminated()) m_pSendQueue->put(pMsg->createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0)); }
+   void postMessage(NXCPMessage *pMsg) { if (!isTerminated()) m_sendQueue->put(pMsg->createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0)); }
    bool sendMessage(NXCPMessage *pMsg);
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
@@ -814,7 +806,6 @@ public:
    void kill();
    void notify(UINT32 dwCode, UINT32 dwData = 0);
 
-	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->put(pUpdate); }
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);
