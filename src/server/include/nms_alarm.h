@@ -58,13 +58,14 @@ private:
    UINT32 m_commentCount;     // Number of comments added to alarm
    IntegerArray<UINT64> *m_relatedEvents;
    IntegerArray<UINT32> *m_alarmCategoryList;
+   UINT32 m_notificationCode; // notification code used when sending client notifications
 
    String categoryListToString();
 
 public:
    Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
-   Alarm(const Alarm *src, bool copyEvents);
+   Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode = 0);
    ~Alarm();
 
    UINT64 getSourceEventId() const { return m_sourceEventId; }
@@ -89,8 +90,9 @@ public:
    const TCHAR *getKey() const { return m_key; }
    const TCHAR *getHelpDeskRef() const { return m_helpDeskRef; }
    UINT32 getCommentCount() const { return m_commentCount; }
+   UINT32 getNotificationCode() const { return m_notificationCode; }
 
-   void fillMessage(NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg) const;
 
    void createInDatabase();
    void updateInDatabase();

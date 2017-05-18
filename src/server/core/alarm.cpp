@@ -82,6 +82,7 @@ Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, in
    nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    nx_strncpy(m_key, key, MAX_DB_STRING);
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
+   m_notificationCode = 0;
 }
 
 /**
@@ -109,6 +110,7 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    m_resolvedByUser = DBGetFieldULong(hResult, row, 17);
    m_ackTimeout = DBGetFieldULong(hResult, row, 18);
    m_dciId = DBGetFieldULong(hResult, row, 19);
+   m_notificationCode = 0;
 
    m_commentCount = GetCommentCount(hdb, m_alarmId);
 
@@ -145,7 +147,7 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
 /**
  * Copy constructor
  */
-Alarm::Alarm(const Alarm *src, bool copyEvents)
+Alarm::Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;
@@ -178,6 +180,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents)
       m_relatedEvents = NULL;
    }
    m_alarmCategoryList = new IntegerArray<UINT32>(src->m_alarmCategoryList);
+   m_notificationCode = notificationCode;
 }
 
 /**
@@ -360,7 +363,7 @@ void Alarm::updateInDatabase()
 /**
  * Fill NXCP message with alarm data
  */
-void Alarm::fillMessage(NXCPMessage *msg)
+void Alarm::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_ALARM_ID, m_alarmId);
    msg->setField(VID_ACK_BY_USER, m_ackByUser);
@@ -385,6 +388,8 @@ void Alarm::fillMessage(NXCPMessage *msg)
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_timeoutEvent);
    msg->setField(VID_NUM_COMMENTS, m_commentCount);
    msg->setField(VID_TIMESTAMP, (UINT32)((m_ackTimeout != 0) ? (m_ackTimeout - time(NULL)) : 0));
+   if (m_notificationCode != 0)
+      msg->setField(VID_NOTIFICATION_CODE, m_notificationCode);
 }
 
 /**

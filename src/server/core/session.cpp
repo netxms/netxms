@@ -667,16 +667,6 @@ void ClientSession::updateThread()
             msg.deleteAllFields();
             ((NetObj *)pUpdate->pData)->decRefCount();
             break;
-         case INFO_CAT_ALARM:
-            MutexLock(m_mutexSendAlarms);
-            msg.setCode(CMD_ALARM_UPDATE);
-            msg.setField(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            ((Alarm *)pUpdate->pData)->fillMessage(&msg);
-            sendMessage(&msg);
-            MutexUnlock(m_mutexSendAlarms);
-            msg.deleteAllFields();
-            delete (Alarm *)pUpdate->pData;
-            break;
          case INFO_CAT_ACTION:
             MutexLock(m_mutexSendActions);
             msg.setCode(CMD_ACTION_DB_UPDATE);
@@ -5410,22 +5400,32 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
 }
 
 /**
+ * Alarm update worker function (executed in thread pool)
+ */
+void ClientSession::alarmUpdateWorker(Alarm *alarm)
+{
+   NXCPMessage msg(CMD_ALARM_UPDATE, 0);
+   alarm->fillMessage(&msg);
+   MutexLock(m_mutexSendAlarms);
+   sendMessage(&msg);
+   MutexUnlock(m_mutexSendAlarms);
+   delete alarm;
+}
+
+/**
  * Process changes in alarms
  */
-void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
+void ClientSession::onAlarmUpdate(UINT32 code, const Alarm *alarm)
 {
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
       NetObj *object = FindObjectById(alarm->getSourceObject());
-      if (object != NULL)
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAccess(this))
-         {
-            UPDATE_INFO *pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-            pUpdate->dwCategory = INFO_CAT_ALARM;
-            pUpdate->dwCode = dwCode;
-            pUpdate->pData = new Alarm(alarm, false);
-            m_pUpdateQueue->put(pUpdate);
-         }
+      if ((object != NULL) &&
+          object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
+          alarm->checkCategoryAccess(this))
+      {
+         ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::alarmUpdateWorker, new Alarm(alarm, false, code));
+      }
    }
 }
 
