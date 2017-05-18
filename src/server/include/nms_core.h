@@ -209,7 +209,6 @@ typedef void * HSNMPSESSION;
  * Information categories for UPDATE_INFO structure
  */
 #define INFO_CAT_OBJECT_CHANGE   2
-#define INFO_CAT_ACTION          4
 
 /**
  * Certificate types
@@ -755,6 +754,7 @@ private:
    void registerServerCommand(CommandExec *command) { m_serverCommands->set(command->getStreamId(), command); }
 
    void alarmUpdateWorker(Alarm *alarm);
+   void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

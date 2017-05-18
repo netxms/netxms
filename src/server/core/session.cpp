@@ -667,18 +667,6 @@ void ClientSession::updateThread()
             msg.deleteAllFields();
             ((NetObj *)pUpdate->pData)->decRefCount();
             break;
-         case INFO_CAT_ACTION:
-            MutexLock(m_mutexSendActions);
-            msg.setCode(CMD_ACTION_DB_UPDATE);
-            msg.setField(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            msg.setField(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
-            if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
-               FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
-            sendMessage(&msg);
-            MutexUnlock(m_mutexSendActions);
-            msg.deleteAllFields();
-            free(pUpdate->pData);
-            break;
          default:
             break;
       }
@@ -6079,23 +6067,30 @@ void ClientSession::deleteAction(NXCPMessage *pRequest)
 }
 
 /**
+ * Send action configuration update message
+ */
+void ClientSession::sendActionDBUpdateMessage(NXCP_MESSAGE *msg)
+{
+   MutexLock(m_mutexSendActions);
+   sendRawMessage(msg);
+   MutexUnlock(m_mutexSendActions);
+   free(msg);
+}
+
+/**
  * Process changes in actions
  */
 void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
 {
-   UPDATE_INFO *pUpdate;
-
-   if (isAuthenticated())
+   if (isAuthenticated() && (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_ACTIONS) || checkSysAccessRights(SYSTEM_ACCESS_EPP)))
    {
-      if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) ||
-			 (m_dwSystemAccess & SYSTEM_ACCESS_EPP))
-      {
-         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-         pUpdate->dwCategory = INFO_CAT_ACTION;
-         pUpdate->dwCode = dwCode;
-         pUpdate->pData = nx_memdup(pAction, sizeof(NXC_ACTION));
-         m_pUpdateQueue->put(pUpdate);
-      }
+      NXCPMessage msg(CMD_ACTION_DB_UPDATE, 0);
+      msg.setField(VID_NOTIFICATION_CODE, dwCode);
+      msg.setField(VID_ACTION_ID, pAction->dwId);
+      if (dwCode != NX_NOTIFY_ACTION_DELETED)
+         FillActionInfoMessage(&msg, pAction);
+      ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
+               msg.createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
    }
 }
 
