@@ -132,7 +132,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 #endif
 			ifc = node->findInterfaceByName(ifName);	/* TODO: find by cached ifName value */
-			if ((ifc == NULL) && !_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
+			if ((ifc == NULL) && !_tcsncmp(node->getSNMPObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
 			{
 				// Hack for Extreme Networks switches
 				// Must be moved into driver

@@ -1904,7 +1904,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                        ((Node *)object)->isSNMPSupported(),
                        ((Node *)object)->isNativeAgent(),
                        ((Node *)object)->isLocalManagement(),
-                       ((Node *)object)->getObjectId());
+                       ((Node *)object)->getSNMPObjectId());
          break;
       case OBJECT_SUBNET:
          ConsolePrintf(pCtx, _T("   IP address: %s/%d\n"), ((Subnet *)object)->getIpAddress().toString(dd->buffer), ((Subnet *)object)->getIpAddress().getMaskBits());

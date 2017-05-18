@@ -48,7 +48,7 @@ Node::Node() : DataCollectionTarget()
    m_snmpVersion = SNMP_VERSION_1;
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
-   m_szObjectId[0] = 0;
+   m_snmpObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
@@ -71,8 +71,8 @@ Node::Node() : DataCollectionTarget()
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
-   m_szAgentVersion[0] = 0;
-   m_szPlatformName[0] = 0;
+   m_agentVersion[0] = 0;
+   m_platformName[0] = 0;
    m_sysDescription = NULL;
    m_sysName = NULL;
    m_sysContact = NULL;
@@ -149,7 +149,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
    addr.toString(m_name);    // Make default name from IP address
-   m_szObjectId[0] = 0;
+   m_snmpObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
@@ -172,8 +172,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
-   m_szAgentVersion[0] = 0;
-   m_szPlatformName[0] = 0;
+   m_agentVersion[0] = 0;
+   m_platformName[0] = 0;
    m_sysDescription = NULL;
    m_sysName = NULL;
    m_sysContact = NULL;
@@ -332,9 +332,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 5, m_szSharedSecret, MAX_SECRET_LENGTH);
    m_agentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
-   DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
-   DBGetField(hResult, 0, 9, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
-   DBGetField(hResult, 0, 10, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
+   DBGetField(hResult, 0, 8, m_snmpObjectId, MAX_OID_LEN * 4);
+   DBGetField(hResult, 0, 9, m_agentVersion, MAX_AGENT_VERSION_LEN);
+   DBGetField(hResult, 0, 10, m_platformName, MAX_PLATFORM_NAME_LEN);
    m_pollerNode = DBGetFieldULong(hResult, 0, 11);
    m_zoneId = DBGetFieldULong(hResult, 0, 12);
    m_agentProxy = DBGetFieldULong(hResult, 0, 13);
@@ -535,10 +535,10 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_agentPort);
    DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_agentAuthMethod);
    DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_szSharedSecret, DB_BIND_STATIC);
-   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szObjectId, DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_snmpObjectId, DB_BIND_STATIC);
    DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
-   DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_szAgentVersion, DB_BIND_STATIC);
-   DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_szPlatformName, DB_BIND_STATIC);
+   DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_agentVersion, DB_BIND_STATIC);
+   DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_platformName, DB_BIND_STATIC);
    DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_pollerNode);
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneId);
    DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
@@ -1391,7 +1391,7 @@ restart_agent_check:
                {
                   m_flags &= ~NF_IS_SNMP;
                   m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-                  m_szObjectId[0] = 0;
+                  m_snmpObjectId[0] = 0;
                   sendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isSNMP set to FALSE\r\n"));
                }
             }
@@ -1441,8 +1441,8 @@ restart_agent_check:
             {
                m_flags &= ~NF_IS_NATIVE_AGENT;
                m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
-               m_szPlatformName[0] = 0;
-               m_szAgentVersion[0] = 0;
+               m_platformName[0] = 0;
+               m_agentVersion[0] = 0;
                sendPollerMsg(dwRqId, POLLER_WARNING _T("Attribute isNetXMSAgent set to FALSE\r\n"));
             }
          }
@@ -2220,9 +2220,9 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
                      NF_IS_8021X | NF_IS_STP | NF_HAS_ENTITY_MIB | NF_HAS_IFXTABLE |
                      NF_HAS_WINPDH);
       m_dwDynamicFlags &= ~NDF_CONFIGURATION_POLL_PASSED;
-      m_szObjectId[0] = 0;
-      m_szPlatformName[0] = 0;
-      m_szAgentVersion[0] = 0;
+      m_snmpObjectId[0] = 0;
+      m_platformName[0] = 0;
+      m_agentVersion[0] = 0;
       safe_free_and_null(m_sysDescription);
       safe_free_and_null(m_sysName);
       safe_free_and_null(m_sysContact);
@@ -2512,11 +2512,11 @@ bool Node::confPollAgent(UINT32 dwRqId)
       if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, buffer) == ERR_SUCCESS)
       {
          lockProperties();
-         if (_tcscmp(m_szAgentVersion, buffer))
+         if (_tcscmp(m_agentVersion, buffer))
          {
-            _tcscpy(m_szAgentVersion, buffer);
+            _tcscpy(m_agentVersion, buffer);
             hasChanges = true;
-            sendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
+            sendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_agentVersion);
          }
          unlockProperties();
       }
@@ -2524,11 +2524,11 @@ bool Node::confPollAgent(UINT32 dwRqId)
       if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, buffer) == ERR_SUCCESS)
       {
          lockProperties();
-         if (_tcscmp(m_szPlatformName, buffer))
+         if (_tcscmp(m_platformName, buffer))
          {
-            _tcscpy(m_szPlatformName, buffer);
+            _tcscpy(m_platformName, buffer);
             hasChanges = true;
-            sendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
+            sendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_platformName);
          }
          unlockProperties();
       }
@@ -2601,7 +2601,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
       }
 
       // Get supported Windows Performance Counters
-      if (!_tcsncmp(m_szPlatformName, _T("windows-"), 8))
+      if (!_tcsncmp(m_platformName, _T("windows-"), 8))
       {
          sendPollerMsg(dwRqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
          ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn);
@@ -2700,9 +2700,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
       _tcscpy(szBuffer, _T(".0.0"));
    }
    lockProperties();
-   if (_tcscmp(m_szObjectId, szBuffer))
+   if (_tcscmp(m_snmpObjectId, szBuffer))
    {
-      nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+      nx_strncpy(m_snmpObjectId, szBuffer, MAX_OID_LEN * 4);
       hasChanges = true;
    }
    unlockProperties();
@@ -2736,13 +2736,13 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    unlockProperties();
 
    // Allow driver to gather additional info
-   m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
+   m_driver->analyzeDevice(pTransport, m_snmpObjectId, &m_customAttributes, &m_driverData);
    NDD_MODULE_LAYOUT layout;
    m_driver->getModuleLayout(pTransport, &m_customAttributes, m_driverData, 1, &layout); // TODO module set to 1
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
-      LookupDevicePortLayout(SNMP_ObjectId::parse(m_szObjectId), &layout);
+      LookupDevicePortLayout(SNMP_ObjectId::parse(m_snmpObjectId), &layout);
    }
    m_portRowCount = layout.rows;
    m_portNumberingScheme = layout.numberingScheme;
@@ -2999,9 +2999,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
       if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          lockProperties();
-         if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
+         if (_tcscmp(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
          {
-            nx_strncpy(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
+            nx_strncpy(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
             hasChanges = true;
          }
 
@@ -4811,11 +4811,11 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
    pMsg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
    pMsg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
-   pMsg->setField(VID_SNMP_OID, m_szObjectId);
+   pMsg->setField(VID_SNMP_OID, m_snmpObjectId);
    pMsg->setField(VID_SNMP_PORT, m_snmpPort);
    pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
-   pMsg->setField(VID_AGENT_VERSION, m_szAgentVersion);
-   pMsg->setField(VID_PLATFORM_NAME, m_szPlatformName);
+   pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
+   pMsg->setField(VID_PLATFORM_NAME, m_platformName);
    pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);

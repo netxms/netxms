@@ -482,7 +482,7 @@ private:
 protected:
    UINT32 m_id;
 	uuid m_guid;
-   UINT32 m_dwTimeStamp;       // Last change time stamp
+   time_t m_timestamp;       // Last change time stamp
    UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR *m_comments;      // User comments
@@ -578,7 +578,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    int getStatus() const { return m_status; }
    int getPropagatedStatus();
-   UINT32 getTimeStamp() const { return m_dwTimeStamp; }
+   time_t getTimeStamp() const { return m_timestamp; }
 	const uuid& getGuid() const { return m_guid; }
 	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
 
@@ -1419,9 +1419,9 @@ protected:
    UINT16 m_snmpPort;
 	UINT16 m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
-   TCHAR m_szObjectId[MAX_OID_LEN * 4];
-   TCHAR m_szAgentVersion[MAX_AGENT_VERSION_LEN];
-   TCHAR m_szPlatformName[MAX_PLATFORM_NAME_LEN];
+   TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
+   TCHAR m_snmpObjectId[MAX_OID_LEN * 4];
 	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
 	TCHAR *m_sysLocation;      // SNMP sysLocation
@@ -1598,12 +1598,11 @@ public:
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() const { return m_flags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
-	INT16 getSNMPVersion() const { return m_snmpVersion; }
-	UINT16 getSNMPPort() const { return m_snmpPort; }
-	const TCHAR *getSNMPObjectId() const { return m_szObjectId; }
-	const TCHAR *getAgentVersion() const { return m_szAgentVersion; }
-	const TCHAR *getPlatformName() const { return m_szPlatformName; }
-   const TCHAR *getObjectId() const { return m_szObjectId; }
+	const TCHAR *getAgentVersion() const { return m_agentVersion; }
+	const TCHAR *getPlatformName() const { return m_platformName; }
+   INT16 getSNMPVersion() const { return m_snmpVersion; }
+   UINT16 getSNMPPort() const { return m_snmpPort; }
+   const TCHAR *getSNMPObjectId() const { return m_snmpObjectId; }
 	const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
 	const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
    const TCHAR *getSysContact() const { return CHECK_NULL_EX(m_sysContact); }

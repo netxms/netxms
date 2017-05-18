@@ -151,7 +151,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 
 	for(int i = 0; i < s_numDrivers; i++)
 	{
-		int pri = s_drivers[i]->isPotentialDevice(node->getObjectId());
+		int pri = s_drivers[i]->isPotentialDevice(node->getSNMPObjectId());
 		if (pri > 0)
 		{
 			if (pri > 255)
@@ -169,7 +169,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 		qsort(selection, selected, sizeof(struct __selected_driver), CompareDrivers);
 		for(int i = 0 ; i < selected; i++)
 		{
-			if (selection[i].driver->isDeviceSupported(pTransport, node->getObjectId()))
+			if (selection[i].driver->isDeviceSupported(pTransport, node->getSNMPObjectId()))
 				return selection[i].driver;
 		}
 	}

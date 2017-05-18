@@ -75,7 +75,7 @@ NetObj::NetObj()
    m_fixedStatus = STATUS_WARNING;
    m_statusShift = 0;
    m_statusSingleThreshold = 75;
-   m_dwTimeStamp = 0;
+   m_timestamp = 0;
    for(i = 0; i < 4; i++)
    {
       m_statusTranslation[i] = i + 1;
@@ -241,7 +241,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				m_status = DBGetFieldLong(hResult, 0, 1);
 				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
 				m_inheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? true : false;
-				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
+				m_timestamp = (time_t)DBGetFieldULong(hResult, 0, 4);
 				m_statusCalcAlg = DBGetFieldLong(hResult, 0, 5);
 				m_statusPropAlg = DBGetFieldLong(hResult, 0, 6);
 				m_fixedStatus = DBGetFieldLong(hResult, 0, 7);
@@ -462,7 +462,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dwTimeStamp);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
@@ -1184,7 +1184,7 @@ void NetObj::setModified(bool notify)
       return;
 
    m_isModified = true;
-   m_dwTimeStamp = (UINT32)time(NULL);
+   m_timestamp = time(NULL);
 
    // Send event to all connected clients
    if (notify && !m_isHidden && !m_isSystem)
