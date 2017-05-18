@@ -2740,6 +2740,8 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
+         json_t *oldValue = object->toJson();
+
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
          if (pRequest->isFieldExist(VID_ACL_SIZE))
@@ -2784,20 +2786,17 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 
 			if (dwResult == RCC_SUCCESS)
 			{
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, dwObjectId,
-								  _T("Object %s modified from client"), object->getName());
+			   json_t *newValue = object->toJson();
+			   writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue,
+								            _T("Object %s modified from client"), object->getName());
+	         json_decref(newValue);
 			}
-			else
-			{
-				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, dwObjectId,
-								  _T("Failed to modify object from client - error %d"), dwResult);
-			}
+			json_decref(oldValue);
       }
       else
       {
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, dwObjectId,
-							  _T("Failed to modify object from client - access denied"), dwResult);
+			writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on object modification"));
       }
    }
    else

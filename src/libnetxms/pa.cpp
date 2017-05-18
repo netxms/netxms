@@ -50,8 +50,21 @@ PostalAddress::PostalAddress(const TCHAR *country, const TCHAR *city, const TCHA
  */
 PostalAddress::~PostalAddress()
 {
-   safe_free(m_country);
-   safe_free(m_city);
-   safe_free(m_streetAddress);
-   safe_free(m_postcode);
+   free(m_country);
+   free(m_city);
+   free(m_streetAddress);
+   free(m_postcode);
+}
+
+/**
+ * Serialize as JSON
+ */
+json_t *PostalAddress::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "country", json_string_t(m_country));
+   json_object_set_new(root, "city", json_string_t(m_city));
+   json_object_set_new(root, "streetAddress", json_string_t(m_streetAddress));
+   json_object_set_new(root, "postcode", json_string_t(m_postcode));
+   return root;
 }

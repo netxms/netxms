@@ -467,6 +467,8 @@ public:
    UINT32 getId() const { return m_id; }
    const TCHAR *getUrl() const { return m_url; }
    const TCHAR *getDescription() const { return m_description; }
+
+   json_t *toJson() const;
 };
 
 /**
@@ -519,8 +521,7 @@ protected:
    bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
-	UINT32 m_dwNumTrustedNodes;	// Trusted nodes
-	UINT32 *m_pdwTrustedNodes;
+   IntegerArray<UINT32> *m_trustedNodes;
 
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;

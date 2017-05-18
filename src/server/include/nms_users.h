@@ -380,6 +380,8 @@ public:
    void enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg);
 
    void fillMessage(NXCPMessage *pMsg);
+
+   json_t *toJson();
 };
 
 /**

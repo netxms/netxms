@@ -714,7 +714,7 @@ public:
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 
-   json_t *toJson() const { json_t *a = json_array(); for(int i = 0; i < m_size; i++) json_array_append_new(a, json_integer(get(i))); return a; }
+   json_t *toJson() const { json_t *a = json_array(); for(int i = 0; i < size(); i++) json_array_append_new(a, json_integer(get(i))); return a; }
 };
 
 /**
@@ -829,6 +829,8 @@ public:
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
+
+   json_t *toJson();
 };
 
 /**
@@ -1563,6 +1565,8 @@ public:
    const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
    const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
    const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
+
+   json_t *toJson() const;
 
    void setCountry(const TCHAR *country) { free(m_country); m_country = _tcsdup_ex(country); }
    void setCity(const TCHAR *city) { free(m_city); m_city = _tcsdup_ex(city); }
@@ -2302,6 +2306,19 @@ json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
 #else
 #define json_string_t json_string
 #endif
+
+json_t LIBNETXMS_EXPORTABLE *json_integer_array(const int *values, int size);
+
+/**
+ * Serialize ObjectArray as JSON
+ */
+template<typename T> json_t *json_object_array(ObjectArray<T> *a)
+{
+   json_t *root = json_array();
+   for(int i = 0; i < a->size(); i++)
+      json_array_append_new(root, a->get(i)->toJson());
+   return root;
+}
 
 #endif
 

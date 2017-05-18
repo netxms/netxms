@@ -32,3 +32,14 @@ json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s)
    free(us);
    return js;
 }
+
+/**
+ * Create JSON array from integer array
+ */
+json_t LIBNETXMS_EXPORTABLE *json_integer_array(const int *values, int size)
+{
+   json_t *a = json_array();
+   for(int i = 0; i < size; i++)
+      json_array_append_new(a, json_integer(values[i]));
+   return a;
+}

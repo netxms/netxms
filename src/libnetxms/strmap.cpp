@@ -189,3 +189,20 @@ void StringMap::loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
       setPreallocated(key, value);
    }
 }
+
+/**
+ * Serialize as JSON
+ */
+json_t *StringMap::toJson()
+{
+   json_t *root = json_array();
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      json_t *e = json_array();
+      json_array_append_new(e, json_string_t(m_ignoreCase ? entry->originalKey : entry->key));
+      json_array_append_new(e, json_string_t((TCHAR *)entry->value));
+      json_array_append_new(root, e);
+   }
+   return root;
+}

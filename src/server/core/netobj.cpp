@@ -67,8 +67,7 @@ NetObj::NetObj()
    m_parentList = new ObjectArray<NetObj>(4, 4, false);
    m_accessList = new AccessList();
    m_inheritAccessRights = true;
-	m_dwNumTrustedNodes = 0;
-	m_pdwTrustedNodes = NULL;
+	m_trustedNodes = NULL;
    m_pollRequestor = NULL;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
    m_statusPropAlg = SA_PROPAGATE_DEFAULT;
@@ -101,8 +100,8 @@ NetObj::~NetObj()
    delete m_childList;
    delete m_parentList;
    delete m_accessList;
-	safe_free(m_pdwTrustedNodes);
-   safe_free(m_comments);
+	delete m_trustedNodes;
+   free(m_comments);
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
@@ -1086,9 +1085,15 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
 	pMsg->setField(VID_IMAGE, m_image);
 	pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
-	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
-	if (m_dwNumTrustedNodes > 0)
-		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+	if ((m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
+	{
+	   pMsg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
+		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+	}
+	else
+	{
+	   pMsg->setField(VID_NUM_TRUSTED_NODES, (UINT32)0);
+	}
    pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
    m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
@@ -1250,9 +1255,11 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 	// Change trusted nodes list
    if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
-      m_dwNumTrustedNodes = pRequest->getFieldAsUInt32(VID_NUM_TRUSTED_NODES);
-		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
-		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+      if (m_trustedNodes == NULL)
+         m_trustedNodes = new IntegerArray<UINT32>();
+      else
+         m_trustedNodes->clear();
+		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
    }
 
    // Change custom attributes
@@ -1696,22 +1703,18 @@ void NetObj::commentsToMessage(NXCPMessage *pMsg)
  */
 bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 {
-	DB_RESULT hResult;
 	TCHAR query[256];
-	int i, count;
-
 	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_id);
-	hResult = DBSelect(hdb, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult != NULL)
 	{
-		count = DBGetNumRows(hResult);
+		int count = DBGetNumRows(hResult);
 		if (count > 0)
 		{
-			m_dwNumTrustedNodes = count;
-			m_pdwTrustedNodes = (UINT32 *)malloc(sizeof(UINT32) * count);
-			for(i = 0; i < count; i++)
+		   m_trustedNodes = new IntegerArray<UINT32>(count);
+			for(int i = 0; i < count; i++)
 			{
-				m_pdwTrustedNodes[i] = DBGetFieldULong(hResult, i, 0);
+				m_trustedNodes->add(DBGetFieldULong(hResult, i, 0));
 			}
 		}
 		DBFreeResult(hResult);
@@ -1724,24 +1727,26 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
  */
 bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-	UINT32 i;
-	bool rc = false;
-
-	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_id);
-	if (DBQuery(hdb, query))
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
+	if (success && (m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
 	{
-		for(i = 0; i < m_dwNumTrustedNodes; i++)
-		{
-			_sntprintf(query, 256, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (%d,%d)"),
-			           m_id, m_pdwTrustedNodes[i]);
-			if (!DBQuery(hdb, query))
-				break;
-		}
-		if (i == m_dwNumTrustedNodes)
-			rc = true;
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (%d,%d)"));
+	   if (hStmt != NULL)
+	   {
+	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_trustedNodes->size()) && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_trustedNodes->get(i));
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+	   }
+	   else
+	   {
+	      success = false;
+	   }
 	}
-	return rc;
+	return success;
 }
 
 /**
@@ -1750,27 +1755,12 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
  */
 bool NetObj::isTrustedNode(UINT32 id)
 {
-	bool rc;
+   if (!(g_flags & AF_CHECK_TRUSTED_NODES))
+      return true;
 
-	if (g_flags & AF_CHECK_TRUSTED_NODES)
-	{
-		UINT32 i;
-
-		lockProperties();
-		for(i = 0, rc = false; i < m_dwNumTrustedNodes; i++)
-		{
-			if (m_pdwTrustedNodes[i] == id)
-			{
-				rc = true;
-				break;
-			}
-		}
-		unlockProperties();
-	}
-	else
-	{
-		rc = true;
-	}
+   lockProperties();
+   bool rc = (m_trustedNodes != NULL) ? m_trustedNodes->contains(id) : false;
+   unlockProperties();
 	return rc;
 }
 
@@ -2230,5 +2220,50 @@ NXSL_Value *NetObj::createNXSLObject()
  */
 json_t *NetObj::toJson()
 {
-   return NULL;
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "timestamp", json_integer(m_timestamp));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "statusCalcAlg", json_integer(m_statusCalcAlg));
+   json_object_set_new(root, "statusPropAlg", json_integer(m_statusPropAlg));
+   json_object_set_new(root, "fixedStatus", json_integer(m_fixedStatus));
+   json_object_set_new(root, "statusShift", json_integer(m_statusShift));
+   json_object_set_new(root, "statusTranslation", json_integer_array(m_statusTranslation, 4));
+   json_object_set_new(root, "statusSingleThreshold", json_integer(m_statusSingleThreshold));
+   json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
+   json_object_set_new(root, "isModified", json_boolean(m_isModified));
+   json_object_set_new(root, "isDeleted", json_boolean(m_isDeleted));
+   json_object_set_new(root, "isHidden", json_boolean(m_isHidden));
+   json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
+   json_object_set_new(root, "maintenanceMode", json_boolean(m_maintenanceMode));
+   json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
+   json_object_set_new(root, "image", m_image.toJson());
+   json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
+   json_object_set_new(root, "postalAddress", m_postalAddress->toJson());
+   json_object_set_new(root, "submapId", json_integer(m_submapId));
+   json_object_set_new(root, "dashboards", m_dashboards->toJson());
+   json_object_set_new(root, "urls", json_object_array(m_urls));
+   json_object_set_new(root, "accessList", m_accessList->toJson());
+   json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
+   json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
+   json_object_set_new(root, "customAttributes", m_customAttributes.toJson());
+
+   json_t *children = json_array();
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+      json_array_append_new(children, json_integer(m_childList->get(i)->getId()));
+   unlockChildList();
+   json_object_set_new(root, "children", children);
+
+   json_t *parents = json_array();
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+      json_array_append_new(parents, json_integer(m_parentList->get(i)->getId()));
+   unlockParentList();
+   json_object_set_new(root, "parents", parents);
+
+   return root;
 }

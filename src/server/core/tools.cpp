@@ -402,6 +402,18 @@ void ObjectUrl::fillMessage(NXCPMessage *msg, UINT32 baseId)
 }
 
 /**
+ * Serialize object to JSON
+ */
+json_t *ObjectUrl::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "url", json_string_t(m_url));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   return root;
+}
+
+/**
  * Distance array sorting callback
  */
 int DistanceSortCallback(const void *obj1, const void *obj2)

@@ -83,6 +83,8 @@ public:
 
 	void fillMessage(NXCPMessage &msg) const;
 
+	json_t *toJson() const;
+
 	static GeoLocation parseAgentData(const TCHAR *data);
 };
 

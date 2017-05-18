@@ -169,11 +169,25 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
  */
 void GeoLocation::fillMessage(NXCPMessage &msg) const
 {
-	msg.setField(VID_GEOLOCATION_TYPE, (WORD)m_type);
+	msg.setField(VID_GEOLOCATION_TYPE, (UINT16)m_type);
 	msg.setField(VID_LATITUDE, m_lat);
 	msg.setField(VID_LONGITUDE, m_lon);
-	msg.setField(VID_ACCURACY, (WORD)m_accuracy);
-	msg.setField(VID_GEOLOCATION_TIMESTAMP, (QWORD)m_timestamp);
+	msg.setField(VID_ACCURACY, (UINT16)m_accuracy);
+	msg.setField(VID_GEOLOCATION_TIMESTAMP, (UINT64)m_timestamp);
+}
+
+/**
+ * Convert to JSON
+ */
+json_t *GeoLocation::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "latitude", json_real(m_lat));
+   json_object_set_new(root, "longitude", json_real(m_lon));
+   json_object_set_new(root, "accuracy", json_integer(m_accuracy));
+   json_object_set_new(root, "timestamp", json_integer(m_timestamp));
+   return root;
 }
 
 /**

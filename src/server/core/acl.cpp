@@ -146,6 +146,22 @@ void AccessList::fillMessage(NXCPMessage *pMsg)
 }
 
 /**
+ * Serialize as JSON
+ */
+json_t *AccessList::toJson()
+{
+   json_t *root = json_array();
+   for(int i = 0; i < m_size; i++)
+   {
+      json_t *e = json_object();
+      json_object_set_new(e, "userId", json_integer(m_elements[i].dwUserId));
+      json_object_set_new(e, "access", json_integer(m_elements[i].dwAccessRights));
+      json_array_append_new(root, e);
+   }
+   return root;
+}
+
+/**
  * Delete all elements
  */
 void AccessList::deleteAll()
