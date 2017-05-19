@@ -413,6 +413,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
 
 /******* end of UNICODE related conversion and helper functions *******/
 
+
 /**
  * Class for serial communications
  */
@@ -1349,6 +1350,38 @@ public:
 };
 
 /**
+ * Create JSON string from wide character string
+ */
+json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
+#ifdef UNICODE
+#define json_string_t json_string_w
+#else
+#define json_string_t json_string
+#endif
+
+/**
+ * Create JSON array from integer array
+ */
+template<typename T> json_t LIBNETXMS_EXPORTABLE *json_integer_array(const T *values, size_t size)
+{
+   json_t *a = json_array();
+   for(size_t i = 0; i < size; i++)
+      json_array_append_new(a, json_integer(values[i]));
+   return a;
+}
+
+/**
+ * Serialize ObjectArray as JSON
+ */
+template<typename T> json_t *json_object_array(ObjectArray<T> *a)
+{
+   json_t *root = json_array();
+   for(int i = 0; i < a->size(); i++)
+      json_array_append_new(root, a->get(i)->toJson());
+   return root;
+}
+
+/**
  * sockaddr buffer
  */
 union SockAddrBuffer
@@ -1497,6 +1530,8 @@ public:
    const ObjectArray<InetAddress> *getList() const { return m_list; }
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
+
+   json_t *toJson() const { return json_object_array(m_list); }
 };
 
 /**
@@ -2297,28 +2332,6 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif
-
-
-// JSON helpers
-json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
-#ifdef UNICODE
-#define json_string_t json_string_w
-#else
-#define json_string_t json_string
-#endif
-
-json_t LIBNETXMS_EXPORTABLE *json_integer_array(const int *values, int size);
-
-/**
- * Serialize ObjectArray as JSON
- */
-template<typename T> json_t *json_object_array(ObjectArray<T> *a)
-{
-   json_t *root = json_array();
-   for(int i = 0; i < a->size(); i++)
-      json_array_append_new(root, a->get(i)->toJson());
-   return root;
-}
 
 #endif
 

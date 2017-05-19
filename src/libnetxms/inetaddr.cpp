@@ -667,3 +667,4 @@ void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
       msg->setField(fieldId++, *m_list->get(i));
    }
 }
+

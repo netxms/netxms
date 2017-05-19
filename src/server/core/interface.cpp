@@ -1324,3 +1324,44 @@ NXSL_Value *Interface::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, this));
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Interface::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "index", json_integer(m_index));
+   char macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string(BinToStrA(m_macAddr, MAC_ADDR_LENGTH, macAddrText)));
+   json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "alias", json_string_t(m_alias));
+   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "mtu", json_integer(m_mtu));
+   json_object_set_new(root, "speed", json_integer(m_speed));
+   json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));
+   json_object_set_new(root, "slotNumber", json_integer(m_slotNumber));
+   json_object_set_new(root, "portNumber", json_integer(m_portNumber));
+   json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
+   json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
+   json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
+   json_object_set_new(root, "adminState", json_integer(m_adminState));
+   json_object_set_new(root, "operState", json_integer(m_operState));
+   json_object_set_new(root, "pendingOperState", json_integer(m_pendingOperState));
+   json_object_set_new(root, "confirmedOperState", json_integer(m_confirmedOperState));
+   json_object_set_new(root, "dot1xPaeAuthState", json_integer(m_dot1xPaeAuthState));
+   json_object_set_new(root, "dot1xBackendAuthState", json_integer(m_dot1xBackendAuthState));
+   json_object_set_new(root, "lastDownEventId", json_integer(m_lastDownEventId));
+   json_object_set_new(root, "pendingStatus", json_integer(m_pendingStatus));
+   json_object_set_new(root, "statusPollCount", json_integer(m_statusPollCount));
+   json_object_set_new(root, "operStatePollCount", json_integer(m_operStatePollCount));
+   json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
+   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "pingTime", json_integer(m_pingTime));
+   json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
+   json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));
+   json_object_set_new(root, "ifTableSuffix", json_integer_array(m_ifTableSuffix, m_ifTableSuffixLen));
+   return root;
+}

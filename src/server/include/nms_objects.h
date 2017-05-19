@@ -882,6 +882,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject();
 
+   virtual json_t *toJson();
+
    Node *getParentNode();
    UINT32 getParentNodeId();
 
