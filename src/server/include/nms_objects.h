@@ -774,6 +774,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual json_t *toJson();
+
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    UINT32 getFlags() const { return m_flags; }

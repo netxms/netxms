@@ -148,3 +148,16 @@ void DCTableColumn::createNXMPRecord(String &str, int id)
 								  (const TCHAR *)EscapeStringForXML2(CHECK_NULL_EX(m_displayName)),
                           (m_snmpOid != NULL) ? (const TCHAR *)m_snmpOid->toString() : _T(""), (int)m_flags);
 }
+
+/**
+ * Serialize to JSON
+ */
+json_t *DCTableColumn::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "displayName", json_string_t(m_displayName));
+   json_object_set_new(root, "snmpOid", (m_snmpOid != NULL) ? json_string_t(m_snmpOid->toString()) : json_null());
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   return root;
+}

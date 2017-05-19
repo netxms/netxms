@@ -881,20 +881,24 @@ public:
 #else
 	void addMBString(const char *value) { add(value); }
 #endif
+   void addAll(const StringList *src);
+   void merge(const StringList *src, bool matchCase);
+   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
+   void remove(int index);
 	void clear();
+
+   void sort(bool ascending = true, bool caseSensitive = false);
+
 	int size() const { return m_count; }
 	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
 	int indexOf(const TCHAR *value) const;
 	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
 	int indexOfIgnoreCase(const TCHAR *value) const;
    bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
-	void remove(int index);
-   void addAll(const StringList *src);
-   void merge(const StringList *src, bool matchCase);
    TCHAR *join(const TCHAR *separator);
-   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
-   void sort(bool ascending = true, bool caseSensitive = false);
+
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
+   json_t *toJson() const;
 };
 
 /**
@@ -1353,10 +1357,19 @@ public:
  * Create JSON string from wide character string
  */
 json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
+
+/**
+ * Create JSON string with null check
+ */
+inline json_t *json_string_a(const char *s)
+{
+   return (s != NULL) ? json_string(s) : json_null();
+}
+
 #ifdef UNICODE
 #define json_string_t json_string_w
 #else
-#define json_string_t json_string
+#define json_string_t json_string_a
 #endif
 
 /**
@@ -1376,8 +1389,15 @@ template<typename T> json_t LIBNETXMS_EXPORTABLE *json_integer_array(const T *va
 template<typename T> json_t *json_object_array(ObjectArray<T> *a)
 {
    json_t *root = json_array();
-   for(int i = 0; i < a->size(); i++)
-      json_array_append_new(root, a->get(i)->toJson());
+   if (a != NULL)
+   {
+      for(int i = 0; i < a->size(); i++)
+      {
+         T *e = a->get(i);
+         if (e != NULL)
+            json_array_append_new(root, e->toJson());
+      }
+   }
    return root;
 }
 

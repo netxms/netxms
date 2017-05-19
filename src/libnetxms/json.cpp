@@ -27,6 +27,8 @@
  */
 json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s)
 {
+   if (s == NULL)
+      return json_null();
    char *us = UTF8StringFromWideString(s);
    json_t *js = json_string(us);
    free(us);

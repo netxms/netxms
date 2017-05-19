@@ -1365,3 +1365,16 @@ void Template::updateFromImport(ConfigEntry *config)
 
    queueUpdate();
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Template::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "dcObjects", json_object_array(m_dcObjects));
+   json_object_set_new(root, "version", json_integer(m_dwVersion));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "applyFilter", json_string_t(m_applyFilterSource));
+   return root;
+}

@@ -822,6 +822,30 @@ void Threshold::createNXMPRecord(String &str, int index)
 }
 
 /**
+ * Serialize to JSON
+ */
+json_t *Threshold::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "targetId", json_integer(m_targetId));
+   json_object_set_new(root, "eventCode", json_integer(m_eventCode));
+   json_object_set_new(root, "rearmEventCode", json_integer(m_rearmEventCode));
+   json_object_set_new(root, "value", json_string_t(m_value));
+   json_object_set_new(root, "function", json_integer(m_function));
+   json_object_set_new(root, "operation", json_integer(m_operation));
+   json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "currentSeverity", json_integer(m_currentSeverity));
+   json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));
+   json_object_set_new(root, "isReached", json_boolean(m_isReached));
+   json_object_set_new(root, "numMatches", json_integer(m_numMatches));
+   json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
+   json_object_set_new(root, "lastEventTimestamp", json_integer(m_lastEventTimestamp));
+   return root;
+}
+
+/**
  * Make an association with DCI (used by management pack parser)
  */
 void Threshold::associate(DCItem *pItem)

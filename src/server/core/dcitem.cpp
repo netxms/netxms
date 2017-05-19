@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1772,4 +1772,24 @@ void DCItem::updateFromImport(ConfigEntry *config)
 DCObject *DCItem::clone()
 {
    return new DCItem(this);
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *DCItem::toJson()
+{
+   json_t *root = DCObject::toJson();
+   json_object_set_new(root, "deltaCalculation", json_integer(m_deltaCalculation));
+   json_object_set_new(root, "dataType", json_integer(m_dataType));
+   json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
+   json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
+   json_object_set_new(root, "prevRawValue", json_string_t(m_prevRawValue));
+   json_object_set_new(root, "prevValueTimeStamp", json_integer(m_tPrevValueTimeStamp));
+   json_object_set_new(root, "baseUnits", json_integer(m_nBaseUnits));
+   json_object_set_new(root, "multiplier", json_integer(m_nMultiplier));
+   json_object_set_new(root, "customUnitName", json_string_t(m_customUnitName));
+   json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
+   json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
+   return root;
 }

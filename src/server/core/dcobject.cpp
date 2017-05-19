@@ -1251,6 +1251,43 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
 }
 
 /**
+ * Serialize object to JSON
+ */
+json_t *DCObject::toJson()
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "systemTag", json_string_t(m_systemTag));
+   json_object_set_new(root, "lastPoll", json_integer(m_tLastPoll));
+   json_object_set_new(root, "pollingInterval", json_integer(m_iPollingInterval));
+   json_object_set_new(root, "retentionTime", json_integer(m_iRetentionTime));
+   json_object_set_new(root, "source", json_integer(m_source));
+   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "busy", json_integer(m_busy));
+   json_object_set_new(root, "scheduledForDeletion", json_integer(m_scheduledForDeletion));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "dwTemplateId", json_integer(m_dwTemplateId));
+   json_object_set_new(root, "dwTemplateItemId", json_integer(m_dwTemplateItemId));
+   json_object_set_new(root, "schedules", (m_schedules != NULL) ? m_schedules->toJson() : json_array());
+   json_object_set_new(root, "lastCheck", json_integer(m_tLastCheck));
+   json_object_set_new(root, "errorCount", json_integer(m_dwErrorCount));
+   json_object_set_new(root, "resourceId", json_integer(m_dwResourceId));
+   json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
+   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "perfTabSettings", json_string_t(m_pszPerfTabSettings));
+   json_object_set_new(root, "transformationScript", json_string_t(m_transformationScriptSource));
+   json_object_set_new(root, "comments", json_string_t(m_comments));
+   json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
+   json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
+   json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
+   json_object_set_new(root, "instance", json_string_t(m_instance));
+   return root;
+}
+
+/**
  * Data collection object info - constructor
  */
 DCObjectInfo::DCObjectInfo(DCObject *object)

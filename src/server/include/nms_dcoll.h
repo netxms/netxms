@@ -164,6 +164,7 @@ public:
    BOOL compare(Threshold *pThr);
 
    void createNXMPRecord(String &str, int index);
+   json_t *toJson() const;
 
 	void associate(DCItem *pItem);
 	void setFunction(int nFunc) { m_function = nFunc; }
@@ -304,6 +305,7 @@ public:
 
    virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
    virtual void createExportRecord(String &str) = 0;
+   virtual json_t *toJson();
 
    NXSL_Value *createNXSLObject();
 
@@ -419,6 +421,7 @@ public:
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);
+   virtual json_t *toJson();
 
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
@@ -459,6 +462,7 @@ public:
    bool isInstanceColumn() { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
 
    void createNXMPRecord(String &str, int id);
+   json_t *toJson() const;
 };
 
 /**
@@ -490,6 +494,8 @@ public:
    const TCHAR *getColumn() { return m_column; }
    int getOperation() { return m_operation; }
    const TCHAR *getValue() { return m_value.getString(); }
+
+   json_t *toJson() const;
 };
 
 /**
@@ -510,6 +516,7 @@ public:
    bool check(Table *value, int row);
 
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+   json_t *toJson() const;
 
    ObjectArray<DCTableCondition> *getConditions() { return m_conditions; }
 };
@@ -568,6 +575,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
    void createNXMPRecord(String &str, int id);
+   json_t *toJson() const;
 
    UINT32 getId() const { return m_id; }
    UINT32 getActivationEvent() const { return m_activationEvent; }
@@ -626,6 +634,7 @@ public:
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);
+   virtual json_t *toJson();
 
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);

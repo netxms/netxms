@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1137,4 +1137,15 @@ void DCTable::getEventList(IntegerArray<UINT32> *eventList)
 DCObject *DCTable::clone()
 {
    return new DCTable(this);
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *DCTable::toJson()
+{
+   json_t *root = DCObject::toJson();
+   json_object_set_new(root, "columns", json_object_array(m_columns));
+   json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
+   return root;
 }

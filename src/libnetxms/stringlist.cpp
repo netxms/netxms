@@ -387,3 +387,16 @@ void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
       msg->setField(fieldId++, CHECK_NULL_EX(m_values[i]));
    }
 }
+
+/**
+ * Serialize to JSON
+ */
+json_t *StringList::toJson() const
+{
+   json_t *root = json_array();
+   for(int i = 0; i < m_count; i++)
+   {
+      json_array_append_new(root, json_string_t(CHECK_NULL_EX(m_values[i])));
+   }
+   return root;
+}
