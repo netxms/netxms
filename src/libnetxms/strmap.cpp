@@ -193,7 +193,7 @@ void StringMap::loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
 /**
  * Serialize as JSON
  */
-json_t *StringMap::toJson()
+json_t *StringMap::toJson() const
 {
    json_t *root = json_array();
    StringMapEntry *entry, *tmp;

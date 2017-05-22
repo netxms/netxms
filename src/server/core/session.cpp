@@ -2873,7 +2873,7 @@ void ClientSession::createUser(NXCPMessage *pRequest)
          if (dwResult == RCC_SUCCESS)
          {
             msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
+            writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
       else
@@ -2916,7 +2916,7 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
          TCHAR name[MAX_DB_STRING];
          UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
          ResolveUserId(id, name, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, id,
+         writeAuditLog(AUDIT_SECURITY, true, 0,
             _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
       }
       msg.setField(VID_RCC, result);
@@ -2956,8 +2956,8 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
       {
          TCHAR name[MAX_DB_STRING];
          ResolveUserId(id, name, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, id,
-            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
+         writeAuditLog(AUDIT_SECURITY, true, 0,
+            _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
       }
       msg.setField(VID_RCC, result);
    }
@@ -3004,7 +3004,7 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
             msg.setField(VID_RCC, rcc);
             if(rcc == RCC_SUCCESS)
             {
-               WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId,
+               writeAuditLog(AUDIT_SECURITY, true, 0,
                              _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
             }
          }

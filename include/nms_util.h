@@ -831,7 +831,7 @@ public:
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 
-   json_t *toJson();
+   json_t *toJson() const;
 };
 
 /**
@@ -1364,6 +1364,19 @@ json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
 inline json_t *json_string_a(const char *s)
 {
    return (s != NULL) ? json_string(s) : json_null();
+}
+
+/**
+ * Create JSON string from wide character string
+ */
+inline json_t *json_string_w(const WCHAR *s)
+{
+   if (s == NULL)
+      return json_null();
+   char *us = UTF8StringFromWideString(s);
+   json_t *js = json_string(us);
+   free(us);
+   return js;
 }
 
 #ifdef UNICODE

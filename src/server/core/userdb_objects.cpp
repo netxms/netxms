@@ -362,6 +362,24 @@ void UserDatabaseObject::disable()
    SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
+/**
+ * Serialize object to JSON
+ */
+json_t *UserDatabaseObject::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "systemRights", json_integer(m_systemRights));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "attributes", m_attributes.toJson());
+   json_object_set_new(root, "ldapDn", json_string_t(m_ldapDn));
+   json_object_set_new(root, "ldapId", json_string_t(m_ldapId));
+   return root;
+}
+
 /*****************************************************************************
  **  User
  ****************************************************************************/
@@ -725,6 +743,26 @@ void User::setFullName(const TCHAR *fullName)
    }
 }
 
+/**
+ * Serialize object to JSON
+ */
+json_t *User::toJson() const
+{
+   json_t *root = UserDatabaseObject::toJson();
+   json_object_set_new(root, "fullName", json_string_t(m_fullName));
+   json_object_set_new(root, "graceLogins", json_integer(m_graceLogins));
+   json_object_set_new(root, "authMethod", json_integer(m_authMethod));
+   json_object_set_new(root, "certMappingMethod", json_integer(m_certMappingMethod));
+   json_object_set_new(root, "certMappingData", json_string_t(m_certMappingData));
+   json_object_set_new(root, "disabledUntil", json_integer(m_disabledUntil));
+   json_object_set_new(root, "lastPasswordChange", json_integer(m_lastPasswordChange));
+   json_object_set_new(root, "lastLogin", json_integer(m_lastLogin));
+   json_object_set_new(root, "minPasswordLength", json_integer(m_minPasswordLength));
+   json_object_set_new(root, "authFailures", json_integer(m_authFailures));
+   json_object_set_new(root, "xmppId", json_string_t(m_xmppId));
+   return root;
+}
+
 /*****************************************************************************
  **  Group
  ****************************************************************************/
@@ -1050,4 +1088,14 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 		}
 		free(members);
 	}
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Group::toJson() const
+{
+   json_t *root = UserDatabaseObject::toJson();
+   json_object_set_new(root, "members", json_integer_array(m_members, m_memberCount));
+   return root;
 }

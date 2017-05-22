@@ -206,7 +206,8 @@ public:
 
 	virtual void fillMessage(NXCPMessage *msg);
 	virtual void modifyFromMessage(NXCPMessage *msg);
-	void detachLdapUser();
+
+	virtual json_t *toJson() const;
 
 	UINT32 getId() const { return m_id; }
 	const TCHAR *getName() const { return m_name; }
@@ -234,8 +235,10 @@ public:
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
 	void setName(const TCHAR *name);
 	void setDescription(const TCHAR *description);
+
 	void setDn(const TCHAR *dn);
 	void setLdapId(const TCHAR *id);
+   void detachLdapUser();
 };
 
 /**
@@ -298,6 +301,8 @@ public:
 	virtual void fillMessage(NXCPMessage *msg);
 	virtual void modifyFromMessage(NXCPMessage *msg);
 
+   virtual json_t *toJson() const;
+
 	const TCHAR *getFullName() { return m_fullName; }
 	int getGraceLogins() { return m_graceLogins; }
 	int getAuthMethod() { return m_authMethod; }
@@ -342,6 +347,8 @@ public:
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+
+   virtual json_t *toJson() const;
 
 	void addUser(UINT32 userId);
 	void deleteUser(UINT32 userId);

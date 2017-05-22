@@ -2,7 +2,7 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
           cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp \
 	  dirw_unix.c geolocation.cpp getopt.c dload.cpp hash.cpp \
 	  hashmapbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
-	  inetaddr.cpp json.cpp log.cpp lz4.c main.cpp md5.cpp message.cpp \
+	  inetaddr.cpp log.cpp lz4.c main.cpp md5.cpp message.cpp \
 	  msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp pa.cpp parisc_atomic.cpp \
           qsort.c queue.cpp rwlock.cpp scandir.c serial.cpp sha1.cpp sha2.cpp \
           solaris9_atomic.c spoll.cpp streamcomp.cpp string.cpp \
