@@ -225,3 +225,19 @@ void SNMP_SecurityContext::recalculateKeys()
 		CalculateSHA1Hash(buffer, m_authoritativeEngine.getIdLen() + 40, m_privKey);
 	}
 }
+
+/**
+ * Serialize to JSON
+ */
+json_t *SNMP_SecurityContext::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "securityModel", json_integer(m_securityModel));
+   json_object_set_new(root, "authName", json_string_a(m_authName));
+   json_object_set_new(root, "authPassword", json_string_a(m_authPassword));
+   json_object_set_new(root, "privPassword", json_string_a(m_privPassword));
+   json_object_set_new(root, "contextName", json_string_a(m_contextName));
+   json_object_set_new(root, "authMethod", json_integer(m_authMethod));
+   json_object_set_new(root, "privMethod", json_integer(m_privMethod));
+   return root;
+}

@@ -182,3 +182,13 @@ bool AgentPolicyLogParser::createUninstallMessage(NXCPMessage *msg)
 {
 	return AgentPolicy::createUninstallMessage(msg);
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *AgentPolicyLogParser::toJson()
+{
+   json_t *root = AgentPolicy::toJson();
+   json_object_set_new(root, "fileContent", json_string_t(m_fileContent));
+   return root;
+}

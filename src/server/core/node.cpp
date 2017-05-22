@@ -7997,3 +7997,64 @@ void Node::setTunnelId(const uuid& tunnelId)
    TCHAR buffer[128];
    nxlog_debug(4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Node::toJson()
+{
+   json_t *root = DataCollectionTarget::toJson();
+   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   json_object_set_new(root, "primaryName", json_string_t(m_primaryName));
+   json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
+   json_object_set_new(root, "runtimeFlags", json_integer(m_dwDynamicFlags));
+   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "subType", json_string_t(m_subType));
+   json_object_set_new(root, "iPendingStatus", json_integer(m_iPendingStatus));
+   json_object_set_new(root, "iPollCount", json_integer(m_iPollCount));
+   json_object_set_new(root, "iRequiredPollCount", json_integer(m_iRequiredPollCount));
+   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "agentPort", json_integer(m_agentPort));
+   json_object_set_new(root, "agentAuthMethod", json_integer(m_agentAuthMethod));
+   json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));
+   json_object_set_new(root, "agentCompressionMode", json_integer(m_agentCompressionMode));
+   json_object_set_new(root, "szSharedSecret", json_string_t(m_szSharedSecret));
+   json_object_set_new(root, "iStatusPollType", json_integer(m_iStatusPollType));
+   json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
+   json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
+   json_object_set_new(root, "nUseIfXTable", json_integer(m_nUseIfXTable));
+   json_object_set_new(root, "snmpSecurity", (m_snmpSecurity != NULL) ? m_snmpSecurity->toJson() : json_object());
+   json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
+   json_object_set_new(root, "platformName", json_string_t(m_platformName));
+   json_object_set_new(root, "snmpObjectId", json_string_t(m_snmpObjectId));
+   json_object_set_new(root, "sysDescription", json_string_t(m_sysDescription));
+   json_object_set_new(root, "sysName", json_string_t(m_sysName));
+   json_object_set_new(root, "sysLocation", json_string_t(m_sysLocation));
+   json_object_set_new(root, "sysContact", json_string_t(m_sysContact));
+   json_object_set_new(root, "lldpNodeId", json_string_t(m_lldpNodeId));
+   json_object_set_new(root, "driverName", (m_driver != NULL) ? json_string_t(m_driver->getName()) : json_null());
+   json_object_set_new(root, "downSince", json_integer(m_downSince));
+   json_object_set_new(root, "bootTime", json_integer(m_bootTime));
+   json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
+   json_object_set_new(root, "agentProxy", json_integer(m_agentProxy));
+   json_object_set_new(root, "snmpProxy", json_integer(m_snmpProxy));
+   json_object_set_new(root, "icmpProxy", json_integer(m_icmpProxy));
+   json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
+   json_object_set_new(root, "adoptedApCount", json_integer(m_adoptedApCount));
+   json_object_set_new(root, "totalApCount", json_integer(m_totalApCount));
+   char baseBridgeAddrText[64];
+   json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
+   json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
+   json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
+   json_object_set_new(root, "rackId", json_integer(m_rackId));
+   json_object_set_new(root, "rackImage", m_rackImage.toJson());
+   json_object_set_new(root, "chassisId", json_integer(m_chassisId));
+   json_object_set_new(root, "syslogMessageCount", json_integer(m_syslogMessageCount));
+   json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));
+   json_object_set_new(root, "sshLogin", json_string_t(m_sshLogin));
+   json_object_set_new(root, "sshPassword", json_string_t(m_sshPassword));
+   json_object_set_new(root, "sshProxy", json_integer(m_sshProxy));
+   json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));
+   json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
+   return root;
+}

@@ -989,6 +989,8 @@ public:
 
    virtual int getObjectClass() const { return OBJECT_NETWORKSERVICE; }
 
+   virtual json_t *toJson();
+
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
@@ -1019,6 +1021,8 @@ public:
    virtual ~VPNConnector();
 
    virtual int getObjectClass() const { return OBJECT_VPNCONNECTOR; }
+
+   virtual json_t *toJson();
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1090,6 +1094,8 @@ public:
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
+   virtual json_t *toJson();
+
    UINT32 getListFromScript(const TCHAR *param, StringList **list);
    UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map);
 
@@ -1150,6 +1156,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject();
 
+   virtual json_t *toJson();
+
 	void updateSystemInfo(NXCPMessage *msg);
 	void updateStatus(NXCPMessage *msg);
 
@@ -1197,6 +1205,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
+
+   virtual json_t *toJson();
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
@@ -1251,6 +1261,8 @@ public:
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
    virtual NXSL_Value *createNXSLObject();
+
+   virtual json_t *toJson();
 
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
@@ -1322,6 +1334,8 @@ public:
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
    virtual NXSL_Value *createNXSLObject();
+
+   virtual json_t *toJson();
 
    UINT32 getControllerId() const { return m_controllerId; }
    UINT32 getRackId() const { return m_rackId; }
@@ -1577,6 +1591,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    virtual NXSL_Value *createNXSLObject();
+
+   virtual json_t *toJson();
 
 	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
@@ -1950,6 +1966,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual json_t *toJson();
+
    void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
 
 	virtual bool showThresholdSummary();
@@ -2044,6 +2062,8 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual json_t *toJson();
+
    virtual NXSL_Value *createNXSLObject();
 
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
@@ -2095,12 +2115,14 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual json_t *toJson();
 };
 
 /**
  * Zone object
  */
-class Zone : public NetObj
+class NXCORE_EXPORTABLE Zone : public NetObj
 {
 protected:
    UINT32 m_zoneId;
@@ -2126,6 +2148,8 @@ public:
 	virtual bool showThresholdSummary();
 
    virtual NXSL_Value *createNXSLObject();
+
+   virtual json_t *toJson();
 
    UINT32 getZoneId() const { return m_zoneId; }
 	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
@@ -2208,6 +2232,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual json_t *toJson();
+
    void lockForPoll();
    void doPoll(PollerInfo *poller);
    void check();
@@ -2246,6 +2272,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual json_t *toJson();
+
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
 
@@ -2275,6 +2303,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual json_t *toJson();
+
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
 };
@@ -2299,6 +2329,8 @@ class NXCORE_EXPORTABLE AgentPolicyLogParser : public AgentPolicy
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual json_t *toJson();
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -2410,6 +2442,8 @@ public:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+   virtual json_t *toJson();
+
    void updateContent();
 
    int getBackgroundColor() { return m_backgroundColor; }
@@ -2434,7 +2468,7 @@ public:
 /**
  * Dashboard element
  */
-class DashboardElement
+class NXCORE_EXPORTABLE DashboardElement
 {
 public:
 	int m_type;
@@ -2442,7 +2476,16 @@ public:
 	TCHAR *m_layout;
 
 	DashboardElement() { m_data = NULL; m_layout = NULL; }
-	~DashboardElement() { safe_free(m_data); safe_free(m_layout); }
+	~DashboardElement() { free(m_data); free(m_layout); }
+
+	json_t *toJson()
+	{
+	   json_t *root = json_object();
+	   json_object_set_new(root, "type", json_integer(m_type));
+	   json_object_set_new(root, "data", json_string_t(m_data));
+	   json_object_set_new(root, "layout", json_string_t(m_layout));
+	   return root;
+	}
 };
 
 /**
@@ -2469,6 +2512,8 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual json_t *toJson();
 
 	virtual bool showThresholdSummary();
 };

@@ -7,6 +7,12 @@ libnxsrv_la_LIBADD = \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../../libnetxms/libnetxms.la
 
+if USE_INTERNAL_JANSSON
+libnxsrv_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+libnxsrv_la_LIBADD += -ljansson
+endif
+
 messages.c: messages.h
 
 messages.h: messages.mc

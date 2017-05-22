@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-
 
 /**
  * Default constructor
@@ -239,4 +238,16 @@ UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 bool Dashboard::showThresholdSummary()
 {
 	return false;
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Dashboard::toJson()
+{
+   json_t *root = Container::toJson();
+   json_object_set_new(root, "numColumns", json_integer(m_numColumns));
+   json_object_set_new(root, "options", json_integer(m_options));
+   json_object_set_new(root, "elements", json_object_array(m_elements));
+   return root;
 }

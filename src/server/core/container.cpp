@@ -391,3 +391,14 @@ NXSL_Value *Container::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslContainerClass, this));
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Container::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "bindFilter", json_string_t(m_bindFilterSource));
+   return root;
+}

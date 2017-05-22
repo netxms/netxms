@@ -1194,3 +1194,14 @@ void DataCollectionTarget::updateContainerMembership()
    }
    delete containers;
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *DataCollectionTarget::toJson()
+{
+   json_t *root = Template::toJson();
+   json_object_set_new(root, "pingTime", json_integer(m_pingTime));
+   json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
+   return root;
+}

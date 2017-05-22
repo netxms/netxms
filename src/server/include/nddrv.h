@@ -116,7 +116,7 @@ typedef struct __ndd_module_layout
 /**
  * Radio interface information
  */
-struct RadioInterfaceInfo
+struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 {
 	int index;
 	TCHAR name[64];
@@ -124,6 +124,8 @@ struct RadioInterfaceInfo
    UINT32 channel;
    INT32 powerDBm;
    INT32 powerMW;
+
+   json_t *toJson() const;
 };
 
 /**

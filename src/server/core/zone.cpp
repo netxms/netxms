@@ -248,3 +248,14 @@ void Zone::dumpSubnetIndex(CONSOLE_CTX console)
 {
    DumpIndex(console, m_idxSubnetByAddr);
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Zone::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "proxyNodeId", json_integer(m_proxyNodeId));
+   return root;
+}

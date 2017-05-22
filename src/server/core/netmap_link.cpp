@@ -132,4 +132,19 @@ void NetworkMapLink::fillMessage(NXCPMessage *msg, UINT32 baseId)
    msg->setField(baseId + 7, m_flags);
 }
 
-
+/**
+ * Serialize to JSON
+ */
+json_t *NetworkMapLink::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "element1", json_integer(m_element1));
+   json_object_set_new(root, "element2", json_integer(m_element2));
+   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "connectorName1", json_string_t(m_connectorName1));
+   json_object_set_new(root, "connectorName2", json_string_t(m_connectorName2));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "config", json_string_t(m_config));
+   return root;
+}

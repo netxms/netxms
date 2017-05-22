@@ -139,3 +139,14 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    return Container::modifyFromMessageInternal(pRequest);
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Rack::toJson()
+{
+   json_t *root = Container::toJson();
+   json_object_set_new(root, "height", json_integer(m_height));
+   json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
+   return root;
+}

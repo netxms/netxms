@@ -559,3 +559,31 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
       unlockProperties();
    return nSize;
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *ConditionObject::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_t *inputs = json_array();
+   for(int i = 0; i < m_dciCount; i++)
+   {
+      json_t *dci = json_object();
+      json_object_set_new(dci, "id", json_integer(m_dciList[i].id));
+      json_object_set_new(dci, "nodeId", json_integer(m_dciList[i].nodeId));
+      json_object_set_new(dci, "function", json_integer(m_dciList[i].function));
+      json_object_set_new(dci, "polls", json_integer(m_dciList[i].polls));
+      json_array_append_new(inputs, dci);
+   }
+   json_object_set_new(root, "inputs", inputs);
+   json_object_set_new(root, "script", json_string_t(m_scriptSource));
+   json_object_set_new(root, "activationEventCode", json_integer(m_activationEventCode));
+   json_object_set_new(root, "deactivationEventCode", json_integer(m_deactivationEventCode));
+   json_object_set_new(root, "sourceObject", json_integer(m_sourceObject));
+   json_object_set_new(root, "activeStatus", json_integer(m_activeStatus));
+   json_object_set_new(root, "inactiveStatus", json_integer(m_inactiveStatus));
+   json_object_set_new(root, "isActive", json_boolean(m_isActive));
+   json_object_set_new(root, "lastPoll", json_integer(m_lastPoll));
+   return root;
+}

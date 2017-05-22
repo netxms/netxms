@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -295,4 +295,16 @@ void Subnet::prepareForDeletion()
 {
    PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isAd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits());
    NetObj::prepareForDeletion();
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Subnet::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));
+   return root;
 }

@@ -986,3 +986,28 @@ void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 
    NetObj::onObjectDelete(dwObjectId);
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *NetworkMap::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "mapType", json_integer(m_mapType));
+   json_object_set_new(root, "seedObjects", m_seedObjects->toJson());
+   json_object_set_new(root, "discoveryRadius", json_integer(m_discoveryRadius));
+   json_object_set_new(root, "layout", json_integer(m_layout));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "backgroundColor", json_integer(m_backgroundColor));
+   json_object_set_new(root, "defaultLinkColor", json_integer(m_defaultLinkColor));
+   json_object_set_new(root, "defaultLinkRouting", json_integer(m_defaultLinkRouting));
+   json_object_set_new(root, "objectDisplayMode", json_integer(m_objectDisplayMode));
+   json_object_set_new(root, "background", m_background.toJson());
+   json_object_set_new(root, "backgroundLatitude", json_real(m_backgroundLatitude));
+   json_object_set_new(root, "backgroundLongitude", json_real(m_backgroundLongitude));
+   json_object_set_new(root, "backgroundZoom", json_integer(m_backgroundZoom));
+   json_object_set_new(root, "elements", json_object_array(m_elements));
+   json_object_set_new(root, "links", json_object_array(m_links));
+   json_object_set_new(root, "filter", json_string_t(m_filterSource));
+   return root;
+}

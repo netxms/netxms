@@ -913,3 +913,29 @@ NXSL_Array *Cluster::getNodesForNXSL()
 
    return nodes;
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *Cluster::toJson()
+{
+   json_t *root = DataCollectionTarget::toJson();
+   json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
+   json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
+   json_object_set_new(root, "lastStatusPoll", json_integer(m_lastStatusPoll));
+   json_object_set_new(root, "lastConfigurationPoll", json_integer(m_lastConfigurationPoll));
+   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+
+   json_t *resources = json_array();
+   for(UINT32 i = 0; i < m_dwNumResources; i++)
+   {
+      json_t *r = json_object();
+      json_object_set_new(r, "id", json_integer(m_pResourceList[i].dwId));
+      json_object_set_new(r, "name", json_string_t(m_pResourceList[i].szName));
+      json_object_set_new(r, "address", m_pResourceList[i].ipAddr.toJson());
+      json_object_set_new(r, "currentOwner", json_integer(m_pResourceList[i].dwCurrOwner));
+      json_array_append_new(resources, r);
+   }
+   json_object_set_new(root, "resources", resources);
+   return root;
+}

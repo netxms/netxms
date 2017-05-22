@@ -321,3 +321,15 @@ InetAddress VPNConnector::getPeerGatewayAddr()
    }
    return InetAddress();
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *VPNConnector::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "peerGateway", json_integer(m_dwPeerGateway));
+   json_object_set_new(root, "localNetworks", json_object_array(m_localNetworks));
+   json_object_set_new(root, "remoteNetworks", json_object_array(m_remoteNetworks));
+   return root;
+}

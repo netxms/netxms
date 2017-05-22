@@ -13,6 +13,12 @@ if USE_INTERNAL_ZLIB
 libnxsnmp_la_CPPFLAGS += -I../../zlib
 libnxsnmp_la_LIBADD += ../../zlib/libnxzlib.la
 endif
+if USE_INTERNAL_JANSSON
+libnxsnmp_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+libnxsnmp_la_LIBADD += -ljansson
+endif
+
 
 EXTRA_DIST = \
 	Makefile.w32 \

@@ -344,3 +344,22 @@ NXSL_Value *MobileDevice::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslMobileDeviceClass, this));
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *MobileDevice::toJson()
+{
+   json_t *root = DataCollectionTarget::toJson();
+   json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
+   json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
+   json_object_set_new(root, "vendor", json_string_t(m_vendor));
+   json_object_set_new(root, "model", json_string_t(m_model));
+   json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
+   json_object_set_new(root, "osName", json_string_t(m_osName));
+   json_object_set_new(root, "osVersion", json_string_t(m_osVersion));
+   json_object_set_new(root, "userId", json_string_t(m_userId));
+   json_object_set_new(root, "batteryLevel", json_integer(m_batteryLevel));
+   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   return root;
+}

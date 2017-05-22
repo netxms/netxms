@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,22 @@
 **/
 
 #include "nxcore.h"
+
+/**
+ * Serialize radio interface information to JSON
+ */
+json_t *RadioInterfaceInfo::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "index", json_integer(index));
+   json_object_set_new(root, "name", json_string_t(name));
+   char macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string(BinToStrA(macAddr, MAC_ADDR_LENGTH, macAddrText)));
+   json_object_set_new(root, "channel", json_integer(channel));
+   json_object_set_new(root, "powerDBm", json_integer(powerDBm));
+   json_object_set_new(root, "powerMW", json_integer(powerMW));
+   return root;
+}
 
 /**
  * Default constructor
@@ -608,4 +624,24 @@ void AccessPoint::updatePingData()
       }
       m_pingLastTimeStamp = time(NULL);
    }
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *AccessPoint::toJson()
+{
+   json_t *root = DataCollectionTarget::toJson();
+   json_object_set_new(root, "index", json_integer(m_index));
+   json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
+   json_object_set_new(root, "nodeId", json_integer(m_nodeId));
+   char macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string_a(BinToStrA(m_macAddr, sizeof(m_macAddr), macAddrText)));
+   json_object_set_new(root, "vendor", json_string_t(m_vendor));
+   json_object_set_new(root, "model", json_string_t(m_model));
+   json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
+   json_object_set_new(root, "radioInterfaces", json_object_array(m_radioInterfaces));
+   json_object_set_new(root, "state", json_integer(m_state));
+   json_object_set_new(root, "prevState", json_integer(m_prevState));
+   return root;
 }

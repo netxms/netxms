@@ -240,3 +240,14 @@ bool AgentPolicy::createUninstallMessage(NXCPMessage *msg)
 	msg->setField(VID_GUID, m_guid);
 	return true;
 }
+
+/**
+ * Serialize object to JSON
+ */
+json_t *AgentPolicy::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "version", json_integer(m_version));
+   json_object_set_new(root, "policyType", json_integer(m_policyType));
+   return root;
+}

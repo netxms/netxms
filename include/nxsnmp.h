@@ -505,6 +505,8 @@ public:
 	BYTE *getAuthKeySHA1() { return m_authKeySHA1; }
 	BYTE *getPrivKey() { return m_privKey; }
 
+	json_t *toJson() const;
+
 	void setAuthName(const char *name);
 	void setCommunity(const char *community) { setAuthName(community); }
 	void setUser(const char *user) { setAuthName(user); }

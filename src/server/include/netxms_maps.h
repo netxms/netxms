@@ -152,12 +152,13 @@ public:
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+	virtual json_t *toJson() const;
 
-	UINT32 getId() { return m_id; }
-	LONG getType() { return m_type; }
-	LONG getPosX() { return m_posX; }
-	LONG getPosY() { return m_posY; }
-	UINT32 getFlags() { return m_flags; }
+	UINT32 getId() const { return m_id; }
+	LONG getType() const { return m_type; }
+	LONG getPosX() const { return m_posX; }
+	LONG getPosY() const { return m_posY; }
+	UINT32 getFlags() const { return m_flags; }
 
 	void setPosition(LONG x, LONG y);
 };
@@ -178,8 +179,9 @@ public:
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual json_t *toJson() const;
 
-	UINT32 getObjectId() { return m_objectId; }
+	UINT32 getObjectId() const { return m_objectId; }
 };
 
 /**
@@ -202,13 +204,14 @@ public:
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual json_t *toJson() const;
 
-	LONG getDecorationType() { return m_decorationType; }
-	UINT32 getColor() { return m_color; }
-	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
+	LONG getDecorationType() const { return m_decorationType; }
+	UINT32 getColor() const { return m_color; }
+	const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
 
-	LONG getWidth() { return m_width; }
-	LONG getHeight() { return m_height; }
+	LONG getWidth() const { return m_width; }
+	LONG getHeight() const { return m_height; }
 };
 
 /**
@@ -217,7 +220,7 @@ public:
 class NetworkMapDCIContainer : public NetworkMapElement
 {
 protected:
-	TCHAR* m_xmlDCIList;
+	TCHAR *m_xmlDCIList;
 
 public:
 	NetworkMapDCIContainer(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
@@ -227,8 +230,9 @@ public:
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual json_t *toJson() const;
 
-	TCHAR* getObjectDCIList() { return m_xmlDCIList; }
+	const TCHAR *getObjectDCIList() const { return m_xmlDCIList; }
 };
 
 /**
@@ -237,7 +241,7 @@ public:
 class NetworkMapDCIImage : public NetworkMapElement
 {
 protected:
-	TCHAR* m_config;
+	TCHAR *m_config;
 
 public:
 	NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
@@ -247,8 +251,9 @@ public:
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual json_t *toJson() const;
 
-	TCHAR* getObjectDCIList() { return m_config; }
+	TCHAR *getObjectDCIList() const { return m_config; }
 };
 
 /**
@@ -272,17 +277,18 @@ public:
 	virtual ~NetworkMapLink();
 
 	void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   json_t *toJson() const;
 
-	UINT32 getElement1() { return m_element1; }
-	UINT32 getElement2() { return m_element2; }
+	UINT32 getElement1() const { return m_element1; }
+	UINT32 getElement2() const { return m_element2; }
 
-	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
-	const TCHAR *getConnector1Name() { return CHECK_NULL_EX(m_connectorName1); }
-	const TCHAR *getConnector2Name() { return CHECK_NULL_EX(m_connectorName2); }
-	int getType() { return m_type; }
-	UINT32 getFlags() { return m_flags; }
-	const TCHAR *getConfig() { return CHECK_NULL_EX(m_config); }
-	bool checkFlagSet(UINT32 flag) { return (m_flags & flag) != 0; }
+	const TCHAR *getName() const { return CHECK_NULL_EX(m_name); }
+	const TCHAR *getConnector1Name() const { return CHECK_NULL_EX(m_connectorName1); }
+	const TCHAR *getConnector2Name() const { return CHECK_NULL_EX(m_connectorName2); }
+	int getType() const { return m_type; }
+	UINT32 getFlags() const { return m_flags; }
+	const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
+	bool checkFlagSet(UINT32 flag) const { return (m_flags & flag) != 0; }
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
