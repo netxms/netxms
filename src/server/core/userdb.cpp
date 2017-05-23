@@ -1052,7 +1052,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
 /**
  * Modify user database object
  */
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
 {
    UINT32 dwResult = RCC_INVALID_USER_ID;
 
@@ -1081,7 +1081,9 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 
       if (dwResult != RCC_INVALID_OBJECT_NAME)
       {
+         *oldData = object->toJson();
          object->modifyFromMessage(msg);
+         *newData = object->toJson();
          SendUserDBUpdate(USER_DB_MODIFY, id, object);
          dwResult = RCC_SUCCESS;
       }

@@ -2910,16 +2910,19 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
    }
    else
    {
-      UINT32 result = ModifyUserDatabaseObject(pRequest);
+      json_t *oldData = NULL, *newData = NULL;
+      UINT32 result = ModifyUserDatabaseObject(pRequest, &oldData, &newData);
       if (result == RCC_SUCCESS)
       {
          TCHAR name[MAX_DB_STRING];
          UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
          ResolveUserId(id, name, MAX_DB_STRING);
-         writeAuditLog(AUDIT_SECURITY, true, 0,
+         writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldData, newData,
             _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
       }
       msg.setField(VID_RCC, result);
+      json_decref(oldData);
+      json_decref(newData);
    }
 
    // Send response
