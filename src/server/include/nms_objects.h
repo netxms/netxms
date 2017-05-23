@@ -2519,6 +2519,22 @@ public:
 };
 
 /**
+ * Dashboard group object
+ */
+class NXCORE_EXPORTABLE DashboardGroup : public Container
+{
+public:
+   DashboardGroup() : Container() { }
+   DashboardGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   virtual ~DashboardGroup() { }
+
+   virtual int getObjectClass() const { return OBJECT_DASHBOARDGROUP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+   virtual bool showThresholdSummary();
+};
+
+/**
  * SLM check object
  */
 class NXCORE_EXPORTABLE SlmCheck : public NetObj

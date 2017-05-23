@@ -29,8 +29,15 @@
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
-               label="%action.label.CreateDashboard"
-               menubarPath="objectcreation">
+               label="&amp;Dashboard..."
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboardGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboardGroup#DashboardRoot"
+               label="Dashboard &amp;group..."
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
       <objectContribution
@@ -63,6 +70,25 @@
                id="org.netxms.ui.eclipse.dashboard.actions.ExportDashboard"
                label="%action.label.Export"
                menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.dashboard.actions.popup.object.DashboardGroup"
+            objectClass="org.netxms.client.objects.DashboardGroup">
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboardGroup"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboardGroup#DashboardGroup"
+               label="Dashboard &amp;group..."
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardGroup"
+               label="&amp;Dashboard..."
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
    </extension>

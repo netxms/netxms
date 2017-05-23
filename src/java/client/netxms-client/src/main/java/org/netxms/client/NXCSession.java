@@ -127,6 +127,7 @@ import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
@@ -1130,6 +1131,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_CONTAINER:
             object = new Container(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARDGROUP:
+            object = new DashboardGroup(msg, this);
             break;
          case AbstractObject.OBJECT_DASHBOARD:
             object = new Dashboard(msg, this);

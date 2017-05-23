@@ -37,7 +37,7 @@ static const TCHAR *s_className[]=
       _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
       _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
       _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint"),
-      _T("AgentPolicyLogParser"), _T("Chassis")
+      _T("AgentPolicyLogParser"), _T("Chassis"), _T("DashboardGroup")
    };
 
 /**

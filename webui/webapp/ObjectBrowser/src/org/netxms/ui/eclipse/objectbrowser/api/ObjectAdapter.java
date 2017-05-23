@@ -102,6 +102,8 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/netmap_root.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_DASHBOARD:
 				return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
+		        case AbstractObject.OBJECT_DASHBOARDGROUP:
+            			return Activator.getImageDescriptor("icons/dashboard_group.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_DASHBOARDROOT:
 				return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:

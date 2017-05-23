@@ -119,6 +119,16 @@ public class ObjectSelectionDialog extends Dialog
    }
 	
    /**
+    * Create filter for dashboard group selection.
+    * 
+    * @return Class filter for dashboard group selection
+    */
+   public static Set<Integer> createDashboardGroupSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createDashboardGroupSelectionFilter();
+   }
+   
+   /**
     * Create filter for dashboard selection.
     * 
     * @return Class filter for dashboard selection
@@ -209,7 +219,6 @@ public class ObjectSelectionDialog extends Dialog
       this.currentObject = new ArrayList<Object>();
    }
 
-	
 	/**
 	 * Create object selection dialog.
 	 * 

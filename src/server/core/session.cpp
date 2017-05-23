@@ -4959,6 +4959,11 @@ void ClientSession::createObject(NXCPMessage *request)
                            object = new Dashboard(objectName);
                            NetObjInsert(object, true, false);
                            break;
+                        case OBJECT_DASHBOARDGROUP:
+                           object = new DashboardGroup(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();
+                           break;
                         case OBJECT_INTERFACE:
                            {
                               InterfaceInfo ifInfo(request->getFieldAsUInt32(VID_IF_INDEX));

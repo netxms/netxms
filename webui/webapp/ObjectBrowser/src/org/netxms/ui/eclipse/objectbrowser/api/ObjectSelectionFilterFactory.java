@@ -153,6 +153,19 @@ public class ObjectSelectionFilterFactory
    }
 	
    /**
+    * Create filter for dashboard group selection.
+    * 
+    * @return Class filter for dashboard group selection
+    */
+   public Set<Integer> createDashboardGroupSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+      return classFilter;
+   }   
+   
+   /**
     * Create filter for dashboard selection.
     * 
     * @return Class filter for dashboard selection

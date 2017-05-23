@@ -79,6 +79,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
@@ -727,7 +728,7 @@ public class ObjectBrowser extends ViewPart
 				filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
 				break;
 			case DASHBOARDS:
-			   filter = ObjectSelectionDialog.createDashboardSelectionFilter();
+			   filter = ObjectSelectionDialog.createDashboardGroupSelectionFilter();
 			   break;
 			case MAPS:
 			   filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
@@ -888,8 +889,9 @@ public class ObjectBrowser extends ViewPart
 					         ((parentObject instanceof NetworkMapGroup) ||
                         (parentObject instanceof NetworkMapRoot)) ? APPROVE : REJECT;
 					case DASHBOARDS:
-					   return (currentObject instanceof Dashboard) &&
-                         ((parentObject instanceof Dashboard) ||
+                  return ((currentObject instanceof Dashboard) ||
+                        (currentObject instanceof DashboardGroup)) &&
+                         ((parentObject instanceof DashboardGroup) ||
                          (parentObject instanceof DashboardRoot)) ? APPROVE : REJECT;
 					case POLICIES:
 					   return ((currentObject instanceof AgentPolicy) ||

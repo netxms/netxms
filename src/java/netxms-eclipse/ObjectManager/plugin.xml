@@ -847,6 +847,9 @@
 	                           <instanceof
 	                                 value="org.netxms.client.objects.AgentPolicy">
 	                           </instanceof>
+                            <instanceof
+                                  value="org.netxms.client.objects.DashboardGroup">
+                            </instanceof>
 	                        </or>
 	                     </not>
 	                  </and>
@@ -895,6 +898,9 @@
 	                           <instanceof
 	                                 value="org.netxms.client.objects.AgentPolicy">
 	                           </instanceof>
+                            <instanceof
+                                  value="org.netxms.client.objects.DashboardGroup">
+                            </instanceof>
 	                        </or>
 	                     </not>
 	                  </and>
@@ -946,6 +952,9 @@
                                  <instanceof
                                        value="org.netxms.client.objects.AgentPolicy">
                                  </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
                               </or>
                            </not>
                         </and>
@@ -993,6 +1002,9 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.AgentPolicy">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardGroup">
                                  </instanceof>
                               </or>
                            </not>
@@ -1044,6 +1056,9 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.AgentPolicy">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardGroup">
                                  </instanceof>
                               </or>
                            </not>

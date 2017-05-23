@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -93,7 +94,7 @@ public class CreateDashboard implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof Dashboard) || (object instanceof DashboardRoot))
+			if ((object instanceof Dashboard) || (object instanceof DashboardRoot) || (object instanceof DashboardGroup))
 			{
 				parentId = ((AbstractObject)object).getObjectId();
 			}

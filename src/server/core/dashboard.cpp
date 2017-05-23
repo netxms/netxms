@@ -251,3 +251,19 @@ json_t *Dashboard::toJson()
    json_object_set_new(root, "elements", json_object_array(m_elements));
    return root;
 }
+
+/**
+ * Redefined status calculation for dashboard group
+ */
+void DashboardGroup::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_status = STATUS_NORMAL;
+}
+
+/**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool DashboardGroup::showThresholdSummary()
+{
+   return false;
+}

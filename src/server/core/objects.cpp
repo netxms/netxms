@@ -326,6 +326,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_DASHBOARDROOT:
+         case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
 			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_BUSINESSSERVICE:
@@ -486,6 +487,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_DASHBOARDROOT:
+      case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
 		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_BUSINESSSERVICE:
@@ -1737,6 +1739,30 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load dashboard group objects
+   DbgPrintf(2, _T("Loading dashboard groups..."));
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_DASHBOARDGROUP);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         DashboardGroup *group = new DashboardGroup;
+         if (group->loadFromDatabase(hdb, id))
+         {
+            NetObjInsert(group, false, false);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete group;
+            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
@@ -1991,8 +2017,10 @@ bool IsValidParentClass(int childClass, int parentClass)
             return true;
          break;
       case OBJECT_DASHBOARDROOT:
+      case OBJECT_DASHBOARDGROUP:
       case OBJECT_DASHBOARD:
-         if (childClass == OBJECT_DASHBOARD)
+         if ((childClass == OBJECT_DASHBOARDGROUP) ||
+             (childClass == OBJECT_DASHBOARD))
             return true;
          break;
       case OBJECT_POLICYROOT:
