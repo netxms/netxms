@@ -60,6 +60,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("message"), _T("Message"), LC_TEXT },
          { _T("old_value"), _T("Old value"), LC_TEXT },
          { _T("new_value"), _T("New value"), LC_TEXT },
+         { _T("value_diff"), _T("Changes"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},

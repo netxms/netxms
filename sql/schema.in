@@ -1267,6 +1267,7 @@ CREATE TABLE audit_log
   message SQL_TEXT null,
   old_value SQL_TEXT null,
   new_value SQL_TEXT null,
+  value_diff SQL_TEXT null,
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 

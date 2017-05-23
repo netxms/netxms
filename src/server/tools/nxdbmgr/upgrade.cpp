@@ -747,6 +747,19 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V452 to V453
+ */
+static BOOL H_UpgradeFromV452(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE audit_log ADD value_diff $SQL:TEXT\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetSchemaVersion(453));
+   return TRUE;
+}
+
+/**
  * Upgrade from V451 to V452
  */
 static BOOL H_UpgradeFromV451(int currVersion, int newVersion)
@@ -11753,6 +11766,7 @@ static struct
    { 449, 450, H_UpgradeFromV449 },
    { 450, 451, H_UpgradeFromV450 },
    { 451, 452, H_UpgradeFromV451 },
+   { 452, 453, H_UpgradeFromV452 },
    { 0, 0, NULL }
 };
 
