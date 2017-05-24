@@ -296,23 +296,18 @@ bool DCObject::matchClusterResource()
  */
 void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 {
-	String temp;
-	TCHAR *head, *rest, *macro;
 	int index = 0, index2;
-
-	temp = src;
+	String temp = src;
 	while((index = temp.find(_T("%{"), index)) != String::npos)
 	{
-		head = temp.substring(0, index);
+		String head = temp.substring(0, index);
 		index2 = temp.find(_T("}"), index);
 		if (index2 == String::npos)
-		{
-			free(head);
 			break;	// Missing closing }
-		}
-		rest = temp.substring(index2 + 1, -1);
-		macro = temp.substring(index + 2, index2 - index - 2);
-		StrStrip(macro);
+
+		String rest = temp.substring(index2 + 1, -1);
+		String macro = temp.substring(index + 2, index2 - index - 2);
+		macro.trim();
 
 		temp = head;
 		if (!_tcscmp(macro, _T("node_id")))
@@ -377,11 +372,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 	         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
 			}
 		}
-		temp += rest;
-
-		free(head);
-		free(rest);
-		free(macro);
+		temp.append(rest);
 	}
 	nx_strncpy(dst, temp, dstLen);
 }
