@@ -72,9 +72,9 @@ String::~String()
 /**
  * Operator =
  */
-const String& String::operator =(const TCHAR *str)
+String& String::operator =(const TCHAR *str)
 {
-   safe_free(m_buffer);
+   free(m_buffer);
    m_buffer = _tcsdup(CHECK_NULL_EX(str));
    m_length = _tcslen(CHECK_NULL_EX(str));
    m_allocated = m_length + 1;
@@ -84,11 +84,11 @@ const String& String::operator =(const TCHAR *str)
 /**
  * Operator =
  */
-const String& String::operator =(const String &src)
+String& String::operator =(const String &src)
 {
 	if (&src == this)
 		return *this;
-   safe_free(m_buffer);
+   free(m_buffer);
 	m_length = src.m_length;
    m_allocated = src.m_length + 1;
    m_allocationStep = src.m_allocationStep;
@@ -99,7 +99,7 @@ const String& String::operator =(const String &src)
 /**
  * Append given string to the end
  */
-const String& String::operator +=(const TCHAR *str)
+String& String::operator +=(const TCHAR *str)
 {
 	if (str != NULL)
 	{
@@ -118,7 +118,7 @@ const String& String::operator +=(const TCHAR *str)
 /**
  * Append given string to the end
  */
-const String& String::operator +=(const String &str)
+String& String::operator +=(const String &str)
 {
    if (str.m_length > 0)
    {
@@ -405,44 +405,63 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 /**
  * Extract substring into buffer
  */
-TCHAR *String::substring(int nStart, int nLen, TCHAR *pszBuffer)
+String String::substring(size_t start, int len) const
 {
-	int nCount;
-	TCHAR *pszOut;
+   String s;
+   if ((start < m_length) && (start >= 0))
+   {
+      int count;
+      if (len == -1)
+      {
+         count = (int)(m_length - start);
+      }
+      else
+      {
+         count = min(len, (int)(m_length - start));
+      }
+      s.append(&m_buffer[start], count);
+   }
+   return s;
+}
 
-	if ((nStart < (int)m_length) && (nStart >= 0))
+/**
+ * Extract substring into buffer
+ */
+TCHAR *String::substring(size_t start, int len, TCHAR *buffer) const
+{
+	TCHAR *s;
+	if ((start < m_length) && (start >= 0))
 	{
-		if (nLen == -1)
+	   int count;
+		if (len == -1)
 		{
-			nCount = (int)m_length - nStart;
+			count = (int)(m_length - start);
 		}
 		else
 		{
-			nCount = min(nLen, (int)m_length - nStart);
+			count = min(len, (int)(m_length - start));
 		}
-		pszOut = (pszBuffer != NULL) ? pszBuffer : (TCHAR *)malloc((nCount + 1) * sizeof(TCHAR));
-		memcpy(pszOut, &m_buffer[nStart], nCount * sizeof(TCHAR));
-		pszOut[nCount] = 0;
+		s = (buffer != NULL) ? buffer : (TCHAR *)malloc((count + 1) * sizeof(TCHAR));
+		memcpy(s, &m_buffer[start], count * sizeof(TCHAR));
+		s[count] = 0;
 	}
 	else
 	{
-		pszOut = (pszBuffer != NULL) ? pszBuffer : (TCHAR *)malloc(sizeof(TCHAR));
-		*pszOut = 0;
+		s = (buffer != NULL) ? buffer : (TCHAR *)malloc(sizeof(TCHAR));
+		*s = 0;
 	}
-	return pszOut;
+	return s;
 }
 
 /**
  * Find substring in a string
  */
-int String::find(const TCHAR *str, int nStart)
+int String::find(const TCHAR *str, size_t start) const
 {
-	TCHAR *p;
-
-	if ((nStart >= (int)m_length) || (nStart < 0))
+	if ((start >= m_length) || (start < 0))
 		return npos;
 
-	p = _tcsstr(&m_buffer[nStart], str);
+	TCHAR *p = _tcsstr(&m_buffer[start], str);
 	return (p != NULL) ? (int)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
 }
 
@@ -491,4 +510,14 @@ char *String::getUTF8String()
 #else
 	return UTF8StringFromMBString(m_buffer);
 #endif
+}
+
+/**
+ * Check that two strings are equal
+ */
+bool String::equals(const String& s) const
+{
+   if (m_length != s.m_length)
+      return false;
+   return !memcmp(m_buffer, s.m_buffer, m_length * sizeof(TCHAR));
 }

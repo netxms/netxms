@@ -173,6 +173,43 @@ void Array::replace(int index, void *element)
 }
 
 /**
+ * Insert element at given index. If index is within array bounds, elements starting at this position will be shifted to the right,
+ * otherwise array will be expanded as required. Other new positions created during expansion will be filled with NULL values.
+ */
+void Array::insert(int index, void *element)
+{
+   if (index < 0)
+      return;
+
+   if (index < m_size)
+   {
+      if (m_size == m_allocated)
+      {
+         m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
+         m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+      }
+      memmove(ADDR(index + 1), ADDR(index), m_elementSize * (m_size - index));
+      m_size++;
+   }
+   else
+   {
+      // Expand array
+      if (index >= m_allocated)
+      {
+         m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
+         m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+      }
+      memset(ADDR(m_size), 0, m_elementSize * (index - m_size));
+      m_size = index + 1;
+   }
+
+   if (m_storePointers)
+      m_data[index] = element;
+   else
+      memcpy(ADDR(index), element, m_elementSize);
+}
+
+/**
  * Remove element at given index
  */
 void Array::internalRemove(int index, bool allowDestruction)

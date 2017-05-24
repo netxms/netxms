@@ -482,6 +482,37 @@ public:
 };
 
 /**
+ * Pair class (stores pair of items)
+ */
+template <typename T1, typename T2> class Pair
+{
+private:
+   T1 value1;
+   T2 value2;
+
+public:
+   Pair() { }
+   Pair(const T1& v1, const T2& v2)
+   {
+      value1 = v1;
+      value2 = v2;
+   }
+   Pair(const Pair<T1, T2>& src)
+   {
+      value1 = src.value1;
+      value2 = src.value2;
+   }
+
+   Pair<T1, T2>& operator=(const Pair<T1, T2> &src)
+   {
+      return Pair<T1, T2>(src.value1, src.value2);
+   }
+
+   const T1& first() const { return value1; }
+   const T2& second() const { return value2; }
+};
+
+/**
  * Dynamic string class
  */
 class LIBNETXMS_EXPORTABLE String
@@ -506,11 +537,14 @@ public:
    size_t getAllocationStep() { return m_allocationStep; }
    void setAllocationStep(size_t step) { m_allocationStep = step; }
 
-   const String& operator =(const TCHAR *str);
-	const String& operator =(const String &src);
-   const String&  operator +=(const TCHAR *str);
-   const String&  operator +=(const String &str);
+   String& operator =(const TCHAR *str);
+	String& operator =(const String &src);
+   String& operator +=(const TCHAR *str);
+   String& operator +=(const String &str);
    operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
+
+   bool operator ==(const String &s) const { return equals(s); }
+   bool operator !=(const String &s) const { return !equals(s); }
 
 	char *getUTF8String();
 
@@ -535,10 +569,16 @@ public:
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
 
+	bool equals(const String& s) const;
+
 	wchar_t charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
 
-	TCHAR *substring(int nStart, int nLen, TCHAR *pszBuffer = NULL);
-	int find(const TCHAR *str, int nStart = 0);
+   String substring(size_t start, int len) const;
+	TCHAR *substring(size_t start, int len, TCHAR *buffer) const;
+	String left(int len) const { return substring(0, len); }
+   String right(int len) const { return substring(max(0, (int)m_length - len), len); }
+
+	int find(const TCHAR *str, size_t start = 0) const;
 
    void escapeCharacter(int ch, int esc);
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
@@ -610,6 +650,7 @@ public:
    int indexOf(void *element) const;
 	void set(int index, void *element);
 	void replace(int index, void *element);
+   void insert(int index, void *element);
 	void remove(int index) { internalRemove(index, true); }
    void remove(void *element) { internalRemove(indexOf(element), true); }
 	void unlink(int index) { internalRemove(index, false); }
@@ -659,6 +700,7 @@ public:
    bool contains(T *object) const { return indexOf(object) >= 0; }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
+   void insert(int index, T *object) { Array::insert(index, (void *)object); }
 	void remove(int index) { Array::remove(index); }
    void remove(T *object) { Array::remove((void *)object); }
 	void unlink(int index) { Array::unlink(index); }
