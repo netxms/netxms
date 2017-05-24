@@ -41,6 +41,7 @@ public class FileSystemReportManager implements ReportManager
 //        , ApplicationContextAware
 {
     private static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
+    private static final String USER_ID_KEY = "SYS_USER_ID";
     private static final String DEFINITIONS_DIRECTORY = "definitions";
     private static final String FILE_SUFIX_DEFINITION = ".jrxml";
     private static final String FILE_SUFIX_COMPILED = ".jasper";
@@ -321,6 +322,7 @@ public class FileSystemReportManager implements ReportManager
             localParameters.put(JRParameter.REPORT_RESOURCE_BUNDLE, translations);
             String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
             localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
+            localParameters.put(USER_ID_KEY, userId);
 
             localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[]{}, getClass().getClassLoader()));
 
