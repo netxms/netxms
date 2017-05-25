@@ -18,9 +18,15 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views.helpers;
 
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
@@ -28,8 +34,20 @@ import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 /**
  * Label provider for server configuration variables
  */
-public class ServerVariablesLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ServerVariablesLabelProvider extends LabelProvider implements ITableLabelProvider, ITableFontProvider
 {
+   private Font textFont;
+   
+   /**
+    * The constructor
+    */
+   public ServerVariablesLabelProvider()
+   {
+      FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
+      fd.setStyle(SWT.BOLD);
+      textFont = new Font(Display.getDefault(), fd);
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
@@ -45,6 +63,8 @@ public class ServerVariablesLabelProvider extends LabelProvider implements ITabl
 			      return ((ServerVariable)obj).getValueDescription();
 			   else
 			      return ((ServerVariable)obj).getValue();
+			case ServerConfigurationEditor.COLUMN_DEFAULT_VALUE:
+			      return ((ServerVariable)obj).getDefaultValue();
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
 				return ((ServerVariable)obj).isServerRestartNeeded() ? Messages.get().ServerVariablesLabelProvider_Yes : Messages.get().ServerVariablesLabelProvider_No;
          case ServerConfigurationEditor.COLUMN_DESCRIPTION:
@@ -70,4 +90,27 @@ public class ServerVariablesLabelProvider extends LabelProvider implements ITabl
 	{
 		return null;
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
+    */
+   @Override
+   public Font getFont(Object element, int columnIndex)
+   {
+      if (((ServerVariable)element).isDefault())
+      {
+         return null;
+      }
+      return textFont;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      textFont.dispose();
+      super.dispose();
+   }
 }

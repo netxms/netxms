@@ -96,12 +96,14 @@ public class ServerConfigurationEditor extends ViewPart
 	private Action actionExportAllToCsv;
 	private Action actionRefresh;
 	private Action actionShowFilter;
+   private Action actionDefaultValue;
 	
 	// Columns
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VALUE = 1;
-	public static final int COLUMN_NEED_RESTART = 2;
-	public static final int COLUMN_DESCRIPTION = 3;
+   public static final int COLUMN_DEFAULT_VALUE = 2;
+	public static final int COLUMN_NEED_RESTART = 3;
+	public static final int COLUMN_DESCRIPTION = 4;
 
 	@Override
    public void init(IViewSite site) throws PartInitException
@@ -139,8 +141,8 @@ public class ServerConfigurationEditor extends ViewPart
          }
       });
 	   
-		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, Messages.get().ServerConfigurationEditor_ColRestart, "Description" };
-		final int[] widths = { 200, 150, 80, 500 };
+		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, "Default value", Messages.get().ServerConfigurationEditor_ColRestart, "Description" };
+		final int[] widths = { 200, 150, 150, 80, 500 };
 		viewer = new SortableTableViewer(content, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerVariablesLabelProvider());
@@ -161,6 +163,7 @@ public class ServerConfigurationEditor extends ViewPart
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				actionEdit.setEnabled(selection.size() == 1);
 				actionDelete.setEnabled(selection.size() > 0);
+				actionDefaultValue.setEnabled(selection.size() > 0);
 			}
 		});
 		
@@ -254,7 +257,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		manager.add(actionAdd);
 		manager.add(actionExportAllToCsv);
-      manager.add(actionShowFilter);		
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -338,6 +341,14 @@ public class ServerConfigurationEditor extends ViewPart
       actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.show_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+      
+      actionDefaultValue = new Action("Set default value") {
+         @Override
+         public void run()
+         {
+            setDefaultValue();
+         }
+      };
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
@@ -417,6 +428,7 @@ public class ServerConfigurationEditor extends ViewPart
 		mgr.add(actionAdd);
 		mgr.add(actionEdit);
 		mgr.add(actionDelete);
+      mgr.add(actionDefaultValue);
 		mgr.add(new Separator());
 		mgr.add(actionExportToCsv);
 	}
@@ -540,5 +552,39 @@ public class ServerConfigurationEditor extends ViewPart
 				return Messages.get().ServerConfigurationEditor_DeleteJobError;
 			}
 		}.start();
+	}
+	
+	/**
+	 * Reset variable values to default
+	 */
+	@SuppressWarnings("unchecked")
+   private void setDefaultValue()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   final List<ServerVariable> list = selection.toList();
+	   
+	   new ConsoleJob("Set default server config values", this, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {         
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.setDefaultServerValues(list);
+            varList = session.getServerVariables();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  synchronized(varList)
+                  {
+                     viewer.setInput(varList.values().toArray());
+                  }
+               }
+            });
+         }         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error setting default server config values";
+         }
+      }.start();
 	}
 }

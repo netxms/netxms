@@ -29,6 +29,7 @@ public final class ServerVariable
 {
 	private String name;
 	private String value;
+   private String defaultValue;
 	private String description;
 	private ServerVariableDataType dataType;
 	private HashMap<String, String> values = new HashMap<String, String>();
@@ -49,6 +50,7 @@ public final class ServerVariable
 	{
 		this.name = name;
 		this.value = value;
+		this.defaultValue = value;
 		this.description = description;
 		this.dataType = dataType;
 		this.isServerRestartNeeded = isServerRestartNeeded;
@@ -68,6 +70,7 @@ public final class ServerVariable
       String code = msg.getFieldAsString(baseId + 3);
       dataType = ServerVariableDataType.getByCode(((code != null) && !code.isEmpty()) ? code.charAt(0) : 'S');
       description = msg.getFieldAsString(baseId + 4);
+      defaultValue = msg.getFieldAsString(baseId + 5);
 	}
 
    /** 
@@ -169,5 +172,21 @@ public final class ServerVariable
 	public HashMap<String, String> getPossibleValues()
 	{
 	   return values;
+	}
+	
+	/**
+	 * @return Variable`s default value
+	 */
+	public String getDefaultValue()
+	{
+	   return defaultValue;
+	}
+	
+	/**
+	 * @return true if variable`s value is the default value
+	 */
+	public boolean isDefault()
+	{
+	   return value.equals(defaultValue);
 	}
 }

@@ -39,6 +39,9 @@ public class ServerVariableComparator extends ViewerComparator
 			   else
 			      result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
 				break;
+			case ServerConfigurationEditor.COLUMN_DEFAULT_VALUE:
+            result = ((ServerVariable)e1).getDefaultValue().compareToIgnoreCase(((ServerVariable)e2).getDefaultValue());
+            break;
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
 				result = compareBooleans(((ServerVariable)e1).isServerRestartNeeded(), ((ServerVariable)e2).isServerRestartNeeded());
 				break;

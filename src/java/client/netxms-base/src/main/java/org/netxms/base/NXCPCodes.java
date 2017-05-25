@@ -162,7 +162,7 @@ public class NXCPCodes
 	public static final int CMD_TABLE_DATA = 0x0088;
 	public static final int CMD_CANCEL_JOB = 0x0089;
 	public static final int CMD_CHANGE_SUBSCRIPTION = 0x008A;
-	//unused: public static final int CMD_GET_SYSLOG = 0x008B;
+	public static final int CMD_SET_CONFIG_TO_DEFAULT = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS = 0x008C;
 	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
 	public static final int CMD_DEPLOY_AGENT_POLICY = 0x008E;

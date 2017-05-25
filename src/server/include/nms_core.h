@@ -517,6 +517,7 @@ private:
    void sendSelectedObjects(NXCPMessage *pRequest);
    void getConfigurationVariables(UINT32 dwRqId);
    void getPublicConfigurationVariable(NXCPMessage *request);
+   void setDefaultConfigurationVariableValues(NXCPMessage *pRequest);
    void setConfigurationVariable(NXCPMessage *pRequest);
    void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);

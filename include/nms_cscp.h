@@ -375,7 +375,7 @@ typedef struct
 #define CMD_TABLE_DATA                    0x0088
 #define CMD_CANCEL_JOB                    0x0089
 #define CMD_CHANGE_SUBSCRIPTION           0x008A
-//unused: #define CMD_GET_SYSLOG                    0x008B
+#define CMD_SET_CONFIG_TO_DEFAULT         0x008B
 #define CMD_SYSLOG_RECORDS                0x008C
 #define CMD_JOB_CHANGE_NOTIFICATION       0x008D
 #define CMD_DEPLOY_AGENT_POLICY           0x008E

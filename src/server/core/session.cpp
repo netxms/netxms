@@ -671,6 +671,9 @@ void ClientSession::processingThread()
          case CMD_SET_CONFIG_VARIABLE:
             setConfigurationVariable(pMsg);
             break;
+         case CMD_SET_CONFIG_TO_DEFAULT:
+            setDefaultConfigurationVariableValues(pMsg);
+            break;
          case CMD_DELETE_CONFIG_VARIABLE:
             deleteConfigurationVariable(pMsg);
             break;
@@ -2376,19 +2379,20 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Retrieve configuration variables from database
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart,data_type,description FROM config WHERE is_visible=1"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart,data_type,description,default_value FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
          dwNumRecords = DBGetNumRows(hResult);
          msg.setField(VID_NUM_VARIABLES, dwNumRecords);
-         for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
+         for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++, dwId += 10)
          {
-            msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-            msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
-            msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
-            msg.setField(dwId++, DBGetField(hResult, i, 3, szBuffer, MAX_CONFIG_VALUE));
-            msg.setField(dwId++, DBGetField(hResult, i, 4, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
+            msg.setField(dwId + 1, DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
+            msg.setField(dwId + 3, DBGetField(hResult, i, 3, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId + 4, DBGetField(hResult, i, 4, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId + 5, DBGetField(hResult, i, 5, szBuffer, MAX_CONFIG_VALUE));
          }
          DBFreeResult(hResult);
 
@@ -2490,15 +2494,15 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE);
       ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE, _T(""));
       if (ConfigWriteStr(name, newValue, true))
-		{
+      {
          msg.setField(VID_RCC, RCC_SUCCESS);
-			writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
-							            _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
-		}
+         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue,
+                                 _T("Server configuration variable \"%s\" changed from \"%s\" to \"%s\""), name, oldValue, newValue);
+      }
       else
-		{
+      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
+      }
    }
    else
    {
@@ -2508,6 +2512,53 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
 
    // Send response
    sendMessage(&msg);
+}
+
+/**
+ * Set configuration variable's values to default
+ */
+void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+   UINT32 rcc = RCC_SUCCESS;
+
+   if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT default_value FROM config WHERE var_name=?"));
+      if (stmt != NULL)
+      {
+         UINT32 numVars = pRequest->getFieldAsUInt32(VID_NUM_VARIABLES), base = VID_VARLIST_BASE;
+         TCHAR varName[64], defValue[MAX_CONFIG_VALUE];
+         for(int i = 0; i < numVars; i++)
+         {
+            pRequest->getFieldAsString(base++, varName, 64);
+            DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+
+            DB_RESULT result = DBSelectPrepared(stmt);
+            if (result != NULL)
+            {
+               DBGetField(result, 0, 0, defValue, MAX_CONFIG_VALUE);
+               ConfigWriteStr(varName, defValue, false);
+            }
+            else
+               rcc = RCC_DB_FAILURE;
+         }
+         DBFreeStatement(stmt);
+      }
+      else
+         rcc = RCC_DB_FAILURE;
+      DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied for setting server configuration variables to default"));
+      rcc = RCC_ACCESS_DENIED;
+   }
+   // Send response
+   msg.setField(VID_RCC, rcc);
+   sendMessage(&msg);
+
 }
 
 /**

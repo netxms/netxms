@@ -3332,11 +3332,10 @@ public class NXCSession
       final HashMap<String, ServerVariable> varList = new HashMap<String, ServerVariable>(count);
 
       long id = NXCPCodes.VID_VARLIST_BASE;
-      for(int i = 0; i < count; i++)
+      for(int i = 0; i < count; i++, id += 10)
       {
          ServerVariable v = new ServerVariable(response, id);
          varList.put(v.getName(), v);
-         id += 5;
       }
       
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
@@ -3435,6 +3434,24 @@ public class NXCSession
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CONFIG_VARIABLE);
       msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Set server configuration variables to default
+    * 
+    * @param varList
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setDefaultServerValues(List<ServerVariable> varList) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CONFIG_TO_DEFAULT);
+      long base = NXCPCodes.VID_VARLIST_BASE;
+      for(ServerVariable v : varList)
+         msg.setField(base++, v.getName());
+      msg.setFieldInt32(NXCPCodes.VID_NUM_VARIABLES, varList.size());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

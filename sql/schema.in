@@ -21,6 +21,7 @@ CREATE TABLE config
 (
   var_name varchar(63) not null,
   var_value varchar(2000) null,
+  default_value varchar(2000) null,
 #ifdef DB_ORACLE
   is_visible integer default 1 not null,
   need_server_restart integer default 0 not null,
