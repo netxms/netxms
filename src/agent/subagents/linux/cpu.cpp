@@ -22,20 +22,19 @@
 
 #define CPU_USAGE_SLOTS			900 // 60 sec * 15 min => 900 sec
 // 64 + 1 for overal
-#define MAX_CPU					(64 + 1)
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
-static UINT64 m_user[MAX_CPU];
-static UINT64 m_nice[MAX_CPU];
-static UINT64 m_system[MAX_CPU];
-static UINT64 m_idle[MAX_CPU];
-static UINT64 m_iowait[MAX_CPU];
-static UINT64 m_irq[MAX_CPU];
-static UINT64 m_softirq[MAX_CPU];
-static UINT64 m_steal[MAX_CPU];
-static UINT64 m_guest[MAX_CPU];
+static UINT64 *m_user;
+static UINT64 *m_nice;
+static UINT64 *m_system;
+static UINT64 *m_idle;
+static UINT64 *m_iowait;
+static UINT64 *m_irq;
+static UINT64 *m_softirq;
+static UINT64 *m_steal;
+static UINT64 *m_guest;
 static UINT64 m_cpuInterrupts;
 static UINT64 m_cpuContextSwitches;
 static float *m_cpuUsage;
@@ -207,32 +206,27 @@ void StartCpuUsageCollector()
 
 	m_cpuUsageMutex = MutexCreate();
 
-#define SIZE sizeof(float) * CPU_USAGE_SLOTS * MAX_CPU
-#define ALLOCATE_AND_CLEAR(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
-	ALLOCATE_AND_CLEAR(m_cpuUsage);
-	ALLOCATE_AND_CLEAR(m_cpuUsageUser);
-	ALLOCATE_AND_CLEAR(m_cpuUsageNice);
-	ALLOCATE_AND_CLEAR(m_cpuUsageSystem);
-	ALLOCATE_AND_CLEAR(m_cpuUsageIdle);
-	ALLOCATE_AND_CLEAR(m_cpuUsageIoWait);
-	ALLOCATE_AND_CLEAR(m_cpuUsageIrq);
-	ALLOCATE_AND_CLEAR(m_cpuUsageSoftIrq);
-	ALLOCATE_AND_CLEAR(m_cpuUsageSteal);
-	ALLOCATE_AND_CLEAR(m_cpuUsageGuest);
-#undef ALLOCATE_AND_CLEAR
-#undef SIZE
+   UINT32 cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+   m_cpuUsage = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageUser = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageNice = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageSystem = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageIdle = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageIoWait = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageIrq = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageSoftIrq = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageSteal = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
+   m_cpuUsageGuest = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
 
-#define CLEAR(x) memset(x, 0, sizeof(UINT64) * MAX_CPU);
-	CLEAR(m_user)
-	CLEAR(m_nice)
-	CLEAR(m_system)
-	CLEAR(m_idle)
-	CLEAR(m_iowait)
-	CLEAR(m_irq)
-	CLEAR(m_softirq)
-	CLEAR(m_steal)
-	CLEAR(m_guest)
-#undef CLEAR
+   m_user = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_nice = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_system = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_idle = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_iowait = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_irq = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_softirq = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_steal = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
+   m_guest = (UINT64 *)calloc(CPU_USAGE_SLOTS, sizeof(UINT64) * (cpuCount + 1));
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
@@ -246,7 +240,7 @@ void StartCpuUsageCollector()
 
 	// fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (i = 0; i < (CPU_USAGE_SLOTS * MAX_CPU) - 1; i++)
+	for (i = 0; i < (CPU_USAGE_SLOTS * cpuCount) - 1; i++)
 	{
 			FILL(m_cpuUsage);
 			FILL(m_cpuUsageUser);
@@ -284,6 +278,15 @@ void ShutdownCpuUsageCollector()
 	free(m_cpuUsageSoftIrq);
 	free(m_cpuUsageSteal);
 	free(m_cpuUsageGuest);
+	free(m_user);
+	free(m_nice);
+	free(m_system);
+	free(m_idle);
+	free(m_iowait);
+	free(m_irq);
+	free(m_softirq);
+	free(m_steal);
+	free(m_guest);
 }
 
 static void GetUsage(int source, int cpu, int count, TCHAR *value)

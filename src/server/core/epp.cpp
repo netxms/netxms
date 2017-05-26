@@ -274,7 +274,7 @@ static EnumerationCallbackResult AddPSSetActionsToSML(const TCHAR *key, const vo
 void EPRule::createNXMPRecord(String &str)
 {
    str.append(_T("\t\t<rule id=\""));
-   str.append(m_id);
+   str.append(m_id + 1);
    str.append(_T("\">\n\t\t\t<guid>"));
    str.append(m_guid.toString());
    str.append(_T("</guid>\n\t\t\t<flags>"));
