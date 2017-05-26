@@ -39,6 +39,11 @@
 #include <time.h>
 #include <jansson.h>
 
+// JSON_EMBED was added in jansson 2.10 - ignore it for older version
+#ifndef JSON_EMBED
+#define JSON_EMBED 0
+#endif
+
 #if HAVE_POLL_H
 #include <poll.h>
 #endif

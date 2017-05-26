@@ -186,7 +186,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 	text.appendFormattedStringV(format, args);
 
 	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16];
-   const TCHAR *values[11] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text, oldValue, newValue };
+   const TCHAR *values[12] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text, oldValue, newValue, NULL };
    _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&m_recordId));
    _sntprintf(_time, 32, _T("%d"), (UINT32)time(NULL));
    _sntprintf(success, 2, _T("%d"), isSuccess);
@@ -194,11 +194,17 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    _sntprintf(_sessionId, 16, _T("%d"), sessionId);
    _sntprintf(_objectId, 16, _T("%d"), objectId);
 
-   static int sqlTypes[11] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT };
+   static int sqlTypes[12] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT, DB_SQLTYPE_TEXT };
    if ((oldValue != NULL) && (newValue != NULL))
-      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message,old_value,new_value) VALUES (?,?,?,?,?,?,?,?,?,?,?)"), 11, sqlTypes, values);
+   {
+      String diff = GenerateLineDiff(oldValue, newValue);
+      values[11] = (const TCHAR *)diff;
+      QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message,old_value,new_value,value_diff) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), 12, sqlTypes, values);
+   }
    else
+   {
       QueueSQLRequest(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES (?,?,?,?,?,?,?,?,?)"), 9, sqlTypes, values);
+   }
 
 	NXCPMessage msg;
 	msg.setCode(CMD_AUDIT_RECORD);
@@ -241,8 +247,8 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
                                                     json_t *oldValue, json_t *newValue,
                                                     const TCHAR *format, va_list args)
 {
-   char *js1 = (oldValue != NULL) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3)) : strdup("");
-   char *js2 = (newValue != NULL) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3)) : strdup("");
+   char *js1 = (oldValue != NULL) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : strdup("");
+   char *js2 = (newValue != NULL) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3) | JSON_EMBED) : strdup("");
 #ifdef UNICODE
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);

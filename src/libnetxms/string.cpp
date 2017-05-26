@@ -604,7 +604,7 @@ bool String::endsWith(const TCHAR *s) const
 StringList *String::split(const TCHAR *separator) const
 {
    int count;
-   TCHAR **strings = SplitString(m_buffer, *separator, &count);
+   TCHAR **strings = SplitString(CHECK_NULL_EX(m_buffer), *separator, &count);
    StringList *result = new StringList();
    for(int i = 0; i < count; i++)
       result->addPreallocated(strings[i]);

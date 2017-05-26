@@ -696,9 +696,14 @@ static void TestDiff()
    static const TCHAR *diffRight = _T("line 1\nline 3\nline 4\nFIXED TEXT\nbeta\n");
    static const TCHAR *expectedDiff = _T("-line 2\n-line3\n+line 3\n+line 4\n-alpha\n+beta\n");
 
-   StartTest(_T("GenerateLineDiff"));
+   StartTest(_T("GenerateLineDiff (multiple lines)"));
    String diff = GenerateLineDiff(diffLeft, diffRight);
    AssertTrue(diff.equals(expectedDiff));
+   EndTest();
+
+   StartTest(_T("GenerateLineDiff (single line)"));
+   diff = GenerateLineDiff(_T("prefix-alpha"), _T("prefix-beta"));
+   AssertTrue(diff.equals(_T("-prefix-alpha\n+prefix-beta\n")));
    EndTest();
 }
 
