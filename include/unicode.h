@@ -183,6 +183,7 @@
 #define _istdigit iswdigit
 #define _istxdigit iswxdigit
 #define _istalpha iswalpha
+#define _istalnum iswalnum
 #define _istupper iswupper
 #define _istprint iswprint
 #define _itot     _itow
@@ -268,6 +269,7 @@
 #define _istdigit isdigit
 #define _istxdigit isxdigit
 #define _istalpha isalpha
+#define _istalnum isalnum
 #define _istupper isupper
 #define _istprint isprint
 #define _itot     _itoa

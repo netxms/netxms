@@ -270,21 +270,21 @@ static void TestString()
 
    StartTest(_T("String - substring #1"));
    s = _T("alpha beta gamma");
-   TCHAR *str = s.substring(0, 5);
+   TCHAR *str = s.substring(0, 5, NULL);
    AssertTrue(!_tcscmp(str, _T("alpha")));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #2"));
    s = _T("alpha beta gamma");
-   str = s.substring(5, -1);
+   str = s.substring(5, -1, NULL);
    AssertTrue(!_tcscmp(str, _T(" beta gamma")));
    free(str);
    EndTest();
 
    StartTest(_T("String - substring #3"));
    s = _T("alpha beta gamma");
-   str = s.substring(14, 4);
+   str = s.substring(14, 4, NULL);
    AssertTrue(!_tcscmp(str, _T("ma")));
    free(str);
    EndTest();
@@ -688,6 +688,21 @@ static void TestByteSwap()
 }
 
 /**
+ * Test diff
+ */
+static void TestDiff()
+{
+   static const TCHAR *diffLeft = _T("line 1\nline 2\nline3\nFIXED TEXT\nalpha\n");
+   static const TCHAR *diffRight = _T("line 1\nline 3\nline 4\nFIXED TEXT\nbeta\n");
+   static const TCHAR *expectedDiff = _T("-line 2\n-line3\n+line 3\n+line 4\n-alpha\n+beta\n");
+
+   StartTest(_T("GenerateLineDiff"));
+   String diff = GenerateLineDiff(diffLeft, diffRight);
+   AssertTrue(diff.equals(expectedDiff));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -713,6 +728,7 @@ int main(int argc, char *argv[])
    TestRWLockWrapper();
    TestConditionWrapper();
    TestByteSwap();
+   TestDiff();
 
    MsgWaitQueue::shutdown();
    return 0;

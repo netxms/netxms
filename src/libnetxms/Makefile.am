@@ -1,5 +1,5 @@
 SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
-          cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp \
+          cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp diff.cpp \
 	  dirw_unix.c geolocation.cpp getopt.c dload.cpp hash.cpp \
 	  hashmapbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
 	  inetaddr.cpp log.cpp lz4.c main.cpp md5.cpp message.cpp \
@@ -48,7 +48,7 @@ endif
 
 EXTRA_DIST = \
 	libnetxms.vcproj \
-	libnetxms.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
+	libnetxms.h diff.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
 	dir.cpp dirw.cpp \
 	seh.cpp StackWalker.cpp StackWalker.h \
 	ldcw.s

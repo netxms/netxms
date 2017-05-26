@@ -134,6 +134,26 @@ String& String::operator +=(const String &str)
 }
 
 /**
+ * Concatenate two strings
+ */
+String String::operator +(const String &right) const
+{
+   String result(*this);
+   result.append(right);
+   return result;
+}
+
+/**
+ * Concatenate two strings
+ */
+String String::operator +(const TCHAR *right) const
+{
+   String result(*this);
+   result.append(right);
+   return result;
+}
+
+/**
  * Add formatted string to the end of buffer
  */
 void String::appendFormattedString(const TCHAR *format, ...)
@@ -520,4 +540,74 @@ bool String::equals(const String& s) const
    if (m_length != s.m_length)
       return false;
    return !memcmp(m_buffer, s.m_buffer, m_length * sizeof(TCHAR));
+}
+
+/**
+ * Check that two strings are equal
+ */
+bool String::equals(const TCHAR *s) const
+{
+   if (s == NULL)
+      return false;
+   return !_tcscmp(m_buffer, s);
+}
+
+/**
+ * Check that this string starts with given sub-string
+ */
+bool String::startsWith(const String& s) const
+{
+   if (s.m_length > m_length)
+      return false;
+   return !memcmp(m_buffer, s.m_buffer, s.m_length * sizeof(TCHAR));
+}
+
+/**
+ * Check that this string starts with given sub-string
+ */
+bool String::startsWith(const TCHAR *s) const
+{
+   if (s == NULL)
+      return false;
+   size_t l = _tcslen(s);
+   if (l > m_length)
+      return false;
+   return !memcmp(m_buffer, s, l * sizeof(TCHAR));
+}
+
+/**
+ * Check that this string ends with given sub-string
+ */
+bool String::endsWith(const String& s) const
+{
+   if (s.m_length > m_length)
+      return false;
+   return !memcmp(&m_buffer[m_length - s.m_length], s.m_buffer, s.m_length * sizeof(TCHAR));
+}
+
+/**
+ * Check that this string ends with given sub-string
+ */
+bool String::endsWith(const TCHAR *s) const
+{
+   if (s == NULL)
+      return false;
+   size_t l = _tcslen(s);
+   if (l > m_length)
+      return false;
+   return !memcmp(&m_buffer[m_length - l], s, l * sizeof(TCHAR));
+}
+
+/**
+ * Split string
+ */
+StringList *String::split(const TCHAR *separator) const
+{
+   int count;
+   TCHAR **strings = SplitString(m_buffer, *separator, &count);
+   StringList *result = new StringList();
+   for(int i = 0; i < count; i++)
+      result->addPreallocated(strings[i]);
+   free(strings);
+   return result;
 }

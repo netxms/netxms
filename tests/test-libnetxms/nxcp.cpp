@@ -75,11 +75,16 @@ void TestMessageClass()
 
    msg.setField(100, longText);
    NXCP_MESSAGE *binMsg = msg.createMessage(true);
+   AssertNotNull(binMsg);
    AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
 
    NXCPMessage *dmsg = new NXCPMessage(binMsg);
-   AssertTrue(!_tcscmp(dmsg->getFieldAsString(100), longText));
+   TCHAR *longTextOut = dmsg->getFieldAsString(100);
+   AssertNotNull(longTextOut);
+   AssertTrue(!_tcscmp(longTextOut, longText));
+   free(longTextOut);
    delete dmsg;
+   free(binMsg);
 
    EndTest();
 }

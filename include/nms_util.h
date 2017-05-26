@@ -541,6 +541,8 @@ public:
 	String& operator =(const String &src);
    String& operator +=(const TCHAR *str);
    String& operator +=(const String &str);
+   String operator +(const String &right) const;
+   String operator +(const TCHAR *right) const;
    operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
 
    bool operator ==(const String &s) const { return equals(s); }
@@ -570,6 +572,11 @@ public:
 	bool isEmpty() const { return m_length == 0; }
 
 	bool equals(const String& s) const;
+	bool equals(const TCHAR *s) const;
+   bool startsWith(const String& s) const;
+   bool startsWith(const TCHAR *s) const;
+   bool endsWith(const String& s) const;
+   bool endsWith(const TCHAR *s) const;
 
 	wchar_t charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
 
@@ -577,6 +584,8 @@ public:
 	TCHAR *substring(size_t start, int len, TCHAR *buffer) const;
 	String left(int len) const { return substring(0, len); }
    String right(int len) const { return substring(max(0, (int)m_length - len), len); }
+
+   StringList *split(const TCHAR *separator) const;
 
 	int find(const TCHAR *str, size_t start = 0) const;
 
@@ -660,6 +669,7 @@ public:
    void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
 	int size() const { return m_size; }
+	bool isEmpty() const { return m_size == 0; }
 
 	void setOwner(bool owner) { m_objectOwner = owner; }
 	bool isOwner() const { return m_objectOwner; }
@@ -696,6 +706,8 @@ public:
 
 	int add(T *object) { return Array::add((void *)object); }
 	T *get(int index) const { return (T*)Array::get(index); }
+	T *first() const { return get(0); }
+	T *last() const { return get(size() - 1); }
    int indexOf(T *object) const { return Array::indexOf((void *)object); }
    bool contains(T *object) const { return indexOf(object) >= 0; }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
@@ -932,6 +944,7 @@ public:
    void sort(bool ascending = true, bool caseSensitive = false);
 
 	int size() const { return m_count; }
+	bool isEmpty() const { return m_count == 0; }
 	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
 	int indexOf(const TCHAR *value) const;
 	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
@@ -2407,6 +2420,8 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 void LIBNETXMS_EXPORTABLE BlockAllSignals(bool processWide, bool allowInterrupt);
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif
+
+String LIBNETXMS_EXPORTABLE GenerateLineDiff(const String& left, const String& right);
 
 #endif
 
