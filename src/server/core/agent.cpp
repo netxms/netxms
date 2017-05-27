@@ -382,13 +382,10 @@ bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
    DbgPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %d"),
       NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   ENUMERATE_MODULES(pfOnAgentMessage)
    {
-      if (g_pModuleList[i].pfOnAgentMessage != NULL)
-      {
-         if (g_pModuleList[i].pfOnAgentMessage(msg, m_nodeId))
-            return true;    // accepted by module
-      }
+      if (g_pModuleList[__i].pfOnAgentMessage(msg, m_nodeId))
+         return true;    // accepted by module
    }
    return false;
 }
