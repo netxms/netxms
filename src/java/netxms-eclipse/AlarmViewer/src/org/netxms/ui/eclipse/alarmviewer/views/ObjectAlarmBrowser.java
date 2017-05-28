@@ -45,12 +45,12 @@ import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
  */
 public class ObjectAlarmBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
-	
+   public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
+
    private CompositeWithMessageBar content;
-	private AlarmList alarmView;
-	private Action actionRefresh;
-	private Action actionExportToCsv;
+   private AlarmList alarmView;
+   private Action actionRefresh;
+   private Action actionExportToCsv;
    private List<Long> objects = new ArrayList<Long>(1);
 
 	/* (non-Javadoc)
@@ -71,7 +71,7 @@ public class ObjectAlarmBrowser extends ViewPart
 		      Activator.logError("Invalid number in AlarmViewer secondary ID", e); //$NON-NLS-1$
 		   }
 		}
-	}
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -81,7 +81,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	{
 		parent.setLayout(new FillLayout());		
 		content = new CompositeWithMessageBar(parent, SWT.NONE);
-		
+
       alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
 		alarmView.setRootObjects(objects);
 
@@ -96,14 +96,14 @@ public class ObjectAlarmBrowser extends ViewPart
 			setPartName(Messages.get().ObjectAlarmBrowser_TitleMultipleObjects);
 			showObjectList();
 		}
-		
-		createActions();
-		contributeToActionBars();
-		
-		getSite().setSelectionProvider(alarmView.getSelectionProvider());
-	}
 
-	/**
+      createActions();
+      contributeToActionBars();
+
+      getSite().setSelectionProvider(alarmView.getSelectionProvider());
+   }
+   
+   /**
     * Show list of selected objects
     */
    private void showObjectList()
@@ -120,71 +120,73 @@ public class ObjectAlarmBrowser extends ViewPart
    }
 
    /**
-	 * Create actions
-	 */
-	private void createActions()
-	{
-		actionRefresh = new RefreshAction() {
-			@Override
-			public void run()
-			{
-				alarmView.refresh();
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionRefresh = new RefreshAction() {
+         @Override
+         public void run()
+         {
+            alarmView.refresh();
             showObjectList();
-			}
-		};
-		
-		actionExportToCsv = new ExportToCsvAction(this, alarmView.getViewer(), false);
-	}
-	
-	/**
-	 * Contribute actions to action bar
-	 */
-	private void contributeToActionBars()
-	{
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
-	}
+         }
+      };
 
-	/**
-	 * Fill local pull-down menu
-	 * 
+      actionExportToCsv = new ExportToCsvAction(this, alarmView.getViewer(), false);
+   }
+
+   /**
+    * Contribute actions to action bar
+    */
+   private void contributeToActionBars()
+   {
+      IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getMenuManager());
+      fillLocalToolBar(bars.getToolBarManager());
+   }
+
+   /**
+    * Fill local pull-down menu
+    * 
     * @param manager Menu manager for pull-down menu
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+      manager.add(alarmView.getActionShowColors());
+      manager.add(new Separator());
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
-	/**
-	 * Fill local tool bar
-	 * 
+   /**
+    * Fill local tool bar
+    * 
     * @param manager Menu manager for local toolbar
-	 */
-	private void fillLocalToolBar(IToolBarManager manager)
-	{
-		manager.add(actionExportToCsv);
-		manager.add(actionRefresh);
-	}
+    */
+   private void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionExportToCsv);
+      manager.add(actionRefresh);
+   }
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		alarmView.setFocus();
-	}
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      alarmView.setFocus();
+   }
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		alarmView.dispose();
-		super.dispose();
-	}
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      alarmView.dispose();
+      super.dispose();
+   }
 }

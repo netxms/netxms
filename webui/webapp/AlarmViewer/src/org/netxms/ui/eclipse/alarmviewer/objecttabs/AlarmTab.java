@@ -18,10 +18,15 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
@@ -30,72 +35,99 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
  */
 public class AlarmTab extends ObjectTab
 {
-   private AlarmList alarmList;
-
+	private AlarmList alarmList;
+	private IPropertyChangeListener propertyChangeListener;
+	
 	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected void createTabContent(Composite parent)
-   {
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	protected void createTabContent(Composite parent)
+	{
       alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix());
-   }
 
-   /**
-    * Get configuration prefix for alarm list.
-    * 
-    * @return
-    */
-   protected String getConfigPrefix()
-   {
-      return "AlarmTab"; //$NON-NLS-1$
-   }
-
-	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   public void objectChanged(AbstractObject object)
-   {
-      if (object != null)
-         alarmList.setRootObject(object.getObjectId());
-   }
-
-	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-    */
-   @Override
-   public void refresh()
-   {
-      alarmList.refresh();
-   }
+      // Force update of "show colors" menu item in object tabbed view 
+      // when settings changes in any alarm viewer
+      propertyChangeListener = new IPropertyChangeListener() {
+         @Override
+         public void propertyChange(PropertyChangeEvent event)
+         {
+            if (event.getProperty().equals("SHOW_ALARM_STATUS_COLORS")) //$NON-NLS-1$
+            {
+               ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+               service.refreshElements("org.netxms.ui.eclipse.alarmviewer.commands.show_status_colors", null);
+            }
+         }
+      };
+      Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangeListener);
+	}
+	
+	/**
+	 * Get configuration prefix for alarm list.
+	 * 
+	 * @return
+	 */
+	protected String getConfigPrefix()
+	{
+		return "AlarmTab"; //$NON-NLS-1$
+	}
 
 	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
-    */
-   @Override
-   public ISelectionProvider getSelectionProvider()
-   {
-      return alarmList.getSelectionProvider();
-   }
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)
+	 */
+	@Override
+	public void objectChanged(AbstractObject object)
+	{
+		if (object != null)
+			alarmList.setRootObject(object.getObjectId());
+	}
 
 	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   public boolean showForObject(AbstractObject object)
-   {
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+	 */
+	@Override
+	public void refresh()
+	{
+		alarmList.refresh();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
+	 */
+	@Override
+	public ISelectionProvider getSelectionProvider()
+	{
+		return alarmList.getSelectionProvider();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#showForObject(org.netxms.client.objects.AbstractObject)
+	 */
+	@Override
+	public boolean showForObject(AbstractObject object)
+	{
       return object.isAlarmsVisible();
-   }
+	}
 
 	/* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (alarmList != null)
-         alarmList.dispose();
-      super.dispose();
-   }
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+	   Activator.getDefault().getPreferenceStore().removePropertyChangeListener(propertyChangeListener);
+		if (alarmList != null)
+			alarmList.dispose();
+		super.dispose();
+	}
+	
+	/**
+	 * Enable disable status color show
+	 * 
+	 * @param show
+	 */
+	public void setShowColors(boolean show)
+	{
+	   alarmList.setShowColors(show);
+	}
 }

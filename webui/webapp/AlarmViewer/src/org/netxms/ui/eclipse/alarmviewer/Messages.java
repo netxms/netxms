@@ -75,6 +75,7 @@ public class Messages extends NLS
    public String AlarmList_Resolve;
    public String AlarmList_ResolveAlarm;
    public String AlarmList_Resolving;
+   public String AlarmList_ShowStatusColors;
    public String AlarmList_StickyAck;
    public String AlarmList_StickyAckMenutTitle;
    public String AlarmList_SyncJobError;

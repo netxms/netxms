@@ -56,10 +56,10 @@ public class ObjectAlarmBrowser extends ViewPart
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
-   @Override
-	public void init(IViewSite site) throws PartInitException 
-   {
-      super.init(site);
+	@Override
+	public void init(IViewSite site) throws PartInitException
+	{
+		super.init(site);
 		for(String id : site.getSecondaryId().split("&"))  //$NON-NLS-1$
 		{
 		   try
@@ -74,11 +74,11 @@ public class ObjectAlarmBrowser extends ViewPart
    }
 
 	/* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-	public void createPartControl(Composite parent) 
-   {
+	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+	 */
+	@Override
+	public void createPartControl(Composite parent)
+	{
 		parent.setLayout(new FillLayout());		
 		content = new CompositeWithMessageBar(parent, SWT.NONE);
 
@@ -150,13 +150,15 @@ public class ObjectAlarmBrowser extends ViewPart
     * Fill local pull-down menu
     * 
     * @param manager Menu manager for pull-down menu
-    */
-   private void fillLocalPullDown(IMenuManager manager)
-   {
-      manager.add(actionExportToCsv);
+	 */
+	private void fillLocalPullDown(IMenuManager manager)
+	{
+      manager.add(alarmView.getActionShowColors());
       manager.add(new Separator());
-      manager.add(actionRefresh);
-   }
+		manager.add(actionExportToCsv);
+		manager.add(new Separator());
+		manager.add(actionRefresh);
+	}
 
    /**
     * Fill local tool bar

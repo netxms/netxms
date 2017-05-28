@@ -77,6 +77,17 @@
             id="org.netxms.ui.eclipse.alarmviewer.commands.openAlarmLog"
             name="Open alarm log">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.alarmviewer.commands.show_status_colors"
+            name="Toggle status colors">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.alarmviewer.actions.ToggleAlarmStatusColorsHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -229,6 +240,25 @@
                      </test>
                   </and>
                </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_status_colors"
+               label="%command.label.showStatusColors"
+               style="toggle"
+               tooltip="%command.tooltip.showStatusColors">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab">
+                  </instanceof>
+               </with>
             </visibleWhen>
          </command>
       </menuContribution>

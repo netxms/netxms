@@ -18,10 +18,13 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
@@ -40,14 +43,20 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Label provider for alarm list
  */
-public class AlarmListLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AlarmListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+   private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
+   private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color[] FOREGROUND_COLORS =
+      { FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
+   
 	private final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
 	private NXCSession session;
 	private Image[] stateImages = new Image[5];
 	private Image commentsImage;
 	private boolean blinkState = true;
+   private boolean showColor = true;
 	private WorkbenchLabelProvider wbLabelProvider;
 	private TableViewer viewer;
 	
@@ -168,4 +177,38 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	{
 		blinkState = !blinkState;
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      return showColor ? FOREGROUND_COLORS[((Alarm)element).getCurrentSeverity().getValue()] : null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return showColor ? StatusDisplayInfo.getStatusColor(((Alarm)element).getCurrentSeverity()) : null;
+   }
+
+   /**
+    * @return the showColor
+    */
+   public boolean isShowColor()
+   {
+      return showColor;
+   }
+
+   /**
+    * @param showColor the showColor to set
+    */
+   public void setShowColor(boolean showColor)
+   {
+      this.showColor = showColor;
+   }
 }

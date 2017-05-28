@@ -101,6 +101,8 @@ public class AlarmBrowser extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+      manager.add(alarmView.getActionShowColors());
+      manager.add(new Separator());
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);

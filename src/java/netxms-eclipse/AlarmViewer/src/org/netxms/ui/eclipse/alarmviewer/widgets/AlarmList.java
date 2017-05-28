@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -115,6 +116,7 @@ public class AlarmList extends CompositeWithMessageBar
 	private SessionListener clientListener = null;
 	private RefreshTimer refreshTimer;
 	private SortableTableViewer alarmViewer;
+   private AlarmListLabelProvider labelProvider;
 	private AlarmListFilter alarmFilter;
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
@@ -136,6 +138,7 @@ public class AlarmList extends CompositeWithMessageBar
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
+   private Action actionShowColor;
 
    /**
     * Create alarm list widget
@@ -171,7 +174,9 @@ public class AlarmList extends CompositeWithMessageBar
          alarmViewer.removeColumnById(COLUMN_ZONE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
-		alarmViewer.setLabelProvider(new AlarmListLabelProvider(alarmViewer));
+		labelProvider = new AlarmListLabelProvider(alarmViewer);
+		labelProvider.setShowColor(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_STATUS_COLORS"));
+		alarmViewer.setLabelProvider(labelProvider);
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
@@ -302,15 +307,6 @@ public class AlarmList extends CompositeWithMessageBar
 		};
 		session.addListener(clientListener);
 		
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				if ((session != null) && (clientListener != null))
-					session.removeListener(clientListener);
-			}
-		});
-		
 		final Runnable blinkTimer = new Runnable() {
 			@Override
 			public void run()
@@ -338,7 +334,7 @@ public class AlarmList extends CompositeWithMessageBar
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		if (ps.getBoolean("BLINK_OUTSTANDING_ALARMS")) //$NON-NLS-1$
 			getDisplay().timerExec(500, blinkTimer);
-		ps.addPropertyChangeListener(new IPropertyChangeListener() {
+      final IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent event)
 			{
@@ -349,8 +345,29 @@ public class AlarmList extends CompositeWithMessageBar
 					else
 						getDisplay().timerExec(-1, blinkTimer);
 				}
+				else if (event.getProperty().equals("SHOW_ALARM_STATUS_COLORS")) //$NON-NLS-1$
+            {
+				   boolean showColors = ps.getBoolean("SHOW_ALARM_STATUS_COLORS");
+				   if (labelProvider.isShowColor() != showColors)
+				   {
+				      labelProvider.setShowColor(showColors);
+				      actionShowColor.setChecked(showColors);
+				      alarmViewer.refresh();
+				   }
+            }
 			}
-		});
+      };
+      ps.addPropertyChangeListener(propertyChangeListener);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            ps.removePropertyChangeListener(propertyChangeListener);
+            if ((session != null) && (clientListener != null))
+               session.removeListener(clientListener);
+         }
+      });
 	}
 	
    /**
@@ -519,6 +536,17 @@ public class AlarmList extends CompositeWithMessageBar
          }
       };
       timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther");  //$NON-NLS-1$
+
+      actionShowColor = new Action(Messages.get().AlarmList_ShowStatusColors, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setShowColor(actionShowColor.isChecked());
+            alarmViewer.refresh();
+            Activator.getDefault().getPreferenceStore().setValue("SHOW_ALARM_STATUS_COLORS", actionShowColor.isChecked());
+         }
+      };
+      actionShowColor.setChecked(labelProvider.isShowColor());
 	}
 
 	/**
@@ -1129,5 +1157,28 @@ public class AlarmList extends CompositeWithMessageBar
    public TableViewer getViewer()
    {
       return alarmViewer;
+   }
+
+   /**
+    * Get action to toggle status color display
+    * 
+    * @return
+    */
+   public IAction getActionShowColors()
+   {
+      return actionShowColor;
+   }
+
+   /**
+    * Enable/disable status color background
+    * 
+    * @param show
+    */
+   public void setShowColors(boolean show)
+   {
+      labelProvider.setShowColor(show);
+      actionShowColor.setChecked(show);
+      alarmViewer.refresh();
+      Activator.getDefault().getPreferenceStore().setValue("SHOW_ALARM_STATUS_COLORS", show);
    }
 }
