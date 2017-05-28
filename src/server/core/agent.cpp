@@ -374,7 +374,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 }
 
 /**
- * Ask modules if they can procress custom message
+ * Ask modules if they can process custom message
  */
 bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
 {

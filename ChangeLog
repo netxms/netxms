@@ -3,7 +3,9 @@
 *
 
 - Improved audit logging
--Fixed issues: NX-1243, NX-1244
+- Management console:
+	- Fixed bug in folder download in file manager
+- Fixed issues: NX-1243, NX-1244
 
 
 *

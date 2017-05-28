@@ -1081,7 +1081,7 @@ public class AgentFileManager extends ViewPart
                   {
                   }
                   monitor.beginTask(String.format("Downloading directory %s", f.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
-                  downloadDir(f, target, monitor);
+                  downloadDir(f, target + "/" + f.getName(), monitor);
                   monitor.done();
                }
                else
