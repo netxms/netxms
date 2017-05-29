@@ -288,6 +288,30 @@ static void TestString()
    AssertTrue(!_tcscmp(str, _T("ma")));
    free(str);
    EndTest();
+
+   StartTest(_T("String - left #1"));
+   s = _T("alpha beta gamma");
+   String ls = s.left(5);
+   AssertTrue(ls.equals(_T("alpha")));
+   EndTest();
+
+   StartTest(_T("String - left #2"));
+   s = _T("alpha");
+   ls = s.left(15);
+   AssertTrue(ls.equals(_T("alpha")));
+   EndTest();
+
+   StartTest(_T("String - right #1"));
+   s = _T("alpha beta gamma");
+   String rs = s.right(5);
+   AssertTrue(rs.equals(_T("gamma")));
+   EndTest();
+
+   StartTest(_T("String - right #2"));
+   s = _T("alpha");
+   rs = s.right(15);
+   AssertTrue(rs.equals(_T("alpha")));
+   EndTest();
 }
 
 /**

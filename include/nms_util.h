@@ -588,7 +588,7 @@ public:
    String substring(size_t start, int len) const;
 	TCHAR *substring(size_t start, int len, TCHAR *buffer) const;
 	String left(size_t len) const { return substring(0, (int)len); }
-   String right(size_t len) const { return substring(max(0, m_length - len), (int)len); }
+   String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, (int)len); }
 
    StringList *split(const TCHAR *separator) const;
 
