@@ -35,6 +35,13 @@
 # define OPENSSL_CONST
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+inline int EVP_PKEY_id(EVP_PKEY *key)
+{
+   return key->type;
+}
+#endif
+
 /**
  * Server certificate file information
  */
