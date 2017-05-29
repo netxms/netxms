@@ -2694,30 +2694,30 @@ void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
    msg.setCode(CMD_NOTIFY);
    msg.setField(VID_NOTIFICATION_CODE, dwCode);
    msg.setField(VID_NOTIFICATION_DATA, dwData);
-   sendMessage(&msg);
+   postMessage(&msg);
 }
 
+/**
+ * Set information about conflicting nodes to VID_VALUE field
+ */
 static void SetNodesConflictString(NXCPMessage *msg, UINT32 zoneId, InetAddress ipAddr)
 {
-   if(ipAddr.isValid())
-   {
-      TCHAR value[512];
+   if (!ipAddr.isValid())
+      return;
 
-      Node *sameNode = FindNodeByIP(zoneId, ipAddr);
-      Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
-      if(sameNode != NULL)
-      {
-         _sntprintf(value, 512, _T("%s"), sameNode->getName());
-      }
-      else if (sameSubnet != NULL)
-      {
-         _sntprintf(value, 512, _T("%s"), sameSubnet->getName());
-      }
-      else
-      {
-         _tcscpy(value, _T(""));
-      }
-      msg->setField(VID_VALUE, value);
+   Node *sameNode = FindNodeByIP(zoneId, ipAddr);
+   Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
+   if (sameNode != NULL)
+   {
+      msg->setField(VID_VALUE, sameNode->getName());
+   }
+   else if (sameSubnet != NULL)
+   {
+      msg->setField(VID_VALUE, sameSubnet->getName());
+   }
+   else
+   {
+      msg->setField(VID_VALUE, _T(""));
    }
 }
 
@@ -2767,7 +2767,7 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 				}
 				else if (dwResult == RCC_ALREADY_EXIST)
 				{
-               //Add information about conflicting nodes
+               // Add information about conflicting nodes
                InetAddress ipAddr;
 
                if (pRequest->isFieldExist(VID_IP_ADDRESS))

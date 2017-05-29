@@ -85,7 +85,7 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
             if (m_pSessionList[i]->isAuthenticated())
-               m_pSessionList[i]->sendMessage(&msg);
+               m_pSessionList[i]->postMessage(&msg);
       RWLockUnlock(m_rwlockSessionListAccess);
    }
 

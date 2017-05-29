@@ -2716,7 +2716,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
       lockProperties();
       if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
       {
-         safe_free(m_sysDescription);
+         free(m_sysDescription);
          m_sysDescription = _tcsdup(szBuffer);
          hasChanges = true;
          sendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
@@ -5585,10 +5585,10 @@ void Node::changeZone(UINT32 newZone)
    pollerLock();
 
    lockProperties();
-
    m_zoneId = newZone;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    m_lastConfigurationPoll = 0;
+   unlockProperties();
 
    // Remove from subnets
    lockParentList(false);
@@ -5604,7 +5604,7 @@ void Node::changeZone(UINT32 newZone)
       deleteParent(subnets[i]);
       subnets[i]->deleteChild(this);
    }
-   safe_free(subnets);
+   free(subnets);
 
    // Change zone ID on interfaces
    lockChildList(false);
@@ -5613,6 +5613,7 @@ void Node::changeZone(UINT32 newZone)
          ((Interface *)m_childList->get(i))->updateZoneId();
    unlockChildList();
 
+   lockProperties();
    setModified();
    unlockProperties();
 
