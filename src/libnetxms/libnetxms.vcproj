@@ -394,6 +394,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\diff.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dir.cpp"
 				>
 			</File>
@@ -597,6 +601,10 @@
 			>
 			<File
 				RelativePath="..\..\include\base64.h"
+				>
+			</File>
+			<File
+				RelativePath=".\diff.h"
 				>
 			</File>
 			<File

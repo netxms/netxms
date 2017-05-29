@@ -95,7 +95,7 @@ public:
  * @param operation One of INSERT, DELETE or EQUAL
  * @param text The text being applied
  */
-Diff::Diff(Operation _operation, const String &_text) : text(_text)
+Diff::Diff(DiffOperation _operation, const String &_text) : text(_text)
 {
    operation = _operation;
 }
@@ -114,18 +114,18 @@ Diff::Diff(const Diff &src)
 
 Diff::Diff()
 {
-   operation = EQUAL;
+   operation = DIFF_EQUAL;
 }
 
-String Diff::strOperation(Operation op)
+String Diff::strOperation(DiffOperation op)
 {
    switch(op)
    {
-      case INSERT:
+      case DIFF_INSERT:
          return _T("INSERT");
-      case DELETE:
+      case DIFF_DELETE:
          return _T("DELETE");
-      case EQUAL:
+      case DIFF_EQUAL:
          return _T("EQUAL");
    }
    return _T("Invalid operation");
@@ -167,9 +167,10 @@ bool Diff::operator!=(const Diff &d) const
 //
 /////////////////////////////////////////////
 
-DiffEngine::DiffEngine() :
-         Diff_Timeout(1.0f), Diff_EditCost(4)
+DiffEngine::DiffEngine()
 {
+   Diff_Timeout = 5000;
+   Diff_EditCost = 4;
 }
 
 ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text2)
@@ -180,19 +181,19 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
 ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text2, bool checklines)
 {
    // Set a deadline by which time the diff must be complete.
-   clock_t deadline;
+   INT64 deadline;
    if (Diff_Timeout <= 0)
    {
-      deadline = std::numeric_limits<clock_t>::max();
+      deadline = _LL(0x7FFFFFFFFFFFFFFF);
    }
    else
    {
-      deadline = clock() + (clock_t)(Diff_Timeout * CLOCKS_PER_SEC);
+      deadline = GetCurrentTimeMs() + Diff_Timeout;
    }
    return diff_main(text1, text2, checklines, deadline);
 }
 
-ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text2, bool checklines, clock_t deadline)
+ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text2, bool checklines, INT64 deadline)
 {
    // Check for equality (speedup).
    if (text1 == text2)
@@ -200,7 +201,7 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
       ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, true);
       if (!text1.isEmpty())
       {
-         diffs->add(new Diff(EQUAL, text1));
+         diffs->add(new Diff(DIFF_EQUAL, text1));
       }
       return diffs;
    }
@@ -230,11 +231,11 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
       // Restore the prefix and suffix.
       if (!commonprefix.isEmpty())
       {
-         diffs->insert(0, new Diff(EQUAL, commonprefix));
+         diffs->insert(0, new Diff(DIFF_EQUAL, commonprefix));
       }
       if (!commonsuffix.isEmpty())
       {
-         diffs->add(new Diff(EQUAL, commonsuffix));
+         diffs->add(new Diff(DIFF_EQUAL, commonsuffix));
       }
 
       diff_cleanupMerge(*diffs);
@@ -242,13 +243,13 @@ ObjectArray<Diff> *DiffEngine::diff_main(const String &text1, const String &text
    return diffs;
 }
 
-ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool checklines, clock_t deadline)
+ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool checklines, INT64 deadline)
 {
    if (text1.isEmpty())
    {
       // Just add some text (speedup).
       ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
-      diffs->add(new Diff(INSERT, text2));
+      diffs->add(new Diff(DIFF_INSERT, text2));
       return diffs;
    }
 
@@ -256,7 +257,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
    {
       // Just delete some text (speedup).
       ObjectArray<Diff> *diffs = new ObjectArray<Diff>(64, 64, true);
-      diffs->add(new Diff(DELETE, text1));
+      diffs->add(new Diff(DIFF_DELETE, text1));
       return diffs;
    }
 
@@ -269,9 +270,9 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
       if (i != String::npos)
       {
          // Shorter text is inside the longer text (speedup).
-         const Operation op = (text1.length() > text2.length()) ? DELETE : INSERT;
+         const DiffOperation op = (text1.length() > text2.length()) ? DIFF_DELETE : DIFF_INSERT;
          diffs->add(new Diff(op, longtext.left(i)));
-         diffs->add(new Diff(EQUAL, shorttext));
+         diffs->add(new Diff(DIFF_EQUAL, shorttext));
          diffs->add(new Diff(op, safeMid(longtext, i + shorttext.length())));
          return diffs;
       }
@@ -280,8 +281,8 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
       {
          // Single character string.
          // After the previous speedup, the character can't be an equality.
-         diffs->add(new Diff(DELETE, text1));
-         diffs->add(new Diff(INSERT, text2));
+         diffs->add(new Diff(DIFF_DELETE, text1));
+         diffs->add(new Diff(DIFF_INSERT, text2));
          return diffs;
       }
       delete diffs;
@@ -298,7 +299,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
          ObjectArray<Diff> *diffs_a = diff_main(hm->get(0), hm->get(2), checklines, deadline);
          ObjectArray<Diff> *diffs_b = diff_main(hm->get(1), hm->get(3), checklines, deadline);
          // Merge the results.
-         diffs_a->add(new Diff(EQUAL, hm->get(4)));
+         diffs_a->add(new Diff(DIFF_EQUAL, hm->get(4)));
          for(int i = 0; i < diffs_b->size(); i++)
             diffs_a->add(diffs_b->get(i));
          diffs_b->setOwner(false);
@@ -318,7 +319,7 @@ ObjectArray<Diff> *DiffEngine::diff_compute(String text1, String text2, bool che
    return diff_bisect(text1, text2, deadline);
 }
 
-ObjectArray<Diff> *DiffEngine::diff_lineMode(const String& text1, const String& text2, clock_t deadline)
+ObjectArray<Diff> *DiffEngine::diff_lineMode(const String& text1, const String& text2, INT64 deadline)
 {
    // Scan the text on a line-by-line basis first.
    Array *b = diff_linesToChars(text1, text2);
@@ -341,11 +342,11 @@ ObjectArray<Diff> *DiffEngine::diff_lineMode(const String& text1, const String& 
    return diffs;
 }
 
-ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &text2, clock_t deadline)
+ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &text2, INT64 deadline)
 {
    // Cache the text lengths to prevent multiple calls.
-   const int text1_length = text1.length();
-   const int text2_length = text2.length();
+   const int text1_length = (int)text1.length();
+   const int text2_length = (int)text2.length();
    const int max_d = (text1_length + text2_length + 1) / 2;
    const int v_offset = max_d;
    const int v_length = 2 * max_d;
@@ -371,7 +372,7 @@ ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &te
    for(int d = 0; d < max_d; d++)
    {
       // Bail out if deadline is reached.
-      if (clock() > deadline)
+      if (GetCurrentTimeMs() > deadline)
       {
          break;
       }
@@ -479,12 +480,12 @@ ObjectArray<Diff> *DiffEngine::diff_bisect(const String &text1, const String &te
    // Diff took too long and hit the deadline or
    // number of diffs equals number of characters, no commonality at all.
    ObjectArray<Diff> *diffs = new ObjectArray<Diff>(16, 16, true);
-   diffs->add(new Diff(DELETE, text1));
-   diffs->add(new Diff(INSERT, text2));
+   diffs->add(new Diff(DIFF_DELETE, text1));
+   diffs->add(new Diff(DIFF_INSERT, text2));
    return diffs;
 }
 
-ObjectArray<Diff> *DiffEngine::diff_bisectSplit(const String &text1, const String &text2, int x, int y, clock_t deadline)
+ObjectArray<Diff> *DiffEngine::diff_bisectSplit(const String &text1, const String &text2, int x, int y, INT64 deadline)
 {
    String text1a = text1.left(x);
    String text2a = text2.left(y);
@@ -539,7 +540,7 @@ String DiffEngine::diff_linesToCharsMunge(const String &text, StringList &lineAr
       {
          lineEnd = text.length();
       }
-      line = safeMid(text, lineStart, lineEnd - lineStart + 1);
+      line = safeMid(text, lineStart, (int)(lineEnd - lineStart + 1));
       lineStart = lineEnd + 1;
 
       if (lineHash.contains(line))
@@ -565,7 +566,7 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
       String text;
       for(int y = 0; y < diff->text.length(); y++)
       {
-         text += lineArray.get(static_cast<ushort>(diff->text.charAt(y)));
+         text += lineArray.get(static_cast<int>(diff->text.charAt(y)));
       }
       diff->text = text;
    }
@@ -574,7 +575,7 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
 int DiffEngine::diff_commonPrefix(const String &text1, const String &text2)
 {
    // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-   const int n = std::min(text1.length(), text2.length());
+   const int n = (int)min(text1.length(), text2.length());
    for(int i = 0; i < n; i++)
    {
       if (text1.charAt(i) != text2.charAt(i))
@@ -588,9 +589,9 @@ int DiffEngine::diff_commonPrefix(const String &text1, const String &text2)
 int DiffEngine::diff_commonSuffix(const String &text1, const String &text2)
 {
    // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-   const int text1_length = text1.length();
-   const int text2_length = text2.length();
-   const int n = std::min(text1_length, text2_length);
+   const int text1_length = (int)text1.length();
+   const int text2_length = (int)text2.length();
+   const int n = min(text1_length, text2_length);
    for(int i = 1; i <= n; i++)
    {
       if (text1.charAt(text1_length - i) != text2.charAt(text2_length - i))
@@ -601,11 +602,11 @@ int DiffEngine::diff_commonSuffix(const String &text1, const String &text2)
    return n;
 }
 
-int DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
+size_t DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
 {
    // Cache the text lengths to prevent multiple calls.
-   const int text1_length = text1.length();
-   const int text2_length = text2.length();
+   const size_t text1_length = text1.length();
+   const size_t text2_length = text2.length();
    // Eliminate the null case.
    if (text1_length == 0 || text2_length == 0)
    {
@@ -622,7 +623,7 @@ int DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
    {
       text2_trunc = text2.left(text1_length);
    }
-   const int text_length = std::min(text1_length, text2_length);
+   const size_t text_length = min(text1_length, text2_length);
    // Quick check for the worst case.
    if (text1_trunc == text2_trunc)
    {
@@ -632,13 +633,13 @@ int DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
    // Start by looking for a single character match
    // and increase length until no match is found.
    // Performance analysis: http://neil.fraser.name/news/2010/11/04/
-   int best = 0;
-   int length = 1;
+   size_t best = 0;
+   size_t length = 1;
    while(true)
    {
       String pattern = text1_trunc.right(length);
       int found = text2_trunc.find(pattern);
-      if (found == -1)
+      if (found == String::npos)
       {
          return best;
       }
@@ -666,9 +667,9 @@ StringList *DiffEngine::diff_halfMatch(const String &text1, const String &text2)
    }
 
    // First check if the second quarter is the seed for a half-match.
-   StringList *hm1 = diff_halfMatchI(longtext, shorttext, (longtext.length() + 3) / 4);
+   StringList *hm1 = diff_halfMatchI(longtext, shorttext, ((int)longtext.length() + 3) / 4);
    // Check again based on the third quarter.
-   StringList *hm2 = diff_halfMatchI(longtext, shorttext, (longtext.length() + 1) / 2);
+   StringList *hm2 = diff_halfMatchI(longtext, shorttext, ((int)longtext.length() + 1) / 2);
    if (hm1->isEmpty() && hm2->isEmpty())
    {
       delete hm1;
@@ -721,7 +722,7 @@ StringList *DiffEngine::diff_halfMatch(const String &text1, const String &text2)
 StringList *DiffEngine::diff_halfMatchI(const String &longtext, const String &shorttext, int i)
 {
    // Start with a 1/4 length substring at position i as a seed.
-   const String seed = safeMid(longtext, i, longtext.length() / 4);
+   const String seed = safeMid(longtext, i, (int)(longtext.length() / 4));
    int j = -1;
    String best_common;
    String best_longtext_a, best_longtext_b;
@@ -777,7 +778,7 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
    Diff *thisDiff = pointer.hasNext() ? pointer.next() : NULL;
    while(thisDiff != NULL)
    {
-      if (thisDiff->operation == EQUAL)
+      if (thisDiff->operation == DIFF_EQUAL)
       {
          // Equality found.
          equalities.push(thisDiff);
@@ -790,18 +791,18 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
       else
       {
          // An insertion or deletion.
-         if (thisDiff->operation == INSERT)
+         if (thisDiff->operation == DIFF_INSERT)
          {
-            length_insertions2 += thisDiff->text.length();
+            length_insertions2 += (int)thisDiff->text.length();
          }
          else
          {
-            length_deletions2 += thisDiff->text.length();
+            length_deletions2 += (int)thisDiff->text.length();
          }
          // Eliminate an equality that is smaller or equal to the edits on both
          // sides of it.
-         if (!lastequality.isEmpty() && (lastequality.length() <= std::max(length_insertions1, length_deletions1))
-                  && (lastequality.length() <= std::max(length_insertions2, length_deletions2)))
+         if (!lastequality.isEmpty() && (lastequality.length() <= max(length_insertions1, length_deletions1))
+                  && (lastequality.length() <= max(length_insertions2, length_deletions2)))
          {
             // printf("Splitting: '%s'\n", qPrintable(lastequality));
             // Walk back to offending equality.
@@ -812,9 +813,9 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
             pointer.next();
 
             // Replace equality with a delete.
-            pointer.setValue(new Diff(DELETE, lastequality));
+            pointer.setValue(new Diff(DIFF_DELETE, lastequality));
             // Insert a corresponding an insert.
-            pointer.insert(new Diff(INSERT, lastequality));
+            pointer.insert(new Diff(DIFF_INSERT, lastequality));
 
             equalities.pop();  // Throw away the equality we just deleted.
             if (!equalities.isEmpty())
@@ -877,19 +878,19 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
    }
    while(thisDiff != NULL)
    {
-      if (prevDiff->operation == DELETE && thisDiff->operation == INSERT)
+      if (prevDiff->operation == DIFF_DELETE && thisDiff->operation == DIFF_INSERT)
       {
          String deletion = prevDiff->text;
          String insertion = thisDiff->text;
-         int overlap_length1 = diff_commonOverlap(deletion, insertion);
-         int overlap_length2 = diff_commonOverlap(insertion, deletion);
+         size_t overlap_length1 = diff_commonOverlap(deletion, insertion);
+         size_t overlap_length2 = diff_commonOverlap(insertion, deletion);
          if (overlap_length1 >= overlap_length2)
          {
             if (overlap_length1 >= deletion.length() / 2.0 || overlap_length1 >= insertion.length() / 2.0)
             {
                // Overlap found.  Insert an equality and trim the surrounding edits.
                pointer.previous();
-               pointer.insert(new Diff(EQUAL, insertion.left(overlap_length1)));
+               pointer.insert(new Diff(DIFF_EQUAL, insertion.left(overlap_length1)));
                prevDiff->text = deletion.left(deletion.length() - overlap_length1);
                thisDiff->text = safeMid(insertion, overlap_length1);
                // pointer.insert inserts the element before the cursor, so there is
@@ -903,10 +904,10 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
                // Reverse overlap found.
                // Insert an equality and swap and trim the surrounding edits.
                pointer.previous();
-               pointer.insert(new Diff(EQUAL, deletion.left(overlap_length2)));
-               prevDiff->operation = INSERT;
+               pointer.insert(new Diff(DIFF_EQUAL, deletion.left(overlap_length2)));
+               prevDiff->operation = DIFF_INSERT;
                prevDiff->text = insertion.left(insertion.length() - overlap_length2);
-               thisDiff->operation = DELETE;
+               thisDiff->operation = DIFF_DELETE;
                thisDiff->text = safeMid(deletion, overlap_length2);
                // pointer.insert inserts the element before the cursor, so there is
                // no need to step past the new element.
@@ -935,7 +936,7 @@ void DiffEngine::diff_cleanupSemanticLossless(ObjectArray<Diff> &diffs)
    // Intentionally ignore the first and last element (don't need checking).
    while(nextDiff != NULL)
    {
-      if (prevDiff->operation == EQUAL && nextDiff->operation == EQUAL)
+      if (prevDiff->operation == DIFF_EQUAL && nextDiff->operation == DIFF_EQUAL)
       {
          // This is a single edit surrounded by equalities.
          equality1 = prevDiff->text;
@@ -1085,7 +1086,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
 
    while(thisDiff != NULL)
    {
-      if (thisDiff->operation == EQUAL)
+      if (thisDiff->operation == DIFF_EQUAL)
       {
          // Equality found.
          if (thisDiff->text.length() < Diff_EditCost && (post_ins || post_del))
@@ -1108,7 +1109,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
       else
       {
          // An insertion or deletion.
-         if (thisDiff->operation == DELETE)
+         if (thisDiff->operation == DIFF_DELETE)
          {
             post_del = true;
          }
@@ -1138,9 +1139,9 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
             pointer.next();
 
             // Replace equality with a delete.
-            pointer.setValue(new Diff(DELETE, lastequality));
+            pointer.setValue(new Diff(DIFF_DELETE, lastequality));
             // Insert a corresponding an insert.
-            pointer.insert(new Diff(INSERT, lastequality));
+            pointer.insert(new Diff(DIFF_INSERT, lastequality));
             thisDiff = pointer.previous();
             pointer.next();
 
@@ -1192,7 +1193,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
 
 void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
 {
-   diffs.add(new Diff(EQUAL, _T("")));  // Add a dummy entry at the end.
+   diffs.add(new Diff(DIFF_EQUAL, _T("")));  // Add a dummy entry at the end.
    MutableListIterator<Diff> pointer(&diffs);
    int count_delete = 0;
    int count_insert = 0;
@@ -1205,17 +1206,17 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
    {
       switch(thisDiff->operation)
       {
-         case INSERT:
+         case DIFF_INSERT:
             count_insert++;
             text_insert += thisDiff->text;
             prevEqual = NULL;
             break;
-         case DELETE:
+         case DIFF_DELETE:
             count_delete++;
             text_delete += thisDiff->text;
             prevEqual = NULL;
             break;
-         case EQUAL:
+         case DIFF_EQUAL:
             if (count_delete + count_insert > 1)
             {
                bool both_types = count_delete != 0 && count_insert != 0;
@@ -1240,7 +1241,7 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
                      if (pointer.hasPrevious())
                      {
                         thisDiff = pointer.previous();
-                        if (thisDiff->operation != EQUAL)
+                        if (thisDiff->operation != DIFF_EQUAL)
                         {
                            return;
                         }
@@ -1249,7 +1250,7 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
                      }
                      else
                      {
-                        pointer.insert(new Diff(EQUAL, text_insert.left(commonlength)));
+                        pointer.insert(new Diff(DIFF_EQUAL, text_insert.left(commonlength)));
                      }
                      text_insert = safeMid(text_insert, commonlength);
                      text_delete = safeMid(text_delete, commonlength);
@@ -1270,11 +1271,11 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
                // Insert the merged records.
                if (!text_delete.isEmpty())
                {
-                  pointer.insert(new Diff(DELETE, text_delete));
+                  pointer.insert(new Diff(DIFF_DELETE, text_delete));
                }
                if (!text_insert.isEmpty())
                {
-                  pointer.insert(new Diff(INSERT, text_insert));
+                  pointer.insert(new Diff(DIFF_INSERT, text_insert));
                }
                // Step forward to the equality.
                thisDiff = pointer.hasNext() ? pointer.next() : NULL;
@@ -1317,7 +1318,7 @@ void DiffEngine::diff_cleanupMerge(ObjectArray<Diff> &diffs)
    // Intentionally ignore the first and last element (don't need checking).
    while(nextDiff != NULL)
    {
-      if (prevDiff->operation == EQUAL && nextDiff->operation == EQUAL)
+      if (prevDiff->operation == DIFF_EQUAL && nextDiff->operation == DIFF_EQUAL)
       {
          // This is a single edit surrounded by equalities.
          if (thisDiff->text.endsWith(prevDiff->text))
@@ -1370,15 +1371,15 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
-      if (aDiff->operation != INSERT)
+      if (aDiff->operation != DIFF_INSERT)
       {
          // Equality or deletion.
-         chars1 += aDiff->text.length();
+         chars1 += (int)aDiff->text.length();
       }
-      if (aDiff->operation != DELETE)
+      if (aDiff->operation != DIFF_DELETE)
       {
          // Equality or insertion.
-         chars2 += aDiff->text.length();
+         chars2 += (int)aDiff->text.length();
       }
       if (chars1 > loc)
       {
@@ -1389,7 +1390,7 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
       last_chars1 = chars1;
       last_chars2 = chars2;
    }
-   if (lastDiff->operation == DELETE)
+   if (lastDiff->operation == DIFF_DELETE)
    {
       // The location was deleted.
       return last_chars2;
@@ -1422,10 +1423,10 @@ String DiffEngine::diff_generateLineDiff(ObjectArray<Diff> *diffs)
       Diff *aDiff = diffs->get(i);
       switch(aDiff->operation)
       {
-         case INSERT:
+         case DIFF_INSERT:
             AppendLines(out, aDiff->text, _T('+'));
             break;
-         case DELETE:
+         case DIFF_DELETE:
             AppendLines(out, aDiff->text, _T('-'));
             break;
       }
@@ -1439,7 +1440,7 @@ String DiffEngine::diff_text1(const ObjectArray<Diff> &diffs)
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
-      if (aDiff->operation != INSERT)
+      if (aDiff->operation != DIFF_INSERT)
       {
          text.append(aDiff->text);
       }
@@ -1453,7 +1454,7 @@ String DiffEngine::diff_text2(const ObjectArray<Diff> &diffs)
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
-      if (aDiff->operation != DELETE)
+      if (aDiff->operation != DIFF_DELETE)
       {
          text += aDiff->text;
       }
@@ -1471,21 +1472,21 @@ int DiffEngine::diff_levenshtein(const ObjectArray<Diff> &diffs)
       Diff *aDiff = diffs.get(i);
       switch(aDiff->operation)
       {
-         case INSERT:
-         insertions += aDiff->text.length();
+         case DIFF_INSERT:
+         insertions += (int)aDiff->text.length();
          break;
-         case DELETE:
-         deletions += aDiff->text.length();
+         case DIFF_DELETE:
+         deletions += (int)aDiff->text.length();
          break;
-         case EQUAL:
+         case DIFF_EQUAL:
          // A deletion and an insertion is one substitution.
-         levenshtein += std::max(insertions, deletions);
+         levenshtein += max(insertions, deletions);
          insertions = 0;
          deletions = 0;
          break;
       }
    }
-   levenshtein += std::max(insertions, deletions);
+   levenshtein += max(insertions, deletions);
    return levenshtein;
 }
 
@@ -1497,15 +1498,15 @@ String DiffEngine::diff_toDelta(const ObjectArray<Diff> &diffs)
       Diff *aDiff = diffs.get(i);
       switch(aDiff->operation)
       {
-         case INSERT:
+         case DIFF_INSERT:
             text.append(_T('+'));
             text.append(aDiff->text);
             text.append(_T('\t'));
             break;
-         case DELETE:
+         case DIFF_DELETE:
             text.appendFormattedString(_T("-%d\t"), aDiff->text.length());
             break;
-         case EQUAL:
+         case DIFF_EQUAL:
             text.appendFormattedString(_T("=%d\t"), aDiff->text.length());
             break;
       }
@@ -1537,7 +1538,7 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
       switch(token[0])
       {
          case '+':
-            diffs->add(new Diff(INSERT, param));
+            diffs->add(new Diff(DIFF_INSERT, param));
             break;
          case '-':
          // Fall through.
@@ -1554,11 +1555,11 @@ ObjectArray<Diff> *DiffEngine::diff_fromDelta(const String &text1, const String 
             pointer += n;
             if (token[0] == '=')
             {
-               diffs->add(new Diff(EQUAL, text));
+               diffs->add(new Diff(DIFF_EQUAL, text));
             }
             else
             {
-               diffs->add(new Diff(DELETE, text));
+               diffs->add(new Diff(DIFF_DELETE, text));
             }
             break;
          }

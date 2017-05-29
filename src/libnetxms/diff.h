@@ -74,24 +74,26 @@ public:
 
  */
 
-
 /**-
 * The data structure representing a diff is a Linked list of Diff objects:
 * {Diff(Operation.DELETE, "Hello"), Diff(Operation.INSERT, "Goodbye"),
 *  Diff(Operation.EQUAL, " world.")}
 * which means: delete "Hello", add "Goodbye" and keep " world."
 */
-enum Operation {
-  DELETE, INSERT, EQUAL
+enum DiffOperation 
+{
+   DIFF_DELETE, 
+   DIFF_INSERT, 
+   DIFF_EQUAL
 };
-
 
 /**
 * Class representing one diff operation.
 */
-class Diff {
- public:
-  Operation operation;
+class Diff 
+{
+public:
+  DiffOperation operation;
   // One of: INSERT, DELETE or EQUAL.
   String text;
   // The text associated with this diff operation.
@@ -101,7 +103,7 @@ class Diff {
    * @param operation One of INSERT, DELETE or EQUAL.
    * @param text The text being applied.
    */
-  Diff(Operation _operation, const String &_text);
+  Diff(DiffOperation _operation, const String &_text);
   Diff(const Diff *src);
   Diff(const Diff &src);
   Diff();
@@ -110,7 +112,7 @@ class Diff {
   bool operator==(const Diff &d) const;
   bool operator!=(const Diff &d) const;
 
-  static String strOperation(Operation op);
+  static String strOperation(DiffOperation op);
 };
 
 /**
@@ -120,17 +122,17 @@ class Diff {
 class DiffEngine
 {
  public:
-  // Defaults.
-  // Set these on your diff_match_patch instance to override the defaults.
+   // Defaults.
+   // Set these on your diff_match_patch instance to override the defaults.
 
-  // Number of seconds to map a diff before giving up (0 for infinity).
-  float Diff_Timeout;
-  // Cost of an empty edit operation in terms of edit characters.
-  short Diff_EditCost;
+   // Number of milliseconds to map a diff before giving up (0 for infinity).
+   int Diff_Timeout;
+   
+   // Cost of an empty edit operation in terms of edit characters.
+   short Diff_EditCost;
 
- public:
-
-  DiffEngine();
+public:
+   DiffEngine();
 
   //  DIFF FUNCTIONS
 
@@ -170,7 +172,7 @@ class DiffEngine
    * @return Linked List of Diff objects.
    */
  private:
-  ObjectArray<Diff> *diff_main(const String &text1, const String &text2, bool checklines, clock_t deadline);
+  ObjectArray<Diff> *diff_main(const String &text1, const String &text2, bool checklines, INT64 deadline);
 
   /**
    * Find the differences between two texts.  Assumes that the texts do not
@@ -184,7 +186,7 @@ class DiffEngine
    * @return Linked List of Diff objects.
    */
  private:
-  ObjectArray<Diff> *diff_compute(String text1, String text2, bool checklines, clock_t deadline);
+  ObjectArray<Diff> *diff_compute(String text1, String text2, bool checklines, INT64 deadline);
 
   /**
    * Do a quick line-level diff on both strings, then rediff the parts for
@@ -196,7 +198,7 @@ class DiffEngine
    * @return Linked List of Diff objects.
    */
  private:
-  ObjectArray<Diff> *diff_lineMode(const String& text1, const String& text2, clock_t deadline);
+  ObjectArray<Diff> *diff_lineMode(const String& text1, const String& text2, INT64 deadline);
 
   /**
    * Find the 'middle snake' of a diff, split the problem in two
@@ -207,7 +209,7 @@ class DiffEngine
    * @return Linked List of Diff objects.
    */
  protected:
-  ObjectArray<Diff> *diff_bisect(const String &text1, const String &text2, clock_t deadline);
+  ObjectArray<Diff> *diff_bisect(const String &text1, const String &text2, INT64 deadline);
 
   /**
    * Given the location of the 'middle snake', split the diff in two parts
@@ -220,7 +222,7 @@ class DiffEngine
    * @return LinkedList of Diff objects.
    */
  private:
-  ObjectArray<Diff> *diff_bisectSplit(const String &text1, const String &text2, int x, int y, clock_t deadline);
+  ObjectArray<Diff> *diff_bisectSplit(const String &text1, const String &text2, int x, int y, INT64 deadline);
 
   /**
    * Split two texts into a list of strings.  Reduce the texts to a string of
@@ -280,7 +282,7 @@ class DiffEngine
    *     string and the start of the second string.
    */
  protected:
-  int diff_commonOverlap(const String &text1, const String &text2);
+  size_t diff_commonOverlap(const String &text1, const String &text2);
 
   /**
    * Do the two texts share a substring which is at least half the length of
@@ -424,7 +426,7 @@ class DiffEngine
    * @return Substring.
    */
  private:
-  static inline String safeMid(const String &str, int pos)
+  static inline String safeMid(const String &str, size_t pos)
   {
     return str.substring(pos, -1);
   }
@@ -438,7 +440,7 @@ class DiffEngine
    * @return Substring.
    */
  private:
-  static inline String safeMid(const String &str, int pos, int len)
+  static inline String safeMid(const String &str, size_t pos, int len)
   {
     return str.substring(pos, len);
   }

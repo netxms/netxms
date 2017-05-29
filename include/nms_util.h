@@ -587,8 +587,8 @@ public:
 
    String substring(size_t start, int len) const;
 	TCHAR *substring(size_t start, int len, TCHAR *buffer) const;
-	String left(int len) const { return substring(0, len); }
-   String right(int len) const { return substring(max(0, (int)m_length - len), len); }
+	String left(size_t len) const { return substring(0, (int)len); }
+   String right(size_t len) const { return substring(max(0, m_length - len), (int)len); }
 
    StringList *split(const TCHAR *separator) const;
 
@@ -1414,11 +1414,6 @@ public:
 };
 
 /**
- * Create JSON string from wide character string
- */
-json_t LIBNETXMS_EXPORTABLE *json_string_w(const WCHAR *s);
-
-/**
  * Create JSON string with null check
  */
 inline json_t *json_string_a(const char *s)
@@ -1448,7 +1443,7 @@ inline json_t *json_string_w(const WCHAR *s)
 /**
  * Create JSON array from integer array
  */
-template<typename T> json_t LIBNETXMS_EXPORTABLE *json_integer_array(const T *values, size_t size)
+template<typename T> json_t *json_integer_array(const T *values, size_t size)
 {
    json_t *a = json_array();
    for(size_t i = 0; i < size; i++)
