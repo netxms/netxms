@@ -128,6 +128,18 @@ public class EditThresholdDialog extends Dialog
                createScriptGroup();
                parent.getParent().layout(true, true);
             }
+            if (f == Threshold.F_ERROR && selectedFunction != Threshold.F_ERROR)
+            {
+               if (!operation.isDisposed())
+                  operation.setEnabled(false);
+               value.setEnabled(false);
+            }
+            else if (f != Threshold.F_ERROR && selectedFunction == Threshold.F_ERROR)
+            {
+               if (!operation.isDisposed())
+                  operation.setEnabled(true);
+               value.setEnabled(true);
+            }
             selectedFunction = f;
          }
       });
