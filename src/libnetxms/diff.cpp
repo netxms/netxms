@@ -20,8 +20,6 @@
  */
 
 #include "libnetxms.h"
-#include <algorithm>
-#include <limits>
 #include "diff.h"
 
 // Define some regex patterns for matching boundaries.
