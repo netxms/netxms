@@ -101,6 +101,33 @@ public class ConsoleSharedData
    {
       return (display != null) ? RWT.getUISession(display).getAttribute("netxms." + name) : null;
    }
+
+   /**
+    * Get value of console property as boolean
+    * 
+    * @param name name of the property
+    * @param defaultValue default value if property does not exist or is not boolean
+    * @return property value or default value
+    */
+   public static boolean getPropertyAsBoolean(final String name, boolean defaultValue)
+   {
+      Object v = getProperty(name);
+      return ((v != null) && (v instanceof Boolean)) ? (Boolean)v : defaultValue;
+   }
+
+   /**
+    * Get value of console property as boolean
+    * 
+    * @param display display to use
+    * @param name name of the property
+    * @param defaultValue default value if property does not exist or is not boolean
+    * @return property value or default value
+    */
+   public static boolean getPropertyAsBoolean(Display display, final String name, boolean defaultValue)
+   {
+      Object v = getProperty(display, name);
+      return ((v != null) && (v instanceof Boolean)) ? (Boolean)v : defaultValue;
+   }
    
 	/**
 	 * Set value of console property
