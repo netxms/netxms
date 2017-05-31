@@ -607,6 +607,8 @@ using std::wcsncasecmp;
 
 #if _USE_GNU_PTH
 #include <pth.h>
+#else
+#include <pthread.h>
 #endif
 
 #ifdef __sun
