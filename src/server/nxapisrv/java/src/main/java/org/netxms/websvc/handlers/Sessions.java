@@ -23,6 +23,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
 import org.restlet.data.CookieSetting;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -44,16 +45,29 @@ public class Sessions extends AbstractHandler
    @Override
    @Post
    public Representation onPost(Representation entity) throws Exception
-   {	   
-      if (entity == null)
+   {
+      String login = null;
+      String password = null;
+      if (entity != null)
       {
-         log.warn("No POST data in login call");
-         return new StringRepresentation(createErrorResponse(RCC.INVALID_REQUEST).toString(), MediaType.APPLICATION_JSON);
+         JSONObject request = new JsonRepresentation(entity).getJsonObject();
+         login = request.getString("login");
+         password = request.getString("password");
+      }
+      else
+      {
+         log.warn("No POST data in login call, looking for authentication data instead...");
+         for(Header h : getRequest().getHeaders())
+         {
+            if (h.getName().equals("Authorization"))
+            {
+               String value = decodeBase64(h.getValue());
+               login = value.substring(0, value.indexOf(':'));
+               password = value.substring(value.indexOf(':') + 1, value.length());
+            }
+         }
       }
       
-      JSONObject request = new JsonRepresentation(entity).getJsonObject();
-      String login = request.getString("login");
-      String password = request.getString("password");
       if ((login == null) || (password == null))
       {
          log.warn("Login or password not specified in login call");
@@ -63,7 +77,8 @@ public class Sessions extends AbstractHandler
       SessionToken token = login(login, password);
 
       log.info("Logged in to NetXMS server, assigned session id " + token.getGuid());
-      getCookieSettings().add(new CookieSetting("session_handle", token.getGuid().toString()));
+      getCookieSettings().add(new CookieSetting(0, "session_handle", token.getGuid().toString(), "/", null));
+      getResponse().getHeaders().add(new Header("Session-Id", token.getGuid().toString()));
       
       JSONObject response = new JSONObject();
       response.put("session", token.getGuid().toString());

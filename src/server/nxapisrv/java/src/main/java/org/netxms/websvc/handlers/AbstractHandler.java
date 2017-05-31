@@ -18,6 +18,7 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import javax.servlet.ServletContext;
@@ -31,6 +32,7 @@ import org.netxms.websvc.SessionToken;
 import org.netxms.websvc.WebSvcStatusService;
 import org.netxms.websvc.json.JsonTools;
 import org.restlet.Application;
+import org.restlet.data.CookieSetting;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
@@ -142,8 +144,7 @@ public abstract class AbstractHandler extends ServerResource
    @Delete
    public Representation onDelete(Representation entity) throws Exception
    {
-      String id = getEntityId();
-      
+      String id = getEntityId();      
       log.debug("DELETE: entityId = " + id);
       if (attachToSession())
       {    	 
@@ -167,6 +168,22 @@ public abstract class AbstractHandler extends ServerResource
    }
    
    /**
+    * Decode strings from Base64
+    * 
+    * @param data coded in base64
+    * @return decoded String value
+    */
+   protected String decodeBase64(String data)
+   {
+      if (data != null && !data.equals("0"))
+      {
+         String value = data.substring(data.indexOf(' ') + 1, data.length());
+         return new String(Base64.getDecoder().decode(value));
+      }
+      return null;
+   }
+   
+   /**
     * Attach this handler to server session
     * 
     * @return true if attached successfully
@@ -174,16 +191,17 @@ public abstract class AbstractHandler extends ServerResource
    protected boolean attachToSession() throws Exception
    {
       SessionToken token = findSessionToken();
-      if ((token == null) && (getRequest().getHeaders().getFirstValue("X-Login") != null))
+      if ((token == null) && (getRequest().getHeaders().getFirstValue("Authorization") != null))
       {
-         String login = getRequest().getHeaders().getFirstValue("X-Login");
-         String password = getRequest().getHeaders().getFirstValue("X-Password");
+         String value = decodeBase64(getRequest().getHeaders().getFirstValue("Authorization"));
+         String login = value.substring(0, value.indexOf(':'));
+         String password = value.substring(value.indexOf(':') + 1, value.length());
          log.debug("Cannot find session token - re-authenticating (login=" + login + ")");
-         token = login(login, password);         
-         getResponse().getHeaders().add(new Header("X-SessionId", token.getGuid().toString()));         
+         token = login(login, password);
+         getCookieSettings().add(new CookieSetting(0, "session_handle", token.getGuid().toString(), "/", null));
+         getResponse().getHeaders().add(new Header("Session-Id", token.getGuid().toString()));
       }
-      
-      if (token != null)
+      else if (token != null)
       {
          log.debug("Handler attached to session " + token.getGuid());
          sessionToken = token;
@@ -206,21 +224,21 @@ public abstract class AbstractHandler extends ServerResource
       String cookie = getCookies().getValues("session_handle");
       if (cookie != null)
       {
+         log.debug("session_handle: " + cookie);
          UUID guid = UUID.fromString(cookie);
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
       
-      String sid = getRequest().getHeaders().getFirstValue("X-SessionId");
-      log.debug("sid: " + sid);
-      if (sid != null && !sid.equals("null") && !sid.equals("0"))
+      String sid = getRequest().getHeaders().getFirstValue("Session-Id");
+      if (sid != null && !sid.equals("0"))
       {
+         log.debug("Session-Id: " + sid);
          UUID guid = UUID.fromString(sid);
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
-      
       return null;
    }
-   
+
    /**
     * Get attached session
     * 
