@@ -46,7 +46,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 	 */
 	public DashboardComposite(Composite parent, int style)
 	{
-		super(parent, style & ~SWT.BORDER);
+		super(parent, style);
 		
 		colors = new ColorCache(this);
 		borderOuterColor = colors.create(171, 173, 179);
