@@ -514,7 +514,7 @@ public:
 	void setPrivPassword(const char *password);
 	void setAuthMethod(int method) { m_authMethod = method; }
 	void setPrivMethod(int method) { m_privMethod = method; }
-	void setSecurityModel(int model) { m_securityModel = model; }
+	void setSecurityModel(int model);
 	void setContextName(const TCHAR *name);
 #ifdef UNICODE
 	void setContextNameA(const char *name);

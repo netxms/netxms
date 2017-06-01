@@ -144,18 +144,27 @@ void SNMP_SecurityContext::setContextName(const TCHAR *name)
  */
 void SNMP_SecurityContext::setContextNameA(const char *name)
 {
-	safe_free(m_contextName);
+	free(m_contextName);
 	m_contextName = (name != NULL) ? strdup(name) : NULL;
 }
 
 #endif
 
 /**
+ * Set security model
+ */
+void SNMP_SecurityContext::setSecurityModel(int model)
+{
+   m_securityModel = model;
+   recalculateKeys();
+}
+
+/**
  * Set authentication name
  */
 void SNMP_SecurityContext::setAuthName(const char *name)
 {
-	safe_free(m_authName);
+	free(m_authName);
 	m_authName = strdup(CHECK_NULL_EX_A(name));
 }
 
@@ -164,7 +173,9 @@ void SNMP_SecurityContext::setAuthName(const char *name)
  */
 void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
-	safe_free(m_authPassword);
+   if ((m_authPassword != NULL) && !strcmp(CHECK_NULL_EX_A(password), m_authPassword))
+      return;
+	free(m_authPassword);
 	m_authPassword = strdup(CHECK_NULL_EX_A(password));
 	recalculateKeys();
 }
@@ -174,7 +185,9 @@ void SNMP_SecurityContext::setAuthPassword(const char *password)
  */
 void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
-	safe_free(m_privPassword);
+   if ((m_privPassword != NULL) && !strcmp(CHECK_NULL_EX_A(password), m_privPassword))
+      return;
+	free(m_privPassword);
 	m_privPassword = strdup(CHECK_NULL_EX_A(password));
 	recalculateKeys();
 }
@@ -193,6 +206,9 @@ void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
  */
 void SNMP_SecurityContext::recalculateKeys()
 {
+   if (m_securityModel != SNMP_SECURITY_MODEL_USM)
+      return;  // no need to recalculate keys
+
 	BYTE buffer[256];
 	const char *authPassword = (m_authPassword != NULL) ? m_authPassword : "";
 	const char *privPassword = (m_privPassword != NULL) ? m_privPassword : "";
