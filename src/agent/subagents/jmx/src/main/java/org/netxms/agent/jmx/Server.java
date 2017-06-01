@@ -246,6 +246,7 @@ public class Server
       connect();
       try
       {
+         SubAgent.writeDebugLog(6, String.format("JMX: reading object %s attribute %s", object, attribute));
          return mbsc.getAttribute(new ObjectName(object), attribute).toString();
       }
       catch(AttributeNotFoundException e)
