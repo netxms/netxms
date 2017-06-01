@@ -58,18 +58,6 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		"SNMP trap monitor",
 		"Event monitor"
 	};
-	private final String[] H_ALIGH = { 
-		Messages.get().DashboardElementsLabelProvider_Fill, 
-		Messages.get().DashboardElementsLabelProvider_Center, 
-		Messages.get().DashboardElementsLabelProvider_Left, 
-		Messages.get().DashboardElementsLabelProvider_Right 
-	};
-	private final String[] V_ALIGH = { 
-		Messages.get().DashboardElementsLabelProvider_Fill, 
-		Messages.get().DashboardElementsLabelProvider_Center, 
-		Messages.get().DashboardElementsLabelProvider_Top, 
-		Messages.get().DashboardElementsLabelProvider_Bottom 
-	};
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -108,22 +96,21 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 				{
 					return "1 / 1"; //$NON-NLS-1$
 				}
-			case DashboardElements.COLUMN_ALIGNMENT:
+			case DashboardElements.COLUMN_HEIGHT:
 				try
 				{
-					DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
-					try
-					{
-						return H_ALIGH[layout.horizontalAlignment] + " / " + V_ALIGH[layout.vertcalAlignment]; //$NON-NLS-1$
-					}
-					catch(ArrayIndexOutOfBoundsException e)
-					{
-						return Messages.get().DashboardElementsLabelProvider_Unknown;
-					}
+	            DashboardElementLayout layout = DashboardElementLayout.createFromXml(de.getLayout());
+	            if (layout.grabVerticalSpace)
+	               return "Fill";
+	            
+	            if (layout.heightHint > 0)
+	               return Integer.toString(layout.heightHint);
+	            
+	            return "Default";
 				}
 				catch(Exception e)
 				{
-					return Messages.get().DashboardElementsLabelProvider_FillFill;
+					return "Fill";
 				}
 		}
 		return null;

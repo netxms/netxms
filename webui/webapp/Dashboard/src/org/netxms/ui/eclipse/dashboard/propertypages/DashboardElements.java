@@ -59,7 +59,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -70,11 +70,10 @@ public class DashboardElements extends PropertyPage
 {
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
-	public static final int COLUMN_ALIGNMENT = 2;
+	public static final int COLUMN_HEIGHT = 2;
 	
 	private Dashboard object;
-	private LabeledText columnCount;
-	private Button checkEqualWidth;
+	private LabeledSpinner columnCount;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -103,25 +102,17 @@ public class DashboardElements extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      columnCount = new LabeledText(dialogArea, SWT.NONE);
+      columnCount = new LabeledSpinner(dialogArea, SWT.NONE);
       columnCount.setLabel(Messages.get().DashboardElements_NumColumns);
-      columnCount.setText(Integer.toString(object.getNumColumns()));
+      columnCount.setRange(1, 128);
+      columnCount.setSelection(object.getNumColumns());
       GridData gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      //gridData.horizontalSpan = 2;
+      gridData.horizontalAlignment = SWT.LEFT;
+      gridData.horizontalSpan = 2;
       columnCount.setLayoutData(gridData);
       
-      checkEqualWidth = new Button(dialogArea, SWT.CHECK);
-      checkEqualWidth.setText(Messages.get().DashboardElements_EqualWidth);
-      checkEqualWidth.setSelection((object.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      checkEqualWidth.setLayoutData(gridData);
-      
-      final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, Messages.get().DashboardElements_Alignment };
-      final int[] columnWidths = { 150, 60, 150 };
+      final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height" };
+      final int[] columnWidths = { 150, 60, 90 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -302,27 +293,9 @@ public class DashboardElements extends PropertyPage
 	 */
 	private boolean applyChanges(final boolean isApply)
 	{
-		int numColumns;
-		try
-		{
-			numColumns = Integer.parseInt(columnCount.getText());
-			if ((numColumns < 1) || (numColumns > 64))
-				throw new NumberFormatException();
-		}
-		catch(NumberFormatException e)
-		{
-			MessageDialogHelper.openError(getShell(), Messages.get().DashboardElements_Error, Messages.get().DashboardElements_ErrorText);
-			return false;
-		}
-		
-		int options = 0;
-		if (checkEqualWidth.getSelection())
-			options |= Dashboard.EQUAL_WIDTH_COLUMNS;
-		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
-		md.setColumnCount(numColumns);
-		md.setObjectFlags(options);
+		md.setColumnCount(columnCount.getSelection());
 		
 		if (isApply)
 			setValid(false);

@@ -25,9 +25,6 @@ import java.util.Map;
 import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IViewPart;
@@ -40,6 +37,8 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
+import org.netxms.ui.eclipse.dashboard.layout.DashboardLayout;
+import org.netxms.ui.eclipse.dashboard.layout.DashboardLayoutData;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
@@ -115,13 +114,12 @@ public class DashboardControl extends Composite
 	{
 		setBackground(SharedColors.getColor(SharedColors.DASHBOARD_BACKGROUND, getDisplay()));
 		
-		GridLayout layout = new GridLayout();
+		DashboardLayout layout = new DashboardLayout();
 		layout.numColumns = dashboard.getNumColumns();
 		layout.marginWidth = embedded ? 0 : 15;
 		layout.marginHeight = embedded ? 0 : 15;
 		layout.horizontalSpacing = 10;
 		layout.verticalSpacing = 10;
-		layout.makeColumnsEqualWidth = (dashboard.getOptions() & Dashboard.EQUAL_WIDTH_COLUMNS) != 0;
 		setLayout(layout);
 		
 		for(final DashboardElement e : elements)
@@ -130,50 +128,6 @@ public class DashboardControl extends Composite
 		}
 	}
 	
-	/**
-	 * Map dashboard element alignment info to SWT
-	 * 
-	 * @param a
-	 * @return
-	 */
-	static int mapHorizontalAlignment(int a)
-	{
-		switch(a)
-		{
-			case DashboardElement.FILL:
-				return SWT.FILL;
-			case DashboardElement.LEFT:
-				return SWT.LEFT;
-			case DashboardElement.RIGHT:
-				return SWT.RIGHT;
-			case DashboardElement.CENTER:
-				return SWT.CENTER;
-		}
-		return 0;
-	}
-
-	/**
-	 * Map dashboard element alignment info to SWT
-	 * 
-	 * @param a
-	 * @return
-	 */
-	static int mapVerticalAlignment(int a)
-	{
-		switch(a)
-		{
-			case DashboardElement.FILL:
-				return SWT.FILL;
-			case DashboardElement.TOP:
-				return SWT.TOP;
-			case DashboardElement.BOTTOM:
-				return SWT.BOTTOM;
-			case DashboardElement.CENTER:
-				return SWT.CENTER;
-		}
-		return 0;
-	}
-
 	/**
 	 * Factory method for creating dashboard elements
 	 * 
@@ -265,14 +219,10 @@ public class DashboardControl extends Composite
 		}
 
 		final DashboardElementLayout el = w.getElementLayout();
-		final GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = el.grabHorizontalSpace;
-		gd.horizontalAlignment = mapHorizontalAlignment(el.horizontalAlignment);
-		gd.grabExcessVerticalSpace = el.grabVerticalSpace;
-		gd.verticalAlignment = mapVerticalAlignment(el.vertcalAlignment);
+		final DashboardLayoutData gd = new DashboardLayoutData();
+		gd.fill = el.grabVerticalSpace;
 		gd.horizontalSpan = el.horizontalSpan;
 		gd.verticalSpan = el.verticalSpan;
-		gd.widthHint = el.widthHint;
 		gd.heightHint = el.heightHint;
 		w.setLayoutData(gd);
 		

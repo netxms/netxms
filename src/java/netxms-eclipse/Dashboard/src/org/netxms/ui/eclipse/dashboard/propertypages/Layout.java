@@ -19,9 +19,9 @@
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
@@ -37,13 +37,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Layout extends PropertyPage
 {
-	private Combo comboHorizontalAlign;
-	private Combo comboVerticalAlign;
-	private Button checkGrabHorizontalSpace;
 	private Button checkGrabVerticalSpace;
 	private Spinner spinnerHorizontalSpan;
 	private Spinner spinnerVerticalSpan;
-	private Spinner spinnerWidthHint;
 	private Spinner spinnerHeightHint;
 	private DashboardElementConfig elementConfig;
 	private DashboardElementLayout elementLayout;
@@ -63,30 +59,6 @@ public class Layout extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		comboHorizontalAlign = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
-				Messages.get().Layout_HAlign, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		comboHorizontalAlign.add(Messages.get().Layout_Fill);
-		comboHorizontalAlign.add(Messages.get().Layout_Center);
-		comboHorizontalAlign.add(Messages.get().Layout_Left);
-		comboHorizontalAlign.add(Messages.get().Layout_Right);
-		comboHorizontalAlign.select(elementLayout.horizontalAlignment);
-		
-		comboVerticalAlign = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
-				Messages.get().Layout_VAlign, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		comboVerticalAlign.add(Messages.get().Layout_Fill);
-		comboVerticalAlign.add(Messages.get().Layout_Center);
-		comboVerticalAlign.add(Messages.get().Layout_Top);
-		comboVerticalAlign.add(Messages.get().Layout_Bottom);
-		comboVerticalAlign.select(elementLayout.vertcalAlignment);
-		
-		checkGrabHorizontalSpace = new Button(dialogArea, SWT.CHECK);
-		checkGrabHorizontalSpace.setText(Messages.get().Layout_GrapExtraH);
-		checkGrabHorizontalSpace.setSelection(elementLayout.grabHorizontalSpace);
-		
-		checkGrabVerticalSpace = new Button(dialogArea, SWT.CHECK);
-		checkGrabVerticalSpace.setText(Messages.get().Layout_GrapExtraV);
-		checkGrabVerticalSpace.setSelection(elementLayout.grabVerticalSpace);
-		
 		final WidgetFactory factory = new WidgetFactory() {
 			@Override
 			public Control createControl(Composite parent, int style)
@@ -97,27 +69,26 @@ public class Layout extends PropertyPage
 				return spinner;
 			}
 		};
-		
-		spinnerHorizontalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				Messages.get().Layout_HSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerHorizontalSpan.setSelection(elementLayout.horizontalSpan);
 
-		spinnerVerticalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				Messages.get().Layout_VSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
+      spinnerHorizontalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+            Messages.get().Layout_HSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      spinnerHorizontalSpan.setSelection(elementLayout.horizontalSpan);
 
-		spinnerWidthHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				Messages.get().Layout_WHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerWidthHint.setMinimum(-1);
-		spinnerWidthHint.setMaximum(8192);
-		spinnerWidthHint.setSelection(elementLayout.widthHint);
+      spinnerHeightHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+            Messages.get().Layout_HHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      spinnerHeightHint.setMinimum(-1);
+      spinnerHeightHint.setMaximum(8192);
+      spinnerHeightHint.setSelection(elementLayout.heightHint);
+      
+      spinnerVerticalSpan = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
+            Messages.get().Layout_VSpan, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      spinnerVerticalSpan.setSelection(elementLayout.verticalSpan);
 
-		spinnerHeightHint = (Spinner)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER, factory, 
-				Messages.get().Layout_HHint, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerHeightHint.setMinimum(-1);
-		spinnerHeightHint.setMaximum(8192);
-		spinnerHeightHint.setSelection(elementLayout.heightHint);
-
+      checkGrabVerticalSpace = new Button(dialogArea, SWT.CHECK);
+      checkGrabVerticalSpace.setText(Messages.get().Layout_GrapExtraV);
+      checkGrabVerticalSpace.setSelection(elementLayout.grabVerticalSpace);
+      checkGrabVerticalSpace.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 1, 1));
+      
 		return dialogArea;
 	}
 
@@ -127,13 +98,9 @@ public class Layout extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
-		elementLayout.horizontalAlignment = comboHorizontalAlign.getSelectionIndex();
-		elementLayout.vertcalAlignment = comboVerticalAlign.getSelectionIndex();
-		elementLayout.grabHorizontalSpace = checkGrabHorizontalSpace.getSelection();
 		elementLayout.grabVerticalSpace = checkGrabVerticalSpace.getSelection();
 		elementLayout.horizontalSpan = spinnerHorizontalSpan.getSelection();
 		elementLayout.verticalSpan = spinnerVerticalSpan.getSelection();
-		elementLayout.widthHint = spinnerWidthHint.getSelection();
 		elementLayout.heightHint = spinnerHeightHint.getSelection();
 		return true;
 	}

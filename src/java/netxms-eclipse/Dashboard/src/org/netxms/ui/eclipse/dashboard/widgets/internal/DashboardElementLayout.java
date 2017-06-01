@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
-import org.netxms.client.dashboards.DashboardElement;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -38,20 +37,8 @@ public class DashboardElementLayout
 	public int verticalSpan = 1;
 	
 	@Element(required=false)
-	public int horizontalAlignment = DashboardElement.FILL;
-
-	@Element(required=false)
-	public int vertcalAlignment = DashboardElement.FILL;
-	
-	@Element(required=false)
-	public boolean grabHorizontalSpace = true;
-
-	@Element(required=false)
 	public boolean grabVerticalSpace = true;
 
-	@Element(required=false)
-	public int widthHint = -1;
-	
 	@Element(required=false)
 	public int heightHint = -1;
 	
