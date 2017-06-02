@@ -347,7 +347,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
       int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
       {
-         if(!result->get(i)->sendMessage(pMsg))
+         if (!result->get(i)->sendMessage(pMsg))
          {
             MONITORED_FILE file;
             _tcsncpy(file.fileName, remoteFile, MAX_PATH);

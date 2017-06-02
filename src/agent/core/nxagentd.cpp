@@ -191,11 +191,7 @@ UINT16 g_sessionAgentPort = 28180;
 UINT16 g_sessionAgentPort = 0;
 #endif
 Config *g_config = NULL;
-#ifdef _WIN32
-UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
-#else
 UINT32 g_dwIdleTimeout = 120;   // Session idle timeout
-#endif
 
 #if !defined(_WIN32)
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");

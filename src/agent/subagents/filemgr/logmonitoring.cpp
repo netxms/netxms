@@ -152,25 +152,26 @@ static EnumerationCallbackResult SendFileUpdateCallback(AbstractCommSession *ses
 THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 {
    FollowData *flData = (reinterpret_cast<FollowData*>(args));
-   int hFile, threadSleepTime = 1;
-   BYTE* readBytes = NULL;
+   int hFile = _topen(flData->getFile(), O_RDONLY | O_BINARY);
+   if (hFile == -1)
+   {
+      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s (ID=%s)."), flData->getFile(), flData->getFileId());
+      g_monitorFileList.remove(flData->getFileId());
+      return THREAD_OK;
+   }
+
+   int threadSleepTime = 1;
+   BYTE *readBytes = NULL;
    NXCPMessage *pMsg;
    UINT32 readSize;
 
    bool follow = true;
-   hFile = _topen(flData->getFile(), O_RDONLY | O_BINARY);
    NX_STAT_STRUCT st;
    NX_FSTAT(hFile, &st);
    flData->setOffset((long)st.st_size);
    ThreadSleep(threadSleepTime);
    int headerSize = NXCP_HEADER_SIZE + MAX_PATH*2;
 
-   if (hFile == -1)
-   {
-      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->getFile());
-      g_monitorFileList.remove(flData->getFile());
-      return THREAD_OK;
-   }
    while (follow)
    {
       NX_FSTAT(hFile, &st);

@@ -45,6 +45,7 @@ void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj
       conn->enableFileUpdates();
       obj->setFileUpdateConnection(conn);
    }
+   nxlog_debug(5, _T("File tracker registered: node=%s [%d], file=\"%s\""), obj->getName(), obj->getId(), fileForAdd->fileName);
    unlock();
 }
 
@@ -54,7 +55,7 @@ bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
+      MONITORED_FILE *m_monitoredFile = m_monitoredFiles.get(i);
       if(_tcscmp(m_monitoredFile->fileName, fileForAdd->fileName) == 0
          && m_monitoredFile->nodeID == fileForAdd->nodeID
          && m_monitoredFile->session->getUserId() == fileForAdd->session->getUserId())
@@ -98,8 +99,9 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
          fileForRemove->session->decRefCount();
          m_monitoredFiles.remove(i);
          deleted = true;
+         i--;
       }
-      if(m_monitoredFile->nodeID == fileForRemove->nodeID)
+      if (m_monitoredFile->nodeID == fileForRemove->nodeID)
          nodeConnectionCount++;
    }
 
@@ -118,12 +120,13 @@ void FileMonitoringList::removeDisconnectedNode(UINT32 nodeId)
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
-      if(m_monitoredFile->nodeID == nodeId)
+      MONITORED_FILE *m_monitoredFile = m_monitoredFiles.get(i);
+      if (m_monitoredFile->nodeID == nodeId)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_MONITORING_FAILED, nodeId);
          m_monitoredFile->session->decRefCount();
          m_monitoredFiles.remove(i);
+         i--;
       }
    }
    unlock();

@@ -5642,6 +5642,7 @@ void Node::changeZone(UINT32 newZone)
 void Node::setFileUpdateConnection(AgentConnection *conn)
 {
    lockProperties();
+   nxlog_debug(6, _T("Changing file tracking connection for node %s [%d]: %p -> %p"), m_name, m_id, m_fileUpdateConn, conn);
    if (m_fileUpdateConn != NULL)
       m_fileUpdateConn->decRefCount();
    m_fileUpdateConn = conn;
