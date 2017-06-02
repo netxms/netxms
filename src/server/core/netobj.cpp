@@ -1730,7 +1730,7 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
 	if (success && (m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
 	{
-	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (%d,%d)"));
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"));
 	   if (hStmt != NULL)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
