@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.netxms.ui.android" android:versionName="2.0.2" android:versionCode="12">
-	<uses-sdk android:targetSdkVersion="24" android:minSdkVersion="9"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.READ_LOGS"/>
-    
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
     <application android:name="NXApplication"
                  android:icon="@drawable/icon"
                  android:allowBackup="true"
@@ -45,9 +45,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".main.activities.NodeInfo"
-                  android:label="@string/app_name">
-        </activity>        
         <activity android:name=".main.activities.ConsolePreferences"
                   android:label="@string/settings">
         </activity>
@@ -84,9 +81,6 @@
         <activity android:name=".main.fragments.NodeInfoFragment"
             	  android:label="@string/app_name"
             	  android:configChanges="orientation|screenSize">
-        </activity>
-        <activity android:name=".main.fragments.ConsolePreferencesFragment"
-            	  android:label="@string/settings">
         </activity>
         <activity android:name=".main.fragments.AlarmBrowserFragment"
                   android:label="@string/app_name">
