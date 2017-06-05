@@ -38,7 +38,17 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
- * Upgrade from V2 to V3
+ * Upgrade from V4 to V5
+ */
+static BOOL H_UpgradeFromV4(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("CREATE INDEX idx_dc_queue_timestamp ON dc_queue(timestamp)")));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 5));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V3 to V4
  */
 static BOOL H_UpgradeFromV3(int currVersion, int newVersion)
 {
@@ -280,6 +290,7 @@ static struct
    { 1, 2, H_UpgradeFromV1 },
    { 2, 3, H_UpgradeFromV2 },
    { 3, 4, H_UpgradeFromV3 },
+   { 4, 5, H_UpgradeFromV4 },
    { 0, 0, NULL }
 };
 

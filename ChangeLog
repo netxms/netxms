@@ -3,6 +3,7 @@
 *
 
 - Improved audit logging
+- Improved data reconciliation between agent and server
 - Management console:
 	- Improved layout of dashboard elements
 	- Added option to indicate alarm severity with background color in alarm list

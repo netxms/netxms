@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,6 +122,8 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  value varchar not null,")
    _T("  status_code integer not null,")
    _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),
+
+   _T("CREATE INDEX idx_dc_queue_timestamp ON dc_queue(timestamp)"),
 
    _T("CREATE TABLE dc_snmp_targets (")
    _T("  guid varchar(36) not null,")
