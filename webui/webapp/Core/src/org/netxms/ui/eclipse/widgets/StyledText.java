@@ -166,6 +166,9 @@ public class StyledText extends Composite
     */
    private String applyStyleRange(StyleRange range, String text)
    {
+      if (range.hidden)
+         return "";
+      
       StringBuilder sb = new StringBuilder();
       sb.append("<span style=\"");
       if (range.foreground != null)
@@ -181,6 +184,14 @@ public class StyledText extends Composite
       if (range.fontStyle == SWT.BOLD)
       {
          sb.append("font:bold;");
+      }
+      if (range.underline)
+      {
+         sb.append("text-decoration: underline;");
+      }
+      if (range.strikeout)
+      {
+         sb.append("text-decoration: line-through;");
       }
       sb.append("\">");
       sb.append(text);

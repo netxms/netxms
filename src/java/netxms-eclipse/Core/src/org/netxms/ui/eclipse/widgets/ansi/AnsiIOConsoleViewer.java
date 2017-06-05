@@ -36,10 +36,11 @@ import org.eclipse.ui.internal.console.IOConsoleViewer;
 @SuppressWarnings("restriction")
 public class AnsiIOConsoleViewer extends IOConsoleViewer
 {
-   private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes();
-   private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes();
    private final static Pattern pattern = Pattern.compile("\\x1b\\[[^\\x40-\\x7e]*."); //$NON-NLS-1$
    private final static char ESCAPE_SGR = 'm';
+   
+   private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes();
+   private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes();
    private int lastRangeEnd = 0;
 
    /**

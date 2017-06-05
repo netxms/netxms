@@ -31,6 +31,12 @@ public class StyleRange
    public Color foreground;
    public Color background;
    public int fontStyle = SWT.NORMAL;
+   public boolean underline = false;
+   public Color underlineColor = null;
+   public int underlineStyle = 0;
+   public boolean strikeout = false;
+   public Color strikeoutColor = null;
+   public boolean hidden = false;
 
    /**
     * New style range
@@ -41,6 +47,26 @@ public class StyleRange
       this.length = 0;
       this.foreground = null;
       this.background = null;
+   }
+   
+   /**
+    * Copy constructor
+    * 
+    * @param src
+    */
+   public StyleRange(StyleRange src)
+   {
+      this.start = src.start;
+      this.length = src.length;
+      this.foreground = src.foreground;
+      this.background = src.background;
+      this.fontStyle = src.fontStyle;
+      this.underline = src.underline;
+      this.underlineColor = src.underlineColor;
+      this.underlineStyle = src.underlineStyle;
+      this.strikeout = src.strikeout;
+      this.strikeoutColor = src.strikeoutColor;
+      this.hidden = src.hidden;
    }
 
    /** 
@@ -72,5 +98,20 @@ public class StyleRange
    {
       this(start, length, foreground, background);
       this.fontStyle = fontStyle;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#clone()
+    */
+   @Override
+   public Object clone() throws CloneNotSupportedException
+   {
+      StyleRange r = new StyleRange(start, length, foreground, background, fontStyle);
+      r.underline = underline;
+      r.underlineColor = underlineColor;
+      r.underlineStyle = underlineStyle;
+      r.strikeout = strikeout;
+      r.strikeoutColor = strikeoutColor;
+      return r;
    }
 }
