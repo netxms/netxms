@@ -81,8 +81,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	{
 		parent.setLayout(new FillLayout());		
 		content = new CompositeWithMessageBar(parent, SWT.NONE);
-
-      alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
+      alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser", null); //$NON-NLS-1$
 		alarmView.setRootObjects(objects);
 
 		if (objects.size() == 1) 

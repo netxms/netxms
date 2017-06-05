@@ -84,6 +84,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -117,6 +118,8 @@ public class AlarmList extends CompositeWithMessageBar
 	private AlarmListFilter alarmFilter;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
+   private VisibilityValidator visibilityValidator;
+   private boolean needInitialRefresh = false;
    private Action actionComments;
    private Action actionAcknowledge;
    private Action actionResolve;
@@ -141,11 +144,12 @@ public class AlarmList extends CompositeWithMessageBar
     * @param style widget style
     * @param configPrefix prefix for saving/loading widget configuration
     */
-   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
+   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix, VisibilityValidator visibilityValidator)
 	{
 		super(parent, style);
 		session = ConsoleSharedData.getSession();
-		this.viewPart = viewPart;	
+		this.viewPart = viewPart;
+		this.visibilityValidator = visibilityValidator;
 		
 		// Setup table columns
 		final String[] names = { 
@@ -198,9 +202,12 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
-      refresh();
-
-      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+		if ((visibilityValidator == null) || visibilityValidator.isVisible())
+		   refresh();
+		else
+		   needInitialRefresh = true;
+		
+		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
          @Override
          public void run()
          {
@@ -662,9 +669,17 @@ public class AlarmList extends CompositeWithMessageBar
    public void setRootObject(long objectId)
    {
       alarmFilter.setRootObject(objectId);
-      synchronized(alarmList)
+      if (needInitialRefresh)
       {
-	      filterAndLimit();
+         needInitialRefresh = false;
+         refresh();
+      }
+      else
+      {
+         synchronized(alarmList)
+         {
+   	      filterAndLimit();
+         }
       }
    }
 
@@ -676,9 +691,12 @@ public class AlarmList extends CompositeWithMessageBar
    public void setRootObjects(List<Long> selectedObjects) 
    {
       alarmFilter.setRootObjects(selectedObjects);
-      synchronized(alarmList)
+      if ((visibilityValidator == null) || visibilityValidator.isVisible())
       {
-         filterAndLimit();
+         synchronized(alarmList)
+         {
+            filterAndLimit();
+         }
       }
    }
 
@@ -741,6 +759,8 @@ public class AlarmList extends CompositeWithMessageBar
     */
    public void refresh()
    {
+      if ((visibilityValidator != null) && !visibilityValidator.isVisible())
+	      return;
       new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception

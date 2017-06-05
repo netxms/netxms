@@ -41,6 +41,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeConten
 import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -58,15 +59,17 @@ public class ThresholdSummaryWidget extends Composite
 	private AbstractObject object;
 	private IViewPart viewPart;
 	private SortableTreeViewer viewer;
+	private VisibilityValidator visibilityValidator;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ThresholdSummaryWidget(Composite parent, int style, IViewPart viewPart)
+	public ThresholdSummaryWidget(Composite parent, int style, IViewPart viewPart, VisibilityValidator visibilityValidator)
 	{
 		super(parent, style);
 		this.viewPart = viewPart;
+		this.visibilityValidator = visibilityValidator;
 		setLayout(new FillLayout());
 
 		final String[] names = { Messages.get().ThresholdSummaryWidget_Node,  Messages.get().ThresholdSummaryWidget_Status, Messages.get().ThresholdSummaryWidget_Parameter, Messages.get().ThresholdSummaryWidget_Value, Messages.get().ThresholdSummaryWidget_Condition, Messages.get().ThresholdSummaryWidget_Since };
@@ -117,6 +120,9 @@ public class ThresholdSummaryWidget extends Composite
 	 */
 	public void refresh()
 	{
+	   if (visibilityValidator != null && !visibilityValidator.isVisible())
+	      return;
+	   
 		if (object == null)
 		{
 			viewer.setInput(new ArrayList<ThresholdViolationSummary>(0));

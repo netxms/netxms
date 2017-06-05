@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.topology.widgets.SubnetAddressMap;
 
 /**
@@ -43,7 +44,13 @@ public class AddressMap extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
-		addressMap = new SubnetAddressMap(scroller, SWT.NONE, getViewPart());
+		addressMap = new SubnetAddressMap(scroller, SWT.NONE, getViewPart(), new VisibilityValidator() {
+         @Override
+         public boolean isVisible()
+         {
+            return isActive();
+         }
+      });
 
 		scroller.setContent(addressMap);
 		scroller.setExpandVertical(true);
@@ -64,8 +71,11 @@ public class AddressMap extends ObjectTab
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-		addressMap.setSubnet((Subnet)object);
-		scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	   if (object != null && isActive())
+	   {
+   		addressMap.setSubnet((Subnet)object);
+   		scroller.setMinSize(addressMap.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	   }
 	}
 
 	/* (non-Javadoc)
@@ -75,5 +85,17 @@ public class AddressMap extends ObjectTab
 	public boolean showForObject(AbstractObject object)
 	{
 		return object instanceof Subnet;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+	 */
+	@Override
+	public void selected()
+	{
+
+      super.selected();
+      if (getObject() != null)
+         addressMap.setSubnet((Subnet)getObject());
 	}
 }

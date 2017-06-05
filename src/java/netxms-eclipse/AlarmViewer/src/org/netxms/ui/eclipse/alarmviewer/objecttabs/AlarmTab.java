@@ -29,6 +29,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Alarm tab
@@ -44,7 +45,13 @@ public class AlarmTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-      alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix());
+      alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix(), new VisibilityValidator() {
+         @Override
+         public boolean isVisible()
+         {
+            return isActive();
+         }
+      });
 
       // Force update of "show colors" menu item in object tabbed view 
       // when settings changes in any alarm viewer
@@ -78,11 +85,22 @@ public class AlarmTab extends ObjectTab
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-		if (object != null)
+		if ((object != null) && isActive())
 			alarmList.setRootObject(object.getObjectId());
 	}
 
 	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+    */
+   @Override
+   public void selected()
+   {
+      super.selected();
+      if (getObject() != null)
+         alarmList.setRootObject(getObject().getObjectId());
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
 	 */
 	@Override

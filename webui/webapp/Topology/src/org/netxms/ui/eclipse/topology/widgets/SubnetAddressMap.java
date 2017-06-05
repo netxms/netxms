@@ -39,6 +39,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
 
@@ -66,14 +67,16 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private Subnet subnet = null;
 	private int rowCount = 0;
 	private ColorCache colors;
+	private VisibilityValidator visibilityValidator;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public SubnetAddressMap(Composite parent, int style, IViewPart viewPart)
+	public SubnetAddressMap(Composite parent, int style, IViewPart viewPart, VisibilityValidator visibilityValidator)
 	{
 		super(parent, style | SWT.DOUBLE_BUFFERED);
+		this.visibilityValidator = visibilityValidator;
 
 		this.viewPart = viewPart;
 		colors = new ColorCache(this);
@@ -87,6 +90,9 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	 */
 	public void setSubnet(Subnet subnet)
 	{
+	   if (visibilityValidator != null && !visibilityValidator.isVisible())
+	      return;
+	   
 	   this.subnet = subnet;
 	   if ((subnet != null) && (subnet.getSubnetAddress() instanceof Inet4Address))
 	   {

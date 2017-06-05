@@ -58,7 +58,7 @@ public class AlarmViewerElement extends ElementWidget
       layout.marginWidth = 0;
       setLayout(layout);
 
-      viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList"); //$NON-NLS-1$
+      viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
       viewer.setRootObject(config.getObjectId());
       viewer.setSeverityFilter(config.getSeverityFilter());
 		viewer.getViewer().getControl().addFocusListener(new FocusListener() {

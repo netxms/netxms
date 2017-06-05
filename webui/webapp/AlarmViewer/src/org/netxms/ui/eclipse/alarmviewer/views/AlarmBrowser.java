@@ -53,7 +53,7 @@ public class AlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser"); //$NON-NLS-1$
+		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser", null); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

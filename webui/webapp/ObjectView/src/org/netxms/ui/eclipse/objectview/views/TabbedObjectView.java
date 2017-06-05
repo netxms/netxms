@@ -432,17 +432,20 @@ public class TabbedObjectView extends ViewPart
 	 */
 	public void selectTab(String tabId)
 	{
-		for(int i = 0; i < tabFolder.getItemCount(); i++)
-		{
-			CTabItem item = tabFolder.getItem(i);
-			ObjectTab tab = (ObjectTab)item.getData();
-			if (tab.getLocalId().equals(tabId))
-			{
-				tabFolder.setSelection(i);
-				onTabSelectionChange(tab);
-				break;
-			}
-		}
+	   if (tabId != null)
+	   {
+	      for(int i = 0; i < tabFolder.getItemCount(); i++)
+   		{
+   			CTabItem item = tabFolder.getItem(i);
+   			ObjectTab tab = (ObjectTab)item.getData();
+   			if (tab.getLocalId().equals(tabId))
+   			{
+   				tabFolder.setSelection(i);
+   				onTabSelectionChange(tab);
+   				break;
+   			}
+   		}
+	   }
 	}
 	
 	/**

@@ -68,7 +68,7 @@ public class AlarmReminderDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog"); //$NON-NLS-1$
+		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog", null); //$NON-NLS-1$
 		list.setStateFilter(Alarm.STATE_OUTSTANDING);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

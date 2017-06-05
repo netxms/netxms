@@ -277,7 +277,7 @@ public abstract class ObjectTab implements IPluginContribution
 	 */
 	public final boolean isActive()
 	{
-	   return tabFolder.getSelection() == tabItem;
+	   return (tabItem != null) && (tabFolder.getSelection() == tabItem);
 	}
 
 	/**

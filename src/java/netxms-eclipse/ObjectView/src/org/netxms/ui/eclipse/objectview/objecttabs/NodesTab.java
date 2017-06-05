@@ -186,7 +186,8 @@ public class NodesTab extends ObjectTab
 	@Override
 	public void objectChanged(final AbstractObject object)
 	{
-		refresh();
+	   if ((object != null) && isActive())
+	      refresh();
 	}
 
 	/* (non-Javadoc)
@@ -196,5 +197,16 @@ public class NodesTab extends ObjectTab
 	public boolean showForObject(AbstractObject object)
 	{
 		return (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Rack);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+	 */
+	@Override
+	public void selected()
+	{
+	   super.selected();
+	   if (getObject() != null)
+	      refresh();
 	}
 }

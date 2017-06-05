@@ -30,6 +30,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.datacollection.widgets.ThresholdSummaryWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Threshold violation summary page
@@ -44,7 +45,13 @@ public class ThresholdSummary extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		tsw = new ThresholdSummaryWidget(parent, SWT.NONE, getViewPart());
+		tsw = new ThresholdSummaryWidget(parent, SWT.NONE, getViewPart(), new VisibilityValidator() {
+         @Override
+         public boolean isVisible()
+         {
+            return isActive();
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -75,5 +82,16 @@ public class ThresholdSummary extends ObjectTab
 	public void refresh()
 	{
 		tsw.refresh();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+	 */
+	@Override
+	public void selected()
+	{
+	   super.selected();
+	   if (getObject() != null)
+	      tsw.refresh();
 	}
 }
