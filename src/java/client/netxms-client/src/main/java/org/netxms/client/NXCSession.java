@@ -2037,7 +2037,6 @@ public class NXCSession
          catch(IOException e)
          {
          }
-         socket = null;
       }
       
       // cause notification processing thread to stop
@@ -2085,6 +2084,7 @@ public class NXCSession
 
       connected = false;
       disconnected = true;
+      socket = null;
       
       listeners.clear();
       consoleListeners.clear();
