@@ -84,24 +84,11 @@ public class AlarmTab extends ObjectTab
 	@Override
 	public void objectChanged(AbstractObject object)
 	{
-<<<<<<< HEAD
-		if (object != null)
-=======
 		if ((object != null) && isActive())
->>>>>>> bd0a288de... Objectview tab content is now loaded only when the tab is visible
 			alarmList.setRootObject(object.getObjectId());
 	}
 
 	/* (non-Javadoc)
-<<<<<<< HEAD
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
-	 */
-	@Override
-	public void refresh()
-	{
-		alarmList.refresh();
-	}
-=======
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
     */
    @Override
@@ -111,7 +98,6 @@ public class AlarmTab extends ObjectTab
       if (getObject() != null)
          alarmList.setRootObject(getObject().getObjectId());
    }
->>>>>>> bd0a288de... Objectview tab content is now loaded only when the tab is visible
 
    /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
