@@ -98,11 +98,12 @@ ZEROMQ_SUPPORT="no"
 ZEROMQ_REQUIRED="no"
 ZEROMQ_CPPFLAGS=""
 ZEROMQ_LDFLAGS=""
-MQTT_SUPPORT="yes"
-MQTT_REQUIRED="no"
+MQTT_SUPPORT="no"
+DISABLE_MQTT="no"
 MQTT_CPPFLAGS=""
 MQTT_LDFLAGS=""
 MQTT_LIBS=""
+DISABLE_CURL="no"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
@@ -309,17 +310,21 @@ else
 	ZEROMQ_SUPPORT=no
 fi ])
 
-AC_ARG_WITH(mqtt,
-[AS_HELP_STRING(--with-mqtt,build with MQTT support)],
+AC_ARG_WITH(mosquitto,
+[AS_HELP_STRING(--with-mosquitto,specify mosquitto library location)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		MQTT_BASE="$withval"
-		MQTT_REQUIRED=yes
+		MOSQUITTO_BASE="$withval"
 	fi
-	MQTT_SUPPORT=yes
-else
-	MQTT_SUPPORT=no
 fi ])
+
+AC_ARG_ENABLE(mqtt,
+[AS_HELP_STRING(--disable-mqtt,disable MQTT support)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_MQTT="yes"
+	fi
+])
 
 AC_ARG_WITH(mongodb,
 [AS_HELP_STRING(--with-mongodb,build MongoDB-dependent components)],
@@ -595,6 +600,12 @@ AC_ARG_ENABLE(xmpp,
 	fi
 ])
 
+AC_ARG_WITH(rpi-agent,
+[AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
+[
+	COMPONENTS="$COMPONENTS raspberrypi"
+])
+
 AC_ARG_ENABLE(ldap,
 [AS_HELP_STRING(--disable-ldap,disable LDAP support)],
 [
@@ -653,12 +664,6 @@ AC_ARG_WITH(dist,
 	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxshell nxsms"
 	SERVER_TOOLS="nxconfig"
 )
-
-AC_ARG_WITH(rpi-agent,
-[AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
-[
-	COMPONENTS="$COMPONENTS raspberrypi"
-])
 
 AC_ARG_WITH(tests,
 [AS_HELP_STRING(--with-tests,build tests)],
@@ -1904,21 +1909,25 @@ if test "x$DISABLE_LMSENSORS" = "xno"; then
 	fi
 fi
 
-AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
-if test "x$HAVE_LIBCURL" = "xyes"; then
-  AC_CHECK_LIB(curl, curl_global_init, [ HAVE_LIBCURL=yes ], [ HAVE_LIBCURL=no ])
-  AC_CHECK_DECLS([CURLOPT_NOSIGNAL, curl_version_info],,,[
+if test "x$DISABLE_CURL" = "xno"; then
+	AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
+	if test "x$HAVE_LIBCURL" = "xyes"; then
+		AC_CHECK_LIB(curl, curl_global_init, [ HAVE_LIBCURL=yes ], [ HAVE_LIBCURL=no ])
+		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, curl_version_info],,,[
 #ifdef HAVE_CURL_CURL_H
 #include <curl/curl.h>
 #endif
-])
-fi
+		])
+	fi
 
-if test "x$HAVE_LIBCURL" = "xyes"; then
-  SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
-  HDLINK_DIRS="$HDLINK_DIRS jira redmine"
-  AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+	if test "x$HAVE_LIBCURL" != "xyes"; then
+		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --disable-curl option)
+	fi
+
+	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
+	SMSDRV_DIRS="$SMSDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
+	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
+	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
 if test "x$DISABLE_SSH" != "xyes"; then
@@ -3085,37 +3094,28 @@ fi
 # MQTT
 #--------------------------------------------------------------------
 
-if test "x$MQTT_SUPPORT" = "xyes"; then
+if test "x$DISABLE_MQTT" != "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
 
-	if test "x$MQTT_BASE" != "x"; then
-		MQTT_CPPFLAGS="-I$MQTT_BASE/include"
-		MQTT_LDFLAGS="-L$MQTT_BASE/lib"
+	if test "x$MOSQUITTO_BASE" != "x"; then
+		MQTT_CPPFLAGS="-I$MOSQUITTO_BASE/include"
+		MQTT_LDFLAGS="-L$MOSQUITTO_BASE/lib"
 		CPPFLAGS="$CPPFLAGS $MQTT_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MQTT_LDFLAGS"
 	fi
 	
 	AC_CHECK_HEADER(mosquitto.h,,[
-		if test "x$MQTT_REQUIRED" = "xyes"; then
-			AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation ***])
-		else
-			MQTT_SUPPORT="no"
-		fi
+		AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation or disable MQTT support with --disable-mqtt ***])
 	])
 	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ MQTT_LIBS="-lmosquitto" ], [
-		if test "x$MQTT_REQUIRED" = "xyes"; then
-			AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation ***])
-		else
-			MQTT_SUPPORT="no"
-		fi
+		AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation or disable MQTT support with --disable-mqtt***])
 	])
     
-	if test "x$MQTT_SUPPORT" = "xyes"; then
-		AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
-		SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
-	fi
+	MQTT_SUPPORT="yes"
+	AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
+	SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -3155,6 +3155,7 @@ if test $? = 0; then
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
 fi
+
 
 #--------------------------------------------------------------------
 # VMGR
