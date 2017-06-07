@@ -210,7 +210,11 @@ public:
    NXSL_Value *getByPosition(int position) const;
 
    void set(int index, NXSL_Value *value);
-	void add(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
+	void append(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
+   void insert(int index, NXSL_Value *value);
+   void remove(int index);
+
+   int callMethod(const TCHAR *name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 };
 
 /**

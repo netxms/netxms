@@ -1416,7 +1416,7 @@ int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    NXSL_Array *a = new NXSL_Array();
    for(int i = 0; i < count; i++)
    {
-      a->add(new NXSL_Value(strings[i]));
+      a->append(new NXSL_Value(strings[i]));
       free(strings[i]);
    }
    free(strings);

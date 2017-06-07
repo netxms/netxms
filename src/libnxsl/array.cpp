@@ -159,3 +159,98 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 		qsort(m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
 	}
 }
+
+/**
+ * Insert value into array
+ */
+void NXSL_Array::insert(int index, NXSL_Value *value)
+{
+   int i = m_size - 1;
+   while((i >= 0) && (m_data[i].index >= index))
+   {
+      m_data[i].index++;
+      i--;
+   }
+
+   if (m_size == m_allocated)
+   {
+      m_allocated += 32;
+      m_data = (NXSL_ArrayElement *)realloc(m_data, sizeof(NXSL_ArrayElement) * m_allocated);
+   }
+
+   i++;
+   m_size++;
+   memmove(&m_data[i + 1], &m_data[i], sizeof(NXSL_ArrayElement) * (m_size - i));
+   m_data[i].index = index;
+   m_data[i].value = value;
+}
+
+/**
+ * Remove value from array
+ */
+void NXSL_Array::remove(int index)
+{
+   if (m_size == 0)
+      return;
+
+   int i = m_size - 1;
+   while((i >= 0) && (m_data[i].index > index))
+   {
+      m_data[i].index--;
+      i--;
+   }
+   if ((i >= 0) && (m_data[i].index == index))
+   {
+      delete m_data[i].value;
+      m_size--;
+      memmove(&m_data[i], &m_data[i + 1], sizeof(NXSL_ArrayElement) * (m_size - i));
+   }
+}
+
+/**
+ * Call method on array
+ */
+int NXSL_Array::callMethod(const TCHAR *name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!_tcscmp(name, _T("append")) || !_tcscmp(name, _T("push")))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+      append(new NXSL_Value(argv[0]));
+      *result = new NXSL_Value(getMaxIndex());
+   }
+   else if (!_tcscmp(name, _T("insert")))
+   {
+      if (argc != 2)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      if (!argv[0]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+
+      insert(argv[0]->getValueAsInt32(), new NXSL_Value(argv[1]));
+      *result = new NXSL_Value();
+   }
+   else if (!_tcscmp(name, _T("pop")))
+   {
+      if (argc != 0)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      *result = (m_size > 0) ? m_data[--m_size].value : new NXSL_Value();
+   }
+   else if (!_tcscmp(name, _T("remove")))
+   {
+      if (argc != 1)
+         return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+      if (!argv[0]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+
+      remove(argv[0]->getValueAsInt32());
+      *result = new NXSL_Value();
+   }
+   else
+   {
+      return NXSL_ERR_NO_SUCH_METHOD;
+   }
+   return 0;
+}

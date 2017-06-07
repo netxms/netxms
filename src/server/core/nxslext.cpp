@@ -1171,7 +1171,7 @@ finish:
  */
 static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
 {
-   ((NXSL_Array *)userArg)->add(new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   ((NXSL_Array *)userArg)->append(new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 

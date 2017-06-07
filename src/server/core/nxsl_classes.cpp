@@ -216,7 +216,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
       alarms->setOwner(false);
       NXSL_Array *array = new NXSL_Array;
       for(int i = 0; i < alarms->size(); i++)
-         array->add(new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarms->get(i))));
+         array->append(new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarms->get(i))));
       value = new NXSL_Value(array);
       delete alarms;
    }

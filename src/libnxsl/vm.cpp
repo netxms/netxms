@@ -934,15 +934,13 @@ void NXSL_VM::execute()
          {
             if (pValue->getDataType() == NXSL_DT_OBJECT)
             {
-               NXSL_Object *pObj;
-               NXSL_Value *pResult;
-
-               pObj = pValue->getValueAsObject();
-               if (pObj != NULL)
+               NXSL_Object *object = pValue->getValueAsObject();
+               if (object != NULL)
                {
-                  nRet = pObj->getClass()->callMethod(cp->m_operand.m_pszString, pObj, cp->m_nStackItems,
-                                                      (NXSL_Value **)m_dataStack->peekList(cp->m_nStackItems),
-                                                      &pResult, this);
+                  NXSL_Value *pResult;
+                  nRet = object->getClass()->callMethod(cp->m_operand.m_pszString, object, cp->m_nStackItems,
+                                                        (NXSL_Value **)m_dataStack->peekList(cp->m_nStackItems),
+                                                        &pResult, this);
                   if (nRet == 0)
                   {
                      for(i = 0; i < cp->m_nStackItems + 1; i++)
@@ -965,6 +963,25 @@ void NXSL_VM::execute()
                   error(NXSL_ERR_INTERNAL);
                }
             }
+            else if (pValue->getDataType() == NXSL_DT_ARRAY)
+            {
+               NXSL_Array *array = pValue->getValueAsArray();
+               NXSL_Value *result;
+               nRet = array->callMethod(cp->m_operand.m_pszString, cp->m_nStackItems,
+                                        (NXSL_Value **)m_dataStack->peekList(cp->m_nStackItems),
+                                        &result, this);
+               if (nRet == 0)
+               {
+                  for(i = 0; i < cp->m_nStackItems + 1; i++)
+                     delete (NXSL_Value *)m_dataStack->pop();
+                  m_dataStack->push(result);
+               }
+               else
+               {
+                  // Execution error inside method
+                  error(nRet);
+               }
+            }
             else
             {
                error(NXSL_ERR_NOT_OBJECT);
@@ -977,6 +994,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_RET_NULL:
          m_dataStack->push(new NXSL_Value);
+         /* no break */
       case OPCODE_RETURN:
          if (m_dwSubLevel > 0)
          {

@@ -64,7 +64,7 @@ NXSL_Value *NXSL_HashMap::getKeys() const
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair *p = values->get(i);
-      array->add(new NXSL_Value(p->key));
+      array->append(new NXSL_Value(p->key));
    }
    delete values;
    return new NXSL_Value(array);
@@ -80,7 +80,7 @@ NXSL_Value *NXSL_HashMap::getValues() const
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair *p = values->get(i);
-      array->add(new NXSL_Value((const NXSL_Value *)p->value));
+      array->append(new NXSL_Value((const NXSL_Value *)p->value));
    }
    delete values;
    return new NXSL_Value(array);
