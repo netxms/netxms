@@ -6,6 +6,9 @@
 - Improved data reconciliation between agent and server
 - NXSL:
 	- New methods for arrays: append, insert, pop, push, remove
+	- Table methods get and set can accept column name instead of column index
+	- Table row method get can accept column name instead of column index
+	- Added table row method set
 - Management console:
 	- Improved layout of dashboard elements
 	- Added option to indicate alarm severity with background color in alarm list

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -55,6 +55,8 @@ public:
    const TCHAR *get(int col) { return m_table->getAsString(m_index, col); }
    int getIndex() { return m_index; }
    Table *getTable() { return m_table; }
+
+   void set(int col, const TCHAR *value) { m_table->setAt(m_index, col, value); }
 };
 
 /**
@@ -136,10 +138,17 @@ NXSL_METHOD_DEFINITION(Table, deleteColumn)
  */
 NXSL_METHOD_DEFINITION(Table, get)
 {
-   if (!argv[0]->isInteger() || !argv[1]->isInteger())
+   if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   const TCHAR *value = ((Table *)object->getData())->getAsString(argv[0]->getValueAsInt32(), argv[1]->getValueAsInt32());
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int columnIndex = argv[1]->isInteger() ?
+      argv[1]->getValueAsInt32() :
+      ((Table *)object->getData())->getColumnIndex(argv[1]->getValueAsCString());
+
+   const TCHAR *value = ((Table *)object->getData())->getAsString(argv[0]->getValueAsInt32(), columnIndex);
    *result = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
    return 0;
 }
@@ -174,12 +183,16 @@ NXSL_METHOD_DEFINITION(Table, getColumnName)
  */
 NXSL_METHOD_DEFINITION(Table, set)
 {
-   if (!argv[0]->isInteger() || !argv[1]->isInteger())
+   if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
-   if (!argv[2]->isString())
+   if (!argv[1]->isString() || !argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   ((Table *)object->getData())->setAt(argv[0]->getValueAsInt32(), argv[1]->getValueAsInt32(), argv[2]->getValueAsCString());
+   int columnIndex = argv[1]->isInteger() ?
+      argv[1]->getValueAsInt32() :
+      ((Table *)object->getData())->getColumnIndex(argv[1]->getValueAsCString());
+
+   ((Table *)object->getData())->setAt(argv[0]->getValueAsInt32(), columnIndex, argv[2]->getValueAsCString());
    *result = new NXSL_Value;
    return 0;
 }
@@ -332,11 +345,32 @@ NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *att
  */
 NXSL_METHOD_DEFINITION(TableRow, get)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-   const TCHAR *value = ((TableRowReference *)object->getData())->get(argv[0]->getValueAsInt32());
+   int columnIndex = argv[0]->isInteger() ?
+      argv[0]->getValueAsInt32() :
+      ((TableRowReference *)object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
+
+   const TCHAR *value = ((TableRowReference *)object->getData())->get(columnIndex);
    *result = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+   return 0;
+}
+
+/**
+ * TableRow::set(column, value) method
+ */
+NXSL_METHOD_DEFINITION(TableRow, set)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int columnIndex = argv[0]->isInteger() ?
+      argv[0]->getValueAsInt32() :
+      ((TableRowReference *)object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
+
+   ((TableRowReference *)object->getData())->set(columnIndex, argv[1]->getValueAsCString());
+   *result = new NXSL_Value;
    return 0;
 }
 
@@ -348,6 +382,7 @@ NXSL_TableRowClass::NXSL_TableRowClass() : NXSL_Class()
    setName(_T("TableRow"));
 
    NXSL_REGISTER_METHOD(TableRow, get, 1);
+   NXSL_REGISTER_METHOD(TableRow, set, 2);
 }
 
 /**
