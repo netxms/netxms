@@ -5089,7 +5089,6 @@ public class NXCSession
       return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_EFFECTIVE_RIGHTS);
    }
 
-
    /**
     * Common internal implementation for bindObject, unbindObject, and
     * removeTemplate

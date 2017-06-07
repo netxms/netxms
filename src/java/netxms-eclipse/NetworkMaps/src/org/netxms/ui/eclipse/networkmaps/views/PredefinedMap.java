@@ -48,6 +48,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -91,6 +92,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private Action actionLinkProperties;
 	private Action actionAddDCIImage;
 	private Color defaultLinkColor = null;
+	private boolean readOnly;
 
 	/**
 	 * Create predefined map view
@@ -98,7 +100,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	public PredefinedMap()
 	{
 		super();
-		allowManualLayout = true;
 	}
 
 	/*
@@ -114,7 +115,32 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		super.init(site);
 		mapObject = (NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
+		
+		ConsoleJob job = new ConsoleJob("Get map effective rights", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            readOnly = ((mapObject.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get effective rights for map";
+         }
+      };
+      job.start();
 
+      // FIXME: rewrite waiting
+      try
+      {
+         job.join();
+      }
+      catch(InterruptedException e)
+      {
+      }
+      
+      allowManualLayout = !readOnly;
 		if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
 		{
 			automaticLayoutEnabled = false;
@@ -132,16 +158,23 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	public void setupMapControl()
 	{
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				actionLinkObjects.setEnabled(((IStructuredSelection)event.getSelection()).size() == 2);
-			}
-		});
-
-		addDropSupport();
-			
+	   if (readOnly)
+	   {
+	      viewer.setDraggingEnabled(false);
+	   }
+	   else
+	   {
+   		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+   			@Override
+   			public void selectionChanged(SelectionChangedEvent event)
+   			{
+   				actionLinkObjects.setEnabled(((IStructuredSelection)event.getSelection()).size() == 2);
+   			}
+   		});
+   
+   		addDropSupport();
+	   }
+	   
 		ImageProvider.getInstance().addUpdateListener(this);
 		
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
@@ -381,11 +414,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
-		manager.add(actionAddObject);
-		manager.add(actionAddDCIContainer);		
-		manager.add(actionAddDCIImage);  
-		manager.add(createDecorationAdditionSubmenu());
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		manager.add(actionAddObject);
+   		manager.add(actionAddDCIContainer);		
+   		manager.add(actionAddDCIImage);  
+   		manager.add(createDecorationAdditionSubmenu());
+   		manager.add(new Separator());
+	   }
 		super.fillMapContextMenu(manager);
 		manager.add(new Separator());
 		manager.add(actionMapProperties);
@@ -401,11 +437,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void fillObjectContextMenu(IMenuManager manager)
 	{
-		int size = ((IStructuredSelection)viewer.getSelection()).size();
-		if (size == 2)
-			manager.add(actionLinkObjects);
-		manager.add(actionRemove);
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		int size = ((IStructuredSelection)viewer.getSelection()).size();
+   		if (size == 2)
+   			manager.add(actionLinkObjects);
+   		manager.add(actionRemove);
+   		manager.add(new Separator());
+	   }
 		super.fillObjectContextMenu(manager);
 	}
 
@@ -415,6 +454,12 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
+	   if (readOnly)
+	   {
+	      super.fillLinkContextMenu(manager);
+	      return;
+	   }
+	   
 		int size = ((IStructuredSelection)viewer.getSelection()).size();
 		manager.add(actionRemove);
 		manager.add(new Separator());
@@ -435,13 +480,16 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
-		manager.add(actionRemove);
-		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
-		if(o instanceof NetworkMapDCIContainer)
-		   manager.add(actionDCIContainerProperties);
-		if(o instanceof NetworkMapDCIImage)
-         manager.add(actionDCIImageProperties);
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		manager.add(actionRemove);
+   		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
+   		if(o instanceof NetworkMapDCIContainer)
+   		   manager.add(actionDCIContainerProperties);
+   		if(o instanceof NetworkMapDCIImage)
+            manager.add(actionDCIImageProperties);
+   		manager.add(new Separator());
+	   }
 		super.fillElementContextMenu(manager);
 	}
 
@@ -455,10 +503,13 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionAddObject);
-		manager.add(actionLinkObjects);
-		manager.add(createDecorationAdditionSubmenu());
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		manager.add(actionAddObject);
+   		manager.add(actionLinkObjects);
+   		manager.add(createDecorationAdditionSubmenu());
+   		manager.add(new Separator());
+	   }
 		super.fillLocalPullDown(manager);
 		manager.add(new Separator());
 		manager.add(actionMapProperties);
@@ -474,8 +525,11 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionLinkObjects);
-		manager.add(new Separator());
+	   if (!readOnly)
+	   {
+   		manager.add(actionLinkObjects);
+   		manager.add(new Separator());
+	   }
 		super.fillLocalToolBar(manager);
 	}
 

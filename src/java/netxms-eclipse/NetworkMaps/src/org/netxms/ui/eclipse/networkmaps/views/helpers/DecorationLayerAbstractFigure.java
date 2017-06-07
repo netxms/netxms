@@ -82,10 +82,13 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 		}
 		if ((me.button == 1) && ((me.getState() & SWT.MOD1) == 0))
 		{
-			addMouseMotionListener(this);
-			drag = true;
-			lastX = me.x;
-			lastY = me.y;
+		   if (viewer.isDraggingEnabled())
+		   {
+   			addMouseMotionListener(this);
+   			drag = true;
+   			lastX = me.x;
+   			lastY = me.y;
+		   }
 			me.consume();
 		}
 	}

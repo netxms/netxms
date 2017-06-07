@@ -103,6 +103,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private ColorCache colors;
 	private Image iconBack;
 	private OverlayButton backButton = null;
+	private boolean draggingEnabled = true;
 	
 	/**
 	 * @param composite
@@ -734,7 +735,24 @@ public class ExtendedGraphViewer extends GraphViewer
 		return snapToGrid;
 	}
 	
-	/* (non-Javadoc)
+	/**
+    * @return the draggingEnabled
+    */
+   public boolean isDraggingEnabled()
+   {
+      return draggingEnabled;
+   }
+
+   /**
+    * @param draggingEnabled the draggingEnabled to set
+    */
+   public void setDraggingEnabled(boolean draggingEnabled)
+   {
+      this.draggingEnabled = draggingEnabled;
+      graph.setDraggingEnabled(draggingEnabled);
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.gef4.zest.core.viewers.GraphViewer#getFactory()
 	 */
 	@Override
