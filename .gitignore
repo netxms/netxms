@@ -210,6 +210,9 @@ target
 /src/server/nxapisrv/java/.classpath
 /src/server/nxapisrv/java/.project
 /src/server/nxapisrv/java/.settings
+/src/server/nxreportd/java/.classpath
+/src/server/nxreportd/java/.project
+/src/server/nxreportd/java/.settings
 /src/server/tools/nxaction/nxaction
 /src/server/tools/nxadm/nxadm
 /src/server/tools/nxap/nxap

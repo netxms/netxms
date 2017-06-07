@@ -1,0 +1,85 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>org.netxms</groupId>
+   <artifactId>nxreportd</artifactId>
+   <packaging>jar</packaging>
+   <version>2.1-M3</version>
+   <name>NetXMS Reporting Server</name>
+   <url>http://netxms.org</url>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <build.finalName>${project.artifactId}</build.finalName>
+   </properties>
+   
+   <dependencies>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>3.8.1</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>ch.qos.logback</groupId>
+         <artifactId>logback-classic</artifactId>
+         <version>1.1.2</version>
+      </dependency>
+      <dependency>
+         <groupId>org.python</groupId>
+         <artifactId>jython-standalone</artifactId>
+         <version>2.7.1b3</version>
+      </dependency>
+      <dependency>
+         <groupId>org.netxms</groupId>
+         <artifactId>netxms-base</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.netxms</groupId>
+         <artifactId>netxms-client</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>javax.mail</groupId>
+         <artifactId>mail</artifactId>
+         <version>1.4.7</version>
+      </dependency>
+      <dependency>
+         <groupId>net.sf.jasperreports</groupId>
+         <artifactId>jasperreports</artifactId>
+         <version>6.1.1</version>
+      </dependency>
+
+      <!-- DB Drivers -->
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <version>9.4-1202-jdbc4</version>
+         <scope>runtime</scope>
+      </dependency>
+      <dependency>
+         <groupId>mysql</groupId>
+         <artifactId>mysql-connector-java</artifactId>
+         <version>5.1.36</version>
+      </dependency>
+      <dependency>
+         <groupId>com.microsoft.sqlserver</groupId>
+         <artifactId>sqljdbc4</artifactId>
+         <version>4.0</version>
+      </dependency>
+   </dependencies>
+   
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.7</source>
+               <target>1.7</target>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+</project>
