@@ -123,6 +123,7 @@ private:
 	int m_errorCount;
 	MUTEX m_mutex;
    StringMap m_aliases;
+   bool m_allowMacroExpansion;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
@@ -131,7 +132,7 @@ protected:
 	ConfigEntry *createEntry(const TCHAR *path);
 
 public:
-	Config();
+	Config(bool allowMacroExpansion = true);
    virtual ~Config();
 
 	void lock() { MutexLock(m_mutex); }

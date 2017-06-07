@@ -35,8 +35,11 @@
 /**
  * Expand value
  */
-static TCHAR *ExpandValue(const TCHAR *src)
+static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
 {
+   if (xmlFormat && !expandEnv)
+      return _tcsdup(src);
+
    size_t allocated = _tcslen(src) + 1;
    TCHAR *buffer = (TCHAR *)malloc(allocated * sizeof(TCHAR));
 
@@ -44,12 +47,12 @@ static TCHAR *ExpandValue(const TCHAR *src)
    TCHAR *out = buffer;
    bool squotes = false;
    bool dquotes = false;
-   if (*in == _T('"'))
+   if ((*in == _T('"')) && !xmlFormat)
    {
       dquotes = true;
       in++;
    }
-   else if (*in == _T('\''))
+   else if ((*in == _T('\'')) && !xmlFormat)
    {
       squotes = true;
       in++;
@@ -68,14 +71,14 @@ static TCHAR *ExpandValue(const TCHAR *src)
       }
       else if (dquotes && (*in == _T('"')))
       {
-         // Single quoting characters are ignored in quoted string
+         // Double quoting characters are ignored in quoted string
          if (*(in + 1) == _T('"'))
          {
             in++;
             *out++ = _T('"');
          }
       }
-      else if (!squotes && (*in == _T('$')))
+      else if (!squotes && expandEnv && (*in == _T('$')))
       {
          if (*(in + 1) == _T('{'))  // environment string expansion
          {
@@ -685,11 +688,12 @@ void ConfigEntry::createXml(String &xml, int level)
 /**
  * Constructor for config
  */
-Config::Config()
+Config::Config(bool allowMacroExpansion)
 {
    m_root = new ConfigEntry(_T("[root]"), NULL, this, NULL, 0, 0);
    m_errorCount = 0;
    m_mutex = MutexCreate();
+   m_allowMacroExpansion = allowMacroExpansion;
 }
 
 /**
@@ -1272,7 +1276,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          {
             entry = new ConfigEntry(buffer, currentSection, this, file, sourceLine, 0);
          }
-         entry->addValuePreallocated(ExpandValue(ptr));
+         entry->addValuePreallocated(ExpandValue(ptr, false, m_allowMacroExpansion));
       }
    }
    fclose(cfg);
@@ -1298,6 +1302,7 @@ typedef struct
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
    bool merge;
+   bool expandEnv;
 } XML_PARSER_STATE;
 
 /**
@@ -1395,7 +1400,7 @@ static void EndElement(void *userData, const char *name)
       ps->level--;
       if (ps->trimValue[ps->level])
          ps->charData[ps->level].trim();
-      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level]));
+      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level], true, ps->expandEnv));
    }
 }
 
@@ -1428,6 +1433,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
    state.parser = parser;
    state.file = (name != NULL) ? name : _T("<mem>");
    state.merge = merge;
+   state.expandEnv = m_allowMacroExpansion;
 
    bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
    if (!success)

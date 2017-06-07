@@ -599,7 +599,7 @@ void ImportLocalConfiguration()
          if (MatchString(_T("*.xml"), f->d_name, FALSE))
          {
             _tcscpy(&path[insPos], f->d_name);
-            Config *config = new Config();
+            Config *config = new Config(false);
             if (config->loadXmlConfig(path, "configuration"))
             {
                ImportConfig(config, CFG_IMPORT_REPLACE_EVENT_BY_CODE | CFG_IMPORT_REPLACE_EVENT_BY_NAME);
