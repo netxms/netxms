@@ -185,7 +185,7 @@ void Array::insert(int index, void *element)
    {
       if (m_size == m_allocated)
       {
-         m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
+         m_allocated += m_grow;
          m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
       }
       memmove(ADDR(index + 1), ADDR(index), m_elementSize * (m_size - index));
