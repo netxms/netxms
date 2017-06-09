@@ -41,8 +41,16 @@ public class SimpleDciValue extends DciValue
     * @param dataType type
     * @param status DCI status
     */
-   public SimpleDciValue(long id, String value, int dataType, int status)
+   public SimpleDciValue(NXCPMessage msg, long base)
    {
-      super(id, value, dataType, status);
+      super();
+      this.id = msg.getFieldAsInt64(base + 1);
+      this.value = msg.getFieldAsString(base + 2);
+      this.dataType = msg.getFieldAsInt32(base + 3);
+      this.status = msg.getFieldAsInt32(base + 4);
+      this.nodeId = msg.getFieldAsInt64(base + 5);
+      this.source = msg.getFieldAsInt32(base + 6);
+      this.name = msg.getFieldAsString(base + 7);
+      this.description = msg.getFieldAsString(base + 8);
    }
 }

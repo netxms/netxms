@@ -240,7 +240,7 @@ public class LinkDciValueProvider
       SingleDciConfig[] dciList =  link.getDciList();
       for(int i = 0; i < dciList.length;)
       {
-         DciValue v = getDciLastValue(dciList[i].dciId); 
+         DciValue v = getDciLastValue(dciList[i].dciId);
          if (v != null)
          {
             String formatString = dciList[i].getFormatString();

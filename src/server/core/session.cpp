@@ -4545,12 +4545,16 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
 
                status = dcoObj->getStatus();
 
-               msg.setField(outgoingIndex++, dciID);
-               msg.setField(outgoingIndex++, CHECK_NULL_EX(value));
-               msg.setField(outgoingIndex++, type);
-               msg.setField(outgoingIndex++, status);
+               msg.setField(outgoingIndex + 1, dciID);
+               msg.setField(outgoingIndex + 2, CHECK_NULL_EX(value));
+               msg.setField(outgoingIndex + 3, type);
+               msg.setField(outgoingIndex + 4, status);
+               msg.setField(outgoingIndex + 5, object->getId());
+               msg.setField(outgoingIndex + 6, dcoObj->getDataSource());
+               msg.setField(outgoingIndex + 7, dcoObj->getName());
+               msg.setField(outgoingIndex + 8, dcoObj->getDescription());
                safe_free(value);
-               outgoingIndex += 6;
+               outgoingIndex += 10;
             }
          }
       }

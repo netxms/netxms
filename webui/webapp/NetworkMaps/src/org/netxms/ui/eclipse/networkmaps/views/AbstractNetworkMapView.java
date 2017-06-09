@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -82,6 +84,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
@@ -98,6 +101,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
@@ -109,6 +113,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
@@ -345,6 +350,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 						}
 					}
 				}
+            else if (selectionType == SELECTION_LINKS)
+            {
+               openLinkDci();
+            }
 
 				// Default behavior
 				actionOpenDrillDownObject.run();
@@ -1354,6 +1363,68 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		}
 	}
+	
+	/**
+    * Handler for opening network map dci on double click
+    */
+   private void openLinkDci()
+   {
+      final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();     
+      if (!link.hasDciData())
+         return;
+      new ConsoleJob("Open link dci job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {         
+         /* (non-Javadoc)
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
+          */
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            DciValue[] values = session.getLastValues(link.getDciAsList());
+            final StringBuilder sb = new StringBuilder();
+            for(DciValue v : values)
+            {
+               sb.append("&");
+               sb.append(Long.toString(v.getNodeId()));
+               sb.append("@");
+               sb.append(Long.toString(v.getId()));
+               sb.append("@");
+               sb.append(Integer.toString(v.getSource()));
+               sb.append("@");
+               sb.append(Integer.toString(v.getDataType()));
+               sb.append("@");
+               sb.append(URLEncoder.encode(v.getName(), "UTF-8"));
+               sb.append("@");
+               sb.append(URLEncoder.encode(v.getDescription(), "UTF-8"));
+            }
+            
+            runInUIThread(new Runnable() {               
+               /* (non-Javadoc)
+                * @see java.lang.Runnable#run()
+                */
+               @Override
+               public void run()
+               {
+                  try
+                  {
+                     getSite().getPage().showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+                  }
+                  catch(PartInitException e)
+                  {
+                     MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Error opening view: %s", e.getLocalizedMessage()));
+                  }
+               }
+            });
+         }         
+         /* (non-Javadoc)
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
+          */
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot open dci link historical graph view";
+         }
+      }.start();
+   }
 
 	/**
 	 * Set map default connection routing algorithm

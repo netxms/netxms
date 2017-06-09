@@ -27,15 +27,15 @@ import org.netxms.client.constants.Severity;
  */
 public abstract class DciValue
 {
-	private long id;					// DCI id
-	private long nodeId;				// related node object id
+	protected long id;					// DCI id
+	protected long nodeId;				// related node object id
 	private long templateDciId;	// related template DCI ID
-	private String name;				// name
-	private String description;	// description
-	private String value;			// value
-	private int source;				// data source (agent, SNMP, etc.)
-	private int dataType;
-	private int status;				// status (active, disabled, etc.)
+	protected String name;				// name
+	protected String description;	// description
+	protected String value;			// value
+	protected int source;				// data source (agent, SNMP, etc.)
+	protected int dataType;
+	protected int status;				// status (active, disabled, etc.)
 	private int errorCount;
 	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
@@ -64,6 +64,13 @@ public abstract class DciValue
 	}
 	
 	/**
+	 * Simple constructor for DciValue
+	 */
+	protected DciValue()
+   {
+   }
+	
+	/**
 	 * Constructor for creating DciValue from NXCP message
 	 * 
 	 * @param nodeId owning node ID
@@ -90,22 +97,6 @@ public abstract class DciValue
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
-	}
-	
-	/**
-	 * Constructor for creating DCIValue from last values message
-	 * 
-	 * @param id
-	 * @param value
-	 * @param dataType
-	 * @param status
-	 */
-	public DciValue(long id, String value, int dataType, int status)
-	{
-	   this.id = id;
-	   this.value = value;
-	   this.dataType = dataType;
-	   this.status = status;
 	}
 	
    /**

@@ -107,6 +107,7 @@ import org.netxms.client.log.Log;
 import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.market.Repository;
@@ -3842,34 +3843,68 @@ public class NXCSession
    }
    
    /**
-    * Get last DCI values for given DCI id list(list can contain simple DCIss and table DCIs) 
+    * Get last DCI values for given Map DCI Instance list
     *
-    * @param dciIDList            List with all required data to get last DCI id
+    * @param dciIDList List with Map DCI Instances
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(Set<MapDCIInstance> dciIDList) throws IOException, NXCException
+   public DciValue[] getLastValues(Set<MapDCIInstance> mapDcis) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_VALUES);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciIDList.size());
-      long base = NXCPCodes.VID_DCI_ID_LIST_BASE;
-      for(MapDCIInstance item : dciIDList)
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, mapDcis.size());
+      for(MapDCIInstance item : mapDcis)
       {
          item.fillMessage(msg, base);
-         base +=10;
+         base += 10;
       }
 
-      sendMessage(msg);
+      return sendLastValuesMsg(msg);
+   }
+   
+   /**
+    * Get last DCI values for given Single Dci Config list
+    *
+    * @param dciIDList List with Single Dci Configs
+    * @return List of DCI values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DciValue[] getLastValues(List<SingleDciConfig> dciConfig) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_VALUES);
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
+      for(SingleDciConfig c : dciConfig)
+      {
+         c.fillMessage(msg, base);
+         base += 10;
+      }
 
+      return sendLastValuesMsg(msg);
+   }
+   
+   /**
+    * Send msg containing list of dci configurations
+    * 
+    * @param msg
+    * @return
+    * @throws NXCException 
+    * @throws IOException 
+    */
+   public DciValue[] sendLastValuesMsg(NXCPMessage msg) throws IOException, NXCException
+   {
+      sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       DciValue[] list = new DciValue[count];
-      base = NXCPCodes.VID_DCI_ID_LIST_BASE;
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
       for(int i = 0; i < count; i++, base += 10)
       {
-         list[i] = (DciValue)new SimpleDciValue(response.getFieldAsInt64(base), response.getFieldAsString(base+1), response.getFieldAsInt32(base+2), response.getFieldAsInt32(base+3));
+         list[i] = (DciValue)new SimpleDciValue(response, base);
       }
 
       return list;

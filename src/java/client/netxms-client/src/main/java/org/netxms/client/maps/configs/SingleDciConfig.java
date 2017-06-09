@@ -18,6 +18,8 @@
  */
 package org.netxms.client.maps.configs;
 
+import org.netxms.base.NXCPMessage;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.simpleframework.xml.Attribute;
@@ -99,6 +101,27 @@ public class SingleDciConfig
 		formatString = "";
 		setInstance(""); //$NON-NLS-1$
 		setColumn(""); //$NON-NLS-1$
+	}
+	
+	/**
+	 * Fill NXCPMessage with object data
+	 * 
+	 * @param msg
+	 * @param base
+	 */
+	public void fillMessage(NXCPMessage msg, long base)
+	{
+	   if (type == DataCollectionItem.DCO_TYPE_TABLE && (column.isEmpty() || instance.isEmpty()))
+	   {
+	      return;
+	   }
+	   msg.setFieldInt32(base++, (int)nodeId);
+	   msg.setFieldInt32(base++, (int)dciId);
+	   if (type == DataCollectionItem.DCO_TYPE_TABLE)
+	   {
+	      msg.setField(base++, column);
+	      msg.setField(base++, instance);
+	   }
 	}
 	
 	/**
