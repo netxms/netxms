@@ -29,22 +29,11 @@
 #endif
 #endif
 
-#ifdef __SYMBIAN32__
-
-// Symbian compiler defines _WIN32 in builds for emulator.
-#undef _WIN32
-
-#else
-
 #if !defined(_WIN32) && !defined(UNDER_CE)
 
-#ifdef _NETWARE
-#include <config-netware.h>
-#else
 #include <config.h>
 #if defined(WITH_OPENSSL) || defined(WITH_COMMONCRYPTO)
 #define _WITH_ENCRYPTION   1
-#endif
 #endif
 
 #else    /* _WIN32 */
@@ -58,9 +47,7 @@
 #endif
 #endif
 
-#endif
-
-#endif	/* __SYMBIAN32__ */
+#endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H
 #include <jemalloc/jemalloc.h>
@@ -80,7 +67,7 @@
 
 #if HAVE_WIDEC_H
 #include <widec.h>
-#endif // HAVE_WIDEC
+#endif /* HAVE_WIDEC */
 
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
@@ -390,115 +377,7 @@ typedef unsigned __int64 uint64_t;
 
 #endif
 
-#elif defined(_NETWARE)
-
-/********** NETWARE ********************/
-
-#define FS_PATH_SEPARATOR       _T("/")
-#define FS_PATH_SEPARATOR_A     "/"
-#define FS_PATH_SEPARATOR_W     L"/"
-#define FS_PATH_SEPARATOR_CHAR  _T('/')
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <dirent.h>
-#include <wchar.h>
-#include <netdb.h>
-
-typedef int BOOL;
-#if (SIZEOF_LONG == 4)
-typedef long INT32;
-#else
-typedef int INT32;
-#endif
-#if (SIZEOF_LONG == 4)
-typedef unsigned long UINT32;
-#else
-typedef unsigned int UINT32;
-#endif
-typedef INT32 LONG;
-typedef UINT32 DWORD;
-typedef unsigned short UINT16;
-typedef UINT16 WORD;
-typedef unsigned char BYTE;
-typedef void * HANDLE;
-typedef void * HMODULE;
-
-#ifdef X_INT64_X
-typedef X_INT64_X INT64;
-#else
-#error Target system does not have signed 64bit integer type
-#endif
-
-#ifdef X_UINT64_X
-typedef X_UINT64_X UINT64;
-typedef UINT64 QWORD;
-#else
-#error Target system does not have unsigned 64bit integer type
-#endif
-
-#define INT64_FMT			_T("%lld")
-#define INT64_FMTW		L"%lld"
-#define INT64_FMTA		"%lld"
-#define UINT64_FMT		_T("%llu")
-#define UINT64_FMTW		L"%llu"
-#define UINT64_FMTA		"%llu"
-#define UINT64X_FMT(m)  _T("%") m _T("llX")
-#define TIME_T_FMT		_T("%u")
-#define TIME_T_FCAST(x) ((UINT32)(x))
-
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
-// Socket compatibility
-typedef int SOCKET;
-
-#define closesocket(x) close(x)
-#define WSAGetLastError() (errno)
-
-#define WSAEINTR        EINTR
-#define WSAEWOULDBLOCK  EWOULDBLOCK
-#define WSAEINPROGRESS  EINPROGRESS
-#define WSAESHUTDOWN    ESHUTDOWN
-#define INVALID_SOCKET  (-1)
-
-#define SetSocketReuseFlag(sd) { \
-	int nVal = 1; \
-	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
-			(socklen_t)sizeof(nVal)); \
-}
-
-#define SetSocketExclusiveAddrUse(s)
-
-#define SetSocketNonBlocking(s) { \
-   int f = fcntl(s, F_GETFL); \
-   if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
-}
-
-#define SetSocketNoDelay(s) { \
-	int val = 1; \
-	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)); \
-}
-
-#define SetSocketBroadcast(s) { \
-	int val = 1; \
-	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(int)); \
-}
-
-#define SELECT_NFDS(x)  (x)
-
-#else    /* not _WIN32 or _NETWARE */
+#else    /* not _WIN32 */
 
 /*********** UNIX *********************/
 
