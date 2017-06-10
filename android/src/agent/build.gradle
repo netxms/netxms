@@ -13,11 +13,5 @@ allprojects {
         jcenter()
         mavenLocal()
         mavenCentral()
-        maven {
-            url "https://mvnrepository.com/artifact/org.netxms/netxms-client"
-        }
-        flatDir {
-            dirs 'C:/Projects/netxms/android/src/agent/libs'
-        }
     }
 }
