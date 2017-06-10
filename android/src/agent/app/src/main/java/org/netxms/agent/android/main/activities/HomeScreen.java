@@ -3,21 +3,36 @@ package org.netxms.agent.android.main.activities;
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.DeviceInfoHelper;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.helpers.SharedPrefs;
 import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.service.AgentConnectorService;
 import org.netxms.base.NXCommon;
 
+import android.Manifest;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.telephony.TelephonyManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import static org.netxms.agent.android.helpers.DeviceInfoHelper.getDeviceId;
+import static org.netxms.agent.android.service.AgentConnectorService.LOCATION_LAST_STATUS;
+import static org.netxms.agent.android.service.AgentConnectorService.PERMISSIONS_GRANTED;
+import static org.netxms.agent.android.service.AgentConnectorService.SCHEDULER_LAST_ACTIVATION;
+import static org.netxms.agent.android.service.AgentConnectorService.SCHEDULER_LAST_ACTIVATION_MSG;
+import static org.netxms.agent.android.service.AgentConnectorService.SCHEDULER_NEXT_ACTIVATION;
 
 /**
  * Home screen activity
@@ -29,6 +44,14 @@ import android.widget.Toast;
 public class HomeScreen extends AbstractClientActivity
 {
 	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
+	private static final String[] TAG_STRING_PERMISSIONS = new String[]
+		{
+			Manifest.permission.ACCESS_FINE_LOCATION,
+			Manifest.permission.READ_PHONE_STATE,
+			Manifest.permission.GET_ACCOUNTS
+		};
+
+	private static final int TAG_CODE_PERMISSIONS = 1;
 
 	private SharedPreferences sp;
 	private TextView agentStatusText;
@@ -44,10 +67,9 @@ public class HomeScreen extends AbstractClientActivity
 	@Override
 	public void onCreateStep2(Bundle savedInstanceState)
 	{
-		setIntentionalExit(false); // Allow autorestart on change connectivity status for premature exit
-		setContentView(R.layout.homescreen);
-
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPrefs.writeBoolean(sp, INTENTIONAL_EXIT_KEY, false);	// Allow autorestart on change connectivity status for premature exit
+		setContentView(R.layout.homescreen);
 
 		agentStatusText = (TextView)findViewById(R.id.AgentStatus);
 		locationStatusText = (TextView)findViewById(R.id.LastLocation);
@@ -55,7 +77,52 @@ public class HomeScreen extends AbstractClientActivity
 		nextConnText = (TextView)findViewById(R.id.NextConnection);
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
 		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + " (" + getString(R.string.build_number) + ")");
+
+		// Check for permissions and request as necessary
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+				ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+				ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED)
+		{
+			SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, false);
+			ActivityCompat.requestPermissions(this, TAG_STRING_PERMISSIONS, TAG_CODE_PERMISSIONS);
+		}
+		else
+			SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, true);
 		refreshStatus();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+	{
+		switch (requestCode)
+		{
+			case TAG_CODE_PERMISSIONS:
+			{
+				// If request is cancelled, the result arrays are empty.
+				int granted = 0;
+				for (int i = 0; i < grantResults.length; i++ )
+				{
+					if (permissions[i] == Manifest.permission.ACCESS_FINE_LOCATION && grantResults[i] == PackageManager.PERMISSION_GRANTED)
+						granted++;
+					else if (permissions[i] == Manifest.permission.READ_PHONE_STATE && grantResults[i] == PackageManager.PERMISSION_GRANTED)
+						granted++;
+					else if (permissions[i] == Manifest.permission.GET_ACCOUNTS && grantResults[i] == PackageManager.PERMISSION_GRANTED)
+						granted++;
+				}
+				if (granted == 3)
+				{
+					SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, true);
+					Intent i = new Intent(this, AgentConnectorService.class);
+					i.setAction(AgentConnectorService.ACTION_FORCE_CONNECT);
+					startService(i);
+				}
+				else
+				{
+					// Print alert!
+				}
+				return;
+			}
+		}
 	}
 
 	/*
@@ -106,7 +173,7 @@ public class HomeScreen extends AbstractClientActivity
 		{
 			if (service != null)
 				service.shutdown();
-			setIntentionalExit(true); // Avoid autorestart on change connectivity status for intentional exit
+			SharedPrefs.writeBoolean(sp, INTENTIONAL_EXIT_KEY, true);	 // Avoid autorestart on change connectivity status for intentional exit
 			moveTaskToBack(true);
 			System.exit(0);
 			return true;
@@ -119,46 +186,54 @@ public class HomeScreen extends AbstractClientActivity
 	 */
 	public void refreshStatus()
 	{
-		long last = sp.getLong("scheduler.last_activation", 0);
+		long last = sp.getLong(SCHEDULER_LAST_ACTIVATION, 0);
 		if (last != 0)
 			lastConnText.setText(getString(R.string.info_agent_last_connection,
 					getString(R.string.info_agent_connection_attempt,
 							TimeHelper.getTimeString(last),
-							sp.getString("scheduler.last_activation_msg", getString(R.string.ok)))));
-		if (sp.getBoolean("global.activate", false))
+							sp.getString(SCHEDULER_LAST_ACTIVATION_MSG, getString(R.string.ok)))));
+		if (sp.getBoolean(PERMISSIONS_GRANTED, false))
 		{
-			String status = getString(R.string.pref_global_activate_enabled);
-			String minutes = sp.getString("connection.interval", "15");
-			String range = "";
-			if (sp.getBoolean("scheduler.daily.enable", false))
-				range = getString(R.string.info_agent_range, sp.getString("scheduler.daily.on", "00:00"), sp.getString("scheduler.daily.off", "00:00"));
-			else
-				range = getString(R.string.info_agent_whole_day);
-			String location = "";
-			if (sp.getBoolean("location.force", false))
+			((TextView)findViewById(R.id.Permissions)).setText(getString(R.string.info_granted_permissions));
+			if (sp.getBoolean("global.activate", false))
 			{
-				String interval = sp.getString("location.interval", "30");
-				String duration = sp.getString("location.duration", "2");
-				String strategies[] = getResources().getStringArray(R.array.locations_strategy_labels);
-				String strategy = "";
-				int type = SafeParser.parseInt(sp.getString("location.strategy", "0"), 0);
-				if (type < strategies.length)
-					strategy = strategies[type];
-				location = getString(R.string.info_agent_location_active, interval, duration, strategy);
+				String status = getString(R.string.pref_global_activate_enabled);
+				String minutes = sp.getString("connection.interval", "15");
+				String range = "";
+				if (sp.getBoolean("scheduler.daily.enable", false))
+					range = getString(R.string.info_agent_range, sp.getString("scheduler.daily.on", "00:00"), sp.getString("scheduler.daily.off", "00:00"));
+				else
+					range = getString(R.string.info_agent_whole_day);
+				String location = "";
+				if (sp.getBoolean("location.force", false))
+				{
+					String interval = sp.getString("location.interval", "30");
+					String duration = sp.getString("location.duration", "2");
+					String strategies[] = getResources().getStringArray(R.array.locations_strategy_labels);
+					String strategy = "";
+					int type = SafeParser.parseInt(sp.getString("location.strategy", "0"), 0);
+					if (type < strategies.length)
+						strategy = strategies[type];
+					location = getString(R.string.info_agent_location_active, interval, duration, strategy);
+				}
+				else
+					location = getString(R.string.info_agent_location_passive);
+				agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range, location));
+				locationStatusText.setText(getString(R.string.info_agent_last_location, sp.getString(LOCATION_LAST_STATUS, "")));
+				long next = sp.getLong(SCHEDULER_NEXT_ACTIVATION, 0);
+				if (next != 0)
+					nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_scheduled, TimeHelper.getTimeString(next))));
 			}
 			else
-				location = getString(R.string.info_agent_location_passive);
-			agentStatusText.setText(getString(R.string.info_agent_status, status, minutes, range, location));
-			locationStatusText.setText(getString(R.string.info_agent_last_location, sp.getString("location.last_status", "")));
-			long next = sp.getLong("scheduler.next_activation", 0);
-			if (next != 0)
-				nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_scheduled, TimeHelper.getTimeString(next))));
+			{
+				agentStatusText.setText(getString(R.string.pref_global_activate_disabled));
+				locationStatusText.setText("");
+				nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_unscheduled)));
+			}
 		}
-		else
+		else	// Notify permissions not granted!
 		{
-			agentStatusText.setText(getString(R.string.pref_global_activate_disabled));
-			locationStatusText.setText("");
-			nextConnText.setText(getString(R.string.info_agent_next_connection, getString(R.string.info_agent_connection_unscheduled)));
+			((TextView)findViewById(R.id.Permissions)).setText(getString(R.string.info_missing_permissions));
 		}
 	}
 	/**
@@ -166,7 +241,7 @@ public class HomeScreen extends AbstractClientActivity
 	 */
 	public void showDeviceInfo()
 	{
-		((TextView)findViewById(R.id.Imei)).setText(getString(R.string.info_device_id, DeviceInfoHelper.getDeviceId(getApplicationContext())));
+		((TextView)findViewById(R.id.Imei)).setText(getString(R.string.info_device_id, getDeviceId(getApplicationContext())));
 		if (DeviceInfoHelper.getSerial().length() > 0)
 			((TextView)findViewById(R.id.Serial)).setText(getString(R.string.info_device_serial, DeviceInfoHelper.getSerial()));
 	}
@@ -181,19 +256,5 @@ public class HomeScreen extends AbstractClientActivity
 				Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
 			}
 		});
-	}
-
-	/**
-	 * Set a flag to inform about an intentional exit to avoid
-	 * automatic reconnection on change connectivity status
-	 * 
-	 * @param flag true to signal an intentional exit
-	 */
-	private void setIntentionalExit(boolean flag)
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putBoolean(INTENTIONAL_EXIT_KEY, flag);
-		editor.commit();
 	}
 }

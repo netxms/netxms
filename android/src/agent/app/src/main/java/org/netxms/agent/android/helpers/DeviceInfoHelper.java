@@ -80,7 +80,7 @@ public class DeviceInfoHelper
 	 */
 	static public String getUser(Context context)
 	{
-		if (context != null)
+		if (context != null && ContextCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED)
 		{
 			try
 			{
@@ -180,6 +180,12 @@ public class DeviceInfoHelper
 				return "ANDROID (LOLLIPOP_MR1)";
 			case Build.VERSION_CODES.M:
 				return "ANDROID (M)";
+			case 24:
+				return "ANDROID (N)";
+			case 25:
+				return "ANDROID (N_MR1)";
+			case 26:
+				return "ANDROID (O)";
 		}
 		return "ANDROID (UNKNOWN)";
 	}

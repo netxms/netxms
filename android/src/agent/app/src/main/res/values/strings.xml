@@ -92,4 +92,6 @@
 	<string name="info_location_timeout">Timeout expired while trying to acquire a new location from \'%1$s\' provider</string>	
 	<string name="info_device_id">Device ID: %1$s</string>
 	<string name="info_device_serial">Device Serial: %1$s</string>
+	<string name="info_missing_permissions">You must grant NETWORK (location), PHONE (read IMEI) and CONTACT (read user info) access to NexSMS agent in order to use it!</string>
+	<string name="info_granted_permissions"></string>
 </resources>

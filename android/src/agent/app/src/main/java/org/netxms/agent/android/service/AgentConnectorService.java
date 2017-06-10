@@ -13,6 +13,7 @@ import org.netxms.agent.android.R;
 import org.netxms.agent.android.helpers.DeviceInfoHelper;
 import org.netxms.agent.android.helpers.NetHelper;
 import org.netxms.agent.android.helpers.SafeParser;
+import org.netxms.agent.android.helpers.SharedPrefs;
 import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.main.activities.HomeScreen;
 import org.netxms.agent.android.receivers.AlarmIntentReceiver;
@@ -33,7 +34,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -68,10 +68,15 @@ public class AgentConnectorService extends Service implements LocationListener
 	public static final String ACTION_FORCE_CONNECT = "org.netxms.agent.android.ACTION_FORCE_CONNECT";
 	public static final String ACTION_SCHEDULE = "org.netxms.agent.android.ACTION_SCHEDULE";
 	public static final String ACTION_CONFIGURE = "org.netxms.agent.android.ACTION_CONFIGURE";
+    public static final String PERMISSIONS_GRANTED = "PermissionsGranted";
+    public static final String SCHEDULER_NEXT_ACTIVATION = "scheduler.next_activation";
+    public static final String SCHEDULER_LAST_ACTIVATION = "scheduler.last_activation";
+    public static final String SCHEDULER_LAST_ACTIVATION_MSG = "scheduler.last_activation_msg";
+    public static final String LOCATION_LAST_STATUS = "location.last_status";
 
 	public static boolean gettingNewLocation = false;
 
-	private static final String TAG = "nxagent/AgentConnectorService";
+	private static final String TAG = "NxAgent/AgentConnectorS";
 	private static final int ONE_DAY_MINUTES = 24 * 60;
 	private static final int NETXMS_REQUEST_CODE = 123456;
 	private static final int STRATEGY_NET_ONLY = 0;
@@ -136,6 +141,15 @@ public class AgentConnectorService extends Service implements LocationListener
 		showToast(getString(R.string.notify_started));
 
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Check for permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED)
+            SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, false);
+        else
+            SharedPrefs.writeBoolean(sp, PERMISSIONS_GRANTED, true);
+
 		Logger.setLoggingFacility(new AndroidLoggingFacility());
 		locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
@@ -209,7 +223,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	void configure()
 	{
-		updateLocationStatus("");
+		SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, "");
 		refreshHomeScreen();
 		agentActive = sp.getBoolean("global.activate", false);
 		notifyToast = sp.getBoolean("notification.toast", true);
@@ -253,7 +267,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	 */
 	public void shutdown()
 	{
-		updateLocationStatus("");
+		SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, "");
 		cancelConnectionSchedule();
 		unregisterReceiver(receiver);
 		stopSelf();
@@ -310,7 +324,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	public void showIcon(String text, int icon)
 	{
 		Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
-		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
 				.setSmallIcon(icon)
 				.setWhen(System.currentTimeMillis())
@@ -448,7 +462,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	private boolean isConnectionScheduleExpired()
 	{
 		Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
-		return cal.getTimeInMillis() > sp.getLong("scheduler.next_activation", 0);
+		return cal.getTimeInMillis() > sp.getLong(SCHEDULER_NEXT_ACTIVATION, 0);
 	}
 
 	/**
@@ -462,9 +476,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, milliseconds, sender);
-		Editor e = sp.edit();
-		e.putLong("scheduler.next_activation", milliseconds);
-		e.commit();
+		SharedPrefs.writeLong(sp, SCHEDULER_NEXT_ACTIVATION, milliseconds);
 	}
 
 	/**
@@ -476,9 +488,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		Intent intent = new Intent(this, AlarmIntentReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(this, NETXMS_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(sender);
-		Editor e = sp.edit();
-		e.putLong("scheduler.next_activation", 0);
-		e.commit();
+		SharedPrefs.writeLong(sp, SCHEDULER_NEXT_ACTIVATION, 0);
 	}
 
 	/**
@@ -515,6 +525,16 @@ public class AgentConnectorService extends Service implements LocationListener
 		@Override
 		protected Boolean doInBackground(Object... params)
 		{
+			if (!sp.getBoolean(PERMISSIONS_GRANTED, false))
+			{
+				Log.d(TAG, "PushDataTask.doInBackground: necessary permissions not granted!");
+				return false;
+			}
+			if (server.isEmpty() || login.isEmpty())
+			{
+				Log.d(TAG, "PushDataTask.doInBackground: server or login are empty!");
+				return false;
+			}
 			Log.d(TAG, "PushDataTask.doInBackground: reconnecting...");
 			notification(ConnectionStatus.CS_INPROGRESS, "");
 			if (NetHelper.isInternetOn(getApplicationContext()))
@@ -572,28 +592,14 @@ public class AgentConnectorService extends Service implements LocationListener
 				Log.d(TAG, "PushDataTask.onPostExecute: error: " + connMsg);
 				notification(ConnectionStatus.CS_ERROR, connMsg);
 			}
-			Editor e = sp.edit();
-			e.putLong("scheduler.last_activation", Calendar.getInstance().getTimeInMillis());
-			e.putString("scheduler.last_activation_msg", connMsg);
-			e.commit();
+			SharedPrefs.writeLong(sp, SCHEDULER_LAST_ACTIVATION, Calendar.getInstance().getTimeInMillis());
+			SharedPrefs.writeString(sp, SCHEDULER_LAST_ACTIVATION_MSG, connMsg);
 			if (agentActive)
 				setConnectionSchedule(Calendar.getInstance().getTimeInMillis() + getNextSchedule(connectionInterval));
 			else
 				cancelConnectionSchedule();
 			refreshHomeScreen();
 		}
-	}
-
-	/**
-	 * Updates last location status
-	 * 
-	 * @pasam status	status of last location
-	 */
-	private void updateLocationStatus(String status)
-	{
-		Editor e = sp.edit();
-		e.putString("location.last_status", status);
-		e.commit();
 	}
 
 	/**
@@ -613,7 +619,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Get last known geolocation (depending on strategy used it could be very old).
 	 * If no provider available, try to get a last position from any available provider
-	 * identifyed by the system using the ACCURACY_COARSE criteria.
+	 * identified by the system using the ACCURACY_COARSE criteria.
 	 * 
 	 * @return Last known location or null if not known
 	 */
@@ -624,21 +630,23 @@ public class AgentConnectorService extends Service implements LocationListener
 			Location location = null;
 			if (locationProvider.length() > 0) // Did we get an updated position?
 			{
-				location = locationManager.getLastKnownLocation(locationProvider);
+                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+    				location = locationManager.getLastKnownLocation(locationProvider);
 			}
 			else
-			{	// Try to get it using the best provider available
+			{	// Try to get it using the best provide0r available
 				Criteria criteria = new Criteria();
 				if (criteria != null)
 				{
 					criteria.setAccuracy(Criteria.ACCURACY_COARSE);
 					String bestProvider = locationManager.getBestProvider(criteria, true);
 					if (bestProvider != null)
-						location = locationManager.getLastKnownLocation(bestProvider);
+                        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                            location = locationManager.getLastKnownLocation(bestProvider);
 				}
 			}
 			
-			// getLastLnownLocation may return fake location at 0,0 if location is not known yet
+			// getLastKnownLocation may return fake location at 0,0 if location is not known yet
 			if ((location != null) && ((location.getLatitude() != 0.0) || (location.getLongitude() != 0.0)))
 			{
 				String locStatus = getString(R.string.info_location_good,
@@ -648,7 +656,7 @@ public class AgentConnectorService extends Service implements LocationListener
 						Float.toString((float)location.getLongitude()),
 						Float.toString(location.getAccuracy()));
 				Log.i(TAG, locStatus);
-				updateLocationStatus(locStatus);
+				SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, locStatus);
 				return new GeoLocation(location.getLatitude(),
 						location.getLongitude(),
 						getProviderType(location.getProvider()),
@@ -704,7 +712,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
 				String locStatus = getString(R.string.info_location_timeout, allowedProviders);
 				Log.i(TAG, locStatus);
-				updateLocationStatus(locStatus);
+				SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, locStatus);
 				refreshHomeScreen();
 			}
 			else if (locationForce)
@@ -718,7 +726,8 @@ public class AgentConnectorService extends Service implements LocationListener
 					for(int i = 0; i < providerList.size(); i++)
 					{
 						allowedProviders += (i > 0 ? ", " : "") + providerList.get(i);
-						locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
+                        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+    						locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
 					}
 					AgentConnectorService.gettingNewLocation = true;
 					locationHandler.postDelayed(locationTask, getNextSchedule(locationDuration));
@@ -729,7 +738,7 @@ public class AgentConnectorService extends Service implements LocationListener
 					locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
 				}
 				Log.i(TAG, locStatus);
-				updateLocationStatus(locStatus);
+				SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, locStatus);
 				refreshHomeScreen();
 			}
 			else
@@ -753,7 +762,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				Float.toString((float)location.getLongitude()),
 				Float.toString(location.getAccuracy()));
 		Log.i(TAG, locStatus);
-		updateLocationStatus(locStatus);
+		SharedPrefs.writeString(sp, LOCATION_LAST_STATUS, locStatus);
 		locationManager.removeUpdates(AgentConnectorService.this);
 		gettingNewLocation = false;
 		locationHandler.removeCallbacks(locationTask);
