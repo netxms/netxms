@@ -1,6 +1,6 @@
 /* 
-** driverloader - command line tool for network device driver testing
-** Copyright (C) 2013-2015 Raden Solutions
+** nddload - command line tool for network device driver testing
+** Copyright (C) 2013-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: loader.cpp
+** File: nddload.cpp
 **
 **/
 
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 2)
    {
-      _tprintf(_T("Usage: driverloader [-c community] [-p port] [-v snmpVersion] driver host\n"));
+      _tprintf(_T("Usage: nddload [-c community] [-p port] [-v snmpVersion] driver device\n"));
       return 1;
    }
 
