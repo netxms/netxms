@@ -13,7 +13,9 @@
  *  Generation of UUID version 4 according to RFC4122.
  */
 
-#include "strophe.h"
+#include <nms_common.h>
+#include <strophe.h>
+
 #include "common.h"
 #include "rand.h"
 

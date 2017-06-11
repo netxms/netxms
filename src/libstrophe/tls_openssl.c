@@ -16,6 +16,7 @@
 #include <nms_common.h>
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
+#include <openssl/err.h>
 
 #include "common.h"
 #include "tls.h"
