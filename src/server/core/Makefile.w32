@@ -10,7 +10,7 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
 	dc_nxsl.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 	dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
-	dctcolumn.cpp dctthreshold.cpp debug.cpp dfile_info.cpp \
+	dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 	download_job.cpp ef.cpp email.cpp entirenet.cpp \
 	epp.cpp events.cpp evproc.cpp fdb.cpp \
 	filemonitoring.cpp graph.cpp hdlink.cpp hk.cpp id.cpp \
@@ -19,10 +19,10 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 	loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
 	market.cpp mdconn.cpp mdsession.cpp mobile.cpp \
-	modules.cpp mt.cpp ndd.cpp ndp.cpp \
-	netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
-	node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
-	nxslext.cpp objects.cpp objtools.cpp package.cpp \
+	modules.cpp mt.cpp ndd.cpp ndp.cpp netinfo.cpp netmap.cpp \
+	netmap_element.cpp netmap_link.cpp netmap_objlist.cpp \
+	netobj.cpp netsrv.cpp node.cpp nodelink.cpp np.cpp npe.cpp \
+	nxsl_classes.cpp nxslext.cpp objects.cpp objtools.cpp package.cpp \
 	pds.cpp poll.cpp ps.cpp rack.cpp radius.cpp \
 	reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 	session.cpp slmcheck.cpp smclp.cpp \
@@ -36,6 +36,6 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 CPPFLAGS = /DNXCORE_EXPORTS
 LIBS = libnxsrv.lib libnxsnmp.lib libnxlp.lib libnxsl.lib libnxmap.lib \
    libnxdb.lib libnxagent.lib libnetxms.lib libstrophe.lib libtre.lib \
-   ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib
+   jansson.lib ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib
 	  
 include ..\..\..\Makefile.inc.w32

@@ -29,14 +29,10 @@ OBJDIR = amd64
 !endif
 
 !if "$(ARCH)" == "x86"
-WINDDK_ARCH = i386
 OBJDIR = i386
 !endif
 
 # SDK locations
-!ifndef WINDDK_BASE
-WINDDK_BASE = C:\SDK\WinDDK
-!endif
 !ifndef OPENSSL_BASE
 OPENSSL_BASE = C:\SDK\OpenSSL
 !endif
@@ -93,8 +89,7 @@ MANIFEST = $(TARGET).intermediate.manifest
 LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
 	/LIBPATH:"$(NETXMS_LIBDIR)" \
 	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
-	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
-	/LIBPATH:"$(WINDDK_BASE)\lib\wnet\$(WINDDK_ARCH)"
+	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib"
 
 # Common libraries
 LIBS = $(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib

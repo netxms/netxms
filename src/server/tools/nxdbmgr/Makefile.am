@@ -19,4 +19,5 @@ tables.cpp: @top_srcdir@/sql/schema.in
 	@top_srcdir@/tools/create_table_list.pl @top_srcdir@/sql/schema.in > tables.cpp
 
 EXTRA_DIST = \
-	nxdbmgr.vcproj nxdbmgr.h
+	nxdbmgr.vcproj nxdbmgr.h \
+	Makefile.w32

@@ -6,7 +6,7 @@ ups_la_CPPFLAGS=-I@top_srcdir@/include
 ups_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 ups_la_LIBADD= ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = ups.h ups.vcproj usb.cpp
+EXTRA_DIST = Makefile.w32 ups.h ups.vcproj usb.cpp
 
 if !STATIC_BUILD
 install-exec-hook:

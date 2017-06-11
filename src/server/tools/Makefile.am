@@ -10,3 +10,5 @@
 
 SUBDIRS = nxget nxadm nxaction nxap nxdbmgr nxminfo nxupload
 SUBDIRS += @SERVER_TOOLS@
+
+EXTRA_DIST = Makefile.w32

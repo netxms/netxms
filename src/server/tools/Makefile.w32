@@ -1,0 +1,3 @@
+SUBDIRS = nddload nxaction nxadm nxdbmgr
+
+include ..\..\..\Makefile.inc.w32

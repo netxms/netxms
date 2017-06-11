@@ -1,0 +1,7 @@
+TARGET = ups.nsm
+TYPE = nsm
+SOURCES = apc.cpp bcmxcp.cpp main.cpp megatec.cpp metasys.cpp microdowell.cpp serial.cpp ups.cpp usb.cpp
+
+LIBS = libnxagent.lib libnetxms.lib hid.lib setupapi.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

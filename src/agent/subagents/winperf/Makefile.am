@@ -10,4 +10,5 @@
 
 EXTRA_DIST = \
     collect.cpp tools.cpp winperf.cpp winperf.h \
+    Makefile.w32 \
     winperf.vcproj

@@ -1,4 +1,4 @@
-SUBDIRS = jansson libexpat libtre sqlite zlib libnetxms libnxlp libnxmap libnxmb libnxsl libstrophe \
+SUBDIRS = jansson libexpat libtre sqlite zlib libnetxms libnxlp libnxmb libnxsl libstrophe \
           nxscript db snmp appagent agent server tools
 
 include ..\Makefile.inc.w32

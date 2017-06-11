@@ -1,0 +1,7 @@
+TARGET = wmi.nsm
+TYPE = nsm
+SOURCES = acpi.cpp sc.cpp wmi.cpp
+
+LIBS = libnxagent.lib libnetxms.lib wbemuuid.lib ole32.lib oleaut32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

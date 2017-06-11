@@ -1,0 +1,4 @@
+TARGET = ubntlw.jar
+TYPE = jar
+
+include ..\..\..\..\Makefile.inc.w32

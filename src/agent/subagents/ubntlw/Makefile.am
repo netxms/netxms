@@ -6,4 +6,4 @@ ubntlw.jar: pom.xml
 	mvn package
 	mv target/ubntlw.jar .
 
-EXTRA_DIST = pom.xml ubntlw.jar LICENSE README
+EXTRA_DIST = Makefile.w32 pom.xml ubntlw.jar LICENSE README

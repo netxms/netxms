@@ -1,0 +1,7 @@
+TARGET = winperf.nsm
+TYPE = nsm
+SOURCES = collect.cpp tools.cpp winperf.cpp
+
+LIBS = libnxagent.lib libnetxms.lib pdh.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

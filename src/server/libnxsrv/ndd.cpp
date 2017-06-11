@@ -23,6 +23,22 @@
 #include <nddrv.h>
 
 /**
+ * Serialize radio interface information to JSON
+ */
+json_t *RadioInterfaceInfo::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "index", json_integer(index));
+   json_object_set_new(root, "name", json_string_t(name));
+   char macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string(BinToStrA(macAddr, MAC_ADDR_LENGTH, macAddrText)));
+   json_object_set_new(root, "channel", json_integer(channel));
+   json_object_set_new(root, "powerDBm", json_integer(powerDBm));
+   json_object_set_new(root, "powerMW", json_integer(powerMW));
+   return root;
+}
+
+/**
  * Access point info constructor
  */
 AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)

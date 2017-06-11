@@ -13,6 +13,6 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp
 
 CPPFLAGS = /I "$(NETXMS_BASE)\src\libexpat\libexpat" /I "$(NETXMS_BASE)\src\zlib" /DLIBNETXMS_EXPORTS
-LIBS = libexpat.lib libtre.lib nxzlib.lib ws2_32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib crypt32.lib
+LIBS = libexpat.lib libtre.lib jansson.lib nxzlib.lib ws2_32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib crypt32.lib
 	  
 include ../../Makefile.inc.w32
