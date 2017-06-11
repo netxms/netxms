@@ -1,8 +1,13 @@
 TARGET = libstrophe.dll
 TYPE = dll
-SOURCES = auth.c conn.c ctx.c event.c handler.c hash.c jid.c \
-	md5.c parser_expat.c sasl.c snprintf.c sock.c \
-	stanza.c tls_openssl.c util.c
+SOURCES = auth.c conn.c crypto.c ctx.c event.c handler.c hash.c jid.c \
+          md5.c parser_expat.c rand.c resolver.c sasl.c scram.c sha1.c \
+          sock.c stanza.c tls_openssl.c util.c uuid.c
+HEADERS = $(MAKEDIR)\common.h $(MAKEDIR)\hash.h $(MAKEDIR)\md5.h \
+          $(MAKEDIR)\ostypes.h $(MAKEDIR)\parser.h $(MAKEDIR)\rand.h \
+          $(MAKEDIR)\resolver.h $(MAKEDIR)\sasl.h $(MAKEDIR)\scram.h \
+          $(MAKEDIR)\sha1.h $(MAKEDIR)\snprintf.h $(MAKEDIR)\sock.h \
+          $(MAKEDIR)\tls.h $(MAKEDIR)\util.h
 
 CPPFLAGS = /I$(NETXMS_BASE)\src\libexpat\libexpat /DLIBSTROPHE_EXPORTS
 LIBS = libexpat.lib ws2_32.lib

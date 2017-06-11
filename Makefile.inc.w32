@@ -90,6 +90,28 @@ LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFES
 	/LIBPATH:"$(NETXMS_LIBDIR)" \
 	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
 	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib"
+	
+# Common headers
+HEADERS = $(HEADERS) \
+	$(NETXMS_BASE)\include\build.h \
+	$(NETXMS_BASE)\include\geolocation.h \
+	$(NETXMS_BASE)\include\jansson.h \
+	$(NETXMS_BASE)\include\netxms-regex.h \
+	$(NETXMS_BASE)\include\netxms-version.h \
+	$(NETXMS_BASE)\include\netxms_getopt.h \
+	$(NETXMS_BASE)\include\nms_common.h \
+	$(NETXMS_BASE)\include\nms_cscp.h \
+	$(NETXMS_BASE)\include\nms_threads.h \
+	$(NETXMS_BASE)\include\nms_util.h \
+	$(NETXMS_BASE)\include\nxconfig.h \
+	$(NETXMS_BASE)\include\nxcpapi.h \
+	$(NETXMS_BASE)\include\nxcrypto.h \
+	$(NETXMS_BASE)\include\nxqueue.h \
+	$(NETXMS_BASE)\include\nxstat.h \
+	$(NETXMS_BASE)\include\rwlock.h \
+	$(NETXMS_BASE)\include\unicode.h \
+	$(NETXMS_BASE)\include\uthash.h \
+	$(NETXMS_BASE)\include\uuid.h
 
 # Common libraries
 LIBS = $(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
@@ -129,7 +151,7 @@ $(BINFILE): objdir $(OBJ) $(RESOBJ)
    @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(RESOBJ) $(LIBS)
 	@rm -f $(MANIFEST)
 
-$(OBJ): $(NETXMS_BASE)\build\netxms-build-tag.h
+$(OBJ): $(NETXMS_BASE)\build\netxms-build-tag.h $(HEADERS)
 
 .PHONY: objdir
 

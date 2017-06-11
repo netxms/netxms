@@ -6,10 +6,7 @@
 **  This software is provided AS-IS with no warranty, either express
 **  or implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+**  This program is dual licensed under the MIT and GPLv3 licenses.
 */
 
 /** @file
@@ -60,6 +57,28 @@ char *xmpp_strdup(const xmpp_ctx_t * const ctx, const char * const s)
     memcpy(copy, s, len + 1);
 
     return copy;
+}
+
+/** strtok_r(3) implementation.
+ *  This function has appeared in POSIX.1-2001, but not in C standard.
+ *  For example, visual studio older than 2005 doesn't provide strtok_r()
+ *  nor strtok_s().
+ */
+char *xmpp_strtok_r(char *s, const char *delim, char **saveptr)
+{
+    size_t len;
+
+    s = s ? s : *saveptr;
+    len = strspn(s, delim);
+    s += len;
+    if (*s == '\0')
+        return NULL;
+
+    len = strcspn(s, delim);
+    *saveptr = s[len] == '\0' ? &s[len] : &s[len + 1];
+    s[len] = '\0';
+
+    return s;
 }
 
 /** Return an integer based time stamp.

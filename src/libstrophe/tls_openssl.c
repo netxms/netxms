@@ -6,10 +6,7 @@
 **  This software is provided AS-IS with no warranty, either express
 **  or implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+**  This program is dual licensed under the MIT and GPLv3 licenses.
 */
 
 /** @file
@@ -31,6 +28,16 @@ struct _tls {
     SSL *ssl;
     int lasterror;
 };
+
+enum {
+    TLS_SHUTDOWN_MAX_RETRIES = 10,
+    TLS_TIMEOUT_SEC = 0,
+    TLS_TIMEOUT_USEC = 100000,
+};
+
+static void _tls_sock_wait(tls_t *tls, int error);
+static void _tls_set_error(tls_t *tls, int error);
+static void _tls_log_error(xmpp_ctx_t *ctx);
 
 void tls_initialize(void)
 {
@@ -54,28 +61,37 @@ tls_t *tls_new(xmpp_ctx_t *ctx, sock_t sock)
 
     if (tls) {
         int ret;
-	memset(tls, 0, sizeof(*tls));
+        memset(tls, 0, sizeof(*tls));
 
-	tls->ctx = ctx;
-	tls->sock = sock;
-	tls->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+        tls->ctx = ctx;
+        tls->sock = sock;
+        tls->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+        if (tls->ssl_ctx == NULL)
+            goto err;
 
-	SSL_CTX_set_client_cert_cb(tls->ssl_ctx, NULL);
-	SSL_CTX_set_mode (tls->ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
-	SSL_CTX_set_verify (tls->ssl_ctx, SSL_VERIFY_NONE, NULL);
+        SSL_CTX_set_client_cert_cb(tls->ssl_ctx, NULL);
+        SSL_CTX_set_mode(tls->ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
+        SSL_CTX_set_verify(tls->ssl_ctx, SSL_VERIFY_NONE, NULL);
 
-	tls->ssl = SSL_new(tls->ssl_ctx);
+        tls->ssl = SSL_new(tls->ssl_ctx);
+        if (tls->ssl == NULL)
+            goto err_free_ctx;
 
-	ret = SSL_set_fd(tls->ssl, (int)sock);
-	if (ret <= 0) {
-	    tls->lasterror = SSL_get_error(tls->ssl, ret);
-	    tls_error(tls);
-	    tls_free(tls);
-	    tls = NULL;
-	}
+        ret = SSL_set_fd(tls->ssl, sock);
+        if (ret <= 0)
+            goto err_free_ssl;
     }
 
     return tls;
+
+err_free_ssl:
+    SSL_free(tls->ssl);
+err_free_ctx:
+    SSL_CTX_free(tls->ssl_ctx);
+err:
+    xmpp_free(ctx, tls);
+    _tls_log_error(ctx);
+    return NULL;
 }
 
 void tls_free(tls_t *tls)
@@ -83,7 +99,6 @@ void tls_free(tls_t *tls)
     SSL_free(tls->ssl);
     SSL_CTX_free(tls->ssl_ctx);
     xmpp_free(tls->ctx, tls);
-    return;
 }
 
 int tls_set_credentials(tls_t *tls, const char *cafilename)
@@ -93,57 +108,56 @@ int tls_set_credentials(tls_t *tls, const char *cafilename)
 
 int tls_start(tls_t *tls)
 {
-    int ret = -1;
+    int error;
+    int ret;
 
     /* Since we're non-blocking, loop the connect call until it
        succeeds or fails */
-    while (ret == -1) {
-	ret = SSL_connect(tls->ssl);
+    while (1) {
+        ret = SSL_connect(tls->ssl);
+        error = ret <= 0 ? SSL_get_error(tls->ssl, ret) : 0;
 
-	/* wait for something to happen on the sock before looping back */
-	if (ret == -1) {
-	    fd_set fds;
-	    struct timeval tv;
+        if (ret == -1 && tls_is_recoverable(error)) {
+            /* wait for something to happen on the sock before looping back */
+            _tls_sock_wait(tls, error);
+            continue;
+        }
 
-	    tv.tv_sec = 0;
-	    tv.tv_usec = 1000;
-
-	    FD_ZERO(&fds); 
-	    FD_SET(tls->sock, &fds);
-    
-	    select(SELECT_NFDS(tls->sock + 1), &fds, &fds, NULL, &tv);
-	}
+        /* success or fatal error */
+        break;
     }
+    _tls_set_error(tls, error);
 
-    if (ret <= 0) {
-	tls->lasterror = SSL_get_error(tls->ssl, ret);
-	return 0;
-    }
-
-    return 1;
-
+    return ret <= 0 ? 0 : 1;
 }
 
 int tls_stop(tls_t *tls)
 {
+    int retries = 0;
+    int error;
     int ret;
 
-    ret = SSL_shutdown(tls->ssl);
-
-    if (ret <= 0) {
-	tls->lasterror = SSL_get_error(tls->ssl, ret);
-	return 0;
+    while (1) {
+        ++retries;
+        ret = SSL_shutdown(tls->ssl);
+        error = ret < 0 ? SSL_get_error(tls->ssl, ret) : 0;
+        if (ret == 1 || !tls_is_recoverable(error) ||
+            retries >= TLS_SHUTDOWN_MAX_RETRIES) {
+            break;
+        }
+        _tls_sock_wait(tls, error);
     }
+    _tls_set_error(tls, error);
 
-    return 1;
+    return ret <= 0 ? 0 : 1;
 }
 
 int tls_is_recoverable(int error)
 {
     return (error == SSL_ERROR_NONE || error == SSL_ERROR_WANT_READ
-	    || error == SSL_ERROR_WANT_WRITE
-	    || error == SSL_ERROR_WANT_CONNECT
-	    || error == SSL_ERROR_WANT_ACCEPT);
+            || error == SSL_ERROR_WANT_WRITE
+            || error == SSL_ERROR_WANT_CONNECT
+            || error == SSL_ERROR_WANT_ACCEPT);
 }
 
 int tls_pending(tls_t *tls)
@@ -153,22 +167,20 @@ int tls_pending(tls_t *tls)
 
 int tls_read(tls_t *tls, void * const buff, const size_t len)
 {
-    int ret = SSL_read(tls->ssl, buff, (int)len);
+    int ret;
 
-    if (ret <= 0) {
-	tls->lasterror = SSL_get_error(tls->ssl, ret);
-    }
+    ret = SSL_read(tls->ssl, buff, len);
+    _tls_set_error(tls, ret <= 0 ? SSL_get_error(tls->ssl, ret) : 0);
 
     return ret;
 }
 
 int tls_write(tls_t *tls, const void * const buff, const size_t len)
 {
-    int ret = SSL_write(tls->ssl, buff, (int)len);
+    int ret;
 
-    if (ret <= 0) {
-	tls->lasterror = SSL_get_error(tls->ssl, ret);
-    }
+    ret = SSL_write(tls->ssl, buff, len);
+    _tls_set_error(tls, ret <= 0 ? SSL_get_error(tls->ssl, ret) : 0);
 
     return ret;
 }
@@ -176,4 +188,49 @@ int tls_write(tls_t *tls, const void * const buff, const size_t len)
 int tls_clear_pending_write(tls_t *tls)
 {
     return 0;
+}
+
+static void _tls_sock_wait(tls_t *tls, int error)
+{
+    struct timeval tv;
+    fd_set rfds;
+    fd_set wfds;
+    int nfds;
+    int ret;
+
+    FD_ZERO(&rfds);
+    FD_ZERO(&wfds);
+    if (error == SSL_ERROR_WANT_READ)
+        FD_SET(tls->sock, &rfds);
+    if (error == SSL_ERROR_WANT_WRITE)
+        FD_SET(tls->sock, &wfds);
+    nfds = (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_WRITE) ?
+           tls->sock + 1 : 0;
+    do {
+        tv.tv_sec = TLS_TIMEOUT_SEC;
+        tv.tv_usec = TLS_TIMEOUT_USEC;
+        ret = select(nfds, &rfds, &wfds, NULL, &tv);
+    } while (ret == -1 && WSAGetLastError() == WSAEINTR);
+}
+
+static void _tls_set_error(tls_t *tls, int error)
+{
+    if (error != 0 && !tls_is_recoverable(error)) {
+        _tls_log_error(tls->ctx);
+    }
+    tls->lasterror = error;
+}
+
+static void _tls_log_error(xmpp_ctx_t *ctx)
+{
+    unsigned long e;
+    char buf[256];
+
+    do {
+        e = ERR_get_error();
+        if (e != 0) {
+            ERR_error_string_n(e, buf, sizeof(buf));
+            xmpp_debug(ctx, "tls", "%s", buf);
+        }
+    } while (e != 0);
 }

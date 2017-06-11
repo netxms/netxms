@@ -6,10 +6,7 @@
 **  This software is provided AS-IS with no warranty, either express
 **  or implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+**  This program is dual licensed under the MIT and GPLv3 licenses.
 */
 
 /** @file
@@ -35,7 +32,7 @@ char *xmpp_jid_new(xmpp_ctx_t *ctx, const char *node,
 				    const char *resource)
 {
     char *result;
-    size_t len,nlen,dlen,rlen;
+    size_t len, nlen, dlen, rlen;
 
     /* jid must at least have a domain */
     if (domain == NULL) return NULL;
@@ -58,7 +55,7 @@ char *xmpp_jid_new(xmpp_ctx_t *ctx, const char *node,
 	    result[nlen+dlen] = '/';
 	    memcpy(result+nlen+dlen+1, resource, rlen - 1);
 	}
-	result[nlen+dlen+rlen] = '\0';
+	result[len] = '\0';
     }
 
     return result;

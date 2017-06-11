@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ static int VersionHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 
    xmpp_stanza_t *query = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(query, "query");
-   char *ns = xmpp_stanza_get_ns(xmpp_stanza_get_children(stanza));
+   const char *ns = xmpp_stanza_get_ns(xmpp_stanza_get_children(stanza));
    if (ns != NULL)
    {
       xmpp_stanza_set_ns(query, ns);
@@ -105,11 +105,11 @@ static int PresenceHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanz
 {
 	xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
 
-   char *type = xmpp_stanza_get_attribute(stanza, "type");
+   const char *type = xmpp_stanza_get_attribute(stanza, "type");
 	if ((type == NULL) || strcmp(type, "subscribe"))
       return 1;
 
-   char *requestor = xmpp_stanza_get_attribute(stanza, "from");
+   const char *requestor = xmpp_stanza_get_attribute(stanza, "from");
    DbgPrintf(4, _T("XMPP: presence subscribe request from %hs"), requestor);
 
    xmpp_stanza_t *reply = xmpp_stanza_new(ctx);
@@ -138,11 +138,11 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 
 	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
       return 1;
-   char *type = xmpp_stanza_get_attribute(stanza, "type");
+   const char *type = xmpp_stanza_get_attribute(stanza, "type");
 	if ((type != NULL) && !strcmp(type, "error"))
       return 1;
 
-   char *requestor = xmpp_stanza_get_attribute(stanza, "from");
+   const char *requestor = xmpp_stanza_get_attribute(stanza, "from");
 	char *intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
    DbgPrintf(6, _T("XMPP: Incoming message from %hs: %hs"), requestor, intext);
 

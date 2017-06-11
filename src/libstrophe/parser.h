@@ -6,10 +6,7 @@
 **  This software is provided AS-IS with no warranty, either express or
 **  implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+**  This program is dual licensed under the MIT and GPLv3 licenses.
 */
 
 /** @file
@@ -37,6 +34,7 @@ parser_t *parser_new(xmpp_ctx_t *ctx,
                      parser_stanza_callback stanzacb,
                      void *userdata);
 void parser_free(parser_t *parser);
+char* parser_attr_name(xmpp_ctx_t *ctx, char *nsname);
 int parser_reset(parser_t *parser);
 int parser_feed(parser_t *parser, char *chunk, int len);
 

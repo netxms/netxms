@@ -1,18 +1,15 @@
 /* auth.c
 ** strophe XMPP client library -- auth functions and handlers
 **
-** Copyright (C) 2005-2009 Collecta, Inc. 
+** Copyright (C) 2005-2009 Collecta, Inc.
 **
 **  This software is provided AS-IS with no warranty, either express or
 **  implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+** This program is dual licensed under the MIT and GPLv3 licenses.
 */
 
-/** @file 
+/** @file
  *  Authentication function and handlers.
  */
 
@@ -51,9 +48,21 @@
  */
 #define LEGACY_TIMEOUT 15000 /* 15 seconds */
 #endif
+#ifndef HANDSHAKE_TIMEOUT
+/** @def HANDSHAKE_TIMEOUT
+ *  Time to wait for component authentication to complete
+ */
+#define HANDSHAKE_TIMEOUT 15000 /* 15 seconds */
+#endif
 
 static void _auth(xmpp_conn_t * const conn);
 static void _handle_open_sasl(xmpp_conn_t * const conn);
+
+static int _handle_component_auth(xmpp_conn_t * const conn);
+static int _handle_component_hs_response(xmpp_conn_t * const conn,
+            xmpp_stanza_t * const stanza,
+            void * const userdata);
+
 static int _handle_missing_legacy(xmpp_conn_t * const conn,
 				  void * const userdata);
 static int _handle_legacy(xmpp_conn_t * const conn,
@@ -71,6 +80,10 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
 static int _handle_digestmd5_rspauth(xmpp_conn_t * const conn,
 			xmpp_stanza_t * const stanza,
 			void * const userdata);
+static int _handle_scram_sha1_challenge(xmpp_conn_t * const conn,
+			xmpp_stanza_t * const stanza,
+			void * const userdata);
+static char *_make_scram_sha1_init_msg(xmpp_conn_t * const conn);
 
 static int _handle_missing_features_sasl(xmpp_conn_t * const conn,
 					 void * const userdata);
@@ -84,6 +97,8 @@ static int _handle_session(xmpp_conn_t * const conn,
 			   void * const userdata);
 static int _handle_missing_session(xmpp_conn_t * const conn,
 				   void * const userdata);
+static int _handle_missing_handshake(xmpp_conn_t * const conn,
+                                     void * const userdata);
 
 /* stream:error handler */
 static int _handle_error(xmpp_conn_t * const conn,
@@ -91,12 +106,12 @@ static int _handle_error(xmpp_conn_t * const conn,
 			 void * const userdata)
 {
     xmpp_stanza_t *child;
-    char *name;
+    const char *name;
 
     /* free old stream error if it's still there */
     if (conn->stream_error) {
 	xmpp_stanza_release(conn->stream_error->stanza);
-	if (conn->stream_error->text) 
+	if (conn->stream_error->text)
 	    xmpp_free(conn->ctx, conn->stream_error->text);
 	xmpp_free(conn->ctx, conn->stream_error);
     }
@@ -110,7 +125,7 @@ static int _handle_error(xmpp_conn_t * const conn,
     if (conn->stream_error) {
 	child = xmpp_stanza_get_children(stanza);
 	do {
-	    char *ns = NULL;
+	    const char *ns = NULL;
 
 	    if (child) {
 		ns = xmpp_stanza_get_ns(child);
@@ -217,14 +232,16 @@ static int _handle_features(xmpp_conn_t * const conn,
     /* check for SASL */
     child = xmpp_stanza_get_child_by_name(stanza, "mechanisms");
     if (child && (strcmp(xmpp_stanza_get_ns(child), XMPP_NS_SASL) == 0)) {
-	for (mech = xmpp_stanza_get_children(child); mech; 
+	for (mech = xmpp_stanza_get_children(child); mech;
 	     mech = xmpp_stanza_get_next(mech)) {
-	    if (strcmp(xmpp_stanza_get_name(mech), "mechanism") == 0) {
+	    if (xmpp_stanza_get_name(mech) && strcmp(xmpp_stanza_get_name(mech), "mechanism") == 0) {
 		text = xmpp_stanza_get_text(mech);
 		if (strcasecmp(text, "PLAIN") == 0)
 		    conn->sasl_support |= SASL_MASK_PLAIN;
 		else if (strcasecmp(text, "DIGEST-MD5") == 0)
 		    conn->sasl_support |= SASL_MASK_DIGESTMD5;
+                else if (strcasecmp(text, "SCRAM-SHA-1") == 0)
+                    conn->sasl_support |= SASL_MASK_SCRAMSHA1;
 		else if (strcasecmp(text, "ANONYMOUS") == 0)
 		    conn->sasl_support |= SASL_MASK_ANONYMOUS;
 
@@ -234,7 +251,7 @@ static int _handle_features(xmpp_conn_t * const conn,
     }
 
     _auth(conn);
- 
+
     return 0;
 }
 
@@ -257,33 +274,21 @@ static int _handle_proceedtls_default(xmpp_conn_t * const conn,
 			      xmpp_stanza_t * const stanza,
 			      void * const userdata)
 {
-    char *name;
+    const char *name;
+
     name = xmpp_stanza_get_name(stanza);
-    xmpp_debug(conn->ctx, "xmpp", 
-	"handle proceedtls called for %s", name);
+    xmpp_debug(conn->ctx, "xmpp", "handle proceedtls called for %s", name);
 
     if (strcmp(name, "proceed") == 0) {
         xmpp_debug(conn->ctx, "xmpp", "proceeding with TLS");
 
-	conn->tls = tls_new(conn->ctx, conn->sock);
-
-	if (!tls_start(conn->tls))
-	{
-	    xmpp_debug(conn->ctx, "xmpp", "Couldn't start TLS! error %d", tls_error(conn->tls));
-	    tls_free(conn->tls);
-	    conn->tls = NULL;
-	    conn->tls_failed = 1;
-	
-	    /* failed tls spoils the connection, so disconnect */
-	    xmpp_disconnect(conn);
-	}
-	else
-	{
-            conn->secured = 1;
+        if (conn_tls_start(conn) == 0) {
             conn_prepare_reset(conn, auth_handle_open);
-
-	    conn_open_stream(conn);
-	}
+            conn_open_stream(conn);
+        } else {
+            /* failed tls spoils the connection, so disconnect */
+            xmpp_disconnect(conn);
+        }
     }
 
     return 0;
@@ -293,20 +298,20 @@ static int _handle_sasl_result(xmpp_conn_t * const conn,
 			       xmpp_stanza_t * const stanza,
 			       void * const userdata)
 {
-    char *name;
+    const char *name;
 
     name = xmpp_stanza_get_name(stanza);
 
     /* the server should send a <success> or <failure> stanza */
     if (strcmp(name, "failure") == 0) {
-	xmpp_debug(conn->ctx, "xmpp", "SASL %s auth failed", 
+	xmpp_debug(conn->ctx, "xmpp", "SASL %s auth failed",
 		   (char *)userdata);
-	
+
 	/* fall back to next auth method */
 	_auth(conn);
     } else if (strcmp(name, "success") == 0) {
 	/* SASL PLAIN auth successful, we need to restart the stream */
-	xmpp_debug(conn->ctx, "xmpp", "SASL %s auth successful", 
+	xmpp_debug(conn->ctx, "xmpp", "SASL %s auth successful",
 		   (char *)userdata);
 
 	/* reset parser */
@@ -332,7 +337,7 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
     char *text;
     char *response;
     xmpp_stanza_t *auth, *authdata;
-    char *name;
+    const char *name;
 
     name = xmpp_stanza_get_name(stanza);
     xmpp_debug(conn->ctx, "xmpp",\
@@ -351,10 +356,10 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
 	if (!auth) {
 	    disconnect_mem_error(conn);
 	    return 0;
-	}	
+	}
 	xmpp_stanza_set_name(auth, "response");
 	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
-	
+
 	authdata = xmpp_stanza_new(conn->ctx);
 	if (!authdata) {
 	    disconnect_mem_error(conn);
@@ -367,7 +372,7 @@ static int _handle_digestmd5_challenge(xmpp_conn_t * const conn,
 	xmpp_stanza_add_child(auth, authdata);
 	xmpp_stanza_release(authdata);
 
-	handler_add(conn, _handle_digestmd5_rspauth, 
+	handler_add(conn, _handle_digestmd5_rspauth,
 		    XMPP_NS_SASL, NULL, NULL, NULL);
 
 	xmpp_send(conn, auth);
@@ -387,7 +392,7 @@ static int _handle_digestmd5_rspauth(xmpp_conn_t * const conn,
 			      void * const userdata)
 {
     xmpp_stanza_t *auth;
-    char *name;
+    const char *name;
 
     name = xmpp_stanza_get_name(stanza);
     xmpp_debug(conn->ctx, "xmpp",
@@ -400,7 +405,7 @@ static int _handle_digestmd5_rspauth(xmpp_conn_t * const conn,
 	if (!auth) {
 	    disconnect_mem_error(conn);
 	    return 0;
-	}	
+	}
 	xmpp_stanza_set_name(auth, "response");
 	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
 	xmpp_send(conn, auth);
@@ -410,6 +415,96 @@ static int _handle_digestmd5_rspauth(xmpp_conn_t * const conn,
     }
 
     return 1;
+}
+
+/* handle the challenge phase of SCRAM-SHA-1 auth */
+static int _handle_scram_sha1_challenge(xmpp_conn_t * const conn,
+					xmpp_stanza_t * const stanza,
+					void * const userdata)
+{
+    char *text;
+    char *response;
+    xmpp_stanza_t *auth, *authdata;
+    const char *name;
+    char *challenge;
+    char *scram_init = (char *)userdata;
+
+    name = xmpp_stanza_get_name(stanza);
+    xmpp_debug(conn->ctx, "xmpp",
+               "handle SCRAM-SHA-1 (challenge) called for %s", name);
+
+    if (strcmp(name, "challenge") == 0) {
+        text = xmpp_stanza_get_text(stanza);
+        if (!text)
+            goto err;
+
+        challenge = xmpp_base64_decode_str(conn->ctx, text, strlen(text));
+        xmpp_free(conn->ctx, text);
+        if (!challenge)
+            goto err;
+
+        response = sasl_scram_sha1(conn->ctx, challenge, scram_init,
+                                   conn->jid, conn->pass);
+        xmpp_free(conn->ctx, challenge);
+        if (!response)
+            goto err;
+
+        auth = xmpp_stanza_new(conn->ctx);
+        if (!auth)
+            goto err_free_response;
+        xmpp_stanza_set_name(auth, "response");
+        xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
+
+        authdata = xmpp_stanza_new(conn->ctx);
+        if (!authdata)
+            goto err_release_auth;
+        xmpp_stanza_set_text(authdata, response);
+        xmpp_free(conn->ctx, response);
+
+        xmpp_stanza_add_child(auth, authdata);
+        xmpp_stanza_release(authdata);
+
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
+
+    } else {
+        xmpp_free(conn->ctx, scram_init);
+        return _handle_sasl_result(conn, stanza, "SCRAM-SHA-1");
+    }
+
+    return 1;
+
+err_release_auth:
+    xmpp_stanza_release(auth);
+err_free_response:
+    xmpp_free(conn->ctx, response);
+err:
+    xmpp_free(conn->ctx, scram_init);
+    disconnect_mem_error(conn);
+    return 0;
+}
+
+static char *_make_scram_sha1_init_msg(xmpp_conn_t * const conn)
+{
+    xmpp_ctx_t *ctx = conn->ctx;
+    size_t message_len;
+    char *node;
+    char *message;
+    char nonce[32];
+
+    node = xmpp_jid_node(ctx, conn->jid);
+    if (!node) {
+        return NULL;
+    }
+    xmpp_rand_nonce(ctx->rand, nonce, sizeof(nonce));
+    message_len = strlen(node) + strlen(nonce) + 8 + 1;
+    message = xmpp_alloc(ctx, message_len);
+    if (message) {
+        xmpp_snprintf(message, message_len, "n,,n=%s,r=%s", node, nonce);
+    }
+    xmpp_free(ctx, node);
+
+    return message;
 }
 
 static xmpp_stanza_t *_make_starttls(xmpp_conn_t * const conn)
@@ -422,7 +517,7 @@ static xmpp_stanza_t *_make_starttls(xmpp_conn_t * const conn)
 	xmpp_stanza_set_name(starttls, "starttls");
 	xmpp_stanza_set_ns(starttls, XMPP_NS_TLS);
     }
-    
+
     return starttls;
 }
 
@@ -438,19 +533,20 @@ static xmpp_stanza_t *_make_sasl_auth(xmpp_conn_t * const conn,
 	xmpp_stanza_set_ns(auth, XMPP_NS_SASL);
 	xmpp_stanza_set_attribute(auth, "mechanism", mechanism);
     }
-    
+
     return auth;
 }
 
-/* authenticate the connection 
- * this may get called multiple times.  if any auth method fails, 
+/* authenticate the connection
+ * this may get called multiple times.  if any auth method fails,
  * this will get called again until one auth method succeeds or every
- * method fails 
+ * method fails
  */
 static void _auth(xmpp_conn_t * const conn)
 {
     xmpp_stanza_t *auth, *authdata, *query, *child, *iq;
     char *str, *authid;
+    char *scram_init;
     int anonjid;
 
     /* if there is no node in conn->jid, we assume anonymous connect */
@@ -462,19 +558,15 @@ static void _auth(xmpp_conn_t * const conn)
 	anonjid = 0;
     }
 
-    if (conn->tls_support)
-    {
+    if (conn->tls_support) {
 	tls_t *tls = tls_new(conn->ctx, conn->sock);
 
 	/* If we couldn't init tls, it isn't there, so go on */
-	if (!tls)
-	{
+	if (!tls) {
 	    conn->tls_support = 0;
 	    _auth(conn);
 	    return;
-	}
-	else
-	{
+	} else {
 	    tls_free(tls);
 	}
 
@@ -485,7 +577,7 @@ static void _auth(xmpp_conn_t * const conn)
 	    return;
 	}
 
-	handler_add(conn, _handle_proceedtls_default, 
+	handler_add(conn, _handle_proceedtls_default,
 		    XMPP_NS_TLS, NULL, NULL, NULL);
 
 	xmpp_send(conn, auth);
@@ -493,7 +585,18 @@ static void _auth(xmpp_conn_t * const conn)
 
 	/* TLS was tried, unset flag */
 	conn->tls_support = 0;
-    } else if (anonjid && conn->sasl_support & SASL_MASK_ANONYMOUS) {
+	/* _auth() will be called later */
+	return;
+    }
+
+    if (conn->tls_mandatory && !xmpp_conn_is_secured(conn)) {
+        xmpp_error(conn->ctx, "xmpp", "TLS is not supported, but set as "
+                                      "mandatory for this connection");
+        conn_disconnect(conn);
+        return;
+    }
+
+    if (anonjid && conn->sasl_support & SASL_MASK_ANONYMOUS) {
 	/* some crap here */
 	auth = _make_sasl_auth(conn, "ANONYMOUS");
 	if (!auth) {
@@ -510,9 +613,54 @@ static void _auth(xmpp_conn_t * const conn)
 	/* SASL ANONYMOUS was tried, unset flag */
 	conn->sasl_support &= ~SASL_MASK_ANONYMOUS;
     } else if (anonjid) {
-	xmpp_error(conn->ctx, "auth", 
+	xmpp_error(conn->ctx, "auth",
 		   "No node in JID, and SASL ANONYMOUS unsupported.");
 	xmpp_disconnect(conn);
+    } else if (conn->sasl_support & SASL_MASK_SCRAMSHA1) {
+        auth = _make_sasl_auth(conn, "SCRAM-SHA-1");
+        if (!auth) {
+            disconnect_mem_error(conn);
+            return;
+        }
+
+        /* don't free scram_init on success */
+        scram_init = _make_scram_sha1_init_msg(conn);
+        if (!scram_init) {
+            xmpp_stanza_release(auth);
+            disconnect_mem_error(conn);
+            return;
+        }
+
+        str = xmpp_base64_encode(conn->ctx, (unsigned char *)scram_init,
+                                 strlen(scram_init));
+        if (!str) {
+            xmpp_free(conn->ctx, scram_init);
+            xmpp_stanza_release(auth);
+            disconnect_mem_error(conn);
+            return;
+        }
+
+        authdata = xmpp_stanza_new(conn->ctx);
+        if (!authdata) {
+            xmpp_free(conn->ctx, str);
+            xmpp_free(conn->ctx, scram_init);
+            xmpp_stanza_release(auth);
+            disconnect_mem_error(conn);
+            return;
+        }
+        xmpp_stanza_set_text(authdata, str);
+        xmpp_free(conn->ctx, str);
+        xmpp_stanza_add_child(auth, authdata);
+        xmpp_stanza_release(authdata);
+
+        handler_add(conn, _handle_scram_sha1_challenge,
+                    XMPP_NS_SASL, NULL, NULL, (void *)scram_init);
+
+        xmpp_send(conn, auth);
+        xmpp_stanza_release(auth);
+
+        /* SASL SCRAM-SHA-1 was tried, unset flag */
+        conn->sasl_support &= ~SASL_MASK_SCRAMSHA1;
     } else if (conn->sasl_support & SASL_MASK_DIGESTMD5) {
 	auth = _make_sasl_auth(conn, "DIGEST-MD5");
 	if (!auth) {
@@ -521,7 +669,7 @@ static void _auth(xmpp_conn_t * const conn)
 
 	}
 
-	handler_add(conn, _handle_digestmd5_challenge, 
+	handler_add(conn, _handle_digestmd5_challenge,
 		    XMPP_NS_SASL, NULL, NULL, NULL);
 
 	xmpp_send(conn, auth);
@@ -539,7 +687,7 @@ static void _auth(xmpp_conn_t * const conn)
 	if (!authdata) {
 	    disconnect_mem_error(conn);
 	    return;
-	}	
+	}
 	authid = _get_authid(conn);
 	if (!authid) {
 	    disconnect_mem_error(conn);
@@ -567,7 +715,7 @@ static void _auth(xmpp_conn_t * const conn)
 	conn->sasl_support &= ~SASL_MASK_PLAIN;
     } else if (conn->type == XMPP_CLIENT) {
 	/* legacy client authentication */
-	
+
 	iq = xmpp_stanza_new(conn->ctx);
 	if (!iq) {
 	    disconnect_mem_error(conn);
@@ -653,7 +801,7 @@ static void _auth(xmpp_conn_t * const conn)
 	} else {
 	    xmpp_stanza_release(authdata);
 	    xmpp_stanza_release(iq);
-	    xmpp_error(conn->ctx, "auth", 
+	    xmpp_error(conn->ctx, "auth",
 		       "Cannot authenticate without resource");
 	    xmpp_disconnect(conn);
 	    return;
@@ -662,7 +810,7 @@ static void _auth(xmpp_conn_t * const conn)
 	xmpp_stanza_release(authdata);
 
 	handler_add_id(conn, _handle_legacy, "_xmpp_auth1", NULL);
-	handler_add_timed(conn, _handle_missing_legacy, 
+	handler_add_timed(conn, _handle_missing_legacy,
 			  LEGACY_TIMEOUT, NULL);
 
 	xmpp_send(conn, iq);
@@ -674,7 +822,7 @@ static void _auth(xmpp_conn_t * const conn)
 /** Set up handlers at stream start.
  *  This function is called internally to Strophe for handling the opening
  *  of an XMPP stream.  It's called by the parser when a stream is opened
- *  or reset, and adds the initial handlers for <stream:error/> and 
+ *  or reset, and adds the initial handlers for <stream:error/> and
  *  <stream:features/>.  This function is not intended for use outside
  *  of Strophe.
  *
@@ -736,7 +884,7 @@ static int _handle_features_sasl(xmpp_conn_t * const conn,
     /* if bind is required, go ahead and start it */
     if (conn->bind_required) {
 	/* bind resource */
-	
+
 	/* setup response handlers */
 	handler_add_id(conn, _handle_bind, "_xmpp_bind1", NULL);
 	handler_add_timed(conn, _handle_missing_bind,
@@ -768,7 +916,7 @@ static int _handle_features_sasl(xmpp_conn_t * const conn,
 	    resource = NULL;
 	}
 
-	/* if we have a resource to request, do it. otherwise the 
+	/* if we have a resource to request, do it. otherwise the
 	   server will assign us one */
 	if (resource) {
 	    res = xmpp_stanza_new(conn->ctx);
@@ -819,12 +967,12 @@ static int _handle_missing_features_sasl(xmpp_conn_t * const conn,
     xmpp_disconnect(conn);
     return 0;
 }
-					  
+
 static int _handle_bind(xmpp_conn_t * const conn,
 			xmpp_stanza_t * const stanza,
 			void * const userdata)
 {
-    char *type;
+    const char *type;
     xmpp_stanza_t *iq, *session;
 
     /* delete missing bind handler */
@@ -851,7 +999,7 @@ static int _handle_bind(xmpp_conn_t * const conn,
 	if (conn->session_required) {
 	    /* setup response handlers */
 	    handler_add_id(conn, _handle_session, "_xmpp_session1", NULL);
-	    handler_add_timed(conn, _handle_missing_session, 
+	    handler_add_timed(conn, _handle_missing_session,
 			      SESSION_TIMEOUT, NULL);
 
 	    /* send session request */
@@ -882,9 +1030,9 @@ static int _handle_bind(xmpp_conn_t * const conn,
 	    xmpp_stanza_release(iq);
 	} else {
 	    conn->authenticated = 1;
-	   
+
 	    /* call connection handler */
-	    conn->conn_handler(conn, XMPP_CONN_CONNECT, 0, NULL, 
+	    conn->conn_handler(conn, XMPP_CONN_CONNECT, 0, NULL,
 			       conn->userdata);
 	}
     } else {
@@ -907,7 +1055,7 @@ static int _handle_session(xmpp_conn_t * const conn,
 			   xmpp_stanza_t * const stanza,
 			   void * const userdata)
 {
-    char *type;
+    const char *type;
 
     /* delete missing session handler */
     xmpp_timed_handler_delete(conn, _handle_missing_session);
@@ -921,7 +1069,7 @@ static int _handle_session(xmpp_conn_t * const conn,
 	xmpp_debug(conn->ctx, "xmpp", "Session establishment successful.");
 
 	conn->authenticated = 1;
-	
+
 	/* call connection handler */
 	conn->conn_handler(conn, XMPP_CONN_CONNECT, 0, NULL, conn->userdata);
     } else {
@@ -944,7 +1092,8 @@ static int _handle_legacy(xmpp_conn_t * const conn,
 			  xmpp_stanza_t * const stanza,
 			  void * const userdata)
 {
-    char *type, *name;
+    const char *type;
+    const char *name;
 
     /* delete missing handler */
     xmpp_timed_handler_delete(conn, _handle_missing_legacy);
@@ -984,3 +1133,120 @@ static int _handle_missing_legacy(xmpp_conn_t * const conn,
     return 0;
 }
 
+void auth_handle_component_open(xmpp_conn_t * const conn)
+{
+    int rc;
+
+    /* reset all timed handlers */
+    handler_reset_timed(conn, 0);
+
+    handler_add(conn, _handle_error, XMPP_NS_STREAMS, "error", NULL, NULL);
+    handler_add(conn, _handle_component_hs_response, NULL,
+                "handshake", NULL, NULL);
+    handler_add_timed(conn, _handle_missing_handshake, HANDSHAKE_TIMEOUT, NULL);
+
+    rc = _handle_component_auth(conn);
+    if (rc != 0) {
+        xmpp_error(conn->ctx, "auth", "Component authentication failed.");
+        xmpp_disconnect(conn);
+    }
+}
+
+/* Will compute SHA1 and authenticate the component to the server */
+int _handle_component_auth(xmpp_conn_t * const conn)
+{
+    uint8_t md_value[SHA1_DIGEST_SIZE];
+    SHA1_CTX mdctx;
+    char *digest;
+    size_t i;
+
+    if (conn->stream_id == NULL) {
+        xmpp_error(conn->ctx, "auth", "Received no stream id from the server.");
+        return XMPP_EINT;
+    }
+
+    /* Feed the session id and passphrase to the algorithm.
+     * We need to compute SHA1(session_id + passphrase)
+     */
+    crypto_SHA1_Init(&mdctx);
+    crypto_SHA1_Update(&mdctx, (uint8_t*)conn->stream_id,
+                       strlen(conn->stream_id));
+    crypto_SHA1_Update(&mdctx, (uint8_t*)conn->pass, strlen(conn->pass));
+    crypto_SHA1_Final(&mdctx, md_value);
+
+    digest = xmpp_alloc(conn->ctx, 2*sizeof(md_value)+1);
+    if (digest) {
+        /* convert the digest into string representation */
+        for (i = 0; i < sizeof(md_value); i++)
+            xmpp_snprintf(digest+i*2, 3, "%02x", md_value[i]);
+        digest[2*sizeof(md_value)] = '\0';
+
+        xmpp_debug(conn->ctx, "auth", "Digest: %s, len: %d",
+                   digest, strlen(digest));
+
+        /* Send the digest to the server */
+        xmpp_send_raw_string(conn, "<handshake xmlns='%s'>%s</handshake>",
+                             XMPP_NS_COMPONENT, digest);
+        xmpp_debug(conn->ctx, "auth", "Sent component handshake to the server.");
+        xmpp_free(conn->ctx, digest);
+    } else {
+        xmpp_debug(conn->ctx, "auth", "Couldn't allocate memory for component "\
+                                      "handshake digest.");
+        return XMPP_EMEM;
+    }
+
+    return 0;
+}
+
+/* Check if the received stanza is <handshake/> and set auth to true
+ * and fire connection handler.
+ */
+int _handle_component_hs_response(xmpp_conn_t * const conn,
+            xmpp_stanza_t * const stanza,
+            void * const userdata)
+{
+    const char *name;
+
+    xmpp_timed_handler_delete(conn, _handle_missing_handshake);
+
+    name = xmpp_stanza_get_name(stanza);
+    if (strcmp(name, "handshake") != 0) {
+        char *msg;
+        size_t msg_size;
+        xmpp_stanza_to_text(stanza, &msg, &msg_size);
+        if (msg) {
+            xmpp_debug(conn->ctx, "auth", "Handshake failed: %s", msg);
+            xmpp_free(conn->ctx, msg);
+        }
+        xmpp_disconnect(conn);
+        return XMPP_EINT;
+    } else {
+        conn->authenticated = 1;
+        conn->conn_handler(conn, XMPP_CONN_CONNECT, 0, NULL, conn->userdata);
+    }
+
+    /* We don't need this handler anymore, return 0 so it can be deleted
+     * from the list of handlers.
+     */
+    return 0;
+}
+
+int _handle_missing_handshake(xmpp_conn_t * const conn, void * const userdata)
+{
+    xmpp_error(conn->ctx, "xmpp", "Server did not reply to handshake request.");
+    xmpp_disconnect(conn);
+    return 0;
+}
+
+void auth_handle_open_raw(xmpp_conn_t * const conn)
+{
+    handler_reset_timed(conn, 0);
+    /* user handlers are not called before authentication is completed. */
+    conn->authenticated = 1;
+    conn->conn_handler(conn, XMPP_CONN_CONNECT, 0, NULL, conn->userdata);
+}
+
+void auth_handle_open_stub(xmpp_conn_t * const conn)
+{
+    xmpp_warn(conn->ctx, "auth", "Stub callback is called.");
+}

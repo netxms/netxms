@@ -6,10 +6,7 @@
 **  This software is provided AS-IS with no warranty, either express or
 **  implied.
 **
-**  This software is distributed under license and may not be copied,
-**  modified or distributed except as expressly authorized under the
-**  terms of the license contained in the file LICENSE.txt in this
-**  distribution.
+**  This software is dual licensed under the MIT and GPLv3 licenses.
 */
 
 /** @file
@@ -131,6 +128,10 @@ xmpp_ctx_t LIBSTROPHE_EXPORTABLE *xmpp_ctx_new(const xmpp_mem_t * const mem,
 			     const xmpp_log_t * const log);
 void LIBSTROPHE_EXPORTABLE xmpp_ctx_free(xmpp_ctx_t * const ctx);
 
+/* free some blocks returned by other APIs, for example the
+   buffer you get from xmpp_stanza_to_text */
+void LIBSTROPHE_EXPORTABLE xmpp_free(const xmpp_ctx_t * const ctx, void *p);
+
 struct _xmpp_mem_t {
     void *(*alloc)(const size_t size, void * const userdata);
     void (*free)(void *p, void * const userdata);
@@ -166,13 +167,25 @@ xmpp_log_t LIBSTROPHE_EXPORTABLE *xmpp_get_default_logger(xmpp_log_level_t level
 
 /* connection */
 
+typedef enum {
+    XMPP_LOOP_NOTSTARTED,
+    XMPP_LOOP_RUNNING,
+    XMPP_LOOP_QUIT
+} xmpp_loop_status_t;
+
 /* opaque connection object */
 typedef struct _xmpp_conn_t xmpp_conn_t;
 typedef struct _xmpp_stanza_t xmpp_stanza_t;
 
+/* connection flags */
+#define XMPP_CONN_FLAG_DISABLE_TLS   (1UL << 0)
+#define XMPP_CONN_FLAG_MANDATORY_TLS (1UL << 1)
+#define XMPP_CONN_FLAG_LEGACY_SSL    (1UL << 2)
+
 /* connect callback */
 typedef enum {
     XMPP_CONN_CONNECT,
+    XMPP_CONN_RAW_CONNECT,
     XMPP_CONN_DISCONNECT,
     XMPP_CONN_FAIL
 } xmpp_conn_event_t;
@@ -220,6 +233,8 @@ xmpp_conn_t LIBSTROPHE_EXPORTABLE *xmpp_conn_new(xmpp_ctx_t * const ctx);
 xmpp_conn_t LIBSTROPHE_EXPORTABLE *xmpp_conn_clone(xmpp_conn_t * const conn);
 int LIBSTROPHE_EXPORTABLE xmpp_conn_release(xmpp_conn_t * const conn);
 
+long LIBSTROPHE_EXPORTABLE xmpp_conn_get_flags(const xmpp_conn_t * const conn);
+int LIBSTROPHE_EXPORTABLE xmpp_conn_set_flags(xmpp_conn_t * const conn, long flags);
 const char LIBSTROPHE_EXPORTABLE *xmpp_conn_get_jid(const xmpp_conn_t * const conn);
 const char LIBSTROPHE_EXPORTABLE *xmpp_conn_get_bound_jid(const xmpp_conn_t * const conn);
 void LIBSTROPHE_EXPORTABLE xmpp_conn_set_jid(xmpp_conn_t * const conn, const char * const jid);
@@ -227,6 +242,8 @@ const char LIBSTROPHE_EXPORTABLE *xmpp_conn_get_pass(const xmpp_conn_t * const c
 void LIBSTROPHE_EXPORTABLE xmpp_conn_set_pass(xmpp_conn_t * const conn, const char * const pass);
 xmpp_ctx_t LIBSTROPHE_EXPORTABLE *xmpp_conn_get_context(xmpp_conn_t * const conn);
 void LIBSTROPHE_EXPORTABLE xmpp_conn_disable_tls(xmpp_conn_t * const conn);
+int LIBSTROPHE_EXPORTABLE xmpp_conn_is_secured(xmpp_conn_t * const conn);
+void LIBSTROPHE_EXPORTABLE xmpp_conn_set_keepalive(xmpp_conn_t * const conn, int timeout, int interval);
 
 int LIBSTROPHE_EXPORTABLE xmpp_connect_client(xmpp_conn_t * const conn, 
 			  const char * const altdomain,
@@ -234,9 +251,20 @@ int LIBSTROPHE_EXPORTABLE xmpp_connect_client(xmpp_conn_t * const conn,
 			  xmpp_conn_handler callback,
 			  void * const userdata);
 
-/*
-int xmpp_connect_component(conn, name)
-*/
+int LIBSTROPHE_EXPORTABLE xmpp_connect_component(xmpp_conn_t * const conn, const char * const server,
+                           unsigned short port, xmpp_conn_handler callback,
+                           void * const userdata);
+
+int LIBSTROPHE_EXPORTABLE xmpp_connect_raw(xmpp_conn_t * const conn,
+                     const char * const altdomain,
+                     unsigned short altport,
+                     xmpp_conn_handler callback,
+                     void * const userdata);
+int LIBSTROPHE_EXPORTABLE xmpp_conn_open_stream_default(xmpp_conn_t * const conn);
+int LIBSTROPHE_EXPORTABLE xmpp_conn_open_stream(xmpp_conn_t * const conn, char **attributes,
+                          size_t attributes_len);
+int LIBSTROPHE_EXPORTABLE xmpp_conn_tls_start(xmpp_conn_t * const conn);
+
 void LIBSTROPHE_EXPORTABLE xmpp_disconnect(xmpp_conn_t * const conn);
 
 void LIBSTROPHE_EXPORTABLE xmpp_send(xmpp_conn_t * const conn,
@@ -288,28 +316,24 @@ void LIBSTROPHE_EXPORTABLE xmpp_id_handler_delete(xmpp_conn_t * const conn,
 void xmpp_register_stanza_handler(conn, stanza, xmlns, type, handler)
 */
 
-/** stanzas **/
+/* stanzas */
 
-/** allocate an initialize a blank stanza */
+/* allocate and initialize a blank stanza */
 xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_new(xmpp_ctx_t *ctx);
 
-/** clone a stanza */
+/* clone a stanza */
 xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_clone(xmpp_stanza_t * const stanza);
 
-/** copies a stanza and all children */
+/* copies a stanza and all children */
 xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_copy(const xmpp_stanza_t * const stanza);
 
-/** free a stanza object and it's contents */
+/* free a stanza object and it's contents */
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_release(xmpp_stanza_t * const stanza);
-
-/** free some blocks returned by other APIs, for example the
-    buffer you get from xmpp_stanza_to_text **/
-void LIBSTROPHE_EXPORTABLE xmpp_free(const xmpp_ctx_t * const ctx, void *p);
 
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_is_text(xmpp_stanza_t * const stanza);
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_is_tag(xmpp_stanza_t * const stanza);
 
-/** marshall a stanza into text for transmission or display **/
+/* marshall a stanza into text for transmission or display */
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_to_text(xmpp_stanza_t *stanza, 
 			char ** const buf, size_t * const buflen);
 
@@ -319,19 +343,19 @@ xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_child_by_name(xmpp_stanza_t
 xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_child_by_ns(xmpp_stanza_t * const stanza,
 					   const char * const ns);
 xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_next(xmpp_stanza_t * const stanza);
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_attribute(xmpp_stanza_t * const stanza,
-				const char * const name);
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_ns(xmpp_stanza_t * const stanza);
-/* concatenate all child text nodes.  this function
- * returns a string that must be freed by the caller */
-
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_text(xmpp_stanza_t * const stanza);
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_text_ptr(xmpp_stanza_t * const stanza);
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_name(xmpp_stanza_t * const stanza);
-
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child);
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_add_child_ex(xmpp_stanza_t *stanza, xmpp_stanza_t *child, int do_clone);
-int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_ns(xmpp_stanza_t * const stanza, const char * const ns);
+
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_attribute(xmpp_stanza_t * const stanza,
+				      const char * const name);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_get_attribute_count(xmpp_stanza_t * const stanza);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_get_attributes(xmpp_stanza_t * const stanza,
+			       const char **attr, int attrlen);
+/* concatenate all child text nodes.  this function
+ * returns a string that must be freed by the caller */
+char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_text(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_text_ptr(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_name(xmpp_stanza_t * const stanza);
 /* set_attribute adds/replaces attributes */
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_attribute(xmpp_stanza_t * const stanza, 
 			      const char * const key,
@@ -343,48 +367,84 @@ int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_text(xmpp_stanza_t *stanza,
 int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_text_with_size(xmpp_stanza_t *stanza,
 				   const char * const text, 
 				   const size_t size);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_del_attribute(xmpp_stanza_t * const stanza,
+                              const char * const name);
 
 /* common stanza helpers */
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_type(xmpp_stanza_t * const stanza);
-char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_id(xmpp_stanza_t * const stanza);
-int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_id(xmpp_stanza_t * const stanza, 
-		       const char * const id);
-int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_type(xmpp_stanza_t * const stanza, 
-			 const char * const type);
-
-/* unimplemented
-int xmpp_stanza_set_to();
-int xmpp_stanza_set_from();
-*/
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_ns(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_type(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_id(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_to(xmpp_stanza_t * const stanza);
+const char LIBSTROPHE_EXPORTABLE *xmpp_stanza_get_from(xmpp_stanza_t * const stanza);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_ns(xmpp_stanza_t * const stanza, const char * const ns);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_id(xmpp_stanza_t * const stanza, const char * const id);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_type(xmpp_stanza_t * const stanza, const char * const type);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_to(xmpp_stanza_t * const stanza, const char * const to);
+int LIBSTROPHE_EXPORTABLE xmpp_stanza_set_from(xmpp_stanza_t * const stanza, const char * const from);
 
 /* allocate and initialize a stanza in reply to another */
-/* unimplemented
-xmpp_stanza_t *xmpp_stanza_reply(const xmpp_stanza_t *stanza);
-*/
+xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_stanza_reply(xmpp_stanza_t * const stanza);
 
 /* stanza subclasses */
-/* unimplemented
-void xmpp_message_new();
-void xmpp_message_get_body();
-void xmpp_message_set_body();
+xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_message_new(xmpp_ctx_t *ctx, const char * const type,
+                                const char * const to, const char * const id);
+char LIBSTROPHE_EXPORTABLE *xmpp_message_get_body(xmpp_stanza_t *msg);
+int LIBSTROPHE_EXPORTABLE xmpp_message_set_body(xmpp_stanza_t *msg, const char * const text);
 
-void xmpp_iq_new();
-void xmpp_presence_new();
-*/
+xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_iq_new(xmpp_ctx_t *ctx, const char * const type,
+                           const char * const id);
+xmpp_stanza_t LIBSTROPHE_EXPORTABLE *xmpp_presence_new(xmpp_ctx_t *ctx);
 
-/** event loop **/
-typedef enum {
-    XMPP_LOOP_NOTSTARTED,
-    XMPP_LOOP_RUNNING,
-    XMPP_LOOP_QUIT
-} xmpp_loop_status_t;
+/* jid */
+
+/* these return new strings that must be xmpp_free()'d */
+char LIBSTROPHE_EXPORTABLE *xmpp_jid_new(xmpp_ctx_t *ctx, const char *node,
+                                    const char *domain,
+                                    const char *resource);
+char LIBSTROPHE_EXPORTABLE *xmpp_jid_bare(xmpp_ctx_t *ctx, const char *jid);
+char LIBSTROPHE_EXPORTABLE *xmpp_jid_node(xmpp_ctx_t *ctx, const char *jid);
+char LIBSTROPHE_EXPORTABLE *xmpp_jid_domain(xmpp_ctx_t *ctx, const char *jid);
+char LIBSTROPHE_EXPORTABLE *xmpp_jid_resource(xmpp_ctx_t *ctx, const char *jid);
+
+/* event loop */
 
 void LIBSTROPHE_EXPORTABLE xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long  timeout);
 void LIBSTROPHE_EXPORTABLE xmpp_run(xmpp_ctx_t *ctx);
 void LIBSTROPHE_EXPORTABLE xmpp_stop(xmpp_ctx_t *ctx);
+
+/* UUID */
+
+char LIBSTROPHE_EXPORTABLE *xmpp_uuid_gen(xmpp_ctx_t *ctx);
+
+/* SHA1 */
+
+/** @def XMPP_SHA1_DIGEST_SIZE
+ *  Size of the SHA1 message digest.
+ */
+#define XMPP_SHA1_DIGEST_SIZE 20
+
+typedef struct _xmpp_sha1_t xmpp_sha1_t;
+
+char *xmpp_sha1(xmpp_ctx_t *ctx, const unsigned char *data, size_t len);
+
+xmpp_sha1_t LIBSTROPHE_EXPORTABLE *xmpp_sha1_new(xmpp_ctx_t *ctx);
+void LIBSTROPHE_EXPORTABLE xmpp_sha1_free(xmpp_sha1_t *sha1);
+void LIBSTROPHE_EXPORTABLE xmpp_sha1_update(xmpp_sha1_t *sha1, const unsigned char *data, size_t len);
+void LIBSTROPHE_EXPORTABLE xmpp_sha1_final(xmpp_sha1_t *sha1);
+char LIBSTROPHE_EXPORTABLE *xmpp_sha1_to_string(xmpp_sha1_t *sha1, char *s, size_t slen);
+char LIBSTROPHE_EXPORTABLE *xmpp_sha1_to_string_alloc(xmpp_sha1_t *sha1);
+void LIBSTROPHE_EXPORTABLE xmpp_sha1_to_digest(xmpp_sha1_t *sha1, unsigned char *digest);
+
+/* Base64 */
+
+char LIBSTROPHE_EXPORTABLE *xmpp_base64_encode(xmpp_ctx_t *ctx, const unsigned char *data, size_t len);
+char LIBSTROPHE_EXPORTABLE *xmpp_base64_decode_str(xmpp_ctx_t *ctx, const char *base64, size_t len);
+void LIBSTROPHE_EXPORTABLE xmpp_base64_decode_bin(xmpp_ctx_t *ctx, const char *base64, size_t len,
+                            unsigned char **out, size_t *outlen);
+
 void LIBSTROPHE_EXPORTABLE xmpp_set_loop_status(xmpp_ctx_t *ctx, xmpp_loop_status_t status);
 xmpp_loop_status_t LIBSTROPHE_EXPORTABLE xmpp_get_loop_status(xmpp_ctx_t *ctx);
-
+							
 #ifdef __cplusplus
 }
 #endif
