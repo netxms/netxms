@@ -129,6 +129,8 @@ $(BINFILE): objdir $(OBJ) $(RESOBJ)
    @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(RESOBJ) $(LIBS)
 	@rm -f $(MANIFEST)
 
+$(OBJ): $(NETXMS_BASE)\build\netxms-build-tag.h
+
 .PHONY: objdir
 
 objdir:
