@@ -99,7 +99,7 @@ public class Table
 
 	/**
 	 * Add data from additional messages
-	 * @param msg
+	 * @param msg The NXCPMessage
 	 */
 	public void addDataFromMessage(final NXCPMessage msg)
 	{

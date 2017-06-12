@@ -33,8 +33,9 @@ public class Script
 	/**
 	 * Create script object with given ID and source code.
 	 * 
-	 * @param id
-	 * @param source
+	 * @param id The script ID
+	 * @param name The script name
+	 * @param source The script source
 	 */
 	public Script(long id, String name, String source)
 	{
@@ -45,6 +46,8 @@ public class Script
 	
    /**
    * Create script object from msg
+   * 
+   * @param msg The NXCPMessage
    */
 	public Script(NXCPMessage msg)
 	{
@@ -55,6 +58,9 @@ public class Script
 	
    /**
    * Create script object for list from msg
+   * 
+   * @param msg The NXCPMessage
+   * @param base The base ID
    */
    public Script(NXCPMessage msg, long base)
    {

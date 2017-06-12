@@ -37,8 +37,8 @@ public class SoftwarePackage
 	/**
 	 * Create software package information from NXCP message
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
 	 */
 	protected SoftwarePackage(NXCPMessage msg, long baseId)
 	{
@@ -99,7 +99,7 @@ public class SoftwarePackage
 	}
 	
 	/**
-	 * @return
+	 * @return The installation date in ms
 	 */
 	public long getInstallDateMs()
 	{

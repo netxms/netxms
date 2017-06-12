@@ -39,6 +39,9 @@ public class DciSummaryTable
 	
 	/**
 	 * Create new empty summary table object
+	 * 
+	 * @param menuPath The menu path
+	 * @param title The title
 	 */
 	public DciSummaryTable(String menuPath, String title)
 	{

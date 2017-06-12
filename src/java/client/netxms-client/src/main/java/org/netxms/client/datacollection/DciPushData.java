@@ -30,9 +30,9 @@ public class DciPushData
 	public String value;
 	
 	/**
-	 * @param nodeId
-	 * @param dciId
-	 * @param value
+	 * @param nodeId The node ID
+	 * @param dciId The dci ID
+	 * @param value The value
 	 */
 	public DciPushData(long nodeId, long dciId, String value)
 	{
@@ -44,9 +44,9 @@ public class DciPushData
 	}
 
 	/**
-	 * @param nodeName
-	 * @param dciName
-	 * @param value
+	 * @param nodeName The node name
+	 * @param dciName the dci name
+	 * @param value The value
 	 */
 	public DciPushData(String nodeName, String dciName, String value)
 	{

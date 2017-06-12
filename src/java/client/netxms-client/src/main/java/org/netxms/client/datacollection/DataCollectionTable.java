@@ -43,8 +43,8 @@ public class DataCollectionTable extends DataCollectionObject
 	/**
 	 * Create data collection object from NXCP message.
 	 * 
-	 * @param owner
-	 * @param msg
+	 * @param owner The owner object
+	 * @param msg The NXCPMessage
 	 */
 	public DataCollectionTable(DataCollectionConfiguration owner, NXCPMessage msg)
 	{
@@ -74,8 +74,8 @@ public class DataCollectionTable extends DataCollectionObject
 	/**
 	 * Constructor for new data collection objects.
 	 * 
-	 * @param owner
-	 * @param id
+	 * @param owner The owner object
+	 * @param id The table ID
 	 */
 	public DataCollectionTable(DataCollectionConfiguration owner, long id)
 	{

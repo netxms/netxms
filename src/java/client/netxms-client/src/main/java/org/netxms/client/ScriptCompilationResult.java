@@ -34,7 +34,7 @@ public class ScriptCompilationResult
    /**
     * Create result object from NXCP message
     * 
-    * @param msg
+    * @param msg The NXCPMessage
     */
    protected ScriptCompilationResult(NXCPMessage msg)
    {

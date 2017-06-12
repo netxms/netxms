@@ -33,10 +33,11 @@ public class ConditionDciInfo
 	private int polls;
 	
 	/**
-	 * @param nodeId
-	 * @param dciId
-	 * @param function
-	 * @param polls
+	 * @param nodeId The node id
+	 * @param dciId The dci id
+	 * @param type The type
+	 * @param function The function
+	 * @param polls The polls
 	 */
 	public ConditionDciInfo(long nodeId, long dciId, int type, int function, int polls)
 	{
@@ -50,8 +51,8 @@ public class ConditionDciInfo
 	/**
 	 * Create DCI information from NXCP message
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base id
 	 */
 	public ConditionDciInfo(NXCPMessage msg, long baseId)
 	{

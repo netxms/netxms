@@ -26,7 +26,7 @@ public interface ProgressListener
 	/**
 	 * Called by entity performing operation to indicate total amount of work to be done
 	 * 
-	 * @param workTotal
+	 * @param workTotal The amount of total work
 	 */
 	public abstract void setTotalWorkAmount(long workTotal);
 	

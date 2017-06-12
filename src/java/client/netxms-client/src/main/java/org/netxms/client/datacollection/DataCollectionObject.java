@@ -297,7 +297,7 @@ public abstract class DataCollectionObject
 	}
 	
 	/**
-	 * @return
+	 * @return The retention time
 	 */
 	public int getComparableRetentionTime()
 	{

@@ -47,7 +47,7 @@ public class NXCReceivedFile
 	
 	/**
 	 * Create new received file with given id
-	 * @param id
+	 * @param id ID
 	 */
 	protected NXCReceivedFile(final long id)
 	{

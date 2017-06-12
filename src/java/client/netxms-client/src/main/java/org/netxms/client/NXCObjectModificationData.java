@@ -216,6 +216,8 @@ public class NXCObjectModificationData
 	
 	/**
 	 * Constructor for creating modification data for given object
+	 * 
+	 * @param objectId Object ID
 	 */
 	public NXCObjectModificationData(long objectId)
 	{
@@ -678,7 +680,13 @@ public class NXCObjectModificationData
 	}
 
 	/**
-	 * @param mapBackground the mapBackground to set
+	 * @param mapBackground 
+	 */
+	/**
+	 * @param mapBackground The mapBackground to set
+	 * @param mapBackgroundLocation The mapBackgroundLocation to set
+	 * @param mapBackgroundZoom The mapBackgroundZoom level to set
+	 * @param mapBackgroundColor The mapBackgroundColor to set
 	 */
 	public void setMapBackground(UUID mapBackground, GeoLocation mapBackgroundLocation, int mapBackgroundZoom, int mapBackgroundColor)
 	{
@@ -708,8 +716,8 @@ public class NXCObjectModificationData
 	/**
 	 * Set map contents
 	 * 
-	 * @param elements
-	 * @param links
+	 * @param elements Network map elements
+	 * @param links Network map links
 	 */
 	public void setMapContent(Collection<NetworkMapElement> elements, Collection<NetworkMapLink> links)
 	{
@@ -1080,7 +1088,7 @@ public class NXCObjectModificationData
 	/**
 	 * Set object flags
 	 * 
-	 * @param objectFlags
+	 * @param objectFlags Object flags
 	 */
 	public void setObjectFlags(int objectFlags)
 	{
@@ -1471,6 +1479,7 @@ public class NXCObjectModificationData
    }
 
    /**
+    * @param localNetworks the localNetworks to set
     * @param remoteNetworks the remoteNetworks to set
     */
    public void setVpnNetworks(List<InetAddressEx> localNetworks, List<InetAddressEx> remoteNetworks)
@@ -1591,10 +1600,10 @@ public class NXCObjectModificationData
    /**
     * Set rack placement data
     * 
-    * @param rackId
-    * @param rackImage
-    * @param rackPosition
-    * @param rackHeight
+    * @param rackId The rack ID to set
+    * @param rackImage The rack image to set
+    * @param rackPosition The rack position to set
+    * @param rackHeight the rack height to set
     */
    public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight)
    {

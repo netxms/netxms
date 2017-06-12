@@ -28,7 +28,7 @@ public class TableCell
    private long objectId;
    
    /**
-    * @param value
+    * @param value The cell value
     */
    public TableCell(String value)
    {
@@ -38,8 +38,8 @@ public class TableCell
    }
 
    /**
-    * @param value
-    * @param status
+    * @param value The cell value
+    * @param status The cell status
     */
    public TableCell(String value, int status)
    {
@@ -49,7 +49,7 @@ public class TableCell
    }
    
    /**
-    * @param src
+    * @param src The TableCell source object
     */
    public TableCell(TableCell src)
    {

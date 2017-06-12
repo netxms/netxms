@@ -54,13 +54,13 @@ public class GraphItem
 	/**
 	 * Constructor for ITEM type
 	 * 
-	 * @param nodeId
-	 * @param dciId
-	 * @param source
-	 * @param dataType
-	 * @param name
-	 * @param description
-	 * @param displayFormat
+	 * @param nodeId The node ID
+	 * @param dciId The dci ID
+	 * @param source The source
+	 * @param dataType The data type
+	 * @param name The name
+	 * @param description The description
+	 * @param displayFormat The display format
 	 */
 	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat)
 	{
@@ -79,12 +79,15 @@ public class GraphItem
 	/**
 	 * Constructor for TABLE type
 	 * 
-	 * @param nodeId
-	 * @param dciId
-	 * @param source
-	 * @param dataType
-	 * @param name
-	 * @param description
+    * @param nodeId The node ID
+    * @param dciId The dci ID
+    * @param source The source
+    * @param dataType The data type
+    * @param name The name
+    * @param description The description
+    * @param displayFormat The display format
+    * @param instance The instance
+    * @param dataColumn The data column
 	 */
 	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat, String instance, String dataColumn)
 	{

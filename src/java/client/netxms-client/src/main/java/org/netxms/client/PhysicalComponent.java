@@ -56,8 +56,9 @@ public class PhysicalComponent
 	/**
 	 * Create object from NXCP message
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
+	 * @param parent The PhysycalComponent parent
 	 */
 	protected PhysicalComponent(NXCPMessage msg, long baseId, PhysicalComponent parent)
 	{

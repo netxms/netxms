@@ -181,8 +181,10 @@ public class ObjectMenuFilter
    }
    
    /**
-    * @param filterText
-    * @param filterType
+    * Set filter
+    * 
+    * @param filterText The filter text
+    * @param filterType The filter type
     */
    public void setFilter(String filterText, int filterType)
    {

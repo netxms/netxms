@@ -40,6 +40,7 @@ public class ColumnDefinition
 	 * Create new column definition.
 	 * 
 	 * @param name column name
+	 * @param displayName The display name
 	 */
 	public ColumnDefinition(String name, String displayName)
 	{

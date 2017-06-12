@@ -39,7 +39,8 @@ public class DataCollectionConfiguration
 	/**
 	 * Create empty data collection configuration.
 	 * 
-	 * @param nodeId
+	 * @param session The NXCSession
+	 * @param nodeId The node ID
 	 */
 	public DataCollectionConfiguration(final NXCSession session, final long nodeId)
 	{
@@ -142,6 +143,7 @@ public class DataCollectionConfiguration
 	/**
 	 * Create new data collection item.
 	 * 
+	 * @param object The DataCollectionObject to create
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -169,6 +171,7 @@ public class DataCollectionConfiguration
 	/**
 	 * Create new data collection table.
 	 * 
+	 * @param object The DataCollectionObject to create
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out

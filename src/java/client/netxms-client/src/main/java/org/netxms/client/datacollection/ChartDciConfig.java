@@ -137,7 +137,7 @@ public class ChartDciConfig
 	/**
 	 * Create DCI info from DciValue object
 	 * 
-	 * @param dci
+	 * @param dci The DciValue
 	 */
 	public ChartDciConfig(DciValue dci)
 	{
@@ -171,7 +171,7 @@ public class ChartDciConfig
 	}
 
 	/**
-	 * @param value
+	 * @param value The colour value
 	 */
 	public void setColor(int value)
 	{
@@ -180,7 +180,7 @@ public class ChartDciConfig
 	
 	/**
 	 * Get DCI name. Always returns non-empty string.
-	 * @return
+	 * @return The name
 	 */
 	public String getName()
 	{
@@ -190,7 +190,7 @@ public class ChartDciConfig
 	/**
 	 * Get display format
 	 * 
-	 * @return
+	 * @return The display format
 	 */
 	public String getDisplayFormat()
 	{
@@ -200,7 +200,7 @@ public class ChartDciConfig
 	/**
 	 * Get display type
 	 * 
-	 * @return
+	 * @return The display type
 	 */
 	public int getDisplayType()
 	{

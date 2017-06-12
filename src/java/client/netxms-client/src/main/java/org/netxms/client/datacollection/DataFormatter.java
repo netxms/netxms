@@ -32,9 +32,9 @@ public class DataFormatter
    private int dataType;
    
    /**
-    * @param formatString
-    * @param dataType
-    * @param useBinaryMultipliers
+    * @param formatString The format
+    * @param dataType The data type
+    * @param useBinaryMultipliers true if multipliers should be used
     */
    public DataFormatter(String formatString, int dataType, boolean useBinaryMultipliers)
    {
@@ -44,8 +44,8 @@ public class DataFormatter
    }
    
    /**
-    * @param formatString
-    * @param dataType
+    * @param formatString The format
+    * @param dataType The data type
     */
    public DataFormatter(String formatString, int dataType)
    {
@@ -53,7 +53,7 @@ public class DataFormatter
    }
    
    /**
-    * @param formatString
+    * @param formatString The format
     */
    public DataFormatter(String formatString)
    {
@@ -63,8 +63,8 @@ public class DataFormatter
    /**
     * Format value
     * 
-    * @param value
-    * @return
+    * @param value The value
+    * @return The format
     */
    public String format(String value)
    {

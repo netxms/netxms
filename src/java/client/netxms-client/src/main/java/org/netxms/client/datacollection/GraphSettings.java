@@ -136,6 +136,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 	 * 
 	 * @param msg NXCP message
 	 * @param baseId base variable id
+	 * @return The graph settings object
 	 */
 	static public GraphSettings createGraphSettings(final NXCPMessage msg, long baseId)
 	{
@@ -304,8 +305,8 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
    /**
     * Checks if this graph template is applicable for node
     * 
-    * @param node
-    * @return
+    * @param node The node object
+    * @return true if applicable
     */
    public boolean isApplicableForNode(AbstractNode node)
    {      

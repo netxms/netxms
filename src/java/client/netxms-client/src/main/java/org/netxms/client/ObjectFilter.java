@@ -26,10 +26,10 @@ import org.netxms.client.objects.AbstractObject;
 public interface ObjectFilter
 {
    /**
-    * Should return true if given object should e included into filtered subset
+    * Should return true if given object should be included into filtered subset
     * 
-    * @param object
-    * @return
+    * @param object The object to filter
+    * @return true if Object is filtered
     */
    public boolean filter(AbstractObject object);
 }

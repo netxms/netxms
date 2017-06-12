@@ -51,6 +51,7 @@ public class GraphItemStyle
 	/**
 	 * Create style record for line item with given color
 	 * 
+	 * @param color The color
 	 */
 	public GraphItemStyle(int color)
 	{
@@ -63,10 +64,10 @@ public class GraphItemStyle
 	/**
 	 * constructor
 	 * 
-	 * @param type
-	 * @param color
-	 * @param lineWidth
-	 * @param flags
+	 * @param type The type
+	 * @param color The color
+	 * @param lineWidth The line width
+	 * @param flags The flags
 	 */
 	public GraphItemStyle(int type, int color, int lineWidth, int flags)
 	{

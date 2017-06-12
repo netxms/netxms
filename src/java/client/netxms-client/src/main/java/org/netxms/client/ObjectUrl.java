@@ -18,6 +18,9 @@ public class ObjectUrl
    
    /**
     * Create from NXCP message
+    * 
+    * @param msg The NXCPMessage
+    * @param baseId The base ID
     */
    public ObjectUrl(NXCPMessage msg, long baseId)
    {
@@ -36,9 +39,9 @@ public class ObjectUrl
    /**
     * Create new object URL
     * 
-    * @param id
-    * @param url
-    * @param description
+    * @param id The ID of url
+    * @param url The url
+    * @param description The description
     */
    public ObjectUrl(int id, URL url, String description)
    {

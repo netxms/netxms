@@ -50,7 +50,7 @@ public final class ProtocolVersion
    /**
     * Create protocol version information from NXCP message
     * 
-    * @param msg
+    * @param msg The NXCPMessage
     */
    protected ProtocolVersion(NXCPMessage msg)
    {
@@ -65,8 +65,8 @@ public final class ProtocolVersion
    /**
     * Get version of given component
     * 
-    * @param index
-    * @return
+    * @param index The index of the component
+    * @return The version
     */
    public int getVersion(int index)
    {
@@ -76,8 +76,8 @@ public final class ProtocolVersion
    /**
     * Check if version of given component match current version
     * 
-    * @param index
-    * @return
+    * @param index The index of the component
+    * @return true if version matches
     */
    public boolean isCorrectVersion(int index)
    {

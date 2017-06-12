@@ -38,8 +38,8 @@ public class NXCException extends Exception
     */
    protected String additionalInfo;
 
-   /**
-	 * @param errorCode
+	/**
+	 * @param errorCode Error code
 	 */
 	public NXCException(int errorCode)
 	{
@@ -49,8 +49,8 @@ public class NXCException extends Exception
 	}
 
 	/**
-	 * @param errorCode
-	 * @param additionalInfo
+	 * @param errorCode Error code
+	 * @param additionalInfo Additional info
 	 */
 	public NXCException(int errorCode, String additionalInfo)
 	{

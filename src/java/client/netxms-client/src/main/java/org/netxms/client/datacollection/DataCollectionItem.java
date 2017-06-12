@@ -207,7 +207,7 @@ public class DataCollectionItem extends DataCollectionObject
 	/**
 	 * Set state of DCF_RAW_VALUE_OCTET_STRING flag
 	 * 
-	 * @param enable
+	 * @param enable true to enable
 	 */
 	public void setSnmpRawValueInOctetString(boolean enable)
 	{
@@ -264,7 +264,7 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * @param func
+	 * @param func The function to set
 	 */
 	public void setAggregationFunction(int func)
 	{
@@ -370,7 +370,7 @@ public class DataCollectionItem extends DataCollectionObject
    /**
     * Enable or disable usage of this DCI for node status calculation
     * 
-    * @param enable
+    * @param enable true to enable
     */
    public void setUsedForNodeStatusCalculation(boolean enable)
    {

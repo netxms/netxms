@@ -142,7 +142,7 @@ public class ChartConfig
 	/**
 	 * Get time range covered by graph in milliseconds
 	 * 
-	 * @return
+	 * @return The time range
 	 */
 	public long getTimeRangeMillis()
 	{
@@ -463,7 +463,7 @@ public class ChartConfig
    }
 
    /**
-    * @return
+    * @return true if auto scale is set
     */
    public boolean isAutoScale()
    {
@@ -471,7 +471,7 @@ public class ChartConfig
    }
 
    /**
-    * @param autoScale
+    * @param autoScale Set auto scale
     */
    public void setAutoScale(boolean autoScale)
    {
@@ -495,7 +495,7 @@ public class ChartConfig
    }
 
    /**
-    * @return
+    * @return Minimal Y scale
     */
    public int getMinYScaleValue()
    {
@@ -503,7 +503,7 @@ public class ChartConfig
    }
 
    /**
-    * @param minYScaleValue
+    * @param minYScaleValue The scale value to set
     */
    public void setMinYScaleValue(int minYScaleValue)
    {
@@ -511,7 +511,7 @@ public class ChartConfig
    }
 
    /**
-    * @return
+    * @return Max Y scale
     */
    public int getMaxYScaleValue()
    {
@@ -519,7 +519,7 @@ public class ChartConfig
    }
 
    /**
-    * @param maxYScaleValue
+    * @param maxYScaleValue max Y scale
     */
    public void setMaxYScaleValue(int maxYScaleValue)
    {
@@ -527,7 +527,7 @@ public class ChartConfig
    }
 
    /**
-    * @return
+    * @return The time period
     */
    public TimePeriod timePeriod()
    {
@@ -535,7 +535,7 @@ public class ChartConfig
    }
    
    /**
-    * @param tp
+    * @param tp The time period to set
     */
    public void setTimePeriod(TimePeriod tp)
    {

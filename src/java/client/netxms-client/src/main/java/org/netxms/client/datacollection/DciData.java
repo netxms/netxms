@@ -31,8 +31,8 @@ public class DciData
 	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
 		
 	/**
-	 * @param nodeId
-	 * @param dciId
+	 * @param nodeId The node ID
+	 * @param dciId The dci ID
 	 */
 	public DciData(long nodeId, long dciId)
 	{
@@ -76,6 +76,8 @@ public class DciData
 	
 	/**
 	 * Add new value
+	 * 
+	 * @param row DciDataRow
 	 */
 	public void addDataRow(DciDataRow row)
 	{

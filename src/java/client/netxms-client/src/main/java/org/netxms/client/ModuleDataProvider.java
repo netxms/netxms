@@ -32,9 +32,9 @@ public interface ModuleDataProvider extends ServiceHandler
    /**
     * Create module data from NXCP message
     * 
-    * @param msg
-    * @param baseId
-    * @return
+    * @param msg NXCPMessage
+    * @param baseId base ID
+    * @return ModularDataProvider object
     */
    public Object createModuleData(NXCPMessage msg, long baseId);
 }

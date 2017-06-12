@@ -34,7 +34,7 @@ public class TableRow
    /**
     * Create new row
     * 
-    * @param rowCount
+    * @param rowCount The amount of new rows to create
     */
    public TableRow(int rowCount)
    {
@@ -47,7 +47,7 @@ public class TableRow
    /**
     * Copy constructor
     * 
-    * @param src
+    * @param src The TableRow source object
     */
    public TableRow(TableRow src)
    {
@@ -58,9 +58,9 @@ public class TableRow
    }
    
    /**
-    * @param column
-    * @return
-    * @throws ArrayIndexOutOfBoundsException
+    * @param column The column ID
+    * @return The TableCell
+    * @throws ArrayIndexOutOfBoundsException If the index is out of bounds
     */
    public TableCell get(int column) throws ArrayIndexOutOfBoundsException
    {
@@ -68,7 +68,7 @@ public class TableRow
    }
    
    /**
-    * @return
+    * @return The amount of cells
     */
    public int size()
    {
@@ -76,9 +76,10 @@ public class TableRow
    }
    
    /**
-    * @param msg
-    * @param baseId
-    * @return
+    * @param msg The NXCPMessage
+    * @param baseId The base ID
+    * @param extendedFormat True if extended format
+    * @return The cell ID
     */
    public long fillMessage(final NXCPMessage msg, long baseId, boolean extendedFormat)
    {

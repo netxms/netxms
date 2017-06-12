@@ -32,8 +32,9 @@ public class DciSummaryTableColumn
 	private int flags;
 
 	/**
-	 * @param name
-	 * @param dciName
+	 * @param name The column name
+	 * @param dciName The dci name
+	 * @param flags The flags
 	 */
 	public DciSummaryTableColumn(String name, String dciName, int flags)
 	{
@@ -45,7 +46,7 @@ public class DciSummaryTableColumn
 	/**
 	 * Copy constructor.
 	 * 
-	 * @param src
+	 * @param src The source object
 	 */
 	public DciSummaryTableColumn(DciSummaryTableColumn src)
 	{
@@ -55,8 +56,8 @@ public class DciSummaryTableColumn
 	}
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
@@ -98,7 +99,7 @@ public class DciSummaryTableColumn
 	}
 	
 	/**
-	 * @return
+	 * @return true if match
 	 */
 	public boolean isRegexpMatch()
 	{
@@ -106,7 +107,7 @@ public class DciSummaryTableColumn
 	}
 	
 	/**
-	 * @param enable
+	 * @param enable true to enable
 	 */
 	public void setRegexpMatch(boolean enable)
 	{

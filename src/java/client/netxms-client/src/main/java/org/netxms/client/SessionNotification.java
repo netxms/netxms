@@ -102,8 +102,8 @@ public class SessionNotification
 	protected Object object;
 
 	/**
-	 * @param code
-	 * @param object
+	 * @param code The notification code
+	 * @param object The notification object
 	 */
 	public SessionNotification(int code, Object object)
 	{
@@ -113,8 +113,8 @@ public class SessionNotification
 	}
 
 	/**
-	 * @param code
-	 * @param subCode
+	 * @param code The notification code
+	 * @param subCode The notification subcode
 	 */
 	public SessionNotification(int code, long subCode)
 	{
@@ -124,9 +124,9 @@ public class SessionNotification
 	}
 
 	/**
-	 * @param code
-	 * @param subCode
-	 * @param object
+	 * @param code The notification code
+	 * @param subCode The notification subcode
+	 * @param object The notification object
 	 */
 	public SessionNotification(int code, long subCode, Object object)
 	{
@@ -136,7 +136,7 @@ public class SessionNotification
 	}
 
 	/**
-	 * @param code
+	 * @param code The notification code
 	 */
 	public SessionNotification(int code)
 	{

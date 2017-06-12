@@ -338,8 +338,8 @@ public class NXCSession
       protected long messageId;
       
       /**
-       * @param messageCode
-       * @param messageId
+       * @param messageCode The message code
+       * @param messageId The message ID
        */
       protected MessageSubscription(int messageCode, long messageId)
       {
@@ -1320,7 +1320,7 @@ public class NXCSession
    /**
     * Add server console listener
     *
-    * @param listener
+    * @param listener The ServerConsoleListener to add
     */
    public void addConsoleListener(ServerConsoleListener listener)
    {
@@ -1333,7 +1333,7 @@ public class NXCSession
    /**
     * Remove server console listener
     *
-    * @param listener
+    * @param listener The ServerConsoleListener to remove
     */
    public void removeConsoleListener(ServerConsoleListener listener)
    {
@@ -1346,9 +1346,9 @@ public class NXCSession
    /**
     * Subscribe to specific messages
     * 
-    * @param messageCode
-    * @param messageId
-    * @param handler
+    * @param messageCode The message code
+    * @param messageId  The message ID
+    * @param handler The message handler
     */
    public void addMessageSubscription(int messageCode, long messageId, MessageHandler handler)
    {
@@ -1359,8 +1359,10 @@ public class NXCSession
    }
    
    /**
-    * @param messageCode
-    * @param messageId
+    * Remove message subscription
+    * 
+    * @param messageCode The message code
+    * @param messageId The message ID
     */
    public void removeMessageSubscription(int messageCode, long messageId)
    {
@@ -1423,8 +1425,8 @@ public class NXCSession
     * @param file source file to be sent
     * @param listener progress listener
     * @param allowStreamCompression true if data stream compression is allowed
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
@@ -1442,8 +1444,8 @@ public class NXCSession
     * @param data file data
     * @param listener progress listener
     * @param allowStreamCompression true if data stream compression is allowed
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    protected void sendFile(final long requestId, final byte[] data, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
@@ -1462,8 +1464,8 @@ public class NXCSession
     * @param inputStream data input stream
     * @param listener progress listener
     * @param allowStreamCompression true if data stream compression is allowed
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
    {
@@ -1711,8 +1713,8 @@ public class NXCSession
     * Execute simple commands (without arguments and only returning RCC)
     *
     * @param command Command code
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    protected void executeSimpleCommand(int command) throws IOException, NXCException
    {
@@ -1746,10 +1748,10 @@ public class NXCSession
     * Only base protocol version check will be performed. Login must be performed before using session
     * after successful connect.
     * 
-    * @throws IOException
-    * @throws UnknownHostException
-    * @throws NXCException
-    * @throws IllegalStateException
+    * @throws IOException  if socket I/O error occurs
+    * @throws UnknownHostException if the host is unknown
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
     */
    public void connect() throws IOException, UnknownHostException, NXCException, IllegalStateException
    {
@@ -1761,11 +1763,11 @@ public class NXCSession
     * Versions of protocol components given in *componentVersions* will be validated. Login must be 
     * performed before using session after successful connect.
     * 
-    * @param componentVersions
-    * @throws IOException
-    * @throws UnknownHostException
-    * @throws NXCException
-    * @throws IllegalStateException
+    * @param componentVersions The versions of the components
+    * @throws IOException  if socket I/O error occurs
+    * @throws UnknownHostException if the host is unknown
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
     */
    public void connect(int[] componentVersions) throws IOException, UnknownHostException, NXCException, IllegalStateException
    {
@@ -1865,9 +1867,9 @@ public class NXCSession
     * 
     * @param login login name
     * @param password password
-    * @throws NXCException
-    * @throws IOException
-    * @throws IllegalStateException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
     */
    public void login(String login, String password) throws NXCException, IOException, IllegalStateException
    {
@@ -1880,9 +1882,9 @@ public class NXCSession
     * @param login login name
     * @param certificate user's certificate
     * @param signature user's digital signature
-    * @throws NXCException
-    * @throws IOException
-    * @throws IllegalStateException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
     */
    public void login(String login, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
    {
@@ -1897,9 +1899,9 @@ public class NXCSession
     * @param password password
     * @param certificate user's certificate
     * @param signature user's digital signature
-    * @throws NXCException
-    * @throws IOException
-    * @throws IllegalStateException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws IllegalStateException if the state is illegal
     */
    public void login(AuthenticationType authType, String login, String password, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
    {
@@ -2130,7 +2132,9 @@ public class NXCSession
    }
 
    /**
-    * @return
+    * Get the state of protocol version check
+    * 
+    * @return true if protocol version should not be checked
     */
    public boolean isIgnoreProtocolVersion()
    {
@@ -2140,7 +2144,7 @@ public class NXCSession
    /**
     * If set to true, protocol version is not checked at connect.
     *
-    * @param ignoreProtocolVersion
+    * @param ignoreProtocolVersion true if protocol version should not be checked
     */
    public void setIgnoreProtocolVersion(boolean ignoreProtocolVersion)
    {
@@ -2150,8 +2154,8 @@ public class NXCSession
    /**
     * Validate protocol versions
     * 
-    * @param versions
-    * @return
+    * @param versions the protocol versions
+    * @return true if protocol versions are valid
     */
    public boolean validateProtocolVersions(int[] versions)
    {
@@ -2247,7 +2251,7 @@ public class NXCSession
    }
 
    /**
-    * Get server identification color
+    * Get server identification colour
     * 
     * @return the serverColor
     */
@@ -2278,8 +2282,8 @@ public class NXCSession
    /**
     * Check if server component with given id is registered
     * 
-    * @param componentId
-    * @return
+    * @param componentId The component ID
+    * @return true if server component is registered
     */
    public boolean isServerComponentRegistered(String componentId)
    {
@@ -2287,9 +2291,9 @@ public class NXCSession
    }
    
    /**
-    * Get list og registered server components
+    * Get list of registered server components
     * 
-    * @return
+    * @return Array of registered server components
     */
    public String[] getRegisteredServerComponents()
    {
@@ -2297,6 +2301,8 @@ public class NXCSession
    }
 
    /**
+    * Get server URL
+    * 
     * @return the tileServerURL
     */
    public String getTileServerURL()
@@ -2305,7 +2311,9 @@ public class NXCSession
    }
 
    /**
-    * @return the zoningEnabled
+    * Get the state of zoning
+    * 
+    * @return true if zoning is enabled
     */
    public boolean isZoningEnabled()
    {
@@ -2325,7 +2333,7 @@ public class NXCSession
    /**
     * Get client information string
     * 
-    * @return
+    * @return The client information
     */
    public String getClientInfo()
    {
@@ -2335,7 +2343,7 @@ public class NXCSession
    /**
     * Set client information string
     * 
-    * @param connClientInfo
+    * @param connClientInfo The client info to set
     */
    public void setClientInfo(final String connClientInfo)
    {
@@ -2374,6 +2382,8 @@ public class NXCSession
    }
 
    /**
+    * Get the current user name
+    * 
     * @return the userName
     */
    public String getUserName()
@@ -2382,6 +2392,8 @@ public class NXCSession
    }
 
    /**
+    * Get the current authentication method
+    * 
     * @return the authenticationMethod
     */
    public AuthenticationType getAuthenticationMethod()
@@ -2429,6 +2441,8 @@ public class NXCSession
    
    /**
     * Get maximum number of records allowed to be displayed in alarm list
+    * 
+    * @return The limit of alarms displayed
     */
    public int getAlarmListDisplayLimit()
    {
@@ -2559,6 +2573,7 @@ public class NXCSession
     *
     * @param id            object identifier
     * @param requiredClass required object class
+    * @param <T> Object
     * @return Object with given ID or null if object cannot be found or is not an instance of required class
     */
    @SuppressWarnings("unchecked")
@@ -2761,7 +2776,7 @@ public class NXCSession
    /**
     * Generic object find using filter. WIll return first object matching given filter.
     * 
-    * @param filter
+    * @param filter ObjectFilter to filter the result
     * @return first matching object or null
     */
    public AbstractObject findObject(ObjectFilter filter)
@@ -2784,7 +2799,7 @@ public class NXCSession
    /**
     * Find all objects matching given filter.
     * 
-    * @param filter
+    * @param filter ObjectFilter to filter the result
     * @return list of matching objects (empty list if nothing found)
     */
    public List<AbstractObject> filterObjects(ObjectFilter filter)
@@ -2807,6 +2822,7 @@ public class NXCSession
     * Get list of top-level objects matching given class filter. Class filter
     * may be null to ignore object class.
     *
+    * @param classFilter To filter the classes
     * @return List of all top matching level objects (either without parents or with
     *         inaccessible parents)
     */
@@ -3164,10 +3180,10 @@ public class NXCSession
    /**
     * Get URL for helpdesk issue associated with given alarm
     * 
-    * @param alarmId
-    * @return
+    * @param alarmId The ID of alarm
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return URL of helpdesk issue
     */
    public String getHelpdeskIssueUrl(long alarmId) throws IOException, NXCException
    {
@@ -3181,7 +3197,7 @@ public class NXCSession
     * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
     * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
     * 
-    * @param helpdeskReference
+    * @param helpdeskReference The helpdesk reference
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3255,10 +3271,10 @@ public class NXCSession
    /**
     * Create alarm comment.
     * 
-    * @param alarmId
-    * @param text
-    * @throws IOException
-    * @throws NXCException
+    * @param alarmId The alarm ID
+    * @param text The comment text
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void createAlarmComment(long alarmId, String text) throws IOException, NXCException 
    {
@@ -3268,10 +3284,10 @@ public class NXCSession
    /**
     * Create alarm comment by helpdesk reference.
     * 
-    * @param helpdeskReference
-    * @param text
-    * @throws IOException
-    * @throws NXCException
+    * @param helpdeskReference The helpdesk reference
+    * @param text The reference text
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException 
    {
@@ -3322,7 +3338,7 @@ public class NXCSession
    /**
     * Get server configuration variables
     * 
-    * @return
+    * @return The server variables
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3414,8 +3430,8 @@ public class NXCSession
    /**
     * Set server configuration variable
     * 
-    * @param name
-    * @param value
+    * @param name The name of the variable
+    * @param value The value of the variable
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3431,7 +3447,7 @@ public class NXCSession
    /**
     * Delete server configuration variable
     * 
-    * @param name
+    * @param name The name of the variable
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3446,7 +3462,7 @@ public class NXCSession
    /**
     * Set server configuration variables to default
     * 
-    * @param varList
+    * @param varList The list of variables
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3464,8 +3480,8 @@ public class NXCSession
    /**
     * Get server config CLOB
     *
-    * @param name
-    * @return
+    * @param name The name of the config
+    * @return The config CLOB
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3481,8 +3497,8 @@ public class NXCSession
    /**
     * Set server config CLOB
     *
-    * @param name
-    * @param value
+    * @param name The name to set
+    * @param value The value to set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -3550,6 +3566,7 @@ public class NXCSession
    /**
     * Find user by ID
     * 
+    * @param id The user DBObject Id
     * @return User object with given ID or null if such user does not exist
     */
    public AbstractUserObject findUserDBObjectById(final long id)
@@ -3674,8 +3691,8 @@ public class NXCSession
     * 
     * @param password password to validate
     * @return true if password is valid
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public boolean validateUserPassword(String password) throws IOException, NXCException
    {
@@ -3849,7 +3866,7 @@ public class NXCSession
    /**
     * Get last DCI values for given Map DCI Instance list
     *
-    * @param dciIDList List with Map DCI Instances
+    * @param mapDcis List with Map DCI Instances
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3871,7 +3888,7 @@ public class NXCSession
    /**
     * Get last DCI values for given Single Dci Config list
     *
-    * @param dciIDList List with Single Dci Configs
+    * @param dciConfig List with Single Dci Configs
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3893,10 +3910,10 @@ public class NXCSession
    /**
     * Send msg containing list of dci configurations
     * 
-    * @param msg
-    * @return
-    * @throws NXCException 
-    * @throws IOException 
+    * @param msg The NXCPMessage to send
+    * @return The DCI values
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public DciValue[] sendLastValuesMsg(NXCPMessage msg) throws IOException, NXCException
    {
@@ -5033,7 +5050,9 @@ public class NXCSession
 
    /**
     * Change object's custom attributes (wrapper for modifyObject())
-    *
+    * 
+    * @param objectId The object ID
+    * @param attrList The attribute list
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -5048,6 +5067,9 @@ public class NXCSession
    /**
     * Change object's ACL (wrapper for modifyObject())
     *
+    * @param objectId The object id
+    * @param acl The AccessListElements
+    * @param inheritAccessRights true if access rights should be inherited
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -5065,9 +5087,9 @@ public class NXCSession
     * between zones.
     *
     * @param objectId Node or cluster object ID
-    * @param zoneId
-    * @throws IOException
-    * @throws NXCException
+    * @param zoneId The zone ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void changeObjectZone(final long objectId, final long zoneId) throws IOException, NXCException
    {
@@ -5115,10 +5137,10 @@ public class NXCSession
    /**
     * Get effective rights of currently logged in user to given object.
     * 
-    * @param objectId
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * @param objectId The object ID
+    * @return The effective rights
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public int getEffectiveRights(final long objectId) throws IOException, NXCException
    {
@@ -5242,8 +5264,10 @@ public class NXCSession
    /**
     * Query layer 2 topology for node
     *
+    * @param nodeId The node ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return The NetworkMapPage
     */
    public NetworkMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
    {
@@ -5903,6 +5927,7 @@ public class NXCSession
     * @param object alarm category
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return The ID of the category
     */
    public long modifyAlarmCategory(AlarmCategory object) throws IOException, NXCException
    {
@@ -7026,9 +7051,9 @@ public class NXCSession
    /**
     * Stop server command
     * 
-    * @param commandId
-    * @throws NXCException 
-    * @throws IOException 
+    * @param commandId The command ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void stopServerCommand(long commandId) throws IOException, NXCException
    {
@@ -7041,7 +7066,7 @@ public class NXCSession
    /**
     * Get summary of SNMP trap mapping. Trap configurations returned without parameter mapping.
     *
-    * @return
+    * @return List of SnmpTrap objects
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7469,9 +7494,11 @@ public class NXCSession
    }
 
    /**
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * Get the whole image library
+    * 
+    * @return List of library images
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<LibraryImage> getImageLibrary() throws IOException, NXCException
    {
@@ -7479,10 +7506,12 @@ public class NXCSession
    }
 
    /**
-    * @param category
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * Get the image library of specific category
+    * 
+    * @param category The name of the category
+    * @return List of library images
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<LibraryImage> getImageLibrary(String category) throws IOException, NXCException
    {
@@ -7512,10 +7541,12 @@ public class NXCSession
    }
 
    /**
-    * @param guid
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * Get an image from the library
+    * 
+    * @param guid UUID of the image
+    * @return The image
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public LibraryImage getImage(UUID guid) throws IOException, NXCException
    {
@@ -7529,11 +7560,13 @@ public class NXCSession
    }
 
    /**
-    * @param image
-    * @param listener
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * Create an image
+    * 
+    * @param image The Image
+    * @param listener The ProgressListener
+    * @return The image created
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public LibraryImage createImage(LibraryImage image, ProgressListener listener) throws IOException, NXCException
    {
@@ -7552,9 +7585,11 @@ public class NXCSession
    }
 
    /**
-    * @param image
-    * @throws IOException
-    * @throws NXCException
+    * Delete an image
+    * 
+    * @param image The image to delete
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteImage(LibraryImage image) throws IOException, NXCException
    {
@@ -7570,10 +7605,12 @@ public class NXCSession
    }
 
    /**
-    * @param image
-    * @param listener
-    * @throws IOException
-    * @throws NXCException
+    * Modify an image
+    * 
+    * @param image The image to modify
+    * @param listener The ProgressListener
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void modifyImage(LibraryImage image, ProgressListener listener) throws IOException, NXCException
    {
@@ -7648,8 +7685,8 @@ public class NXCSession
     * Get list of all values in persistent storage
     * 
     * @return Hash map wit persistent storage key, value
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public HashMap<String, String> getPersistentStorageList() throws IOException, NXCException
    {
@@ -7671,7 +7708,9 @@ public class NXCSession
     * Set persistent storage value. Will create new or update existing
     * 
     * @param key unique key of persistent storage value
-    * @param value value 
+    * @param value value
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setPersistentStorageValue(String key, String value) throws IOException, NXCException
    {
@@ -7685,8 +7724,8 @@ public class NXCSession
     * Delete persistent storage value
     * 
     * @param key unique key of persistent storage value
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deletePersistentStorageValue(String key) throws IOException, NXCException
    {
@@ -7787,10 +7826,11 @@ public class NXCSession
    
    /**
     * Return information about agent file
-    * @param file
+    * 
+    * @param file The AgentFile in question
     * @return AgentFileInfo object
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public AgentFileInfo getAgentFileInfo(AgentFile file) throws IOException, NXCException
    {
@@ -7836,6 +7876,7 @@ public class NXCSession
     *
     * @param localFile      local file
     * @param serverFileName name under which file will be stored on server
+    * @param listener The ProgressListener to set
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -7931,7 +7972,8 @@ public class NXCSession
     * @param nodeId node object ID
     * @param remoteFileName fully qualified file name on remote system
     * @param maxFileSize maximum download size, 0 == UNLIMITED
-    * @param follow if set to true, server will send file updates as they appear (like for tail -f command) 
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
+    * @param listener The ProgressListener to set
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7979,6 +8021,7 @@ public class NXCSession
     * @param remoteFileName fully qualified file name on remote system
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return The downloaded file
     */
    public File downloadFileFromServer( String remoteFileName) throws IOException, NXCException
    {
@@ -8363,7 +8406,7 @@ public class NXCSession
    /**
     * Remove agent package from server
     *
-    * @param packageId
+    * @param packageId The package ID
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8401,7 +8444,7 @@ public class NXCSession
    /**
     * Get list of installed packages
     *
-    * @return
+    * @return List of PackageInfo objects
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8590,7 +8633,7 @@ public class NXCSession
    /**
     * Get default date format provided by server
     * 
-    * @return
+    * @return The current date format
     */
    public String getDateFormat()
    {
@@ -8600,7 +8643,7 @@ public class NXCSession
    /**
     * Get default time format provided by server
     * 
-    * @return
+    * @return The current time format
     */
    public String getTimeFormat()
    {
@@ -8610,7 +8653,7 @@ public class NXCSession
    /**
     * Get time format for short form (usually without seconds).
     * 
-    * @return
+    * @return The current short time format
     */
    public String getShortTimeFormat()
    {
@@ -8646,7 +8689,7 @@ public class NXCSession
    /**
     * Get list of all configured mapping tables.
     * 
-    * @return
+    * @return List of MappingTableDescriptor objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8667,8 +8710,10 @@ public class NXCSession
    }
 
    /**
-    * @param id
-    * @return
+    * Get list of specific mapping table
+    * 
+    * @param id The ID of mapping table
+    * @return The MappingTable
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8730,6 +8775,8 @@ public class NXCSession
    }
 
    /**
+    * Get the default DCI retention time
+    * 
     * @return the default DCI retention time in days
     */
    public final int getDefaultDciRetentionTime()
@@ -8738,6 +8785,8 @@ public class NXCSession
    }
 
    /**
+    * Get the default DCI polling interval
+    * 
     * @return the default DCI polling interval in seconds
     */
    public final int getDefaultDciPollingInterval()
@@ -8746,6 +8795,8 @@ public class NXCSession
    }
    
    /**
+    * Get the minimal view refresh interval
+    * 
     * @return the minViewRefreshInterval
     */
    public int getMinViewRefreshInterval()
@@ -8754,6 +8805,8 @@ public class NXCSession
    }
 
    /**
+    * Get the state of alarm status flow
+    * 
     * @return true if alarm status flow set to "strict" mode
     */
    public final boolean isStrictAlarmStatusFlow()
@@ -8772,7 +8825,7 @@ public class NXCSession
    /**
     * Get list of all configured DCI summary tables
     *
-    * @return
+    * @return List of DciSummaryTableDescriptor objects
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8796,7 +8849,7 @@ public class NXCSession
     * Get DCI summary table configuration.
     *
     * @param id DCI summary table ID.
-    * @return
+    * @return The DciSummaryTable object
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8828,7 +8881,7 @@ public class NXCSession
    /**
     * Delete DCI summary table.
     *
-    * @param id
+    * @param id The ID of the summary table
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -8867,6 +8920,7 @@ public class NXCSession
     * @param function data aggregation function
     * @param periodStart start of query period
     * @param periodEnd end of query period
+    * @param multiInstance The multiInstance flag
     * @return table with last values data for all nodes under given base container
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8892,9 +8946,11 @@ public class NXCSession
    }
 
    /**
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * List reports
+    * 
+    * @return List of report UUIDs
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<UUID> listReports() throws NXCException, IOException
    {
@@ -8912,10 +8968,12 @@ public class NXCSession
    }
 
    /**
-    * @param reportId
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * Get the report definition
+    * 
+    * @param reportId The UUID of the report
+    * @return The ReportDefinition object
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public ReportDefinition getReportDefinition(UUID reportId) throws NXCException, IOException
    {
@@ -8927,11 +8985,13 @@ public class NXCSession
    }
 
    /**
-    * @param reportId
-    * @param parameters
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * Execute a report
+    * 
+    * @param reportId The report UUID
+    * @param parameters The parameters to set
+    * @return the UUID of the report
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public UUID executeReport(UUID reportId, Map<String, String> parameters) throws NXCException, IOException
    {
@@ -8950,10 +9010,12 @@ public class NXCSession
    }
 
    /**
-    * @param reportId
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * List report results
+    * 
+    * @param reportId The report UUID
+    * @return List of ReportResult objects
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<ReportResult> listReportResults(UUID reportId) throws NXCException, IOException
    {
@@ -8975,10 +9037,12 @@ public class NXCSession
    }
 
    /**
-    * @param reportId
-    * @param jobId
-    * @throws NXCException
-    * @throws IOException
+    * Delete report result
+    * 
+    * @param reportId The report UUID
+    * @param jobId The job UUID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteReportResult(UUID reportId, UUID jobId) throws NXCException, IOException
    {
@@ -8990,12 +9054,14 @@ public class NXCSession
    }
 
    /**
-    * @param reportId
-    * @param jobId
-    * @param format
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * Render report
+    * 
+    * @param reportId The report UUID
+    * @param jobId The job UUID
+    * @param format The format of the render
+    * @return The render of the report
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public File renderReport(UUID reportId, UUID jobId, ReportRenderFormat format) throws NXCException, IOException
    {
@@ -9014,10 +9080,12 @@ public class NXCSession
    }
 
 	/**
-	 * @param job
-	 * @param parameters
-	 * @throws NXCException
-	 * @throws IOException
+	 * Schedule a report
+	 * 
+	 * @param job The ReportingJob
+	 * @param parameters The parameters to set
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NXCException, IOException
 	{
@@ -9057,10 +9125,12 @@ public class NXCSession
 	}
 
    /**
-    * @param reportId
-    * @return
-    * @throws NXCException
-    * @throws IOException
+    * List scheduled jobs
+    * 
+    * @param reportId The report UUID
+    * @return List of ReportingJob objects
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<ReportingJob> listScheduledJobs(UUID reportId) throws NXCException, IOException
    {
@@ -9081,10 +9151,12 @@ public class NXCSession
    }
    
    /**
-    * @param reportId
-    * @param jobId
-    * @throws NXCException
-    * @throws IOException
+    * Delete report schedule
+    * 
+    * @param reportId The report UUID
+    * @param jobId The job UUID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteReportSchedule(UUID reportId, UUID jobId) throws NXCException, IOException
    {
@@ -9096,6 +9168,8 @@ public class NXCSession
    }
    
    /**
+    * Set the client address
+    * 
     * @param clientAddress the clientAddress to set
     */
    public void setClientAddress(String clientAddress)
@@ -9104,10 +9178,12 @@ public class NXCSession
    }
 
    /**
+    * Sign a challange
+    * 
     * @param signature user's signature
     * @param challenge challenge string received from server
     * @return signed server challenge
-    * @throws NXCException 
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private byte[] signChallenge(Signature signature, byte[] challenge) throws NXCException
    {
@@ -9127,6 +9203,8 @@ public class NXCSession
    }
    
    /**
+    * Get the client`s language
+    * 
     * @return the clientLanguage
     */
    public String getClientLanguage()
@@ -9135,6 +9213,8 @@ public class NXCSession
    }
 
    /**
+    * Set client`s language
+    * 
     * @param clientLanguage the clientLanguage to set
     */
    public void setClientLanguage(String clientLanguage)
@@ -9147,8 +9227,8 @@ public class NXCSession
     * in a subnet. Element value could be eithet ID of the node with that IP address,
     * 0 for unused addresses, and 0xFFFFFFFF for subnet and broadcast addresses.
     * 
-    * @param subnetId
-    * @return
+    * @param subnetId The subnet ID
+    * @return Address map
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -9236,8 +9316,8 @@ public class NXCSession
    /**
     * Swaps 2 configs sequence numbers
     * 
-    * @param id1
-    * @param id2
+    * @param id1 The id of first config
+    * @param id2 The id of second config
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -9253,10 +9333,10 @@ public class NXCSession
    /**
     * Get location history for given object.
     * 
-    * @param objectId
-    * @param from
-    * @param to
-    * @return
+    * @param objectId The object ID
+    * @param from The date from
+    * @param to The date to
+    * @return List of location history
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -9388,11 +9468,12 @@ public class NXCSession
    
    /**
     * Manage subscription for ZMQ event forwarder
+    * 
     * @param objectId Node id
     * @param dciId DCI ID. 0 means "disabled DCI source filter for events"
-    * @param subscribe
-    * @throws IOException
-    * @throws NXCException
+    * @param subscribe If true, the event will be subscribed to
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void updateZmqEventSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
    {
@@ -9413,11 +9494,12 @@ public class NXCSession
 
    /**
     * Manage subscription for ZMQ data forwarder
-    * @param objectId
-    * @param dciId
-    * @param subscribe
-    * @throws IOException
-    * @throws NXCException
+    * 
+    * @param objectId The object ID
+    * @param dciId The DCI ID
+    * @param subscribe If true, the event will be subscribed to
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void updateZmqDataSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
    {
@@ -9437,10 +9519,12 @@ public class NXCSession
    }
    
    /**
-    * @param type
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * Get subscriptions for ZMQ data forwarder
+    * 
+    * @param type Subscription type
+    * @return List of subscriptions
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
    {
@@ -9474,8 +9558,8 @@ public class NXCSession
     * Get list of configured repositories
     * 
     * @return list of configured repositories
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<Repository> getRepositories() throws IOException, NXCException
    {
@@ -9497,9 +9581,9 @@ public class NXCSession
    /**
     * Add repository. Will update given repository object with assigned ID.
     * 
-    * @param r
-    * @throws IOException
-    * @throws NXCException
+    * @param r The repository
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void addRepository(Repository r) throws IOException, NXCException
    {
@@ -9513,9 +9597,9 @@ public class NXCSession
    /**
     * Modify repository.
     * 
-    * @param r
-    * @throws IOException
-    * @throws NXCException
+    * @param r The repository
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void modifyRepository(Repository r) throws IOException, NXCException
    {
@@ -9528,9 +9612,9 @@ public class NXCSession
    /**
     * Delete repository.
     * 
-    * @param id
-    * @throws IOException
-    * @throws NXCException
+    * @param id The id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteRepository(int id) throws IOException, NXCException
    {
@@ -9545,6 +9629,7 @@ public class NXCSession
     * 
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return List of PredictionEngine objects
     */
    public List<PredictionEngine> getPredictionEngines() throws IOException, NXCException
    {

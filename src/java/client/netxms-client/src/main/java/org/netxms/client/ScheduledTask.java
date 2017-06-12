@@ -238,7 +238,7 @@ public class ScheduledTask
    
    /**
     * Get scheduled task comments
-    * @return
+    * @return comments
     */
    public String getComments()
    {
@@ -247,7 +247,8 @@ public class ScheduledTask
    
    /**
     * Set scheduled task comments
-    * @param comments
+    * 
+    * @param comments The comments to set
     */
    public void setComments(String comments)
    {

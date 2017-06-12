@@ -103,7 +103,7 @@ public abstract class DciValue
 	 * Returns formated DCI value or string with format error and correct type of DCI value;
 	 * 
 	 * @param formatString the string into which will be placed DCI value 
-	 * @return
+	 * @return The format
 	 */
 	public String format(String formatString)
 	{

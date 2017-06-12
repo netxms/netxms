@@ -26,7 +26,7 @@ public interface ServiceHandler
    /**
     * Get service name
     * 
-    * @return
+    * @return Service name
     */
    public String getServiceName();
 }

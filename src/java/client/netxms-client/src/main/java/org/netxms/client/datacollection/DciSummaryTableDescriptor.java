@@ -35,8 +35,8 @@ public class DciSummaryTableDescriptor
 	/**
 	 * Create summary information from NXCP message.
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
 	 */
 	public DciSummaryTableDescriptor(NXCPMessage msg, long baseId)
 	{
@@ -50,7 +50,7 @@ public class DciSummaryTableDescriptor
 	/**
 	 * Create descriptor from table object
 	 * 
-	 * @param table
+	 * @param table The table object
 	 */
 	public DciSummaryTableDescriptor(DciSummaryTable table)
 	{
@@ -64,7 +64,7 @@ public class DciSummaryTableDescriptor
 	/**
 	 * Update descriptor from table
 	 * 
-	 * @param table
+	 * @param table The table to update from
 	 */
 	public void updateFromTable(DciSummaryTable table)
 	{

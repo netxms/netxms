@@ -16,10 +16,10 @@ public class TableColumnDefinition
 	private boolean instanceColumn;
 	
 	/**
-	 * @param name
-	 * @param displayName
-	 * @param dataType
-	 * @param instanceColumn
+	 * @param name The name to set
+	 * @param displayName The display name to set
+	 * @param dataType The data type to set
+	 * @param instanceColumn Set true if instance column
 	 */
 	public TableColumnDefinition(String name, String displayName, int dataType, boolean instanceColumn)
 	{
@@ -30,8 +30,8 @@ public class TableColumnDefinition
 	}
 
 	/**
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
 	 */
 	protected TableColumnDefinition(NXCPMessage msg, long baseId)
 	{
@@ -44,8 +44,8 @@ public class TableColumnDefinition
 	}
 	
 	/**
-	 * @param msg
-	 * @param baseId
+	 * @param msg The NXCPMessage
+	 * @param baseId The base ID
 	 */
 	protected void fillMessage(NXCPMessage msg, long baseId)
 	{
