@@ -326,6 +326,14 @@ AC_ARG_ENABLE(mqtt,
 	fi
 ])
 
+AC_ARG_WITH(curl,
+[AS_HELP_STRING(--without-curl,build without curl)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_CURL="yes"
+	fi
+])
+
 AC_ARG_WITH(mongodb,
 [AS_HELP_STRING(--with-mongodb,build MongoDB-dependent components)],
 [ if test "x$withval" != "xno" ; then
@@ -1921,7 +1929,7 @@ if test "x$DISABLE_CURL" = "xno"; then
 	fi
 
 	if test "x$HAVE_LIBCURL" != "xyes"; then
-		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --disable-curl option)
+		AC_MSG_ERROR(libcurl is required. Check that it is installed or use --without-curl option)
 	fi
 
 	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
