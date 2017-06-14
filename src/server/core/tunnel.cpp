@@ -346,7 +346,9 @@ void AgentTunnel::recvThread()
       }
       delete msg;
    }
+
    UnregisterTunnel(this);
+   m_state = AGENT_TUNNEL_SHUTDOWN;
 
    // shutdown all channels
    MutexLock(m_channelLock);
@@ -354,6 +356,7 @@ void AgentTunnel::recvThread()
    while(it->hasNext())
       it->next()->shutdown();
    delete it;
+   m_channels.clear();
    MutexUnlock(m_channelLock);
 
    debugPrintf(5, _T("Receiver thread stopped"));
@@ -408,6 +411,9 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
  */
 bool AgentTunnel::sendMessage(NXCPMessage *msg)
 {
+   if (m_state == AGENT_TUNNEL_SHUTDOWN)
+      return false;
+
    if (nxlog_get_debug_level() >= 6)
    {
       TCHAR buffer[64];
@@ -420,7 +426,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
 }
 
 /**
- * Start tunel
+ * Start tunnel
  */
 void AgentTunnel::start()
 {
@@ -435,6 +441,8 @@ void AgentTunnel::shutdown()
 {
    if (m_socket != INVALID_SOCKET)
       ::shutdown(m_socket, SHUT_RDWR);
+   m_state = AGENT_TUNNEL_SHUTDOWN;
+   debugPrintf(4, _T("Tunnel shutdown"));
 }
 
 /**
@@ -645,6 +653,9 @@ void AgentTunnel::processChannelClose(UINT32 channelId)
  */
 void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
 {
+   if (m_state == AGENT_TUNNEL_SHUTDOWN)
+      return;
+
    debugPrintf(4, _T("closeChannel: request to close channel %d"), channel->getId());
 
    MutexLock(m_channelLock);
@@ -693,6 +704,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
 {
+   tunnel->incRefCount();
    m_tunnel = tunnel;
    m_id = id;
    m_active = true;
@@ -709,6 +721,7 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
  */
 AgentTunnelCommChannel::~AgentTunnelCommChannel()
 {
+   m_tunnel->decRefCount();
    free(m_buffer);
    MutexDestroy(m_bufferLock);
    ConditionDestroy(m_dataCondition);

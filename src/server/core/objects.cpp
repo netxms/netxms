@@ -63,7 +63,6 @@ static int m_iStatusShift;        // Shift value for "shifted" status propagatio
 static int m_iStatusTranslation[4];
 static int m_iStatusSingleThreshold;
 static int m_iStatusThresholds[4];
-static CONDITION s_condUpdateMaps = INVALID_CONDITION_HANDLE;
 
 /**
  * Thread which apply template updates
@@ -207,8 +206,6 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
 
    g_pTemplateUpdateQueue = new Queue;
-
-	s_condUpdateMaps = ConditionCreate(FALSE);
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;

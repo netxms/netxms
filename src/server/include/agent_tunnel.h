@@ -68,7 +68,8 @@ enum AgentTunnelState
 {
    AGENT_TUNNEL_INIT = 0,
    AGENT_TUNNEL_UNBOUND = 1,
-   AGENT_TUNNEL_BOUND = 2
+   AGENT_TUNNEL_BOUND = 2,
+   AGENT_TUNNEL_SHUTDOWN = 3
 };
 
 /**
