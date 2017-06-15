@@ -56,17 +56,19 @@ extern "C" int getprocs(struct procsinfo *, int, struct fdsinfo *, int, pid_t *,
 #endif
 #endif
 
-
-//
-// Get process list and number of processes
-//
-
+/**
+ * Get process list and number of processes
+ */
 static PROCENTRY *GetProcessList(int *pnprocs)
 {
-	PROCENTRY *pBuffer;
-	int nprocs, nrecs = 100;
-	pid_t index;
+   pid_t index = 0;
+   int nprocs = GETPROCS(NULL, 0, NULL, 0, &index, 65535);
+	if (nprocs == -1)
+		return NULL;
 
+	PROCENTRY *pBuffer;
+	int nrecs = nprocs + 64;
+	
 retry_getprocs:
 	pBuffer = (PROCENTRY *)malloc(sizeof(PROCENTRY) * nrecs);
 	index = 0;
@@ -76,7 +78,7 @@ retry_getprocs:
 		if (nprocs == nrecs)
 		{
 			free(pBuffer);
-			nrecs += 100;
+			nrecs += 1024;
 			goto retry_getprocs;
 		}
 		*pnprocs = nprocs;
@@ -144,13 +146,12 @@ LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
-	PROCENTRY *pList;
-	int i, nProcCount, nThreadCount;
-
-	pList = GetProcessList(&nProcCount);
+	int nProcCount;
+	PROCENTRY *pList = GetProcessList(&nProcCount);
 	if (pList != NULL)
 	{
-		for(i = 0, nThreadCount = 0; i < nProcCount; i++)
+	   int nThreadCount = 0;
+		for(int i = 0; i < nProcCount; i++)
 		{
 			nThreadCount += pList[i].pi_thcount;
 		}
