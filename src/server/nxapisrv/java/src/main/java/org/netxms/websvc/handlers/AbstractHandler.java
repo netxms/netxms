@@ -19,7 +19,9 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.servlet.ServletContext;
 import org.json.JSONException;
@@ -71,7 +73,7 @@ public abstract class AbstractHandler extends ServerResource
       if (attachToSession())
       {
          Object response = (id == null) ? getCollection(getRequest().getResourceRef().getQueryAsForm().getValuesMap()) : get(id);
-         return new StringRepresentation(JsonTools.jsonFromObject(response), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(JsonTools.jsonFromObject(response, getRequestedFields()), MediaType.APPLICATION_JSON);
       }
       else
       {
@@ -98,7 +100,7 @@ public abstract class AbstractHandler extends ServerResource
       log.debug("POST: data = " + data);
       if (attachToSession())
       {
-         return new StringRepresentation(JsonTools.jsonFromObject(create(data)), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(JsonTools.jsonFromObject(create(data), null), MediaType.APPLICATION_JSON);
       }
       else
       {
@@ -127,7 +129,7 @@ public abstract class AbstractHandler extends ServerResource
       if (attachToSession())
       {
          Object response = (id != null) ? update(id, data) : createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
-         return new StringRepresentation(JsonTools.jsonFromObject(response), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(JsonTools.jsonFromObject(response, null), MediaType.APPLICATION_JSON);
       }
       else
       {
@@ -149,7 +151,7 @@ public abstract class AbstractHandler extends ServerResource
       if (attachToSession())
       {    	 
          Object response = (id != null) ? delete(id) : createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
-         return new StringRepresentation(JsonTools.jsonFromObject(response), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(JsonTools.jsonFromObject(response, null), MediaType.APPLICATION_JSON);
       }
       else
       {
@@ -360,5 +362,26 @@ public abstract class AbstractHandler extends ServerResource
       session.connect();
       session.login(login, (password == null) ? "" : password);
       return SessionStore.getInstance(getServletContext()).registerSession(session);
+   }
+   
+   /**
+    * Get set of field names specified in "fields" parameter
+    * 
+    * @return set of field names or null
+    */
+   private Set<String> getRequestedFields()
+   {
+      String fieldList = getRequest().getResourceRef().getQueryAsForm().getValuesMap().get("fields");
+      if ((fieldList == null) || fieldList.isEmpty())
+         return null;
+      
+      String[] parts = fieldList.split(",");
+      if (parts.length == 0)
+         return null;
+      
+      Set<String> fields = new HashSet<String>();
+      for(String f : parts)
+         fields.add(f);
+      return fields;
    }
 }

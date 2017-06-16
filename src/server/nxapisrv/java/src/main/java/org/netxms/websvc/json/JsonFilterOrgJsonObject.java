@@ -19,55 +19,36 @@
 package org.netxms.websvc.json;
 
 import java.util.Set;
+import org.json.JSONObject;
 
 /**
- * Generic container for named response.
+ * Filter for JSONObject class
  */
-public class ResponseContainer
+public class JsonFilterOrgJsonObject extends JsonFilter<JSONObject>
 {
-   private String name;
-   private Object value;
-
    /**
-    * Create container.
-    * 
-    * @param name
-    * @param value
+    * @param object
+    * @param fields
     */
-   public ResponseContainer(String name, Object value)
+   protected JsonFilterOrgJsonObject(JSONObject object, Set<String> fields)
    {
-      this.name = name;
-      this.value = value;
+      super(object, fields);
    }
 
-   /**
-    * @return the name
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.json.JsonFilter#filter()
     */
-   public String getName()
+   @Override
+   public JSONObject filter()
    {
-      return name;
-   }
-
-   /**
-    * @return the value
-    */
-   public Object getValue()
-   {
-      return value;
-   }
-   
-   /**
-    * Create JSON code from container.
-    * 
-    * @return JSON code
-    */
-   public String toJson(Set<String> fields)
-   {
-      StringBuilder sb = new StringBuilder("{ \"");
-      sb.append(name);
-      sb.append("\":");
-      sb.append(JsonTools.jsonFromObject(value, fields));
-      sb.append(" }");
-      return sb.toString();
+      JSONObject result = new JSONObject();
+      for(String s : object.keySet())
+      {
+         if (fields.contains(s))
+         {
+            result.put(s, object.get(s));
+         }
+      }
+      return result;
    }
 }

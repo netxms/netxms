@@ -20,6 +20,7 @@ package org.netxms.websvc.json;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.base.InetAddressEx;
@@ -32,6 +33,7 @@ import org.netxms.websvc.json.adapters.MacAddressAdapter;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -46,16 +48,15 @@ public class JsonTools
     * @param object object to serialize
     * @return JSON code
     */
-   public static String jsonFromObject(Object object)
+   public static String jsonFromObject(Object object, Set<String> fields)
    {
-      if (object instanceof JsonObject)
-         return ((JsonObject)object).toString();
-      if (object instanceof JSONObject)
-         return ((JSONObject)object).toString();
-      if (object instanceof JSONArray)
-         return ((JSONArray)object).toString();
+      if ((object instanceof JsonObject) || 
+          (object instanceof JsonArray) ||
+          (object instanceof JSONObject) ||
+          (object instanceof JSONArray))
+         return JsonFilter.createFilter(object, fields).filter().toString();
       if (object instanceof ResponseContainer)
-         return ((ResponseContainer)object).toJson();
+         return ((ResponseContainer)object).toJson(fields);
       
       GsonBuilder builder = new GsonBuilder();
       builder.setPrettyPrinting();  // FIXME: remove for production
@@ -76,6 +77,10 @@ public class JsonTools
             return c.isAnnotationPresent(Internal.class);
          }
       });
+      if ((fields != null) && !fields.isEmpty())
+      {
+         return JsonFilter.createFilter(builder.create().toJsonTree(object), fields).filter().toString();
+      }
       return builder.create().toJson(object);
    }
    

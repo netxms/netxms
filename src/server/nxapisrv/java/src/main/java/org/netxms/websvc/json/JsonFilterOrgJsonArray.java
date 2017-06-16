@@ -19,55 +19,37 @@
 package org.netxms.websvc.json;
 
 import java.util.Set;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
- * Generic container for named response.
+ * Filter for JSONArray class
  */
-public class ResponseContainer
+public class JsonFilterOrgJsonArray extends JsonFilter<JSONArray>
 {
-   private String name;
-   private Object value;
-
    /**
-    * Create container.
-    * 
-    * @param name
-    * @param value
+    * @param object
+    * @param fields
     */
-   public ResponseContainer(String name, Object value)
+   protected JsonFilterOrgJsonArray(JSONArray object, Set<String> fields)
    {
-      this.name = name;
-      this.value = value;
+      super(object, fields);
    }
 
-   /**
-    * @return the name
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.json.JsonFilter#filter()
     */
-   public String getName()
+   @Override
+   public JSONArray filter()
    {
-      return name;
-   }
-
-   /**
-    * @return the value
-    */
-   public Object getValue()
-   {
-      return value;
-   }
-   
-   /**
-    * Create JSON code from container.
-    * 
-    * @return JSON code
-    */
-   public String toJson(Set<String> fields)
-   {
-      StringBuilder sb = new StringBuilder("{ \"");
-      sb.append(name);
-      sb.append("\":");
-      sb.append(JsonTools.jsonFromObject(value, fields));
-      sb.append(" }");
-      return sb.toString();
+      for(int i = 0; i < object.length(); i++)
+      {
+         Object e = object.get(i);
+         if (e instanceof JSONObject)
+         {
+            object.put(i, new JsonFilterOrgJsonObject((JSONObject)e, fields).filter());
+         }
+      }
+      return object;
    }
 }
