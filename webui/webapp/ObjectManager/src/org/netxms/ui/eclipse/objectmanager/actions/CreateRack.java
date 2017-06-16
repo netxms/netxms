@@ -66,11 +66,11 @@ public class CreateRack implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CreateRack_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_RACK, dlg.getObjectName(), parentId);
 				cd.setHeight(42);
 				session.createObject(cd);
