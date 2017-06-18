@@ -187,6 +187,15 @@ public class DeviceView extends DashboardComposite
 		
 		for(Port p : ports)
 		{
+		   // Some devices has slots and ports numbering started at 0, so
+		   // port 0/0 could be valid - in that case check interface object
+		   // for physical port flag
+		   if ((p.getSlot() == 0) && (p.getPort() == 0))
+		   {
+		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
+		      if ((iface == null) || !iface.isPhysicalPort())
+		         continue;
+		   }
 			SlotView sv = slots.get(p.getSlot());
 			if (sv != null)
 			{

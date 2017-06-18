@@ -12289,11 +12289,9 @@ void ClientSession::processConsoleCommand(NXCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Get VLANs configured on device
-//
-
+/**
+ * Get VLANs configured on device
+ */
 void ClientSession::getVlans(NXCPMessage *request)
 {
 	NXCPMessage msg;
@@ -12314,6 +12312,7 @@ void ClientSession::getVlans(NXCPMessage *request)
 					vlans->fillMessage(&msg);
 					vlans->decRefCount();
 					msg.setField(VID_RCC, RCC_SUCCESS);
+		         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("VLAN information read"));
 				}
 				else
 				{
@@ -12328,6 +12327,7 @@ void ClientSession::getVlans(NXCPMessage *request)
 		else
 		{
 			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading VLAN information"));
 		}
 	}
 	else

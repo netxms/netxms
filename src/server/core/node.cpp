@@ -7150,12 +7150,10 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
  */
 VlanList *Node::getVlans()
 {
-   VlanList *vlans;
-
    MutexLock(m_mutexTopoAccess);
    if (m_vlans != NULL)
       m_vlans->incRefCount();
-   vlans = m_vlans;
+   VlanList *vlans = m_vlans;
    MutexUnlock(m_mutexTopoAccess);
    return vlans;
 }
