@@ -213,6 +213,7 @@ private:
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
       isSystem = false;
+      parentIndex = 0;
    }
 
 public:
@@ -232,6 +233,7 @@ public:
    bool isSystem;
    UINT32 ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
+   UINT32 parentIndex;
 
    InterfaceInfo(UINT32 ifIndex)
    {
@@ -271,6 +273,7 @@ public:
 	int size() { return m_interfaces->size(); }
 	InterfaceInfo *get(int index) { return m_interfaces->get(index); }
 	InterfaceInfo *findByIfIndex(UINT32 ifIndex);
+   InterfaceInfo *findByPhyPosition(int slot, int port);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }

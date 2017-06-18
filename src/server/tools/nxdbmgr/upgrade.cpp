@@ -747,6 +747,21 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V454 to V455
+ */
+static BOOL H_UpgradeFromV454(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE interfaces ADD parent_iface integer\n")
+            _T("UPDATE interfaces SET parent_iface=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetNotNullConstraint(_T("interfaces"), _T("parent_iface")));
+   CHK_EXEC(SetSchemaVersion(455));
+   return TRUE;
+}
+
+/**
  * Upgrade from V453 to V454
  */
 static BOOL H_UpgradeFromV453(int currVersion, int newVersion)
@@ -11954,6 +11969,7 @@ static struct
    { 451, 452, H_UpgradeFromV451 },
    { 452, 453, H_UpgradeFromV452 },
    { 453, 454, H_UpgradeFromV453 },
+   { 454, 455, H_UpgradeFromV454 },
    { 0, 0, NULL }
 };
 

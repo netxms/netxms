@@ -45,9 +45,22 @@ InterfaceList::~InterfaceList()
  */
 InterfaceInfo *InterfaceList::findByIfIndex(UINT32 ifIndex)
 {
-   // Delete loopback interface(s) from list
    for(int i = 0; i < m_interfaces->size(); i++)
       if (m_interfaces->get(i)->index == ifIndex)
 			return m_interfaces->get(i);
 	return NULL;
+}
+
+/**
+ * Find interface entry by physical position
+ */
+InterfaceInfo *InterfaceList::findByPhyPosition(int slot, int port)
+{
+   for(int i = 0; i < m_interfaces->size(); i++)
+   {
+      InterfaceInfo *iface = m_interfaces->get(i);
+      if (iface->isPhysicalPort && (iface->slot == slot) && (iface->port == port))
+         return iface;
+   }
+   return NULL;
 }

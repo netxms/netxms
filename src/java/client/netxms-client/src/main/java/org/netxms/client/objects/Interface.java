@@ -415,6 +415,7 @@ public class Interface extends GenericObject
 	private int dot1xPaeState;
 	private int dot1xBackendState;
 	private SnmpObjectId ifTableSuffix;
+   private long parentInterfaceId;
 	
 	/**
 	 * @param msg
@@ -443,6 +444,7 @@ public class Interface extends GenericObject
 		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
 		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
+		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_IP_ADDRESS_COUNT);
 		ipAddressList = new ArrayList<InetAddressEx>(count);
@@ -845,6 +847,25 @@ public class Interface extends GenericObject
       return ifTypeNames.get(ifType);
    }
 
+   /**
+    * Get object ID of parent interface
+    * 
+    * @return parent interface object ID or 0
+    */
+   public long getParentInterfaceId()
+   {
+      return parentInterfaceId;
+   }
+   
+   /**
+    * Get parent interface object
+    * 
+    * @return parent interface object or null
+    */
+   public Interface getParentInterface()
+   {
+      return session.findObjectById(parentInterfaceId, Interface.class);
+   }
 
    /* (non-Javadoc)
     * @see org.netxms.client.objects.AbstractObject#getStrings()

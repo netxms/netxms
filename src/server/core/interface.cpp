@@ -28,6 +28,7 @@
  */
 Interface::Interface() : NetObj()
 {
+   m_parentInterfaceId = 0;
 	m_flags = 0;
 	nx_strncpy(m_description, m_name, MAX_DB_STRING);
    m_alias[0] = 0;
@@ -65,6 +66,7 @@ Interface::Interface() : NetObj()
  */
 Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask) : NetObj()
 {
+   m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
    if (addrList.isLoopbackOnly())
 		m_flags |= IF_LOOPBACK;
@@ -114,6 +116,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	else
 		m_flags = 0;
 
+   m_parentInterfaceId = 0;
    nx_strncpy(m_name, name, MAX_OBJECT_NAME);
    nx_strncpy(m_description, descr, MAX_DB_STRING);
    m_alias[0] = 0;
@@ -153,7 +156,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
  */
 Interface::~Interface()
 {
-   safe_free(m_ifTableSuffix);
+   free(m_ifTableSuffix);
 }
 
 /**
@@ -186,7 +189,8 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
-      _T("oper_state,peer_proto,alias,mtu,speed,iftable_suffix FROM interfaces WHERE id=?"));
+      _T("oper_state,peer_proto,alias,mtu,speed,parent_iface,")
+      _T("iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -221,9 +225,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		DBGetField(hResult, 0, 17, m_alias, MAX_DB_STRING);
 		m_mtu = DBGetFieldULong(hResult, 0, 18);
       m_speed = DBGetFieldUInt64(hResult, 0, 19);
+      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 20);
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 20, suffixText, 128);
+      DBGetField(hResult, 0, 21, suffixText, 128);
       StrStrip(suffixText);
       if (suffixText[0] == 0)
       {
@@ -347,15 +352,17 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
 			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
 			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
-         _T("peer_proto=?,alias=?,mtu=?,speed=?,iftable_suffix=? WHERE id=?"));
+         _T("peer_proto=?,alias=?,mtu=?,speed=?,parent_iface=?,")
+         _T("iftable_suffix=? WHERE id=?"));
 	}
    else
 	{
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
 			_T("flags,required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,iftable_suffix,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,")
+         _T("parent_iface,iftable_suffix,id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -383,16 +390,17 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
 	DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
+   DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
    if (m_ifTableSuffixLen > 0)
    {
       TCHAR buffer[128];
-      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
    }
    else
    {
-	   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+	   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
    }
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1019,6 +1027,7 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
    pMsg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
+   pMsg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
 }
 
 /**

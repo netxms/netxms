@@ -86,6 +86,7 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
 	if (chassisTable != NULL)
 	{
+	   // Update slot/port for physical interfaces
       for(int i = 0; i < ifList->size(); i++)
       {
          InterfaceInfo *iface = ifList->get(i);
@@ -109,6 +110,32 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
          iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
          iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
       }
+
+      // Attach logical interfaces to physical
+      for(int i = 0; i < ifList->size(); i++)
+      {
+         InterfaceInfo *iface = ifList->get(i);
+         if (iface->type != IFTYPE_PROP_VIRTUAL)
+            continue;
+
+         SNMP_ObjectId oid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.2636.3.3.2.1.1"));
+         oid.extend(iface->index);
+         int slot = chassisTable->getAsInt32(oid);
+
+         oid.changeElement(oid.length() - 2, 2);
+         int pic = chassisTable->getAsInt32(oid);
+
+         oid.changeElement(oid.length() - 2, 3);
+         int port = chassisTable->getAsInt32(oid);
+
+         if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
+            continue;
+
+         InterfaceInfo *parent = ifList->findByPhyPosition(slot - 1, port - 1);
+         if (parent != NULL)
+            iface->parentIndex = parent->index;
+      }
+
       delete chassisTable;
 	}
 	return ifList;

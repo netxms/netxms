@@ -1055,10 +1055,14 @@ bool Node::filterInterface(InterfaceInfo *info)
 
    Interface *iface;
    if (info->name[0] != 0)
+   {
       iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
                                  info->index, info->ipAddrList, info->type, m_zoneId);
+   }
    else
+   {
       iface = new Interface(info->ipAddrList, m_zoneId, false);
+   }
    iface->setMacAddr(info->macAddr, false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setSlotNumber(info->slot);
@@ -3347,6 +3351,26 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             }
          }
       }
+
+      // Set parent interfaces
+      for(int j = 0; j < pIfList->size(); j++)
+      {
+         InterfaceInfo *ifInfo = pIfList->get(j);
+         if (ifInfo->parentIndex != 0)
+         {
+            Interface *parent = findInterfaceByIndex(ifInfo->parentIndex);
+            if (parent != NULL)
+            {
+               Interface *iface = findInterfaceByIndex(ifInfo->index);
+               if (iface != NULL)
+               {
+                  iface->setParentInterface(parent->getId());
+                  nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): set sub-interface: %s [%d] -> %s [%d]"),
+                           m_name, m_id, parent->getName(), parent->getId(), iface->getName(), iface->getId());
+               }
+            }
+         }
+      }
    }
    else if (!(m_flags & NF_REMOTE_AGENT))    /* pIfList == NULL */
    {
@@ -3354,7 +3378,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       UINT32 dwCount;
 
       sendPollerMsg(rqid, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
-      DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
+      nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
       if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)

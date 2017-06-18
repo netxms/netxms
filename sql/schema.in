@@ -402,6 +402,7 @@ CREATE TABLE interfaces
 (
   id integer not null,
   node_id integer not null,
+  parent_iface integer not null,
   flags integer not null,
   if_type integer not null,
   if_index integer not null,

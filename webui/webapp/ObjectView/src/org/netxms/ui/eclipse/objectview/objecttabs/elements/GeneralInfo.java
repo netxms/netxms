@@ -101,6 +101,9 @@ public class GeneralInfo extends TableElement
             break;
 			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
+				Interface parentIface = iface.getParentInterface();
+				if (parentIface != null)
+	            addPair("Parent interface", parentIface.getObjectName());
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
 				String typeName = iface.getIfTypeName();
 				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType())); //$NON-NLS-1$

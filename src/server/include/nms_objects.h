@@ -828,6 +828,7 @@ class Cluster;
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
+   UINT32 m_parentInterfaceId;
    UINT32 m_index;
    BYTE m_macAddr[MAC_ADDR_LENGTH];
    InetAddressList m_ipAddressList;
@@ -888,6 +889,7 @@ public:
 
    Node *getParentNode();
    UINT32 getParentNodeId();
+   UINT32 getParentInterfaceId() const { return m_parentInterfaceId; }
 
    const InetAddressList *getIpAddressList() { return &m_ipAddressList; }
    const InetAddress& getFirstIpAddress();
@@ -923,6 +925,7 @@ public:
    bool isFake() const { return (m_index == 1) &&
                                 (m_type == IFTYPE_OTHER) &&
                                 !_tcscmp(m_name, _T("unknown")); }
+   bool isSubInterface() const { return m_parentInterfaceId != 0; }
 
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }
@@ -944,6 +947,7 @@ public:
 	void setMTU(int mtu) { m_mtu = mtu; setModified(); }
 	void setSpeed(UINT64 speed) { m_speed = speed; setModified(); }
    void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); safe_free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(); unlockProperties(); }
+   void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(); }
 
 	void updateZoneId();
 

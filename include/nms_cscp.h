@@ -1180,6 +1180,7 @@ typedef struct
 #define VID_TUNNEL_GUID             ((UINT32)577)
 #define VID_ORGANIZATION            ((UINT32)578)
 #define VID_TUNNEL_ID               ((UINT32)579)
+#define VID_PARENT_INTERFACE        ((UINT32)580)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
