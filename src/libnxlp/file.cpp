@@ -444,8 +444,27 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	}
 
 	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
+	bool exclusionPeriod = false;
 	while(true)
 	{
+	   if (isExclusionPeriod())
+	   {
+	      if (!exclusionPeriod)
+	      {
+	         exclusionPeriod = true;
+            LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+	      }
+         if (ConditionWait(stopCondition, 30000))
+            break;
+         continue;
+	   }
+
+	   if (exclusionPeriod)
+	   {
+	      exclusionPeriod = false;
+         LogParserTrace(6, _T("LogParser: exclusion period for file \"%s\" ended"), getFileName());
+	   }
+
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) == 0)
 		{
@@ -575,6 +594,13 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
                         }
                      }
 					   }
+					}
+
+					if (isExclusionPeriod())
+					{
+                  LogParserTrace(6, _T("LogParser: closing file \"%s\" because of exclusion period"), fname);
+                  exclusionPeriod = true;
+					   break;
 					}
 				}
 				_close(fh);

@@ -1820,7 +1820,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
             *ptr = 0;
             nPrev = _tcstol(curr, NULL, 10);
             break;
-         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
+         case 'L':  // special case for last day of week in a month (like 5L - last Friday)
             if (bRange || (localTime == NULL))
                return false;  // Range with L is not supported; nL form supported only for day of week
             *ptr = 0;
@@ -1856,6 +1856,44 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 
 check_step:
    return (nValue % nStep) == 0;
+}
+
+/**
+ * Match cron-style schedule
+ */
+bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTime, time_t now)
+{
+   TCHAR value[256];
+
+   // Minute
+   const TCHAR *curr = ExtractWord(schedule, value);
+   if (!MatchScheduleElement(value, currTime->tm_min, 59, currTime, now))
+      return false;
+
+   // Hour
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_hour, 23, currTime, now))
+      return false;
+
+   // Day of month
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now))
+      return false;
+
+   // Month
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, currTime, now))
+      return false;
+
+   // Day of week
+   ExtractWord(curr, value);
+   for(int i = 0; value[i] != 0; i++)
+      if (value[i] == _T('7'))
+         value[i] = _T('0');
+   if (!MatchScheduleElement(value, currTime->tm_wday, 7, currTime, now))
+      return false;
+
+   return true;
 }
 
 /**

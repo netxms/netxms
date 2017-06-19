@@ -267,6 +267,9 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 	UINT32 sourceId = (event != NULL) ? event->getSourceId() : sourceObject;
    NetObj *pObject;
    struct tm *lt;
+#if HAVE_LOCALTIME_R
+   struct tm tmbuffer;
+#endif
    TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
 
@@ -403,12 +406,20 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						if (event != NULL)
 						{
+#if HAVE_LOCALTIME_R
+                     lt = localtime_r(&event->m_timeStamp, &tmbuffer);
+#else
 							lt = localtime(&event->m_timeStamp);
+#endif
 						}
 						else
 						{
 							time_t t = time(NULL);
+#if HAVE_LOCALTIME_R
+                     lt = localtime_r(&t, &tmbuffer);
+#else
 							lt = localtime(&t);
+#endif
 						}
                   _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
                   dwPos = (UINT32)_tcslen(pText);

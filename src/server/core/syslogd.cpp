@@ -119,7 +119,11 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
 
    // Prepare local time structure
    t = time(NULL);
+#if HAVE_LOCALTIME_R
+   localtime_r(&t, &timestamp);
+#else
    memcpy(&timestamp, localtime(&t), sizeof(struct tm));
+#endif
 
    // Month
    for(i = 0; i < 12; i++)

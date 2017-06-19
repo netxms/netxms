@@ -211,6 +211,7 @@ private:
 	TCHAR *m_fileName;
 	int m_fileEncoding;
 	bool m_preallocatedFile;
+	StringList m_exclusionSchedules;
 	TCHAR *m_name;
 	CODE_TO_TEXT *m_eventNameList;
 	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
@@ -228,6 +229,8 @@ private:
 	const TCHAR *checkContext(LogParserRule *rule);
 	void trace(int level, const TCHAR *format, ...);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
+
+	bool isExclusionPeriod();
 
    const LogParserRule *findRuleByName(const TCHAR *name) const;
 
@@ -274,6 +277,8 @@ public:
 	void setEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
 	void setEventNameResolver(bool (*cb)(const TCHAR *, UINT32 *)) { m_eventResolver = cb; }
 	UINT32 resolveEventName(const TCHAR *name, UINT32 defVal = 0);
+
+   void addExclusionSchedule(const TCHAR *schedule) { m_exclusionSchedules.add(schedule); }
 
 	void addMacro(const TCHAR *name, const TCHAR *value);
 	const TCHAR *getMacro(const TCHAR *name);

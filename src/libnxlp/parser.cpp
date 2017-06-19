@@ -32,22 +32,27 @@ static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 /**
  * XML parser state codes
  */
-#define XML_STATE_INIT        -1
-#define XML_STATE_END         -2
-#define XML_STATE_ERROR       -255
-#define XML_STATE_PARSER      0
-#define XML_STATE_RULES       1
-#define XML_STATE_RULE        2
-#define XML_STATE_MATCH       3
-#define XML_STATE_EVENT       4
-#define XML_STATE_FILE        5
-#define XML_STATE_ID          6
-#define XML_STATE_LEVEL       7
-#define XML_STATE_SOURCE      8
-#define XML_STATE_CONTEXT     9
-#define XML_STATE_MACROS      10
-#define XML_STATE_MACRO       11
-#define XML_STATE_DESCRIPTION 12
+enum ParserState
+{
+   XML_STATE_INIT,
+   XML_STATE_END,
+   XML_STATE_ERROR,
+   XML_STATE_PARSER,
+   XML_STATE_RULES,
+   XML_STATE_RULE,
+   XML_STATE_MATCH,
+   XML_STATE_EVENT,
+   XML_STATE_FILE,
+   XML_STATE_ID,
+   XML_STATE_LEVEL,
+   XML_STATE_SOURCE,
+   XML_STATE_CONTEXT,
+   XML_STATE_MACROS,
+   XML_STATE_MACRO,
+   XML_STATE_DESCRIPTION,
+   XML_STATE_EXCLUSION_SCHEDULES,
+   XML_STATE_EXCLUSION_SCHEDULE
+};
 
 /**
  * XML parser state for creating LogParser object from XML
@@ -55,7 +60,7 @@ static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 struct XML_PARSER_STATE
 {
 	LogParser *parser;
-	int state;
+	ParserState state;
 	String regexp;
 	String event;
 	String file;
@@ -74,6 +79,7 @@ struct XML_PARSER_STATE
 	String errorText;
 	String macroName;
 	String macro;
+	String schedule;
 	bool invertedRule;
 	bool breakFlag;
 	int repeatCount;
@@ -82,7 +88,7 @@ struct XML_PARSER_STATE
 
 	XML_PARSER_STATE() : encodings(4, 4), preallocFlags(4, 4)
 	{
-      state = -1;
+      state = XML_STATE_INIT;
       parser = NULL;
 	   invertedRule = false;
 	   breakFlag = false;
@@ -560,6 +566,14 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_DESCRIPTION;
 	}
+   else if (!strcmp(name, "exclusionSchedules"))
+   {
+      ps->state = XML_STATE_EXCLUSION_SCHEDULES;
+   }
+   else if (!strcmp(name, "schedule"))
+   {
+      ps->state = XML_STATE_EXCLUSION_SCHEDULE;
+   }
 	else
 	{
 		ps->state = XML_STATE_ERROR;
@@ -690,6 +704,15 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
+   else if (!strcmp(name, "exclusionSchedules"))
+   {
+      ps->state = XML_STATE_PARSER;
+   }
+   else if (!strcmp(name, "schedule"))
+   {
+      ps->parser->addExclusionSchedule(ps->schedule);
+      ps->state = XML_STATE_EXCLUSION_SCHEDULES;
+   }
 }
 
 /**
@@ -728,6 +751,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		case XML_STATE_MACRO:
 			ps->macro.appendMBString(s, len, CP_UTF8);
 			break;
+		case XML_STATE_EXCLUSION_SCHEDULE:
+         ps->schedule.appendMBString(s, len, CP_UTF8);
+         break;
 		default:
 			break;
 	}
@@ -857,4 +883,28 @@ int LogParser::getCharSize() const
       default:
          return 1;
    }
+}
+
+/**
+ * Check for exclusion period
+ */
+bool LogParser::isExclusionPeriod()
+{
+   if (m_exclusionSchedules.isEmpty())
+      return false;
+
+   localtime(NULL);
+   time_t now = time(NULL);
+   struct tm localTime;
+#if HAVE_LOCALTIME_R
+   localtime_r(&now, &localTime);
+#else
+   memcpy(&localTime, localtime(&now), sizeof(struct tm));
+#endif
+   for(int i = 0; i < m_exclusionSchedules.size(); i++)
+   {
+      if (MatchSchedule(m_exclusionSchedules.get(i), &localTime, now))
+         return true;
+   }
+   return false;
 }

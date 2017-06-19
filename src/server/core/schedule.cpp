@@ -186,17 +186,10 @@ static int ScheduledTaskComparator(const void *e1, const void *e2)
    ScheduledTask * s1 = *((ScheduledTask**)e1);
    ScheduledTask * s2 = *((ScheduledTask**)e2);
 
-   //Executed schedules schould go down
-   if(s1->checkFlag(SCHEDULED_TASK_EXECUTED) != s2->checkFlag(SCHEDULED_TASK_EXECUTED))
+   // Executed schedules should go down
+   if (s1->checkFlag(SCHEDULED_TASK_EXECUTED) != s2->checkFlag(SCHEDULED_TASK_EXECUTED))
    {
-      if(s1->checkFlag(SCHEDULED_TASK_EXECUTED))
-      {
-         return 1;
-      }
-      else
-      {
-         return -1;
-      }
+      return s1->checkFlag(SCHEDULED_TASK_EXECUTED) ? 1 : -1;
    }
 
    //Schedules with execution time 0 should go down, others should be compared
@@ -205,14 +198,7 @@ static int ScheduledTaskComparator(const void *e1, const void *e2)
       return 0;
    }
 
-   if (((s1->getExecutionTime() < s2->getExecutionTime()) && (s1->getExecutionTime() != 0)) || (s2->getExecutionTime() == 0))
-   {
-      return -1;
-   }
-   else
-   {
-      return 1;
-   }
+   return (((s1->getExecutionTime() < s2->getExecutionTime()) && (s1->getExecutionTime() != 0)) || (s2->getExecutionTime() == 0)) ? -1 : 1;
 }
 
 /**
@@ -755,7 +741,11 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
       WatchdogNotify(watchdogId);
       time_t now = time(NULL);
       struct tm currLocal;
+#if HAVE_LOCALTIME_R
+      localtime_r(&now, &currLocal);
+#else
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
+#endif
 
       s_oneTimeScheduleLock.lock();
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
@@ -813,44 +803,6 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 }
 
 /**
- * Checks if it is time to execute cron schedule
- */
-static bool IsTimeToRun(struct tm *currTime, const TCHAR *schedule, time_t currTimestamp)
-{
-   TCHAR value[256];
-
-   // Minute
-   const TCHAR *curr = ExtractWord(schedule, value);
-   if (!MatchScheduleElement(value, currTime->tm_min, 59, NULL))
-      return false;
-
-   // Hour
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_hour, 23, NULL))
-      return false;
-
-   // Day of month
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), NULL))
-      return false;
-
-   // Month
-   curr = ExtractWord(curr, value);
-   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, NULL))
-      return false;
-
-   // Day of week
-   ExtractWord(curr, value);
-   for(int i = 0; value[i] != 0; i++)
-      if (value[i] == _T('7'))
-         value[i] = _T('0');
-   if (!MatchScheduleElement(value, currTime->tm_wday, 7, currTime))
-      return false;
-
-   return true;
-}
-
-/**
  * Wakes up for execution of one time schedule or for recalculation new wake up timestamp
  */
 static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
@@ -862,7 +814,11 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
       WatchdogNotify(watchdogId);
       time_t now = time(NULL);
       struct tm currLocal;
+#if HAVE_LOCALTIME_R
+      localtime_r(&now, &currLocal);
+#else
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
+#endif
 
       s_cronScheduleLock.lock();
       for(int i = 0; i < s_cronSchedules.size(); i++)
@@ -876,7 +832,7 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
             DbgPrintf(3, _T("RecurrentScheduler: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;
          }
-         if (IsTimeToRun(&currLocal, sh->getSchedule(), now))
+         if (MatchSchedule(sh->getSchedule(), &currLocal, now))
          {
             DbgPrintf(7, _T("RecurrentScheduler: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);

@@ -325,9 +325,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
  */
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {   
-   TCHAR buffer[512];
    time_t tTime;
-	struct tm *ptm;
 	BOOL bLocalTime;
 
    if ((argc == 0) || (argc > 3))
@@ -360,19 +358,23 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		bLocalTime = TRUE;
 	}
 
-   ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
+#if HAVE_LOCALTIME_R && HAVE_GMTIME_R
+	struct tm tbuffer;
+   struct tm *ptm = bLocalTime ? localtime_r(&tTime, &tbuffer) : gmtime_r(&tTime, &tbuffer);
+#else
+	struct tm *ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
+#endif
+   TCHAR buffer[512];
    _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
    *ppResult = new NXSL_Value(buffer);   
    
    return 0;
 }
 
-
-//
-// Convert seconds since uptime to string
-// PATCH: by Edgar Chupit
-//
-
+/**
+ * Convert seconds since uptime to string
+ * PATCH: by Edgar Chupit
+ */
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    UINT32 d, h, n;
@@ -549,7 +551,6 @@ static NXSL_TimeClass s_nxslTimeClass;
  */
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	struct tm *p;
 	time_t t;
 
    if (argc == 0)
@@ -568,8 +569,13 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 	}
 
-	p = localtime(&t);
-	*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+#if HAVE_LOCALTIME_R
+   struct tm buffer;
+   struct tm *p = localtime_r(&t, &buffer);
+#else
+   struct tm *p = localtime(&t);
+#endif
+   *ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -578,7 +584,6 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	struct tm *p;
 	time_t t;
 
    if (argc == 0)
@@ -597,7 +602,12 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 	}
 
-	p = gmtime(&t);
+#if HAVE_GMTIME_R
+   struct tm buffer;
+   struct tm *p = gmtime_r(&t, &buffer);
+#else
+   struct tm *p = gmtime(&t);
+#endif
 	*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }

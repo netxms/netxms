@@ -45,7 +45,12 @@ static void SendSyslogRecord(const TCHAR *text)
 		return;
 
 	time_t ts = time(NULL);
+#if HAVE_LOCALTIME_R
+	struct tm tmbuffer;
+   struct tm *now = localtime_r(&ts, &tmbuffer);
+#else
 	struct tm *now = localtime(&ts);
+#endif
 
    char message[1025];
 #ifdef UNICODE

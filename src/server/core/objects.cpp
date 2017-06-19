@@ -1916,7 +1916,12 @@ static void DumpObjectCallback(NetObj *object, void *data)
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"),
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
 	time_t t = object->getTimeStamp();
+#if HAVE_LOCALTIME_R
+	struct tm tmbuffer;
+   struct tm *ltm = localtime_r(&t, &tmbuffer);
+#else
 	struct tm *ltm = localtime(&t);
+#endif
 	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(pCtx, _T("   Last change: %s\n"), dd->buffer);
    switch(object->getObjectClass())

@@ -442,14 +442,14 @@ void DCObject::setStatus(int status, bool generateEvent)
 /**
  * Match schedule to current time
  */
-bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
+bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp)
 {
    TCHAR szValue[256], expandedSchedule[1024];
-   const TCHAR *realSchedule = pszSchedule;
+   const TCHAR *realSchedule = schedule;
 
-   if (_tcslen(pszSchedule) > 4 && !_tcsncmp(pszSchedule, _T("%["), 2))
+   if (_tcslen(schedule) > 4 && !_tcsncmp(schedule, _T("%["), 2))
    {
-      TCHAR *scriptName = _tcsdup(pszSchedule + 2);
+      TCHAR *scriptName = _tcsdup(schedule + 2);
       if (scriptName != NULL)
       {
          bool success = false;
@@ -502,22 +502,22 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
 
    // Minute
    const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_min, 59, NULL))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_min, 59, currLocalTime, currTimestamp))
       return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour, 23, NULL))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_hour, 23, currLocalTime, currTimestamp))
       return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday, GetLastMonthDay(pCurrTime), NULL))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_mday, GetLastMonthDay(currLocalTime), currLocalTime, currTimestamp))
       return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1, 12, NULL))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_mon + 1, 12, currLocalTime, currTimestamp))
       return false;
 
    // Day of week
@@ -525,7 +525,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
    for(int i = 0; szValue[i] != 0; i++)
       if (szValue[i] == _T('7'))
          szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday, 7, pCurrTime))
+   if (!MatchScheduleElement(szValue, currLocalTime->tm_wday, 7, currLocalTime, currTimestamp))
       return false;
 
    // Seconds
@@ -533,9 +533,9 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOO
    ExtractWord(pszCurr, szValue);
    if (szValue[0] != _T('\0'))
    {
-      if (bWithSeconds)
-         *bWithSeconds = TRUE;
-      return MatchScheduleElement(szValue, pCurrTime->tm_sec, 59, NULL, currTimestamp);
+      if (withSeconds != NULL)
+         *withSeconds = true;
+      return MatchScheduleElement(szValue, currLocalTime->tm_sec, 59, currLocalTime, currTimestamp);
    }
 
    return true;
@@ -586,17 +586,22 @@ bool DCObject::isReadyForPolling(time_t currTime)
          if (m_schedules != NULL)
          {
             struct tm tmCurrLocal, tmLastLocal;
+#if HAVE_LOCALTIME_R
+            localtime_r(&currTime, &tmCurrLocal);
+            localtime_r(&m_tLastCheck, &tmLastLocal);
+#else
             memcpy(&tmCurrLocal, localtime(&currTime), sizeof(struct tm));
             memcpy(&tmLastLocal, localtime(&m_tLastCheck), sizeof(struct tm));
+#endif
             result = false;
             for(int i = 0; i < m_schedules->size(); i++)
             {
-               BOOL bWithSeconds = FALSE;
-               if (matchSchedule(&tmCurrLocal, m_schedules->get(i), &bWithSeconds, currTime))
+               bool withSeconds = false;
+               if (matchSchedule(m_schedules->get(i), &withSeconds, &tmCurrLocal, currTime))
                {
                   // TODO: do we have to take care about the schedules with seconds
                   // that trigger polling too often?
-                  if (bWithSeconds || (currTime - m_tLastCheck >= 60) || (tmCurrLocal.tm_min != tmLastLocal.tm_min))
+                  if (withSeconds || (currTime - m_tLastCheck >= 60) || (tmCurrLocal.tm_min != tmLastLocal.tm_min))
                   {
                      result = true;
                      break;
