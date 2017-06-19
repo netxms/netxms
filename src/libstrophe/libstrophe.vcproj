@@ -350,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\crypto.c"
+				>
+			</File>
+			<File
 				RelativePath=".\ctx.c"
 				>
 			</File>
@@ -378,11 +382,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rand.c"
+				>
+			</File>
+			<File
+				RelativePath=".\resolver.c"
+				>
+			</File>
+			<File
 				RelativePath=".\sasl.c"
 				>
 			</File>
 			<File
-				RelativePath=".\snprintf.c"
+				RelativePath=".\scram.c"
+				>
+			</File>
+			<File
+				RelativePath=".\sha1.c"
 				>
 			</File>
 			<File
@@ -399,6 +415,10 @@
 			</File>
 			<File
 				RelativePath=".\util.c"
+				>
+			</File>
+			<File
+				RelativePath=".\uuid.c"
 				>
 			</File>
 		</Filter>
