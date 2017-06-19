@@ -138,7 +138,11 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
     VALUES (33,'68e102a3-58d3-4112-901c-f683356ba662',7944,'Show alarm when interface with expected state UP is administratively disabled',
-        '%m',2,'IF_DOWN_%i_%5','interface = GetInterfaceObject($node, $event-&gt;parameters[5]);&#x0D;&#x0A;&#x0D;&#x0A;// if interface not found or interface expected state is not UP, do not match&#x0D;&#x0A;// otherwize (if interface expected status is UP), match&#x0D;&#x0A;return (interface != null &amp;&amp; interface-&gt;expectedState == 0);&#x0D;&#x0A;',0,EVENT_ALARM_TIMEOUT);
+        '%m',2,'IF_DOWN_%i_%5',
+        'interface = GetInterfaceObject($node, $event->parameters[5]);' CONCAT CRLF CONCAT CRLF CONCAT 
+        '// if interface not found or interface expected state is not UP, do not match' CONCAT CRLF CONCAT 
+        '// otherwise (if interface expected status is UP), match' CONCAT CRLF CONCAT 
+        'return (interface != null && interface->expectedState == 0);',0,EVENT_ALARM_TIMEOUT);
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
     VALUES (34,'68a629ef-c645-49e5-8a7b-c5e79308080e',7944,'Generate alarm when MAC address change detected on interface',
