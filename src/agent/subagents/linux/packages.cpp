@@ -28,16 +28,40 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    const char *command;
    if (access("/bin/rpm", X_OK) == 0)
    {
-		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}|%{VERSION}|%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
+		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}|%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
-		command = "/usr/bin/dpkg-query -W -f '@@@${Status}#${package}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'";
+		command = "/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'";
 	}
 	else
 	{
 		return SYSINFO_RC_UNSUPPORTED;
 	}
+
+   struct utsname un;
+   const char *arch;
+   if (uname(&un) != -1)
+   {
+      if (!strcmp(un.machine, "i686") || !strcmp(un.machine, "i586") || !strcmp(un.machine, "i486") || !strcmp(un.machine, "i386"))
+      {
+         arch = ":i686:i586:i486:i386";
+      }
+      else if (!strcmp(un.machine, "amd64") || !strcmp(un.machine, "x86_64"))
+      {
+         arch = ":amd64:x86_64";
+      }
+      else
+      {
+         memmove(&un.machine[1], un.machine, strlen(un.machine) + 1);
+         un.machine[0] = ':';
+         arch = un.machine;
+      }
+   }
+   else
+   {
+      arch = ":i686:i586:i486:i386";
+   }
 
 	FILE *pipe = popen(command, "r");
 	if (pipe == NULL)
@@ -81,6 +105,19 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 					ptr = NULL;
 				}
 			}
+
+			// Remove architecture from package name if it is the same as
+			// OS architecture or package is architecture-independent
+			if (i == 0)
+			{
+			   char *pa = strrchr(curr, ':');
+			   if (pa != NULL)
+			   {
+			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || (strstr(arch, pa) != NULL))
+			         *pa = 0;
+			   }
+			}
+
 #ifdef UNICODE
 			value->setPreallocated(i, WideStringFromMBString(curr));
 #else
