@@ -281,11 +281,9 @@ ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask) const
 /**
  * Comparator for ConfigEntryList::sortById()
  */
-static int CompareById(const void *p1, const void *p2)
+static int CompareById(const ConfigEntry **e1, const ConfigEntry **e2)
 {
-   ConfigEntry *e1 = *((ConfigEntry **)p1);
-   ConfigEntry *e2 = *((ConfigEntry **)p2);
-   return e1->getId() - e2->getId();
+   return (*e1)->getId() - (*e2)->getId();
 }
 
 /**

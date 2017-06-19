@@ -87,31 +87,32 @@ public:
    ScheduledTask(DB_RESULT hResult, int row);
    ~ScheduledTask();
 
-   UINT32 getId() { return m_id; }
-   const TCHAR *getTaskHandlerId() { return m_taskHandlerId; }
-   const TCHAR *getSchedule() { return m_schedule; }
-   const TCHAR *getParams() { return m_params; }
-   time_t getExecutionTime() { return m_executionTime; }
-   UINT32 getOwner() { return m_owner; }
-   UINT32 getObjectId() { return m_objectId; }
-   UINT32 getFlags() { return m_flags; }
+   UINT32 getId() const { return m_id; }
+   const TCHAR *getTaskHandlerId() const { return m_taskHandlerId; }
+   const TCHAR *getSchedule() const { return m_schedule; }
+   const TCHAR *getParams() const { return m_params; }
+   time_t getExecutionTime() const { return m_executionTime; }
+   UINT32 getOwner() const { return m_owner; }
+   UINT32 getObjectId() const { return m_objectId; }
+   UINT32 getFlags() const { return m_flags; }
 
    void setLastExecutionTime(time_t time) { m_lastExecution = time; };
    void setExecutionTime(time_t time) { m_executionTime = time; }
    void setFlag(UINT32 flag) { m_flags |= flag; }
    void removeFlag(UINT32 flag) { m_flags &= ~flag; }
 
+   void run(SchedulerCallback *callback);
+
    void update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags);
    void update(const TCHAR *taskHandlerId, time_t nextExecution, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags);
 
-   void saveToDatabase(bool newObject);
-   void run(SchedulerCallback *callback);
-   void fillMessage(NXCPMessage *msg);
-   void fillMessage(NXCPMessage *msg, UINT32 base);
+   void saveToDatabase(bool newObject) const;
+   void fillMessage(NXCPMessage *msg) const;
+   void fillMessage(NXCPMessage *msg, UINT32 base) const;
 
-   bool checkFlag(UINT32 flag) { return (m_flags & flag) != 0; }
-   bool isRunning() { return (m_flags & SCHEDULED_TASK_RUNNING) != 0; }
-   bool canAccess(UINT32 userId, UINT64 systemAccess);
+   bool checkFlag(UINT32 flag) const { return (m_flags & flag) != 0; }
+   bool isRunning() const { return (m_flags & SCHEDULED_TASK_RUNNING) != 0; }
+   bool canAccess(UINT32 userId, UINT64 systemAccess) const;
 };
 
 /**

@@ -127,10 +127,9 @@ static bool ResetConnection(PoolConnectionInfo *conn)
 /**
  * Callback for sorting reset list
  */
-static int ResetListSortCallback(const void *e1, const void *e2)
+static int ResetListSortCallback(const PoolConnectionInfo **e1, const PoolConnectionInfo **e2)
 {
-   return ((PoolConnectionInfo *)e1)->usageCount > ((PoolConnectionInfo *)e2)->usageCount ? -1 :
-		(((PoolConnectionInfo *)e1)->usageCount == ((PoolConnectionInfo *)e2)->usageCount ? 0 : 1);
+   return (*e1)->usageCount > (*e2)->usageCount ? -1 : ((*e1)->usageCount == (*e2)->usageCount ? 0 : 1);
 }
 
 /**

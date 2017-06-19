@@ -55,12 +55,12 @@ public:
 	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id);
 	~ConfigEntry();
 
-	ConfigEntry *getNext() { return m_next; }
-	ConfigEntry *getParent() { return m_parent; }
+	ConfigEntry *getNext() const { return m_next; }
+	ConfigEntry *getParent() const { return m_parent; }
 
-	const TCHAR *getName() { return m_name; }
-	int getId() { return m_id; }
-	int getValueCount() { return m_valueCount; }
+	const TCHAR *getName() const { return m_name; }
+	int getId() const { return m_id; }
+	int getValueCount() const { return m_valueCount; }
 	int getConcatenatedValuesLength();
 
 	const TCHAR *getValue(int index = 0);

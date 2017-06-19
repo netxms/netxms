@@ -416,9 +416,9 @@ json_t *ObjectUrl::toJson() const
 /**
  * Distance array sorting callback
  */
-int DistanceSortCallback(const void *obj1, const void *obj2)
+int DistanceSortCallback(const ObjectsDistance **obj1, const ObjectsDistance **obj2)
 {
-   return ((ObjectsDistance *)obj1)->m_distance - ((ObjectsDistance *)obj2)->m_distance;
+   return (*obj1)->m_distance - (*obj2)->m_distance;
 }
 
 /**

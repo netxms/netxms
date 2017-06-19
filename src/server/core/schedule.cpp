@@ -139,11 +139,11 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, con
 /**
  * Save task to database
  */
-void ScheduledTask::saveToDatabase(bool newObject)
+void ScheduledTask::saveToDatabase(bool newObject) const
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt;
 
+   DB_STATEMENT hStmt;
    if (newObject)
    {
 		hStmt = DBPrepare(db,
@@ -158,22 +158,22 @@ void ScheduledTask::saveToDatabase(bool newObject)
                     _T("WHERE id=?"));
    }
 
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_taskHandlerId, DB_BIND_STATIC);
-	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_schedule, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_params, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_executionTime);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_lastExecution);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_owner);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_objectId);
-   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_id);
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_taskHandlerId, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_schedule, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_params, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_executionTime);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_lastExecution);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_owner);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_objectId);
+      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
-	if (hStmt == NULL)
-		return;
-
-   DBExecute(hStmt);
-   DBFreeStatement(hStmt);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 	DBConnectionPoolReleaseConnection(db);
 	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
 }
@@ -181,10 +181,10 @@ void ScheduledTask::saveToDatabase(bool newObject)
 /**
  * Scheduled task comparator (used for task sorting)
  */
-static int ScheduledTaskComparator(const void *e1, const void *e2)
+static int ScheduledTaskComparator(const ScheduledTask **e1, const ScheduledTask **e2)
 {
-   ScheduledTask * s1 = *((ScheduledTask**)e1);
-   ScheduledTask * s2 = *((ScheduledTask**)e2);
+   const ScheduledTask *s1 = *e1;
+   const ScheduledTask *s2 = *e2;
 
    // Executed schedules should go down
    if (s1->checkFlag(SCHEDULED_TASK_EXECUTED) != s2->checkFlag(SCHEDULED_TASK_EXECUTED))
@@ -235,7 +235,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
 /**
  * Fill NXCP message with task data
  */
-void ScheduledTask::fillMessage(NXCPMessage *msg)
+void ScheduledTask::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_SCHEDULED_TASK_ID, m_id);
    msg->setField(VID_TASK_HANDLER, m_taskHandlerId);
@@ -252,7 +252,7 @@ void ScheduledTask::fillMessage(NXCPMessage *msg)
 /**
  * Fill NXCP message with task data
  */
-void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base)
+void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base) const
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_taskHandlerId);
@@ -269,7 +269,7 @@ void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base)
 /**
  * Check if user can access this scheduled task
  */
-bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess)
+bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess) const
 {
    if (systemAccess & SYSTEM_ACCESS_ALL_SCHEDULED_TASKS)
       return true;

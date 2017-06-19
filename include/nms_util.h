@@ -723,6 +723,13 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *object) { Array::unlink((void *)object); }
 
+   void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
+   T *find(const T *key, int (*cb)(const T **, const T **)) const
+   {
+      T **result = (T **)Array::find(&key, (int (*)(const void *, const void *))cb);
+      return (result != NULL) ? *result : NULL;
+   }
+
    Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
 };
 
