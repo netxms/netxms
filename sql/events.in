@@ -962,10 +962,98 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   2) Description'
    );
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_UP, 'SYS_IF_EXPECTED_STATE_UP', '4997c3f5-b332-4077-8e99-983142f0e193',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to UP',
+		'Generated when interface expected state set to UP.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_DOWN, 'SYS_IF_EXPECTED_STATE_DOWN', '75de536c-4861-4f19-ba56-c43d814431d7',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to DOWN',
+		'Generated when interface expected state set to DOWN.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_IF_EXPECTED_STATE_IGNORE, 'SYS_IF_EXPECTED_STATE_IGNORE', '0e488c0e-3340-4e02-ad96-b999b8392e55',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Expected state for interface "%2" set to IGNORE',
+		'Generated when interface expected state set to IGNORE.' CONCAT CRLF CONCAT
+		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Interface index' CONCAT CRLF CONCAT
+		'   2) Interface name'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ROUTING_LOOP_DETECTED, 'SYS_ROUTING_LOOP_DETECTED', '98276f42-dc85-41a5-b449-6ba83d1a71b7',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Routing loop detected for destination %3 (selected route %6/%7 via %9)',
+		'Generated when server detects routing loop during network path trace.' CONCAT CRLF CONCAT
+		'Source of the event is node which routes packet back to already passed hop.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Protocol (IPv4 or IPv6)' CONCAT CRLF CONCAT
+		'   2) Path trace destination node ID' CONCAT CRLF CONCAT
+		'   3) Path trace destination address' CONCAT CRLF CONCAT
+		'   4) Path trace source node ID' CONCAT CRLF CONCAT
+		'   5) Path trace source node address' CONCAT CRLF CONCAT
+		'   6) Routing prefix (subnet address)' CONCAT CRLF CONCAT
+		'   7) Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
+		'   8) Next hop node ID' CONCAT CRLF CONCAT
+		'   9) Next hop address'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_PACKAGE_INSTALLED, 'SYS_PACKAGE_INSTALLED', '92e5cf98-a415-4414-9ad8-d155dac77e96',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Package %1 %2 installed',
+		'Generated when new software package is found.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Package name' CONCAT CRLF CONCAT
+		'   2) Package version'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_PACKAGE_UPDATED, 'SYS_PACKAGE_UPDATED', '9d5878c1-525e-4cab-8f02-2a6c46d7fc36',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Package %1 updated from %3 to %2',
+		'Generated when software package version change is detected.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Package name' CONCAT CRLF CONCAT
+		'   2) New package version' CONCAT CRLF CONCAT
+		'   3) Old package version'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_PACKAGE_REMOVED, 'SYS_PACKAGE_REMOVED', '6ada4ea4-43e4-4444-9d19-ef7366110bb9',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Package %1 %2 removed',
+		'Generated when software package removal is detected.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Package name' CONCAT CRLF CONCAT
+		'   2) Last known package version'
+	);
+
 /*
 ** SNMP traps
 */
-
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_UNMATCHED_TRAP, 'SNMP_UNMATCHED_TRAP', 'fc3613f7-d151-4221-9acd-d28b6f804335',
@@ -1038,7 +1126,6 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 ** Following is a set of predefined events for thresholds
 ** These events can occupy ID space 4000 ... 4999
 */
-
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		4000, 'DC_HIGH_CPU_UTIL', 'a1063661-6992-4536-bb11-38e40d72537f',
@@ -1146,55 +1233,4 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Custom data collection threshold event.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		EVENT_IF_EXPECTED_STATE_UP, 'SYS_IF_EXPECTED_STATE_UP', '4997c3f5-b332-4077-8e99-983142f0e193',
-		EVENT_SEVERITY_NORMAL, 1,
-		'Expected state for interface "%2" set to UP',
-		'Generated when interface expected state set to UP.' CONCAT CRLF CONCAT
-		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		EVENT_IF_EXPECTED_STATE_DOWN, 'SYS_IF_EXPECTED_STATE_DOWN', '75de536c-4861-4f19-ba56-c43d814431d7',
-		EVENT_SEVERITY_NORMAL, 1,
-		'Expected state for interface "%2" set to DOWN',
-		'Generated when interface expected state set to DOWN.' CONCAT CRLF CONCAT
-		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		EVENT_IF_EXPECTED_STATE_IGNORE, 'SYS_IF_EXPECTED_STATE_IGNORE', '0e488c0e-3340-4e02-ad96-b999b8392e55',
-		EVENT_SEVERITY_NORMAL, 1,
-		'Expected state for interface "%2" set to IGNORE',
-		'Generated when interface expected state set to IGNORE.' CONCAT CRLF CONCAT
-		'Please note that source of event is node, not an interface itself.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Interface index' CONCAT CRLF CONCAT
-		'   2) Interface name'
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		EVENT_ROUTING_LOOP_DETECTED, 'SYS_ROUTING_LOOP_DETECTED', '98276f42-dc85-41a5-b449-6ba83d1a71b7',
-		EVENT_SEVERITY_MAJOR, 1,
-		'Routing loop detected for destination %3 (selected route %6/%7 via %9)',
-		'Generated when server detects routing loop during network path trace.' CONCAT CRLF CONCAT
-		'Source of the event is node which routes packet back to already passed hop.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Protocol (IPv4 or IPv6)' CONCAT CRLF CONCAT
-		'   2) Path trace destination node ID' CONCAT CRLF CONCAT
-		'   3) Path trace destination address' CONCAT CRLF CONCAT
-		'   4) Path trace source node ID' CONCAT CRLF CONCAT
-		'   5) Path trace source node address' CONCAT CRLF CONCAT
-		'   6) Routing prefix (subnet address)' CONCAT CRLF CONCAT
-		'   7) Routing prefix length (subnet mask length)' CONCAT CRLF CONCAT
-		'   8) Next hop node ID' CONCAT CRLF CONCAT
-		'   9) Next hop address'
 	);

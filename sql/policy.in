@@ -160,6 +160,10 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (38,'b8abb037-ab4a-4e05-adc4-9425ce440e4a',7944,'Generate alarm when a routing loop is detected',
         '%m',5,'ROUTING_LOOP_%i','',0,EVENT_ALARM_TIMEOUT);
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event)
+    VALUES (39,'2bb3df47-482b-4e4b-9b49-8c72c6b33011',7944,'Generate alarm on software package changes',
+        '%m',5,'SW_PKG_%i_%<name>','',0,EVENT_ALARM_TIMEOUT);
+
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -207,3 +211,6 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (36,EVENT_INTERFACE_DE
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_IF_MASK_CHANGED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (37,EVENT_IF_IPADDR_DELETED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (38,EVENT_ROUTING_LOOP_DETECTED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_PACKAGE_INSTALLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_PACKAGE_UPDATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (39,EVENT_PACKAGE_REMOVED);

@@ -379,7 +379,10 @@ public:
 	SoftwarePackage(Table *table, int row);
 	~SoftwarePackage();
 
-	void fillMessage(NXCPMessage *msg, UINT32 baseId);
+	void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+
+	const TCHAR *getName() const { return m_name; }
+	const TCHAR *getVersion() const { return m_version; }
 };
 
 /**
@@ -1547,6 +1550,7 @@ protected:
 	bool confPollAgent(UINT32 dwRqId);
 	bool confPollSnmp(UINT32 dwRqId);
 	NodeType detectNodeType();
+	bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
 	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);

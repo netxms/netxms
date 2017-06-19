@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,6 +141,9 @@
 #define EVENT_IF_EXPECTED_STATE_DOWN       84
 #define EVENT_IF_EXPECTED_STATE_IGNORE     85
 #define EVENT_ROUTING_LOOP_DETECTED        86
+#define EVENT_PACKAGE_INSTALLED            87
+#define EVENT_PACKAGE_UPDATED              88
+#define EVENT_PACKAGE_REMOVED              89
 
 #define EVENT_SNMP_UNMATCHED_TRAP          500
 #define EVENT_SNMP_COLD_START              501

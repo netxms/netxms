@@ -78,7 +78,7 @@ SoftwarePackage::~SoftwarePackage()
 /**
  * Fill NXCP message with package data
  */
-void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	UINT32 varId = baseId;
 	msg->setField(varId++, CHECK_NULL_EX(m_name));

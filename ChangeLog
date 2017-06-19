@@ -4,6 +4,7 @@
 
 - Improved audit logging
 - Improved data reconciliation between agent and server
+- Server detects changes in installed packages during configuration poll
 - Fixed excessive CPU usage by agent on AIX
 - NXSL:
 	- New methods for arrays: append, insert, pop, push, remove

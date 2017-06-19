@@ -2183,6 +2183,89 @@ void Node::updatePrimaryIpAddr()
 }
 
 /**
+ * Comparator for package names
+ */
+static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+{
+   return _tcscmp((*p1)->getName(), (*p2)->getName());
+}
+
+/**
+ * Update list of software packages for node
+ */
+bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
+{
+   if (!(m_flags & NF_IS_NATIVE_AGENT))
+      return false;
+
+   poller->setStatus(_T("software check"));
+   sendPollerMsg(requestId, _T("Reading list of installed software packages\r\n"));
+
+   Table *table;
+   if (getTableFromAgent(_T("System.InstalledProducts"), &table) != DCE_SUCCESS)
+   {
+      sendPollerMsg(requestId, POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
+      return false;
+   }
+
+   ObjectArray<SoftwarePackage> *packages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
+   for(int i = 0; i < table->getNumRows(); i++)
+      packages->add(new SoftwarePackage(table, i));
+   packages->sort(PackageNameComparator);
+   delete table;
+   sendPollerMsg(requestId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
+
+   lockProperties();
+   if (m_softwarePackages != NULL)
+   {
+      // Check for removed and updated packages
+      for(int i = 0; i < m_softwarePackages->size(); i++)
+      {
+         SoftwarePackage *p = m_softwarePackages->get(i);
+         SoftwarePackage *np = (SoftwarePackage *)packages->find(p, PackageNameComparator);
+         if (np != NULL)
+         {
+            if (_tcscmp(p->getVersion(), np->getVersion()))
+            {
+               nxlog_debug(5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), p->getVersion(), np->getVersion());
+               sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), p->getVersion(), np->getVersion());
+
+               static const TCHAR *names[] = { _T("name"), _T("version"), _T("previousVersion") };
+               PostEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", names, p->getName(), np->getVersion(), p->getVersion());
+            }
+         }
+         else
+         {
+            nxlog_debug(5, _T("ConfPoll(%s): package %s removed (last installed version was %s)"), m_name, p->getName(), p->getVersion());
+            sendPollerMsg(requestId, _T("   Package %s removed (last installed version was %s)\r\n"), p->getName(), p->getVersion());
+
+            static const TCHAR *names[] = { _T("name"), _T("version") };
+            PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", names, p->getName(), p->getVersion());
+         }
+      }
+
+      // Check for new packages
+      for(int i = 0; i < packages->size(); i++)
+      {
+         SoftwarePackage *p = packages->get(i);
+         if (m_softwarePackages->find(p, PackageNameComparator) == NULL)
+         {
+            nxlog_debug(5, _T("ConfPoll(%s): new package %s (version %s)"), m_name, p->getName(), p->getVersion());
+            sendPollerMsg(requestId, _T("   New package %s (version %s)\r\n"), p->getName(), p->getVersion());
+
+            static const TCHAR *names[] = { _T("name"), _T("version") };
+            PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", names, p->getName(), p->getVersion());
+         }
+      }
+
+      delete m_softwarePackages;
+   }
+   m_softwarePackages = packages;
+   unlockProperties();
+   return true;
+}
+
+/**
  * Entry point for configuration poller
  */
 void Node::configurationPoll(PollerInfo *poller)
@@ -2224,7 +2307,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_name);
-   DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -2268,7 +2351,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
       {
-         DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
+         nxlog_debug(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
          if (!((m_flags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && m_ipAddress.isValidUnicast())
          {
             SNMP_Transport *pTransport = new SNMP_UDPTransport;
@@ -2342,31 +2425,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 
       applyUserTemplates();
       updateContainerMembership();
-
-      // Get list of installed products
-      if (m_flags & NF_IS_NATIVE_AGENT)
-      {
-         poller->setStatus(_T("software check"));
-         sendPollerMsg(dwRqId, _T("Reading list of installed software packages\r\n"));
-
-         Table *table;
-         if (getTableFromAgent(_T("System.InstalledProducts"), &table) == DCE_SUCCESS)
-         {
-            lockProperties();
-            delete m_softwarePackages;
-            m_softwarePackages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
-            for(int i = 0; i < table->getNumRows(); i++)
-               m_softwarePackages->add(new SoftwarePackage(table, i));
-            unlockProperties();
-            delete table;
-            sendPollerMsg(dwRqId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), m_softwarePackages->size());
-         }
-         else
-         {
-            delete_and_null(m_softwarePackages);
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("Unable to get information about installed software packages\r\n"));
-         }
-      }
+      updateSoftwarePackages(poller, dwRqId);
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)

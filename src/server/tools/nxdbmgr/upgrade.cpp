@@ -747,6 +747,60 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V455 to V456
+ */
+static BOOL H_UpgradeFromV455(int currVersion, int newVersion)
+{
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_PACKAGE_INSTALLED, _T("SYS_PACKAGE_INSTALLED"),
+         SEVERITY_NORMAL, EF_LOG, _T("92e5cf98-a415-4414-9ad8-d155dac77e96"),
+         _T("Package %1 %2 installed"),
+         _T("Generated when new software package is found.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Package name\r\n")
+         _T("   2) Package version"))
+      );
+
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_PACKAGE_UPDATED, _T("SYS_PACKAGE_UPDATED"),
+         SEVERITY_NORMAL, EF_LOG, _T("9d5878c1-525e-4cab-8f02-2a6c46d7fc36"),
+         _T("Package %1 updated from %3 to %2"),
+         _T("Generated when software package version change is detected.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Package name\r\n")
+         _T("   2) New package version\r\n")
+         _T("   3) Old package version"))
+      );
+
+   CHK_EXEC(
+      CreateEventTemplate(EVENT_PACKAGE_REMOVED, _T("SYS_PACKAGE_REMOVED"),
+         SEVERITY_NORMAL, EF_LOG, _T("6ada4ea4-43e4-4444-9d19-ef7366110bb9"),
+         _T("Package %1 %2 removed"),
+         _T("Generated when software package removal is detected.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Package name\r\n")
+         _T("   2) Last known package version"))
+      );
+
+   int ruleId = NextFreeEPPruleID();
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'2bb3df47-482b-4e4b-9b49-8c72c6b33011',7944,'Generate alarm on software package changes','%%m',5,'SW_PKG_%%i_%%<name>','',0,%d)"),
+                           ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_PACKAGE_INSTALLED);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_PACKAGE_UPDATED);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 256, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_PACKAGE_REMOVED);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetSchemaVersion(456));
+   return TRUE;
+}
+
+/**
  * Upgrade from V454 to V455
  */
 static BOOL H_UpgradeFromV454(int currVersion, int newVersion)
@@ -11970,6 +12024,7 @@ static struct
    { 452, 453, H_UpgradeFromV452 },
    { 453, 454, H_UpgradeFromV453 },
    { 454, 455, H_UpgradeFromV454 },
+   { 455, 456, H_UpgradeFromV455 },
    { 0, 0, NULL }
 };
 
