@@ -129,12 +129,16 @@ LogParser::LogParser()
 /**
  * Parser copy constructor
  */
-LogParser::LogParser(LogParser *src)
+LogParser::LogParser(const LogParser *src)
 {
    int count = src->m_rules->size();
    m_rules = new ObjectArray<LogParserRule>(count, 16, true);
 	for(int i = 0; i < count; i++)
 		m_rules->add(new LogParserRule(src->m_rules->get(i), this));
+
+	m_macros.addAll(&src->m_macros);
+	m_contexts.addAll(&src->m_contexts);
+	m_exclusionSchedules.addAll(&src->m_exclusionSchedules);
 
 	m_cb = src->m_cb;
 	m_userArg = src->m_userArg;
@@ -597,7 +601,7 @@ static void EndElement(void *userData, const char *name)
 	else if (!strcmp(name, "file"))
 	{
 		ps->files.add(ps->file);
-		ps->file = _T("");
+		ps->file.clear();
 		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "macros"))
@@ -607,6 +611,8 @@ static void EndElement(void *userData, const char *name)
 	else if (!strcmp(name, "macro"))
 	{
 		ps->parser->addMacro(ps->macroName, ps->macro);
+		ps->macroName.clear();
+		ps->macro.clear();
 		ps->state = XML_STATE_MACROS;
 	}
 	else if (!strcmp(name, "rules"))
@@ -711,6 +717,7 @@ static void EndElement(void *userData, const char *name)
    else if (!strcmp(name, "schedule"))
    {
       ps->parser->addExclusionSchedule(ps->schedule);
+      ps->schedule.clear();
       ps->state = XML_STATE_EXCLUSION_SCHEDULES;
    }
 }
@@ -893,7 +900,6 @@ bool LogParser::isExclusionPeriod()
    if (m_exclusionSchedules.isEmpty())
       return false;
 
-   localtime(NULL);
    time_t now = time(NULL);
    struct tm localTime;
 #if HAVE_LOCALTIME_R

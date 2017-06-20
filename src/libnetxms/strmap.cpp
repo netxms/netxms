@@ -70,7 +70,7 @@ StringMap& StringMap::operator =(const StringMap &src)
 /**
  * Add all values from another string map
  */
-void StringMap::addAll(StringMap *src)
+void StringMap::addAll(const StringMap *src)
 {
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src->m_data, entry, tmp)

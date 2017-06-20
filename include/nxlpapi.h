@@ -249,7 +249,7 @@ private:
 
 public:
 	LogParser();
-	LogParser(LogParser *src);
+	LogParser(const LogParser *src);
 	~LogParser();
 
 	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1,

@@ -884,7 +884,7 @@ public:
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
 	void set(const TCHAR *key, UINT32 value);
 
-   void addAll(StringMap *src);
+   void addAll(const StringMap *src);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    INT32 getInt32(const TCHAR *key, INT32 defaultValue) const;
