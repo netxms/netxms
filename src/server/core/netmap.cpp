@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -735,20 +735,21 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       NetworkMapLink *link = m_links->get(i);
       if (!link->checkFlagSet(AUTO_GENERATED))
          continue;
+
       UINT32 objID1 = objectIdFromElementId(link->getElement1());
       UINT32 objID2 = objectIdFromElementId(link->getElement2());
+
       bool linkExists = false;
       if (objects->isLinkExist(objID1, objID2))
       {
          linkExists = true;
-         break;
       }
-      if (objects->isLinkExist(objID2, objID1))
+      else if (objects->isLinkExist(objID2, objID1))
       {
          link->swap();
          linkExists = true;
-         break;
       }
+
       if (!linkExists)
       {
          DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_name, link->getElement1(), link->getElement2());
@@ -764,13 +765,8 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       NetworkMapElement *e = m_elements->get(i);
       if ((e->getType() != MAP_ELEMENT_OBJECT) || !(e->getFlags() & AUTO_GENERATED))
          continue;
-      bool objectExists = false;
-      if (objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
-      {
-         objectExists = true;
-         break;
-      }
-      if (!objectExists)
+
+      if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
       {
          DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_name, e->getId());
          m_elements->remove(i);
