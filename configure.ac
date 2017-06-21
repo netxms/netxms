@@ -421,7 +421,7 @@ AC_ARG_WITH(mysql,
 			MYSQL_LD_RUN_PATH="$__dir$"    
 			MYSQL_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql"; then
+		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql" "/usr/include/mariadb"; then
 			MYSQL_CPPFLAGS="-I$__dir"
 		fi
 	fi
@@ -2832,7 +2832,12 @@ if test $? = 0; then
 	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your MySQL client installation]))
 
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
-		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
+		[
+		 	AC_CHECK_LIB(mariadb, mysql_init, [MYSQL_LIBS="-lmariadb"],
+				[
+		 			AC_MSG_ERROR(libmysqlclient or libmariadb is requred for MySQL support)
+				])
+		])
 
 	OLD_LIBS="$LIBS"
 	LIBS="$LIBS $MYSQL_LIBS"
