@@ -429,6 +429,30 @@ AC_ARG_WITH(mysql,
 	DBDRIVER_SELECTED="yes"
 fi ])
 
+AC_ARG_WITH(mariadb,
+[AS_HELP_STRING(--with-mariadb,build MariaDB database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib"; then
+			MARIADB_LD_RUN_PATH="$__dir$"    
+			MARIADB_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include"; then
+			MARIADB_CPPFLAGS="-I$__dir"
+		fi
+	else
+		if find_existing_dir "/usr/local/mariadb/lib"; then
+			MARIADB_LD_RUN_PATH="$__dir$"    
+			MARIADB_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb"; then
+			MARIADB_CPPFLAGS="-I$__dir"
+		fi
+	fi
+	COMPONENTS="$COMPONENTS mariadb"
+	DBDRIVER_SELECTED="yes"
+fi ])
+
 AC_ARG_WITH(pgsql,
 [AS_HELP_STRING(--with-pgsql,build PostgreSQL database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -658,7 +682,7 @@ AC_ARG_ENABLE(64bit,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
+	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
@@ -893,6 +917,11 @@ check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS mysql"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mysql"
+fi
+
+check_substr "$COMPONENTS" "mariadb"
+if test $? = 0; then
+	DB_DRIVERS="$DB_DRIVERS mariadb"
 fi
 
 check_substr "$COMPONENTS" "pgsql"
@@ -2833,10 +2862,7 @@ if test $? = 0; then
 
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[
-		 	AC_CHECK_LIB(mariadb, mysql_init, [MYSQL_LIBS="-lmariadb"],
-				[
-		 			AC_MSG_ERROR(libmysqlclient or libmariadb is requred for MySQL support)
-				])
+ 			AC_MSG_ERROR(libmysqlclient is requred for MySQL support)
 		])
 
 	OLD_LIBS="$LIBS"
@@ -2848,6 +2874,35 @@ if test $? = 0; then
 	LDFLAGS="$OLD_LDFLAGS"
 	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
+# MariaDB
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "mariadb"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $MARIADB_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $MARIADB_LDFLAGS"
+	if test "x$MARIADB_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${MARIADB_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
+	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your MariaDB client installation]))
+
+ 	AC_CHECK_LIB(mariadb, mysql_init, [MARIADB_LIBS="-lmariadb"],
+		[
+ 			AC_MSG_ERROR(libmariadb is requred for MariaDB support)
+		])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
@@ -3315,6 +3370,9 @@ AC_SUBST(BUILD_SDK)
 AC_SUBST(MYSQL_CPPFLAGS)
 AC_SUBST(MYSQL_LDFLAGS)
 AC_SUBST(MYSQL_LIBS)
+AC_SUBST(MARIADB_CPPFLAGS)
+AC_SUBST(MARIADB_LDFLAGS)
+AC_SUBST(MARIADB_LIBS)
 AC_SUBST(PGSQL_CPPFLAGS)
 AC_SUBST(PGSQL_LDFLAGS)
 AC_SUBST(PGSQL_LIBS)
@@ -3481,6 +3539,7 @@ AC_CONFIG_FILES([
 	src/db/dbdrv/db2/Makefile
 	src/db/dbdrv/informix/Makefile
 	src/db/dbdrv/odbc/Makefile
+	src/db/dbdrv/mariadb/Makefile
 	src/db/dbdrv/mssql/Makefile
 	src/db/dbdrv/mysql/Makefile
 	src/db/dbdrv/oracle/Makefile
@@ -3741,6 +3800,16 @@ if test "x${MYSQL_LDFLAGS}" != "x"; then
 fi
 if test "x${MYSQL_LIBS}" != "x"; then
 	echo "MySQL LIBS              : ${MYSQL_LIBS}"
+fi
+
+if test "x${MARIADB_CPPFLAGS}" != "x"; then
+	echo "MariaDB CPPFLAGS        : ${MARIADB_CPPFLAGS}"
+fi
+if test "x${MARIADB_LDFLAGS}" != "x"; then
+	echo "MariaDB LDFLAGS         : ${MARIADB_LDFLAGS}"
+fi
+if test "x${MARIADB_LIBS}" != "x"; then
+	echo "MariaDB LIBS            : ${MARIADB_LIBS}"
 fi
 
 if test "x${PGSQL_CPPFLAGS}" != "x"; then
