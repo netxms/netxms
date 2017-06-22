@@ -8,6 +8,7 @@ Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixe
 Name: "console"; Description: "Administrator's Console"; Types: full
 Name: "tools"; Description: "Command Line Tools"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
+Name: "server\mariadb"; Description: "MariaDB Client Library"; Types: full
 Name: "server\mssql"; Description: "Microsoft SQL Server 2008 Native Client"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
@@ -70,6 +71,8 @@ Source: "..\..\..\Release\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; 
 Source: "..\..\..\Release\db2.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\informix.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\mariadb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\mysql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -251,6 +254,7 @@ Source: "..\..\..\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; Management console
 Source: "..\..\java\build\win32.win32.x86\nxmc\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs; Components: console
 ; Third party files
+Source: "..\files\windows\x86\libmariadb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
 Source: "..\files\windows\x86\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x86\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x86\intl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql

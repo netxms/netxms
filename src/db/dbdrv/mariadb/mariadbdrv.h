@@ -43,8 +43,8 @@
 #include <nms_util.h>
 
 #undef GROUP_FLAG
-#include <mysql.h>
-#include <errmsg.h>
+#include <mariadb/mysql.h>
+#include <mariadb/errmsg.h>
 
 /**
  * Structure of DB connection handle
