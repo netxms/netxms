@@ -26,6 +26,7 @@ import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.Objects;
 import org.netxms.websvc.handlers.Sessions;
+import org.netxms.websvc.handlers.SummaryTableAdHoc;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
@@ -72,6 +73,7 @@ public class WebSvcApplication extends Application
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/authenticate", AccessIntegrationTools.class);
+      router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
       return router;
    }
 }

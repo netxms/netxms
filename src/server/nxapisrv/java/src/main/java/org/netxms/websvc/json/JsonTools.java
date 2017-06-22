@@ -22,10 +22,12 @@ import java.net.InetAddress;
 import java.util.Date;
 import java.util.Set;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.MacAddress;
+import org.netxms.client.constants.RCC;
 import org.netxms.websvc.json.adapters.DateAdapter;
 import org.netxms.websvc.json.adapters.InetAddressAdapter;
 import org.netxms.websvc.json.adapters.InetAddressExAdapter;
@@ -101,5 +103,138 @@ public class JsonTools
       {
          return new JsonObject();
       }
+   }
+   
+   /**
+    * Get JSON value as a string by key
+    * 
+    * @param data base JSON object
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return JSON value as a string
+    */
+   public static String getStringFromJson(JSONObject data, String key, String defaultValue)
+   {
+      String value = defaultValue;
+      try
+      {
+         value = data.getString(key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
+   }
+   
+   /**
+    * Get JSON value as an int by key
+    * 
+    * @param data base JSON object
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return JSON value as an int
+    */
+   public static int getIntFromJson(JSONObject data, String key, int defaultValue)
+   {
+      int value = defaultValue;
+      try
+      {
+         value = data.getInt(key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
+   }
+   
+   /**
+    * Get JSON value as a long by key
+    * 
+    * @param data base JSON object
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return JSON value as a long
+    */
+   public static long getLongFromJson(JSONObject data, String key, long defaultValue)
+   {
+      long value = defaultValue;
+      try
+      {
+         value = data.getLong(key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
+   }
+   
+   /**
+    * Get JSON value as an enum by key
+    * 
+    * @param data base JSON object
+    * @param clazz enum class to convert to
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return JSON value as an enum
+    */
+   public static <E extends Enum<E>> E getEnumFromJson(JSONObject data, Class<E> clazz, String key, E defaultValue)
+   {
+      E value = defaultValue;
+      try
+      {
+         value = data.getEnum(clazz, key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
+   }
+   
+   /**
+    * Get JSON value as a JSONArray by key
+    * 
+    * @param data base JSON object
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return JSON value as a JSONArray
+    */
+   public static JSONArray getJsonArrayFromJson(JSONObject data, String key, JSONArray defaultValue)
+   {
+      JSONArray value = defaultValue;
+      try
+      {
+         value = data.getJSONArray(key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
+   }
+   
+   /**
+    * Get JSON value as a boolean by key
+    * 
+    * @param data base JSON object
+    * @param key search object key
+    * @param defaultValue value in case searched object not found
+    * @return value as a boolean
+    */
+   public static boolean getBooleanFromJson(JSONObject data, String key, boolean defaultValue)
+   {
+      boolean value = defaultValue;
+      try
+      {
+         value = data.getBoolean(key);
+      }
+      catch(JSONException ex)
+      {
+      }
+      
+      return value;
    }
 }

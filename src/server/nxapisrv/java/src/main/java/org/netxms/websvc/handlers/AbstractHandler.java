@@ -20,6 +20,7 @@ package org.netxms.websvc.handlers;
 
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -193,9 +194,9 @@ public abstract class AbstractHandler extends ServerResource
    protected boolean attachToSession() throws Exception
    {
       SessionToken token = findSessionToken();
-      if ((token == null) && (getRequest().getHeaders().getFirstValue("Authorization") != null))
+      if ((token == null) && (getHeader("Authorization") != null))
       {
-         String value = decodeBase64(getRequest().getHeaders().getFirstValue("Authorization"));
+         String value = decodeBase64(getHeader("Authorization"));
          String login = value.substring(0, value.indexOf(':'));
          String password = value.substring(value.indexOf(':') + 1, value.length());
          log.debug("Cannot find session token - re-authenticating (login=" + login + ")");
@@ -231,7 +232,7 @@ public abstract class AbstractHandler extends ServerResource
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
       
-      String sid = getRequest().getHeaders().getFirstValue("Session-Id");
+      String sid = getHeader("Session-Id");
       if (sid != null && !sid.equals("0"))
       {
          log.debug("Session-Id: " + sid);
@@ -383,5 +384,16 @@ public abstract class AbstractHandler extends ServerResource
       for(String f : parts)
          fields.add(f);
       return fields;
+   }
+   
+   /**
+    * Get header by name
+    * 
+    * @param name name of header 
+    * @return value of requested header
+    */   
+   private String getHeader(String name)
+   {
+      return getRequest().getHeaders().getFirstValue(name, true);
    }
 }
