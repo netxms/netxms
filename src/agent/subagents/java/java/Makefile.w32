@@ -1,4 +1,5 @@
 TARGET = netxms-agent.jar
 TYPE = jar
+JAR_BUILD_MODE = install
 
 include ..\..\..\..\..\Makefile.inc.w32

@@ -3,4 +3,4 @@ nxalarm_SOURCES = nxalarm.cpp
 nxalarm_CPPFLAGS=-I@top_srcdir@/include
 nxalarm_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
 
-EXTRA_DIST = nxalarm.vcproj nxalarm.h
+EXTRA_DIST = Makefile.w32 nxalarm.vcproj nxalarm.h

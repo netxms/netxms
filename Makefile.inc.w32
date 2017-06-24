@@ -138,9 +138,15 @@ all: Makefile.w32 subdirs $(GENERATED) $(BINFILE)
 
 !if "$(TYPE)" == "jar"
 
+!if "$(JAR_BUILD_MODE)" == "install"
+MVNCMD=install
+!else
+MVNCMD=package
+!endif
+
 $(BINFILE): pom.xml
 	mvn clean
-	mvn install
+	mvn $(MVNCMD) $(MVNFLAGS)
 	mv target/$(TARGET) $(BINFILE)
 
 !else

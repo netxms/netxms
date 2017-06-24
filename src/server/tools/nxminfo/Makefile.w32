@@ -1,0 +1,8 @@
+TARGET = nxminfo.exe
+TYPE = exe
+COMPONENT = server
+SOURCES = nxminfo.cpp
+
+LIBS = libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

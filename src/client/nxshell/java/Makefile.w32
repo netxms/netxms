@@ -1,0 +1,6 @@
+TARGET = nxshell.jar
+TYPE = jar
+
+MVNFLAGS = -Pnxshell-launcher
+
+include ..\..\..\..\Makefile.inc.w32

@@ -3,4 +3,4 @@ nxsms_SOURCES = nxsms.cpp
 nxsms_CPPFLAGS=-I@top_srcdir@/include
 nxsms_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
 
-EXTRA_DIST = nxsms.vcproj nxsms.h
+EXTRA_DIST = Makefile.w32 nxsms.vcproj nxsms.h

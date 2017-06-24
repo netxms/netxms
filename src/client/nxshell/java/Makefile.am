@@ -6,4 +6,4 @@ nxshell.jar: pom.xml
 	MAVEN_OPTS=-Xmx512m mvn package -Pnxshell-launcher
 	mv target/nxshell.jar .
 
-EXTRA_DIST = pom.xml nxshell.jar
+EXTRA_DIST = pom.xml nxshell.jar Makefile.w32

@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = libnxclient @CLIENT_COMPONENTS@ install
-EXTRA_DIST = readme.txt
+EXTRA_DIST = Makefile.w32 readme.txt

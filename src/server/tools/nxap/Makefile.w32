@@ -1,0 +1,8 @@
+TARGET = nxap.exe
+TYPE = exe
+COMPONENT = server
+SOURCES = nxap.cpp
+
+LIBS = libnxsrv.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

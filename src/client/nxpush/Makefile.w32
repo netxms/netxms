@@ -1,0 +1,7 @@
+TARGET = nxpush.exe
+TYPE = exe
+SOURCES = nxpush.cpp
+
+LIBS = libnxclient.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32

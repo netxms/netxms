@@ -9,4 +9,5 @@ libnxclient_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	libnxclient.vcproj \
-	libnxclient.h
+	libnxclient.h \
+	Makefile.w32

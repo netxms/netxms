@@ -13,4 +13,4 @@ nxevent_SOURCES = nxevent.cpp
 nxevent_CPPFLAGS=-I@top_srcdir@/include
 nxevent_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
 
-EXTRA_DIST = nxevent.vcproj nxevent.h
+EXTRA_DIST = Makefile.w32 nxevent.vcproj nxevent.h

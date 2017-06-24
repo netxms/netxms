@@ -1,0 +1,8 @@
+TARGET = libnxclient.dll
+TYPE = dll
+SOURCES = alarms.cpp dc.cpp events.cpp main.cpp objects.cpp server.cpp session.cpp
+
+CPPFLAGS = /DLIBNXCLIENT_EXPORTS
+LIBS = libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\Makefile.inc.w32
