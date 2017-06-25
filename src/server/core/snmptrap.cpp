@@ -78,7 +78,6 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT 
 
    DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT mapResult = DBSelectPrepared(stmt);
-
    if (mapResult != NULL)
    {
       int mapCount = DBGetNumRows(mapResult);
