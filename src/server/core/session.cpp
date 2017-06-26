@@ -2720,6 +2720,7 @@ void ClientSession::sendObjectUpdate(NetObj *object)
    sendMessage(&msg);
    MutexUnlock(m_mutexSendObjects);
    object->decRefCount();
+   decRefCount();
 }
 
 /**
@@ -2731,6 +2732,7 @@ void ClientSession::onObjectChange(NetObj *object)
       (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
       object->incRefCount();
+      incRefCount();
       ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendObjectUpdate, object);
    }
 }
