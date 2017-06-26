@@ -7,6 +7,7 @@
 - Server detects changes in installed packages during configuration poll
 - Added MariaDB database driver
 - Fixed excessive CPU usage by agent on AIX
+- nxshell can connect to server on non-standard port
 - NXSL:
 	- New methods for arrays: append, insert, pop, push, remove
 	- Table methods get and set can accept column name instead of column index

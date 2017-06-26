@@ -13,14 +13,19 @@ import org.python.core.PySystemState;
 import org.python.core.imp;
 import org.python.util.InteractiveConsole;
 
+/**
+ * nxshell launcher
+ */
 public class Shell
 {
-   public static final String DEFAULT_SERVER = "127.0.0.1";
-   public static final String DEFAULT_LOGIN = "admin";
-   public static final String DEFAULT_PASSWORD = "netxms";
-   private String server;
-   private String login;
-   private String password;
+   private static final String DEFAULT_SERVER = "127.0.0.1";
+   private static final String DEFAULT_LOGIN = "admin";
+   private static final String DEFAULT_PASSWORD = "netxms";
+   
+   private String optServer;
+   private String optPort;
+   private String optLogin;
+   private String optPassword;
 
    /**
     * @param args
@@ -74,45 +79,50 @@ public class Shell
     */
    private void readCredentials(boolean interactive)
    {
-      server = System.getProperty("netxms.server");
-      login = System.getProperty("netxms.login");
-      password = System.getProperty("netxms.password");
+      optServer = System.getProperty("netxms.server");
+      optPort = System.getProperty("netxms.port");
+      optLogin = System.getProperty("netxms.login");
+      optPassword = System.getProperty("netxms.password");
 
       if (interactive)
       {
          final Console console = System.console();
-         if (server == null)
+         if (optServer == null)
          {
-            server = console.readLine("Server IP [127.0.0.1]: ");
+            optServer = console.readLine("Server IP [127.0.0.1]: ");
+            if (optPort == null)
+            {
+               optPort = console.readLine("Server TCP port [4701]: ");
+            }
          }
-         if (login == null)
+         if (optLogin == null)
          {
-            login = console.readLine("Login [admin]: ");
+            optLogin = console.readLine("Login [admin]: ");
          }
-         if (password == null)
+         if (optPassword == null)
          {
             final char[] passwordChars = console.readPassword("Password [netxms]: ");
             if (passwordChars == null || passwordChars.length == 0)
             {
-               password = DEFAULT_PASSWORD;
+               optPassword = DEFAULT_PASSWORD;
             }
             else
             {
-               password = new String(passwordChars);
+               optPassword = new String(passwordChars);
             }
          }
       }
-      if (server == null || server.length() == 0)
+      if (optServer == null || optServer.length() == 0)
       {
-         server = DEFAULT_SERVER;
+         optServer = DEFAULT_SERVER;
       }
-      if (login == null || login.length() == 0)
+      if (optLogin == null || optLogin.length() == 0)
       {
-         login = DEFAULT_LOGIN;
+         optLogin = DEFAULT_LOGIN;
       }
-      if (password == null)
+      if (optPassword == null)
       {
-         password = DEFAULT_PASSWORD;
+         optPassword = DEFAULT_PASSWORD;
       }
    }
 
@@ -137,10 +147,45 @@ public class Shell
       {
          encrypt = Boolean.parseBoolean(encryptOption);
       }
-
-      final NXCSession session = new NXCSession(server, NXCSession.DEFAULT_CONN_PORT, encrypt);
+      
+      final String hostName;
+      int port = NXCSession.DEFAULT_CONN_PORT;
+      if ((optPort != null) && !optPort.isEmpty())
+      {
+         hostName = optServer;
+         try
+         {
+            port = Integer.valueOf(optPort);
+         }
+         catch(NumberFormatException e)
+         {
+            // ignore
+         }
+      }
+      else
+      {
+         final String[] parts = optServer.split(":"); //$NON-NLS-1$
+         if (parts.length == 2)
+         {
+            hostName = parts[0];
+            try
+            {
+               port = Integer.valueOf(parts[1]);
+            }
+            catch(NumberFormatException e)
+            {
+               // ignore
+            }
+         }
+         else
+         {
+            hostName = optServer;
+         }
+      }
+      
+      final NXCSession session = new NXCSession(hostName, port, encrypt);
       session.connect();
-      session.login(login, password);
+      session.login(optLogin, optPassword);
       session.syncObjects();
       session.syncUserDatabase();
       return session;

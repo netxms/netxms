@@ -30,6 +30,7 @@
  * Options
  */
 static const char *s_optHost = "127.0.0.1";
+static const char *s_optPort = "";
 static const char *s_optUser = "admin";
 static const char *s_optPassword = "";
 static const char *s_optJre = NULL;
@@ -93,15 +94,16 @@ static int StartApp(int argc, char *argv[])
    }
    nxlog_debug(5, _T("Using classpath \"%s\""), (const TCHAR *)classpath);
 
-   char server[256], login[256], password[256];
+   char server[256], port[256], login[256], password[256];
    snprintf(server, 256, "-Dnetxms.server=%s", s_optHost);
+   snprintf(port, 256, "-Dnetxms.port=%s", s_optPort);
    snprintf(login, 256, "-Dnetxms.login=%s", s_optUser);
 
    char clearPassword[128];
    DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
    snprintf(password, 256, "-Dnetxms.password=%s", clearPassword);
 
-   JavaVMOption vmOptions[6];
+   JavaVMOption vmOptions[7];
    memset(vmOptions, 0, sizeof(vmOptions));
 #ifdef UNICODE
    vmOptions[0].optionString = classpath.getUTF8String();
@@ -109,20 +111,21 @@ static int StartApp(int argc, char *argv[])
    vmOptions[0].optionString = strdup(classpath);
 #endif
    vmOptions[1].optionString = server;
-   vmOptions[2].optionString = login;
-   vmOptions[3].optionString = password;
+   vmOptions[2].optionString = port;
+   vmOptions[3].optionString = login;
+   vmOptions[4].optionString = password;
 
    bool verboseVM = (nxlog_get_debug_level() > 0);
    if (verboseVM)
    {
-      vmOptions[4].optionString = strdup("-verbose:jni");
-      vmOptions[5].optionString = strdup("-verbose:class");
+      vmOptions[5].optionString = strdup("-verbose:jni");
+      vmOptions[6].optionString = strdup("-verbose:class");
    }
 
    JavaVMInitArgs vmArgs;
    vmArgs.version = JNI_VERSION_1_6;
    vmArgs.options = vmOptions;
-   vmArgs.nOptions = verboseVM ? 6 : 4;
+   vmArgs.nOptions = verboseVM ? 7 : 5;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    int rc = 4;
@@ -199,13 +202,14 @@ static struct option longOptions[] =
 	{ (char *)"host",           required_argument, NULL,        'H' },
 	{ (char *)"jre",            required_argument, NULL,        'j' },
 	{ (char *)"password",       required_argument, NULL,        'P' },
+   { (char *)"port",           required_argument, NULL,        'p' },
 	{ (char *)"user",           required_argument, NULL,        'u' },
 	{ (char *)"version",        no_argument,       NULL,        'v' },
 	{ NULL, 0, NULL, 0 }
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:P:u:v"
+#define SHORT_OPTIONS "C:DhH:j:p:P:u:v"
 
 /**
  * Print usage info
@@ -227,8 +231,9 @@ static void usage(bool showVersion)
       _T("  -C, --classpath <path>      Additional Java class path.\n")
       _T("  -D, --debug                 Show additional debug output.\n")
       _T("  -h, --help                  Display this help message.\n")
-      _T("  -H, --host <hostname>       Specify host name or IP address.\n")
+      _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
+      _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
       _T("  -v, --version               Display version information.\n\n")
@@ -236,8 +241,9 @@ static void usage(bool showVersion)
       _T("  -C <path>      Additional Java class path.\n")
       _T("  -D             Show additional debug output.\n")
       _T("  -h             Display this help message.\n")
-      _T("  -H <hostname>  Specify host name or IP address.\n")
+      _T("  -H <hostname>  Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j <path>      Specify JRE location.\n")
+      _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. Default is empty.\n")
       _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
       _T("  -v             Display version information.\n\n")
@@ -289,6 +295,9 @@ int main(int argc, char *argv[])
 		   case 'j': // JRE
 			   s_optJre = optarg;
 			   break;
+         case 'p': // port
+            s_optPort = optarg;
+            break;
 		   case 'P': // password
 			   s_optPassword = optarg;
 			   break;

@@ -7,3 +7,6 @@ nxshell.jar: pom.xml
 	mv target/nxshell.jar .
 
 EXTRA_DIST = pom.xml nxshell.jar Makefile.w32
+
+clean-local:
+	rm -f nxshell.jar
