@@ -73,9 +73,6 @@ static int StartApp(int argc, char *argv[])
       return 3;
    }
 
-   JavaVMOption vmOptions[5];
-   memset(vmOptions, 0, sizeof(vmOptions));
-
    TCHAR libdir[MAX_PATH];
    GetNetXMSDirectory(nxDirLib, libdir);
 
@@ -104,6 +101,8 @@ static int StartApp(int argc, char *argv[])
    DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
    snprintf(password, 256, "-Dnetxms.password=%s", clearPassword);
 
+   JavaVMOption vmOptions[6];
+   memset(vmOptions, 0, sizeof(vmOptions));
 #ifdef UNICODE
    vmOptions[0].optionString = classpath.getUTF8String();
 #else
@@ -116,13 +115,14 @@ static int StartApp(int argc, char *argv[])
    bool verboseVM = (nxlog_get_debug_level() > 0);
    if (verboseVM)
    {
-      vmOptions[4].optionString = strdup("-verbose:jni,gc,class");
+      vmOptions[4].optionString = strdup("-verbose:jni");
+      vmOptions[5].optionString = strdup("-verbose:class");
    }
 
    JavaVMInitArgs vmArgs;
    vmArgs.version = JNI_VERSION_1_6;
    vmArgs.options = vmOptions;
-   vmArgs.nOptions = verboseVM ? 5 : 4;
+   vmArgs.nOptions = verboseVM ? 6 : 4;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    int rc = 4;
