@@ -63,6 +63,7 @@ static int StartApp(int argc, char *argv[])
          return 2;
       }
    }
+   nxlog_debug(1, _T("Using JRE: %s"), jre);
 
    TCHAR errorText[256];
    HMODULE jvmModule = DLOpen(jre, errorText);
@@ -72,8 +73,7 @@ static int StartApp(int argc, char *argv[])
       return 3;
    }
 
-   JavaVMInitArgs vmArgs;
-   JavaVMOption vmOptions[4];
+   JavaVMOption vmOptions[5];
    memset(vmOptions, 0, sizeof(vmOptions));
 
    TCHAR libdir[MAX_PATH];
@@ -94,6 +94,7 @@ static int StartApp(int argc, char *argv[])
       classpath.append(s_optClassPath);
 #endif      
    }
+   nxlog_debug(5, _T("Using classpath \"%s\""), (const TCHAR *)classpath);
 
    char server[256], login[256], password[256];
    snprintf(server, 256, "-Dnetxms.server=%s", s_optHost);
@@ -112,25 +113,39 @@ static int StartApp(int argc, char *argv[])
    vmOptions[2].optionString = login;
    vmOptions[3].optionString = password;
 
+   bool verboseVM = (nxlog_get_debug_level() > 0);
+   if (verboseVM)
+   {
+      vmOptions[4].optionString = strdup("-verbose:jni,gc,class");
+   }
+
+   JavaVMInitArgs vmArgs;
    vmArgs.version = JNI_VERSION_1_6;
    vmArgs.options = vmOptions;
-   vmArgs.nOptions = 4;
+   vmArgs.nOptions = verboseVM ? 5 : 4;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    int rc = 4;
    T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(jvmModule, "JNI_CreateJavaVM", NULL);
    if (CreateJavaVM != NULL)
    {
+      nxlog_debug(6, _T("Creating JVM with options:"));
+      for(int i = 0; i < vmArgs.nOptions; i++)
+         nxlog_debug(6, _T("   %hs"), vmArgs.options[i].optionString);
+
       JavaVM *jvm = NULL;
       JNIEnv *jniEnv;
       if (CreateJavaVM(&jvm, (void **)&jniEnv, &vmArgs) == JNI_OK)
       {
+         nxlog_debug(5, _T("JVM created"));
          jclass shell = jniEnv->FindClass("org/netxms/Shell");
          if (shell != NULL)
          {
+            nxlog_debug(5, _T("Shell class found"));
             jmethodID shellMain = jniEnv->GetStaticMethodID(shell, "main", "([Ljava/lang/String;)V");
             if (shellMain != NULL)
             {
+               nxlog_debug(5, _T("Shell main method found"));
                jclass stringClass = jniEnv->FindClass("java/lang/String");
                jobjectArray jargs = jniEnv->NewObjectArray(argc, stringClass, NULL);
                for(int i = 0; i < argc; i++)
