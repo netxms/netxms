@@ -1072,7 +1072,7 @@ protected:
 
    NetObj *objectFromParameter(const TCHAR *param);
 
-   NXSL_VM *runDataCollectionScript(const TCHAR *param);
+   NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
 
    void applyUserTemplates();
    void updateContainerMembership();
@@ -1096,15 +1096,15 @@ public:
    virtual void leaveMaintenanceMode();
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
-   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
-   virtual UINT32 getScriptTable(const TCHAR *param, Table **result);
+   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
+   virtual UINT32 getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
    virtual json_t *toJson();
 
-   UINT32 getListFromScript(const TCHAR *param, StringList **list);
-   UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map);
+   UINT32 getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
+   UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);

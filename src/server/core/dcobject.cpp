@@ -1100,8 +1100,17 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
    NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
    DCObject *dco = ((FilterCallbackData *)data)->dco;
 
-   instanceFilter->setGlobalVariable(_T("$node"), dco->getOwner()->createNXSLObject());
+   instanceFilter->setGlobalVariable(_T("$object"), dco->getOwner()->createNXSLObject());
+   instanceFilter->setGlobalVariable(_T("$targetObject"), dco->getOwner()->createNXSLObject());
+   if (dco->getOwner()->getObjectClass() == OBJECT_NODE)
+      instanceFilter->setGlobalVariable(_T("$node"), dco->getOwner()->createNXSLObject());
    instanceFilter->setGlobalVariable(_T("$dci"), dco->createNXSLObject());
+   if (dco->getSourceNode() != 0)
+   {
+      Node *sourceNode = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
+      if (sourceNode != NULL)
+         instanceFilter->setGlobalVariable(_T("$sourceNode"), sourceNode->createNXSLObject());
+   }
 
    NXSL_Value *argv[2];
    argv[0] = new NXSL_Value(key);

@@ -3674,12 +3674,12 @@ StringMap *Node::getInstanceList(DCObject *dco)
       node = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (node == NULL)
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
          return NULL;
       }
       if (!node->isTrustedNode(m_id))
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"),
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
                   dco->getName(), dco->getId(), m_name, m_id, node->getName(), node->getId());
          return NULL;
       }
@@ -3697,7 +3697,7 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
          break;
       case IDM_SCRIPT:
-         node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap);
+         node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       case IDM_SNMP_WALK_VALUES:
          node->getListFromSNMP(dco->getSnmpPort(), dco->getInstanceDiscoveryData(), &instances);

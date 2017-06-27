@@ -152,7 +152,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer, (DataCollectionTarget *)pItem->getOwner());
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
@@ -208,7 +208,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
             }
             break;
          case DS_SCRIPT:
-            *error = dcTarget->getScriptTable(table->getName(), &result);
+            *error = dcTarget->getScriptTable(table->getName(), &result, (DataCollectionTarget *)table->getOwner());
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;

@@ -13,13 +13,14 @@
 	- Table methods get and set can accept column name instead of column index
 	- Table row method get can accept column name instead of column index
 	- Added table row method set
+	- Access to DCI owner object in data collection and instance discovery scripts via $targetObject variable
 - Management console:
 	- Improved layout of dashboard elements
 	- Added option to indicate alarm severity with background color in alarm list
 	- Fixed bug in folder download in file manager
 	- Proper support for ANSI colors in object tools output in web UI
 	- Object dragging on map disabled if user don't have write access to map object
-- Fixed issues: NX-1039, NX-1166, NX-1180, NX-1194, NX-1212, NX-1214, NX-1215, NX-1236, NX-1243, NX-1244, NX-1251, NX-1253, NX-1257
+- Fixed issues: NX-1039, NX-1041, NX-1166, NX-1180, NX-1194, NX-1212, NX-1214, NX-1215, NX-1234, NX-1236, NX-1243, NX-1244, NX-1251, NX-1253, NX-1257
 
 
 *

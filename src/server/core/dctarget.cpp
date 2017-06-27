@@ -603,7 +603,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 /**
  * Run data collection script. Returns pointer to NXSL VM after successful run and NULL on failure.
  */
-NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param)
+NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject)
 {
    TCHAR name[256];
    nx_strncpy(name, param, 256);
@@ -633,9 +633,13 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param)
       vm->setGlobalVariable(_T("$object"), createNXSLObject());
       if (getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+         vm->setGlobalVariable(_T("$node"), createNXSLObject());
       }
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      if (targetObject != NULL)
+      {
+         vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
+      }
       if (!vm->run(&args))
       {
          DbgPrintf(4, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
@@ -654,10 +658,10 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param)
 /**
  * Get parameter value from NXSL script
  */
-UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject)
 {
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
       NXSL_Value *value = vm->getResult();
@@ -681,10 +685,10 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
 /**
  * Get list from library script
  */
-UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list)
+UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject)
 {
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
       rc = DCE_SUCCESS;
@@ -715,10 +719,10 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
 /**
  * Get table from NXSL script
  */
-UINT32 DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result)
+UINT32 DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
 {
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = runDataCollectionScript(param);
+   NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
       NXSL_Value *value = vm->getResult();
@@ -741,7 +745,7 @@ UINT32 DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result)
 /**
  * Get string map from library script
  */
-UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map)
+UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject)
 {
    TCHAR name[256];
    nx_strncpy(name, param, 256);
@@ -772,9 +776,13 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
       vm->setGlobalVariable(_T("$object"), createNXSLObject());
       if (getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+         vm->setGlobalVariable(_T("$node"), createNXSLObject());
       }
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      if (targetObject != NULL)
+      {
+         vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
+      }
       if (vm->run(&args))
       {
          rc = DCE_SUCCESS;
