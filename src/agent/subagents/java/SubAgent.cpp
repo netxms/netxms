@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2016 Raden Solutions SIA
+ ** Copyright (c) 2015-2017 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -61,11 +61,23 @@ jmethodID SubAgent::m_tableHandler = NULL;
 bool SubAgent::m_initialized = false;
 
 /**
- * Class:     org_netxms_agent_SubAgent
- * Method:    AgentGetParameterArg
+ * Class:     org.netxms.agent.SubAgent
+ * Method:    getNetXMSDirectoryInternal
+ * Signature: (I)Ljava/lang/String;
+ */
+static jstring JNICALL J_getNetXMSDirectoryInternal(JNIEnv *jenv, jclass jcls, jint type)
+{
+   TCHAR buffer[MAX_PATH];
+   GetNetXMSDirectory(static_cast<nxDirectoryType>(type), buffer);
+   return JavaStringFromCString(jenv, buffer);
+}
+
+/**
+ * Class:     org.netxms.agent.SubAgent
+ * Method:    getParameterArg
  * Signature: (Ljava/lang/String;I)Ljava/lang/String;
  */
-static jstring JNICALL Java_org_netxms_agent_SubAgent_getParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
+static jstring JNICALL J_getParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
 {
    jstring jresult = NULL;
    if (jparam)
@@ -82,11 +94,11 @@ static jstring JNICALL Java_org_netxms_agent_SubAgent_getParameterArg(JNIEnv *je
 }
 
 /**
- * Class:     org_netxms_agent_SubAgent
+ * Class:     org.netxms.agent.SubAgent
  * Method:    sendTrap
  * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
+static void JNICALL J_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
 {
    if ((jname != NULL) && (jargs != NULL))
    {
@@ -109,11 +121,11 @@ static void JNICALL Java_org_netxms_agent_SubAgent_sendTrap(JNIEnv *jenv, jclass
 }
 
 /**
- * Class:     org_netxms_agent_SubAgent
- * Method:    AgentPushParameterData
+ * Class:     org.netxms.agent.SubAgent
+ * Method:    pushParameterData
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-static jboolean JNICALL Java_org_netxms_agent_SubAgent_pushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+static jboolean JNICALL J_pushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
 {
    jboolean res = false;
    if ((jname != NULL) && (jvalue != NULL))
@@ -128,11 +140,11 @@ static jboolean JNICALL Java_org_netxms_agent_SubAgent_pushParameterData(JNIEnv 
 }
 
 /**
- * Class:     org_netxms_agent_SubAgent
- * Method:    AgentWriteLog
+ * Class:     org.netxms.agent.SubAgent
+ * Method:    writeLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -143,11 +155,11 @@ static void JNICALL Java_org_netxms_agent_SubAgent_writeLog(JNIEnv *jenv, jclass
 }
 
 /**
- * Class:     org_netxms_agent_SubAgent
- * Method:    AgentWriteDebugLog
+ * Class:     org.netxms.agent.SubAgent
+ * Method:    writeDebugLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -162,11 +174,12 @@ static void JNICALL Java_org_netxms_agent_SubAgent_writeDebugLog(JNIEnv *jenv, j
  */
 static JNINativeMethod s_jniNativeMethods[] =
 {
-   { (char *)"getParameterArg", (char *)"(Ljava/lang/String;I)Ljava/lang/String;", (void *)Java_org_netxms_agent_SubAgent_getParameterArg },
-   { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)Java_org_netxms_agent_SubAgent_pushParameterData },
-   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_sendTrap },
-   { (char *)"writeDebugLog", (char *)"(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeDebugLog },
-   { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeLog }
+   { (char *)"getNetXMSDirectoryInternal", (char *)"(I)Ljava/lang/String;", (void *)J_getNetXMSDirectoryInternal },
+   { (char *)"getParameterArg", (char *)"(Ljava/lang/String;I)Ljava/lang/String;", (void *)J_getParameterArg },
+   { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)J_pushParameterData },
+   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)J_sendTrap },
+   { (char *)"writeDebugLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeDebugLog },
+   { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeLog }
 };
 
 /**

@@ -120,6 +120,14 @@ public class SubAgent
    /*===== native methods exposed by agent (see nms_agent.h) =====*/
    
    /**
+    * Get NetXMS directory (internal bridge to native code)
+    * 
+    * @param type directory type
+    * @return path to directory or empty string on error
+    */
+   protected static native String getNetXMSDirectoryInternal(int type);
+   
+   /**
     * Extract argument from full parameter name.
     * 
     * For example:
@@ -169,6 +177,16 @@ public class SubAgent
       }
    }
    
+   /**
+    * Get NetXMS directory
+    * 
+    * @param type directory type
+    * @return path to directory or empty string on error
+    */
+   public static String getNetXMSDirectory(DirectoryType type)
+   {
+      return getNetXMSDirectoryInternal(type.getValue());
+   }
 
    /**
     * Initialize (to be called from native subagent)
@@ -309,7 +327,25 @@ public class SubAgent
       URLClassLoader classLoader;
       try
       {
-         classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
+         File file = new File(jarFile);
+         if (!file.isAbsolute())
+         {
+            writeDebugLog(5, "Plugin file path \"" + jarFile + "\" is not absolute");
+            String libDir = getNetXMSDirectory(DirectoryType.LIB);
+            if ((libDir != null) && !libDir.isEmpty())
+            {
+               file = new File(libDir + File.separatorChar + jarFile);
+            }
+         }
+         
+         if (!file.isFile())
+         {
+            writeLog(LogLevel.WARNING, "File \"" + file.getAbsolutePath() + "\" does not exist or is not a regular file");
+            return null;
+         }
+         
+         writeDebugLog(2, "Loading plugin file \"" + file.getAbsolutePath() + "\"");
+         classLoader = new URLClassLoader(new URL[] { file.toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
          URL url = classLoader.findResource(MANIFEST_PATH);
          if (url != null)
          {

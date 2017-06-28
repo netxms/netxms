@@ -20,7 +20,7 @@
 	- Fixed bug in folder download in file manager
 	- Proper support for ANSI colors in object tools output in web UI
 	- Object dragging on map disabled if user don't have write access to map object
-- Fixed issues: NX-1039, NX-1041, NX-1166, NX-1180, NX-1194, NX-1212, NX-1214, NX-1215, NX-1234, NX-1236, NX-1243, NX-1244, NX-1251, NX-1253, NX-1257, NX-1264
+- Fixed issues: NX-1039, NX-1041, NX-1166, NX-1180, NX-1194, NX-1212, NX-1214, NX-1215, NX-1234, NX-1236, NX-1243, NX-1244, NX-1251, NX-1253, NX-1257, NX-1260, NX-1264
 
 
 *
@@ -153,7 +153,7 @@
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
-- Fixed issues: NX-44, NX-53, NX-65, NX-272, NX-355, NX-393, NX-520, NX-587, NX-694, NX-697, NX-726, NX-732, NX-742, NX-773, NX-780, NX-787, NX-796, NX-825, NX-832, NX-876, NX-880, NX-934, NX-956, NX-960, NX-989, NX-996, NX-1000, NX-1001, NX-1004, NX-1009, NX-1012, NX-1016, NX-1018, NX-1026, NX-1033, NX-1034, NX-1038, NX-1051
+- Fixed issues: NX-44, NX-53, NX-65, NX-272, NX-355, NX-393, NX-520, NX-587, NX-694, NX-697, NX-726, NX-732, NX-742, NX-773, NX-780, NX-787, NX-796, NX-825, NX-832, NX-876, NX-880, NX-934, NX-956, NX-960, NX-980, NX-989, NX-996, NX-1000, NX-1001, NX-1004, NX-1009, NX-1012, NX-1016, NX-1018, NX-1026, NX-1033, NX-1034, NX-1038, NX-1051
 
 
 *
