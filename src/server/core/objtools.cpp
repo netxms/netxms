@@ -1570,7 +1570,7 @@ void ServerCommandExec::onOutput(const char *text)
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
 #ifdef UNICODE
-   TCHAR *buffer = WideStringFromMBString(text);
+   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(&msg);
    free(buffer);
