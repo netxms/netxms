@@ -177,13 +177,13 @@ public class JmxPlugin extends Plugin
             new JmxObjectParameterAdapter("JMX.VM.BootClassPath(*)", "JVM {instance}: boot class path", OBJECT_RUNTIME, "BootClassPath", ParameterType.STRING),
             new JmxObjectParameterAdapter("JMX.VM.ClassPath(*)", "JVM {instance}: class path", OBJECT_RUNTIME, "ClassPath", ParameterType.STRING),
             new JmxObjectParameterAdapter("JMX.VM.LoadedClassCount(*)", "JVM {instance}: loaded class count", OBJECT_CLASS_LOADING, "LoadedClassCount", ParameterType.UINT),
-            new JmxObjectParameterAdapter("JMX.VM.Name(*)", "JVM {instance}: name", "VmName", OBJECT_RUNTIME, ParameterType.STRING),
+            new JmxObjectParameterAdapter("JMX.VM.Name(*)", "JVM {instance}: name", OBJECT_RUNTIME, "VmName", ParameterType.STRING),
             new JmxObjectParameterAdapter("JMX.VM.SpecVersion(*)", "JVM {instance}: specification version", OBJECT_RUNTIME, "SpecVersion", ParameterType.STRING),
             new JmxObjectParameterAdapter("JMX.VM.TotalLoadedClassCount(*)", "JVM {instance}: total loaded class count", OBJECT_CLASS_LOADING, "TotalLoadedClassCount", ParameterType.UINT),
             new JmxObjectParameterAdapter("JMX.VM.UnloadedClassCount(*)", "JVM {instance}: unloaded class count", OBJECT_CLASS_LOADING, "UnloadedClassCount", ParameterType.UINT),
-            new JmxObjectParameterAdapter("JMX.VM.Uptime(*)", "JVM {instance}: uptime", "Uptime", OBJECT_RUNTIME, ParameterType.UINT),
-            new JmxObjectParameterAdapter("JMX.VM.Vendor(*)", "JVM {instance}: vendor", "VmVendor", OBJECT_RUNTIME, ParameterType.STRING),
-            new JmxObjectParameterAdapter("JMX.VM.Version(*)", "JVM {instance}: version", "VmVersion", OBJECT_RUNTIME, ParameterType.STRING),
+            new JmxObjectParameterAdapter("JMX.VM.Uptime(*)", "JVM {instance}: uptime", OBJECT_RUNTIME, "Uptime", ParameterType.UINT),
+            new JmxObjectParameterAdapter("JMX.VM.Vendor(*)", "JVM {instance}: vendor", OBJECT_RUNTIME, "VmVendor", ParameterType.STRING),
+            new JmxObjectParameterAdapter("JMX.VM.Version(*)", "JVM {instance}: version", OBJECT_RUNTIME, "VmVersion", ParameterType.STRING),
       };
    }
 
