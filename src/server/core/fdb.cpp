@@ -203,7 +203,23 @@ void ForwardingDatabase::fillMessage(NXCPMessage *msg)
       Interface *iface = (node != NULL) ? node->findInterfaceByIndex(m_fdb[i].ifIndex) : NULL;
       if (iface != NULL)
       {
-         msg->setField(fieldId++, iface->getName());
+         if (iface->getParentInterfaceId() != 0)
+         {
+            Interface *parentIface = (Interface *)FindObjectById(iface->getParentInterfaceId(), OBJECT_INTERFACE);
+            if ((parentIface != NULL) &&
+                ((parentIface->getIfType() == IFTYPE_ETHERNET_CSMACD) || (parentIface->getIfType() == IFTYPE_IEEE8023ADLAG)))
+            {
+               msg->setField(fieldId++, parentIface->getName());
+            }
+            else
+            {
+               msg->setField(fieldId++, iface->getName());
+            }
+         }
+         else
+         {
+            msg->setField(fieldId++, iface->getName());
+         }
       }
       else
       {
