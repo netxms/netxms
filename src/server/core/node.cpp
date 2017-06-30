@@ -1181,50 +1181,50 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
    }
 
    // Create interface object
-   Interface *pInterface;
+   Interface *iface;
    if (info->name[0] != 0)
-      pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
+      iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
                                  info->index, info->ipAddrList, info->type, m_zoneId);
    else
-      pInterface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
-   pInterface->setMacAddr(info->macAddr, false);
-   pInterface->setBridgePortNumber(info->bridgePort);
-   pInterface->setSlotNumber(info->slot);
-   pInterface->setPortNumber(info->port);
-   pInterface->setPhysicalPortFlag(info->isPhysicalPort);
-   pInterface->setManualCreationFlag(manuallyCreated);
-   pInterface->setSystemFlag(info->isSystem);
-   pInterface->setMTU(info->mtu);
-   pInterface->setSpeed(info->speed);
-   pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+      iface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
+   iface->setMacAddr(info->macAddr, false);
+   iface->setBridgePortNumber(info->bridgePort);
+   iface->setSlotNumber(info->slot);
+   iface->setPortNumber(info->port);
+   iface->setPhysicalPortFlag(info->isPhysicalPort);
+   iface->setManualCreationFlag(manuallyCreated);
+   iface->setSystemFlag(info->isSystem);
+   iface->setMTU(info->mtu);
+   iface->setSpeed(info->speed);
+   iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
    int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
    switch(defaultExpectedState)
    {
       case IF_DEFAULT_EXPECTED_STATE_AUTO:
-         pInterface->setExpectedState(fakeInterface ? IF_EXPECTED_STATE_UP : IF_EXPECTED_STATE_AUTO);
+         iface->setExpectedState(fakeInterface ? IF_EXPECTED_STATE_UP : IF_EXPECTED_STATE_AUTO);
          break;
       case IF_DEFAULT_EXPECTED_STATE_IGNORE:
-         pInterface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
+         iface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
          break;
       default:
-         pInterface->setExpectedState(IF_EXPECTED_STATE_UP);
+         iface->setExpectedState(IF_EXPECTED_STATE_UP);
          break;
    }
 
    // Insert to objects' list and generate event
-   NetObjInsert(pInterface, true, false);
-   addInterface(pInterface);
+   NetObjInsert(iface, true, false);
+   addInterface(iface);
    if (!m_isHidden)
-      pInterface->unhide();
-   if (!pInterface->isSystem())
+      iface->unhide();
+   if (!iface->isSystem())
    {
-      const InetAddress& addr = pInterface->getFirstIpAddress();
-      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", pInterface->getId(),
-                pInterface->getName(), &addr, addr.getMaskBits(), pInterface->getIfIndex());
+      const InetAddress& addr = iface->getFirstIpAddress();
+      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
+                iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
    }
 
-   return pInterface;
+   return iface;
 }
 
 /**
@@ -3223,10 +3223,10 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
    bool hasChanges = deleteDuplicateInterfaces(rqid);
 
-   InterfaceList *pIfList = getInterfaceList();
-   if (pIfList != NULL)
+   InterfaceList *ifList = getInterfaceList();
+   if (ifList != NULL)
    {
-      DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, pIfList->size());
+      nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, ifList->size());
 
       // Find non-existing interfaces
       lockChildList(false);
@@ -3235,27 +3235,27 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       {
          if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
          {
-            Interface *pInterface = (Interface *)m_childList->get(i);
-            if (pInterface->isFake())
+            Interface *iface = (Interface *)m_childList->get(i);
+            if (iface->isFake())
             {
                // always delete fake interfaces if we got actual interface list
-               deleteList.add(pInterface);
+               deleteList.add(iface);
                continue;
             }
 
-            if (!pInterface->isManuallyCreated())
+            if (!iface->isManuallyCreated())
             {
                int j;
-               for(j = 0; j < pIfList->size(); j++)
+               for(j = 0; j < ifList->size(); j++)
                {
-                  if (pIfList->get(j)->index == pInterface->getIfIndex())
+                  if (ifList->get(j)->index == iface->getIfIndex())
                      break;
                }
 
-               if (j == pIfList->size())
+               if (j == ifList->size())
                {
                   // No such interface in current configuration, add it to delete list
-                  deleteList.add(pInterface);
+                  deleteList.add(iface);
                }
             }
          }
@@ -3277,10 +3277,10 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       }
 
       // Add new interfaces and check configuration of existing
-      for(int j = 0; j < pIfList->size(); j++)
+      for(int j = 0; j < ifList->size(); j++)
       {
-         InterfaceInfo *ifInfo = pIfList->get(j);
-         BOOL bNewInterface = TRUE;
+         InterfaceInfo *ifInfo = ifList->get(j);
+         bool isNewInterface = true;
 
          lockChildList(false);
          for(int i = 0; i < m_childList->size(); i++)
@@ -3388,14 +3388,14 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      }
                   }
 
-                  bNewInterface = FALSE;
+                  isNewInterface = false;
                   break;
                }
             }
          }
          unlockChildList();
 
-         if (bNewInterface)
+         if (isNewInterface)
          {
             // New interface
             sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
@@ -3412,9 +3412,9 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       }
 
       // Set parent interfaces
-      for(int j = 0; j < pIfList->size(); j++)
+      for(int j = 0; j < ifList->size(); j++)
       {
-         InterfaceInfo *ifInfo = pIfList->get(j);
+         InterfaceInfo *ifInfo = ifList->get(j);
          if (ifInfo->parentIndex != 0)
          {
             Interface *parent = findInterfaceByIndex(ifInfo->parentIndex);
@@ -3427,6 +3427,16 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): set sub-interface: %s [%d] -> %s [%d]"),
                            m_name, m_id, parent->getName(), parent->getId(), iface->getName(), iface->getId());
                }
+            }
+         }
+         else
+         {
+            Interface *iface = findInterfaceByIndex(ifInfo->index);
+            if ((iface != NULL) && (iface->getParentInterfaceId() != 0))
+            {
+               iface->setParentInterface(0);
+               nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): removed reference to parent interface from %s [%d]"),
+                        m_name, m_id, iface->getName(), iface->getId());
             }
          }
       }
@@ -3535,7 +3545,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == NULL, dwCount = %u"), m_name, m_id, dwCount);
    }
 
-   delete pIfList;
+   delete ifList;
    checkSubnetBinding();
 
    sendPollerMsg(rqid, _T("Interface configuration check finished\r\n"));

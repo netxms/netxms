@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.topology.views.helpers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jface.viewers.IColorProvider;
@@ -100,6 +102,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		StringBuilder sb = new StringBuilder();
 
 		// Add non-physical ports first
+		List<Port> physicalPorts = new ArrayList<Port>();
 		Iterator<Port> it = ports.iterator();
 		while(it.hasNext())
 		{
@@ -107,20 +110,44 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 			Interface iface = (Interface)session.findObjectById(p.getObjectId(), Interface.class);
 			if (iface != null)
 			{
-				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) == 0)
+				if (!iface.isPhysicalPort())
 				{
-					if (sb.length() > 0)
-						sb.append(',');
-					sb.append(iface.getObjectName());
-					it.remove();
+				   Interface parent = iface.getParentInterface();
+				   if ((parent != null) && parent.isPhysicalPort())
+				   {
+				      physicalPorts.add(new Port(parent.getObjectId(), parent.getIfIndex(), parent.getSlot(), parent.getPort()));
+				   }
+				   else
+				   {
+   					if (sb.length() > 0)
+   						sb.append(',');
+   					sb.append(iface.getObjectName());
+   					it.remove();
+				   }
 				}
+				else
+				{
+				   physicalPorts.add(p);
+				}
+			}
+			else
+			{
+			   physicalPorts.add(p);
 			}
 		}
 		
-		if (ports.size() == 0)
+		if (physicalPorts.size() == 0)
 			return sb.toString();
 		
-		int slot = ports.get(0).getSlot();
+		Collections.sort(physicalPorts, new Comparator<Port>() {
+         @Override
+         public int compare(Port p1, Port p2)
+         {
+            return (p1.getSlot() == p2.getSlot()) ? p1.getPort() - p2.getPort() : p1.getSlot() - p2.getSlot();
+         }
+      });
+		
+		int slot = physicalPorts.get(0).getSlot();
 		int lastPort = ports.get(0).getPort();
 		int firstPort = lastPort;
 
@@ -131,16 +158,16 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		sb.append(firstPort);
 		
 		int i;
-		for(i = 1; i < ports.size(); i++)
+		for(i = 1; i < physicalPorts.size(); i++)
 		{
-			if ((ports.get(i).getSlot() == slot) && (ports.get(i).getPort() == lastPort + 1))
+			if ((physicalPorts.get(i).getSlot() == slot) && (physicalPorts.get(i).getPort() == lastPort + 1))
 			{
 				lastPort++;
 				continue;
 			}
 			
 			// If previous series was not single port, add ending port
-			if (ports.get(i - 1).getPort() != firstPort)
+			if (physicalPorts.get(i - 1).getPort() != firstPort)
 			{
 				if (lastPort - firstPort > 1)
 					sb.append('-');
@@ -151,8 +178,8 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				sb.append(lastPort);
 			}
 			
-			slot = ports.get(i).getSlot();
-			lastPort = ports.get(i).getPort();
+			slot = physicalPorts.get(i).getSlot();
+			lastPort = physicalPorts.get(i).getPort();
 			firstPort = lastPort;
 			
 			sb.append(',');
@@ -162,7 +189,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		}
 
 		// If previous series was not single port, add ending port
-		if (ports.get(i - 1).getPort() != firstPort)
+		if (physicalPorts.get(i - 1).getPort() != firstPort)
 		{
 			if (lastPort - firstPort > 1)
 				sb.append('-');

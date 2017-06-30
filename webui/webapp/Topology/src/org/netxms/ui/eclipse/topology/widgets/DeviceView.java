@@ -193,8 +193,15 @@ public class DeviceView extends DashboardComposite
 		   if ((p.getSlot() == 0) && (p.getPort() == 0))
 		   {
 		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-		      if ((iface == null) || !iface.isPhysicalPort())
+		      if (iface == null)
 		         continue;
+            if (!iface.isPhysicalPort())
+            {
+               Interface parent = iface.getParentInterface();
+               if ((parent == null) || !parent.isPhysicalPort())  
+                  continue;
+               p = new Port(parent.getObjectId(), parent.getIfIndex(), parent.getSlot(), parent.getPort());
+            }
 		   }
 			SlotView sv = slots.get(p.getSlot());
 			if (sv != null)
