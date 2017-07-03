@@ -131,7 +131,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	   if (m_source != NULL)
 	   {
 		   m_parser->trace(6, _T("  matching source \"%s\" against pattern \"%s\""), source, m_source);
-		   if (!MatchString(m_source, source, FALSE))
+		   if (!MatchString(m_source, source, false))
 		   {
 			   m_parser->trace(6, _T("  source: no match"));
 			   return false;
