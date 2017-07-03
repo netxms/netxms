@@ -67,7 +67,7 @@ const TCHAR *Ping3Driver::getCustomTestOID()
  */
 int Ping3Driver::isPotentialDevice(const TCHAR *oid)
 {
-	return 127;
+	return 63;
 }
 
 /**
