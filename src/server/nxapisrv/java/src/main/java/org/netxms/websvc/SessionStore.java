@@ -4,7 +4,9 @@
  */
 package org.netxms.websvc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.servlet.ServletContext;
@@ -21,6 +23,7 @@ public class SessionStore
 {
    private Map<UUID, SessionToken> sessions = new HashMap<UUID, SessionToken>();
    private Logger log = LoggerFactory.getLogger(SessionStore.class);
+   private Thread sessionManager = null;
    
    /**
     * Get session store instance for servlet
@@ -45,7 +48,10 @@ public class SessionStore
     */
    public synchronized SessionToken getSessionToken(UUID guid)
    {
-      return sessions.get(guid);
+      SessionToken s = sessions.get(guid);
+      if (s != null)
+         s.updateActivityTimestamp();
+      return s;
    }
    
    /**
@@ -53,6 +59,19 @@ public class SessionStore
     */
    public synchronized SessionToken registerSession(final NXCSession session)
    {
+      if (sessionManager == null)
+      {
+         sessionManager = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+               sessionManagerThread();
+            }
+         }, "Session Manager");
+         sessionManager.setDaemon(true);
+         sessionManager.start();
+      }
+      
       final SessionToken token = new SessionToken(session);
       sessions.put(token.getGuid(), token);
       session.addListener(new SessionListener() {
@@ -80,5 +99,50 @@ public class SessionStore
    {
       sessions.remove(guid);
       log.info("Session " + guid + " unregistered");
+   }
+   
+   /**
+    * Session manager background thread
+    */
+   private void sessionManagerThread()
+   {
+      while(true)
+      {
+         try
+         {
+            Thread.sleep(60000);
+         }
+         catch(InterruptedException e)
+         {
+         }
+         checkSessions();
+      }
+   }
+   
+   /**
+    * Check active sessions
+    */
+   private synchronized void checkSessions()
+   {
+      long now = System.currentTimeMillis();
+      List<UUID> disconnectedSessions = new ArrayList<UUID>();
+      for(SessionToken s : sessions.values())
+      {
+         if (now - s.getActivityTimestamp() > 300000) // 5 minutes inactivity timeout
+         {
+            log.info("Session " + s.getGuid() + " disconnected by inactivity timeout");
+            s.getSession().disconnect();
+            disconnectedSessions.add(s.getGuid());
+         }
+         else if (!s.getSession().checkConnection())
+         {
+            log.info("Session " + s.getGuid() + " removed due to communication failure");
+            s.getSession().disconnect();
+            disconnectedSessions.add(s.getGuid());
+         }
+      }
+      
+      for(UUID u : disconnectedSessions)
+         unregisterSession(u);
    }
 }
