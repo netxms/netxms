@@ -18,13 +18,13 @@
  */
 package org.netxms.websvc.handlers;
 
-import java.util.Base64;
+import java.nio.charset.Charset;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.servlet.ServletContext;
+import javax.xml.bind.DatatypeConverter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
@@ -181,7 +181,7 @@ public abstract class AbstractHandler extends ServerResource
       if (data != null && !data.equals("0"))
       {
          String value = data.substring(data.indexOf(' ') + 1, data.length());
-         return new String(Base64.getDecoder().decode(value));
+         return new String(DatatypeConverter.parseBase64Binary(value), Charset.forName("UTF-8"));
       }
       return null;
    }
@@ -392,7 +392,7 @@ public abstract class AbstractHandler extends ServerResource
     * @param name name of header 
     * @return value of requested header
     */   
-   private String getHeader(String name)
+   protected String getHeader(String name)
    {
       return getRequest().getHeaders().getFirstValue(name, true);
    }

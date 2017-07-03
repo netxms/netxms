@@ -57,13 +57,14 @@ public class Sessions extends AbstractHandler
       else
       {
          log.warn("No POST data in login call, looking for authentication data instead...");
-         for(Header h : getRequest().getHeaders())
+         String authHeader = getHeader("Authorization");
+         if ((authHeader != null) && !authHeader.isEmpty())
          {
-            if (h.getName().equals("Authorization"))
+            String[] values = decodeBase64(authHeader).split(":", 2);
+            if (values.length == 2)
             {
-               String value = decodeBase64(h.getValue());
-               login = value.substring(0, value.indexOf(':'));
-               password = value.substring(value.indexOf(':') + 1, value.length());
+               login = values[0];
+               password = values[1];
             }
          }
       }
