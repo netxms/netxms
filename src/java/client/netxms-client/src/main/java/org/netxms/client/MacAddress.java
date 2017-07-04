@@ -56,6 +56,19 @@ public class MacAddress
 			Arrays.fill(value, (byte)0);
 		}
 	}
+	
+	/**
+	 * Check if MAC address is all zeroes
+	 * 
+	 * @return true if MAC address is all zeroes
+	 */
+	public boolean isNull()
+	{
+	   for(byte b : value)
+	      if (b != 0)
+	         return false;
+	   return true;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
