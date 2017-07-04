@@ -1482,7 +1482,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
 
    CHK_EXEC(CreateTable(
             _T("CREATE TABLE persistent_storage (")
-            _T("entry_key varchar(256) not null,")
+            _T("entry_key varchar(255) not null,")
             _T("value varchar(2000) null,")
             _T("PRIMARY KEY(entry_key))")));
 
