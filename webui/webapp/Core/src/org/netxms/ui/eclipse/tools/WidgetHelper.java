@@ -524,7 +524,7 @@ public class WidgetHelper
 	public static void copyToClipboard(final String text)
 	{
 	   JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if( executor != null ) 
+      if (executor != null) 
       {
          StringBuilder js = new StringBuilder();
          js.append("copyTextToClipboard(\'" + text + "\');"); //$NON-NLS-1$

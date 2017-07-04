@@ -13,10 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
@@ -34,6 +37,9 @@ import org.swtchart.internal.series.Series;
  */
 public class Legend extends Canvas implements ILegend, PaintListener
 {
+   private static final String HEADER_ID = "$$header$$";
+   private static final String VALUE_PLACEHOLDER = "000.0000";
+   
    /** the plot chart */
    private Chart chart;
 
@@ -44,7 +50,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
    private int position;
 
    /** the margin */
-   private static final int MARGIN = 5;
+   private static final int MARGIN = 4;
 
    /** the width of area to draw symbol */
    private static final int SYMBOL_WIDTH = 20;
@@ -63,6 +69,9 @@ public class Legend extends Canvas implements ILegend, PaintListener
    
    /** extended legend flag */
    private boolean extended = true;
+   
+   /** font used for column headers */
+   private Font headerFont = null;
 
    /**
     * Constructor.
@@ -75,12 +84,21 @@ public class Legend extends Canvas implements ILegend, PaintListener
       super(chart, style);
       this.chart = chart;
 
+      updateHeaderFont();
       visible = true;
       position = DEFAULT_POSITION;
       cellBounds = new HashMap<String, Rectangle>();
       setForeground(DEFAULT_FOREGROUND);
       setBackground(chart.getBackground());
       addPaintListener(this);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (headerFont != null)
+               headerFont.dispose();
+         }
+      });
    }
 
    /*
@@ -124,6 +142,19 @@ public class Legend extends Canvas implements ILegend, PaintListener
    {
       this.extended = extended;
    }
+   
+   /**
+    * Update header font
+    */
+   private void updateHeaderFont()
+   {
+      if (headerFont != null)
+         headerFont.dispose();
+      
+      FontData fd = getFont().getFontData()[0];
+      fd.setStyle(SWT.BOLD);
+      headerFont = new Font(getDisplay(), fd);
+   }
 
    /*
     * @see Canvas#setFont(Font)
@@ -132,6 +163,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
    public void setFont(Font font)
    {
       super.setFont(font);
+      updateHeaderFont();
       chart.updateLayout();
    }
 
@@ -291,6 +323,8 @@ public class Legend extends Canvas implements ILegend, PaintListener
          setLayoutData(new ChartLayoutData(0, 0));
          return;
       }
+      
+      extendedInfoOffset = 0;
 
       int width = 0;
       int height = 0;
@@ -298,13 +332,14 @@ public class Legend extends Canvas implements ILegend, PaintListener
       ISeries[] seriesArray = sort(chart.getSeriesSet().getSeries());
 
       Rectangle r = chart.getClientArea();
-      int titleHeight = ((Composite)chart.getTitle()).getSize().y;
-      int cellHeight = Util.getExtentInGC(getFont(), "dummy").y;
-
+      final int titleHeight = ((Composite)chart.getTitle()).getSize().y;
+      final int cellHeight = Util.getExtentInGC(getFont(), "fgdl0").y;
+      final int cellExtraWidth = extended ? (Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + MARGIN) * 4 : 0;
+      
       if (position == SWT.RIGHT || position == SWT.LEFT)
       {
          int columns = 1;
-         int yPosition = MARGIN;
+         int yPosition = extended ? (cellHeight + MARGIN * 2) : MARGIN;
          int maxCellWidth = 0;
 
          for(ISeries series : seriesArray)
@@ -312,6 +347,8 @@ public class Legend extends Canvas implements ILegend, PaintListener
             int textWidth = Util.getExtentInGC(getFont(), series.getName()).x;
             int cellWidth = textWidth + SYMBOL_WIDTH + MARGIN * 3;
             maxCellWidth = Math.max(maxCellWidth, cellWidth);
+            if (extendedInfoOffset < cellWidth)
+               extendedInfoOffset = cellWidth;
             if (yPosition + cellHeight < r.height - titleHeight || yPosition == MARGIN)
             {
                yPosition += cellHeight + MARGIN;
@@ -321,8 +358,8 @@ public class Legend extends Canvas implements ILegend, PaintListener
                columns++;
                yPosition = cellHeight + MARGIN * 2;
             }
-            cellBounds.put(series.getId(), new Rectangle(maxCellWidth * (columns - 1), yPosition - cellHeight - MARGIN, cellWidth,
-                  cellHeight));
+            cellBounds.put(series.getId(), new Rectangle(maxCellWidth * (columns - 1), 
+                  yPosition - cellHeight - MARGIN, cellWidth + cellExtraWidth, cellHeight));
             height = Math.max(yPosition, height);
          }
          width = maxCellWidth * columns;
@@ -331,6 +368,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
       {
          int rows = 1;
          int xPosition = 0;
+         final int topOffset = extended ? (cellHeight + MARGIN * 2) : MARGIN;
 
          for(ISeries series : seriesArray)
          {
@@ -345,7 +383,8 @@ public class Legend extends Canvas implements ILegend, PaintListener
                rows++;
                xPosition = cellWidth;
             }
-            cellBounds.put(series.getId(), new Rectangle(xPosition - cellWidth, (cellHeight + MARGIN) * (rows - 1) + MARGIN, cellWidth, cellHeight));
+            cellBounds.put(series.getId(), new Rectangle(xPosition - cellWidth, (cellHeight + MARGIN) * (rows - 1) + topOffset, 
+                  cellWidth + cellExtraWidth, cellHeight));
             width = Math.max(xPosition, width);
             if (extendedInfoOffset < cellWidth)
                extendedInfoOffset = cellWidth;
@@ -355,7 +394,9 @@ public class Legend extends Canvas implements ILegend, PaintListener
 
       if (extended)
       {
-         width += (Util.getExtentInGC(getFont(), "Max: 000000.000000").x + MARGIN) * 4;
+         width += cellExtraWidth;
+         height += cellHeight + MARGIN; 
+         cellBounds.put(HEADER_ID, new Rectangle(0, MARGIN, cellExtraWidth, cellHeight));
       }
       
       setLayoutData(new ChartLayoutData(width, height));
@@ -401,19 +442,19 @@ public class Legend extends Canvas implements ILegend, PaintListener
     */
    private void drawExtendedInfo(GC gc, Series series, Rectangle r)
    {
-      int shift = Util.getExtentInGC(getFont(), "Max: 000000.000000").x;
+      int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
       
-      gc.drawText(String.format("Max: %s", Chart.roundedDecimalValue(series.getMaxY(), 0.0005)), x, r.y, true);
+      gc.drawText(Chart.roundedDecimalValue(series.getCurY(), 0.005), x, r.y, true);
       x += shift;
 
-      gc.drawText(String.format("Avg: %s", Chart.roundedDecimalValue(series.getAvgY(), 0.0005)), x, r.y, true);
+      gc.drawText(Chart.roundedDecimalValue(series.getMinY(), 0.005), x, r.y, true);
       x += shift;
 
-      gc.drawText(String.format("Min: %s", Chart.roundedDecimalValue(series.getMinY(), 0.0005)), x, r.y, true);
+      gc.drawText(Chart.roundedDecimalValue(series.getAvgY(), 0.005), x, r.y, true);
       x += shift;
 
-      gc.drawText(String.format("Cur: %s", Chart.roundedDecimalValue(series.getCurY(), 0.0005)), x, r.y, true);
+      gc.drawText(Chart.roundedDecimalValue(series.getMaxY(), 0.005), x, r.y, true);
    }
 
    /*
@@ -432,6 +473,32 @@ public class Legend extends Canvas implements ILegend, PaintListener
       if (seriesArray.length == 0)
       {
          return;
+      }
+      
+      // Draw column headers
+      if (extended)
+      {
+         gc.setBackground(getBackground());
+         gc.setForeground(getForeground());
+         gc.setFont(headerFont);
+         
+         final int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
+         
+         Rectangle r = cellBounds.get(HEADER_ID);
+         int x = r.x + extendedInfoOffset + MARGIN * 2;
+
+         gc.drawText("Curr", x, r.y, true);
+         x += shift;
+
+         gc.drawText("Min", x, r.y, true);
+         x += shift;
+
+         gc.drawText("Avg", x, r.y, true);
+         x += shift;
+
+         gc.drawText("Max", x, r.y, true);
+         
+         gc.setFont(getFont());
       }
 
       // draw content

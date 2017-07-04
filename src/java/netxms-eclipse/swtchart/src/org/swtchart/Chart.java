@@ -267,14 +267,14 @@ public class Chart extends Composite implements Listener
 	 */
 	public void updateLayout()
 	{
+      if (title != null)
+      {
+         title.updateLayoutData();
+      }
+
 		if (legend != null)
 		{
 			legend.updateLayoutData();
-		}
-
-		if (title != null)
-		{
-			title.updateLayoutData();
 		}
 
 		if (axisSet != null)
@@ -282,7 +282,7 @@ public class Chart extends Composite implements Listener
 			axisSet.updateLayoutData();
 		}
 
-		layout();
+		layout(true, true);
 
 		if (axisSet != null)
 		{

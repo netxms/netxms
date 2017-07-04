@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.charts.api;
 
 import java.util.Date;
 import java.util.List;
-import org.eclipse.swt.graphics.Color;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;

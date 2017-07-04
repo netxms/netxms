@@ -265,14 +265,14 @@ public class Chart extends Canvas implements Listener
 	 */
 	public void updateLayout()
 	{
+      if (title != null)
+      {
+         title.updateLayoutData();
+      }
+
 		if (legend != null)
 		{
 			legend.updateLayoutData();
-		}
-
-		if (title != null)
-		{
-			title.updateLayoutData();
 		}
 
 		if (axisSet != null)
@@ -280,7 +280,7 @@ public class Chart extends Canvas implements Listener
 			axisSet.updateLayoutData();
 		}
 
-		layout();
+		layout(true, true);
 
 		if (axisSet != null)
 		{

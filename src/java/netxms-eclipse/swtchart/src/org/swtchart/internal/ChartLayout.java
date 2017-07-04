@@ -297,12 +297,12 @@ public class ChartLayout extends Layout
       if (legendPosition == SWT.RIGHT)
       {
          x = r.width - legendWidth - MARGIN;
-         y = (tHeight + r.height - legendHeight) / 2;
+         y = tHeight;
       }
       else if (legendPosition == SWT.LEFT)
       {
          x = MARGIN;
-         y = (tHeight + r.height - legendHeight) / 2;
+         y = tHeight;
       }
       else if (legendPosition == SWT.TOP)
       {

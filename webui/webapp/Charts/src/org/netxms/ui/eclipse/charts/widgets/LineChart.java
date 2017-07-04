@@ -54,6 +54,8 @@ import org.netxms.ui.eclipse.charts.api.DataPoint;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.FontTools;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;

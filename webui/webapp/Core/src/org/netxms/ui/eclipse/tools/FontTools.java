@@ -59,6 +59,7 @@ public class FontTools
    public static Font createFont(String[] names, int heightAdjustment, int style)
    {
       String name = findFirstAvailableFont(names);
+System.out.println("FONT FOUND: " + name);      
       if (name == null)
          return null;
       return new Font(Display.getCurrent(), name, JFaceResources.getDefaultFont().getFontData()[0].getHeight() + heightAdjustment, style);
