@@ -80,75 +80,77 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
  */
 void CommSession::proxySnmpRequest(NXCPMessage *request)
 {
-   NXCPMessage response;
-   response.setCode(CMD_REQUEST_COMPLETED);
-   response.setId(request->getId());
+   UINT32 requestId = request->getId();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
 
    s_serverRequests++;
-	UINT32 dwSizeIn = request->getFieldAsUInt32(VID_PDU_SIZE);
-	if (dwSizeIn > 0)
-	{
-		BYTE *pduIn = (BYTE *)malloc(dwSizeIn);
-		if (pduIn != NULL)
-		{
-			request->getFieldAsBinary(VID_PDU, pduIn, dwSizeIn);
-
-			SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-			if (hSocket != INVALID_SOCKET)
-			{
-				InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-            SockAddrBuffer sa;
-            addr.fillSockAddr(&sa, request->getFieldAsUInt16(VID_PORT));
-				if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
-				{
-					BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
-					if (pduOut != NULL)
-					{
-                  int nRetries;
-						for(nRetries = 0; nRetries < 3; nRetries++)
-						{
-							if (send(hSocket, (char *)pduIn, dwSizeIn, 0) == (int)dwSizeIn)
-							{
-							   s_snmpRequests++;
-                        UINT32 dwSizeOut;
-								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
-								{
-								   s_snmpResponses++;
-									response.setField(VID_PDU_SIZE, dwSizeOut);
-									response.setField(VID_PDU, pduOut, dwSizeOut);
-									break;
-								}
-							}
-						}
-						free(pduOut);
-						response.setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
-					}
-					else
-					{
-						response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
-					}
-				}
-				else
-				{
-					response.setField(VID_RCC, ERR_SOCKET_ERROR);
-				}
-				closesocket(hSocket);
-			}
-			else
-			{
-				response.setField(VID_RCC, ERR_SOCKET_ERROR);
-			}
-			free(pduIn);
-		}
-		else
-		{
-			response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
-		}
-	}
-	else
-	{
-		response.setField(VID_RCC, ERR_MALFORMED_COMMAND);
-	}
+   size_t sizeIn;
+   const BYTE *pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
+   if ((pduIn != NULL) && (sizeIn > 0))
+   {
+      InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+      SOCKET hSocket = socket(addr.getFamily(), SOCK_DGRAM, 0);
+      if (hSocket != INVALID_SOCKET)
+      {
+         SockAddrBuffer sa;
+         addr.fillSockAddr(&sa, request->getFieldAsUInt16(VID_PORT));
+         if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
+         {
+            BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
+            if (pduOut != NULL)
+            {
+               int nRetries;
+               for(nRetries = 0; nRetries < 3; nRetries++)
+               {
+                  if (send(hSocket, (char *)pduIn, sizeIn, 0) == (int)sizeIn)
+                  {
+                     s_snmpRequests++;
+                     UINT32 dwSizeOut;
+                     if (ReadPDU(hSocket, pduOut, &dwSizeOut))
+                     {
+                        s_snmpResponses++;
+                        response.setField(VID_PDU_SIZE, dwSizeOut);
+                        response.setField(VID_PDU, pduOut, dwSizeOut);
+                        break;
+                     }
+                     else
+                     {
+                        debugPrintf(7, _T("proxySnmpRequest(%d): read failure or timeout (%d)"), requestId, WSAGetLastError());
+                     }
+                  }
+                  else
+                  {
+                     debugPrintf(7, _T("proxySnmpRequest(%d): send() call failed (%d)"), requestId, WSAGetLastError());
+                  }
+               }
+               free(pduOut);
+               response.setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+               debugPrintf(7, _T("proxySnmpRequest(%d): %s (%d retries)"), requestId, (nRetries == 3) ? _T("failure") : _T("success"), nRetries);
+            }
+            else
+            {
+               response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+               debugPrintf(7, _T("proxySnmpRequest(%d): memory allocation failure"), requestId);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, ERR_SOCKET_ERROR);
+            debugPrintf(7, _T("proxySnmpRequest(%d): connect() call failed (%d)"), requestId, WSAGetLastError());
+         }
+         closesocket(hSocket);
+      }
+      else
+      {
+         response.setField(VID_RCC, ERR_SOCKET_ERROR);
+         debugPrintf(7, _T("proxySnmpRequest(%d): socket() call failed (%d)"), requestId, WSAGetLastError());
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, ERR_MALFORMED_COMMAND);
+      debugPrintf(7, _T("proxySnmpRequest(%d): input PDU is missing or empty"), requestId);
+   }
 	sendMessage(&response);
 	delete request;
 	decRefCount();

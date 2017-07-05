@@ -326,7 +326,7 @@ void CommSession::readThread()
          else
          {
             TCHAR buffer[64];
-            debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+            debugPrintf(6, _T("Received message %s (%d)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
             UINT32 rcc;
             switch(msg->getCode())
@@ -438,8 +438,9 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
    if (nxlog_get_debug_level() >= 6)
    {
       TCHAR buffer[128];
-      debugPrintf(6, _T("Sending message %s (size %d; %s)"), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size),
-                  ntohs(msg->flags) & MF_COMPRESSED ? _T("compressed") : _T("uncompressed"));
+      debugPrintf(6, _T("Sending message %s (ID %d; size %d; %s)"), NXCPMessageCodeName(ntohs(msg->code), buffer),
+               ntohl(msg->id), ntohl(msg->size),
+               ntohs(msg->flags) & MF_COMPRESSED ? _T("compressed") : _T("uncompressed"));
       if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
