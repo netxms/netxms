@@ -712,8 +712,13 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
    m_head = 0;
    m_size = 0;
    m_buffer = (BYTE *)malloc(m_allocated);
+#ifdef _WIN32
    m_bufferLock = MutexCreate();
    m_dataCondition = ConditionCreate(TRUE);
+#else
+   pthread_mutex_init(&m_bufferLock, NULL);
+   pthread_cond_init(&m_dataCondition, NULL);
+#endif
 }
 
 /**
@@ -723,8 +728,13 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
 {
    m_tunnel->decRefCount();
    free(m_buffer);
+#ifdef _WIN32
    MutexDestroy(m_bufferLock);
    ConditionDestroy(m_dataCondition);
+#else
+   pthread_mutex_destroy(&m_bufferLock);
+   pthread_cond_destroy(&m_dataCondition);
+#endif
 }
 
 /**
@@ -743,6 +753,7 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
    if (!m_active)
       return 0;
 
+#ifdef _WIN32
    if (!ConditionWait(m_dataCondition, timeout))
       return -2;
 
@@ -750,19 +761,58 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
       return 0;   // closed while waiting
 
    MutexLock(m_bufferLock);
+#else
+   pthread_mutex_lock(&m_bufferLock);
+   if (m_size == 0)
+   {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+      struct timespec ts;
+      ts.tv_sec = timeout / 1000;
+      ts.tv_nsec = (timeout % 1000) * 1000000;
+      int rc = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+#else
+      struct timeval now;
+      struct timespec ts;
+      gettimeofday(&now, NULL);
+      ts.tv_sec = now.tv_sec + (timeout / 1000);
+      now.tv_usec += (timeout % 1000) * 1000;
+      ts.tv_sec += now.tv_usec / 1000000;
+      ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+      int rc = pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts);
+#endif
+      if (rc != 0)
+      {
+         pthread_mutex_unlock(&m_bufferLock);
+         return -2;  // timeout
+      }
+
+      if (!m_active) // closed while waiting
+      {
+         pthread_mutex_unlock(&m_bufferLock);
+         return 0;
+      }
+   }
+#endif
+
    size_t bytes = min(size, m_size);
    memcpy(buffer, &m_buffer[m_head], bytes);
    m_size -= bytes;
    if (m_size == 0)
    {
       m_head = 0;
+#ifdef _WIN32
       ConditionReset(m_dataCondition);
+#endif
    }
    else
    {
       m_head += bytes;
    }
+#ifdef _WIN32
    MutexUnlock(m_bufferLock);
+#else
+   pthread_mutex_unlock(&m_bufferLock);
+#endif
    return (int)bytes;
 }
 
@@ -777,7 +827,32 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
    if (!m_active)
       return -1;
 
+#ifdef _WIN32
    return ConditionWait(m_dataCondition, timeout) ? 1 : 0;
+#else
+   int rc = 0;
+   pthread_mutex_lock(&m_bufferLock);
+   if (m_size == 0)
+   {
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
+      struct timespec ts;
+      ts.tv_sec = timeout / 1000;
+      ts.tv_nsec = (timeout % 1000) * 1000000;
+      rc = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+#else
+      struct timeval now;
+      struct timespec ts;
+      gettimeofday(&now, NULL);
+      ts.tv_sec = now.tv_sec + (timeout / 1000);
+      now.tv_usec += (timeout % 1000) * 1000;
+      ts.tv_sec += now.tv_usec / 1000000;
+      ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+      rc = pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts);
+#endif
+   }
+   pthread_mutex_unlock(&m_bufferLock);
+   return (rc == 0) ? 1 : 0;
+#endif
 }
 
 /**
@@ -786,7 +861,11 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 int AgentTunnelCommChannel::shutdown()
 {
    m_active = false;
+#ifdef _WIN32
    ConditionSet(m_dataCondition);
+#else
+   pthread_cond_broadcast(&m_dataCondition);
+#endif
    return 0;
 }
 
@@ -796,7 +875,11 @@ int AgentTunnelCommChannel::shutdown()
 void AgentTunnelCommChannel::close()
 {
    m_active = false;
+#ifdef _WIN32
    ConditionSet(m_dataCondition);
+#else
+   pthread_cond_broadcast(&m_dataCondition);
+#endif
    m_tunnel->closeChannel(this);
 }
 
@@ -805,7 +888,11 @@ void AgentTunnelCommChannel::close()
  */
 void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 {
+#ifdef _WIN32
    MutexLock(m_bufferLock);
+#else
+   pthread_mutex_lock(&m_bufferLock);
+#endif
    if (m_head + m_size + size > m_allocated)
    {
       m_allocated = m_head + m_size + size;
@@ -813,8 +900,13 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
    }
    memcpy(&m_buffer[m_head + m_size], data, size);
    m_size += size;
-   MutexUnlock(m_bufferLock);
+#ifdef _WIN32
    ConditionSet(m_dataCondition);
+   MutexUnlock(m_bufferLock);
+#else
+   pthread_cond_broadcast(&m_dataCondition);
+   pthread_mutex_unlock(&m_bufferLock);
+#endif
 }
 
 /**

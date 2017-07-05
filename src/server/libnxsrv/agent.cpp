@@ -220,6 +220,8 @@ void AgentConnection::receiverThread()
       {
          if ((rc != 0) && (WSAGetLastError() != WSAESHUTDOWN))
             debugPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
+         else
+            debugPrintf(6, _T("AgentConnection::ReceiverThread(): communication channel shutdown"));
          break;
       }
 
@@ -263,8 +265,8 @@ void AgentConnection::receiverThread()
          if (nxlog_get_debug_level() >= 6)
          {
             TCHAR buffer[64];
-            debugPrintf(6, _T("Received raw message %s from agent at %s"),
-               NXCPMessageCodeName(rawMsg->code, buffer), (const TCHAR *)m_addr.toString());
+            debugPrintf(6, _T("Received raw message %s (%d) from agent at %s"),
+               NXCPMessageCodeName(rawMsg->code, buffer), rawMsg->id, (const TCHAR *)m_addr.toString());
          }
 
          if ((rawMsg->code == CMD_FILE_DATA) && (rawMsg->id == m_dwDownloadRequestId))
@@ -361,6 +363,12 @@ void AgentConnection::receiverThread()
       {
          // Create message object from raw message
          NXCPMessage *msg = new NXCPMessage(rawMsg, m_nProtocolVersion);
+         if (nxlog_get_debug_level() >= 6)
+         {
+            TCHAR buffer[64];
+            debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
+               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)m_addr.toString());
+         }
          switch(msg->getCode())
          {
             case CMD_REQUEST_COMPLETED:
@@ -440,6 +448,7 @@ void AgentConnection::receiverThread()
          }
       }
    }
+   debugPrintf(6, _T("Receiver loop terminated"));
 
    // Close socket and mark connection as disconnected
    lock();
@@ -455,6 +464,7 @@ void AgentConnection::receiverThread()
       onFileDownload(false);
    }
 
+	debugPrintf(6, _T("Closing communication channel"));
 	channel->close();
 	channel->decRefCount();
 	if (m_pCtx != NULL)
@@ -1081,6 +1091,13 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    AbstractCommChannel *channel = acquireChannel();
    if (channel == NULL)
       return false;
+
+   if (nxlog_get_debug_level() >= 6)
+   {
+      TCHAR buffer[64];
+      debugPrintf(6, _T("Sending message %s (%d) to agent at %s"),
+         NXCPMessageCodeName(pMsg->getCode(), buffer), pMsg->getId(), (const TCHAR *)m_addr.toString());
+   }
 
    bool success;
    NXCP_MESSAGE *rawMsg = pMsg->createMessage(m_allowCompression);

@@ -1635,6 +1635,7 @@ restart_agent_check:
             {
                PostEvent(EVENT_NODE_DOWN, m_id, NULL);
             }
+            g_monitoringList.removeDisconnectedNode(m_id);
             sendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
          }
          else
@@ -1685,7 +1686,7 @@ restart_agent_check:
    }
 
    // Get agent uptime to check if it was restared
-   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1707,12 +1708,11 @@ restart_agent_check:
    }
    else
    {
-      g_monitoringList.removeDisconnectedNode(m_id);
       m_agentUpTime = 0;
    }
 
    // Get geolocation
-   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1734,7 +1734,7 @@ restart_agent_check:
    }
 
    // Get agent log and agent local database status
-   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
