@@ -101,7 +101,7 @@ size_t RingBuffer::read(BYTE *buffer, size_t bufferSize)
       size_t chunkSize = m_allocated - m_readPos;
       memcpy(buffer, &m_data[m_readPos], chunkSize);
       memcpy(&buffer[chunkSize], m_data, readSize - chunkSize);
-      m_readPos = chunkSize;
+      m_readPos = readSize - chunkSize;
    }
    else
    {
