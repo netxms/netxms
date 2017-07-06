@@ -702,16 +702,12 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Channel constructor
  */
-AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
+AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id) : m_buffer(65536, 65536)
 {
    tunnel->incRefCount();
    m_tunnel = tunnel;
    m_id = id;
    m_active = true;
-   m_allocated = 256 * 1024;
-   m_head = 0;
-   m_size = 0;
-   m_buffer = (BYTE *)malloc(m_allocated);
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
    m_dataCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -727,7 +723,6 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
 AgentTunnelCommChannel::~AgentTunnelCommChannel()
 {
    m_tunnel->decRefCount();
-   free(m_buffer);
 #ifdef _WIN32
    DeleteCriticalSection(&m_bufferLock);
    CloseHandle(m_dataCondition);
@@ -755,7 +750,7 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 retry_wait:
       LeaveCriticalSection(&m_bufferLock);
@@ -766,7 +761,7 @@ retry_wait:
          return 0;   // closed while waiting
 
       EnterCriticalSection(&m_bufferLock);
-      if (m_size == 0)
+      if (m_buffer.isEmpty())
       {
          ResetEvent(m_dataCondition);
          goto retry_wait;
@@ -774,7 +769,7 @@ retry_wait:
    }
 #else
    pthread_mutex_lock(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
@@ -805,21 +800,10 @@ retry_wait:
    }
 #endif
 
-   size_t bytes = min(size, m_size);
-   memcpy(buffer, &m_buffer[m_head], bytes);
-   m_size -= bytes;
-   if (m_size == 0)
-   {
-      m_head = 0;
+   size_t bytes = m_buffer.read((BYTE *)buffer, size);
 #ifdef _WIN32
+   if (m_buffer.isEmpty())
       ResetEvent(m_dataCondition);
-#endif
-   }
-   else
-   {
-      m_head += bytes;
-   }
-#ifdef _WIN32
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_unlock(&m_bufferLock);
@@ -842,7 +826,7 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 retry_wait:
       LeaveCriticalSection(&m_bufferLock);
@@ -853,7 +837,7 @@ retry_wait:
          return -1;
 
       EnterCriticalSection(&m_bufferLock);
-      if (m_size == 0)
+      if (m_buffer.isEmpty())
       {
          ResetEvent(m_dataCondition);
          goto retry_wait;
@@ -862,7 +846,7 @@ retry_wait:
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_lock(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
@@ -928,13 +912,7 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 #else
    pthread_mutex_lock(&m_bufferLock);
 #endif
-   if (m_head + m_size + size > m_allocated)
-   {
-      m_allocated = m_head + m_size + size;
-      m_buffer = (BYTE *)realloc(m_buffer, m_allocated);
-   }
-   memcpy(&m_buffer[m_head + m_size], data, size);
-   m_size += size;
+   m_buffer.write(data, size);
 #ifdef _WIN32
    SetEvent(m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);

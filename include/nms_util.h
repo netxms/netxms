@@ -1159,6 +1159,7 @@ public:
    size_t read(BYTE *buffer, size_t bufferSize);
 
    size_t size() const { return m_size; }
+   bool isEmpty() const { return m_size == 0; }
 };
 
 /**

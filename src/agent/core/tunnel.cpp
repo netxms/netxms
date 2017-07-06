@@ -49,10 +49,7 @@ private:
    UINT32 m_id;
    bool m_active;
    VolatileCounter m_closed;
-   BYTE *m_buffer;
-   size_t m_allocated;
-   size_t m_head;
-   size_t m_size;
+   RingBuffer m_buffer;
 #ifdef _WIN32
    CRITICAL_SECTION m_bufferLock;
    HANDLE m_dataCondition;
@@ -1005,16 +1002,12 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
 /**
  * Channel constructor
  */
-TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel()
+TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel(), m_buffer(32768, 32768)
 {
    m_id = InterlockedIncrement(&s_nextChannelId);
    m_tunnel = tunnel;
    m_active = true;
    m_closed = 0;
-   m_allocated = 256 * 1024;
-   m_head = 0;
-   m_size = 0;
-   m_buffer = (BYTE *)malloc(m_allocated);
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
    m_dataCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -1029,7 +1022,6 @@ TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel()
  */
 TunnelCommChannel::~TunnelCommChannel()
 {
-   free(m_buffer);
 #ifdef _WIN32
    DeleteCriticalSection(&m_bufferLock);
    CloseHandle(m_dataCondition);
@@ -1068,7 +1060,7 @@ retry_wait:
          return 0;   // closed while waiting
 
       EnterCriticalSection(&m_bufferLock);
-      if (m_size == 0)
+      if (m_buffer.isEmpty())
       {
          ResetEvent(m_dataCondition);
          goto retry_wait;
@@ -1076,7 +1068,7 @@ retry_wait:
    }
 #else
    pthread_mutex_lock(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
@@ -1107,21 +1099,10 @@ retry_wait:
    }
 #endif
 
-   size_t bytes = min(size, m_size);
-   memcpy(buffer, &m_buffer[m_head], bytes);
-   m_size -= bytes;
-   if (m_size == 0)
-   {
-      m_head = 0;
+   size_t bytes = m_buffer.read((BYTE *)buffer, size);
 #ifdef _WIN32
+   if (m_buffer.isEmpty())
       ResetEvent(m_dataCondition);
-#endif
-   }
-   else
-   {
-      m_head += bytes;
-   }
-#ifdef _WIN32
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_unlock(&m_bufferLock);
@@ -1144,7 +1125,7 @@ int TunnelCommChannel::poll(UINT32 timeout, bool write)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 retry_wait:
       LeaveCriticalSection(&m_bufferLock);
@@ -1155,7 +1136,7 @@ retry_wait:
          return -1;
 
       EnterCriticalSection(&m_bufferLock);
-      if (m_size == 0)
+      if (m_buffer.isEmpty())
       {
          ResetEvent(m_dataCondition);
          goto retry_wait;
@@ -1164,7 +1145,7 @@ retry_wait:
    LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_lock(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 #if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
       struct timespec ts;
@@ -1225,13 +1206,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 #else
    pthread_mutex_lock(&m_bufferLock);
 #endif
-   if (m_head + m_size + size > m_allocated)
-   {
-      m_allocated = m_head + m_size + size;
-      m_buffer = (BYTE *)realloc(m_buffer, m_allocated);
-   }
-   memcpy(&m_buffer[m_head + m_size], data, size);
-   m_size += size;
+   m_buffer.write(data, size);
 #ifdef _WIN32
    SetEvent(m_dataCondition);
    LeaveCriticalSection(&m_bufferLock);

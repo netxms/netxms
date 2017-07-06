@@ -37,10 +37,7 @@ private:
    AgentTunnel *m_tunnel;
    UINT32 m_id;
    bool m_active;
-   BYTE *m_buffer;
-   size_t m_allocated;
-   size_t m_head;
-   size_t m_size;
+   RingBuffer m_buffer;
 #ifdef _WIN32
    CRITICAL_SECTION m_bufferLock;
    HANDLE m_dataCondition;
