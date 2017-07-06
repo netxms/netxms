@@ -732,6 +732,79 @@ static void TestDiff()
 }
 
 /**
+ * Test ring buffer
+ */
+static void TestRingBuffer()
+{
+   RingBuffer rb(32, 32);
+   char buffer[256];
+
+   StartTest(_T("RingBuffer: write #1"));
+   rb.write((const BYTE *)"short data", 10);
+   AssertEquals(rb.size(), 10);
+   EndTest();
+
+   StartTest(_T("RingBuffer: read #1"));
+   size_t bytes = rb.read((BYTE *)buffer, 256);
+   AssertEquals(bytes, 10);
+   AssertTrue(!memcmp(buffer, "short data", 10));
+   AssertEquals(rb.size(), 0);
+   EndTest();
+
+   StartTest(_T("RingBuffer: write #2"));
+   rb.write((const BYTE *)"short data", 10);
+   AssertEquals(rb.size(), 10);
+   EndTest();
+
+   StartTest(_T("RingBuffer: read #2"));
+   memset(buffer, 0, 256);
+   bytes = rb.read((BYTE *)buffer, 4);
+   AssertEquals(bytes, 4);
+   AssertTrue(!memcmp(buffer, "shor", 4));
+   AssertEquals(rb.size(), 6);
+   EndTest();
+
+   StartTest(_T("RingBuffer: write #3"));
+   rb.write((const BYTE *)"long data: 123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.", 111);
+   AssertEquals(rb.size(), 117);
+   EndTest();
+
+   StartTest(_T("RingBuffer: read #3"));
+   memset(buffer, 0, 256);
+   bytes = rb.read((BYTE *)buffer, 17);
+   AssertEquals(bytes, 17);
+   AssertTrue(!memcmp(buffer, "t datalong data: ", 17));
+   AssertEquals(rb.size(), 100);
+   EndTest();
+
+   StartTest(_T("RingBuffer: write #4"));
+   rb.write((const BYTE *)"short data", 10);
+   AssertEquals(rb.size(), 110);
+   EndTest();
+
+   StartTest(_T("RingBuffer: read #4"));
+   memset(buffer, 0, 256);
+   bytes = rb.read((BYTE *)buffer, 108);
+   AssertEquals(bytes, 108);
+   AssertTrue(!memcmp(buffer, "123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.short da", 108));
+   AssertEquals(rb.size(), 2);
+   EndTest();
+
+   StartTest(_T("RingBuffer: write #5"));
+   rb.write((const BYTE *)"test", 4);
+   AssertEquals(rb.size(), 6);
+   EndTest();
+
+   StartTest(_T("RingBuffer: read #5"));
+   memset(buffer, 0, 256);
+   bytes = rb.read((BYTE *)buffer, 256);
+   AssertEquals(bytes, 6);
+   AssertTrue(!memcmp(buffer, "tatest", 6));
+   AssertEquals(rb.size(), 0);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -758,6 +831,7 @@ int main(int argc, char *argv[])
    TestConditionWrapper();
    TestByteSwap();
    TestDiff();
+   TestRingBuffer();
 
    MsgWaitQueue::shutdown();
    return 0;

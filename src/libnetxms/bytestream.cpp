@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2015 Raden Solutions
+ ** Copyright (C) 2003-2017 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -17,7 +17,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** File: config.cpp
+ ** File: bytestream.cpp
  **
  **/
 

@@ -1139,6 +1139,29 @@ public:
 };
 
 /**
+ * Ring buffer
+ */
+class LIBNETXMS_EXPORTABLE RingBuffer
+{
+private:
+   BYTE *m_data;
+   size_t m_size;
+   size_t m_allocated;
+   size_t m_allocationStep;
+   size_t m_readPos;
+   size_t m_writePos;
+
+public:
+   RingBuffer(size_t initial = 8192, size_t allocationStep = 8192);
+   ~RingBuffer();
+
+   void write(const BYTE *data, size_t dataSize);
+   size_t read(BYTE *buffer, size_t bufferSize);
+
+   size_t size() const { return m_size; }
+};
+
+/**
  * Byte stream
  */
 class LIBNETXMS_EXPORTABLE ByteStream

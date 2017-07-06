@@ -4,11 +4,11 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	  hashmapbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
 	  inetaddr.cpp log.cpp lz4.c main.cpp md5.cpp message.cpp \
 	  msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp pa.cpp parisc_atomic.cpp \
-          qsort.c queue.cpp rwlock.cpp scandir.c serial.cpp sha1.cpp sha2.cpp \
-          solaris9_atomic.c spoll.cpp streamcomp.cpp string.cpp \
-	  stringlist.cpp strmap.cpp strmapbase.cpp strptime.c strset.cpp \
-	  strtoll.c strtoull.c table.cpp threads.cpp timegm.c tools.cpp \
-	  tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
+          qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c serial.cpp \
+	  sha1.cpp sha2.cpp solaris9_atomic.c spoll.cpp streamcomp.cpp \
+	  string.cpp stringlist.cpp strmap.cpp strmapbase.cpp strptime.c \
+	  strset.cpp strtoll.c strtoull.c table.cpp threads.cpp timegm.c \
+	  tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
 	  wcscasecmp.cpp wcsncasecmp.cpp
 
 lib_LTLIBRARIES = libnetxms.la
