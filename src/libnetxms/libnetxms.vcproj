@@ -486,6 +486,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rbuffer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rwlock.cpp"
 				>
 			</File>
