@@ -42,8 +42,8 @@ private:
    size_t m_head;
    size_t m_size;
 #ifdef _WIN32
-   MUTEX m_bufferLock;
-   CONDITION m_dataCondition;
+   CRITICAL_SECTION m_bufferLock;
+   HANDLE m_dataCondition;
 #else
    pthread_mutex_t m_bufferLock;
    pthread_cond_t m_dataCondition;

@@ -713,8 +713,8 @@ AgentTunnelCommChannel::AgentTunnelCommChannel(AgentTunnel *tunnel, UINT32 id)
    m_size = 0;
    m_buffer = (BYTE *)malloc(m_allocated);
 #ifdef _WIN32
-   m_bufferLock = MutexCreate();
-   m_dataCondition = ConditionCreate(TRUE);
+   InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
+   m_dataCondition = CreateEvent(NULL, TRUE, FALSE, NULL);
 #else
    pthread_mutex_init(&m_bufferLock, NULL);
    pthread_cond_init(&m_dataCondition, NULL);
@@ -729,8 +729,8 @@ AgentTunnelCommChannel::~AgentTunnelCommChannel()
    m_tunnel->decRefCount();
    free(m_buffer);
 #ifdef _WIN32
-   MutexDestroy(m_bufferLock);
-   ConditionDestroy(m_dataCondition);
+   DeleteCriticalSection(&m_bufferLock);
+   CloseHandle(m_dataCondition);
 #else
    pthread_mutex_destroy(&m_bufferLock);
    pthread_cond_destroy(&m_dataCondition);
@@ -754,13 +754,24 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
       return 0;
 
 #ifdef _WIN32
-   if (!ConditionWait(m_dataCondition, timeout))
-      return -2;
+   EnterCriticalSection(&m_bufferLock);
+   if (m_size == 0)
+   {
+retry_wait:
+      LeaveCriticalSection(&m_bufferLock);
+      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
+         return -2;
 
-   if (!m_active)
-      return 0;   // closed while waiting
+      if (!m_active)
+         return 0;   // closed while waiting
 
-   MutexLock(m_bufferLock);
+      EnterCriticalSection(&m_bufferLock);
+      if (m_size == 0)
+      {
+         ResetEvent(m_dataCondition);
+         goto retry_wait;
+      }
+   }
 #else
    pthread_mutex_lock(&m_bufferLock);
    if (m_size == 0)
@@ -801,7 +812,7 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
    {
       m_head = 0;
 #ifdef _WIN32
-      ConditionReset(m_dataCondition);
+      ResetEvent(m_dataCondition);
 #endif
    }
    else
@@ -809,7 +820,7 @@ int AgentTunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
       m_head += bytes;
    }
 #ifdef _WIN32
-   MutexUnlock(m_bufferLock);
+   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_unlock(&m_bufferLock);
 #endif
@@ -827,10 +838,29 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
    if (!m_active)
       return -1;
 
-#ifdef _WIN32
-   return ConditionWait(m_dataCondition, timeout) ? 1 : 0;
-#else
    int rc = 0;
+
+#ifdef _WIN32
+   EnterCriticalSection(&m_bufferLock);
+   if (m_size == 0)
+   {
+retry_wait:
+      LeaveCriticalSection(&m_bufferLock);
+      if (WaitForSingleObject(m_dataCondition, timeout) == WAIT_TIMEOUT)
+         return 0;
+
+      if (!m_active)
+         return -1;
+
+      EnterCriticalSection(&m_bufferLock);
+      if (m_size == 0)
+      {
+         ResetEvent(m_dataCondition);
+         goto retry_wait;
+      }
+   }
+   LeaveCriticalSection(&m_bufferLock);
+#else
    pthread_mutex_lock(&m_bufferLock);
    if (m_size == 0)
    {
@@ -851,8 +881,9 @@ int AgentTunnelCommChannel::poll(UINT32 timeout, bool write)
 #endif
    }
    pthread_mutex_unlock(&m_bufferLock);
-   return (rc == 0) ? 1 : 0;
 #endif
+
+   return (rc == 0) ? 1 : 0;
 }
 
 /**
@@ -862,7 +893,9 @@ int AgentTunnelCommChannel::shutdown()
 {
    m_active = false;
 #ifdef _WIN32
-   ConditionSet(m_dataCondition);
+   EnterCriticalSection(&m_bufferLock);
+   SetEvent(m_dataCondition);
+   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
 #endif
@@ -876,7 +909,9 @@ void AgentTunnelCommChannel::close()
 {
    m_active = false;
 #ifdef _WIN32
-   ConditionSet(m_dataCondition);
+   EnterCriticalSection(&m_bufferLock);
+   SetEvent(m_dataCondition);
+   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
 #endif
@@ -889,7 +924,7 @@ void AgentTunnelCommChannel::close()
 void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
 {
 #ifdef _WIN32
-   MutexLock(m_bufferLock);
+   EnterCriticalSection(&m_bufferLock);
 #else
    pthread_mutex_lock(&m_bufferLock);
 #endif
@@ -901,8 +936,8 @@ void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
    memcpy(&m_buffer[m_head + m_size], data, size);
    m_size += size;
 #ifdef _WIN32
-   ConditionSet(m_dataCondition);
-   MutexUnlock(m_bufferLock);
+   SetEvent(m_dataCondition);
+   LeaveCriticalSection(&m_bufferLock);
 #else
    pthread_cond_broadcast(&m_dataCondition);
    pthread_mutex_unlock(&m_bufferLock);
