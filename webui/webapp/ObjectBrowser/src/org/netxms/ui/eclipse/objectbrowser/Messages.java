@@ -22,6 +22,7 @@ public class Messages extends NLS
 	public String IPAddressSelectionDialog_WarningText;
 	public String IPAddressSelector_None;
    public String ObjectBrowser_HideCheckTemplates;
+   public String ObjectBrowser_HideSubInterfaces;
 	public String ObjectBrowser_HideUnmanaged;
 	public String ObjectBrowser_MoveJob_Error;
 	public String ObjectBrowser_MoveJob_Title;
