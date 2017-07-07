@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2017 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,208 +31,205 @@ public class InterfacesTabFilter extends ViewerFilter
 {
    private NXCSession session = ConsoleSharedData.getSession();
    private String filterString = null;
+   private boolean hideSubInterfaces = false;
 
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
+      final Interface iface = (Interface)element;
+      if (hideSubInterfaces && (iface.getParentInterfaceId() != 0))
+         return false;
+      
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      final Interface interf = (Interface)element;
-      if (containsOId(interf))
-      {
-         return true;
-      }
-      else if (containsName(interf))
-      {
-         return true;
-      }
-      else if (containsAlias(interf))
-      {
-         return true;
-      }
-      else if (containsIfType(interf))
-      {
-         return true;
-      }
-      else if (containsIfIndex(interf))
-      {
-         return true;
-      }
-      else if (containsIfTypeName(interf))
-      {
-         return true;
-      }      
-      else if (containsSlot(interf))
-      {
-         return true;
-      }
-      else if (containsPort(interf))
-      {
-         return true;
-      }
-      else if (containsMtu(interf))
-      {
-         return true;
-      }
-      else if (containsSpeed(interf))
-      {
-         return true;
-      }
-      else if (containsDescription(interf))
-      {
-         return true;
-      }
-      else if (containsMac(interf))
-      {
-         return true;
-      }
-      else if (containsIp(interf))
-      {
-         return true;
-      }
-      else if (containsPeerNode(interf))
-      {
-         return true;
-      }
-      /*else if (containsPeerMac(interf))
-      {
-         return true;
-      }
-      else if (containsPeerIp(interf))
-      {
-         return true;
-      }*/
-      else if (containsPeerDiscoveryProtocol(interf))
-      {
-         return true;
-      }
-      else if (containsAdminState(interf))
-      {
-         return true;
-      }
-      else if (containsOperState(interf))
-      {
-         return true;
-      }
-      else if (containsExpState(interf))
-      {
-         return true;
-      }
-      else if (containsStatus(interf))
-      {
-         return true;
-      }
-      else if (containsDot1xPaeState(interf))
-      {
-         return true;
-      }
-      else if (containsDot1xBackendState(interf))
-      {
-         return true;
-      }
-      return false;
+      return matchOId(iface) ||
+            matchName(iface) ||
+            matchAlias(iface) ||
+            matchIfType(iface) ||
+            matchIfIndex(iface) ||
+            matchIfTypeName(iface) ||
+            matchSlot(iface) ||
+            matchPort(iface) ||
+            matchMtu(iface) ||
+            matchSpeed(iface) ||
+            matchDescription(iface) ||
+            matchMac(iface) ||
+            matchIp(iface) ||
+            matchPeerNode(iface) ||
+            matchPeerMac(iface) ||
+            matchPeerIp(iface) ||
+            matchPeerDiscoveryProtocol(iface) ||
+            matchAdminState(iface) ||
+            matchOperState(iface) ||
+            matchExpState(iface) ||
+            matchStatus(iface) ||
+            matchDot1xPaeState(iface) ||
+            matchDot1xBackendState(iface);
    }
-   
-   public boolean containsOId(Interface interf)
+
+   /**
+    * @param iface
+    * @return
+    */
+   private boolean matchOId(Interface iface)
    {
-      if (Long.toString(interf.getObjectId()).contains(filterString))
-            return true;
-      return false;
-   }
-   
-   public boolean containsName(Interface interf)
-   {
-      if (interf.getObjectName().toLowerCase().contains(filterString))
+      if (Long.toString(iface.getObjectId()).contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsAlias(Interface interf)
+
+   /**
+    * @param iface
+    * @return
+    */
+   private boolean matchName(Interface iface)
+   {
+      if (iface.getObjectName().toLowerCase().contains(filterString))
+         return true;
+      return false;
+   }
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchAlias(Interface interf)
    {
       if (interf.getAlias().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsIfType(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchIfType(Interface interf)
    {
       if (Integer.toString(interf.getIfType()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsIfTypeName(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchIfTypeName(Interface interf)
    {
       if (interf.getIfTypeName().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsIfIndex(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchIfIndex(Interface interf)
    {
       if (Integer.toString(interf.getIfIndex()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsSlot(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchSlot(Interface interf)
    {
       if (Integer.toString(interf.getSlot()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsPort(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchPort(Interface interf)
    {
       if (Integer.toString(interf.getPort()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsMtu(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchMtu(Interface interf)
    {
       if (Integer.toString(interf.getMtu()).toLowerCase().contains(filterString))
          return true;
-      return false;      
+      return false;
    }
-   
-   public boolean containsSpeed(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchSpeed(Interface interf)
    {
       if (Long.toString(interf.getSpeed()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsDescription(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchDescription(Interface interf)
    {
       if (interf.getDescription().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsMac(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchMac(Interface interf)
    {
       if (interf.getMacAddress().toString().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsIp(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchIp(Interface interf)
    {
       if (interf.getIpAddressListAsString().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsPeerNode(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchPeerNode(Interface interf)
    {
       if (Long.toString(interf.getPeerNodeId()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsPeerMac(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchPeerMac(Interface interf)
    {
       Interface peer = (Interface)session.findObjectById(interf.getPeerInterfaceId(), Interface.class);
       if (peer == null)
@@ -241,8 +238,12 @@ public class InterfacesTabFilter extends ViewerFilter
          return true;
       return false;
    }
-   
-   public boolean containsPeerIp(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchPeerIp(Interface interf)
    {
       Interface peer = (Interface)session.findObjectById(interf.getPeerInterfaceId(), Interface.class);
       if (peer == null)
@@ -252,65 +253,114 @@ public class InterfacesTabFilter extends ViewerFilter
       return false;
    }
 
-   public boolean containsPeerDiscoveryProtocol(Interface interf)
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchPeerDiscoveryProtocol(Interface interf)
    {
       if (interf.getPeerDiscoveryProtocol().toString().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsAdminState(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchAdminState(Interface interf)
    {
       if (interf.getAdminStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsOperState(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchOperState(Interface interf)
    {
       if (interf.getOperStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsExpState(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchExpState(Interface interf)
    {
       if (Integer.toString(interf.getExpectedState()).toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsStatus(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchStatus(Interface interf)
    {
       if (interf.getStatus().toString().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsDot1xPaeState(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchDot1xPaeState(Interface interf)
    {
       if (interf.getDot1xPaeStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
-   public boolean containsDot1xBackendState(Interface interf)
+
+   /**
+    * @param interf
+    * @return
+    */
+   private boolean matchDot1xBackendState(Interface interf)
    {
       if (interf.getDot1xBackendStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
    }
-  
+
+   /**
+    * Get filter string
+    * 
+    * @return
+    */
    public String getFilterString()
    {
       return filterString;
    }
-   
+
    /**
     * @param filterString the filterString to set
     */
    public void setFilterString(String filterString)
    {
       this.filterString = filterString.toLowerCase();
+   }
+
+   /**
+    * @return the hideSubInterfaces
+    */
+   public boolean isHideSubInterfaces()
+   {
+      return hideSubInterfaces;
+   }
+
+   /**
+    * @param hideSubInterfaces the hideSubInterfaces to set
+    */
+   public void setHideSubInterfaces(boolean hideSubInterfaces)
+   {
+      this.hideSubInterfaces = hideSubInterfaces;
    }
 }

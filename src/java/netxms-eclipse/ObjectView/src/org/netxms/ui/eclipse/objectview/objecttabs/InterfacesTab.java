@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,8 @@ public class InterfacesTab extends ObjectTab
 	private Action actionCopyPeerIpToClipboard;
 	private Action actionExportToCsv;
 	
-	private boolean initShowFilter = true;
+	private boolean showFilter = true;
+	private boolean hideSubInterfaces = false;
 	private FilterText filterText;
 	private InterfacesTabFilter filter;
    private Composite interfacesArea;
@@ -111,11 +112,14 @@ public class InterfacesTab extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initShowFilter = safeCast(settings.get("InterfacesTab.showFilter"), settings.getBoolean("InterfacesTab.showFilter"), initShowFilter); //$NON-NLS-1$ //$NON-NLS-2$
+      showFilter = safeCast(settings.get("InterfacesTab.showFilter"), settings.getBoolean("InterfacesTab.showFilter"), showFilter); //$NON-NLS-1$ //$NON-NLS-2$
+      hideSubInterfaces = safeCast(settings.get("InterfacesTab.hideSubInterfaces"), settings.getBoolean("InterfacesTab.hideSubInterfaces"), hideSubInterfaces); //$NON-NLS-1$ //$NON-NLS-2$
+
       // Create interface area
       interfacesArea = new Composite(parent, SWT.BORDER);
       FormLayout formLayout = new FormLayout();
       interfacesArea.setLayout(formLayout);
+
       // Create filter
       filterText = new FilterText(interfacesArea, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
@@ -129,7 +133,8 @@ public class InterfacesTab extends ObjectTab
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put("InterfacesTab.showFilter", initShowFilter); //$NON-NLS-1$
+            settings.put("InterfacesTab.showFilter", showFilter); //$NON-NLS-1$
+            settings.put("InterfacesTab.hideSubInterfaces", hideSubInterfaces); //$NON-NLS-1$
          }
       });
       
@@ -147,6 +152,19 @@ public class InterfacesTab extends ObjectTab
       };
       setFilterCloseAction(action);
 
+      // Check/uncheck menu items
+      ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+
+      Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter"); //$NON-NLS-1$
+      State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state"); //$NON-NLS-1$
+      state.setValue(showFilter);
+      service.refreshElements(command.getId(), null);
+
+      command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.hideSubInterfaces"); //$NON-NLS-1$
+      state = command.getState("org.netxms.ui.eclipse.objectview.commands.hideSubInterfaces.state"); //$NON-NLS-1$
+      state.setValue(hideSubInterfaces);
+      service.refreshElements(command.getId(), null);
+      
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -188,6 +206,7 @@ public class InterfacesTab extends ObjectTab
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
 		filter = new InterfacesTabFilter();
+		filter.setHideSubInterfaces(hideSubInterfaces);
 		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -201,7 +220,6 @@ public class InterfacesTab extends ObjectTab
       // Setup layout
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      ;
       fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
       fd.bottom = new FormAttachment(100, 0);
       fd.right = new FormAttachment(100, 0);
@@ -211,7 +229,7 @@ public class InterfacesTab extends ObjectTab
       createPopupMenu();
 
       // Set initial focus to filter input line
-      if (initShowFilter)
+      if (showFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
@@ -274,8 +292,8 @@ public class InterfacesTab extends ObjectTab
     */
    public void enableFilter(boolean enable)
    {
-      initShowFilter = enable;
-      filterText.setVisible(initShowFilter);
+      showFilter = enable;
+      filterText.setVisible(showFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       interfacesArea.layout();
@@ -488,5 +506,15 @@ public class InterfacesTab extends ObjectTab
    {
       super.selected();
       refresh();
+   }
+
+   /**
+    * @param hide
+    */
+   public void hideSubInterfaces(boolean hide)
+   {
+      hideSubInterfaces = hide;
+      filter.setHideSubInterfaces(hide);
+      viewer.refresh();
    }
 }

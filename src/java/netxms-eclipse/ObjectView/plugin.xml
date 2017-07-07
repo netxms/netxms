@@ -54,6 +54,22 @@
             </parameter>
          </defaultHandler>
       </command>
+      <command
+            description="Hide sub-interfaces"
+            id="org.netxms.ui.eclipse.objectview.commands.hideSubInterfaces"
+            name="Hide sub-interfaces">
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.objectview.commands.hideSubInterfaces.state">
+         </state>
+         <defaultHandler
+               class="org.netxms.ui.eclipse.objectview.actions.HideSubInterfacesHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -198,6 +214,21 @@
                label="Show &amp;filter"
                style="toggle"
                tooltip="Show Filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.objectview.commands.hideSubInterfaces"
+               label="Hide sub-&amp;interfaces"
+               style="toggle"
+               tooltip="Hide sub-interfaces">
             <visibleWhen
                   checkEnabled="false">
                <with

@@ -122,6 +122,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionShowStatusIndicator;
 	private Action actionHideUnmanaged;
 	private Action actionHideTemplateChecks;
+   private Action actionHideSubInterfaces;
 	private Action actionMoveObject;
 	private Action actionMoveTemplate;
 	private Action actionMoveBusinessService;
@@ -132,6 +133,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionRenameObject;
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
+   private boolean initHideSubInterfaces = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
 	private String initialObjectSelection = null;
@@ -149,6 +151,7 @@ public class ObjectBrowser extends ViewPart
 		{
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
+			initHideSubInterfaces = safeCast(memento.getBoolean("ObjectBrowser.hideSubInterfaces"), false); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
@@ -183,6 +186,7 @@ public class ObjectBrowser extends ViewPart
 		super.saveState(memento);
 		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
+      memento.putBoolean("ObjectBrowser.hideSubInterfaces", objectTree.isHideSubInterfaces()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
 		saveSelection(memento);
 	}
@@ -206,7 +210,8 @@ public class ObjectBrowser extends ViewPart
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
 		objectTree.setLayoutData(fd);
-		
+
+		objectTree.setHideSubInterfaces(initHideSubInterfaces);
 		objectTree.setHideTemplateChecks(initHideTemplateChecks);
 		objectTree.setHideUnmanaged(initHideUnmanaged);
 		objectTree.enableFilter(initShowFilter);
@@ -501,8 +506,7 @@ public class ObjectBrowser extends ViewPart
 			@Override
 			public void run()
 			{
-				objectTree.setHideUnmanaged(!objectTree.isHideUnmanaged());
-		      actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
+				objectTree.setHideUnmanaged(actionHideUnmanaged.isChecked());
 			}
       };
       actionHideUnmanaged.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideUnmanaged"); //$NON-NLS-1$
@@ -512,19 +516,27 @@ public class ObjectBrowser extends ViewPart
 			@Override
 			public void run()
 			{
-				objectTree.setHideTemplateChecks(!objectTree.isHideTemplateChecks());
-		      actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
+				objectTree.setHideTemplateChecks(actionHideTemplateChecks.isChecked());
 			}
       };
       actionHideTemplateChecks.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideTemplateChecks"); //$NON-NLS-1$
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
+      actionHideSubInterfaces = new Action(Messages.get().ObjectBrowser_HideSubInterfaces, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            objectTree.setHideSubInterfaces(actionHideSubInterfaces.isChecked());
+         }
+      };
+      actionHideSubInterfaces.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideSubInterfaces"); //$NON-NLS-1$
+      actionHideSubInterfaces.setChecked(objectTree.isHideSubInterfaces());
+
       actionShowFilter = new Action(Messages.get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
-				objectTree.enableFilter(!objectTree.isFilterEnabled());
-				actionShowFilter.setChecked(objectTree.isFilterEnabled());
+				objectTree.enableFilter(actionShowFilter.isChecked());
 			}
       };
       actionShowFilter.setId("org.netxms.ui.eclipse.objectbrowser.actions.showFilter"); //$NON-NLS-1$
@@ -571,6 +583,7 @@ public class ObjectBrowser extends ViewPart
       IMenuManager manager = getViewSite().getActionBars().getMenuManager();
       FilteringMenuManager.add(manager, actionShowFilter, Activator.PLUGIN_ID);
       FilteringMenuManager.add(manager, actionShowStatusIndicator, Activator.PLUGIN_ID);
+      FilteringMenuManager.add(manager, actionHideSubInterfaces, Activator.PLUGIN_ID);
       FilteringMenuManager.add(manager, actionHideUnmanaged, Activator.PLUGIN_ID);
       FilteringMenuManager.add(manager, actionHideTemplateChecks, Activator.PLUGIN_ID);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -889,7 +902,7 @@ public class ObjectBrowser extends ViewPart
 					         ((parentObject instanceof NetworkMapGroup) ||
                         (parentObject instanceof NetworkMapRoot)) ? APPROVE : REJECT;
 					case DASHBOARDS:
-                  return ((currentObject instanceof Dashboard) ||
+					   return ((currentObject instanceof Dashboard) ||
                         (currentObject instanceof DashboardGroup)) &&
                          ((parentObject instanceof DashboardGroup) ||
                          (parentObject instanceof DashboardRoot)) ? APPROVE : REJECT;

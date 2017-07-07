@@ -469,7 +469,7 @@ public class ObjectTree extends Composite
 	}
 
 	/**
-	 * @return the hideUnmanaged
+    * @return true if unmanaged objects are hidden
 	 */
 	public boolean isHideUnmanaged()
 	{
@@ -477,16 +477,18 @@ public class ObjectTree extends Composite
 	}
 
 	/**
-	 * @param hideUnmanaged the hideUnmanaged to set
+	 * Show/hide unmanaged objects
+	 * 
+	 * @param hide true to hide unmanaged objects
 	 */
-	public void setHideUnmanaged(boolean hideUnmanaged)
+	public void setHideUnmanaged(boolean hide)
 	{
-		filter.setHideUnmanaged(hideUnmanaged);
+		filter.setHideUnmanaged(hide);
 		onFilterModify();
 	}
 
 	/**
-	 * @return the hideTemplateChecks
+    * @return true if template checks are hidden
 	 */
 	public boolean isHideTemplateChecks()
 	{
@@ -494,14 +496,35 @@ public class ObjectTree extends Composite
 	}
 
 	/**
-	 * @param hideTemplateChecks the hideTemplateChecks to set
+    * Show/hide service check template objects
+    * 
+    * @param hide true to hide service check template objects
 	 */
-	public void setHideTemplateChecks(boolean hideTemplateChecks)
+	public void setHideTemplateChecks(boolean hide)
 	{
-		filter.setHideTemplateChecks(hideTemplateChecks);
+		filter.setHideTemplateChecks(hide);
 		onFilterModify();
 	}
 	
+   /**
+    * @return true if sub-interfaces are hidden
+    */
+   public boolean isHideSubInterfaces()
+   {
+      return filter.isHideSubInterfaces();
+   }
+
+   /**
+    * Show/hide sub-interfaces
+    * 
+    * @param hide true to hide sub-interfaces
+    */
+   public void setHideSubInterfaces(boolean hide)
+   {
+      filter.setHideSubInterfaces(hide);
+      onFilterModify();
+   }
+   
 	/**
 	 * Set action to be executed when user press "Close" button in object filter.
 	 * Default implementation will hide filter area without notifying parent.

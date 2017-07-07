@@ -805,10 +805,10 @@ static void TestRingBuffer()
 
    StartTest(_T("RingBuffer: random read/write"));
    AssertTrue(rb.isEmpty());
-   for(int i = 0; i < 1000; i++)
+   for(int i = 0; i < 10000; i++)
    {
-      int writes = rand() % 5;
-      int reads = rand() % 5;
+      int writes = rand() % 10;
+      int reads = rand() % 10;
       for(int j = 0; j < writes; j++)
       {
          rb.write((const BYTE *)"---------/---------/---------/---------/---------/---------/---------/---------/---------/---------/", 100);
