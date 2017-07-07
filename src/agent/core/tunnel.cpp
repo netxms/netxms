@@ -1049,7 +1049,7 @@ int TunnelCommChannel::recv(void *buffer, size_t size, UINT32 timeout)
 
 #ifdef _WIN32
    EnterCriticalSection(&m_bufferLock);
-   if (m_size == 0)
+   if (m_buffer.isEmpty())
    {
 retry_wait:
       LeaveCriticalSection(&m_bufferLock);
