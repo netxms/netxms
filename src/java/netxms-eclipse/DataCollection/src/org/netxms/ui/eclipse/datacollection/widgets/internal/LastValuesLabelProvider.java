@@ -97,7 +97,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 					return Messages.get().LastValuesLabelProvider_Table;
 				return useMultipliers ? ((DciValue)element).format("%*s") : ((DciValue)element).getValue();
 			case LastValuesWidget.COLUMN_TIMESTAMP:
-				if (((DciValue)element).getTimestamp().getTime() == 0)
+				if (((DciValue)element).getTimestamp().getTime() <= 1000)
 					return null;
 				return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
