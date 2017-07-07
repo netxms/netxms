@@ -775,7 +775,7 @@ retry_wait:
       struct timespec ts;
       ts.tv_sec = timeout / 1000;
       ts.tv_nsec = (timeout % 1000) * 1000000;
-      int rc = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+      int rc = pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts);
 #else
       struct timeval now;
       struct timespec ts;
@@ -852,7 +852,7 @@ retry_wait:
       struct timespec ts;
       ts.tv_sec = timeout / 1000;
       ts.tv_nsec = (timeout % 1000) * 1000000;
-      rc = pthread_cond_reltimedwait_np(&cond->cond, &cond->mutex, &timeout);
+      rc = pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts);
 #else
       struct timeval now;
       struct timespec ts;
