@@ -329,7 +329,7 @@ AC_ARG_ENABLE(mqtt,
 AC_ARG_WITH(curl,
 [AS_HELP_STRING(--without-curl,build without curl)],
 [
-	if test "x$enableval" = "xno"; then
+	if test "x$withval" = "xno"; then
 		DISABLE_CURL="yes"
 	fi
 ])
