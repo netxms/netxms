@@ -71,6 +71,14 @@ void RingBuffer::write(const BYTE *data, size_t dataSize)
       memcpy(&m_data[m_writePos], data, dataSize);
       m_writePos += dataSize;
    }
+   else if (m_size == 0)   // buffer is empty but not large enough to hold new data
+   {
+      m_allocated = dataSize + m_allocationStep;
+      m_data = (BYTE *)realloc(m_data, m_allocated);
+      memcpy(m_data, data, dataSize);
+      m_writePos = dataSize;
+      m_readPos = 0;
+   }
    else
    {
       size_t tailSize = m_allocated - m_readPos;
