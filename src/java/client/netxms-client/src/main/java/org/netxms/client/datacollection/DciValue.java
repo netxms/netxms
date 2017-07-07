@@ -75,7 +75,7 @@ public abstract class DciValue
 	 * 
 	 * @param nodeId owning node ID
 	 * @param msg NXCP message
-	 * @param base Base variable ID for value object
+	 * @param base Base field ID for value object
 	 */
 	protected DciValue(long nodeId, NXCPMessage msg, long base)
 	{

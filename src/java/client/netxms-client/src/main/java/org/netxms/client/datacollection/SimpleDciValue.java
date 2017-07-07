@@ -26,9 +26,11 @@ import org.netxms.base.NXCPMessage;
 public class SimpleDciValue extends DciValue
 {
 	/**
-	 * @param nodeId node id
-	 * @param msg source message
-	 * @param base Base field ID for value object
+	 * Create simple DCI value from NXCP message
+	 * 
+    * @param nodeId owning node ID
+    * @param msg NXCP message
+    * @param base Base field ID for value object
 	 */
 	protected SimpleDciValue(long nodeId, NXCPMessage msg, long base)
 	{
@@ -36,12 +38,12 @@ public class SimpleDciValue extends DciValue
 	}
 	
 	/**
-    * @param id node id
-    * @param value value
-    * @param dataType type
-    * @param status DCI status
-    */
-   public SimpleDciValue(NXCPMessage msg, long base)
+    * Create simple DCI value from NXCP message (with node ID passed in message)
+    * 
+    * @param msg NXCP message
+    * @param base Base field ID for value object
+	 */
+	public SimpleDciValue(NXCPMessage msg, long base)
    {
       super();
       this.id = msg.getFieldAsInt64(base + 1);
