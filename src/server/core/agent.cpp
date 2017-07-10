@@ -738,6 +738,14 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       return ERR_INTERNAL_ERROR;
    }
 
+   // Check that server is not overloaded with DCI data
+   int queueSize = g_dciDataWriterQueue->size();
+   if (queueSize > 250000)
+   {
+      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);
+      return ERR_RESOURCE_BUSY;
+   }
+
    int count = request->getFieldAsInt16(VID_NUM_ELEMENTS);
    if (count > MAX_BULK_DATA_BLOCK_SIZE)
       count = MAX_BULK_DATA_BLOCK_SIZE;
