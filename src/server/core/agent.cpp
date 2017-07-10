@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -599,6 +599,14 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
       return ERR_INTERNAL_ERROR;
+   }
+
+   // Check that server is not overloaded with DCI data
+   int queueSize = g_dciDataWriterQueue->size();
+   if (queueSize > 250000)
+   {
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);
+      return ERR_RESOURCE_BUSY;
    }
 
    DataCollectionTarget *target;
