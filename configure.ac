@@ -1067,6 +1067,7 @@ case "$PLATFORM" in
       ;;
    SunOS)
       CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__"
+
       AC_MSG_CHECKING(whether C compiler accepts -O2)
       OLD_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS -O2"
@@ -1074,6 +1075,16 @@ case "$PLATFORM" in
          [ AC_MSG_RESULT(yes) ],
          [
             CPPFLAGS="$OLD_CPPFLAGS"
+            AC_MSG_RESULT(no)
+         ])
+
+      AC_MSG_CHECKING(whether C compiler accepts -features=extensions)
+      OLD_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS -features=extensions"
+      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+         [ AC_MSG_RESULT(yes) ],
+         [
+            CFLAGS="$OLD_CFLAGS"
             AC_MSG_RESULT(no)
          ])
       ;;

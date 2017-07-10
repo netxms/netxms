@@ -69,7 +69,7 @@ void handler_fire_stanza(xmpp_conn_t * const conn,
                     hash_drop(conn->id_handlers, id);
                     hash_add(conn->id_handlers, id, next);
                 }
-                xmpp_free(conn->ctx, item->id);
+                xmpp_free(conn->ctx, item->attrs.id);
                 xmpp_free(conn->ctx, item);
                 item = NULL;
             }
@@ -99,19 +99,19 @@ void handler_fire_stanza(xmpp_conn_t * const conn,
             continue;
         }
 
-        if ((!item->ns || (ns && strcmp(ns, item->ns) == 0) ||
-             xmpp_stanza_get_child_by_ns(stanza, item->ns)) &&
-            (!item->name || (name && strcmp(name, item->name) == 0)) &&
-            (!item->type || (type && strcmp(type, item->type) == 0)))
+        if ((!item->attrs.ns || (ns && strcmp(ns, item->attrs.ns) == 0) ||
+             xmpp_stanza_get_child_by_ns(stanza, item->attrs.ns)) &&
+            (!item->attrs.name || (name && strcmp(name, item->attrs.name) == 0)) &&
+            (!item->attrs.type || (type && strcmp(type, item->attrs.type) == 0)))
             if (!((xmpp_handler)(item->handler))(conn, stanza, item->userdata)) {
                 /* handler is one-shot, so delete it */
                 if (prev)
                     prev->next = item->next;
                 else
                     conn->handlers = item->next;
-                if (item->ns) xmpp_free(conn->ctx, item->ns);
-                if (item->name) xmpp_free(conn->ctx, item->name);
-                if (item->type) xmpp_free(conn->ctx, item->type);
+                if (item->attrs.ns) xmpp_free(conn->ctx, item->attrs.ns);
+                if (item->attrs.name) xmpp_free(conn->ctx, item->attrs.name);
+                if (item->attrs.type) xmpp_free(conn->ctx, item->attrs.type);
                 xmpp_free(conn->ctx, item);
                 item = NULL;
             }
@@ -164,10 +164,10 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
                 continue;
             }
 
-            elapsed = time_elapsed(item->last_stamp, time_stamp());
-            if (elapsed >= item->period) {
+            elapsed = time_elapsed(item->attrs.last_stamp, time_stamp());
+            if (elapsed >= item->attrs.period) {
                 /* fire! */
-                item->last_stamp = time_stamp();
+                item->attrs.last_stamp = time_stamp();
                 ret = ((xmpp_timed_handler)item->handler)(conn, item->userdata);
                 if (!ret) {
                     /* delete handler if it returned false */
@@ -178,8 +178,8 @@ uint64_t handler_fire_timed(xmpp_ctx_t * const ctx)
                     xmpp_free(conn->ctx, item);
                     item = NULL;
                 }
-            } else if (min > (item->period - elapsed))
-                min = item->period - elapsed;
+            } else if (min > (item->attrs.period - elapsed))
+                min = item->attrs.period - elapsed;
 
             if (item) {
                 prev = item;
@@ -207,7 +207,7 @@ void handler_reset_timed(xmpp_conn_t *conn, int user_only)
     handitem = conn->timed_handlers;
     while (handitem) {
         if ((user_only && handitem->user_handler) || !user_only)
-            handitem->last_stamp = time_stamp();
+            handitem->attrs.last_stamp = time_stamp();
 
         handitem = handitem->next;
     }
@@ -240,8 +240,8 @@ static void _timed_handler_add(xmpp_conn_t * const conn,
     item->enabled = 0;
     item->next = NULL;
 
-    item->period = period;
-    item->last_stamp = time_stamp();
+    item->attrs.period = period;
+    item->attrs.last_stamp = time_stamp();
 
     /* append item to list */
     if (!conn->timed_handlers)
@@ -314,8 +314,8 @@ static void _id_handler_add(xmpp_conn_t * const conn,
     item->enabled = 0;
     item->next = NULL;
 
-    item->id = xmpp_strdup(conn->ctx, id);
-    if (!item->id) {
+    item->attrs.id = xmpp_strdup(conn->ctx, id);
+    if (!item->attrs.id) {
         xmpp_free(conn->ctx, item);
         return;
     }
@@ -360,7 +360,7 @@ void xmpp_id_handler_delete(xmpp_conn_t * const conn,
                 hash_add(conn->id_handlers, id, next);
             }
 
-            xmpp_free(conn->ctx, item->id);
+            xmpp_free(conn->ctx, item->attrs.id);
             xmpp_free(conn->ctx, item);
             item = next;
         } else {
@@ -402,31 +402,31 @@ static void _handler_add(xmpp_conn_t * const conn,
     item->next = NULL;
 
     if (ns) {
-        item->ns = xmpp_strdup(conn->ctx, ns);
-        if (!item->ns) {
+        item->attrs.ns = xmpp_strdup(conn->ctx, ns);
+        if (!item->attrs.ns) {
             xmpp_free(conn->ctx, item);
             return;
         }
     } else
-        item->ns = NULL;
+        item->attrs.ns = NULL;
     if (name) {
-        item->name = xmpp_strdup(conn->ctx, name);
-        if (!item->name) {
-            if (item->ns) xmpp_free(conn->ctx, item->ns);
+        item->attrs.name = xmpp_strdup(conn->ctx, name);
+        if (!item->attrs.name) {
+            if (item->attrs.ns) xmpp_free(conn->ctx, item->attrs.ns);
             xmpp_free(conn->ctx, item);
             return;
         }
     } else
-        item->name = NULL;
+        item->attrs.name = NULL;
     if (type) {
-        item->type = xmpp_strdup(conn->ctx, type);
-        if (!item->type) {
-            if (item->ns) xmpp_free(conn->ctx, item->ns);
-            if (item->name) xmpp_free(conn->ctx, item->name);
+        item->attrs.type = xmpp_strdup(conn->ctx, type);
+        if (!item->attrs.type) {
+            if (item->attrs.ns) xmpp_free(conn->ctx, item->attrs.ns);
+            if (item->attrs.name) xmpp_free(conn->ctx, item->attrs.name);
             xmpp_free(conn->ctx, item);
         }
     } else
-        item->type = NULL;
+        item->attrs.type = NULL;
 
     /* append to list */
     if (!conn->handlers)
@@ -462,9 +462,9 @@ void xmpp_handler_delete(xmpp_conn_t * const conn,
             else
                 conn->handlers = item->next;
 
-            if (item->ns) xmpp_free(conn->ctx, item->ns);
-            if (item->name) xmpp_free(conn->ctx, item->name);
-            if (item->type) xmpp_free(conn->ctx, item->type);
+            if (item->attrs.ns) xmpp_free(conn->ctx, item->attrs.ns);
+            if (item->attrs.name) xmpp_free(conn->ctx, item->attrs.name);
+            if (item->attrs.type) xmpp_free(conn->ctx, item->attrs.type);
             xmpp_free(conn->ctx, item);
             item = prev ? prev->next : conn->handlers;
         } else {
