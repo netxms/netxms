@@ -66,13 +66,13 @@ public class WebSvcApplication extends Application
       Router router = new Router(getContext());
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
+      router.attach("/authenticate", AccessIntegrationTools.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
       router.attach("/grafana/datacollection", GrafanaDataCollection.class);
       router.attach("/objects", Objects.class);
-      router.attach("/objects/{id}", Objects.class);
+      router.attach("/objects/{object-id}", Objects.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
-      router.attach("/authenticate", AccessIntegrationTools.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
       return router;
    }

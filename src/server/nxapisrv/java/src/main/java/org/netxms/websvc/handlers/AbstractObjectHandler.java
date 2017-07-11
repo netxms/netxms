@@ -36,7 +36,7 @@ public class AbstractObjectHandler extends AbstractHandler
     */
    protected AbstractObject getObject() throws Exception
    {
-      String entityId = getEntityId();
+      String entityId = (String)getRequest().getAttributes().get("object-id");
       AbstractObject object;
       try
       {
