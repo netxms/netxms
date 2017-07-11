@@ -20,7 +20,9 @@ package org.netxms.websvc.handlers;
 
 import java.util.Date;
 import java.util.Map;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -50,11 +52,11 @@ public class HistoricalData extends AbstractObjectHandler
       }
       catch(NumberFormatException e)
       {
-         dciId = session.resolveDciId(obj, id);
+         dciId = session.resolveDciId(obj.getObjectId(), id);
       }
       
       if(obj == null || dciId == 0 || !(obj instanceof DataCollectionTarget))
-         return null; // return invalid object error
+         throw new NXCException(RCC.INVALID_OBJECT_ID);
       
       String timeFrom = query.get("from");
       String timeTo = query.get("to");

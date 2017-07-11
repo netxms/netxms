@@ -129,7 +129,6 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
-import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -4351,28 +4350,16 @@ public class NXCSession
     *
     * @param nodeIds node identifiers
     * @param dciIds  DCI identifiers (length must match length of node identifiers list)
-    * @return array of resolved DCI names
+    * @return id of resolved DCI
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long resolveDciId(long nodeId, String dciName)
+   public long resolveDciId(long nodeId, String dciName) throws IOException, NXCException
    {
       if (nodeId == 0 || dciName == null || dciName.isEmpty()) 
          return 0;
       
-      return resolveDciId(findObjectById(nodeId), dciName);
-   }
-
-   /**
-    * Resolve id of given DCI names
-    *
-    * @param nodeId node identifiers
-    * @param dciName  DCI identifiers (length must match length of node identifiers list)
-    * @return 
-    */
-   public long resolveDciId(AbstractObject obj, String dciName)
-   {
-      if(!(obj instanceof DataCollectionTarget)) 
-         return 0;
-      List<DciValue> list = ((DataCollectionTarget)obj).getOverviewDciData();
+      DciValue[] list = getLastValues(nodeId);
       for(DciValue dciValue : list)
       {
          if(dciValue.getName().equals(dciName))
