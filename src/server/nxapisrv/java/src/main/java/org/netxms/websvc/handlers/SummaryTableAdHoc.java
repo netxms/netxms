@@ -21,9 +21,7 @@ package org.netxms.websvc.handlers;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
@@ -34,12 +32,8 @@ import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
-import org.restlet.representation.Representation;
-import org.restlet.resource.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 public class SummaryTableAdHoc  extends AbstractHandler
 {

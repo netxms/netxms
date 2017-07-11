@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.ResponseContainer;
 import org.slf4j.Logger;
@@ -34,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Objects request handler
  */
-public class Objects extends AbstractHandler
+public class Objects extends AbstractObjectHandler
 {
    private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
    
@@ -168,8 +167,6 @@ public class Objects extends AbstractHandler
    @Override
    protected Object get(String id) throws Exception
    {
-      Long objectId = Long.parseLong(id);
-      AbstractObject object = getSession().findObjectById(objectId);
-      return (object != null) ? object : createErrorResponse(RCC.INVALID_OBJECT_ID);
+      return getObject();
    }
 }

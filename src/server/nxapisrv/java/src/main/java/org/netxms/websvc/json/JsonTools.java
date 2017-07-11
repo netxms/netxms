@@ -27,7 +27,6 @@ import org.json.JSONObject;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.MacAddress;
-import org.netxms.client.constants.RCC;
 import org.netxms.websvc.json.adapters.DateAdapter;
 import org.netxms.websvc.json.adapters.InetAddressAdapter;
 import org.netxms.websvc.json.adapters.InetAddressExAdapter;

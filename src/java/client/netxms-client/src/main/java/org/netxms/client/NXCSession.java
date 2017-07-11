@@ -313,6 +313,7 @@ public class NXCSession
 
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
+   private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
    private boolean objectsSynchronized = false;
 
    // Users
@@ -429,6 +430,7 @@ public class NXCSession
                         synchronized(objectList)
                         {
                            objectList.put(obj.getObjectId(), obj);
+                           objectListGUID.put(obj.getGuid(), obj);
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
@@ -440,7 +442,12 @@ public class NXCSession
                         long objectId = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_ID);
                         synchronized(objectList)
                         {
-                           objectList.remove(objectId);
+                           AbstractObject object = objectList.get(objectId);
+                           if (object != null)
+                           {
+                              objectListGUID.remove(object.getGuid());
+                              objectList.remove(objectId);
+                           }
                         }
                         sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
                      }
@@ -2099,6 +2106,7 @@ public class NXCSession
       receivedFiles.clear();
       recievedUpdates.clear();
       objectList.clear();
+      objectListGUID.clear();
       eventTemplates.clear();
       userDB.clear();
       alarmCategories.clear();
@@ -2559,13 +2567,10 @@ public class NXCSession
     */
    public AbstractObject findObjectById(final long id)
    {
-      AbstractObject obj;
-
       synchronized(objectList)
       {
-         obj = objectList.get(id);
+         return objectList.get(id);
       }
-      return obj;
    }
 
    /**
@@ -2668,7 +2673,36 @@ public class NXCSession
 
       return result;
    }
-   
+
+   /**
+    * Find NetXMS object by it's GUID.
+    *
+    * @param guid Object GUID
+    * @return Object with given ID or null if object cannot be found
+    */
+   public AbstractObject findObjectByGUID(final UUID guid)
+   {
+      synchronized(objectList)
+      {
+         return objectListGUID.get(guid);
+      }
+   }
+
+   /**
+    * Find NetXMS object by it's GUID with additional class checking.
+    *
+    * @param guid            object GUID
+    * @param requiredClass required object class
+    * @param <T> Object
+    * @return Object with given ID or null if object cannot be found or is not an instance of required class
+    */
+   @SuppressWarnings("unchecked")
+   public <T extends AbstractObject> T findObjectByGUID(final UUID guid, final Class<T> requiredClass)
+   {
+      AbstractObject object = findObjectByGUID(guid);
+      return requiredClass.isInstance(object) ? (T)object : null;
+   }
+
    /**
     * Find zone object by zone ID.
     *
