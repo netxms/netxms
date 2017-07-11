@@ -44,6 +44,7 @@ public class DashboardLayout extends Layout
    private int rowCount = 0;
    private Map<Control, Point> coordinates = new HashMap<Control, Point>(0);
    private int[] rowStart = null;
+   private Point cachedSize = null;
    
    /**
     * Create logical grid
@@ -114,7 +115,38 @@ public class DashboardLayout extends Layout
    @Override
    protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache)
    {
-      return null;
+      if ((wHint != SWT.DEFAULT) && (hHint != SWT.DEFAULT))
+         return new Point(wHint, hHint);
+      
+      if ((cachedSize != null) && !flushCache)
+         return new Point(cachedSize.x, cachedSize.y);
+
+      createGrid(composite);
+      if (rowCount == 0)
+         return new Point(0, 0);
+
+      int widthHint = (wHint != SWT.DEFAULT) ? wHint / numColumns : SWT.DEFAULT;
+      int[] rowSizeX = new int[rowCount];
+      int[] rowSizeY = new int[rowCount];
+      for(Entry<Control, Point> e : coordinates.entrySet())
+      {
+         DashboardLayoutData layoutData = getLayoutData(e.getKey());
+         Point s = e.getKey().computeSize((widthHint != SWT.DEFAULT) ? widthHint * layoutData.horizontalSpan : SWT.DEFAULT, SWT.DEFAULT, flushCache);
+         rowSizeX[e.getValue().y] += s.x;
+         if (rowSizeY[e.getValue().y] < s.y / layoutData.verticalSpan)
+            rowSizeY[e.getValue().y] = s.y / layoutData.verticalSpan;
+      }
+      
+      Point size = new Point(0, 0);
+      for(int i = 0; i < rowCount; i++)
+      {
+         if (size.x < rowSizeX[i])
+            size.x = rowSizeX[i];
+         if (size.y < rowSizeX[i])
+            size.y = rowSizeX[i];
+      }
+      cachedSize = new Point(size.x, size.y);
+      return size;
    }
 
    /* (non-Javadoc)
