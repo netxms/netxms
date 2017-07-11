@@ -165,7 +165,7 @@ public class Objects extends AbstractObjectHandler
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
-   protected Object get(String id) throws Exception
+   protected Object get(String id, Map<String, String> query) throws Exception
    {
       return getObject();
    }

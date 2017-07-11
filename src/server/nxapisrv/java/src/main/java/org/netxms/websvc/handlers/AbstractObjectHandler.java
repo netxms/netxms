@@ -20,6 +20,7 @@ package org.netxms.websvc.handlers;
 
 import java.util.UUID;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 
@@ -37,16 +38,19 @@ public class AbstractObjectHandler extends AbstractHandler
    protected AbstractObject getObject() throws Exception
    {
       String entityId = (String)getRequest().getAttributes().get("object-id");
+      NXCSession session = getSession();
+      if (!session.isObjectsSynchronized())
+         session.syncObjects();
       AbstractObject object;
       try
       {
          long objectId = Long.parseLong(entityId);
-         object = getSession().findObjectById(objectId);
+         object = session.findObjectById(objectId);
       }
       catch(NumberFormatException e)
       {
          UUID objectGuid = UUID.fromString(entityId);
-         object = getSession().findObjectByGUID(objectGuid);
+         object = session.findObjectByGUID(objectGuid);
       }
       if (object == null)
          throw new NXCException(RCC.INVALID_OBJECT_ID);

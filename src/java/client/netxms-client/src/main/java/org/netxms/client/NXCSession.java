@@ -129,6 +129,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -4343,6 +4344,41 @@ public class NXCSession
          i++;
       }
       return resolveDciNames(nodeIds, dciIds);
+   }
+
+   /**
+    * Resolve id of given DCI names
+    *
+    * @param nodeIds node identifiers
+    * @param dciIds  DCI identifiers (length must match length of node identifiers list)
+    * @return array of resolved DCI names
+    */
+   public long resolveDciId(long nodeId, String dciName)
+   {
+      if (nodeId == 0 || dciName == null || dciName.isEmpty()) 
+         return 0;
+      
+      return resolveDciId(findObjectById(nodeId), dciName);
+   }
+
+   /**
+    * Resolve id of given DCI names
+    *
+    * @param nodeId node identifiers
+    * @param dciName  DCI identifiers (length must match length of node identifiers list)
+    * @return 
+    */
+   public long resolveDciId(AbstractObject obj, String dciName)
+   {
+      if(!(obj instanceof DataCollectionTarget)) 
+         return 0;
+      List<DciValue> list = ((DataCollectionTarget)obj).getOverviewDciData();
+      for(DciValue dciValue : list)
+      {
+         if(dciValue.getName().equals(dciName))
+            return dciValue.getId();
+      }
+      return 0;
    }
 
    /**

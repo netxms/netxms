@@ -73,7 +73,9 @@ public abstract class AbstractHandler extends ServerResource
       log.debug("GET: entityId = " + id);
       if (attachToSession())
       {
-         Object response = (id == null) ? getCollection(getRequest().getResourceRef().getQueryAsForm().getValuesMap()) : get(id);
+         String entityId = (String)getRequest().getAttributes().get("object-id");
+         Map<String, String>  map = getRequest().getResourceRef().getQueryAsForm().getValuesMap();
+         Object response = (id == null && entityId == null) ? getCollection(map) : get(id, map);
          return new StringRepresentation(JsonTools.jsonFromObject(response, getRequestedFields()), MediaType.APPLICATION_JSON);
       }
       else
@@ -310,7 +312,7 @@ public abstract class AbstractHandler extends ServerResource
     * @return entity as JSON
     * @throws Exception
     */
-   protected Object get(String id) throws Exception
+   protected Object get(String id, Map<String, String> query) throws Exception
    {
       return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
    }
