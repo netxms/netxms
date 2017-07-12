@@ -169,4 +169,13 @@ public class Objects extends AbstractObjectHandler
    {
       return getObject();
    }
+
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#getEntityIdFieldName()
+    */
+   @Override
+   protected String getEntityIdFieldName()
+   {
+      return "object-id";
+   }
 }

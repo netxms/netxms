@@ -168,7 +168,17 @@ public abstract class AbstractHandler extends ServerResource
     */
    protected String getEntityId()
    {
-      return (String)getRequest().getAttributes().get("id");
+      return (String)getRequest().getAttributes().get(getEntityIdFieldName());
+   }
+   
+   /**
+    * Get name of entity ID field
+    * 
+    * @return entity ID field
+    */
+   protected String getEntityIdFieldName()
+   {
+      return "id";
    }
    
    /**
