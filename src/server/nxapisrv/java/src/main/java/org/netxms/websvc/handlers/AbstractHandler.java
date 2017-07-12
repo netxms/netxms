@@ -73,9 +73,8 @@ public abstract class AbstractHandler extends ServerResource
       log.debug("GET: entityId = " + id);
       if (attachToSession())
       {
-         String entityId = (String)getRequest().getAttributes().get("object-id");
-         Map<String, String>  map = getRequest().getResourceRef().getQueryAsForm().getValuesMap();
-         Object response = (id == null && entityId == null) ? getCollection(map) : get(id, map);
+         Map<String, String> query = getRequest().getResourceRef().getQueryAsForm().getValuesMap();
+         Object response = (id == null) ? getCollection(query) : get(id, query);
          return new StringRepresentation(JsonTools.jsonFromObject(response, getRequestedFields()), MediaType.APPLICATION_JSON);
       }
       else
