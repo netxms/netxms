@@ -5,4 +5,4 @@ Bundle-SymbolicName: org.swtchart;singleton:=true
 Bundle-Version: 0.7.15
 Require-Bundle: org.eclipse.swt
 Export-Package: org.swtchart
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

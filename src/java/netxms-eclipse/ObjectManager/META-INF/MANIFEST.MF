@@ -16,7 +16,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.datacollection;bundle-version="2.0.7",
  org.netxms.ui.eclipse.eventmanager;bundle-version="2.0.1",
  org.eclipse.ui.forms;bundle-version="3.5.200"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectmanager.actions,
  org.netxms.ui.eclipse.objectmanager.propertypages

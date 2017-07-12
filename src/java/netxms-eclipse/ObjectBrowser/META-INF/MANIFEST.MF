@@ -10,7 +10,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.console;bundle-version="2.1.0",
  org.eclipse.core.expressions;bundle-version="3.4.300",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.1.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectbrowser.api,
  org.netxms.ui.eclipse.objectbrowser.dialogs,

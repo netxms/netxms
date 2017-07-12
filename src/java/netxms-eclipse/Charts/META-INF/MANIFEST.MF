@@ -15,7 +15,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.eclipse.birt.chart.engine;bundle-version="3.7.2",
  org.eclipse.birt.chart.engine.extension;bundle-version="3.7.2",
  org.eclipse.draw2d;bundle-version="3.10.100"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.charts.api,
  org.netxms.ui.eclipse.charts.figures
