@@ -1011,7 +1011,7 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
    // Sanity check
    if (m_owner == NULL)
    {
-      DbgPrintf(3, _T("DCItem::updateCacheSize() called for DCI %d when m_owner == NULL"), m_id);
+      nxlog_debug(3, _T("DCItem::updateCacheSize() called for DCI %d when m_owner == NULL"), m_id);
       return;
    }
 
@@ -1062,7 +1062,7 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
       }
       else
       {
-         safe_free(m_ppValueCache);
+         free(m_ppValueCache);
          m_ppValueCache = NULL;
       }
    }
@@ -1071,7 +1071,7 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if ((m_owner != NULL) && ((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300))
+      if ((m_owner != NULL) && (((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
       {
          m_owner->incRefCount();
          m_requiredCacheSize = dwRequiredSize;
