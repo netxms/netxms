@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.ResponseContainer;
@@ -46,17 +48,20 @@ public class Alarms extends AbstractHandler
          UUID objectGuid = UUID.fromString(queryGuid);
          if (!session.isObjectsSynchronized())
             session.syncObjects();
+         
          AbstractObject object = session.findObjectByGUID(objectGuid);
+         if (object == null)
+            throw new NXCException(RCC.INVALID_OBJECT_ID);
+         
          Iterator<Alarm> iterator =  alarms.iterator();
-         if(object != null)
-            while(iterator.hasNext())
+         while(iterator.hasNext())
+         {
+            Alarm alarm = iterator.next();
+            if(alarm.getSourceObjectId() != object.getObjectId())
             {
-               Alarm alarm = iterator.next();
-               if(alarm.getSourceObjectId() != object.getObjectId())
-               {
-                  iterator.remove();
-               }
+               iterator.remove();
             }
+         }
       }
          
       return new ResponseContainer("alarms", alarms);
