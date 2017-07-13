@@ -44,6 +44,9 @@ public class StatusMapConfig extends DashboardElementConfig
 	@Element(required=false)
 	private boolean groupObjects = false;
 
+   @Element(required=false)
+   private boolean showTextFilter = false;
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -149,4 +152,20 @@ public class StatusMapConfig extends DashboardElementConfig
 	{
 		this.groupObjects = groupObjects;
 	}
+
+   /**
+    * @return the showTextFilter
+    */
+   public boolean isShowTextFilter()
+   {
+      return showTextFilter;
+   }
+
+   /**
+    * @param showTextFilter the showTextFilter to set
+    */
+   public void setShowTextFilter(boolean showTextFilter)
+   {
+      this.showTextFilter = showTextFilter;
+   }
 }

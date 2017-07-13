@@ -279,8 +279,9 @@ public class Messages extends NLS
    public String StatusIndicator_UseFullColorRange;
 	public String StatusMap_DisplayMode;
    public String StatusMap_Group;
-   public String StatusMap_NoGroup;
+   public String StatusMap_Options;
    public String StatusMap_SeverityFilter;
+   public String StatusMap_ShowFilter;
    public String TableComparisonChart_3DView;
 	public String TableComparisonChart_Bottom;
 	public String TableComparisonChart_Left;

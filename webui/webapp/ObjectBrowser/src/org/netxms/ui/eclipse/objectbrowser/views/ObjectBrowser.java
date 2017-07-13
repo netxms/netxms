@@ -242,7 +242,14 @@ public class ObjectBrowser extends ViewPart
 				actionMoveObject.setEnabled(size == 1);
 			}
 		});
-		objectTree.setFilterCloseAction(actionShowFilter);
+		objectTree.setFilterCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            actionShowFilter.setChecked(false);
+            objectTree.enableFilter(false);
+         }
+      });
 		
 		final TreeViewer tree = objectTree.getTreeViewer();		
 		TreeViewerEditor.create(tree, new ColumnViewerEditorActivationStrategy(tree) {

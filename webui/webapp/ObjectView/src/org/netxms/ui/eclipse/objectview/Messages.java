@@ -196,6 +196,7 @@ public class Messages extends NLS
    public String NodesTab_ColStatus;
    public String NodesTab_ColSysDescr;
    public String ObjectStatusMapView_ActionGroupNodes;
+   public String ObjectStatusMapView_ActionShowFilter;
    public String ObjectStatusMapView_PartName;
    public String ShowObjectDetailsView_Error;
    public String ShowObjectDetailsView_ErrorOpeningView;

@@ -58,7 +58,7 @@ public class StatusMapElement extends ElementWidget
 		if (config.getTitle().trim().isEmpty())
 		{
 			setLayout(new FillLayout());
-			map = new ObjectStatusMap(viewPart, this, SWT.NONE);
+			map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
 		}
 		else
 		{
@@ -73,11 +73,12 @@ public class StatusMapElement extends ElementWidget
 			title.setFont(JFaceResources.getBannerFont());
 			title.setBackground(getBackground());
 			
-			map = new ObjectStatusMap(viewPart, this, SWT.NONE);
+			map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
 			map.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
 		map.setGroupObjects(config.isGroupObjects());
 		map.setSeverityFilter(config.getSeverityFilter());
+		map.enableFilter(config.isShowTextFilter());
 		map.setRootObject(config.getObjectId());
 		
 		map.addRefreshListener(new Runnable() {

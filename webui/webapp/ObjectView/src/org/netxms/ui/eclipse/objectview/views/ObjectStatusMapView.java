@@ -22,16 +22,19 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -46,8 +49,10 @@ public class ObjectStatusMapView extends ViewPart
 	private long rootObjectId;
 	private ObjectStatusMap map;
 	private boolean initialGroupFlag = true;
+   private boolean initialShowFilter = true;
 	private Action actionRefresh;
 	private Action actionGroupNodes;
+	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -60,32 +65,7 @@ public class ObjectStatusMapView extends ViewPart
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		rootObjectId = Long.parseLong(site.getSecondaryId());
 		final AbstractObject object = session.findObjectById(rootObjectId);
-		setPartName(String.format(Messages.get().ObjectStatusMapView_PartName, (object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		if (memento != null)
-		{
-			Boolean f = memento.getBoolean("GroupObjects"); //$NON-NLS-1$
-			if (f != null)
-				initialGroupFlag = f;
-		}
-		super.init(site, memento);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void saveState(IMemento memento)
-	{
-		super.saveState(memento);
-		memento.putBoolean("GroupObjects", map.isGroupObjects()); //$NON-NLS-1$
+		setPartName(String.format(Messages.get().ObjectStatusMapView_PartName, (object != null) ? object.getObjectName() : ("[" + rootObjectId + "]"))); //$NON-NLS-1$ //$NON-NLS-2$		
 	}
 
 	/* (non-Javadoc)
@@ -94,9 +74,32 @@ public class ObjectStatusMapView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		map = new ObjectStatusMap(this, parent, SWT.NONE);
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initialGroupFlag = (settings.get("GroupObjects") != null) ? settings.getBoolean("GroupObjects") : true;
+      initialShowFilter = (settings.get("ShowFilter") != null) ? settings.getBoolean("ShowFilter") : true;
+	   
+	   map = new ObjectStatusMap(this, parent, SWT.NONE, true);
 		map.setGroupObjects(initialGroupFlag);
 		map.setRootObject(rootObjectId);
+		map.enableFilter(initialShowFilter);
+		
+		map.setFilterCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            actionShowFilter.setChecked(false);
+            map.enableFilter(false);
+         }
+      });
+		
+		map.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            settings.put("GroupObjects", map.isGroupObjects());
+            settings.put("ShowFilter", map.isFilterEnabled());
+         }
+      });
 
 		createActions();
 		contributeToActionBars();
@@ -126,6 +129,15 @@ public class ObjectStatusMapView extends ViewPart
 			}
 		};
 		actionGroupNodes.setChecked(initialGroupFlag);
+      
+      actionShowFilter = new Action(Messages.get().ObjectStatusMapView_ActionShowFilter, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            map.enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setChecked(initialShowFilter);
 	}
 	
 	/**
@@ -147,6 +159,7 @@ public class ObjectStatusMapView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionGroupNodes);
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

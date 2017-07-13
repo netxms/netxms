@@ -193,6 +193,7 @@ public class Messages extends NLS
    public static String NodesTab_ColStatus;
    public static String NodesTab_ColSysDescr;
    public static String ObjectStatusMapView_ActionGroupNodes;
+   public static String ObjectStatusMapView_ActionShowFilter;
    public static String ObjectStatusMapView_PartName;
    public static String ShowObjectDetailsView_Error;
    public static String ShowObjectDetailsView_ErrorOpeningView;
@@ -222,7 +223,7 @@ public class Messages extends NLS
 
    private Messages()
 	{
- }
+	}
 
 
 	private static Messages instance = new Messages();

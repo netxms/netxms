@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -49,10 +50,15 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -72,15 +78,18 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * Widget showing "heat" map of nodes under given root object
  */
-public class ObjectStatusMap extends ScrolledComposite implements ISelectionProvider
+public class ObjectStatusMap extends Composite implements ISelectionProvider
 {
 	private IViewPart viewPart;
 	private long rootObjectId;
 	private NXCSession session;
+   private FilterText filterTextControl;
+   private ScrolledComposite scroller;
 	private Composite dataArea;
 	private List<Composite> sections = new ArrayList<Composite>();
 	private Map<Long, ObjectStatusWidget> statusWidgets = new HashMap<Long, ObjectStatusWidget>();
@@ -89,7 +98,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private MenuManager menuManager;
 	private Font titleFont;
 	private boolean groupObjects = true;
+	private boolean filterEnabled = true;
 	private int severityFilter = 0xFF;
+	private String textFilter = "";
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
 	private Set<Runnable> refreshListeners = new HashSet<Runnable>();
 	
@@ -97,9 +108,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectStatusMap(IViewPart viewPart, Composite parent, int style)
+	public ObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
 	{
-		super(parent, style | SWT.V_SCROLL);
+		super(parent, style);
 		
 		initDetailsProviders();
 		
@@ -124,25 +135,62 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			}
 		});
 		
-		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
-		setExpandHorizontal(true);
-		setExpandVertical(true);
+      FormLayout formLayout = new FormLayout();
+      setLayout(formLayout);
+      
+      setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+
+      // Create filter area
+      filterTextControl = new FilterText(this, SWT.NONE, null, allowFilterClose);
+      filterTextControl.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterTextControl.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
+      
+      scroller = new ScrolledComposite(this, SWT.V_SCROLL);
+		scroller.setBackground(getBackground());
+		scroller.setExpandHorizontal(true);
+		scroller.setExpandVertical(true);
 		addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e)
 			{
 				Rectangle r = getClientArea();
-				setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+				scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
 		
-		dataArea = new Composite(this, SWT.NONE);
-		setContent(dataArea);
+		dataArea = new Composite(scroller, SWT.NONE);
+		scroller.setContent(dataArea);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = 10;
 		dataArea.setLayout(layout);
 		dataArea.setBackground(getBackground());
 		
-		titleFont = JFaceResources.getFontRegistry().getBold(JFaceResources.BANNER_FONT);
+		if (Platform.getOS().equals(Platform.OS_WIN32))
+		{
+			titleFont = new Font(parent.getDisplay(), "Verdana", 10, SWT.BOLD); //$NON-NLS-1$
+			addDisposeListener(new DisposeListener() {
+				@Override
+				public void widgetDisposed(DisposeEvent e)
+				{
+					titleFont.dispose();
+				}
+			});
+		}
+		else
+		{
+			titleFont = JFaceResources.getFontRegistry().getBold(JFaceResources.BANNER_FONT);
+		}
 		
 		menuManager = new MenuManager();
 		menuManager.setRemoveAllWhenShown(true);
@@ -152,6 +200,26 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 				fillContextMenu(manager);
 			}
 		});
+
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterTextControl);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      scroller.setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterTextControl.setLayoutData(fd);
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterTextControl.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 	}
 	
 	/**
@@ -193,7 +261,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		dataArea.layout(true, true);
 		
 		Rectangle r = getClientArea();
-		setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 		
 		for(Runnable l : refreshListeners)
 		   l.run();
@@ -211,8 +279,8 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		List<AbstractObject> objects = 
 		      new ArrayList<AbstractObject>(root.getAllChilds(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER }));
 		
-		// apply severity filter
-		if ((severityFilter & 0x1F) != 0x1F)
+		// apply filter
+		if (((severityFilter & 0x3F) != 0x3F) || !textFilter.isEmpty())
 		{
 			Iterator<AbstractObject> it = objects.iterator();
 			while(it.hasNext())
@@ -221,6 +289,20 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 				if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				{
 					it.remove();
+				}
+				else if (!textFilter.isEmpty())
+				{
+				   boolean match = false;
+               for(String s : o.getStrings())
+               {
+                  if (s.toLowerCase().contains(textFilter))
+                  {
+                     match = true;
+                     break;
+                  }
+               }
+               if (!match)
+                  it.remove();
 				}
 			}
 		}
@@ -289,6 +371,21 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				continue;
 
+         if (!textFilter.isEmpty())
+         {
+            boolean match = false;
+            for(String s : o.getStrings())
+            {
+               if (s.toLowerCase().contains(textFilter))
+               {
+                  match = true;
+                  break;
+               }
+            }
+            if (!match)
+               continue;
+         }
+			
 			if (section == null)
 			{
 				section = new Composite(dataArea, SWT.NONE);
@@ -573,4 +670,75 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	{
 	   refreshListeners.remove(listener);
 	}
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterTextControl.setVisible(filterEnabled);
+      FormData fd = (FormData)scroller.getLayoutData();
+      fd.top = enable ? new FormAttachment(filterTextControl) : new FormAttachment(0, 0);
+      layout();
+      if (enable)
+         filterTextControl.setFocus();
+      else
+         setFilterText(""); //$NON-NLS-1$
+   }
+
+   /**
+    * @return the filterEnabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return filterEnabled;
+   }
+   
+   /**
+    * Set action to be executed when user press "Close" button in object filter.
+    * Default implementation will hide filter area without notifying parent.
+    * 
+    * @param action
+    */
+   public void setFilterCloseAction(Action action)
+   {
+      filterTextControl.setCloseAction(action);
+   }
+   
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilterText(final String text)
+   {
+      filterTextControl.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Get filter text
+    * 
+    * @return Current filter text
+    */
+   public String getFilterText()
+   {
+      return filterTextControl.getText();
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      String text = filterTextControl.getText().trim().toLowerCase();
+      if (!textFilter.equals(text))
+      {
+         textFilter = text;
+         refresh();
+      }
+   }
 }

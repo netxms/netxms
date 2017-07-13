@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -32,7 +31,6 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -44,7 +42,8 @@ public class StatusMap extends PropertyPage
 	private ObjectSelector objectSelector;
 	private LabeledText title;
 	private Button[] checkSeverity;
-	private Combo displayMode;
+   private Button checkGroupObjects;
+	private Button checkShowFilter;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -84,22 +83,37 @@ public class StatusMap extends PropertyPage
 		severityGroup.setLayoutData(gd);
 		
 		layout = new GridLayout();
-		layout.numColumns = 5;
+		layout.numColumns = 4;
 		layout.makeColumnsEqualWidth = true;
 		severityGroup.setLayout(layout);
 		
-		checkSeverity = new Button[5];
-		for(int severity = 4; severity >= 0; severity--)
+		checkSeverity = new Button[7];
+		for(int severity = 6; severity >= 0; severity--)
 		{
 			checkSeverity[severity] = new Button(severityGroup, SWT.CHECK);
 			checkSeverity[severity].setText(StatusDisplayInfo.getStatusText(severity));
 			checkSeverity[severity].setSelection((config.getSeverityFilter() & (1 << severity)) != 0);
 		}
+
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(Messages.get().StatusMap_Options);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      optionsGroup.setLayoutData(gd);
+      
+      layout = new GridLayout();
+      layout.numColumns = 1;
+      layout.makeColumnsEqualWidth = true;
+      optionsGroup.setLayout(layout);
 		
-		displayMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.BORDER, Messages.get().StatusMap_DisplayMode, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		displayMode.add(Messages.get().StatusMap_NoGroup);
-		displayMode.add(Messages.get().StatusMap_Group);
-		displayMode.select(config.isGroupObjects() ? 1 : 0);
+      checkGroupObjects = new Button(optionsGroup, SWT.CHECK);
+      checkGroupObjects.setText(Messages.get().StatusMap_Group);
+      checkGroupObjects.setSelection(config.isGroupObjects());
+
+		checkShowFilter = new Button(optionsGroup, SWT.CHECK);
+		checkShowFilter.setText(Messages.get().StatusMap_ShowFilter);
+		checkShowFilter.setSelection(config.isShowTextFilter());
 
 		return dialogArea;
 	}
@@ -118,7 +132,8 @@ public class StatusMap extends PropertyPage
 			if (checkSeverity[i].getSelection())
 				severityFilter |= (1 << i);
 		config.setSeverityFilter(severityFilter);
-		config.setGroupObjects(displayMode.getSelectionIndex() == 1);
+		config.setGroupObjects(checkGroupObjects.getSelection());
+		config.setShowTextFilter(checkShowFilter.getSelection());
 		
 		return true;
 	}
