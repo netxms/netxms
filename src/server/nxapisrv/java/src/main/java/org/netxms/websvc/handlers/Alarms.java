@@ -18,8 +18,13 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
+import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.ResponseContainer;
 
 /**
@@ -33,7 +38,27 @@ public class Alarms extends AbstractHandler
    @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
-      Map<Long, Alarm> alarms = getSession().getAlarms();
-      return new ResponseContainer("alarms", alarms.values());
+      NXCSession session = getSession();
+      Collection<Alarm> alarms = session.getAlarms().values();
+      String queryGuid = query.get("objectGuid");
+      if(queryGuid != null)
+      {         
+         UUID objectGuid = UUID.fromString(queryGuid);
+         if (!session.isObjectsSynchronized())
+            session.syncObjects();
+         AbstractObject object = session.findObjectByGUID(objectGuid);
+         Iterator<Alarm> iterator =  alarms.iterator();
+         if(object != null)
+            while(iterator.hasNext())
+            {
+               Alarm alarm = iterator.next();
+               if(alarm.getSourceObjectId() != object.getObjectId())
+               {
+                  iterator.remove();
+               }
+            }
+      }
+         
+      return new ResponseContainer("alarms", alarms);
    }
 }
