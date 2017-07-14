@@ -501,9 +501,9 @@ void Template::deleteChildDCIs(UINT32 dcObjectId)
       DCObject *subObject = m_dcObjects->get(i);
       if (subObject->getTemplateItemId() == dcObjectId)
       {
+         nxlog_debug(7, _T("Template::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
          destroyItem(subObject, i);
          i--;
-			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
       }
    }
 }
