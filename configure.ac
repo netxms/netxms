@@ -1701,6 +1701,31 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 
 
 #--------------------------------------------------------------------
+# Checks for __get_cpuid
+#--------------------------------------------------------------------
+
+AC_CHECK_HEADERS([cpuid.h])
+AC_MSG_CHECKING(for __get_cpuid)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+]],[[
+	unsigned int eax, ebx, ecx, edx;
+	return __get_cpuid(0x01, &eax, &ebx, &ecx, &edx);
+]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_GET_CPUID,1,Define to 1 if __get_cpuid function is available)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_GET_CPUID,0,Define to 1 if __get_cpuid function is available)
+])
+AC_LANG_POP([C++])
+
+
+#--------------------------------------------------------------------
 # Checks for alloca
 #--------------------------------------------------------------------
 

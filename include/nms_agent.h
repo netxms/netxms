@@ -216,6 +216,7 @@
 #define DCIDESC_SYSTEM_CPU_MODEL                  _T("CPU {instance}: model")
 #define DCIDESC_SYSTEM_CPU_PHYSICAL_ID            _T("CPU {instance}: physical ID")
 #define DCIDESC_SYSTEM_HOSTNAME                   _T("Host name")
+#define DCIDESC_SYSTEM_IS_VIRTUAL                 _T("Virtual system indicator")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE  _T("Available physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT _T("Percentage of available physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_BUFFERS    _T("Physical memory used for buffers")

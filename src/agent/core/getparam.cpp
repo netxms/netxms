@@ -22,6 +22,10 @@
 
 #include "nxagentd.h"
 
+#if HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+
 /**
  * Parameter handlers
  */
@@ -242,6 +246,36 @@ static LONG H_FlagValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
    return SYSINFO_RC_SUCCESS;
 }
 
+#if HAVE_GET_CPUID
+
+/**
+ * Handler for System.IsVirtual parameter
+ */
+static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   unsigned int eax, ebx, ecx, edx;
+   if (__get_cpuid(0x1, &eax, &ebx, &ecx, &edx) != 1)
+      return SYSINFO_RC_UNSUPPORTED;
+   ret_int(value, (ecx & 0x80000000) != 0 ? 1 : 0);
+   return SYSINFO_RC_SUCCESS;
+}
+
+#elif defined(_WIN32)
+
+/**
+ * Handler for System.IsVirtual parameter
+ */
+static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   int data[4];
+   __cpuid(data, 0x01);
+   ret_int(value, (data[2] & 0x80000000) != 0 ? 1 : 0);
+   return SYSINFO_RC_SUCCESS;
+}
+
+#endif
+
+
 /**
  * Standard agent's parameters
  */
@@ -267,6 +301,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
    { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
+   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INTEGER, DCIDESC_SYSTEM_IS_VIRTUAL },
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
@@ -280,6 +315,10 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
    { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
    { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+#endif
+
+#if HAVE_GET_CPUID
+   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 #endif
 
    { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_acceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
