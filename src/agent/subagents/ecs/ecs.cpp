@@ -163,16 +163,16 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Ab
 	char szArg[256];
 
 	int digetSize;
-	void (*hashFunction)(unsigned char *, size_t, unsigned char *) = NULL;
+	void (*hashFunction)(const BYTE *, size_t, BYTE *) = NULL;
 	if (CAST_FROM_POINTER(pArg, int) == 1)
 	{
 		digetSize = SHA1_DIGEST_SIZE;
-		hashFunction = &CalculateSHA1Hash;
+		hashFunction = CalculateSHA1Hash;
 	}
 	else
 	{
 		digetSize = MD5_DIGEST_SIZE;
-		hashFunction = (void (*)(unsigned char *, size_t, unsigned char *))&CalculateMD5Hash;
+		hashFunction = CalculateMD5Hash;
 	}
 
 	AgentGetParameterArgA(pszParam, 1, szArg, 255);

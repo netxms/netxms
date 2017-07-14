@@ -415,7 +415,7 @@ public:
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
-   bool parse(BYTE *data, size_t varLength);
+   bool parse(const BYTE *data, size_t varLength);
    size_t encode(BYTE *buffer, size_t bufferSize);
 
    const SNMP_ObjectId& getName() const { return m_name; }
@@ -558,22 +558,23 @@ private:
 	SNMP_Engine m_authoritativeEngine;
 	int m_securityModel;
 	BYTE m_signature[12];
+	size_t m_signatureOffset;
 
-   bool parseVariable(BYTE *pData, size_t varLength);
-   bool parseVarBinds(BYTE *pData, size_t pduLength);
-   bool parsePdu(BYTE *pdu, size_t pduLength);
-   bool parseTrapPDU(BYTE *pData, size_t pduLength);
-   bool parseTrap2PDU(BYTE *pData, size_t pduLength);
-   bool parsePduContent(BYTE *pData, size_t pduLength);
-   bool parseV3Header(BYTE *pData, size_t pduLength);
-   bool parseV3SecurityUsm(BYTE *pData, size_t pduLength);
-   bool parseV3ScopedPdu(BYTE *pData, size_t pduLength);
-	bool validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
+   bool parseVariable(const BYTE *pData, size_t varLength);
+   bool parseVarBinds(const BYTE *pData, size_t pduLength);
+   bool parsePdu(const BYTE *pdu, size_t pduLength);
+   bool parseTrapPDU(const BYTE *pData, size_t pduLength);
+   bool parseTrap2PDU(const BYTE *pData, size_t pduLength);
+   bool parsePduContent(const BYTE *pData, size_t pduLength);
+   bool parseV3Header(const BYTE *pData, size_t pduLength);
+   bool parseV3SecurityUsm(const BYTE *pData, size_t pduLength, const BYTE *rawMsg);
+   bool parseV3ScopedPdu(const BYTE *pData, size_t pduLength);
+	bool validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
 	size_t encodeV3Header(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
 	size_t encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext);
 	size_t encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, size_t pduSize, BYTE *buffer, size_t bufferSize);
 	void signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext);
-	bool decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
+	bool decryptData(const BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext);
 
 public:
    SNMP_PDU();
@@ -581,7 +582,7 @@ public:
    SNMP_PDU(SNMP_PDU *src);
    ~SNMP_PDU();
 
-   bool parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
+   bool parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate);
    size_t encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
    UINT32 getCommand() { return m_command; }

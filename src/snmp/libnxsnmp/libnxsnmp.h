@@ -119,8 +119,8 @@ public:
 /**
  * Functions
  */
-bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *length, BYTE **data, size_t *idLength);
-bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer);
+bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, size_t *length, const BYTE **data, size_t *idLength);
+bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffer);
 size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
 
 #endif   /* _libnxsnmp_h_ */

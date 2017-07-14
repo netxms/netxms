@@ -113,7 +113,7 @@ A million repetitions of "a"
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-static void SHA1Transform(uint32 state[5], unsigned char buffer[64])
+static void SHA1Transform(uint32 state[5], const unsigned char buffer[64])
 {
 uint32 a, b, c, d, e;
 typedef union {
@@ -182,7 +182,7 @@ void I_SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void I_SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len)	/* JHB */
+void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, uint32 len)	/* JHB */
 {
 uint32 i, j;	/* JHB */
 

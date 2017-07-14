@@ -26,10 +26,10 @@
 /**
  * Decode BER-encoded variable
  */
-bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *dataLength, BYTE **data, size_t *idLength)
+bool BER_DecodeIdentifier(const BYTE *rawData, size_t rawSize, UINT32 *type, size_t *dataLength, const BYTE **data, size_t *idLength)
 {
    bool bResult = false;
-   BYTE *pbCurrPos = rawData;
+   const BYTE *pbCurrPos = rawData;
    UINT32 dwIdLength = 0;
 
    *type = (UINT32)(*pbCurrPos);
@@ -76,7 +76,7 @@ bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *d
 /**
  * Decode content of specified types
  */
-bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer)
+bool BER_DecodeContent(UINT32 type, const BYTE *data, size_t length, BYTE *buffer)
 {
    bool bResult = true;
 

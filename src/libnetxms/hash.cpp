@@ -110,9 +110,33 @@ UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, UINT32 nB
 }
 
 /**
+ * Init MD5 hash function
+ */
+void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
+{
+   I_md5_init((md5_state_t *)state);
+}
+
+/**
+ * Append data to MD5 hash
+ */
+void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const BYTE *data, size_t size)
+{
+   I_md5_append((md5_state_t *)state, (const md5_byte_t *)data, (int)size);
+}
+
+/**
+ * Finish MD5 calculation
+ */
+void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash)
+{
+   I_md5_finish((md5_state_t *)state, (md5_byte_t *)hash);
+}
+
+/**
  * Calculate MD5 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const BYTE *data, size_t nbytes, BYTE *hash)
 {
 	md5_state_t state;
 
@@ -124,7 +148,7 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nby
 /**
  * Calculate MD5 hash for repeated pattern in virtual buffer
  */
-void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash)
+void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
 	md5_state_t state;
 	int count, patternIndex;
@@ -151,9 +175,33 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t pa
 }
 
 /**
+ * Init SHA1 hash function
+ */
+void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
+{
+   I_SHA1Init((SHA1_CTX *)state);
+}
+
+/**
+ * Append data to SHA1 hash
+ */
+void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const BYTE *data, size_t size)
+{
+   I_SHA1Update((SHA1_CTX *)state, data, (uint32)size);
+}
+
+/**
+ * Finish SHA1 calculation
+ */
+void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash)
+{
+   I_SHA1Final(hash, (SHA1_CTX *)state);
+}
+
+/**
  * Calculate SHA1 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const BYTE *data, size_t nbytes, BYTE *hash)
 {
    SHA1_CTX context;
 
@@ -165,7 +213,7 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, 
 /**
  * Calculate SHA1 hash for repeated pattern in virtual buffer
  */
-void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash)
+void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    SHA1_CTX context;
 	int count, patternIndex;
@@ -258,7 +306,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *
 /**
  * Calculate SHA2-256 hash for array of bytes
  */
-void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const unsigned char *data, size_t len, unsigned char *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const BYTE *data, size_t len, BYTE *hash)
 {
    sha256_ctx ctx;
 

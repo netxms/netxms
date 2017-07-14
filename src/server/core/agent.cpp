@@ -440,17 +440,17 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
       if (acceptTrap)
       {
          InetAddress originSenderIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
-         UINT32 pduLenght = msg->getFieldAsUInt32(VID_PDU_SIZE);
-         BYTE *pduBytes = (BYTE*)malloc(pduLenght);
-         msg->getFieldAsBinary(VID_PDU, pduBytes, pduLenght);
+         size_t pduLenght;
+         const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
          UINT32 zoneId = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_ID) : 0;
          Node *originNode = FindNodeByIP(zoneId, originSenderIP);
          if ((originNode != NULL) || ConfigReadInt(_T("LogAllSNMPTraps"), FALSE))
          {
             SNMP_PDU *pdu = new SNMP_PDU;
-            if (pdu->parse(pduBytes, pduLenght, (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL, true))
+            SNMP_SecurityContext *sctx = (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL;
+            if (pdu->parse(pduBytes, pduLenght, sctx, true))
             {
-               DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
+               nxlog_debug(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
                if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
                   bool isInformRequest = (pdu->getCommand() == SNMP_INFORM_REQUEST);
@@ -466,7 +466,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
                {
                   // Engine ID discovery
-                  DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+                  nxlog_debug(6, _T("SNMPTrapReceiver: EngineId discovery"));
 
                   SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(this, originNode, originSenderIP, msg->getFieldAsUInt16(VID_PORT));
 
@@ -502,6 +502,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
             {
                debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
             }
+            delete sctx;
          }
          else
          {

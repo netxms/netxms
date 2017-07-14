@@ -86,9 +86,9 @@ SNMP_Variable::~SNMP_Variable()
 /**
  * Parse variable record in PDU
  */
-bool SNMP_Variable::parse(BYTE *data, size_t varLength)
+bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
 {
-   BYTE *pbCurrPos;
+   const BYTE *pbCurrPos;
    UINT32 type;
    size_t length, dwIdLength;
    SNMP_OID *oid;

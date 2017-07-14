@@ -2076,14 +2076,27 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 #endif
 
 UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
-void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
-void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, unsigned char *hash);
-void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const unsigned char *data, size_t len, unsigned char *hash);
-BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
-BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
+
+typedef unsigned char MD5_STATE[128];
+
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const BYTE *data, size_t nbytes, BYTE *hash);
+void LIBNETXMS_EXPORTABLE MD5HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash);
+BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
+void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state);
+void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const BYTE *data, size_t size);
+void LIBNETXMS_EXPORTABLE MD5Finish(MD5_STATE *state, BYTE *hash);
+
+typedef unsigned char SHA1_STATE[128];
+
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const BYTE *data, size_t nbytes, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const BYTE *data, size_t patternSize, size_t fullSize, BYTE *hash);
+BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
+void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const BYTE *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash);
+
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const BYTE *data, size_t len, BYTE *hash);
 
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 

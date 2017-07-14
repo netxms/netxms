@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -232,11 +232,11 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
  */
 DCObject::~DCObject()
 {
-   safe_free(m_transformationScriptSource);
+   free(m_transformationScriptSource);
    delete m_transformationScript;
    delete m_schedules;
-	safe_free(m_pszPerfTabSettings);
-	safe_free(m_comments);
+	free(m_pszPerfTabSettings);
+	free(m_comments);
    MutexDestroy(m_hMutex);
    free(m_instanceDiscoveryData);
    free(m_instanceFilterSource);
@@ -1225,7 +1225,7 @@ void DCObject::filterInstanceList(StringMap *instances)
  */
 void DCObject::setInstanceFilter(const TCHAR *pszScript)
 {
-   safe_free(m_instanceFilterSource);
+   free(m_instanceFilterSource);
    delete m_instanceFilter;
    if (pszScript != NULL)
    {

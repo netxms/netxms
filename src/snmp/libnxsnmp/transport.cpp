@@ -422,7 +422,7 @@ size_t SNMP_UDPTransport::preParsePDU()
 {
    UINT32 dwType;
    size_t dwLength, dwIdLength;
-   BYTE *pbCurrPos;
+   const BYTE *pbCurrPos;
 
    if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer,
                              &dwType, &dwLength, &pbCurrPos, &dwIdLength))

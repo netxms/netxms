@@ -6,7 +6,7 @@ ping_la_CPPFLAGS=-I@top_srcdir@/include
 ping_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 ping_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = ping.h ping.vcproj
+EXTRA_DIST = Makefile.w32 ping.h ping.vcproj
 
 if !STATIC_BUILD
 install-exec-hook:

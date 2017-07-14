@@ -116,7 +116,7 @@ extern "C"
 #endif
 
 void I_SHA1Init(SHA1_CTX* context);
-void I_SHA1Update(SHA1_CTX* context, unsigned char* data, uint32 len);	/*
+void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, uint32 len);	/*
 JHB */
 void I_SHA1Final(unsigned char digest[20], SHA1_CTX* context);
 

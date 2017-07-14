@@ -83,6 +83,7 @@ SNMP_PDU::SNMP_PDU()
    m_securityModel = SNMP_SECURITY_MODEL_V1;
 	m_dwAgentAddr = 0;
 	m_dwTimeStamp = 0;
+	m_signatureOffset = 0;
 }
 
 /**
@@ -109,6 +110,7 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
    m_securityModel = (m_version == SNMP_VERSION_1) ? SNMP_SECURITY_MODEL_V1 : ((m_version == SNMP_VERSION_2C) ? SNMP_SECURITY_MODEL_V2C : SNMP_SECURITY_MODEL_USM);
    m_dwAgentAddr = 0;
    m_dwTimeStamp = 0;
+   m_signatureOffset = 0;
 }
 
 /**
@@ -138,6 +140,7 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
    m_securityModel = src->m_securityModel;
    m_dwAgentAddr = 0;
    m_dwTimeStamp = 0;
+   m_signatureOffset = src->m_signatureOffset;
 }
 
 /**
@@ -147,13 +150,13 @@ SNMP_PDU::~SNMP_PDU()
 {
    delete m_pEnterprise;
    delete m_variables;
-	safe_free(m_authObject);
+	free(m_authObject);
 }
 
 /**
  * Parse single variable binding
  */
-bool SNMP_PDU::parseVariable(BYTE *pData, size_t varLength)
+bool SNMP_PDU::parseVariable(const BYTE *pData, size_t varLength)
 {
    SNMP_Variable *var;
    bool success = true;
@@ -174,9 +177,9 @@ bool SNMP_PDU::parseVariable(BYTE *pData, size_t varLength)
 /**
  * Parse variable bindings
  */
-bool SNMP_PDU::parseVarBinds(BYTE *pData, size_t pduLength)
+bool SNMP_PDU::parseVarBinds(const BYTE *pData, size_t pduLength)
 {
-   BYTE *pbCurrPos;
+   const BYTE *pbCurrPos;
    UINT32 dwType;
    size_t dwLength, dwBindingLength, idLength;
 
@@ -207,11 +210,11 @@ bool SNMP_PDU::parseVarBinds(BYTE *pData, size_t pduLength)
 /**
  * Parse generic PDU content
  */
-bool SNMP_PDU::parsePduContent(BYTE *pData, size_t pduLength)
+bool SNMP_PDU::parsePduContent(const BYTE *pData, size_t pduLength)
 {
    UINT32 dwType;
    size_t dwLength, idLength;
-   BYTE *pbCurrPos = pData;
+   const BYTE *pbCurrPos = pData;
    bool bResult = false;
 
    // Request ID
@@ -267,11 +270,11 @@ bool SNMP_PDU::parsePduContent(BYTE *pData, size_t pduLength)
 /**
  * Parse version 1 TRAP PDU
  */
-bool SNMP_PDU::parseTrapPDU(BYTE *pData, size_t pduLength)
+bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
 {
    UINT32 dwType;
    size_t dwLength, idLength;
-   BYTE *pbCurrPos = pData;
+   const BYTE *pbCurrPos = pData;
    SNMP_OID *oid;
    UINT32 dwBuffer;
    bool bResult = false;
@@ -395,7 +398,7 @@ bool SNMP_PDU::parseTrapPDU(BYTE *pData, size_t pduLength)
 /**
  * Parse version 2 TRAP or INFORM-REQUEST PDU
  */
-bool SNMP_PDU::parseTrap2PDU(BYTE *pData, size_t pduLength)
+bool SNMP_PDU::parseTrap2PDU(const BYTE *pData, size_t pduLength)
 {
    bool bResult;
    static UINT32 pdwStdTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
@@ -436,11 +439,11 @@ bool SNMP_PDU::parseTrap2PDU(BYTE *pData, size_t pduLength)
 /**
  * Parse version 3 header
  */
-bool SNMP_PDU::parseV3Header(BYTE *header, size_t headerLength)
+bool SNMP_PDU::parseV3Header(const BYTE *header, size_t headerLength)
 {
 	UINT32 type;
    size_t length, idLength, remLength = headerLength;
-	BYTE *currPos = header;
+	const BYTE *currPos = header;
 
    // Message id
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
@@ -491,12 +494,12 @@ bool SNMP_PDU::parseV3Header(BYTE *header, size_t headerLength)
 /**
  * Parse V3 USM security parameters
  */
-bool SNMP_PDU::parseV3SecurityUsm(BYTE *data, size_t dataLength)
+bool SNMP_PDU::parseV3SecurityUsm(const BYTE *data, size_t dataLength, const BYTE *rawMsg)
 {
 	UINT32 type;
    size_t length, idLength, engineIdLen, remLength = dataLength;
 	UINT32 engineBoots, engineTime;
-	BYTE *currPos = data;
+	const BYTE *currPos = data;
 	BYTE engineId[SNMP_MAX_ENGINEID_LEN];
 
 	// Should be sequence
@@ -561,7 +564,7 @@ bool SNMP_PDU::parseV3SecurityUsm(BYTE *data, size_t dataLength)
    if (type != ASN_OCTET_STRING)
       return false;
 	memcpy(m_signature, currPos, min(length, 12));
-	memset(currPos, 0, min(length, 12));	// Replace with 0 to generate correct hash in validate method
+	m_signatureOffset = currPos - rawMsg;
    currPos += length;
    remLength -= length + idLength;
 
@@ -578,11 +581,11 @@ bool SNMP_PDU::parseV3SecurityUsm(BYTE *data, size_t dataLength)
 /**
  * Parse V3 scoped PDU
  */
-bool SNMP_PDU::parseV3ScopedPdu(BYTE *data, size_t dataLength)
+bool SNMP_PDU::parseV3ScopedPdu(const BYTE *data, size_t dataLength)
 {
 	UINT32 type;
    size_t length, idLength, remLength = dataLength;
-	BYTE *currPos = data;
+	const BYTE *currPos = data;
 
    // Context engine ID
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
@@ -612,9 +615,9 @@ bool SNMP_PDU::parseV3ScopedPdu(BYTE *data, size_t dataLength)
 /**
  * Parse PDU
  */
-bool SNMP_PDU::parsePdu(BYTE *pdu, size_t pduLength)
+bool SNMP_PDU::parsePdu(const BYTE *pdu, size_t pduLength)
 {
-	BYTE *content;
+	const BYTE *content;
 	size_t length, idLength;
    UINT32 type;
 	bool success;
@@ -667,13 +670,15 @@ bool SNMP_PDU::parsePdu(BYTE *pdu, size_t pduLength)
 /**
  * Validate V3 signed message
  */
-bool SNMP_PDU::validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext)
+bool SNMP_PDU::validateSignedMessage(const BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext)
 {
-	BYTE k1[64], k2[64], hash[20], *buffer;
-	int i;
-
 	if (securityContext == NULL)
 		return false;	// Unable to validate message without security context
+
+   BYTE k1[64], k2[64], hash[20];
+   SHA1_STATE sha1;
+   MD5_STATE md5;
+   int i;
 
 	switch(securityContext->getAuthMethod())
 	{
@@ -689,16 +694,19 @@ bool SNMP_PDU::validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityCont
 			}
 
 			// Calculate first hash (step 3)
-			buffer = (BYTE *)malloc(msgLen + 64);
-			memcpy(buffer, k1, 64);
-			memcpy(&buffer[64], msg, msgLen);
-			CalculateMD5Hash(buffer, msgLen + 64, hash);
+			MD5Init(&md5);
+			MD5Update(&md5, k1, 64);
+			MD5Update(&md5, msg, m_signatureOffset);
+			MD5Update(&md5, (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 12); // Replace signature with 0 to generate correct hash
+			if (msgLen > m_signatureOffset + 12)
+			   MD5Update(&md5, msg + m_signatureOffset + 12, msgLen - m_signatureOffset - 12);
+			MD5Finish(&md5, hash);
 
 			// Calculate second hash
-			memcpy(buffer, k2, 64);
-			memcpy(&buffer[64], hash, 16);
-			CalculateMD5Hash(buffer, 80, hash);
-			free(buffer);
+         MD5Init(&md5);
+         MD5Update(&md5, k2, 64);
+         MD5Update(&md5, hash, 16);
+         MD5Finish(&md5, hash);
 			break;
 		case SNMP_AUTH_SHA1:
 			// Create K1 and K2
@@ -712,16 +720,19 @@ bool SNMP_PDU::validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityCont
 			}
 
 			// Calculate first hash (step 3)
-			buffer = (BYTE *)malloc(msgLen + 64);
-			memcpy(buffer, k1, 64);
-			memcpy(&buffer[64], msg, msgLen);
-			CalculateSHA1Hash(buffer, msgLen + 64, hash);
+			SHA1Init(&sha1);
+         SHA1Update(&sha1, k1, 64);
+         SHA1Update(&sha1, msg, m_signatureOffset);
+         SHA1Update(&sha1, (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 12); // Replace signature with 0 to generate correct hash
+         if (msgLen > m_signatureOffset + 12)
+            SHA1Update(&sha1, msg + m_signatureOffset + 12, msgLen - m_signatureOffset - 12);
+         SHA1Finish(&sha1, hash);
 
 			// Calculate second hash
-			memcpy(buffer, k2, 64);
-			memcpy(&buffer[64], hash, 20);
-			CalculateSHA1Hash(buffer, 84, hash);
-			free(buffer);
+         SHA1Init(&sha1);
+         SHA1Update(&sha1, k2, 64);
+         SHA1Update(&sha1, hash, 20);
+         SHA1Finish(&sha1, hash);
 			break;
 		default:
 			break;
@@ -734,7 +745,7 @@ bool SNMP_PDU::validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityCont
 /**
  * Decrypt data in packet
  */
-bool SNMP_PDU::decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
+bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
 {
 #ifdef _WITH_ENCRYPTION
 	if (securityContext == NULL)
@@ -803,9 +814,9 @@ bool SNMP_PDU::decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_
 /**
  * Create PDU from packet
  */
-bool SNMP_PDU::parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
+bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
 {
-   BYTE *pbCurrPos;
+   const BYTE *pbCurrPos;
    UINT32 dwType;
    size_t dwLength, dwPacketLength, idLength;
    bool bResult = false;
@@ -850,7 +861,7 @@ bool SNMP_PDU::parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *secu
 
 		if (m_securityModel == SNMP_SECURITY_MODEL_USM)
 		{
-			if (!parseV3SecurityUsm(pbCurrPos, dwLength))
+			if (!parseV3SecurityUsm(pbCurrPos, dwLength, rawData))
 				return false;
 
 			if (engineIdAutoupdate && (m_authoritativeEngine.getIdLen() > 0) && (securityContext != NULL))
@@ -869,33 +880,37 @@ bool SNMP_PDU::parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *secu
 		dwPacketLength -= dwLength + idLength;
 
 		// Decrypt scoped PDU if needed
+		BYTE *decryptedPdu = NULL;
 		if ((m_securityModel == SNMP_SECURITY_MODEL_USM) && (m_flags & SNMP_PRIV_FLAG))
 		{
-			BYTE *scopedPduStart = pbCurrPos;
-
 			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
 				return false;
 			if (dwType != ASN_OCTET_STRING)
 				return false;   // Should be encoded as octet string
 
-			BYTE *decryptedPdu = (BYTE *)malloc(dwLength);
+			decryptedPdu = (BYTE *)malloc(dwLength);
 			if (!decryptData(pbCurrPos, dwLength, decryptedPdu, securityContext))
 			{
 				free(decryptedPdu);
 				return false;
 			}
 
-			pbCurrPos = scopedPduStart;
-			memcpy(pbCurrPos, decryptedPdu, dwLength);
-			free(decryptedPdu);
+			pbCurrPos = decryptedPdu;
 		}
 
 		// Scoped PDU
 		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+		{
+	      free(decryptedPdu);
 			return false;
+		}
 		if (dwType != ASN_SEQUENCE)
+		{
+	      free(decryptedPdu);
 			return false;   // Should be sequence
+		}
 		bResult = parseV3ScopedPdu(pbCurrPos, dwLength);
+      free(decryptedPdu);
 	}
 	else
 	{
