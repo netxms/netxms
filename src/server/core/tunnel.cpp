@@ -359,7 +359,7 @@ void AgentTunnel::recvThread()
    m_channels.clear();
    MutexUnlock(m_channelLock);
 
-   debugPrintf(5, _T("Receiver thread stopped"));
+   debugPrintf(4, _T("Receiver thread stopped"));
 }
 
 /**
@@ -368,6 +368,7 @@ void AgentTunnel::recvThread()
 THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
 {
    ((AgentTunnel *)arg)->recvThread();
+   ((AgentTunnel *)arg)->decRefCount();
    return THREAD_OK;
 }
 
@@ -431,6 +432,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
 void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
+   incRefCount();
    m_recvThread = ThreadCreateEx(AgentTunnel::recvThreadStarter, 0, this);
 }
 

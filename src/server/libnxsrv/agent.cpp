@@ -1522,6 +1522,8 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
          else
             dwResult = ERR_IO_FAILURE;
          m_fileUploadInProgress = false;
+         if (ctx != NULL)
+            ctx->decRefCount();
          channel->decRefCount();
       }
       else

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ WinPerfObject::WinPerfObject(const TCHAR *name)
  */
 WinPerfObject::~WinPerfObject()
 {
-	safe_free(m_name);
+	free(m_name);
 	delete m_instances;
 	delete m_counters;
 }
