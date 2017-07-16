@@ -32,24 +32,14 @@ static ObjectRefArray<AgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock;
 
 /**
- * Callback for closing old tunnel
- */
-static void CloseTunnelCallback(void *arg)
-{
-   ((AgentTunnel *)arg)->decRefCount();
-}
-
-/**
  * Register tunnel
  */
 static void RegisterTunnel(AgentTunnel *tunnel)
 {
-   AgentTunnel *oldTunnel = NULL;
    tunnel->incRefCount();
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      oldTunnel = s_boundTunnels.get(tunnel->getNodeId());
       s_boundTunnels.set(tunnel->getNodeId(), tunnel);
       tunnel->decRefCount(); // set already increased ref count
    }
@@ -58,11 +48,6 @@ static void RegisterTunnel(AgentTunnel *tunnel)
       s_unboundTunnels.add(tunnel);
    }
    s_tunnelListLock.unlock();
-
-   // Execute decRefCount for old tunnel on separate thread to avoid
-   // possible tunnel manager thread lock on old tunnel receiver thread join
-   if (oldTunnel != NULL)
-      ThreadPoolExecute(g_mainThreadPool, CloseTunnelCallback, oldTunnel);
 }
 
 /**
@@ -70,28 +55,18 @@ static void RegisterTunnel(AgentTunnel *tunnel)
  */
 static void UnregisterTunnel(AgentTunnel *tunnel)
 {
+   tunnel->debugPrintf(4, _T("Tunnel unregistered"));
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      AgentTunnel *curr = s_boundTunnels.get(tunnel->getNodeId());
-      if (curr == tunnel)
-      {
-         s_boundTunnels.remove(tunnel->getNodeId());
-         tunnel->debugPrintf(4, _T("Tunnel unregistered"));
-      }
-      else if (curr != NULL)
-      {
-         curr->decRefCount();  // ref count was increased by get
-      }
+      s_boundTunnels.remove(tunnel->getNodeId());
    }
    else
    {
       s_unboundTunnels.remove(tunnel);
-      tunnel->debugPrintf(4, _T("Tunnel unregistered"));
+      tunnel->decRefCount();
    }
    s_tunnelListLock.unlock();
-
-   ThreadPoolExecute(g_mainThreadPool, CloseTunnelCallback, tunnel);
 }
 
 /**
@@ -235,7 +210,6 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_context = context;
    m_ssl = ssl;
    m_sslLock = MutexCreate();
-   m_recvThread = INVALID_THREAD_HANDLE;
    m_requestId = 0;
    m_nodeId = nodeId;
    m_state = AGENT_TUNNEL_INIT;
@@ -254,7 +228,6 @@ AgentTunnel::~AgentTunnel()
 {
    m_channels.clear();
    shutdown();
-   ThreadJoin(m_recvThread);
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
    MutexDestroy(m_sslLock);
@@ -433,7 +406,7 @@ void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
    incRefCount();
-   m_recvThread = ThreadCreateEx(AgentTunnel::recvThreadStarter, 0, this);
+   ThreadCreate(AgentTunnel::recvThreadStarter, 0, this);
 }
 
 /**
