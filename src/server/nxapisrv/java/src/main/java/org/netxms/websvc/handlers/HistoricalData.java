@@ -65,39 +65,27 @@ public class HistoricalData extends AbstractObjectHandler
       
       DciData data = null;
       
-      if(timeFrom != null || timeTo != null)
+      if (timeFrom != null || timeTo != null)
       {
-         data = session.getCollectedData(obj.getObjectId(), dciId, new Date(parseLogng(timeFrom, 0)*1000), new Date(parseLogng(timeTo, 0)*1000), (int)parseLogng(itemCount, 0));
+         data = session.getCollectedData(obj.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0));
       }
-      else if(timeInteval != null)
+      else if (timeInteval != null)
       {
          Date now = new Date();
-         long from = now.getTime() - parseLogng(timeInteval, 0)*1000;
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), (int)parseLogng(itemCount, 0));         
+         long from = now.getTime() - parseLong(timeInteval, 0) * 1000;
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0));         
       }
-      else if(itemCount != null)
+      else if (itemCount != null)
       {         
-         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, (int)parseLogng(itemCount, 0));
+         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0));
       }  
       else
       {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, (int)parseLogng(itemCount, 0));           
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0));           
       }
       
       return new ResponseContainer("values", data);
-   }
-   
-   private long parseLogng(String data, long defaultValue)
-   {
-      try 
-      {
-         return Long.parseLong(data);
-      }
-      catch(NumberFormatException e)
-      {
-         return defaultValue;
-      }      
    }
 }

@@ -102,9 +102,11 @@ public class GrafanaDataCollection extends AbstractHandler
                                                       Long.parseLong(dci.get("id").getAsString()), from, to, 0);
          root = new JsonObject();
          JsonArray datapoints = new JsonArray();
-         JsonArray datapoint;         
-         for(DciDataRow r : data.getValues())
+         JsonArray datapoint;
+         DciDataRow[] values = data.getValues(); 
+         for(int i = values.length - 1; i >= 0; i--)
          {
+            DciDataRow r = values[i];
             datapoint = new JsonArray();
             datapoint.add(r.getValueAsDouble());
             datapoint.add(r.getTimestamp().getTime());

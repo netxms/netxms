@@ -407,4 +407,48 @@ public abstract class AbstractHandler extends ServerResource
    {
       return getRequest().getHeaders().getFirstValue(name, true);
    }
+   
+   /**
+    * Parse string as Integer value
+    * 
+    * @param value input string
+    * @param defaultValue default value to return if parse fails
+    * @return value parsed as integer or default value
+    */
+   static protected int parseInt(String value, int defaultValue)
+   {
+      if (value == null)
+         return defaultValue;
+      
+      try 
+      {
+         return Integer.parseInt(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }      
+   }
+   
+   /**
+    * Parse string as Long value
+    * 
+    * @param value input string
+    * @param defaultValue default value to return if parse fails
+    * @return value parsed as long or default value
+    */
+   static protected long parseLong(String value, long defaultValue)
+   {
+      if (value == null)
+         return defaultValue;
+      
+      try 
+      {
+         return Long.parseLong(value);
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }      
+   }
 }
