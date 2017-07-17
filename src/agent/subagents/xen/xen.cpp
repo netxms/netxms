@@ -27,6 +27,8 @@
  */
 LONG H_XenDomainList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_XenHostOnlineCPUs(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_XenHostPhyInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenHostVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
@@ -100,6 +102,20 @@ static BOOL SubagentInit(Config *config)
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("XEN.Host.CPU.Cores"), H_XenHostPhyInfo, _T("c"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
+   { _T("XEN.Host.CPU.Frequency"), H_XenHostPhyInfo, _T("F"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
+   { _T("XEN.Host.CPU.LogicalCount"), H_XenHostPhyInfo, _T("C"), DCI_DT_INT, _T("XEN host: number of logical CPUs") },
+   { _T("XEN.Host.CPU.Online"), H_XenHostOnlineCPUs, NULL, DCI_DT_INT, _T("XEN host: number of online CPUs") },
+   { _T("XEN.Host.CPU.PhysicalCount"), H_XenHostPhyInfo, _T("P"), DCI_DT_INT, _T("XEN host: number of physical CPUs") },
+   { _T("XEN.Host.Memory.Free"), H_XenHostPhyInfo, _T("M"), DCI_DT_UINT64, _T("XEN host: free memory") },
+   { _T("XEN.Host.Memory.FreePerc"), H_XenHostPhyInfo, _T("m"), DCI_DT_FLOAT, _T("XEN host: free memory (%)") },
+   { _T("XEN.Host.Memory.Outstanding"), H_XenHostPhyInfo, _T("O"), DCI_DT_UINT64, _T("XEN host: outstanding memory") },
+   { _T("XEN.Host.Memory.OutstandingPerc"), H_XenHostPhyInfo, _T("o"), DCI_DT_FLOAT, _T("XEN host: outstanding memory (%)") },
+   { _T("XEN.Host.Memory.Scrub"), H_XenHostPhyInfo, _T("S"), DCI_DT_UINT64, _T("XEN host: scrub memory") },
+   { _T("XEN.Host.Memory.ScrubPerc"), H_XenHostPhyInfo, _T("s"), DCI_DT_FLOAT, _T("XEN host: scrub memory (%)") },
+   { _T("XEN.Host.Memory.Total"), H_XenHostPhyInfo, _T("T"), DCI_DT_UINT64, _T("XEN host: total memory") },
+   { _T("XEN.Host.Memory.Used"), H_XenHostPhyInfo, _T("U"), DCI_DT_UINT64, _T("XEN host: used memory") },
+   { _T("XEN.Host.Memory.UsedPerc"), H_XenHostPhyInfo, _T("u"), DCI_DT_FLOAT, _T("XEN host: used memory (%)") },
 	{ _T("XEN.Host.Version"), H_XenHostVersion, NULL, DCI_DT_STRING, _T("XEN host: version") }
 };
 
