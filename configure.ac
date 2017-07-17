@@ -109,8 +109,13 @@ DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
+VMGR_CPPFLAGS=""
+VMGR_LDFLAGS=""
 VMGR_LIBS=""
 LIBVIRT_BASE=""
+XEN_CPPFLAGS=""
+XEN_LDFLAGS=""
+XEN_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
@@ -355,6 +360,12 @@ AC_ARG_WITH(libvirt,
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		LIBVIRT_BASE="$withval"
 	fi
+fi ])
+
+AC_ARG_WITH(xen,
+[AS_HELP_STRING(--with-xen,build XEN subagent)],
+[ if test "x$withval" != "xno" ; then
+	COMPONENTS="$COMPONENTS xen"
 fi ])
 
 AC_ARG_WITH(sqlite,
@@ -684,7 +695,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -981,6 +992,11 @@ fi
 check_substr "$COMPONENTS" "vmgr"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS vmgr"
+fi
+
+check_substr "$COMPONENTS" "xen"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS xen"
 fi
 
 check_substr "$COMPONENTS" "sdk"
@@ -3294,6 +3310,26 @@ if test $? = 0; then
 	LIBS="$OLD_LIBS"
 fi
 
+
+#--------------------------------------------------------------------
+# XEN
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "xen"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	AC_CHECK_HEADER(libxl.h,,AC_MSG_ERROR([*** Cannot find libxl.h - check your libxen installation ***]))
+	AC_CHECK_LIB(xenlight, libxl_ctx_alloc, [ XEN_LIBS="$XEN_LIBS -lxenlight" ])
+	AC_CHECK_LIB(xenctrl, xc_vcpu_getinfo, [ XEN_LIBS="$XEN_LIBS -lxenctrl" ])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
 #--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
@@ -3424,6 +3460,7 @@ AC_SUBST(DB2_LIBS)
 AC_SUBST(INFORMIX_CPPFLAGS)
 AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
+AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
@@ -3440,7 +3477,9 @@ AC_SUBST(MQTT_LIBS)
 AC_SUBST(VMGR_CPPFLAGS)
 AC_SUBST(VMGR_LDFLAGS)
 AC_SUBST(VMGR_LIBS)
-AC_SUBST(INSTALL_LIBPATH)
+AC_SUBST(XEN_CPPFLAGS)
+AC_SUBST(XEN_LDFLAGS)
+AC_SUBST(XEN_LIBS)
 AC_SUBST(ZEROMQ_CPPFLAGS)
 AC_SUBST(ZEROMQ_LDFLAGS)
 
@@ -3557,6 +3596,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
+	src/agent/subagents/xen/Makefile
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
@@ -3931,6 +3971,16 @@ if test "x${VMGR_LDFLAGS}" != "x"; then
 fi
 if test "x${VMGR_LIBS}" != "x"; then
 	echo "Vmgr LIBS               : ${VMGR_LIBS}"
+fi
+
+if test "x${XEN_CPPFLAGS}" != "x"; then
+	echo "XEN CPPFLAGS            : ${XEN_CPPFLAGS}"
+fi
+if test "x${XEN_LDFLAGS}" != "x"; then
+	echo "XEN LDFLAGS             : ${XEN_LDFLAGS}"
+fi
+if test "x${XEN_LIBS}" != "x"; then
+	echo "XEN LIBS                : ${XEN_LIBS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

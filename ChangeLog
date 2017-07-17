@@ -2,6 +2,8 @@
 * 2.1.1
 *
 
+- XEN monitoring subagent
+- Fixed issues with agent tunnels
 - Management console:
 	- Improved status map
 
