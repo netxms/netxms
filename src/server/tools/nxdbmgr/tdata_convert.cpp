@@ -80,7 +80,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
    TCHAR oldName[64], newName[64];
    _sntprintf(oldName, 64, _T("tdata_%d"), id);
    _sntprintf(newName, 64, _T("tdata_temp_%d"), id);
-   if (!RenameDatabaseTable(oldName, newName))
+   if (!DBRenameTable(g_hCoreDB, oldName, newName))
       return false;
 
    bool success = false;
@@ -178,7 +178,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
 
       _sntprintf(oldName, 64, _T("tdata_temp_%d"), id);
       _sntprintf(newName, 64, _T("tdata_%d"), id);
-      RenameDatabaseTable(oldName, newName);
+      DBRenameTable(g_hCoreDB, oldName, newName);
    }
 
    return success;

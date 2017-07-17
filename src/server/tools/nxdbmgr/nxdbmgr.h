@@ -82,8 +82,6 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *descr
 
 bool IsDataTableExist(const TCHAR *format, UINT32 id);
 
-bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName);
-
 BOOL CreateIDataTable(DWORD nodeId);
 BOOL CreateTDataTable(DWORD nodeId);
 BOOL CreateTDataTable_preV281(DWORD nodeId);

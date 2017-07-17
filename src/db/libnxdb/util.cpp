@@ -224,7 +224,7 @@ int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 {
 	DB_RESULT hResult;
-	TCHAR syntaxId[256];
+	TCHAR syntaxId[256] = _T("");
 	bool read = false;
 	int syntax;
 
@@ -293,4 +293,142 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
    }
 
 	return syntax;
+}
+
+/**
+ * Rename table
+ */
+bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const TCHAR *newName)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024];
+   switch(syntax)
+   {
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_INFORMIX:
+      case DB_SYNTAX_MYSQL:
+         _sntprintf(query, 1024, _T("RENAME TABLE %s TO %s"), oldName, newName);
+         break;
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME TO %s"), oldName, newName);
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("EXEC sp_rename '%s','%s'"), oldName, newName);
+         break;
+      default:    // Unsupported DB engine
+         return false;
+   }
+   return DBQuery(hdb, query);
+}
+
+/**
+ * Drop primary key from table
+ */
+bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024];
+   DB_RESULT hResult;
+   bool success;
+
+   switch(syntax)
+   {
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_INFORMIX:
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_MSSQL:
+         success = FALSE;
+         _sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
+         hResult = DBSelect(hdb, query);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               TCHAR objName[512];
+
+               DBGetField(hResult, 0, 0, objName, 512);
+               _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
+               success = DBQuery(hdb, query);
+            }
+            else
+            {
+               success = true; // No PK to drop
+            }
+            DBFreeResult(hResult);
+         }
+         break;
+      default:    // Unsupported DB engine
+         success = false;
+         break;
+   }
+
+   if ((syntax == DB_SYNTAX_DB2) && success)
+   {
+      _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+      success = DBQuery(hdb, query);
+   }
+   return success;
+}
+
+/**
+ * Remove NOT NULL constraint from column
+ */
+bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024] = _T("");
+   switch(syntax)
+   {
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
+                                 _T("PRAGMA EXCEPTION_INIT(already_null, -1451); ")
+                                 _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s null'; ")
+                                 _T("EXCEPTION WHEN already_null THEN null; END;"), table, column);
+         break;
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
+         break;
+      default:
+         break;
+   }
+
+   return (query[0] != 0) ? DBQuery(hdb, query) : true;
+}
+
+/**
+ * Set NOT NULL constraint on column
+ */
+bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024] = _T("");
+   switch(syntax)
+   {
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("DECLARE already_not_null EXCEPTION; ")
+                                 _T("PRAGMA EXCEPTION_INIT(already_not_null, -1442); ")
+                                 _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s NOT NULL'; ")
+                                 _T("EXCEPTION WHEN already_not_null THEN null; END;"), table, column);
+         break;
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
+         break;
+      default:
+         break;
+   }
+
+   return (query[0] != 0) ? DBQuery(hdb, query) : true;
 }

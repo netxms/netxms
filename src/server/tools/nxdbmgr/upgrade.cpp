@@ -162,88 +162,6 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bo
 }
 
 /**
- * Rename table
- */
-bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName)
-{
-   TCHAR query[1024];
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_DB2:
-      case DB_SYNTAX_INFORMIX:
-      case DB_SYNTAX_MYSQL:
-         _sntprintf(query, 1024, _T("RENAME TABLE %s TO %s"), oldName, newName);
-         break;
-      case DB_SYNTAX_ORACLE:
-      case DB_SYNTAX_PGSQL:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME TO %s"), oldName, newName);
-         break;
-      case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 1024, _T("EXEC sp_rename '%s','%s'"), oldName, newName);
-         break;
-      default:    // Unsupported DB engine
-         return false;
-   }
-   return SQLQuery(query);
-}
-
-/**
- * Drop primary key from table
- */
-static BOOL DropPrimaryKey(const TCHAR *table)
-{
-	TCHAR query[1024];
-	DB_RESULT hResult;
-	BOOL success;
-
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_DB2:
-		case DB_SYNTAX_INFORMIX:
-		case DB_SYNTAX_MYSQL:
-		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
-			success = SQLQuery(query);
-			break;
-		case DB_SYNTAX_PGSQL:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
-			success = SQLQuery(query);
-			break;
-		case DB_SYNTAX_MSSQL:
-			success = FALSE;
-			_sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
-			hResult = SQLSelect(query);
-			if (hResult != NULL)
-			{
-				if (DBGetNumRows(hResult) > 0)
-				{
-					TCHAR objName[512];
-
-					DBGetField(hResult, 0, 0, objName, 512);
-					_sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
-					success = SQLQuery(query);
-				}
-				else
-				{
-				   success = TRUE; // No PK to drop
-				}
-				DBFreeResult(hResult);
-			}
-			break;
-		default:		// Unsupported DB engine
-			success = FALSE;
-			break;
-	}
-
-   if ((g_dbSyntax == DB_SYNTAX_DB2) && success)
-   {
-      _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
-      success = SQLQuery(query);
-   }
-	return success;
-}
-
-/**
  * Convert strings from # encoded form to normal form
  */
 static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId)
@@ -343,56 +261,6 @@ cleanup:
 static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
 {
 	return ConvertStrings(table, idColumn, NULL, column, false);
-}
-
-/**
- * Remove NOT NULL constraint from column
- */
-static bool RemoveNotNullConstraint(const TCHAR *table, const TCHAR *column)
-{
-	TCHAR query[1024] = _T("");
-
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
-			                        _T("PRAGMA EXCEPTION_INIT(already_null, -1451); ")
-											_T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s null'; ")
-											_T("EXCEPTION WHEN already_null THEN null; END;"), table, column);
-			break;
-		case DB_SYNTAX_PGSQL:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
-			break;
-		default:
-			break;
-	}
-
-	return (query[0] != 0) ? SQLQuery(query) : true;
-}
-
-/**
- * Set NOT NULL constraint on column
- */
-static bool SetNotNullConstraint(const TCHAR *table, const TCHAR *column)
-{
-   TCHAR query[1024] = _T("");
-
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_ORACLE:
-         _sntprintf(query, 1024, _T("DECLARE already_not_null EXCEPTION; ")
-                                 _T("PRAGMA EXCEPTION_INIT(already_not_null, -1442); ")
-                                 _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s NOT NULL'; ")
-                                 _T("EXCEPTION WHEN already_not_null THEN null; END;"), table, column);
-         break;
-      case DB_SYNTAX_PGSQL:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
-         break;
-      default:
-         break;
-   }
-
-   return (query[0] != 0) ? SQLQuery(query) : true;
 }
 
 /**
@@ -810,7 +678,7 @@ static BOOL H_UpgradeFromV454(int currVersion, int newVersion)
             _T("UPDATE interfaces SET parent_iface=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SetNotNullConstraint(_T("interfaces"), _T("parent_iface")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("interfaces"), _T("parent_iface")));
    CHK_EXEC(SetSchemaVersion(455));
    return TRUE;
 }
@@ -1054,7 +922,7 @@ static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
             _T("UPDATE dct_thresholds SET sample_count=1\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   SetNotNullConstraint(_T("dct_thresholds"), _T("sample_count"));
+   DBSetNotNullConstraint(g_hCoreDB, _T("dct_thresholds"), _T("sample_count"));
 
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE dct_threshold_instances (")
@@ -1182,7 +1050,7 @@ static BOOL H_UpgradeFromV442(int currVersion, int newVersion)
             _T("ALTER TABLE dc_tables ADD instd_filter $SQL:TEXT null\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   SetNotNullConstraint(_T("dc_tables"), _T("instd_method"));
+   DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instd_method"));
    CHK_EXEC(SetSchemaVersion(443));
    return TRUE;
 }
@@ -1323,8 +1191,8 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   CHK_EXEC(SetNotNullConstraint(_T("snmp_trap_cfg"), _T("guid")));
-   CHK_EXEC(SetNotNullConstraint(_T("script_library"), _T("guid")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("guid")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("script_library"), _T("guid")));
    CHK_EXEC(SetSchemaVersion(438));
    return TRUE;
 }
@@ -1365,7 +1233,7 @@ static BOOL H_UpgradeFromV435(int currVersion, int newVersion)
             _T("UPDATE nodes SET agent_comp_mode='0'\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("agent_comp_mode")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("agent_comp_mode")));
    CHK_EXEC(SetSchemaVersion(436));
    return TRUE;
 }
@@ -2129,7 +1997,7 @@ static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV414(int currVersion, int newVersion)
 {
-   CHK_EXEC(RemoveNotNullConstraint(_T("dci_summary_tables"), _T("menu_path")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("dci_summary_tables"), _T("menu_path")));
    CHK_EXEC(SetSchemaVersion(415));
    return TRUE;
 }
@@ -2355,8 +2223,8 @@ static BOOL H_UpgradeFromV409(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("ssh_proxy")));
-   CHK_EXEC(SetNotNullConstraint(_T("zones"), _T("ssh_proxy")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("ssh_proxy")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("zones"), _T("ssh_proxy")));
 
    CHK_EXEC(SetSchemaVersion(410));
    return TRUE;
@@ -2374,7 +2242,7 @@ static BOOL H_UpgradeFromV408(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("node_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("node_type")));
 
    CHK_EXEC(SetSchemaVersion(409));
    return TRUE;
@@ -2403,7 +2271,7 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("chassis_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("chassis_id")));
 
    CHK_EXEC(SetSchemaVersion(408));
    return TRUE;
@@ -4087,9 +3955,9 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
 {
    if (g_dbSyntax == DB_SYNTAX_MSSQL)
    {
-      CHK_EXEC(DropPrimaryKey(_T("cluster_sync_subnets")));
-      CHK_EXEC(DropPrimaryKey(_T("address_lists")));
-      CHK_EXEC(DropPrimaryKey(_T("vpn_connector_networks")));
+      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("cluster_sync_subnets")));
+      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("address_lists")));
+      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("vpn_connector_networks")));
    }
 
    CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
@@ -4326,7 +4194,7 @@ static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
 {
-   CHK_EXEC(RemoveNotNullConstraint(_T("user_groups"), _T("description")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("description")));
    CHK_EXEC(SetSchemaVersion(334));
    return TRUE;
 }
@@ -4408,7 +4276,7 @@ static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
 {
-   CHK_EXEC(DropPrimaryKey(_T("network_map_links")));
+   CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("network_map_links")));
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
    CHK_EXEC(SetSchemaVersion(327));
    return TRUE;
@@ -4793,12 +4661,12 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
 {
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("tool_name")));
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("tool_data")));
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("description")));
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("confirmation_text")));
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("matching_oid")));
-   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools_table_columns"), _T("col_name")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("tool_name")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("tool_data")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("description")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("confirmation_text")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("matching_oid")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools_table_columns"), _T("col_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));
@@ -4944,7 +4812,7 @@ static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("config_clob"), _T("var_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("config_clob"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
    CHK_EXEC(SetSchemaVersion(307));
    return TRUE;
@@ -5055,11 +4923,11 @@ static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
 	CHK_EXEC(CreateConfigParam(_T("XMPPServer"), _T("localhost"), 1, 1));
 	CHK_EXEC(CreateConfigParam(_T("XMPPPort"), _T("5222"), 1, 1));
 
-   RemoveNotNullConstraint(_T("users"), _T("full_name"));
-   RemoveNotNullConstraint(_T("users"), _T("description"));
-   RemoveNotNullConstraint(_T("users"), _T("cert_mapping_data"));
-   RemoveNotNullConstraint(_T("user_groups"), _T("description"));
-   RemoveNotNullConstraint(_T("userdb_custom_attributes"), _T("attr_value"));
+   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("full_name"));
+   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("description"));
+   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("cert_mapping_data"));
+   DBRemoveNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("description"));
+   DBRemoveNotNullConstraint(g_hCoreDB, _T("userdb_custom_attributes"), _T("attr_value"));
 
    ConvertStrings(_T("users"), _T("id"), _T("full_name"));
    ConvertStrings(_T("users"), _T("id"), _T("description"));
@@ -5615,18 +5483,18 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024, true));
 	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024, true));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("alarm_key")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("alarm_message")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("comments")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("situation_instance")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("script")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_key")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_message")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("comments")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("situation_instance")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("script")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_key")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_message")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("comments")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("situation_instance")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("script")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("policy_situation_attr_list"), _T("attr_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("policy_situation_attr_list"), _T("attr_value")));
 	// convert strings in policy_situation_attr_list
 	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id,situation_id,attr_name,attr_value FROM policy_situation_attr_list"));
 	if (hResult != NULL)
@@ -5676,8 +5544,8 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 			return FALSE;
 	}
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_cfg"), _T("description")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("event_cfg"), _T("message")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_cfg"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_cfg"), _T("message")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("message")));
 
@@ -5690,15 +5558,15 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("network_services"), _T("check_request")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("network_services"), _T("check_responce")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("network_services"), _T("check_request")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("config"), _T("var_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("dci_schedules"), _T("schedule")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("dci_schedules"), _T("schedule")));
 	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
 
 	CHK_EXEC(SetSchemaVersion(268));
@@ -5860,8 +5728,8 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	// have to made these columns nullable again because
 	// because they was forgotten as NOT NULL in schema.in
 	// and so some databases can still have them as NOT NULL
-	CHK_EXEC(RemoveNotNullConstraint(_T("templates"), _T("apply_filter")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("templates"), _T("apply_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("containers"), _T("auto_bind_filter")));
 
 	CHK_EXEC(SetSchemaVersion(259));
 	return TRUE;
@@ -5959,10 +5827,10 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("templates"), _T("apply_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("templates"), _T("apply_filter")));
 	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("containers"), _T("auto_bind_filter")));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
 	static TCHAR batch[] =
@@ -6108,8 +5976,8 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("thresholds"), _T("fire_value")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("thresholds"), _T("rearm_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("thresholds"), _T("fire_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("thresholds"), _T("rearm_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("rearm_value")));
 
@@ -6260,7 +6128,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 {
 	static TCHAR insertQuery[] = _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)");
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("object_custom_attributes"), _T("attr_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_custom_attributes"), _T("attr_value")));
 
 	// Convert strings in object_custom_attributes table
 	DB_RESULT hResult = SQLSelect(_T("SELECT object_id,attr_name,attr_value FROM object_custom_attributes"));
@@ -6346,10 +6214,10 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_pmap"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_pmap"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("cluster_resources"), _T("resource_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 
 	CHK_EXEC(SetSchemaVersion(246));
@@ -6368,9 +6236,9 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("rcpt_addr")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("email_subject")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("action_data")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("rcpt_addr")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("email_subject")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("action_data")));
 
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
@@ -7102,7 +6970,7 @@ static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_communities"), _T("community")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_communities"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
 
 	CHK_EXEC(SetSchemaVersion(218));
@@ -7123,40 +6991,40 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("community")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("community")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("usm_auth_password")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("usm_auth_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_auth_password")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("usm_priv_password")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("usm_priv_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_priv_password")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("snmp_oid")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("snmp_oid")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("snmp_oid")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("secret")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("secret")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("secret")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("agent_version")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("agent_version")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("agent_version")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("platform_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("platform_name")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("platform_name")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("uname")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("uname")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("uname")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("name")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("transformation")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("transformation")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("instance")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("instance")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
 
 	CHK_EXEC(SetSchemaVersion(217));
@@ -7168,13 +7036,13 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("ap_common"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("ap_common"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
 	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("ap_config_files"), _T("file_content")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("ap_config_files"), _T("file_content")));
 	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
 
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
@@ -7242,10 +7110,10 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("script_library"), _T("script_code")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("script_library"), _T("script_code")));
 	CHK_EXEC(ConvertStrings(_T("script_library"), _T("script_id"), _T("script_code")));
 
-	CHK_EXEC(RemoveNotNullConstraint(_T("raw_dci_values"), _T("raw_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("raw_dci_values"), _T("raw_value")));
 	CHK_EXEC(ConvertStrings(_T("raw_dci_values"), _T("item_id"), _T("raw_value")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
@@ -7260,7 +7128,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			_sntprintf(table, 32, _T("idata_%d"), nodeId);
-			CHK_EXEC(RemoveNotNullConstraint(table, _T("idata_value")));
+			CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, table, _T("idata_value")));
 		}
 		DBFreeResult(hResult);
 	}
@@ -7312,8 +7180,8 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("custom_units_name")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("perftab_settings")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("custom_units_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("perftab_settings")));
 
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
@@ -7328,9 +7196,9 @@ static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 {
-	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("snmp_oid")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("user_tag")));
-	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("snmp_oid")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("user_tag")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("description")));
 
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("user_tag")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("description")));
