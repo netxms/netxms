@@ -432,3 +432,34 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
 
    return (query[0] != 0) ? DBQuery(hdb, query) : true;
 }
+
+/**
+ * Resize varchar column
+ */
+bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024];
+   switch(syntax)
+   {
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
+         break;
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
+         break;
+      case DB_SYNTAX_SQLITE:
+         /* TODO: add SQLite support */
+         query[0] = 0;
+         break;
+      default:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
+         break;
+   }
+
+   return (query[0] != 0) ? DBQuery(hdb, query) : true;
+}

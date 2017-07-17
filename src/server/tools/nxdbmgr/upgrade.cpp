@@ -264,36 +264,6 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 }
 
 /**
- * Resize varchar column
- */
-static bool ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
-{
-	TCHAR query[1024];
-
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_DB2:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
-			break;
-		case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
-			break;
-		case DB_SYNTAX_PGSQL:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
-			break;
-		case DB_SYNTAX_SQLITE:
-			/* TODO: add SQLite support */
-			query[0] = 0;
-			break;
-		default:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
-			break;
-	}
-
-	return (query[0] != 0) ? SQLQuery(query) : true;
-}
-
-/**
  * Create new event template
  */
 static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description)
@@ -1423,7 +1393,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("config"), _T("description"), 450, true));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("config"), _T("description"), 450, true));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between active network discovery polls.' WHERE var_name='ActiveDiscoveryInterval'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable active network discovery. This setting is change by Network Discovery GUI' WHERE var_name='ActiveNetworkDiscovery'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.' WHERE var_name='AgentCommandTimeout'")));
@@ -2282,7 +2252,7 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV406(int currVersion, int newVersion)
 {
-   ResizeColumn(_T("user_groups"), _T("ldap_unique_id"), 64, true);
+   DBResizeColumn(g_hCoreDB, _T("user_groups"), _T("ldap_unique_id"), 64, true);
    CHK_EXEC(SetSchemaVersion(407));
    return TRUE;
 }
@@ -3292,7 +3262,7 @@ static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("primary_ip"), 48, false));
    CHK_EXEC(SetSchemaVersion(383));
    return TRUE;
 }
@@ -3586,7 +3556,7 @@ static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
 {
-   ResizeColumn(_T("config"), _T("var_value"), 2000, true);
+   DBResizeColumn(g_hCoreDB, _T("config"), _T("var_value"), 2000, true);
    CHK_EXEC(SetSchemaVersion(363));
    return TRUE;
 }
@@ -3791,7 +3761,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("users"), _T("password"), 127, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("users"), _T("password"), 127, false));
    CHK_EXEC(SetSchemaVersion(354));
    return TRUE;
 }
@@ -3960,16 +3930,16 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
       CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("vpn_connector_networks")));
    }
 
-   CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("cluster_resources"), _T("ip_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("subnets"), _T("ip_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("interfaces"), _T("ip_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("network_services"), _T("ip_bind_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("vpn_connector_networks"), _T("ip_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("snmp_trap_log"), _T("ip_addr"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr1"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr2"), 48, false));
-   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("cluster_resources"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("subnets"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("interfaces"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_services"), _T("ip_bind_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("vpn_connector_networks"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("snmp_trap_log"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("address_lists"), _T("addr1"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("address_lists"), _T("addr2"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("primary_ip"), 48, false));
 
    CHK_EXEC(ConvertNetMasks(_T("cluster_sync_subnets"), _T("subnet_mask"), _T("cluster_id")));
    CHK_EXEC(ConvertNetMasks(_T("subnets"), _T("ip_netmask"), _T("id")));
@@ -4164,8 +4134,8 @@ static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255, true));
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255, true));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_map_links"), _T("connector_name1"), 255, true));
+   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_map_links"), _T("connector_name2"), 255, true));
    CHK_EXEC(SetSchemaVersion(336));
    return TRUE;
 }
@@ -5475,13 +5445,13 @@ static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 {
-	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000, true));
-	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000, true));
-	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000, true));
-	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000, true));
-	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000, true));
-	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024, true));
-	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("alarms"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("alarm_events"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_log"), _T("event_message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_cfg"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_policy"), _T("alarm_message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("items"), _T("name"), 1024, true));
+	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("dc_tables"), _T("name"), 1024, true));
 
 	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_key")));
 	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_message")));
