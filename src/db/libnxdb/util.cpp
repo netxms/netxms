@@ -382,6 +382,45 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
 }
 
 /**
+ * Add primary key to table. Columns should be passed as comma separated list.
+ */
+bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const TCHAR *columns)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024];
+   bool success;
+   switch(syntax)
+   {
+      case DB_SYNTAX_INFORMIX:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ADD CONSTRAINT PRIMARY KEY (%s)"), table, columns);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_MSSQL:
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ADD CONSTRAINT pk_%s PRIMARY KEY (%s)"), table, table, columns);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, columns);
+         success = DBQuery(hdb, query);
+         break;
+      default:    // Unsupported DB engine
+         success = false;
+         break;
+   }
+
+   if ((syntax == DB_SYNTAX_DB2) && success)
+   {
+      _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+      success = DBQuery(hdb, query);
+   }
+   return success;
+}
+
+/**
  * Remove NOT NULL constraint from column
  */
 bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
