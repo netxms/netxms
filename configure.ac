@@ -3393,15 +3393,22 @@ AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 #--------------------------------------------------------------------
 
 COMPILER_VERSION=""
-for opt in -qversion --version -v -V; do
-	v=`$CXX $opt 2>/dev/null | head -1`
+if test "$CXX" = "CC"; then
+	v=`$CXX -V 2>&1 | head -1`
 	if test $? = 0; then
-		if test "x$COMPILER_VERSION" = "x"; then
-			COMPILER_VERSION="$v"
-			AC_DEFINE_UNQUOTED([CPP_COMPILER_VERSION], "$COMPILER_VERSION", [C++ compiler version information])
-		fi
+		COMPILER_VERSION="$v"
 	fi
-done
+else
+	for opt in -qversion --version -v -V; do
+		v=`$CXX $opt 2>/dev/null | head -1`
+		if test $? = 0; then
+			if test "x$v" != "x" -a "x$COMPILER_VERSION" = "x"; then
+				COMPILER_VERSION="$v"
+			fi
+		fi
+	done
+fi
+AC_DEFINE_UNQUOTED([CPP_COMPILER_VERSION], "$COMPILER_VERSION", [C++ compiler version information])
 
 
 #--------------------------------------------------------------------
