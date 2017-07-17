@@ -312,6 +312,7 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
          break;
       case DB_SYNTAX_ORACLE:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
          _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME TO %s"), oldName, newName);
          break;
       case DB_SYNTAX_MSSQL:
@@ -501,4 +502,93 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
    }
 
    return (query[0] != 0) ? DBQuery(hdb, query) : true;
+}
+
+/**
+ * Drop column from the table
+ */
+bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
+{
+   int syntax = DBGetSyntax(hdb);
+
+   TCHAR query[1024];
+   bool success = false;
+   if (syntax != DB_SYNTAX_SQLITE)
+   {
+      _sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
+      success = DBQuery(hdb, query);
+      if (syntax == DB_SYNTAX_DB2)
+      {
+         _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+         success = DBQuery(hdb, query);
+      }
+   }
+   else
+   {
+      _sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != NULL)
+      {
+         int rows = DBGetNumRows(hResult);
+         const int blen = 2048;
+         TCHAR buffer[blen];
+         // Intermediate buffers for SQLs
+         TCHAR columnList[1024], createList[1024];
+         // TABLE_INFO() columns
+         TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
+         columnList[0] = createList[0] = _T('\0');
+         for (int i = 0; i < rows; i++)
+         {
+            DBGetField(hResult, i, 1, tabColName, 128);
+            DBGetField(hResult, i, 2, tabColType, 64);
+            DBGetField(hResult, i, 3, tabColNull, 10);
+            DBGetField(hResult, i, 4, tabColDefault, 128);
+            if (_tcsnicmp(tabColName, column, 128))
+            {
+               _tcscat(columnList, tabColName);
+               if (columnList[0] != _T('\0'))
+                  _tcscat(columnList, _T(","));
+               _tcscat(createList, tabColName);
+               _tcscat(createList, tabColType);
+               if (tabColDefault[0] != _T('\0'))
+               {
+                  _tcscat(createList, _T("DEFAULT "));
+                  _tcscat(createList, tabColDefault);
+               }
+               if (tabColNull[0] == _T('1'))
+                  _tcscat(createList, _T(" NOT NULL"));
+               _tcscat(createList, _T(","));
+            }
+         }
+         DBFreeResult(hResult);
+         if (rows > 0)
+         {
+            int cllen = (int)_tcslen(columnList);
+            if (cllen > 0 && columnList[cllen - 1] == _T(','))
+               columnList[cllen - 1] = _T('\0');
+            // TODO: figure out if SQLite transactions will work here
+            _sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
+            success = DBQuery(hdb, buffer);
+            if (success)
+            {
+               _sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
+                  table, columnList, columnList, table);
+               success = DBQuery(hdb, buffer);
+            }
+            if (success)
+            {
+               _sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
+               success = DBQuery(hdb, buffer);
+            }
+            if (success)
+            {
+               _sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME TO %s"), table, table);
+               success = DBQuery(hdb, buffer);
+            }
+         }
+      }
+      // TODO: preserve indices and constraints??
+   }
+
+   return success;
 }

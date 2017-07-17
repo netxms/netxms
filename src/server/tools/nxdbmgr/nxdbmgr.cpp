@@ -251,7 +251,7 @@ bool SQLBatch(const TCHAR *pszBatch)
 
 		if (_stscanf(pszQuery, _T("ALTER TABLE %128s DROP COLUMN %128s"), table, column) == 2)
 		{
-			if (!SQLDropColumn(table, column))
+			if (!DBDropColumn(g_hCoreDB, table, column))
 			{
 				WriteToTerminalEx(_T("Cannot drop column \x1b[37;1m%s.%s\x1b[0m\n"), table, column);
 				if (!g_bIgnoreErrors)
@@ -283,88 +283,6 @@ bool SQLBatch(const TCHAR *pszBatch)
       pszQuery = ptr;
    }
    return success;
-}
-
-/**
- * Drop column from the table
- */
-bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
-{
-	TCHAR query[1024];
-	DB_RESULT hResult;
-	bool success = false;
-
-	if (g_dbSyntax != DB_SYNTAX_SQLITE)
-	{
-		_sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
-		success = SQLQuery(query);
-      if (g_dbSyntax == DB_SYNTAX_DB2)
-      {
-         _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
-         success = SQLQuery(query);
-      }
-	}
-	else
-	{
-		_sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
-		hResult = SQLSelect(query);
-		if (hResult != NULL)
-		{
-			int rows = DBGetNumRows(hResult);
-			const int blen = 2048;
-			TCHAR buffer[blen];
-			// Intermediate buffers for SQLs
-			TCHAR columnList[1024], createList[1024];
-			// TABLE_INFO() columns
-			TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
-			columnList[0] = createList[0] = _T('\0');
-			for (int i = 0; i < rows; i++)
-			{
-				DBGetField(hResult, i, 1, tabColName, 128);
-				DBGetField(hResult, i, 2, tabColType, 64);
-				DBGetField(hResult, i, 3, tabColNull, 10);
-				DBGetField(hResult, i, 4, tabColDefault, 128);
-				if (_tcsnicmp(tabColName, column, 128))
-				{
-					_tcscat(columnList, tabColName);
-					if (columnList[0] != _T('\0'))
-						_tcscat(columnList, _T(","));
-					_tcscat(createList, tabColName);
-					_tcscat(createList, tabColType);
-					if (tabColDefault[0] != _T('\0'))
-					{
-						_tcscat(createList, _T("DEFAULT "));
-						_tcscat(createList, tabColDefault);
-					}
-					if (tabColNull[0] == _T('1'))
-						_tcscat(createList, _T(" NOT NULL"));
-					_tcscat(createList, _T(","));
-				}
-			}
-			DBFreeResult(hResult);
-			if (rows > 0)
-			{
-				int cllen = (int)_tcslen(columnList);
-				if (cllen > 0 && columnList[cllen - 1] == _T(','))
-					columnList[cllen - 1] = _T('\0');
-				// TODO: figure out if SQLite transactions will work here
-				_sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
-				CHK_EXEC(SQLQuery(buffer));
-				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
-					table, columnList, columnList, table);
-				CHK_EXEC(SQLQuery(buffer));
-				_sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
-				CHK_EXEC(SQLQuery(buffer));
-				_sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME to %s"), table, table);
-				CHK_EXEC(SQLQuery(buffer));
-				success = true;
-			}
-		}
-	}
-
-	// TODO: preserve indices and constraints??
-
-	return success;
 }
 
 /**

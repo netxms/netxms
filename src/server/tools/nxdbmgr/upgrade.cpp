@@ -379,7 +379,7 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
    if (hResult == NULL)
       return FALSE;
 
-   BOOL success = SQLDropColumn(table, column);
+   bool success = DBDropColumn(g_hCoreDB, table, column);
 
    if (success)
    {
@@ -977,7 +977,7 @@ static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
             }
          }
 
-         CHK_EXEC(SQLDropColumn(_T("network_maps"), _T("seed")));
+         CHK_EXEC(DBDropColumn(g_hCoreDB, _T("network_maps"), _T("seed")));
          DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
@@ -1382,8 +1382,8 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("DROP TABLE situations")));
    CHK_EXEC(SQLQuery(_T("DROP TABLE policy_situation_attr_list")));
-   CHK_EXEC(SQLDropColumn(_T("event_policy"), _T("situation_id")));
-   CHK_EXEC(SQLDropColumn(_T("event_policy"), _T("situation_instance")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_policy"), _T("situation_id")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_policy"), _T("situation_instance")));
    CHK_EXEC(SetSchemaVersion(430));
    return TRUE;
 }
@@ -3832,7 +3832,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
          break;
 	}
 
-   CHK_EXEC(SQLDropColumn(_T("ap_common"), _T("description")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("description")));
    CHK_EXEC(SetSchemaVersion(350));
    return TRUE;
 }
@@ -4063,7 +4063,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
          free(oid);
       }
    }
-   CHK_EXEC(SQLDropColumn(_T("object_tools"), _T("matching_oid"))); //delete old column
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_tools"), _T("matching_oid"))); //delete old column
    CHK_EXEC(SetSchemaVersion(342));
    return TRUE;
 }
@@ -5055,7 +5055,7 @@ static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLDropColumn(_T("dct_thresholds"), _T("current_state")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("dct_thresholds"), _T("current_state")));
    CHK_EXEC(SetSchemaVersion(289));
    return TRUE;
 }
@@ -5245,7 +5245,7 @@ static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
          return FALSE;
    }
 
-   CHK_EXEC(SQLDropColumn(_T("dc_tables"), _T("instance_column")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("dc_tables"), _T("instance_column")));
 
    CHK_EXEC(SetSchemaVersion(280));
    return TRUE;

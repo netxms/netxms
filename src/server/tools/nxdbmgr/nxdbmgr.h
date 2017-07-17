@@ -64,7 +64,6 @@ DB_UNBUFFERED_RESULT SQLSelectUnbuffered(const TCHAR *pszQuery);
 bool SQLExecute(DB_STATEMENT hStmt);
 bool SQLQuery(const TCHAR *pszQuery);
 bool SQLBatch(const TCHAR *pszBatch);
-bool SQLDropColumn(const TCHAR *table, const TCHAR *column);
 bool GetYesNo(const TCHAR *format, ...);
 void ShowQuery(const TCHAR *pszQuery);
 bool ExecSQLBatch(const char *pszFile);
