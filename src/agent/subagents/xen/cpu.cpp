@@ -41,11 +41,11 @@ public:
       currPos = 0;
    }
 
-   void update(uint64_t timePeriod, uint64_t cpuTime)
+   void update(uint64_t timePeriod, uint64_t cpuTime, int cpuCount)
    {
       if (prevTime != 0)
       {
-         usage[currPos++] = (INT32)((cpuTime - prevTime) * 1000 / timePeriod);
+         usage[currPos++] = (INT32)((cpuTime - prevTime) * 1000 / timePeriod) / cpuCount;
          if (currPos == MAX_CPU_USAGE_SLOTS)
             currPos = 0;
       }
@@ -94,6 +94,8 @@ static bool CollectData(libxl_ctx *ctx, struct timespec *prevClock)
       clock_gettime(CLOCK_MONOTONIC_RAW, &currClock);
       uint64_t tdiff = (currClock.tv_sec - prevClock->tv_sec) * _ULL(1000000000) + (currClock.tv_nsec - prevClock->tv_nsec);
 
+      int cpuCount = libxl_get_online_cpus(ctx);
+
       s_dataLock.lock();
       for(int i = 0; i < count; i++)
       {
@@ -103,12 +105,12 @@ static bool CollectData(libxl_ctx *ctx, struct timespec *prevClock)
             u = new CpuUsageData();
             s_vmCpuUsage.set(domains[i].domid, u);
          }
-         u->update(tdiff, domains[i].cpu_time);
+         u->update(tdiff, domains[i].cpu_time, cpuCount);
          totalTime += domains[i].cpu_time;
       }
       libxl_dominfo_list_free(domains, count);
 
-      s_hostCpuUsage.update(tdiff, totalTime);
+      s_hostCpuUsage.update(tdiff, totalTime, cpuCount);
       s_dataLock.unlock();
 
       memcpy(prevClock, &currClock, sizeof(struct timespec));
