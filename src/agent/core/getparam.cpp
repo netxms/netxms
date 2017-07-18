@@ -22,7 +22,9 @@
 
 #include "nxagentd.h"
 
-#if HAVE_CPUID_H
+#if defined(_WIN32)
+#include <intrin.h>
+#elif HAVE_CPUID_H
 #include <cpuid.h>
 #endif
 
@@ -301,7 +303,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
    { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INTEGER, DCIDESC_SYSTEM_IS_VIRTUAL },
+   { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
