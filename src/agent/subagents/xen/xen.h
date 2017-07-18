@@ -58,4 +58,9 @@ extern xentoollog_logger g_xenLogger;
 void XenStartCPUCollector();
 void XenStopCPUCollector();
 
+/**
+ * Resolve domain name to ID
+ */
+LONG XenResolveDomainName(const char *name, uint32_t *domId);
+
 #endif

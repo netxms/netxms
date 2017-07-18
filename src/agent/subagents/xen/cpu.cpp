@@ -22,26 +22,97 @@
 
 #include "xen.h"
 
-struct CPU_USAGE
+#define MAX_CPU_USAGE_SLOTS   900
+
+/**
+ * CPU usage structure
+ */
+class CpuUsageData
 {
+public:
    uint64_t prevTime;
+   INT32 usage[MAX_CPU_USAGE_SLOTS];
+   int currPos;
+
+   CpuUsageData()
+   {
+      prevTime = 0;
+      memset(usage, 0, sizeof(usage));
+      currPos = 0;
+   }
+
+   void update(uint64_t timePeriod, uint64_t cpuTime)
+   {
+      if (prevTime != 0)
+      {
+         usage[currPos++] = (INT32)((cpuTime - prevTime) * 1000 / timePeriod);
+         if (currPos == MAX_CPU_USAGE_SLOTS)
+            currPos = 0;
+      }
+      prevTime = cpuTime;
+   }
+
+   UINT32 getCurrentUsage()
+   {
+      return usage[currPos > 0 ? currPos - 1 : MAX_CPU_USAGE_SLOTS - 1];
+   }
+
+   UINT32 getAverageUsage(int samples)
+   {
+      UINT32 sum = 0;
+      for(int i = 0, pos = currPos; i < samples; i++)
+      {
+         pos--;
+         if (pos < 0)
+            pos = MAX_CPU_USAGE_SLOTS - 1;
+         sum += usage[pos];
+      }
+      return sum / samples;
+   }
 };
 
-static HashMap<INT32, CPU_USAGE> s_spuUsage;
+/**
+ * Collected data
+ */
+static HashMap<uint32_t, CpuUsageData> s_vmCpuUsage(true);
+static CpuUsageData s_hostCpuUsage;
+static Mutex s_dataLock;
 
-static bool CollectCPUTime(libxl_ctx *ctx)
+/**
+ * Collect CPU usage data
+ */
+static bool CollectData(libxl_ctx *ctx, struct timespec *prevClock)
 {
    bool success = false;
    uint64_t totalTime = 0;
+
    int count;
    libxl_dominfo *domains = libxl_list_domain(ctx, &count);
    if (domains != NULL)
    {
+      struct timespec currClock;
+      clock_gettime(CLOCK_MONOTONIC_RAW, &currClock);
+      uint64_t tdiff = (currClock.tv_sec - prevClock->tv_sec) * _ULL(1000000000) + (currClock.tv_nsec - prevClock->tv_nsec);
+
+      s_dataLock.lock();
       for(int i = 0; i < count; i++)
       {
+         CpuUsageData *u = s_vmCpuUsage.get(domains[i].domid);
+         if (u == NULL)
+         {
+            u = new CpuUsageData();
+            s_vmCpuUsage.set(domains[i].domid, u);
+         }
+         u->update(tdiff, domains[i].cpu_time);
          totalTime += domains[i].cpu_time;
       }
       libxl_dominfo_list_free(domains, count);
+
+      s_hostCpuUsage.update(tdiff, totalTime);
+      s_dataLock.unlock();
+
+      memcpy(prevClock, &currClock, sizeof(struct timespec));
+      success = true;
    }
    else
    {
@@ -56,22 +127,21 @@ static bool CollectCPUTime(libxl_ctx *ctx)
 static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 {
    nxlog_debug(1, _T("XEN: CPU collector thread started"));
+
    libxl_ctx *ctx = NULL;
    bool connected = false;
-   uint64_t prevTime = 0;
+
+   struct timespec currClock;
    while(!AgentSleepAndCheckForShutdown(1000))
    {
       if (!connected)
       {
          connected = (libxl_ctx_alloc(&ctx, LIBXL_VERSION, 0, &g_xenLogger) == 0);
          if (connected)
-            prevTime = CollectCPUTime(ctx);
+            CollectData(ctx, &currClock);
          continue;
       }
-
-      uint64_t currTime = CollectCPUTime(ctx);
-      nxlog_debug(1, _T("TIME = %llu"), currTime - prevTime);
-      prevTime = currTime;
+      CollectData(ctx, &currClock);
    }
    if (ctx != NULL)
       libxl_ctx_free(ctx);
@@ -98,4 +168,80 @@ void XenStartCPUCollector()
 void XenStopCPUCollector()
 {
    ThreadJoin(s_cpuCollectorThread);
+}
+
+/**
+ * Handler for XEN.Host.CPU.Usage parameters
+ */
+LONG H_XenHostCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   UINT32 usage;
+   s_dataLock.lock();
+   switch(*arg)
+   {
+      case '0':
+         usage = s_hostCpuUsage.getCurrentUsage();
+         break;
+      case '1':
+         usage = s_hostCpuUsage.getAverageUsage(60);
+         break;
+      case '5':
+         usage = s_hostCpuUsage.getAverageUsage(300);
+         break;
+      case 'F':
+         usage = s_hostCpuUsage.getAverageUsage(900);
+         break;
+   }
+   s_dataLock.unlock();
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d"), usage / 10, usage % 10);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for XEN.Domain.CPU.Usage parameters
+ */
+LONG H_XenDomainCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char domName[256];
+   if (!AgentGetParameterArgA(param, 1, domName, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   char *eptr;
+   uint32_t domId = strtoul(domName, &eptr, 0);
+   if (*eptr != 0)
+   {
+      LONG rc = XenResolveDomainName(domName, &domId);
+      if (rc != SYSINFO_RC_SUCCESS)
+         return rc;
+   }
+
+   LONG rc = SYSINFO_RC_SUCCESS;
+   UINT32 usage;
+   s_dataLock.lock();
+   CpuUsageData *data = s_vmCpuUsage.get(domId);
+   if (data != NULL)
+   {
+      switch(*arg)
+      {
+         case '0':
+            usage = data->getCurrentUsage();
+            break;
+         case '1':
+            usage = data->getAverageUsage(60);
+            break;
+         case '5':
+            usage = data->getAverageUsage(300);
+            break;
+         case 'F':
+            usage = data->getAverageUsage(900);
+            break;
+      }
+      _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d"), usage / 10, usage % 10);
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   s_dataLock.unlock();
+   return rc;
 }

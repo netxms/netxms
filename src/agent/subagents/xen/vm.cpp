@@ -23,6 +23,18 @@
 #include "xen.h"
 
 /**
+ * Resolve domain name to ID
+ */
+LONG XenResolveDomainName(const char *name, uint32_t *domId)
+{
+   libxl_ctx *ctx;
+   XEN_CONNECT(ctx);
+   int rc = (libxl_name_to_domid(ctx, name, domId) == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_NO_SUCH_INSTANCE;
+   libxl_ctx_free(ctx);
+   return rc;
+}
+
+/**
  * Handler for XEN.VirtualMachines list
  */
 LONG H_XenDomainList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)

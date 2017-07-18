@@ -25,8 +25,10 @@
 /**
  * Handlers
  */
+LONG H_XenDomainCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenDomainList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_XenHostCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenHostOnlineCPUs(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenHostPhyInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenHostVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -104,11 +106,19 @@ static BOOL SubagentInit(Config *config)
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("XEN.Domain.CPU.CurrentUsage(*)"), H_XenDomainCPUUsage, _T("0"), DCI_DT_FLOAT, _T("XEN domain {instance}: current CPU utilization") },
+   { _T("XEN.Domain.CPU.Usage(*)"), H_XenDomainCPUUsage, _T("1"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last minute") },
+   { _T("XEN.Domain.CPU.Usage15(*)"), H_XenDomainCPUUsage, _T("F"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last 15 minutes") },
+   { _T("XEN.Domain.CPU.Usage5(*)"), H_XenDomainCPUUsage, _T("5"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last 5 minutes") },
    { _T("XEN.Host.CPU.Cores"), H_XenHostPhyInfo, _T("c"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
+   { _T("XEN.Host.CPU.CurrentUsage"), H_XenHostCPUUsage, _T("0"), DCI_DT_FLOAT, _T("XEN host: current CPU utilization") },
    { _T("XEN.Host.CPU.Frequency"), H_XenHostPhyInfo, _T("F"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
    { _T("XEN.Host.CPU.LogicalCount"), H_XenHostPhyInfo, _T("C"), DCI_DT_INT, _T("XEN host: number of logical CPUs") },
    { _T("XEN.Host.CPU.Online"), H_XenHostOnlineCPUs, NULL, DCI_DT_INT, _T("XEN host: number of online CPUs") },
    { _T("XEN.Host.CPU.PhysicalCount"), H_XenHostPhyInfo, _T("P"), DCI_DT_INT, _T("XEN host: number of physical CPUs") },
+   { _T("XEN.Host.CPU.Usage"), H_XenHostCPUUsage, _T("1"), DCI_DT_FLOAT, _T("XEN host: average CPU utilization for last minute") },
+   { _T("XEN.Host.CPU.Usage15"), H_XenHostCPUUsage, _T("F"), DCI_DT_FLOAT, _T("XEN host: average CPU utilization for last 15 minutes") },
+   { _T("XEN.Host.CPU.Usage5"), H_XenHostCPUUsage, _T("5"), DCI_DT_FLOAT, _T("XEN host: average CPU utilization for last 5 minutes") },
    { _T("XEN.Host.Memory.Free"), H_XenHostPhyInfo, _T("M"), DCI_DT_UINT64, _T("XEN host: free memory") },
    { _T("XEN.Host.Memory.FreePerc"), H_XenHostPhyInfo, _T("m"), DCI_DT_FLOAT, _T("XEN host: free memory (%)") },
    { _T("XEN.Host.Memory.Outstanding"), H_XenHostPhyInfo, _T("O"), DCI_DT_UINT64, _T("XEN host: outstanding memory") },
@@ -126,7 +136,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("XEN.VirtualMachines"), H_XenDomainList, NULL }
+	{ _T("XEN.Domains"), H_XenDomainList, NULL }
 };
 
 /**
@@ -134,7 +144,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-    { _T("XEN.VirtualMachines"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: virtual machines (domains)") }
+    { _T("XEN.Domains"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: domains (virtual machines)") }
 };
 
 /**
@@ -143,7 +153,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PING"), NETXMS_VERSION_STRING,
+	_T("XEN"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
