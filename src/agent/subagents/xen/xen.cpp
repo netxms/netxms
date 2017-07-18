@@ -87,6 +87,7 @@ xentoollog_logger g_xenLogger = { LogMessage, LogProgress, LogDestroy };
  */
 static void SubagentShutdown()
 {
+   XenStopCPUCollector();
 }
 
 /**
@@ -94,6 +95,7 @@ static void SubagentShutdown()
  */
 static BOOL SubagentInit(Config *config)
 {
+   XenStartCPUCollector();
    return TRUE;
 }
 

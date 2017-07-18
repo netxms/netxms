@@ -1,7 +1,7 @@
 SUBAGENT = xen
 
 pkglib_LTLIBRARIES = xen.la
-xen_la_SOURCES = host.cpp vm.cpp xen.cpp
+xen_la_SOURCES = cpu.cpp host.cpp vm.cpp xen.cpp
 xen_la_CPPFLAGS=-I@top_srcdir@/include @XEN_CPPFLAGS@
 xen_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @XEN_LDFLAGS@
 xen_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @XEN_LIBS@

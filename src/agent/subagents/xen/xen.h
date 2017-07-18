@@ -52,4 +52,10 @@ extern xentoollog_logger g_xenLogger;
    } \
 } while(0)
 
+/**
+ * CPU collector start/stop
+ */
+void XenStartCPUCollector();
+void XenStopCPUCollector();
+
 #endif
