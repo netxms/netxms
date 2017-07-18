@@ -262,10 +262,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage5.User"), H_CpuUsage, _T("T2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER },
    
    { _T("System.CPU.Usage5(*)"), H_CpuUsage, _T("C2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
-   { _T("System.CPU.Usage.Idle(*)"), H_CpuUsage, _T("C2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
-   { _T("System.CPU.Usage.Irq(*)"), H_CpuUsage, _T("C2q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IRQ_EX },
-   { _T("System.CPU.Usage.System(*)"), H_CpuUsage, _T("C2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
-   { _T("System.CPU.Usage.User(*)"), H_CpuUsage, _T("C2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
+   { _T("System.CPU.Usage5.Idle(*)"), H_CpuUsage, _T("C2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
+   { _T("System.CPU.Usage5.Irq(*)"), H_CpuUsage, _T("C2q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IRQ_EX },
+   { _T("System.CPU.Usage5.System(*)"), H_CpuUsage, _T("C2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
+   { _T("System.CPU.Usage5.User(*)"), H_CpuUsage, _T("C2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
    
    { _T("System.CPU.Usage15"), H_CpuUsage, _T("T3U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
    { _T("System.CPU.Usage15.Idle"), H_CpuUsage, _T("T3I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
