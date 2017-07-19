@@ -63,4 +63,14 @@ void XenStopCPUCollector();
  */
 LONG XenResolveDomainName(const char *name, uint32_t *domId);
 
+/**
+ * Query domain CPU usage
+ */
+bool XenQueryDomainCpuUsage(uint32_t domId, INT32 *curr, INT32 *avg1min);
+
+/**
+ * Query network traffic for domain
+ */
+bool XenQueryDomainNetworkTraffic(uint32_t domId, UINT64 *rxBytes, UINT64 *txBytes, UINT64 *rxPackets, UINT64 *txPackets);
+
 #endif

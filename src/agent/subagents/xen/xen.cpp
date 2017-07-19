@@ -27,6 +27,7 @@
  */
 LONG H_XenDomainCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenDomainList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_XenDomainNetStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_XenHostCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenHostOnlineCPUs(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -110,6 +111,10 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("XEN.Domain.CPU.Usage(*)"), H_XenDomainCPUUsage, _T("1"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last minute") },
    { _T("XEN.Domain.CPU.Usage15(*)"), H_XenDomainCPUUsage, _T("F"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last 15 minutes") },
    { _T("XEN.Domain.CPU.Usage5(*)"), H_XenDomainCPUUsage, _T("5"), DCI_DT_FLOAT, _T("XEN domain {instance}: average CPU utilization for last 5 minutes") },
+   { _T("XEN.Domain.Net.RxBytes(*)"), H_XenDomainNetStats, _T("RB"), DCI_DT_UINT64, _T("XEN domain {instance}: network usage (bytes received)") },
+   { _T("XEN.Domain.Net.RxPackets(*)"), H_XenDomainNetStats, _T("RP"), DCI_DT_UINT64, _T("XEN domain {instance}: network usage (packets received)") },
+   { _T("XEN.Domain.Net.TxBytes(*)"), H_XenDomainNetStats, _T("TB"), DCI_DT_UINT64, _T("XEN domain {instance}: network usage (bytes transmitted)") },
+   { _T("XEN.Domain.Net.TxPackets(*)"), H_XenDomainNetStats, _T("TP"), DCI_DT_UINT64, _T("XEN domain {instance}: network usage (packets transmitted)") },
    { _T("XEN.Host.CPU.Cores"), H_XenHostPhyInfo, _T("c"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
    { _T("XEN.Host.CPU.CurrentUsage"), H_XenHostCPUUsage, _T("0"), DCI_DT_FLOAT, _T("XEN host: current CPU utilization") },
    { _T("XEN.Host.CPU.Frequency"), H_XenHostPhyInfo, _T("F"), DCI_DT_INT, _T("XEN host: number of CPU cores") },
@@ -144,7 +149,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-    { _T("XEN.Domains"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: domains (virtual machines)") }
+   { _T("XEN.Domains"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: domains (virtual machines)") }
 };
 
 /**

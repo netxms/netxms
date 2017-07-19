@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: vm.cpp
+** File: domain.cpp
 **
 **/
 
@@ -88,6 +88,12 @@ LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstra
       value->addColumn(_T("MEM_MAX"), DCI_DT_UINT64, _T("Max memory"));
       value->addColumn(_T("CPU_COUNT"), DCI_DT_INT, _T("CPU count"));
       value->addColumn(_T("CPU_TIME"), DCI_DT_UINT64, _T("CPU time"));
+      value->addColumn(_T("CPU_USAGE_CURR"), DCI_DT_FLOAT, _T("CPU usage (current)"));
+      value->addColumn(_T("CPU_USAGE_1MIN"), DCI_DT_FLOAT, _T("CPU usage (1 minute average)"));
+      value->addColumn(_T("NET_RX_BYTES"), DCI_DT_UINT64, _T("Net Rx Bytes"));
+      value->addColumn(_T("NET_TX_BYTES"), DCI_DT_UINT64, _T("Net Tx Bytes"));
+      value->addColumn(_T("NET_RX_PACKETS"), DCI_DT_UINT64, _T("Net Rx Packets"));
+      value->addColumn(_T("NET_TX_PACKETS"), DCI_DT_UINT64, _T("Net Tx Packets"));
 
       for(int i = 0; i < count; i++)
       {
@@ -118,6 +124,25 @@ LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstra
 
          value->set(8, d->vcpu_online);
          value->set(9, (UINT64)d->cpu_time);
+
+         INT32 curr, avg;
+         if (XenQueryDomainCpuUsage(d->domid, &curr, &avg))
+         {
+            TCHAR buffer[32];
+            _sntprintf(buffer, 32, _T("%d.%d"), curr / 10, curr % 10);
+            value->set(10, buffer);
+            _sntprintf(buffer, 32, _T("%d.%d"), avg / 10, avg % 10);
+            value->set(11, buffer);
+         }
+
+         UINT64 rxBytes, txBytes, rxPackets, txPackets;
+         if (XenQueryDomainNetworkTraffic(d->domid, &rxBytes, &txBytes, &rxPackets, &txPackets))
+         {
+            value->set(12, rxBytes);
+            value->set(13, txBytes);
+            value->set(14, rxPackets);
+            value->set(15, txPackets);
+         }
       }
       libxl_dominfo_list_free(domains, count);
       rc = SYSINFO_RC_SUCCESS;

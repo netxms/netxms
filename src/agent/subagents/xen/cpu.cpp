@@ -79,6 +79,22 @@ static CpuUsageData s_hostCpuUsage;
 static Mutex s_dataLock;
 
 /**
+ * Query CPU usage for domain
+ */
+bool XenQueryDomainCpuUsage(uint32_t domId, INT32 *curr, INT32 *avg1min)
+{
+   s_dataLock.lock();
+   CpuUsageData *data = s_vmCpuUsage.get(domId);
+   if (data != NULL)
+   {
+      *curr = data->getCurrentUsage();
+      *avg1min = data->getAverageUsage(60);
+   }
+   s_dataLock.unlock();
+   return data != NULL;
+}
+
+/**
  * Collect CPU usage data
  */
 static bool CollectData(libxl_ctx *ctx, struct timespec *prevClock)
