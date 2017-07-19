@@ -89,6 +89,29 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
 }
 
 /**
+ * Get NIC data
+ */
+static bool GetNicData(libxl_ctx *ctx, uint32_t domId, uint32_t netId, libxl_device_nic *data)
+{
+   int count;
+   libxl_device_nic *nicList = libxl_device_nic_list(ctx, domId, &count);
+   if (nicList == NULL)
+      return false;
+
+   bool found = false;
+   for(int i = 0; i < count; i++)
+   {
+      if (nicList[i].devid == netId)
+      {
+         memcpy(data, &nicList[i], sizeof(libxl_device_nic));
+         found = true;
+         break;
+      }
+   }
+   return found;
+}
+
+/**
  * Network device data cache
  */
 static ObjectArray<NetDevice> *s_cache = NULL;
@@ -175,5 +198,62 @@ LONG H_XenDomainNetStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
       }
       rc = SYSINFO_RC_SUCCESS;
    }
+   return rc;
+}
+
+/**
+ * Handler for XEN.VirtualMachines table
+ */
+LONG H_XenDomainNetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   libxl_ctx *ctx;
+   XEN_CONNECT(ctx);
+
+   LONG rc = SYSINFO_RC_ERROR;
+
+   AcquireNetDeviceCache();
+   if (s_cache != NULL)
+   {
+      value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
+      value->addColumn(_T("DOMAIN_ID"), DCI_DT_UINT, _T("Domain ID"));
+      value->addColumn(_T("DOMAIN_NAME"), DCI_DT_STRING, _T("Domain name"));
+      value->addColumn(_T("NET_ID"), DCI_DT_UINT, _T("Network ID"));
+      value->addColumn(_T("BRIDGE"), DCI_DT_STRING, _T("Bridge"));
+      value->addColumn(_T("MAC_ADDR"), DCI_DT_STRING, _T("MAC Address"));
+      value->addColumn(_T("IP_ADDR"), DCI_DT_STRING, _T("IP Address"));
+      value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
+      value->addColumn(_T("RX_BYTES"), DCI_DT_UINT64, _T("Bytes Rx"));
+      value->addColumn(_T("TX_BYTES"), DCI_DT_UINT64, _T("Bytes Tx"));
+      value->addColumn(_T("RX_PACKETS"), DCI_DT_UINT64, _T("Packets Rx"));
+      value->addColumn(_T("TX_PACKETS"), DCI_DT_UINT64, _T("Packets Tx"));
+      for(int i = 0; i < s_cache->size(); i++)
+      {
+         NetDevice *d = s_cache->get(i);
+         value->addRow();
+         value->set(0, d->name);
+         value->set(1, d->domId);
+         value->set(2, libxl_domid_to_name(ctx, d->domId));
+         value->set(3, d->netId);
+
+         libxl_device_nic nicData;
+         if (GetNicData(ctx, d->domId, d->netId, &nicData))
+         {
+            value->set(4, nicData.bridge);
+            TCHAR buffer[64];
+            value->set(5, MACToStr(nicData.mac, buffer));
+            value->set(6, nicData.ip);
+            value->set(7, nicData.model);
+         }
+
+         value->set(8, d->rxBytes);
+         value->set(9, d->txBytes);
+         value->set(10, d->rxPackets);
+         value->set(11, d->txPackets);
+      }
+      rc = SYSINFO_RC_SUCCESS;
+   }
+
+   s_cacheLock.unlock();
+   libxl_ctx_free(ctx);
    return rc;
 }

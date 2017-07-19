@@ -27,6 +27,7 @@
  */
 LONG H_XenDomainCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenDomainList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_XenDomainNetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_XenDomainNetStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_XenHostCPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -149,7 +150,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("XEN.Domains"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: domains (virtual machines)") }
+   { _T("XEN.Domains"), H_XenDomainTable, NULL, _T("ID"), _T("XEN: domains (virtual machines)") },
+   { _T("XEN.Net.DomainInterfaces"), H_XenDomainNetIfTable, NULL, _T("NAME"), _T("XEN: domain network interfaces") }
 };
 
 /**
