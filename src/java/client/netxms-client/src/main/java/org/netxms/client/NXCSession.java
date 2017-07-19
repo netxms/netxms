@@ -314,6 +314,7 @@ public class NXCSession
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
    private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
+   private Map<Long, Zone> zoneList = new HashMap<Long, Zone>();
    private boolean objectsSynchronized = false;
 
    // Users
@@ -431,6 +432,8 @@ public class NXCSession
                         {
                            objectList.put(obj.getObjectId(), obj);
                            objectListGUID.put(obj.getGuid(), obj);
+                           if (obj instanceof Zone)
+                              zoneList.put(((Zone)obj).getZoneId(), (Zone)obj);
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
@@ -447,6 +450,8 @@ public class NXCSession
                            {
                               objectListGUID.remove(object.getGuid());
                               objectList.remove(objectId);
+                              if (object instanceof Zone)
+                                 zoneList.remove(((Zone)object).getZoneId());
                            }
                         }
                         sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
@@ -2107,6 +2112,7 @@ public class NXCSession
       recievedUpdates.clear();
       objectList.clear();
       objectListGUID.clear();
+      zoneList.clear();
       eventTemplates.clear();
       userDB.clear();
       alarmCategories.clear();
@@ -2711,22 +2717,10 @@ public class NXCSession
     */
    public Zone findZone(long zoneId)
    {
-      Zone result = null;
       synchronized(objectList)
       {
-         AbstractObject entireNetwork = objectList.get(1L);
-         Collection<AbstractObject> objects = (entireNetwork != null) ? 
-               entireNetwork.getAllChilds(AbstractObject.OBJECT_ZONE) : objectList.values();
-         for(AbstractObject object : objects)
-         {
-            if ((object instanceof Zone) && ((Zone)object).getZoneId() == zoneId)
-            {
-               result = (Zone)object;
-               break;
-            }
-         }
+         return zoneList.get(zoneId);
       }
-      return result;
    }
    
    /**
@@ -2736,24 +2730,14 @@ public class NXCSession
     */
    public long[] findAllZoneIds()
    {
-      long[] result = null;
       synchronized(objectList)
       {
-         AbstractObject entireNetwork = objectList.get(1L);
-         Collection<AbstractObject> objects = (entireNetwork != null) ? 
-               entireNetwork.getAllChilds(AbstractObject.OBJECT_ZONE) : objectList.values();
+         long[] result = new long[zoneList.size()];
          int i = 0;
-         result = new long[objects.size()];
-         for(AbstractObject o : objects)
-         {
-            if (o instanceof Zone)
-            {
-               result[i] = (((Zone)o).getObjectId());
-               i++;
-            }
-         }
+         for(Long id : zoneList.keySet())
+            result[i++] = id;
+         return result;
       }
-      return result;
    }
    
    /**
@@ -4545,6 +4529,9 @@ public class NXCSession
          if (object != null)
          {
             objectList.remove(objectId);
+            objectListGUID.remove(object.getGuid());
+            if (object instanceof Zone)
+               zoneList.remove(((Zone)object).getZoneId());
             removeOrphanedObjects(object);
          }
       }
@@ -4565,6 +4552,9 @@ public class NXCSession
          if ((object != null) && (object.getParentCount() == 1))
          {
             objectList.remove(object.getObjectId());
+            objectListGUID.remove(object.getGuid());
+            if (object instanceof Zone)
+               zoneList.remove(((Zone)object).getZoneId());
             removeOrphanedObjects(object);
          }
       }
@@ -8726,11 +8716,15 @@ public class NXCSession
    public void handover(NXCSession target)
    {
       target.objectList = objectList;
+      target.objectListGUID = objectListGUID;
+      target.zoneList = zoneList;
       for(AbstractObject o : objectList.values())
       {
          o.setSession(target);
       }
       objectList = null;
+      objectListGUID = null;
+      zoneList = null;
    }
 
    /**
