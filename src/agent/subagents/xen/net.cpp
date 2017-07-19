@@ -47,9 +47,9 @@ static bool NetDeviceToDomId(const char *dev, uint32_t *domId, uint32_t *netId)
    char path[128];
    snprintf(path, 128, "/sys/class/net/%s/device/nodename", dev);
    FILE *f = fopen(path, "r");
-   if (path != NULL)
+   if (f != NULL)
    {
-      char line[256];
+      char line[256] = "";
       fgets(line, 256, f);
       fclose(f);
       if (sscanf(line, "backend/vif/%u/%u", domId, netId) == 2)
@@ -75,7 +75,7 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
    while(!feof(f))
    {
       fgets(line, 1024, f);
-      if (sscanf(line, "%s: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu %*u %*u %*u %*u %*u %*u",
+      if (sscanf(line, " %[^:]: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu %*u %*u %*u %*u %*u %*u",
                dev.name, &dev.rxBytes, &dev.rxPackets, &dev.txBytes, &dev.txPackets) == 5)
       {
          if (NetDeviceToDomId(dev.name, &dev.domId, &dev.netId))
