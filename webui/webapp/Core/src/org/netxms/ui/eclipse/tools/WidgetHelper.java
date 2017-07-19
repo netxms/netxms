@@ -334,7 +334,10 @@ public class WidgetHelper
 		TableColumn[] columns = table.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
-			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
+         Object id = columns[i].getData("ID");
+         if ((id == null) || !(id instanceof Integer))
+            id = Integer.valueOf(i);
+			settings.put(prefix + "." + id + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -352,7 +355,10 @@ public class WidgetHelper
 		{
 			try
 			{
-				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
+			   Object id = columns[i].getData("ID");
+			   if ((id == null) || !(id instanceof Integer))
+			      id = Integer.valueOf(i);
+				int w = settings.getInt(prefix + "." + id + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
 				columns[i].setWidth((w > 0) ? w : 50);
 			}
 			catch(NumberFormatException e)
@@ -373,7 +379,10 @@ public class WidgetHelper
 		TreeColumn[] columns = tree.getColumns();
 		for(int i = 0; i < columns.length; i++)
 		{
-			settings.put(prefix + "." + i + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
+         Object id = columns[i].getData("ID");
+         if ((id == null) || !(id instanceof Integer))
+            id = Integer.valueOf(i);
+			settings.put(prefix + "." + id + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	
@@ -391,7 +400,10 @@ public class WidgetHelper
 		{
 			try
 			{
-				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
+	         Object id = columns[i].getData("ID");
+	         if ((id == null) || !(id instanceof Integer))
+	            id = Integer.valueOf(i);
+				int w = settings.getInt(prefix + "." + id + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
 				columns[i].setWidth(w);
 			}
 			catch(NumberFormatException e)
