@@ -63,7 +63,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 	*size = 0;
 
 	InetAddress hostAddr = InetAddress::resolveHostName(host);
-	if (hostAddr.isValidUnicast())
+	if (hostAddr.isValidUnicast() || hostAddr.isLoopback())
 	{
 		SOCKET sd = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
 		if (sd != INVALID_SOCKET)

@@ -28,7 +28,7 @@
 SOCKET NetConnectTCP(const char *szHost, const InetAddress& addr, unsigned short nPort, UINT32 dwTimeout)
 {
    InetAddress hostAddr = (szHost != NULL) ? InetAddress::resolveHostName(szHost) : addr;
-   if (!hostAddr.isValidUnicast())
+   if (!hostAddr.isValidUnicast() && !hostAddr.isLoopback())
       return INVALID_SOCKET;
 
 	SOCKET nSocket = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
