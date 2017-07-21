@@ -54,6 +54,11 @@ static bool NetDeviceToDomId(const char *dev, uint32_t *domId, uint32_t *netId)
       fclose(f);
       if (sscanf(line, "backend/vif/%u/%u", domId, netId) == 2)
          return true;
+      nxlog_debug(6, _T("XEN: NetDeviceToDomId(%hs): cannot parse /sys/class/net/%hs/device/nodename (content is \"%hs\")"), dev, dev, line);
+   }
+   else
+   {
+      nxlog_debug(6, _T("XEN: NetDeviceToDomId(%hs): cannot open /sys/class/net/%hs/device/nodename"), dev, dev);
    }
 
    return false;
@@ -66,7 +71,10 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
 {
    FILE *f = fopen("/proc/net/dev", "r");
    if (f == NULL)
+   {
+      nxlog_debug(6, _T("XEN: ScanNetworkDevices: cannot open /proc/net/dev (%hs)"), strerror(errno));
       return NULL;
+   }
 
    char line[1024];
    NetDevice dev;
@@ -74,7 +82,8 @@ ObjectArray<NetDevice> *ScanNetworkDevices()
    ObjectArray<NetDevice> *devices = new ObjectArray<NetDevice>(32, 32, true);
    while(!feof(f))
    {
-      fgets(line, 1024, f);
+      if (fgets(line, 1024, f) == NULL)
+         break;
       if (sscanf(line, " %[^:]: %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu %*u %*u %*u %*u %*u %*u",
                dev.name, &dev.rxBytes, &dev.rxPackets, &dev.txBytes, &dev.txPackets) == 5)
       {
@@ -158,9 +167,9 @@ bool XenQueryDomainNetworkTraffic(uint32_t domId, UINT64 *rxBytes, UINT64 *txByt
             *txBytes += d->txBytes;
             *rxPackets += d->rxPackets;
             *txPackets += d->txPackets;
+            success = true;
          }
       }
-      success = true;
    }
    s_cacheLock.unlock();
    return success;
