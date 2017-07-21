@@ -4,6 +4,7 @@
 
 - XEN monitoring subagent
 - Fixed issues with agent tunnels
+- Fixed bug in STP-based topology discovery
 - Management console:
 	- Improved status map
 
