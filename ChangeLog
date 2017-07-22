@@ -5,6 +5,9 @@
 - XEN monitoring subagent
 - Fixed issues with agent tunnels
 - Fixed bug in STP-based topology discovery
+- NXSL:
+	- New class "InetAddress"
+	- New attribute "ipAddressList" for class "Interface"
 - Management console:
 	- Improved status map
 

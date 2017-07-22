@@ -238,7 +238,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("geolocation")))
    {
-      value = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
+      value = NXSL_GeoLocationClass::createObject(object->getGeoLocation());
    }
    else if (!_tcscmp(attr, _T("guid")))
    {
@@ -696,6 +696,16 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    else if (!_tcscmp(attr, _T("ifType")))
    {
 		value = new NXSL_Value(iface->getIfType());
+   }
+   else if (!_tcscmp(attr, _T("ipAddressList")))
+   {
+      const InetAddressList *addrList = iface->getIpAddressList();
+      NXSL_Array *a = new NXSL_Array();
+      for(int i = 0; i < addrList->size(); i++)
+      {
+         a->append(new NXSL_Value(NXSL_InetAddressClass::createObject(addrList->get(i))));
+      }
+      value = new NXSL_Value(a);
    }
    else if (!_tcscmp(attr, _T("ipNetMask")))
    {

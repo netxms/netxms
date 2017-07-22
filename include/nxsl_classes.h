@@ -26,6 +26,7 @@
 #include <nms_threads.h>
 #include <nms_util.h>
 #include <nxcpapi.h>
+#include <geolocation.h>
 
 //
 // Constants
@@ -492,10 +493,10 @@ class NXSL_Library;
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
-   UINT32 m_numFunctions;
+   int m_numFunctions;
    NXSL_ExtFunction *m_functions;
 
-   UINT32 m_numSelectors;
+   int m_numSelectors;
    NXSL_ExtSelector *m_selectors;
 
    NXSL_Library *m_library;
@@ -512,10 +513,10 @@ public:
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
    NXSL_ExtFunction *findFunction(const TCHAR *name);
-   void registerFunctionSet(UINT32 count, NXSL_ExtFunction *list);
+   void registerFunctionSet(int count, NXSL_ExtFunction *list);
 
    NXSL_ExtSelector *findSelector(const TCHAR *name);
-   void registerSelectorSet(UINT32 count, NXSL_ExtSelector *list);
+   void registerSelectorSet(int count, NXSL_ExtSelector *list);
 
    bool loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo);
 };
@@ -931,7 +932,7 @@ public:
 };
 
 /**
- * NXSL "Connector" class
+ * NXSL "GeoLocation" class
  */
 class LIBNXSL_EXPORTABLE NXSL_GeoLocationClass : public NXSL_Class
 {
@@ -941,6 +942,23 @@ public:
 
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
    virtual void onObjectDelete(NXSL_Object *object);
+
+   static NXSL_Value *createObject(const GeoLocation& gl);
+};
+
+/**
+ * NXSL "InetAddress" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_InetAddressClass : public NXSL_Class
+{
+public:
+   NXSL_InetAddressClass();
+   virtual ~NXSL_InetAddressClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual void onObjectDelete(NXSL_Object *object);
+
+   static NXSL_Value *createObject(const InetAddress& addr);
 };
 
 /**
@@ -952,5 +970,6 @@ extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
+extern NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
 
 #endif

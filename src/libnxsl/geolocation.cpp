@@ -22,7 +22,6 @@
 **/
 
 #include "libnxsl.h"
-#include <geolocation.h>
 
 /**
  * Instance of NXSL_Table class
@@ -88,6 +87,14 @@ NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const TCHAR *att
       value = new NXSL_Value(gl->getType());
    }
    return value;
+}
+
+/**
+ * Create NXSL object from GeoLocation object
+ */
+NXSL_Value *NXSL_GeoLocationClass::createObject(const GeoLocation& gl)
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(gl)));
 }
 
 /**

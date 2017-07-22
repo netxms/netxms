@@ -185,9 +185,7 @@ NXSL_Environment::~NXSL_Environment()
  */
 NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_numFunctions; i++)
+   for(int i = 0; i < m_numFunctions; i++)
       if (!_tcscmp(m_functions[i].m_name, name))
          return &m_functions[i];
    return NULL;
@@ -196,7 +194,7 @@ NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
 /**
  * Register function set
  */
-void NXSL_Environment::registerFunctionSet(UINT32 count, NXSL_ExtFunction *list)
+void NXSL_Environment::registerFunctionSet(int count, NXSL_ExtFunction *list)
 {
    m_functions = (NXSL_ExtFunction *)realloc(m_functions, sizeof(NXSL_ExtFunction) * (m_numFunctions + count));
    memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
@@ -208,9 +206,7 @@ void NXSL_Environment::registerFunctionSet(UINT32 count, NXSL_ExtFunction *list)
  */
 NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_numSelectors; i++)
+   for(int i = 0; i < m_numSelectors; i++)
       if (!_tcscmp(m_selectors[i].m_name, name))
          return &m_selectors[i];
    return NULL;
@@ -219,7 +215,7 @@ NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
 /**
  * Register selector set
  */
-void NXSL_Environment::registerSelectorSet(UINT32 count, NXSL_ExtSelector *list)
+void NXSL_Environment::registerSelectorSet(int count, NXSL_ExtSelector *list)
 {
    m_selectors = (NXSL_ExtSelector *)realloc(m_selectors, sizeof(NXSL_ExtSelector) * (m_numSelectors + count));
    memcpy(&m_selectors[m_numSelectors], list, sizeof(NXSL_ExtSelector) * count);
