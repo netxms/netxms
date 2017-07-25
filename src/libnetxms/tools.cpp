@@ -3041,15 +3041,22 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
    }
 
    /* Turn echoing off and fail if we can’t. */
-   struct termios oldSettings;
-   if (tcgetattr(fileno(stdin), &oldSettings) != 0)
+#ifdef WIN32
+   HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE); 
+   DWORD mode;
+   GetConsoleMode(hStdin, &mode);
+
+   mode &= ~ENABLE_ECHO_INPUT;
+   SetConsoleMode(hStdin, mode);
+#else
+   struct termios ts;
+   if (tcgetattr(fileno(stdin), &ts) != 0)
       return false;
 
-   struct termios newSettings;
-   memcpy(&newSettings, &oldSettings, sizeof(struct termios));
-   newSettings.c_lflag &= ~ECHO;
-   if (tcsetattr(fileno(stdin), TCSAFLUSH, &newSettings) != 0)
+   ts.c_lflag &= ~ECHO;
+   if (tcsetattr(fileno(stdin), TCSAFLUSH, &ts) != 0)
       return false;
+#endif
 
    /* Read the password. */
    if (_fgetts(buffer, bufferSize, stdin) != NULL)
@@ -3060,7 +3067,14 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
    }
 
    /* Restore terminal. */
-   tcsetattr(fileno(stdin), TCSAFLUSH, &oldSettings);
+#ifdef _WIN32
+   mode |= ENABLE_ECHO_INPUT;
+   SetConsoleMode(hStdin, mode);
+#else
+   ts.c_lflag |= ECHO;
+   tcsetattr(fileno(stdin), TCSAFLUSH, &ts);
+#endif
+
    _tprintf(_T("\n"));
    return true;
 }

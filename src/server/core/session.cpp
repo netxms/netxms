@@ -2528,11 +2528,12 @@ void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
       DB_STATEMENT stmt = DBPrepare(hdb, _T("SELECT default_value FROM config WHERE var_name=?"));
       if (stmt != NULL)
       {
-         UINT32 numVars = pRequest->getFieldAsUInt32(VID_NUM_VARIABLES), base = VID_VARLIST_BASE;
+         int numVars = pRequest->getFieldAsInt32(VID_NUM_VARIABLES);
+         UINT32 fieldId = VID_VARLIST_BASE;
          TCHAR varName[64], defValue[MAX_CONFIG_VALUE];
          for(int i = 0; i < numVars; i++)
          {
-            pRequest->getFieldAsString(base++, varName, 64);
+            pRequest->getFieldAsString(fieldId++, varName, 64);
             DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 
             DB_RESULT result = DBSelectPrepared(stmt);
@@ -2542,12 +2543,17 @@ void ClientSession::setDefaultConfigurationVariableValues(NXCPMessage *pRequest)
                ConfigWriteStr(varName, defValue, false);
             }
             else
+            {
                rcc = RCC_DB_FAILURE;
+               break;
+            }
          }
          DBFreeStatement(stmt);
       }
       else
+      {
          rcc = RCC_DB_FAILURE;
+      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
@@ -8338,7 +8344,6 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
  */
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
-   UPDATE_INFO *pUpdate;
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
       NetObj *object = FindObjectById(pRec->dwSourceObject);

@@ -409,6 +409,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inetaddr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\instruction.cpp"
 				>
 			</File>
