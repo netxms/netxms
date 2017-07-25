@@ -5,6 +5,7 @@
 - XEN monitoring subagent
 - Fixed issues with agent tunnels
 - Fixed bug in STP-based topology discovery
+- Server's database password can be supplied by external tool
 - NXSL:
 	- New class "InetAddress"
 	- New attribute "ipAddressList" for class "Interface"

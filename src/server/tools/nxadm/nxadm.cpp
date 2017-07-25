@@ -40,9 +40,40 @@ static void Help()
             _T("       nxadm -i\n")
             _T("       nxadm -h\n\n")
             _T("Options:\n")
-            _T("   -c  Execute given command at server debug console and disconnect\n")
-            _T("   -i  Connect to server debug console in interactive mode\n")
-            _T("   -h  Display help and exit\n\n"));
+            _T("   -c <command>   Execute given command at server debug console and disconnect\n")
+            _T("   -i             Connect to server debug console in interactive mode\n")
+            _T("   -h             Display help and exit\n")
+            _T("   -p <password>  Provide database password for server startup\n")
+            _T("   -P             Provide database password for server startup (password read from terminal)\n\n"));
+}
+
+/**
+ * Send database password
+ */
+static bool SendPassword(const TCHAR *password)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_SET_DB_PASSWORD);
+   msg.setId(g_dwRqId++);
+   msg.setField(VID_PASSWORD, password);
+   SendMsg(&msg);
+
+   bool success = false;
+   NXCPMessage *response = RecvMsg();
+   if (response != NULL)
+   {
+      UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+      if (rcc != 0)
+         _tprintf(_T("ERROR: server error %d\n"), rcc);
+      delete response;
+      success = (rcc == 0);
+   }
+   else
+   {
+      _tprintf(_T("ERROR: no response from server\n"));
+   }
+
+   return success;
 }
 
 /**
@@ -69,12 +100,13 @@ static bool ExecCommand(const TCHAR *command)
       }
 
       UINT16 code = response->getCode();
-      if(code == CMD_ADM_MESSAGE)
+      if (code == CMD_ADM_MESSAGE)
       {
          TCHAR *text = response->getFieldAsString(VID_MESSAGE);
          if (text != NULL)
          {
             WriteToTerminal(text);
+            free(text);
          }
       }
       delete response;
@@ -163,7 +195,8 @@ int main(int argc, char *argv[])
 {
    int iError, ch;
    BOOL bStart = TRUE, bCmdLineOK = FALSE;
-   TCHAR *command = NULL;
+   TCHAR *command = NULL, *password = NULL;
+   TCHAR passwordBuffer[MAX_PASSWORD];
 
    InitNetXMSProcess(true);
 
@@ -176,7 +209,7 @@ int main(int argc, char *argv[])
    {
       // Parse command line
       opterr = 1;
-      while((ch = getopt(argc, argv, "c:ih")) != -1)
+      while((ch = getopt(argc, argv, "c:ihp:P")) != -1)
       {
          switch(ch)
          {
@@ -197,6 +230,18 @@ int main(int argc, char *argv[])
                command = NULL;
                bCmdLineOK = TRUE;
                break;
+            case 'p':
+#ifdef UNICODE
+               password = WideStringFromMBStringSysLocale(optarg);
+#else
+               password = optarg;
+#endif
+               bCmdLineOK = TRUE;
+               break;
+            case 'P':
+               password = passwordBuffer;
+               bCmdLineOK = TRUE;
+               break;
             case '?':
                bStart = FALSE;
                iError = 1;
@@ -210,16 +255,30 @@ int main(int argc, char *argv[])
       {
          if (Connect())
          {
-            if (command == NULL)
+            if ((command == NULL) && (password == NULL))
             {
                Shell();
+               iError = 0;
+            }
+            else if (command != NULL)
+            {
+               ExecCommand(command);
+               iError = 0;
             }
             else
             {
-               ExecCommand(command);
+               if (password == passwordBuffer)
+               {
+                  if (!ReadPassword(_T("Database password: "), passwordBuffer, MAX_PASSWORD))
+                  {
+                     _tprintf(_T("Cannot read password from terminal\n"));
+                     iError = 4;
+                     goto stop;
+                  }
+               }
+               iError = SendPassword(password) ? 0 : 3;
             }
             Disconnect();
-            iError = 0;
          }
          else
          {
@@ -237,8 +296,12 @@ int main(int argc, char *argv[])
       Help();
       iError = 1;
    }
+
+stop:
 #ifdef UNICODE
    free(command);
+   if (password != passwordBuffer)
+      free(password);
 #endif
    return iError;
 }

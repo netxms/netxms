@@ -2379,6 +2379,8 @@ void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 #endif
 ;
 
+bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_t bufferSize);
+
 #ifdef _WIN32
 int LIBNETXMS_EXPORTABLE mkstemp(char *tmpl);
 int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl);

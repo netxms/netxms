@@ -3028,3 +3028,39 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
    free(temp);
    return args;
 }
+
+/**
+ * Read password from terminal
+ */
+bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_t bufferSize)
+{
+   if (prompt != NULL)
+   {
+      _tprintf(_T("%s"), prompt);
+      fflush(stdout);
+   }
+
+   /* Turn echoing off and fail if we can’t. */
+   struct termios oldSettings;
+   if (tcgetattr(fileno(stdin), &oldSettings) != 0)
+      return false;
+
+   struct termios newSettings;
+   memcpy(&newSettings, &oldSettings, sizeof(struct termios));
+   newSettings.c_lflag &= ~ECHO;
+   if (tcsetattr(fileno(stdin), TCSAFLUSH, &newSettings) != 0)
+      return false;
+
+   /* Read the password. */
+   if (_fgetts(buffer, bufferSize, stdin) != NULL)
+   {
+      TCHAR *nl = _tcschr(buffer, _T('\n'));
+      if (nl != NULL)
+         *nl = 0;
+   }
+
+   /* Restore terminal. */
+   tcsetattr(fileno(stdin), TCSAFLUSH, &oldSettings);
+   _tprintf(_T("\n"));
+   return true;
+}

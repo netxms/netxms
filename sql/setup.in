@@ -58,7 +58,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DiscoveryFilter','none','none',1,0,'S','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DiscoveryFilterFlags','0','0',1,0,'I','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DiscoveryPollingInterval','900','900',1,1,'I','Interval in seconds between passive network discovery polls.');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('EnableAdminInterface','1','1',1,1,'B','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('EnableAgentRegistration','1','1',1,0,'B','Enable/disable agent self-registration');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('EnableAuditLog','1','1',1,1,'B','Enable/disable audit log.');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('EnableCheckPointSNMP','0','0',1,0,'B','');

@@ -395,7 +395,7 @@ typedef struct
 #define CMD_RENAME_SCRIPT                 0x009C
 #define CMD_GET_SESSION_LIST              0x009D
 #define CMD_KILL_SESSION                  0x009E
-//unused: #define CMD_GET_TRAP_LOG                  0x009F
+#define CMD_SET_DB_PASSWORD               0x009F
 #define CMD_TRAP_LOG_RECORDS              0x00A0
 #define CMD_START_SNMP_WALK               0x00A1
 #define CMD_SNMP_WALK_DATA                0x00A2

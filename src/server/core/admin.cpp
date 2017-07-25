@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,71 +26,82 @@
 /**
  * Max message size
  */
-#define MAX_MSG_SIZE       32768
+#define MAX_MSG_SIZE       65536
+
+/**
+ * DB password set condition
+ */
+extern Condition g_dbPasswordReady;
 
 /**
  * Request processing thread
  */
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
-   SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
-   int iError, nExitCode;
-   NXCP_MESSAGE *pRawMsg, *pRawMsgOut;
-   NXCP_BUFFER *pRecvBuffer;
-   NXCPMessage *pRequest, response;
-   TCHAR szCmd[256];
-   struct __console_ctx ctx;
-	static NXCPEncryptionContext *pDummyCtx = NULL;
+   static NXCPEncryptionContext *dummyCtx = NULL;
 
-   pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   NXCPInitBuffer(pRecvBuffer);
+   SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
+
+   struct __console_ctx ctx;
    ctx.hSocket = sock;
 	ctx.socketMutex = MutexCreate();
-   ctx.pMsg = &response;
+   ctx.pMsg = NULL;
 	ctx.session = NULL;
    ctx.output = NULL;
 
-   while(1)
+   SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
+   while(true)
    {
-      iError = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
-      if (iError <= 0)
-         break;   // Communication error or closed connection
+      MessageReceiverResult result;
+      NXCPMessage *request = receiver.readMessage(INFINITE, &result);
 
-      if (iError == 1)
-         continue;   // Too big message
-
-      pRequest = new NXCPMessage(pRawMsg);
-      pRequest->getFieldAsString(VID_COMMAND, szCmd, 256);
-
-      response.setCode(CMD_ADM_MESSAGE);
-      response.setId(pRequest->getId());
-      nExitCode = ProcessConsoleCommand(szCmd, &ctx);
-      switch(nExitCode)
+      // Receive error
+      if (request == NULL)
       {
-         case CMD_EXIT_SHUTDOWN:
-            InitiateShutdown();
-            break;
-         case CMD_EXIT_CLOSE_SESSION:
-            delete pRequest;
-            goto close_session;
-         default:
-            break;
+         if (result == MSGRECV_CLOSED)
+            nxlog_debug(5, _T("LocalServerConsole: connection closed"));
+         else
+            nxlog_debug(5, _T("LocalServerConsole: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         break;
+      }
+
+      NXCPMessage response(CMD_ADM_MESSAGE, request->getId());
+      if (request->getCode() == CMD_ADM_REQUEST)
+      {
+         TCHAR command[256];
+         request->getFieldAsString(VID_COMMAND, command, 256);
+
+         ctx.pMsg = &response;
+         int exitCode = ProcessConsoleCommand(command, &ctx);
+         switch(exitCode)
+         {
+            case CMD_EXIT_SHUTDOWN:
+               InitiateShutdown();
+               break;
+            case CMD_EXIT_CLOSE_SESSION:
+               delete request;
+               goto close_session;
+            default:
+               break;
+         }
+      }
+      else if (request->getCode() == CMD_SET_DB_PASSWORD)
+      {
+         request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
+         DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
+         g_dbPasswordReady.set();
       }
 
       response.setCode(CMD_REQUEST_COMPLETED);
-      pRawMsgOut = response.createMessage();
-		SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, ctx.socketMutex);
-      
-      free(pRawMsgOut);
-      delete pRequest;
+      NXCP_MESSAGE *rawMsgOut = response.createMessage();
+		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, ctx.socketMutex);
+      free(rawMsgOut);
+      delete request;
    }
 
 close_session:
    shutdown(sock, 2);
    closesocket(sock);
-   free(pRawMsg);
-   free(pRecvBuffer);
 	MutexDestroy(ctx.socketMutex);
    return THREAD_OK;
 }

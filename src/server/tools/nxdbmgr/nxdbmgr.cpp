@@ -704,7 +704,15 @@ stop_search:
    }
 	delete config;
 
-	// Decrypt password
+	// Read and decrypt password
+	if (!_tcscmp(s_dbPassword, _T("?")))
+   {
+	   if (!ReadPassword(_T("Database password: "), s_dbPassword, MAX_PASSWORD))
+	   {
+	      _tprintf(_T("Cannot read password from terminal\n"));
+	      return 3;
+	   }
+   }
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
 
 #ifndef _WIN32

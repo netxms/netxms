@@ -159,6 +159,7 @@ DB_DRIVER g_dbDriver = NULL;
 ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool = NULL;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
+Condition g_dbPasswordReady(true);
 
 /**
  * Static data
@@ -605,6 +606,19 @@ static void OracleSessionInitCallback(DB_HANDLE hdb)
 }
 
 /**
+ * Get database password
+ */
+static void GetDatabasePassword()
+{
+   if (_tcscmp(g_szDbPassword, _T("?")))
+      return;
+
+   nxlog_write(MSG_WAITING_FOR_DB_PASSWORD, NXLOG_INFO, NULL);
+   g_dbPasswordReady.wait(INFINITE);
+   nxlog_debug(1, _T("Database password received"));
+}
+
+/**
  * Server initialization
  */
 BOOL NXCORE_EXPORTABLE Initialize()
@@ -689,6 +703,13 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (nxlog_get_debug_level() >= 9), DBEventHandler, NULL);
 	if (g_dbDriver == NULL)
 		return FALSE;
+
+   // Start local administrative interface listener if required
+   if (g_flags & AF_ENABLE_LOCAL_CONSOLE)
+      ThreadCreate(LocalAdminListener, 0, NULL);
+
+	// Wait for database password if needed
+	GetDatabasePassword();
 
 	// Connect to database
 	DB_HANDLE hdbBootstrap = NULL;
@@ -936,10 +957,6 @@ retry_db_lock:
 
 	// Start database _T("lazy") write thread
 	StartDBWriter();
-
-	// Start local administartive interface listener if required
-	if (ConfigReadInt(_T("EnableAdminInterface"), 1))
-		ThreadCreate(LocalAdminListener, 0, NULL);
 
 	// Start beacon host poller
 	ThreadCreate(BeaconPoller, 0, NULL);

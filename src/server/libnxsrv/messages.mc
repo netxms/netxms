@@ -1064,4 +1064,10 @@ Language=English
 Cannot load server certificate from %1 (%2)
 .
 
+MessageId=
+SymbolicName=MSG_WAITING_FOR_DB_PASSWORD
+Language=English
+Server is waiting for database password to be supplied
+.
+
 ;#endif

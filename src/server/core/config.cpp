@@ -36,7 +36,7 @@ extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
 
 /**
- * database connection parameters
+ * Database connection parameters
  */
 TCHAR g_szDbDriver[MAX_PATH] = _T("");
 TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
@@ -76,6 +76,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
+   { _T("EnableServerConsole"), CT_BOOLEAN64, 0, 0, AF_ENABLE_LOCAL_CONSOLE, 0, &g_flags, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },

@@ -585,6 +585,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V456 to V457
+ */
+static BOOL H_UpgradeFromV456(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='EnableAdminInterface'")));
+   CHK_EXEC(SetSchemaVersion(457));
+   return TRUE;
+}
+
+/**
  * Upgrade from V455 to V456
  */
 static BOOL H_UpgradeFromV455(int currVersion, int newVersion)
@@ -11863,6 +11873,7 @@ static struct
    { 453, 454, H_UpgradeFromV453 },
    { 454, 455, H_UpgradeFromV454 },
    { 455, 456, H_UpgradeFromV455 },
+   { 456, 457, H_UpgradeFromV456 },
    { 0, 0, NULL }
 };
 
