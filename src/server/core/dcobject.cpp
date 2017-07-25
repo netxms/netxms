@@ -848,7 +848,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_dwResourceId = src->m_dwResourceId;
 	m_snmpPort = src->m_snmpPort;
 
-	safe_free(m_pszPerfTabSettings);
+	free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = _tcsdup_ex(src->m_pszPerfTabSettings);
 
    setTransformationScript(src->m_transformationScriptSource);
@@ -865,7 +865,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    {
       expandMacros(src->m_instance, m_instance, MAX_DB_STRING);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-      safe_free(m_instanceDiscoveryData);
+      free(m_instanceDiscoveryData);
       m_instanceDiscoveryData = _tcsdup_ex(src->m_instanceDiscoveryData);
       safe_free_and_null(m_instanceFilterSource);
       delete_and_null(m_instanceFilter);

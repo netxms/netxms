@@ -85,7 +85,7 @@ static int StartApp()
    String classpath = _T("-Djava.class.path=");
    classpath.append(libdir);
    classpath.append(FS_PATH_SEPARATOR_CHAR);
-   classpath.append(_T("nxshell.jar"));
+   classpath.append(_T("nxreportd.jar"));
    if (s_optClassPath != NULL)
    {
       classpath.append(JAVA_CLASSPATH_SEPARATOR);
@@ -98,26 +98,15 @@ static int StartApp()
 #endif
    }
 
-   char server[256], login[256], password[256];
-   snprintf(server, 256, "-Dnetxms.server=%s", s_optHost);
-   snprintf(login, 256, "-Dnetxms.login=%s", s_optUser);
-
-   char clearPassword[128];
-   DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-   snprintf(password, 256, "-Dnetxms.password=%s", clearPassword);
-
 #ifdef UNICODE
    vmOptions[0].optionString = classpath.getUTF8String();
 #else
    vmOptions[0].optionString = strdup(classpath);
 #endif
-   vmOptions[1].optionString = server;
-   vmOptions[2].optionString = login;
-   vmOptions[3].optionString = password;
 
    vmArgs.version = JNI_VERSION_1_6;
    vmArgs.options = vmOptions;
-   vmArgs.nOptions = 4;
+   vmArgs.nOptions = 1;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    int rc = 4;
@@ -226,26 +215,28 @@ static bool LoadConfig()
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if (homeDir != NULL)
       {
-         _sntprintf(path, MAX_PATH, _T("%s/etc/nxreportd.conf"), homeDir);
+         _sntprintf(path, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
       }
       if ((path[0] != 0) && (_taccess(path, 4) == 0))
       {
-         _tcscpy(g_szConfigFile, path);
+         s_optConfig = _tcsdup(path);
       }
-      else if (_taccess(PREFIX _T("/etc/nxreportd.conf"), 4) == 0)
+      else if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
       {
-         _tcscpy(g_szConfigFile, PREFIX _T("/etc/nxreportd.conf"));
+         s_optConfig = PREFIX _T("/etc/netxmsd.conf");
       }
-      else if (_taccess(_T("/usr/etc/nxreportd.conf"), 4) == 0)
+      else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
       {
-         _tcscpy(g_szConfigFile, _T("/usr/etc/nxreportd.conf"));
+         s_optConfig = _T("/usr/etc/netxmsd.conf");
       }
       else
       {
-         _tcscpy(g_szConfigFile, _T("/etc/nxreportd.conf"));
+         s_optConfig = _T("/etc/netxmsd.conf");
       }
    }
 #endif
+
+
 }
 
 /**
