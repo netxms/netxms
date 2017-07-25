@@ -155,3 +155,90 @@ LONG H_XenDomainTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstra
    libxl_ctx_free(ctx);
    return rc;
 }
+
+/**
+ * Handler for domain state parameters
+ */
+LONG H_XenDomainState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char domName[256];
+   if (!AgentGetParameterArgA(param, 1, domName, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   libxl_ctx *ctx;
+   XEN_CONNECT(ctx);
+
+   char *eptr;
+   uint32_t domId = strtoul(domName, &eptr, 0);
+   if (*eptr != 0)
+   {
+      if (libxl_name_to_domid(ctx, domName, &domId) != 0)
+      {
+         if (*arg == '?')
+         {
+            ret_string(value, _T("MISSING"));
+         }
+         else
+         {
+            ret_int(value, 0);
+         }
+         return SYSINFO_RC_SUCCESS;
+      }
+   }
+
+   LONG ret = SYSINFO_RC_SUCCESS;
+
+   libxl_dominfo dom;
+   libxl_dominfo_init(&dom);
+   int rc = libxl_domain_info(ctx, &dom, domId);
+   if (rc == 0)
+   {
+      switch(*arg)
+      {
+         case 'E':
+            ret_int(value, 1);
+            break;
+         case 'O':
+            ret_int(value, dom.running || dom.blocked ? 1 : 0);
+            break;
+         case 'P':
+            ret_int(value, dom.paused ? 1 : 0);
+            break;
+         case '?':
+            if (dom.running)
+               ret_string(value, _T("RUNNING"));
+            else if (dom.blocked)
+               ret_string(value, _T("BLOCKED"));
+            else if (dom.paused)
+               ret_string(value, _T("PAUSED"));
+            else if (dom.shutdown)
+               ret_string(value, _T("SHUTDOWN"));
+            else if (dom.dying)
+               ret_string(value, _T("DYING"));
+            else
+               ret_string(value, _T("UNKNOWN"));
+            break;
+         default:
+            ret = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
+   else if (rc == ERROR_DOMAIN_NOTFOUND)
+   {
+      if (*arg == '?')
+      {
+         ret_string(value, _T("MISSING"));
+      }
+      else
+      {
+         ret_int(value, 0);
+      }
+   }
+   else
+   {
+      ret = SYSINFO_RC_ERROR;
+   }
+
+   libxl_ctx_free(ctx);
+   return ret;
+}
