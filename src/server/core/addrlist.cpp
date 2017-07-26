@@ -115,7 +115,11 @@ bool InetAddressListElement::contains(const InetAddress& addr) const
    if (m_type == InetAddressListElement_SUBNET)
       return m_baseAddress.contain(addr);
    if ((m_baseAddress.getFamily() == addr.getFamily()) && (m_endAddress.getFamily() == addr.getFamily()))
-      return (m_baseAddress.compareTo(addr) <= 0) && (m_endAddress.compareTo(addr) >= 0);
+   {
+      InetAddress a = addr;
+      a.setMaskBits(m_baseAddress.getMaskBits());   // compare only address parts
+      return (m_baseAddress.compareTo(a) <= 0) && (m_endAddress.compareTo(a) >= 0);
+   }
    return false;
 }
 
