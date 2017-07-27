@@ -2724,19 +2724,15 @@ public class NXCSession
    }
    
    /**
-    * Find all zone Ids
+    * Get all accessible zone objects
     * 
-    * @return list of zone Ids
+    * @return list of all accessible zone objects
     */
-   public long[] findAllZoneIds()
+   public List<Zone> getAllZones()
    {
       synchronized(objectList)
       {
-         long[] result = new long[zoneList.size()];
-         int i = 0;
-         for(Long id : zoneList.keySet())
-            result[i++] = id;
-         return result;
+         return new ArrayList<Zone>(zoneList.values());
       }
    }
    

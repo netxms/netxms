@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -38,7 +39,6 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.ZoneSelectionDialogComparator;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.ZoneSelectionDialogFilter;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -105,21 +105,22 @@ public class ZoneSelectionDialog extends Dialog
       final int[] widths = { 200 };
       zoneList = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, 
             SWT.BORDER | SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL);
-      long[] zoneIds = session.findAllZoneIds();
-      zoneList.setContentProvider(new ObjectTreeContentProvider(zoneIds));
+      zoneList.setContentProvider(new ArrayContentProvider());
       zoneList.setComparator(new ZoneSelectionDialogComparator());
-      zoneList.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
+      zoneList.setLabelProvider(new WorkbenchLabelProvider());
       filter = new ZoneSelectionDialogFilter();
       if (filterString != null)
          filter.setFilterString(filterString);
       zoneList.addFilter(filter);
-      zoneList.setInput(session);
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       zoneList.getTable().setLayoutData(gd);
+      
+      zoneList.setInput(session.getAllZones());
       
       filterText.addModifyListener(new ModifyListener() {
          @Override
