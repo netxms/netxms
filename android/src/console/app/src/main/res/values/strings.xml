@@ -221,6 +221,7 @@
 	<string name="ts_fn_diff">diff</string>
 	<string name="ts_fn_error">error</string>
 	<string name="ts_fn_sum">sum</string>
+	<string name="ts_fn_script">script</string>
 	<string name="ts_op_less">&lt;</string>
 	<string name="ts_op_lessequal">&lt;=</string>
 	<string name="ts_op_equal">==</string>

@@ -311,7 +311,7 @@ public class LastValuesAdapter extends BaseAdapter
 	private String getThresholdText(Threshold t)
 	{
 		final int[] fns = { R.string.ts_fn_last, R.string.ts_fn_average, R.string.ts_fn_deviation,
-				R.string.ts_fn_diff, R.string.ts_fn_error, R.string.ts_fn_sum };
+				R.string.ts_fn_diff, R.string.ts_fn_error, R.string.ts_fn_sum, R.string.ts_fn_script };
 		final int[] ops = { R.string.ts_op_less, R.string.ts_op_lessequal, R.string.ts_op_equal,
 				R.string.ts_op_greatherequal, R.string.ts_op_greather, R.string.ts_op_different,
 				R.string.ts_op_like, R.string.ts_op_unlike };

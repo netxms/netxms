@@ -147,7 +147,7 @@ public class AlarmListAdapter extends BaseAdapter
 					case SORT_NAME_DESC:
 						return compareName(alarm2, alarm1);
 				}
-				return 1;
+				return 0;
 			}
 		});
 	}
