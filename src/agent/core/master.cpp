@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,11 @@
 **/
 
 #include "nxagentd.h"
+
+/**
+ * Restart agent
+ */
+LONG RestartAgent();
 
 /**
  * Handler for CMD_GET_PARAMETER command
@@ -165,6 +170,11 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 						break;
                case CMD_SHUTDOWN:
                   Shutdown();
+                  ThreadSleep(10);
+                  exit(0);
+                  break;
+               case CMD_RESTART:
+                  RestartAgent();
                   ThreadSleep(10);
                   exit(0);
                   break;

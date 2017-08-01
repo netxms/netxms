@@ -482,34 +482,46 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 
 #endif   /* _WIN32 */
 
-
 /**
  * Restart agent
  */
-static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+LONG RestartAgent()
 {
-	DebugPrintf(1, _T("H_RestartAgent() called"));
+	nxlog_debug(1, _T("RestartAgent() called"));
 
-   TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
+	RestartExtSubagents();
 
+   TCHAR platformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 	if (g_szPlatformSuffix[0] != 0)
 	{
-		_sntprintf(szPlatformSuffixOption, MAX_PSUFFIX_LENGTH + 16, _T("-P \"%s\" "), g_szPlatformSuffix);
+		_sntprintf(platformSuffixOption, MAX_PSUFFIX_LENGTH + 16, _T("-P \"%s\" "), g_szPlatformSuffix);
 	}
 	else
 	{
-		szPlatformSuffixOption[0] = 0;
+	   platformSuffixOption[0] = 0;
 	}
 
+	const TCHAR *configSection = g_config->getAlias(_T("agent"));
+	TCHAR configSectionOption[256];
+	if ((configSection != NULL) && (*configSection != 0))
+	{
+	   _sntprintf(configSectionOption, 256, _T("-G %s "), configSection);
+	}
+	else
+	{
+	   configSectionOption[0] = 0;
+	}
+
+   TCHAR szCmdLine[4096];
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s-X %u"), s_executableName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s%s-X %u"), s_executableName,
               g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
 				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  s_debugLevel, szPlatformSuffixOption,
+				  s_debugLevel, platformSuffixOption, configSectionOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
@@ -549,16 +561,24 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-X %lu"), s_executableName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s%s-X %lu"), s_executableName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  (int)s_debugLevel, szPlatformSuffixOption,
+				  (int)s_debugLevel, platformSuffixOption, configSectionOption,
               (unsigned long)s_pid);
 	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
+}
+
+/**
+ * Handler for Agent.Restart action
+ */
+static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   return RestartAgent();
 }
 
 /**

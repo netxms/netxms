@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -130,10 +130,17 @@ void ExternalSubagent::connect(HPIPE hPipe)
  */
 void ExternalSubagent::shutdown()
 {
-	NXCPMessage msg;
-	msg.setCode(CMD_SHUTDOWN);
-	msg.setId(m_requestId++);
+	NXCPMessage msg(CMD_SHUTDOWN, m_requestId++);
 	sendMessage(&msg);
+}
+
+/**
+ * Send restart command
+ */
+void ExternalSubagent::restart()
+{
+   NXCPMessage msg(CMD_RESTART, m_requestId++);
+   sendMessage(&msg);
 }
 
 /**
@@ -846,8 +853,23 @@ void ShutdownExtSubagents()
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
-         DebugPrintf(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
+         nxlog_debug(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->shutdown();
 		}
 	}
+}
+
+/**
+ * Restart all connected external subagents
+ */
+void RestartExtSubagents()
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (s_subagents.get(i)->isConnected())
+      {
+         nxlog_debug(1, _T("Sending RESTART command to external subagent %s"), s_subagents.get(i)->getName());
+         s_subagents.get(i)->restart();
+      }
+   }
 }

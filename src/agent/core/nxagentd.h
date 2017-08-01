@@ -257,6 +257,7 @@ public:
 	void listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listTables(StringList *list);
    void shutdown();
+   void restart();
 };
 
 /**
@@ -594,6 +595,7 @@ bool SendMessageToPipe(HPIPE hPipe, NXCP_MESSAGE *msg);
 bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents();
+void RestartExtSubagents();
 
 void RegisterApplicationAgent(const TCHAR *name);
 UINT32 GetParameterValueFromAppAgent(const TCHAR *name, TCHAR *buffer);

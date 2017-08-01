@@ -586,6 +586,7 @@ typedef struct
 #define CMD_CLOSE_CHANNEL                 0x015F
 #define CMD_CREATE_OBJECT_ACCESS_SNAPSHOT 0x0160
 #define CMD_UNBIND_AGENT_TUNNEL           0x0161
+#define CMD_RESTART                       0x0162
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
