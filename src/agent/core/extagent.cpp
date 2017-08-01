@@ -22,7 +22,6 @@
 
 #include "nxagentd.h"
 
-
 /**
  *Static data
  */
@@ -872,4 +871,26 @@ void RestartExtSubagents()
          s_subagents.get(i)->restart();
       }
    }
+}
+
+/**
+ * Handler for Agent.IsExternalSubagentConnected
+ */
+LONG H_IsExtSubagentConnected(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   if (!AgentGetParameterArg(cmd, 1, name, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+   LONG rc = SYSINFO_RC_NO_SUCH_INSTANCE;
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      if (!_tcsicmp(s_subagents.get(i)->getName(), name))
+      {
+_tprintf(_T(">>> subagent %s connected %d\n"), s_subagents.get(i)->getName(), s_subagents.get(i)->isConnected());
+         ret_int(value, s_subagents.get(i)->isConnected() ? 1 : 0);
+         rc = SYSINFO_RC_SUCCESS;
+         break;
+      }
+   }
+   return rc;
 }
