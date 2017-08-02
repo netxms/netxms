@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -177,11 +177,14 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		   if (!success)
 		   {
             error = GetLastError();
-			   LogParserTrace(5, _T("LogWatch: Retry call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
-			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
-			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
-			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
-			   goto cleanup;
+            if (error != ERROR_EVT_UNRESOLVED_VALUE_INSERT)
+            {
+			      LogParserTrace(5, _T("LogWatch: Retry call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
+			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
+			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
+			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
+			      goto cleanup;
+            }
 		   }
       }
 	}
