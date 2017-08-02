@@ -20,8 +20,7 @@ package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ZoneSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -31,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ZoneSelector extends AbstractSelector
 {
-   private long objectId = 0;
+   private long zoneId = 0;
    private String emptySelectionName = "<none>";
    
    /**
@@ -54,7 +53,7 @@ public class ZoneSelector extends AbstractSelector
       ZoneSelectionDialog dlg = new ZoneSelectionDialog(getShell());
       if (dlg.open() == Window.OK)
       {
-         objectId = dlg.getZoneId();
+         zoneId = dlg.getZoneId();
          setText(dlg.getZoneName());
          fireModifyListeners();
       }
@@ -66,23 +65,27 @@ public class ZoneSelector extends AbstractSelector
    @Override
    protected void clearButtonHandler()
    {
-      objectId = 0;
+      zoneId = 0;
       setText(emptySelectionName);
       fireModifyListeners();
    }
 
    /**
-    * @return the objectId
+    * Get ID of selected zone
+    * 
+    * @return selected zone ID
     */
-   public long getObjectId()
+   public long getZoneId()
    {
-      return objectId;
+      return zoneId;
    }
 
    /**
-    * @return the object name
+    * Get name of selected zone
+    * 
+    * @return zone name
     */
-   public String getObjectName()
+   public String getZoneName()
    {
       return getText();
    }
@@ -90,17 +93,17 @@ public class ZoneSelector extends AbstractSelector
    /**
     * @param objectId the objectId to set
     */
-   public void setObjectId(long objectId)
+   public void setZoneId(long zoneId)
    {
-      this.objectId = objectId;
-      if (objectId == 0)
+      this.zoneId = zoneId;
+      if (zoneId == 0)
       {
          setText(emptySelectionName); //$NON-NLS-1$
       }
       else
       {
-         final AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
-         setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+         final Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+         setText((zone != null) ? zone.getObjectName() : ("<" + Long.toString(zoneId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
       }
    }
 }

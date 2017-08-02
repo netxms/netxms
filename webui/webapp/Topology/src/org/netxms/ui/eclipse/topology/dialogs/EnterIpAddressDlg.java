@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -54,7 +53,7 @@ public class EnterIpAddressDlg extends Dialog
 	public EnterIpAddressDlg(Shell parent)
 	{
 		super(parent);
-		zoningEnabled = ((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled();
+		zoningEnabled = ConsoleSharedData.getSession().isZoningEnabled();
 	}
 
 	/* (non-Javadoc)
@@ -118,20 +117,7 @@ public class EnterIpAddressDlg extends Dialog
 			return;
 		}
 		
-		if (zoningEnabled)
-		{
-			long objectId = zoneSelector.getObjectId();
-			if (objectId == 0)
-			{
-				MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
-				return;
-			}
-			zoneId = objectId;
-		}
-		else
-		{
-			zoneId = 0;
-		}
+		zoneId = zoningEnabled ? zoneSelector.getZoneId() : 0;
 		super.okPressed();
 	}
 

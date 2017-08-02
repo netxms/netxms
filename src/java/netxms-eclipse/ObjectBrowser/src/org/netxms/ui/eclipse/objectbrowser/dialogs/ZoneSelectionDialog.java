@@ -167,6 +167,16 @@ public class ZoneSelectionDialog extends Dialog
     */
    public long getZoneId()
    {
+      return zone.getZoneId();
+   }
+   
+   /**
+    * Get zone object ID
+    * 
+    * @return zone object ID
+    */
+   public long getZoneObjectId()
+   {
       return zone.getObjectId();
    }
    

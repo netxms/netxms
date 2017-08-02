@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -243,7 +242,7 @@ public class CreateNodeDialog extends Dialog
 			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
 			Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-			zoneSelector.setObjectId((zone != null) ? zone.getObjectId() : 0);
+			zoneSelector.setZoneId((zone != null) ? zone.getZoneId() : 0);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -299,12 +298,7 @@ public class CreateNodeDialog extends Dialog
 		snmpProxy = snmpProxySelector.getObjectId();
 		if (session.isZoningEnabled())
 		{
-			long zoneObjectId = zoneSelector.getObjectId();
-			AbstractObject object = session.findObjectById(zoneObjectId);
-			if ((object != null) && (object instanceof Zone))
-			{
-				zoneId = ((Zone)object).getZoneId();
-			}
+		   zoneId = zoneSelector.getZoneId();
 		}
 		
 		showAgain = checkCreateAnother.getSelection();

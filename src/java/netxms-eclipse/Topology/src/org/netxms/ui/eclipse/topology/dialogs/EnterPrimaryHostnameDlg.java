@@ -26,10 +26,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Messages;
 
@@ -52,7 +50,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
    public EnterPrimaryHostnameDlg(Shell parent)
    {
       super(parent);
-      zoningEnabled = ((NXCSession)ConsoleSharedData.getSession()).isZoningEnabled();
+      zoningEnabled = ConsoleSharedData.getSession().isZoningEnabled();
    }
    
    /* (non-Javadoc)
@@ -104,21 +102,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
    protected void okPressed()
    {
       hostname = hostnameText.getText();
-      
-      if (zoningEnabled)
-      {
-         long objectId = zoneSelector.getObjectId();
-         if (objectId == 0)
-         {
-            MessageDialogHelper.openWarning(getShell(), Messages.get().EnterIpAddressDlg_Warning, Messages.get().EnterIpAddressDlg_SelectZone);
-            return;
-         }
-         zoneId = objectId;
-      }
-      else
-      {
-         zoneId = -1;
-      }
+      zoneId = zoningEnabled ? zoneSelector.getZoneId() : 0;
       super.okPressed();
    }
 
