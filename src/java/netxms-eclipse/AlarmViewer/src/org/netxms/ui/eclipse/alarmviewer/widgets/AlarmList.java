@@ -406,11 +406,11 @@ public class AlarmList extends CompositeWithMessageBar
 						if (i > 0)
 							sb.append(newLine);
 						sb.append('[');
-						sb.append(selection[i].getText(COLUMN_SEVERITY));
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTable(), COLUMN_SEVERITY)));
 						sb.append("]\t"); //$NON-NLS-1$
-						sb.append(selection[i].getText(COLUMN_SOURCE));
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTable(), COLUMN_SOURCE)));
 						sb.append('\t');
-						sb.append(selection[i].getText(COLUMN_MESSAGE - (session.isZoningEnabled() ? 0 : 1)));
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTable(), COLUMN_MESSAGE)));
 					}
 					WidgetHelper.copyToClipboard(sb.toString());
 				}
@@ -431,7 +431,7 @@ public class AlarmList extends CompositeWithMessageBar
 					{
 						if (i > 0)
 							sb.append(newLine);
-						sb.append(selection[i].getText(COLUMN_MESSAGE - (session.isZoningEnabled() ? 0 : 1)));
+						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTable(), COLUMN_MESSAGE)));
 					}
 					WidgetHelper.copyToClipboard(sb.toString());
 				}

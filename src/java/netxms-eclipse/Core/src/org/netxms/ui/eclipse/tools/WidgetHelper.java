@@ -820,4 +820,27 @@ public class WidgetHelper
       gc.dispose();
       return e;
    }
+   
+   /**
+    *  Get column index by column ID
+    *  
+    * @param table table index to be found
+    * @param id the id index to be found by
+    * @return index of the column
+    */
+   public static int getColumnIndexById(Table table, int id)
+   {
+      int index = -1;
+      TableColumn[] columns = table.getColumns();
+      for(int i = 0; i < columns.length; i++)
+      {
+         if (!columns[i].isDisposed() && ((Integer)columns[i].getData("ID") == id)) //$NON-NLS-1$
+         {
+            index = i;
+            break;
+         }
+      }
+      
+      return index;
+   }
 }
