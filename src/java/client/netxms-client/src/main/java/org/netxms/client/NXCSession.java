@@ -4206,7 +4206,8 @@ public class NXCSession
       long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows)
       throws IOException, NXCException
    {
-      if (instance == null || dataColumn == null) throw new NXCException(RCC.INVALID_ARGUMENT);
+      if (instance == null || dataColumn == null) 
+         throw new NXCException(RCC.INVALID_ARGUMENT);
       return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows);
    }
 

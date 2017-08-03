@@ -1062,6 +1062,7 @@ void AddDriverSpecificOids(StringList *list);
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId);
 Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
                                     UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
                                     UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,

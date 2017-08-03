@@ -159,7 +159,7 @@ static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 	}
 	MutexUnlock(m_dataAccess);
 
-	while(1)
+	while(true)
 	{
 		if (ConditionWait(m_condStop, 60000 / SAMPLES_PER_MINUTE))
 			break;	// Stop condition set

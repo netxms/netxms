@@ -462,7 +462,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
 	BOOL processed = FALSE;
    int iResult;
 
-   DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
+   nxlog_debug(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
              pdu->getTrapId()->toString(&szBuffer[96], 4000), srcAddr.toString(szBuffer));
    s_trapCountersLock.lock();
    g_snmpTrapsReceived++; // FIXME: change to 64 bit volatile counter
@@ -534,7 +534,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
    // Process trap if it is coming from host registered in database
    if (node != NULL)
    {
-      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
+      nxlog_debug(4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
       node->incSnmpTrapCount();
       if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
@@ -619,39 +619,17 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
       }
       else
       {
-         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
+         nxlog_debug(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
       }
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
-      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
-      Subnet *subnet = FindSubnetForNode(zoneId, srcAddr);
-      if (subnet != NULL)
-      {
-         if (!subnet->getIpAddress().equals(srcAddr) && !srcAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
-         {
-            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->ipAddr = srcAddr;
-            pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-				pInfo->zoneId = zoneId;
-				pInfo->ignoreFilter = FALSE;
-				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-            g_nodePollerQueue.put(pInfo);
-         }
-      }
-      else
-      {
-         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-         pInfo->ipAddr = srcAddr;
-			pInfo->zoneId = zoneId;
-			pInfo->ignoreFilter = FALSE;
-			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-         g_nodePollerQueue.put(pInfo);
-      }
+      nxlog_debug(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
+      CheckPotentialNode(srcAddr, zoneId);
    }
    else  // unknown node, discovery disabled
    {
-      DbgPrintf(4, _T("ProcessTrap: trap not matched to any node"));
+      nxlog_debug(4, _T("ProcessTrap: trap not matched to any node"));
    }
 }
 
@@ -663,7 +641,7 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
    InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
 	Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
 	TCHAR buffer[64];
-	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
+	nxlog_debug(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
       ipAddr.toString(buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
 }

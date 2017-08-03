@@ -232,12 +232,76 @@ static bool PollerQueueElementComparator(void *key, void *element)
 }
 
 /**
+ * Check potential new node from sysog or SNMP trap
+ */
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
+{
+	TCHAR buffer[64];
+	nxlog_debug(6, _T("CheckPotentialNode(): checking address %s in zone %d"), ipAddr.toString(buffer), zoneId);
+   if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
+   {
+      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   Node *curr = FindNodeByIP(zoneId, ipAddr);
+   if (curr != NULL)
+   {
+      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address already known at node %s [%d])"),
+               ipAddr.toString(buffer), curr->getName(), curr->getId());
+      return;
+   }
+
+   if (IsClusterIP(zoneId, ipAddr))
+   {
+      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
+   {
+      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      return;
+   }
+
+   Subnet *subnet = FindSubnetForNode(zoneId, ipAddr);
+   if (subnet != NULL)
+   {
+      if (!subnet->getIpAddress().equals(ipAddr) && !ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+      {
+         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+         pInfo->ipAddr = ipAddr;
+         pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
+         pInfo->zoneId = zoneId;
+         pInfo->ignoreFilter = FALSE;
+         memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+         nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+         g_nodePollerQueue.put(pInfo);
+      }
+      else
+      {
+         nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is a base or broadcast address of existing subnet)"), ipAddr.toString(buffer));
+      }
+   }
+   else
+   {
+      NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+      pInfo->ipAddr = ipAddr;
+      pInfo->zoneId = zoneId;
+      pInfo->ignoreFilter = FALSE;
+      memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+      nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+      g_nodePollerQueue.put(pInfo);
+   }
+}
+
+/**
  * Check potential new node from ARP cache or routing table
  */
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
 {
-	TCHAR buffer[64];
-	nxlog_debug(6, _T("DiscoveryPoller(): checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
+   TCHAR buffer[64];
+   nxlog_debug(6, _T("DiscoveryPoller(): checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
       nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));

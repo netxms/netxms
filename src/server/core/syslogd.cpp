@@ -478,29 +478,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
 	      DbgPrintf(4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
-	      Subnet *subnet = FindSubnetForNode(msg->zoneId, msg->sourceAddr);
-	      if (subnet != NULL)
-	      {
-	         if (!subnet->getIpAddress().equals(msg->sourceAddr) && !msg->sourceAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
-	         {
-	            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-	            pInfo->ipAddr = msg->sourceAddr;
-	            pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-	            pInfo->zoneId = msg->zoneId;
-	            pInfo->ignoreFilter = FALSE;
-	            memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-	            g_nodePollerQueue.put(pInfo);
-	         }
-	      }
-	      else
-	      {
-	         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-	         pInfo->ipAddr = msg->sourceAddr;
-	         pInfo->zoneId = msg->zoneId;
-	         pInfo->ignoreFilter = FALSE;
-	         memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-	         g_nodePollerQueue.put(pInfo);
-	      }
+	      CheckPotentialNode(msg->sourceAddr, msg->zoneId);
 	   }
    }
 	else

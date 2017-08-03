@@ -5,12 +5,14 @@
 - XEN monitoring subagent
 - Fixed issues with agent tunnels
 - Fixed bug in STP-based topology discovery
+- Fixed unrestricted node poller queue growth when discovery from SNMP traps or syslog is on
 - Server's database password can be supplied by external tool
 - NXSL:
 	- New class "InetAddress"
 	- New attribute "ipAddressList" for class "Interface"
 - Management console:
 	- Improved status map
+- Fixed issues: NX-1263
 
 
 *
