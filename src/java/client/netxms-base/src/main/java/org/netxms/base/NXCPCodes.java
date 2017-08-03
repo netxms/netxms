@@ -966,7 +966,20 @@ public class NXCPCodes
    public static final long VID_TUNNEL_GUID = 577;
    public static final long VID_ORGANIZATION = 578;
    public static final long VID_TUNNEL_ID = 579;
-   public static final long VID_PARENT_INTERFACE = 580;
+   public static final long VID_PARENT_INTERFACE = 580; 
+   public static final long VID_SENSOR_FLAGS = 581; 
+   public static final long VID_DEVICE_CLASS = 582; 
+   public static final long VID_COMM_PROTOCOL = 583; 
+   public static final long VID_XML_CONFIG = 584; 
+   public static final long VID_DEVICE_ADDRESS = 585; 
+   public static final long VID_META_TYPE = 586; 
+   public static final long VID_LAST_CONN_TIME = 587;
+   public static final long VID_FRAME_COUNT = 588;
+   public static final long VID_SIGNAL_STRENGHT = 589;
+   public static final long VID_SIGNAL_NOISE = 590;
+   public static final long VID_FREQUENCY = 591;
+   public static final long VID_SENSOR_PROXY = 592;
+   public static final long VID_XML_REG_CONFIG = 593;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

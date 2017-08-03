@@ -587,6 +587,38 @@ static bool SetSchemaVersion(int version)
 /**
  * Upgrade from V456 to V457
  */
+static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE sensors (")
+      _T("  id integer not null,")
+      _T("  proxy_node integer not null,")
+      _T("  flags integer not null,")
+      _T("  mac_address varchar(16) null,")
+      _T("  device_class integer not null,")
+      _T("  vendor varchar(128) null,")
+      _T("  communication_protocol integer not null,")
+      _T("  xml_config varchar(4000) null,")
+      _T("  xml_reg_config varchar(4000) null,")
+      _T("  serial_number varchar(256) null,")
+      _T("  device_address varchar(256) null,")
+      _T("  meta_type varchar(256) null,")
+      _T("  description varchar(512) null,")
+      _T("  last_connection_time integer not null,")
+      _T("  frame_count integer not null,")
+      _T("  signal_strenght integer not null,")
+      _T("  signal_noise integer not null,")
+      _T("  frequency integer not null,")
+      _T("  runtime_flags integer null,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(SetSchemaVersion(458));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V456 to V457
+ */
 static BOOL H_UpgradeFromV456(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='EnableAdminInterface'")));

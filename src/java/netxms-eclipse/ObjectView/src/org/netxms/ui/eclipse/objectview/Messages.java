@@ -195,6 +195,18 @@ public class Messages extends NLS
    public static String ObjectStatusMapView_ActionGroupNodes;
    public static String ObjectStatusMapView_ActionShowFilter;
    public static String ObjectStatusMapView_PartName;
+   public static String SensorStatus_DeviceAddress;
+   public static String SensorStatus_MacAddress;
+   public static String SensorStatus_Vendor;
+   public static String SensorStatus_DeviceClass;
+   public static String SensorStatus_CommProtocol;
+   public static String SensorStatus_SerialNumber;
+   public static String SensorStatus_MetaType;
+   public static String SensorStatus_Description;
+   public static String SensorStatus_FrameCount;
+   public static String SensorStatus_RSSI;
+   public static String SensorStatus_SNR;
+   public static String SensorStatus_Frequency;
    public static String ShowObjectDetailsView_Error;
    public static String ShowObjectDetailsView_ErrorOpeningView;
    public static String ShowSoftwareInventory_Error;

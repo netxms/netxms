@@ -119,6 +119,14 @@ public class NXCObjectModificationData
    public static final int AGENT_COMPRESSION_MODE = 68;
    public static final int URL_LIST               = 69;
    public static final int SEED_OBJECTS           = 70;
+   public static final int MAC_ADDRESS            = 71;
+   public static final int DEVICE_CLASS           = 72;
+   public static final int VENDOR                 = 73;
+   public static final int SERIAL_NUMBER          = 74;
+   public static final int DEVICE_ADDRESS         = 75;
+   public static final int META_TYPE              = 76;
+   public static final int SENSOR_PROXY           = 77;
+   public static final int XML_CONFIG             = 78;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -213,6 +221,14 @@ public class NXCObjectModificationData
 	private long zoneProxy;
 	private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
+   private MacAddress macAddress;
+   private int deviceClass;
+   private String vendor;
+   private String serialNumber;
+   private String deviceAddress;
+   private String metaType;
+   private long sensorProxy;
+   private String xmlConfig;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1784,5 +1800,135 @@ public class NXCObjectModificationData
    {
       this.seedObjectIds = seedObjectIds;
       fieldSet.add(SEED_OBJECTS);
+   }
+
+   /**
+    * @return the macAddress
+    */
+   public MacAddress getMacAddress()
+   {
+      return macAddress;
+   }
+
+   /**
+    * @param macAddress the macAddress to set
+    */
+   public void setMacAddress(MacAddress macAddress)
+   {
+      this.macAddress = macAddress;
+      fieldSet.add(MAC_ADDRESS);
+   }
+
+   /**
+    * @return the deviceClass
+    */
+   public int getDeviceClass()
+   {
+      return deviceClass;
+   }
+
+   /**
+    * @param deviceClass the deviceClass to set
+    */
+   public void setDeviceClass(int deviceClass)
+   {
+      this.deviceClass = deviceClass;
+      fieldSet.add(DEVICE_CLASS);
+   }
+
+   /**
+    * @return the vendor
+    */
+   public String getVendor()
+   {
+      return vendor;
+   }
+
+   /**
+    * @param vendor the vendor to set
+    */
+   public void setVendor(String vendor)
+   {
+      this.vendor = vendor;
+      fieldSet.add(VENDOR);
+   }
+
+   /**
+    * @return the serialNumber
+    */
+   public String getSerialNumber()
+   {
+      return serialNumber;
+   }
+
+   /**
+    * @param serialNumber the serialNumber to set
+    */
+   public void setSerialNumber(String serialNumber)
+   {
+      this.serialNumber = serialNumber;
+      fieldSet.add(SERIAL_NUMBER);
+   }
+
+   /**
+    * @return the deviceAddress
+    */
+   public String getDeviceAddress()
+   {
+      return deviceAddress;
+   }
+
+   /**
+    * @param deviceAddress the deviceAddress to set
+    */
+   public void setDeviceAddress(String deviceAddress)
+   {
+      this.deviceAddress = deviceAddress;
+      fieldSet.add(DEVICE_ADDRESS);
+   }
+
+   /**
+    * @return the metaType
+    */
+   public String getMetaType()
+   {
+      return metaType;
+   }
+
+   /**
+    * @param metaType the metaType to set
+    */
+   public void setMetaType(String metaType)
+   {
+      this.metaType = metaType;
+      fieldSet.add(META_TYPE);
+   }
+
+   public void setSensorProxy(long proxyNode)
+   {
+      this.sensorProxy = proxyNode;
+      fieldSet.add(SENSOR_PROXY);
+   }
+   
+   public long getSensorProxy()
+   {
+      return sensorProxy;
+   }
+
+   /**
+    * @return the xmlConfig
+    */
+   public String getXmlConfig()
+   {
+      return xmlConfig;
+   }
+
+   /**
+    * @param xmlConfig the xmlConfig to set
+    */
+   public void setXmlConfig(String xmlConfig)
+   {
+      this.xmlConfig = xmlConfig;
+      fieldSet.add(XML_CONFIG);
    }
 }

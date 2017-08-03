@@ -403,8 +403,8 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
-      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE)) ||
-          !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE) &&
+          (obj->getObjectClass() != OBJECT_SENSOR)) || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          obj->decRefCount();
          continue;

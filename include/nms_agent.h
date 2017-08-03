@@ -118,6 +118,7 @@
 #define ERR_OUT_OF_STATE_REQUEST    ((UINT32)922)
 #define ERR_ENCRYPTION_ERROR        ((UINT32)923)
 #define ERR_MALFORMED_RESPONSE      ((UINT32)924)
+#define ERR_INVALID_OBJECT          ((UINT32)925)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -804,5 +805,69 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value);
 bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
+
+/**
+ * LoraWAN device payload
+ */
+typedef BYTE lorawan_payload_t[36];
+
+class LIBNXAGENT_EXPORTABLE LoraDeviceData
+{
+private:
+   uuid m_guid;
+   MacAddress m_devAddr;
+   MacAddress m_devEui;
+   lorawan_payload_t m_payload;
+   INT32 m_decoder;
+   char m_dataRate[24];
+   INT32 m_rssi;
+   double m_snr;
+   double m_freq;
+   UINT32 m_fcnt;
+   UINT32 m_port;
+   time_t m_lastContact;
+
+public:
+   LoraDeviceData(NXCPMessage *request);
+   LoraDeviceData(DB_RESULT result, int row);
+
+   UINT32 saveDeviceData();
+   UINT32 updateDeviceData();
+   UINT32 deleteDeviceData();
+
+   bool isOtaa() { return (m_devEui.length() > 0) ? true : false; }
+
+   uuid getGuid() { return m_guid; }
+
+   MacAddress getDevAddr() { return m_devAddr; }
+   void setDevAddr(MacAddress devAddr) { m_devAddr = devAddr; updateDeviceData(); }
+   MacAddress getDevEui() { return m_devEui; }
+
+   const BYTE *getPayload() { return m_payload; }
+   void setPayload(const char *payload) {  StrToBinA(payload, m_payload, 36); }
+
+   UINT32 getDecoder() { return m_decoder; }
+
+   const char *getDataRate() { return m_dataRate; }
+   void setDataRate(const char *dataRate) { strncpy(m_dataRate, dataRate, 24); }
+
+   INT32 getRssi() { return m_rssi; }
+   void setRssi(INT32 rssi) { m_rssi = rssi; }
+
+   double getSnr() { return m_snr; }
+   void setSnr(double snr) { m_snr = snr; }
+
+   double getFreq() { return m_freq; }
+   void setFreq(double freq) { m_freq = freq; }
+
+   UINT32 getFcnt() { return m_fcnt; }
+   void setFcnt(UINT32 fcnt) { m_fcnt = fcnt; }
+
+   UINT32 getPort() { return m_port; }
+   void setPort(UINT32 port) { m_port = port; }
+
+   const INT32 getLastContact() { return (INT32)m_lastContact; }
+   void updateLastContact() { m_lastContact = time(NULL); }
+};
 
 #endif   /* _nms_agent_h_ */

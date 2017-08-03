@@ -318,7 +318,7 @@ bool InetAddress::sameSubnet(const InetAddress &a) const
 
 /**
  * Check if two inet addresses are equal
- * This method ignores mask bits and only compares addresses. 
+ * This method ignores mask bits and only compares addresses.
  * To compare two address/mask pairs use InetAddress::compareTo.
  */
 bool InetAddress::equals(const InetAddress &a) const
@@ -667,4 +667,3 @@ void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
       msg->setField(fieldId++, *m_list->get(i));
    }
 }
-

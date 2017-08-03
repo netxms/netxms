@@ -1723,3 +1723,30 @@ CREATE TABLE object_access_snapshot
    access_rights integer not null,
    PRIMARY KEY(user_id,object_id)
 ) TABLE_TYPE;
+
+/**
+ * Sensor specific information table
+ */
+CREATE TABLE sensors
+(
+   id integer not null,
+   proxy_node integer not null,
+   flags integer not null,
+   mac_address varchar(16) null,
+   device_class integer not null,
+   vendor varchar(128) null,
+   communication_protocol integer not null,
+   xml_reg_config varchar(4000) null,
+   xml_config varchar(4000) null,
+   serial_number varchar(256) null,
+   device_address varchar(256) null,
+   meta_type varchar(256) null,
+   description varchar(512) null,
+   last_connection_time integer not null,
+   frame_count integer not null,
+   signal_strenght integer not null,
+   signal_noise integer not null,
+   frequency integer not null,
+   runtime_flags integer null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;

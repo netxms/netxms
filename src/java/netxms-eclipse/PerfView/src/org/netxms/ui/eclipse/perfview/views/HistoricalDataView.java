@@ -45,6 +45,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Sensor;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -95,7 +96,7 @@ public class HistoricalDataView extends ViewPart
 		
 		nodeId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(nodeId);
-		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof MobileDevice) && !(object instanceof Cluster)))
+		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof MobileDevice) && !(object instanceof Cluster) && !(object instanceof Sensor)))
 			throw new PartInitException(Messages.get().HistoricalDataView_InvalidObjectID);
 		nodeName = object.getObjectName();
 		

@@ -341,7 +341,8 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
             {
                if ((pObject->getObjectClass() == OBJECT_NODE) ||
                    (pObject->getObjectClass() == OBJECT_CLUSTER) ||
-                   (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
+                   (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+                   (pObject->getObjectClass() == OBJECT_SENSOR))
                {
                   ((DataCollectionTarget *)pObject)->updateDCItemCacheSize(m_dciList[i].id, m_id);
                }

@@ -89,6 +89,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
@@ -896,7 +897,8 @@ public class ObjectBrowser extends ViewPart
 				              (currentObject instanceof Condition) ||
 				              (currentObject instanceof Rack) ||
                           (currentObject instanceof MobileDevice) ||
-					           (currentObject instanceof Container)) &&
+					           (currentObject instanceof Container) || 
+					           (currentObject instanceof Sensor)) &&
 					          ((parentObject instanceof Container) ||
 					           (parentObject instanceof ServiceRoot)) ? APPROVE : REJECT;
 					case TEMPLATES:

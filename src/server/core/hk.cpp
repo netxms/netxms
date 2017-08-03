@@ -253,6 +253,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxNodeById.forEach(CleanDciData, hdb);
 		g_idxClusterById.forEach(CleanDciData, hdb);
 		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
+		g_idxSensorById.forEach(CleanDciData, hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
 

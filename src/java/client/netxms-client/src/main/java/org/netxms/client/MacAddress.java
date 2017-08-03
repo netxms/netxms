@@ -48,7 +48,7 @@ public class MacAddress
 	{
 		if (src != null)
 		{
-			value = Arrays.copyOf(src, 6);
+			value = Arrays.copyOf(src, src.length);
 		}
 		else
 		{
@@ -59,7 +59,6 @@ public class MacAddress
 	
 	/**
 	 * Check if MAC address is all zeroes
-	 * 
 	 * @return true if MAC address is all zeroes
 	 */
 	public boolean isNull()
@@ -115,27 +114,30 @@ public class MacAddress
 	/**
 	 * Parse MAC address string representation. Supported representations are 6 groups of
 	 * two hex digits, separated by spaces, minuses, or colons; or 4 groups of three hex digits 
-	 * separated by dots; or 12 non-separated digits. Examples of valid MAC address strings:
+	 * separated by dots; or 12 non-separated digits; or 16 non-separated hex digits. 
+	 * Examples of valid MAC address strings:
 	 * 00:10:FA:23:11:7A
 	 * 01 02 fa c4 10 dc
 	 * 00-90-0b-11-01-29
 	 * 009.00b.110.129
 	 * 0203fcd456c1
+	 * 0203FCD465C1DF56
 	 * 
 	 * @param str MAC address string
 	 * @return MAC address object
 	 * @throws MacAddressFormatException if MAC address sting is invalid
 	 */
 	public static MacAddress parseMacAddress(String str) throws MacAddressFormatException
-	{
-		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})$");
+	{	   
+		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})?[ :\\-]?([0-9a-fA-F]{2})?$");
 		Matcher matcher = pattern.matcher(str.trim());
 		if (matcher.matches())
 		{
-			byte[] bytes = new byte[6];
+		   int count = matcher.groupCount();
+			byte[] bytes = new byte[count];
 			try
 			{
-				for(int i = 0; i < 6; i++)
+				for(int i = 0; i < count; i++)
 					bytes[i] = (byte)Integer.parseInt(matcher.group(i + 1), 16);
 			}
 			catch(NumberFormatException e)
@@ -182,7 +184,7 @@ public class MacAddress
 	 */
 	public byte[] getValue()
 	{
-		return Arrays.copyOf(value, 6);
+		return Arrays.copyOf(value, value.length);
 	}
 	
 	/**

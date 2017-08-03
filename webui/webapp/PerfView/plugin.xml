@@ -352,6 +352,9 @@
                      <instanceof
                            value="org.netxms.client.objects.MobileDevice">
                      </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Sensor">
+                     </instanceof>
                   </or>
                </iterate>
             </visibleWhen>

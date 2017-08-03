@@ -587,6 +587,8 @@ typedef struct
 #define CMD_CREATE_OBJECT_ACCESS_SNAPSHOT 0x0160
 #define CMD_UNBIND_AGENT_TUNNEL           0x0161
 #define CMD_RESTART                       0x0162
+#define CMD_REGISTER_LORAWAN_SENSOR       0x0163
+#define CMD_UNREGISTER_LORAWAN_SENSOR     0x0164
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1182,6 +1184,25 @@ typedef struct
 #define VID_ORGANIZATION            ((UINT32)578)
 #define VID_TUNNEL_ID               ((UINT32)579)
 #define VID_PARENT_INTERFACE        ((UINT32)580)
+#define VID_SENSOR_FLAGS            ((UINT32)581)
+#define VID_DEVICE_CLASS            ((UINT32)582)
+#define VID_COMM_PROTOCOL           ((UINT32)583)
+#define VID_XML_CONFIG              ((UINT32)584)
+#define VID_DEVICE_ADDRESS          ((UINT32)585)
+#define VID_META_TYPE               ((UINT32)586)
+#define VID_LAST_CONN_TIME          ((UINT32)587)
+#define VID_FRAME_COUNT             ((UINT32)588)
+#define VID_SIGNAL_STRENGHT         ((UINT32)589)
+#define VID_SIGNAL_NOISE            ((UINT32)590)
+#define VID_FREQUENCY               ((UINT32)591)
+#define VID_SENSOR_PROXY            ((UINT32)592)
+#define VID_XML_REG_CONFIG          ((UINT32)593)
+#define VID_REG_TYPE                ((UINT32)594)
+#define VID_DECODER                 ((UINT32)595)
+#define VID_LORA_APP_EUI            ((UINT32)596)
+#define VID_LORA_APP_KEY            ((UINT32)597)
+#define VID_LORA_APP_S_KEY          ((UINT32)598)
+#define VID_LORA_NWK_S_KWY          ((UINT32)599)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

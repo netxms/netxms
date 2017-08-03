@@ -558,6 +558,23 @@ static void QueueForPolling(NetObj *object, void *data)
 
 	switch(object->getObjectClass())
 	{
+	   case OBJECT_SENSOR:
+         {
+            Sensor *sensor = (Sensor *)object;
+            if (sensor->isReadyForStatusPoll())
+            {
+               sensor->lockForStatusPoll();
+               DbgPrintf(2, _T("Sensor %d \"%s\" queued for status poll"), (int)sensor->getId(), sensor->getName());
+               ThreadPoolExecute(g_pollerThreadPool, sensor, &Sensor::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, sensor));
+            }
+            if (sensor->isReadyForConfigurationPoll())
+            {
+               sensor->lockForConfigurationPoll();
+               DbgPrintf(2, _T("Sensor %d \"%s\" queued for configuration poll"), (int)sensor->getId(), sensor->getName());
+               ThreadPoolExecute(g_pollerThreadPool, sensor, &Sensor::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, sensor));
+            }
+            break;
+         }
 		case OBJECT_NODE:
 			{
 				Node *node = (Node *)object;

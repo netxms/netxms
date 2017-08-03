@@ -30,7 +30,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
 {
    BITMAP bitmap;
    GetObject(hBitmap, sizeof(bitmap), (LPSTR)&bitmap);
-   
+
    DWORD scanlineSize = ((bitmap.bmWidth * 4) + (4 - 1)) & ~(4 - 1);
    DWORD bufferSize = scanlineSize * bitmap.bmHeight;
    BYTE *buffer = (BYTE *)malloc(bufferSize);
@@ -59,7 +59,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
    const int width = bitmap.bmWidth;
    const int height = bitmap.bmHeight;
    const int depth = 8;
-   const int bytesPerPixel = sizeof(BYTE) * 4;
+   const int bytesPerPixel = 4;
 
    png_structp png_ptr = NULL;
    png_infop info_ptr = NULL;
@@ -95,7 +95,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
    {
       png_byte *row = (png_byte *)&buffer[y * bitmap.bmWidth * 4];
       row_pointers[height - y - 1] = row;
-      
+
       // Convert RGBA to BGR
       for(int i = 0, j = 0; i < width * 4; i++)
       {

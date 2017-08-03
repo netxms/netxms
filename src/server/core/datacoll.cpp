@@ -86,6 +86,8 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_NATIVE_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+			   else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
+               *error = ((Sensor *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
@@ -403,6 +405,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 		g_idxClusterById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxChassisById.forEach(QueueItems, &watchdogId);
+		g_idxSensorById.forEach(QueueItems, &watchdogId);
 
       // Save last poll time
       dwTimingHistory[currPos] = (UINT32)(GetCurrentTimeMs() - qwStart);

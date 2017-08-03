@@ -21,6 +21,7 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractObject;
@@ -74,6 +75,17 @@ public class NXCObjectCreationData
 	private long chassisId;
 	private String sshLogin;
 	private String sshPassword;
+   private int deviceClass;
+   private String vendor;
+   private int  commProtocol;
+   private String xmlConfig;
+   private String xmlRegConfig;
+   private String serialNumber;
+   private String deviceAddress;
+   private String metaType;
+   private String description;
+   private Date lastConnectionTime;
+   private long sensorProxy;
 	
 	/**
 	 * Constructor.
@@ -125,6 +137,15 @@ public class NXCObjectCreationData
 		createStatusDci = false;
 		sshLogin = "";
 		sshPassword = "";
+	   deviceClass = 0;
+	   vendor = "";
+	   commProtocol = 0;
+	   xmlConfig ="";
+	   serialNumber = "";
+	   deviceAddress = "";
+	   metaType = "";
+	   description = "";
+	   sensorProxy = 0;
 	}
 
 	/**
@@ -726,5 +747,180 @@ public class NXCObjectCreationData
    public void setSshPassword(String sshPassword)
    {
       this.sshPassword = sshPassword;
+   }
+
+   /**
+    * @return the deviceClass
+    */
+   public int getDeviceClass()
+   {
+      return deviceClass;
+   }
+
+   /**
+    * @param deviceClass the deviceClass to set
+    */
+   public void setDeviceClass(int deviceClass)
+   {
+      this.deviceClass = deviceClass;
+   }
+
+   /**
+    * @return the commProtocol
+    */
+   public int getCommProtocol()
+   {
+      return commProtocol;
+   }
+
+   /**
+    * @param commProtocol the commProtocol to set
+    */
+   public void setCommProtocol(int commProtocol)
+   {
+      this.commProtocol = commProtocol;
+   }
+
+   /**
+    * @return the xmlConfig
+    */
+   public String getXmlConfig()
+   {
+      return xmlConfig;
+   }
+
+   /**
+    * @param xmlConfig the xmlConfig to set
+    */
+   public void setXmlConfig(String xmlConfig)
+   {
+      this.xmlConfig = xmlConfig;
+   }
+
+   /**
+    * @return the xmlRegConfig
+    */
+   public String getXmlRegConfig()
+   {
+      return xmlRegConfig;
+   }
+
+   /**
+    * @param xmlRegConfig the xmlRegConfig to set
+    */
+   public void setXmlRegConfig(String xmlRegConfig)
+   {
+      this.xmlRegConfig = xmlRegConfig;
+   }
+
+   /**
+    * @return the deviceAddress
+    */
+   public String getDeviceAddress()
+   {
+      return deviceAddress;
+   }
+
+   /**
+    * @param deviceAddress the deviceAddress to set
+    */
+   public void setDeviceAddress(String deviceAddress)
+   {
+      this.deviceAddress = deviceAddress;
+   }
+
+   /**
+    * @return the metaType
+    */
+   public String getMetaType()
+   {
+      return metaType;
+   }
+
+   /**
+    * @param metaType the metaType to set
+    */
+   public void setMetaType(String metaType)
+   {
+      this.metaType = metaType;
+   }
+
+   /**
+    * @return the description
+    */
+   public String getDescription()
+   {
+      return description;
+   }
+
+   /**
+    * @param description the description to set
+    */
+   public void setDescription(String description)
+   {
+      this.description = description;
+   }
+
+   /**
+    * @return the lastConnectionTime
+    */
+   public Date getLastConnectionTime()
+   {
+      return lastConnectionTime;
+   }
+
+   /**
+    * @param lastConnectionTime the lastConnectionTime to set
+    */
+   public void setLastConnectionTime(Date lastConnectionTime)
+   {
+      this.lastConnectionTime = lastConnectionTime;
+   }
+
+   /**
+    * @param vendor the vendor to set
+    */
+   public void setVendor(String vendor)
+   {
+      this.vendor = vendor;
+   }
+
+   /**
+    * @param serialNumber the serialNumber to set
+    */
+   public void setSerialNumber(String serialNumber)
+   {
+      this.serialNumber = serialNumber;
+   }
+   
+   /**
+    * @return the vendor
+    */
+   public final String getVendor()
+   {
+      return vendor;
+   }
+   /**
+    * @return the serialNumber
+    */
+   public final String getSerialNumber()
+   {
+      return serialNumber;
+   }
+
+   /**
+    * @return the sensorProxy
+    */
+   public long getSensorProxy()
+   {
+      return sensorProxy;
+   }
+
+   /**
+    * @param sensorProxy the sensorProxy to set
+    */
+   public void setSensorProxy(long sensorProxy)
+   {
+      this.sensorProxy = sensorProxy;
    }
 }

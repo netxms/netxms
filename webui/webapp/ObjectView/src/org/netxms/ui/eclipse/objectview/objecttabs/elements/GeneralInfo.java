@@ -31,6 +31,7 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
@@ -187,6 +188,26 @@ public class GeneralInfo extends TableElement
 				if (md.getBatteryLevel() >= 0)
 					addPair(Messages.get().GeneralInfo_BatteryLevel, Integer.toString(md.getBatteryLevel()) + "%"); //$NON-NLS-1$
 				break;
+         case AbstractObject.OBJECT_SENSOR:
+            Sensor sensor = (Sensor)object;
+            addPair(Messages.get().SensorStatus_DeviceAddress, sensor.getDeviceAddress(), false);
+            if(sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
+               addPair(Messages.get().SensorStatus_MacAddress, sensor.getMacAddress().toString(), true);
+            addPair(Messages.get().SensorStatus_Vendor, sensor.getVendor(), true);            
+            addPair(Messages.get().SensorStatus_DeviceClass, Sensor.DEV_CLASS_NAMES[sensor.getDeviceClass()]);
+            addPair(Messages.get().SensorStatus_CommProtocol, Sensor.COMM_METHOD[sensor.getCommProtocol()]);
+            addPair(Messages.get().SensorStatus_SerialNumber, sensor.getSerialNumber(), true);
+            addPair(Messages.get().SensorStatus_MetaType, sensor.getMetaType(), true);
+            addPair(Messages.get().SensorStatus_Description, sensor.getDescription(), true);
+            if(sensor.getFrameCount() != 0)
+               addPair(Messages.get().SensorStatus_FrameCount, Integer.toString(sensor.getFrameCount()));
+            if(sensor.getSignalStrenght() != 1)
+               addPair(Messages.get().SensorStatus_RSSI, Integer.toString(sensor.getSignalStrenght()));
+            if(sensor.getSignalNoise() != Integer.MAX_VALUE)
+               addPair(Messages.get().SensorStatus_SNR, Double.toString((double)sensor.getSignalNoise()/10));
+            if(sensor.getFrequency() != 0)
+               addPair(Messages.get().SensorStatus_Frequency, Double.toString((double)sensor.getFrequency()/10));
+            break;
 			case AbstractObject.OBJECT_ACCESSPOINT:
 				AccessPoint ap = (AccessPoint)object;
             addPair(Messages.get().GeneralInfo_State, ap.getState().toString());

@@ -52,6 +52,7 @@ ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
 ObjectIndex g_idxChassisById;
+ObjectIndex g_idxSensorById;
 
 /**
  * Static data
@@ -161,6 +162,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
 	UpdateDataCollectionCache(&g_idxAccessPointById);
    UpdateDataCollectionCache(&g_idxChassisById);
+   UpdateDataCollectionCache(&g_idxSensorById);
 
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
@@ -250,7 +252,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
    {
       // Assign unique ID to new object
       pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
-      if (!importedObject) // imported objects already have valid GUID
+      if (!importedObject && pObject->getGuid().isNull()) // imported objects already have valid GUID
          pObject->generateGuid();
 
       // Create tables for storing data collection values
@@ -429,6 +431,9 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_NETWORKMAP:
 				g_idxNetMapById.put(pObject->getId(), pObject);
             break;
+			case OBJECT_SENSOR:
+				g_idxSensorById.put(pObject->getId(), pObject);
+            break;
          default:
 				{
 					bool processed = false;
@@ -593,6 +598,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
 		case OBJECT_NETWORKMAP:
 			g_idxNetMapById.remove(pObject->getId());
+         break;
+		case OBJECT_SENSOR:
+			g_idxSensorById.remove(pObject->getId());
          break;
       default:
 			{
@@ -1021,6 +1029,9 @@ NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void
       case OBJECT_ZONE:
          index = &g_idxZoneByGUID;
          break;
+      case OBJECT_SENSOR:
+         index = &g_idxSensorById;
+         break;
       default:
          index = &g_idxObjectById;
          break;
@@ -1379,6 +1390,29 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             delete md;
+            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load mobile devices
+   DbgPrintf(2, _T("Loading sensors..."));
+   hResult = DBSelect(hdb, _T("SELECT id FROM sensors"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Sensor *sensor = new Sensor;
+         if (sensor->loadFromDatabase(hdb, id))
+         {
+            NetObjInsert(sensor, false, false);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete sensor;
             nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1992,7 +2026,8 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_RACK) ||
-             (childClass == OBJECT_SUBNET))
+             (childClass == OBJECT_SUBNET) ||
+             (childClass == OBJECT_SENSOR))
             return true;
          break;
       case OBJECT_CHASSIS:
@@ -2009,7 +2044,8 @@ bool IsValidParentClass(int childClass, int parentClass)
       case OBJECT_TEMPLATE:
          if ((childClass == OBJECT_NODE) ||
              (childClass == OBJECT_CLUSTER) ||
-             (childClass == OBJECT_MOBILEDEVICE))
+             (childClass == OBJECT_MOBILEDEVICE) ||
+             (childClass == OBJECT_SENSOR))
             return true;
          break;
       case OBJECT_NETWORKMAPROOT:
@@ -2208,7 +2244,8 @@ bool IsEventSource(int objectClass)
 	return (objectClass == OBJECT_NODE) ||
 	       (objectClass == OBJECT_CONTAINER) ||
 	       (objectClass == OBJECT_CLUSTER) ||
-			 (objectClass == OBJECT_MOBILEDEVICE);
+			 (objectClass == OBJECT_MOBILEDEVICE ||
+          (objectClass == OBJECT_SENSOR));
 }
 
 /**
@@ -2267,6 +2304,9 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
          break;
       case OBJECT_ZONE:
          index = &g_idxZoneByGUID;
+         break;
+      case OBJECT_SENSOR:
+         index = &g_idxSensorById;
          break;
       default:
          index = &g_idxObjectById;

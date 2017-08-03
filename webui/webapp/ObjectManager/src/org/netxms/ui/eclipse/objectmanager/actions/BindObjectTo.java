@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -106,7 +107,7 @@ public class BindObjectTo implements IObjectActionDelegate
 		   objects = new HashSet<Long>();
 		   for(Object o : ((IStructuredSelection)selection).toList())
 		   {
-		      if ((o instanceof AbstractNode) || (o instanceof Subnet) || (o instanceof MobileDevice) || (o instanceof Rack) || (o instanceof Cluster))
+		      if ((o instanceof AbstractNode) || (o instanceof Subnet) || (o instanceof MobileDevice) || (o instanceof Rack) || (o instanceof Cluster) || (o instanceof Sensor))
 		         objects.add(((AbstractObject)o).getObjectId());
 		   }
 		}

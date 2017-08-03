@@ -108,6 +108,9 @@
                 <instanceof
                       value="org.netxms.client.objects.MobileDevice">
                 </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.Sensor">
+                </instanceof>
              </or>
           </enabledWhen>
         </page>
@@ -314,6 +317,9 @@
                  <instanceof
                        value="org.netxms.client.objects.MobileDevice">
                  </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.Sensor">
+                </instanceof>
                  <instanceof
                        value="org.netxms.client.objects.Zone">
                  </instanceof>
@@ -397,6 +403,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.SensorProperties"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.SensorProperties"
+              name="%page.name.Sensor">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Sensor">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -441,6 +457,13 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createSensor_Container"
+               label="Create Sensor"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
@@ -469,6 +492,13 @@
                label="%action.label.CreateChassis"
                menubarPath="CreateObjectSubmenu/additions"
                state="false">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createSensor_Container"
+               label="&amp;Sensor..."
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
 
@@ -511,6 +541,13 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createSensor_ServiceRoot"
+               label="Create Sensor"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
@@ -536,6 +573,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createChassis_ServiceRoot"
                label="%action.label.CreateChassis"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateSensor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createSensor_Container"
+               label="&amp;Sensor..."
                menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
@@ -706,6 +750,18 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
                enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_MobileDevice"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Sensor"
+            objectClass="org.netxms.client.objects.Sensor">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Sensor"
                label="%action.label.BindTo"
                menubarPath="objectbinding">
          </action>

@@ -240,7 +240,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             pObject = FindObjectById(dwNodeId);
             if (pObject != NULL)
             {
-               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
+               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || (pObject->getObjectClass() == OBJECT_SENSOR))
                {
                   addChild(pObject);
                   pObject->addParent(this);
@@ -1184,7 +1184,7 @@ void Template::prepareForDeletion()
 
 /**
  * Check if template should be automatically applied to given data collection target
- * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not, 
+ * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
  * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
 AutoBindDecision Template::isApplicable(DataCollectionTarget *target)

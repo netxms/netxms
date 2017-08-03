@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Sensor;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -70,7 +71,7 @@ public class TableLastValuesView extends ViewPart
 		
 		objectId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(objectId);
-		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)))
+		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)  && !(object instanceof Sensor)))
 			throw new PartInitException(Messages.get().TableLastValuesView_InvalidObjectID);
 		
 		dciId = Long.parseLong(parts[1]);

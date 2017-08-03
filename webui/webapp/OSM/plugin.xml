@@ -88,6 +88,18 @@
          </action>
       </objectContribution>
       <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Sensor"
+            objectClass="org.netxms.client.objects.Sensor">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Sensor"
+               label="%action.label.Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
             id="org.netxms.ui.eclipse.osm.actions.popup.object.Rack"
             objectClass="org.netxms.client.objects.Rack">
          <action

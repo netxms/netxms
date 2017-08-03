@@ -142,6 +142,7 @@ import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.PolicyGroup;
 import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -1188,6 +1189,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_RACK:
             object = new Rack(msg, this);
+            break;
+         case AbstractObject.OBJECT_SENSOR:
+            object = new Sensor(msg, this);
             break;
          case AbstractObject.OBJECT_SERVICEROOT:
             object = new ServiceRoot(msg, this);
@@ -4482,6 +4486,20 @@ public class NXCSession
          case AbstractObject.OBJECT_SLMCHECK:
             msg.setFieldInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
             break;
+         case AbstractObject.OBJECT_SENSOR:            
+            msg.setFieldInt32(NXCPCodes.VID_SENSOR_FLAGS, data.getFlags());
+            msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress());
+            msg.setFieldInt32(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass());
+            msg.setField(NXCPCodes.VID_VENDOR, data.getVendor());
+            msg.setFieldInt32(NXCPCodes.VID_COMM_PROTOCOL, data.getCommProtocol());
+            msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
+            msg.setField(NXCPCodes.VID_XML_REG_CONFIG, data.getXmlRegConfig());
+            msg.setField(NXCPCodes.VID_SERIAL_NUMBER, data.getSerialNumber());
+            msg.setField(NXCPCodes.VID_DEVICE_ADDRESS, data.getDeviceAddress());
+            msg.setField(NXCPCodes.VID_META_TYPE, data.getMetaType());
+            msg.setField(NXCPCodes.VID_DESCRIPTION, data.getDescription());
+            msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, (int)data.getSensorProxy());
+            break;
       }
 
       if (userData != null) createCustomObject(data, userData, msg);
@@ -5056,6 +5074,46 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.SEED_OBJECTS))
       {
          msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.MAC_ADDRESS))
+      {
+         msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.DEVICE_CLASS))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_DEVICE_CLASS, data.getDeviceClass());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.VENDOR))
+      {
+         msg.setField(NXCPCodes.VID_VENDOR, data.getVendor());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.SERIAL_NUMBER))
+      {
+         msg.setField(NXCPCodes.VID_SERIAL_NUMBER, data.getSerialNumber());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.DEVICE_ADDRESS))
+      {
+         msg.setField(NXCPCodes.VID_DEVICE_ADDRESS, data.getDeviceAddress());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.META_TYPE))
+      {
+         msg.setField(NXCPCodes.VID_META_TYPE, data.getMetaType());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.SENSOR_PROXY))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_SENSOR_PROXY, (int)data.getSensorProxy());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.XML_CONFIG))
+      {
+         msg.setField(NXCPCodes.VID_XML_CONFIG, data.getXmlConfig());
       }
             
       modifyCustomObject(data, userData, msg);

@@ -114,6 +114,7 @@ public:
    void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
    void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
    void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
+   void setField(UINT32 fieldId, const MacAddress& value) { set(fieldId, NXCP_DT_BINARY, value.value(), false, value.length()); }
 #ifdef UNICODE
    void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
@@ -141,6 +142,7 @@ public:
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
    UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;
    InetAddress getFieldAsInetAddress(UINT32 fieldId) const;
+   MacAddress getFieldAsMacAddress(UINT32 fieldId) const;
    uuid getFieldAsGUID(UINT32 fieldId) const;
 
    void deleteAllFields();

@@ -79,7 +79,10 @@ public class ObjectSelectionFilterFactory
 		classFilter.add(AbstractObject.OBJECT_RACK);
 		classFilter.add(AbstractObject.OBJECT_NODE);
 		if (allowMobileDevices)
+		{
 			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+	      classFilter.add(AbstractObject.OBJECT_SENSOR);
+		}
 		return classFilter;
 	}
 
@@ -226,7 +229,10 @@ public class ObjectSelectionFilterFactory
 		classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
 		classFilter.add(AbstractObject.OBJECT_TEMPLATE);
 		if (allowMobileDevices)
+		{
 			classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+	      classFilter.add(AbstractObject.OBJECT_SENSOR);
+		}
 		return classFilter;
 	}
 

@@ -3207,7 +3207,8 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_ZONE) ||
              (object->getObjectClass() == OBJECT_SUBNET) ||
              (object->getObjectClass() == OBJECT_NETWORK) ||
-             (object->getObjectClass() == OBJECT_SERVICEROOT))
+             (object->getObjectClass() == OBJECT_SERVICEROOT)||
+             (object->getObjectClass() == OBJECT_SENSOR))
          {
             object->enterMaintenanceMode();
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3258,7 +3259,8 @@ void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_ZONE) ||
              (object->getObjectClass() == OBJECT_SUBNET) ||
              (object->getObjectClass() == OBJECT_NETWORK) ||
-             (object->getObjectClass() == OBJECT_SERVICEROOT))
+             (object->getObjectClass() == OBJECT_SERVICEROOT) ||
+             (object->getObjectClass() == OBJECT_SENSOR))
          {
             object->leaveMaintenanceMode();
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -4991,6 +4993,11 @@ void ClientSession::createObject(NXCPMessage *request)
                            request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
                            object = new MobileDevice(objectName, deviceId);
                            NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_SENSOR:
+                           object = Sensor::createSensor(objectName, request);
+                           if (object != NULL)
+                              NetObjInsert(object, true, false);
                            break;
                         case OBJECT_NETWORKMAP:
                            {
@@ -9748,13 +9755,9 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			if (object->getObjectClass() == OBJECT_NODE)
+			if (object->getObjectClass() == OBJECT_NODE || object->getObjectClass() == OBJECT_CLUSTER || object->getObjectClass() == OBJECT_MOBILEDEVICE || object->getObjectClass() == OBJECT_SENSOR)
 			{
-				msg.setField(VID_RCC, ((Node *)object)->getPerfTabDCIList(&msg));
-			}
-			else if (object->getObjectClass() == OBJECT_CLUSTER)
-			{
-				msg.setField(VID_RCC, ((Cluster *)object)->getPerfTabDCIList(&msg));
+				msg.setField(VID_RCC, ((DataCollectionTarget *)object)->getPerfTabDCIList(&msg));
 			}
 			else
 			{
@@ -10610,7 +10613,8 @@ void ClientSession::executeScript(NXCPMessage *request)
           (object->getObjectClass() == OBJECT_CHASSIS) ||
           (object->getObjectClass() == OBJECT_CONTAINER) ||
           (object->getObjectClass() == OBJECT_ZONE) ||
-          (object->getObjectClass() == OBJECT_SUBNET))
+          (object->getObjectClass() == OBJECT_SUBNET) ||
+          (object->getObjectClass() == OBJECT_SENSOR))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
@@ -10755,7 +10759,8 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
           (object->getObjectClass() == OBJECT_CHASSIS) ||
           (object->getObjectClass() == OBJECT_CONTAINER) ||
           (object->getObjectClass() == OBJECT_ZONE) ||
-          (object->getObjectClass() == OBJECT_SUBNET))
+          (object->getObjectClass() == OBJECT_SUBNET) ||
+          (object->getObjectClass() == OBJECT_SENSOR))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {

@@ -99,6 +99,14 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  version integer not null,")
    _T("  PRIMARY KEY(guid))"),
 
+   _T("CREATE TABLE device_decoder_map (")
+   _T("  guid varchar(36) not null,")
+   _T("  devAddr varchar(10) null,")
+   _T("  devEui varchar(10) null,")
+   _T("  decoder integer not null,")
+   _T("  last_contact integer null,")
+   _T("  PRIMARY KEY(guid))"),
+
    _T("CREATE TABLE dc_config (")
    _T("  server_id number(20) not null,")
    _T("  dci_id integer not null,")

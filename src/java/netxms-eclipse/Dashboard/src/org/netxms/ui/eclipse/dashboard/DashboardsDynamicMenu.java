@@ -43,6 +43,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -102,7 +103,8 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
 		    !(object instanceof Subnet) &&
 		    !(object instanceof Zone) &&
           !(object instanceof Condition) &&
-		    !(object instanceof EntireNetwork))
+		    !(object instanceof EntireNetwork) &&
+		    !(object instanceof Sensor))
 			return;
 		
 		List<AbstractObject> dashboards = object.getDashboards(true);

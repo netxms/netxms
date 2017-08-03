@@ -827,7 +827,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
    int mostCriticalDCI =
-      (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT) ?
+      (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT || getObjectClass() == OBJECT_SENSOR) ?
          ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN;
 
    int oldStatus = m_status;

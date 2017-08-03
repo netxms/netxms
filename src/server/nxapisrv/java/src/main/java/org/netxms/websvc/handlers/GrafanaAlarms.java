@@ -53,6 +53,7 @@ public class GrafanaAlarms extends AbstractHandler
          classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
          classFilter.add(AbstractObject.OBJECT_RACK);
          classFilter.add(AbstractObject.OBJECT_CLUSTER);
+         classFilter.add(AbstractObject.OBJECT_SENSOR);
          AbstractObject[] objects = getSession().getTopLevelObjects(classFilter);
          Map<Long, String> result = new HashMap<Long, String>();
          for(AbstractObject o : objects)

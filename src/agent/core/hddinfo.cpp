@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
@@ -37,7 +37,7 @@
 
 //
 // Get value of specific attribute from SMART_ATA_VALUES structure
-// 
+//
 
 static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
                               TCHAR *pValue, int nType)
@@ -72,13 +72,13 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 {
    LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
    TCHAR szBuffer[128], *eptr;                     //
-   BYTE pbValue[40];                               // 
+   BYTE pbValue[40];                               //
    HANDLE hDevice;
    SENDCMDINPARAMS rq;
    SENDCMDOUTPARAMS *pResult;
    DWORD dwBytes;
    BOOL bSwapWords = FALSE;
-   //memset(pbValue, 0, sizeof(BYTE) * 40);
+   //memset(pbValue, 0, 40);
    if (!AgentGetParameterArg(pszParam, 1, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -89,7 +89,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 
    // Open device
    _sntprintf(szBuffer, 128, _T("\\\\.\\PHYSICALDRIVE%d"), nDisk);      //
-   hDevice = CreateFile(szBuffer, GENERIC_READ | GENERIC_WRITE, 
+   hDevice = CreateFile(szBuffer, GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
    if (hDevice != INVALID_HANDLE_VALUE)
    {
@@ -209,7 +209,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 			   memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); // has bug
 			   pbValue[21] = 0;
                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 21);
-               StrStrip(pValue); 
+               StrStrip(pValue);
 #else
 			   memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->serial_no, 20); //
                pValue[21] = 0;
@@ -222,7 +222,7 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 				memcpy(pbValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8); // has bug
 			   pbValue[8] = 0;
                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pbValue, -1, pValue, 8);
-               StrStrip(pValue); 
+               StrStrip(pValue);
 #else
 				memcpy(pValue, ((ATA_IDENTIFY_DEVICE_DATA *)pResult->bBuffer)->fw_rev, 8);  //
                pValue[8] = 0;

@@ -41,6 +41,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -178,7 +179,7 @@ public class SelectDciDialog extends Dialog
 					AbstractObject object = objectTree.getFirstSelectedObject2();
 					if ((object != null) && 
 					    ((object instanceof AbstractNode) || (object instanceof MobileDevice) || (object instanceof Cluster) ||
-					     (allowTemplateItems && (object instanceof Template))))
+					     (allowTemplateItems && (object instanceof Template) || (object instanceof Sensor))))
 					{
 						dciList.setNode(object);
 					}

@@ -592,6 +592,19 @@ InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId) const
    return InetAddress();
 }
 
+/*
+ * Get field as MAC address
+ */
+MacAddress NXCPMessage::getFieldAsMacAddress(UINT32 fieldId) const
+{
+   NXCP_MESSAGE_FIELD *f = find(fieldId);
+
+   if (f == NULL || !((f->type == NXCP_DT_BINARY) && (f->df_binary.length <= 8)))
+      return MacAddress();
+
+   return MacAddress(f->df_binary.value, f->df_binary.length);
+}
+
 /**
  * Get string field
  * If buffer is NULL, memory block of required size will be allocated

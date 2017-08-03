@@ -66,6 +66,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
@@ -802,6 +803,8 @@ public class DataCollectionEditor extends ViewPart
 					dciConfig.copyObjects(o.getObjectId(), dciList);
 				for(AbstractObject o : dlg.getSelectedObjects(MobileDevice.class))
 					dciConfig.copyObjects(o.getObjectId(), dciList);
+            for(AbstractObject o : dlg.getSelectedObjects(Sensor.class))
+               dciConfig.copyObjects(o.getObjectId(), dciList);
 				if (doMove)
 				{
 					for(long id : dciList)

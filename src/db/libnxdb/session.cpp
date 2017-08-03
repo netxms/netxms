@@ -689,6 +689,17 @@ InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int iRow, i
 }
 
 /**
+ * Get field`s value as MAC address
+ */
+MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int iRow, int iColumn)
+{
+   TCHAR *pszVal, buffer[36];
+   pszVal = DBGetField(hResult, iRow, iColumn, buffer, 36);
+
+   return pszVal == NULL ? MacAddress() : MacAddress::parse(pszVal);
+}
+
+/**
  * Get field's value as integer array from byte array encoded in hex
  */
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
@@ -1381,6 +1392,15 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const u
 {
    TCHAR buffer[64];
    DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer), DB_BIND_TRANSIENT);
+}
+
+/**
+ * Bind Mac Address
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const MacAddress& value)
+{
+   TCHAR buffer[36];
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer, MAC_ADDR_FLAT_STRING), DB_BIND_TRANSIENT);
 }
 
 /**

@@ -127,6 +127,7 @@ public class ObjectFinder extends ViewPart
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POLICYGROUP, "Policy Group"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POLICYROOT, "Policy Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_RACK, "Rack"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, "Sensor"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, "Service Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SLMCHECK, "Service Check"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SUBNET, "Subnet"));

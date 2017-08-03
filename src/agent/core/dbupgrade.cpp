@@ -38,6 +38,24 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V5 to V6
+ */
+static BOOL H_UpgradeFromV5(int currVersion, int newVersion)
+{
+   TCHAR upgradeQueries[] =
+            _T("CREATE TABLE device_decoder_map (")
+            _T("  guid varchar(36) not null,")
+            _T("  devAddr varchar(10) null,")
+            _T("  devEui varchar(10) null,")
+            _T("  decoder integer not null,")
+            _T("  last_contact integer null,")
+            _T("  PRIMARY KEY(guid))");
+   CHK_EXEC(Query(upgradeQueries));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 6));
+   return TRUE;
+}
+
+/**
  * Upgrade from V4 to V5
  */
 static BOOL H_UpgradeFromV4(int currVersion, int newVersion)
@@ -291,6 +309,7 @@ static struct
    { 2, 3, H_UpgradeFromV2 },
    { 3, 4, H_UpgradeFromV3 },
    { 4, 5, H_UpgradeFromV4 },
+   { 5, 6, H_UpgradeFromV5 },
    { 0, 0, NULL }
 };
 
