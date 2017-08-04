@@ -59,6 +59,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -728,7 +729,10 @@ public class ObjectTree extends Composite
                      filter = ObjectSelectionDialog.createBusinessServiceSelectionFilter();
                      break;
                   case DASHBOARDS:
-                     filter = ObjectSelectionDialog.createDashboardSelectionFilter();
+                     if(object instanceof DashboardGroup)
+                        filter = ObjectSelectionDialog.createDashboardGroupSelectionFilter();
+                     else
+                        filter = ObjectSelectionDialog.createDashboardSelectionFilter();
                      break;
                   case MAPS:
                      filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();

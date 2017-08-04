@@ -175,6 +175,7 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_DASHBOARD);
       classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
       return classFilter;
    }
 

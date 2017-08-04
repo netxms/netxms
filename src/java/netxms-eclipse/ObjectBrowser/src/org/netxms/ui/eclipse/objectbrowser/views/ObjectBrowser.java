@@ -914,10 +914,11 @@ public class ObjectBrowser extends ViewPart
 					         ((parentObject instanceof NetworkMapGroup) ||
                         (parentObject instanceof NetworkMapRoot)) ? APPROVE : REJECT;
 					case DASHBOARDS:
-					   return ((currentObject instanceof Dashboard) ||
+					   return (((currentObject instanceof Dashboard) ||
                         (currentObject instanceof DashboardGroup)) &&
-                         ((parentObject instanceof DashboardGroup) ||
-                         (parentObject instanceof DashboardRoot)) ? APPROVE : REJECT;
+                       ((parentObject instanceof DashboardRoot) ||
+                       (parentObject instanceof DashboardGroup) ||
+                       (parentObject instanceof Dashboard))) ? APPROVE : REJECT;
 					case POLICIES:
 					   return ((currentObject instanceof AgentPolicy) ||
 					         (currentObject instanceof PolicyGroup))&&
