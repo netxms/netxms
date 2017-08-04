@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -52,7 +52,7 @@ static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 }
 
 static THREAD_RESULT THREAD_CALL Worker(void *arg)
-{ 
+{
 	char *cmd = ((PROCESS_START_INFO *)arg)->cmdLine;
 	if (cmd == NULL)
 	{
@@ -199,7 +199,7 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
    si.dwFlags = 0;
 
    // Create new process
-   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, 
+   if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE,
                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
    {
       nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
@@ -335,10 +335,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 
          DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
          TCHAR *pTmp;
-			if ((pTmp = _tcschr(value, _T('\n'))) != NULL)
-			{
-				*pTmp = 0;
-			}
+         RemoveTrailingCRLF(value);
          if (value[0] != 0)
          {
             data->values.add(value);
