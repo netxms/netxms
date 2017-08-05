@@ -6,16 +6,16 @@ package org.netxms.agent.jmx;
 import java.util.HashMap;
 import java.util.Map;
 import javax.management.openmbean.CompositeData;
-import org.netxms.agent.Config;
-import org.netxms.agent.ConfigEntry;
 import org.netxms.agent.ListParameter;
 import org.netxms.agent.Parameter;
 import org.netxms.agent.ParameterType;
 import org.netxms.agent.Plugin;
 import org.netxms.agent.PluginInitException;
-import org.netxms.agent.SubAgent;
 import org.netxms.agent.adapters.ListParameterAdapter;
 import org.netxms.agent.adapters.ParameterAdapter;
+import org.netxms.bridge.Config;
+import org.netxms.bridge.ConfigEntry;
+import org.netxms.bridge.Platform;
 
 /**
  * JMX subagent plugin
@@ -54,7 +54,7 @@ public class JmxPlugin extends Plugin
    @Override
    public String getVersion()
    {
-      return "1.0";
+      return "2.1.1";
    }
 
    /* (non-Javadoc)
@@ -115,7 +115,7 @@ public class JmxPlugin extends Plugin
          s = new Server(parts[0].trim(), parts[1].trim(), null, null);
       }
       servers.put(s.getName(), s);
-      SubAgent.writeDebugLog(3, "JMX: added server connection " + s.getName() + " (" + s.getUrl() + ")");
+      Platform.writeDebugLog(3, "JMX: added server connection " + s.getName() + " (" + s.getUrl() + ")");
    }
    
    /**

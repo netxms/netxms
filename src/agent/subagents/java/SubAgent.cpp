@@ -62,18 +62,6 @@ bool SubAgent::m_initialized = false;
 
 /**
  * Class:     org.netxms.agent.SubAgent
- * Method:    getNetXMSDirectoryInternal
- * Signature: (I)Ljava/lang/String;
- */
-static jstring JNICALL J_getNetXMSDirectoryInternal(JNIEnv *jenv, jclass jcls, jint type)
-{
-   TCHAR buffer[MAX_PATH];
-   GetNetXMSDirectory(static_cast<nxDirectoryType>(type), buffer);
-   return JavaStringFromCString(jenv, buffer);
-}
-
-/**
- * Class:     org.netxms.agent.SubAgent
  * Method:    getParameterArg
  * Signature: (Ljava/lang/String;I)Ljava/lang/String;
  */
@@ -140,46 +128,13 @@ static jboolean JNICALL J_pushParameterData(JNIEnv *jenv, jclass jcls, jstring j
 }
 
 /**
- * Class:     org.netxms.agent.SubAgent
- * Method:    writeLog
- * Signature: (ILjava/lang/String;)V
- */
-static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
-{
-   if (jmessage != NULL)
-   {
-      TCHAR *message = CStringFromJavaString(jenv, jmessage);
-      AgentWriteLog((int)level, message);
-      free(message);
-   }
-}
-
-/**
- * Class:     org.netxms.agent.SubAgent
- * Method:    writeDebugLog
- * Signature: (ILjava/lang/String;)V
- */
-static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
-{
-   if (jmessage != NULL)
-   {
-      TCHAR *message = CStringFromJavaString(jenv, jmessage);
-      AgentWriteDebugLog((int)level, message);
-      free(message);
-   }
-}
-
-/**
  * Native methods
  */
 static JNINativeMethod s_jniNativeMethods[] =
 {
-   { (char *)"getNetXMSDirectoryInternal", (char *)"(I)Ljava/lang/String;", (void *)J_getNetXMSDirectoryInternal },
    { (char *)"getParameterArg", (char *)"(Ljava/lang/String;I)Ljava/lang/String;", (void *)J_getParameterArg },
    { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)J_pushParameterData },
-   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)J_sendTrap },
-   { (char *)"writeDebugLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeDebugLog },
-   { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeLog }
+   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)J_sendTrap }
 };
 
 /**
@@ -201,15 +156,15 @@ bool SubAgent::getMethodId(JNIEnv *curEnv, const char *name, const char *profile
  */
 bool SubAgent::initialize(JNIEnv *curEnv)
 {
-   m_class = CreateClassGlobalRef(curEnv, s_subAgentClassName);
+   m_class = CreateJavaClassGlobalRef(curEnv, s_subAgentClassName);
    if (m_class == NULL)
       return false;
 
-   m_stringClass = CreateClassGlobalRef(curEnv, "java/lang/String");
+   m_stringClass = CreateJavaClassGlobalRef(curEnv, "java/lang/String");
    if (m_stringClass == NULL)
       return false;
 
-   if (!getMethodId(curEnv, "<init>", "(Lorg/netxms/agent/Config;)V", &m_constructor))
+   if (!getMethodId(curEnv, "<init>", "(Lorg/netxms/bridge/Config;)V", &m_constructor))
       return false;
    if (!getMethodId(curEnv, "actionHandler", "(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Z", &m_actionHandler))
       return false;
@@ -223,7 +178,7 @@ bool SubAgent::initialize(JNIEnv *curEnv)
       return false;
    if (!getMethodId(curEnv, "getTables", "()[Ljava/lang/String;", &m_getTables))
       return false;
-   if (!getMethodId(curEnv, "init", "(Lorg/netxms/agent/Config;)Z", &m_init))
+   if (!getMethodId(curEnv, "init", "()Z", &m_init))
       return false;
    if (!getMethodId(curEnv, "listHandler", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;", &m_listHandler))
       return false;
@@ -246,10 +201,9 @@ bool SubAgent::initialize(JNIEnv *curEnv)
 
 /**
  * Create SubAgent object instance.
- * @param jvm the Java VM
  * @param config Config object
  */
-SubAgent *SubAgent::createInstance(JavaVM *jvm, JNIEnv *curEnv, jobject config)
+SubAgent *SubAgent::createInstance(JNIEnv *curEnv, jobject config)
 {
    if (!m_initialized)
    {
@@ -272,15 +226,14 @@ SubAgent *SubAgent::createInstance(JavaVM *jvm, JNIEnv *curEnv, jobject config)
       return NULL;
    }
 
-   return new SubAgent(jvm, instance);
+   return new SubAgent(instance);
 }
 
 /**
  * Internal constructor
  */
-SubAgent::SubAgent(JavaVM *jvm, jobject instance)
+SubAgent::SubAgent(jobject instance)
 {
-   m_jvm = jvm;
    m_instance = instance;
 }
 
@@ -289,11 +242,10 @@ SubAgent::SubAgent(JavaVM *jvm, jobject instance)
  */
 SubAgent::~SubAgent()
 {
-   JNIEnv *curEnv = NULL;
-   if (m_jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL) == JNI_OK)
-   {
+   JNIEnv *curEnv = AttachThreadToJavaVM();
+   if (curEnv != NULL)
       curEnv->DeleteGlobalRef(m_instance);
-   }
+   DetachThreadFromJavaVM();
 }
 
 /**
@@ -301,20 +253,16 @@ SubAgent::~SubAgent()
  */
 JNIEnv *SubAgent::getCurrentEnv()
 {
-   JNIEnv *curEnv = NULL;
-   jint res = m_jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
-   if (res != JNI_OK)
-   {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::getCurrentEnv(): cannot attach current thrad to JVM"));
-      return NULL;
-   }
+   JNIEnv *curEnv = AttachThreadToJavaVM();
+   if (curEnv == NULL)
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::getCurrentEnv(): cannot attach current thread to JVM"));
    return curEnv;
 }
 
 /**
  * Call Java method SubAgent.init()
  */
-bool SubAgent::init(jobject config)
+bool SubAgent::init()
 {
    if (!m_initialized)
       return false;
@@ -323,7 +271,7 @@ bool SubAgent::init(jobject config)
    if (curEnv == NULL)
       return false;
 
-   jboolean ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_init, config));
+   jboolean ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_init));
    m_initialized = (ret == JNI_TRUE);
    return m_initialized;
 }

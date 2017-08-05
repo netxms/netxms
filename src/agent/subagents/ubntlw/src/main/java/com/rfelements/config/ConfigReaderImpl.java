@@ -1,12 +1,12 @@
 package com.rfelements.config;
 
+import org.netxms.bridge.Config;
 import com.rfelements.Logger;
 import com.rfelements.Protocol;
 import com.rfelements.cache.Cache;
 import com.rfelements.cache.CacheImpl;
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.DeviceCredentials;
-import org.netxms.agent.Config;
 
 /**
  * @author Pichanič Ján

@@ -1,19 +1,20 @@
 package com.rfelements.provider;
 
+import org.netxms.bridge.Config;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
 import com.rfelements.DeviceType;
 import com.rfelements.Protocol;
 import com.rfelements.cache.Cache;
 import com.rfelements.cache.CacheImpl;
-import com.rfelements.exception.CollectorException;
 import com.rfelements.config.ConfigReader;
 import com.rfelements.config.ConfigReaderImpl;
+import com.rfelements.exception.CollectorException;
 import com.rfelements.model.DeviceCredentials;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import com.rfelements.workers.WorkersProvider;
 import com.rfelements.workers.WorkersProviderImpl;
-import org.netxms.agent.Config;
-import org.netxms.agent.SubAgent;
 
 /**
  * @author Pichanič Ján
@@ -38,7 +39,7 @@ public class DataProviderImpl implements DataProvider {
     private WorkersProvider workersProvider;
 
     private DataProviderImpl() {
-        SubAgent.writeLog(SubAgent.LogLevel.INFO, Thread.currentThread().getName() + " [DataProviderImpl] Data provider initialized ...");
+       Platform.writeLog(LogLevel.INFO, Thread.currentThread().getName() + " [DataProviderImpl] Data provider initialized ...");
         this.cache = CacheImpl.getInstance();
         this.workersProvider = WorkersProviderImpl.getInstance();
         this.configReader = ConfigReaderImpl.getInstance();
@@ -61,7 +62,7 @@ public class DataProviderImpl implements DataProvider {
         Ligowave ligowave = (Ligowave) cache.getJsonObject(deviceCredentials.getIp());
         if (ligowave == null) {
             String message = "Value of ligowave JSON object in the cache, under key : " + ip + " , is NULL !";
-            SubAgent.writeDebugLog(DEBUG_LEVEL, message);
+            Platform.writeDebugLog(DEBUG_LEVEL, message);
             throw new CollectorException(message);
         }
         return ligowave;
@@ -74,7 +75,7 @@ public class DataProviderImpl implements DataProvider {
         Ubiquiti ubnt = (Ubiquiti) cache.getJsonObject(deviceCredentials.getIp());
         if (ubnt == null) {
             String message = "Value of ubiquiti JSON object in the cache, under key : " + ip + " , is NULL !";
-            SubAgent.writeDebugLog(DEBUG_LEVEL, message);
+            Platform.writeDebugLog(DEBUG_LEVEL, message);
             throw new CollectorException(message);
         }
         return ubnt;

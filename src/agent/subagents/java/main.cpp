@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2016 Raden Solutions SIA
+ ** Copyright (c) 2015-2017 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -25,40 +25,9 @@
 #include "SubAgent.h"
 
 /**
- * JVM instance
- */
-static JavaVM *s_jvm = NULL;
-static HMODULE s_jvmModule = NULL;
-static JNIEnv *s_jniEnv = NULL;
-
-/**
  * Java subagent instance
  */
 static SubAgent *s_subAgent = NULL;
-
-/**
- * Create global reference to Java class
- */
-jclass CreateClassGlobalRef(JNIEnv *curEnv, const char *className)
-{
-   jclass c = curEnv->FindClass(className);
-   if (c == NULL)
-   {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not find class %hs"), className);
-      return NULL;
-   }
-
-   jclass gc = static_cast<jclass>(curEnv->NewGlobalRef(c));
-   curEnv->DeleteLocalRef(c);
-
-   if (gc == NULL)
-   {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not create global reference of class %s"), className);
-      return NULL;
-   }
-
-   return gc;
-}
 
 /**
  * Action handler
@@ -70,7 +39,7 @@ static LONG ActionHandler(const TCHAR *action, StringList *args, const TCHAR *id
 
    AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), action, id);
    LONG rc = s_subAgent->actionHandler(action, args, id);
-   s_jvm->DetachCurrentThread();
+   DetachThreadFromJavaVM();
    return rc;
 }
 
@@ -83,7 +52,7 @@ static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, 
       return SYSINFO_RC_ERROR;
 
    LONG rc = s_subAgent->parameterHandler(param, id, value);
-   s_jvm->DetachCurrentThread();
+   DetachThreadFromJavaVM();
    return rc;
 }
 
@@ -96,7 +65,7 @@ static LONG ListHandler(const TCHAR *cmd, const TCHAR *id, StringList *value, Ab
       return SYSINFO_RC_ERROR;
 
    LONG rc = s_subAgent->listHandler(cmd, id, value);
-   s_jvm->DetachCurrentThread();
+   DetachThreadFromJavaVM();
    return rc;
 }
 
@@ -109,7 +78,7 @@ static LONG TableHandler(const TCHAR *cmd, const TCHAR *id, Table *value, Abstra
       return SYSINFO_RC_ERROR;
 
    LONG rc = s_subAgent->tableHandler(cmd, id, value);
-   s_jvm->DetachCurrentThread();
+   DetachThreadFromJavaVM();
    return rc;
 }
 
@@ -118,14 +87,7 @@ static LONG TableHandler(const TCHAR *cmd, const TCHAR *id, Table *value, Abstra
  */
 static BOOL SubAgentInit(Config *config)
 {
-   jobject jconfig = CreateConfigInstance(s_jniEnv, config);
-   if (jconfig == NULL)
-   {
-      return FALSE;
-   }
-   bool success = s_subAgent->init(jconfig);
-   s_jniEnv->DeleteGlobalRef(jconfig);
-   return success ? TRUE : FALSE;
+   return s_subAgent->init();
 }
 
 /**
@@ -137,28 +99,9 @@ static void SubAgentShutdown()
    {
       s_subAgent->shutdown();
    }
-
-   if (s_jvm != NULL)
-   {
-      AgentWriteDebugLog(6, _T("JAVA: destroying Java VM"));
-      s_jvm->DestroyJavaVM();
-      s_jvm = NULL;
-   }
-
-   if (s_jvmModule != NULL)
-   {
-      AgentWriteDebugLog(6, _T("JAVA: unloading JVM library"));
-      DLClose(s_jvmModule);
-      s_jvmModule = NULL;
-   }
-
-   AgentWriteDebugLog(1, _T("JAVA: shutdown comple"));
+   DestroyJavaVM();
+   AgentWriteDebugLog(1, _T("JAVA: subagent shutdown completed"));
 }
-
-/**
- * Prototype for JNI_CreateJavaVM
- */
-typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
 
 /**
  * JVM path
@@ -336,101 +279,44 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    }
 
    nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
-   
-   TCHAR errorText[256];
-   s_jvmModule = DLOpen(s_jvmPath, errorText);
-   if (s_jvmModule == NULL)
+
+   JNIEnv *env;
+   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent.jar"), s_userClasspath, NULL, &env);
+   if (err != NXJAVA_SUCCESS)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), errorText);
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
       return FALSE;
    }
 
    BOOL success = FALSE;
-
-   JavaVMInitArgs vmArgs;
-   JavaVMOption vmOptions[1];
-   memset(vmOptions, 0, sizeof(vmOptions));
-
-   TCHAR libdir[MAX_PATH];
-   GetNetXMSDirectory(nxDirLib, libdir);
-
-   String classpath = _T("-Djava.class.path=");
-   classpath.append(libdir);
-   classpath.append(FS_PATH_SEPARATOR_CHAR);
-   classpath.append(_T("netxms-agent.jar"));
-   if (s_userClasspath != NULL)
+   if (SubAgent::initialize(env))
    {
-      classpath.append(JAVA_CLASSPATH_SEPARATOR);
-      classpath.append(s_userClasspath);
-      free(s_userClasspath);
-      s_userClasspath = NULL;
-   }
-
-#ifdef UNICODE
-   vmOptions[0].optionString = classpath.getUTF8String();
-#else
-   vmOptions[0].optionString = strdup(classpath);
-#endif
-
-   // TODO JVM options
-
-   vmArgs.version = JNI_VERSION_1_6;
-   vmArgs.options = vmOptions;
-   vmArgs.nOptions = 1;
-   vmArgs.ignoreUnrecognized = JNI_TRUE;
-
-   nxlog_debug(6, _T("JVM options:"));
-   for(int i = 0; i < vmArgs.nOptions; i++)
-      nxlog_debug(6, _T("    %hs"), vmArgs.options[i].optionString);
-
-   T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(s_jvmModule, "JNI_CreateJavaVM", NULL);
-   if (CreateJavaVM != NULL)
-   {
-      if (CreateJavaVM(&s_jvm, (void **)&s_jniEnv, &vmArgs) == JNI_OK)
+      // create an instance of org.netxms.agent.Config
+      jobject jconfig = CreateConfigJavaInstance(env, config);
+      if (jconfig != NULL)
       {
-         AgentWriteDebugLog(6, _T("Java VM created"));
-         if (SubAgent::initialize(s_jniEnv) && RegisterConfigHelperNatives(s_jniEnv))
+         // create an instance of org.netxms.agent.SubAgent
+         s_subAgent = SubAgent::createInstance(env, jconfig);
+         if (s_subAgent != NULL)
          {
-            // create an instance of org.netxms.agent.Config
-            jobject jconfig = CreateConfigInstance(s_jniEnv, config);
-            if (jconfig != NULL)
-            {
-               // create an instance of org.netxms.agent.SubAgent
-               s_subAgent = SubAgent::createInstance(s_jvm, s_jniEnv, jconfig);
-               if (s_subAgent != NULL)
-               {
-                  AddContributionItems();
-                  success = TRUE;
-               }
-               else
-               {
-                  AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.agent.SubAgent"));
-               }
-               s_jniEnv->DeleteGlobalRef(jconfig);
-            }
-            else
-            {
-               AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.agent.Config"));
-            }
+            AddContributionItems();
+            success = TRUE;
          }
+         else
+         {
+            AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.agent.SubAgent"));
+         }
+         env->DeleteGlobalRef(jconfig);
       }
       else
       {
-         AgentWriteLog(NXLOG_ERROR, _T("JAVA: CreateJavaVM failed"));
+         AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to instantiate org.netxms.bridge.Config"));
       }
-   }
-   else
-   {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: JNI_CreateJavaVM failed"));
    }
 
    if (!success)
    {
-      if (s_jvm != NULL)
-         s_jvm->DestroyJavaVM();
-
-      if (s_jvmModule != NULL)
-         DLClose(s_jvmModule);
+      DestroyJavaVM();
       return FALSE;
    }
 

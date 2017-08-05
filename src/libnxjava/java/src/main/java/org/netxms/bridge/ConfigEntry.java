@@ -1,6 +1,7 @@
 /**
- * Java-Bridge NetXMS subagent
+ * NetXMS Java Bridge
  * Copyright (C) 2013 TEMPEST a.s.
+ * Copyright (C) 2014-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.agent;
+package org.netxms.bridge;
 
 public class ConfigEntry
 {

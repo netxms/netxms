@@ -2356,9 +2356,11 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
-                                     unsigned int msgCount, const TCHAR **messages, DWORD debugMsg);
-void LIBNETXMS_EXPORTABLE nxlog_close(void);
+                                     unsigned int msgCount, const TCHAR **messages,
+                                     DWORD debugMsg, DWORD genericMsg);
+void LIBNETXMS_EXPORTABLE nxlog_close();
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
 bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 maxLogSize, int historySize, const TCHAR *dailySuffix);

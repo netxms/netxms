@@ -721,7 +721,7 @@ BOOL Initialize()
 #ifdef _WIN32
 	                0, NULL, MSG_DEBUG))
 #else
-	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_SUBAGENT_MSG))
 #endif
 	{
 	   //TODO: set flag that log have been opened with errors
@@ -734,7 +734,7 @@ BOOL Initialize()
 #ifdef _WIN32
 	               0, NULL, MSG_DEBUG);
 #else
-	               g_dwNumMessages, g_szMessages, MSG_DEBUG);
+	               g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_SUBAGENT_MSG);
 #endif
 		_ftprintf(stderr, _T("ERROR: Cannot open log file, logs will be written to syslog with debug level 1\n"));
 

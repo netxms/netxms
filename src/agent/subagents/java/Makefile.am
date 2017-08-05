@@ -1,10 +1,12 @@
 SUBAGENT = java
 
 pkglib_LTLIBRARIES = java.la
-java_la_SOURCES = ConfigHelper.cpp main.cpp SubAgent.cpp
+java_la_SOURCES = main.cpp SubAgent.cpp
 java_la_CPPFLAGS = -I@top_srcdir@/include
 java_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-java_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
+java_la_LIBADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la \
+	@top_srcdir@/src/libnxjava/libnxjava.la \
+	@top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	Makefile.w32 \

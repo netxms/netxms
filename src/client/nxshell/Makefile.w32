@@ -2,7 +2,7 @@ TARGET = nxshell.exe
 TYPE = exe
 SOURCES = nxshell.cpp
 
-LIBS = libnetxms.lib
+LIBS = libnxjava.lib libnetxms.lib
 
 SUBDIRS = java
 	  

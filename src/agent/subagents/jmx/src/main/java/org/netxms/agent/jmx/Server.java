@@ -16,7 +16,7 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import org.netxms.agent.SubAgent;
+import org.netxms.bridge.Platform;
 
 /**
  * JMX server
@@ -86,7 +86,7 @@ public class Server
          }
          catch(Exception e)
          {
-            SubAgent.writeDebugLog(5, "JMX: cannot setup connection to " + url, e);
+            Platform.writeDebugLog(5, "JMX: cannot setup connection to " + url, e);
             throw e;
          }
       }
@@ -96,11 +96,11 @@ public class Server
          try
          {
             mbsc = jmxc.getMBeanServerConnection();
-            SubAgent.writeDebugLog(5, "JMX: connected to " + url);
+            Platform.writeDebugLog(5, "JMX: connected to " + url);
          }
          catch(Exception e)
          {
-            SubAgent.writeDebugLog(5, "JMX: cannot get MBean server connection for " + url, e);
+            Platform.writeDebugLog(5, "JMX: cannot get MBean server connection for " + url, e);
             jmxc.close();
             jmxc = null;
             throw e;
@@ -121,7 +121,7 @@ public class Server
          }
          catch(Exception e)
          {
-            SubAgent.writeDebugLog(6, "JMX: exception in disconnect() call for " + url, e);
+            Platform.writeDebugLog(6, "JMX: exception in disconnect() call for " + url, e);
          }
          jmxc = null;
       }
@@ -246,7 +246,7 @@ public class Server
       connect();
       try
       {
-         SubAgent.writeDebugLog(6, String.format("JMX: reading object %s attribute %s", object, attribute));
+         Platform.writeDebugLog(6, String.format("JMX: reading object %s attribute %s", object, attribute));
          return mbsc.getAttribute(new ObjectName(object), attribute).toString();
       }
       catch(AttributeNotFoundException e)

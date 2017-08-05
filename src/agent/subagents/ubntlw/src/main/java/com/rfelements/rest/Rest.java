@@ -1,14 +1,11 @@
 package com.rfelements.rest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.rfelements.config.Settings;
-import com.rfelements.exception.CollectorException;
-import com.rfelements.gson.BooleanTypeAdapter;
-import com.rfelements.gson.StringTypeAdapter;
-import com.rfelements.model.DeviceCredentials;
-import com.rfelements.model.json.ligowave.Ligowave;
-import com.rfelements.model.json.ubiquiti.Ubiquiti;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -21,14 +18,17 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-import org.netxms.agent.SubAgent;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import java.io.IOException;
-import java.security.KeyStore;
-import java.util.Date;
-import java.util.concurrent.ConcurrentHashMap;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.rfelements.config.Settings;
+import com.rfelements.exception.CollectorException;
+import com.rfelements.gson.BooleanTypeAdapter;
+import com.rfelements.gson.StringTypeAdapter;
+import com.rfelements.model.DeviceCredentials;
+import com.rfelements.model.json.ligowave.Ligowave;
+import com.rfelements.model.json.ubiquiti.Ubiquiti;
 
 /**
  * @author Pichanič Ján
@@ -58,7 +58,7 @@ public class Rest {
         BasicCookieStore cs;
         if (cookiesStoreCache.get(ip) == null) {
             cookiesStoreCache.put(ip, new BasicCookieStore());
-            SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
+            Platform.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
                     " [" + Rest.class.getName() + "][initOrGetHttpClient] ip : " + ip + " , Cookie store initialization and storing into cache ... ");
         }
         cs = cookiesStoreCache.get(ip);
@@ -73,17 +73,17 @@ public class Rest {
                 }
             }).setSslcontext(ctx.build()).setDefaultCookieStore(cs).build();
         } catch (Exception e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR, e.getLocalizedMessage());
+           Platform.writeLog(LogLevel.ERROR, e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         }
-        SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() + " [" + Rest.class.getName() + "][initOrGetHttpClient] ip : " + ip
+        Platform.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() + " [" + Rest.class.getName() + "][initOrGetHttpClient] ip : " + ip
                 + " , Http client is storing into cache , client hash code : " + client.hashCode());
         httpClientCache.put(ip, client);
         return client;
     }
 
     public static boolean loginUbiquiti(final DeviceCredentials deviceCredentials) throws CollectorException {
-        SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
+       Platform.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
                 " [" + Rest.class.getName() + "] [loginUbiquiti] Performing login against (ubiquiti) " + deviceCredentials.getUrl());
         HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
@@ -97,17 +97,17 @@ public class Rest {
             if (200 == response.getStatusLine().getStatusCode() || 302 == response.getStatusLine().getStatusCode()) {
                 String responseStr = EntityUtils.toString(response.getEntity());
                 if (responseStr.contains("Invalid credentials.")) {
-                    SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
+                   Platform.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
                             " [" + Rest.class.getName() + "][loginUbiquiti] ip : " + deviceCredentials.getIp() + " , Failed to login. Invalid credentials");
                     return false;
                 }
-                SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
+                Platform.writeDebugLog(DEBUG_LEVEL_DETAILED,
                         Thread.currentThread().getName() + " [" + Rest.class.getName() + "][loginUbiquiti][Ubiquiti] ip : " + deviceCredentials.getIp()
                                 + " , Login has been successful !");
                 return true;
             }
         } catch (IOException e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     "[" + Rest.class.getName() + "][loginUbiquiti] Login failed because of exception : " + e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         } finally {
@@ -118,7 +118,7 @@ public class Rest {
     }
 
     public static boolean loginLigowave(final DeviceCredentials deviceCredentials) throws CollectorException {
-        SubAgent.writeDebugLog(DEBUG_LEVEL,
+        Platform.writeDebugLog(DEBUG_LEVEL,
                 Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [loginLigowave] Performing login against (ligowave): " + deviceCredentials.getUrl());
         HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
@@ -135,17 +135,17 @@ public class Rest {
             if (200 == response.getStatusLine().getStatusCode() || 302 == response.getStatusLine().getStatusCode()) {
                 String responseStr = EntityUtils.toString(response.getEntity());
                 if (!responseStr.equals("{\"message\":\"Incorrect username or password\",\"status\":false}")) {
-                    SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
+                    Platform.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
                             " [" + Rest.class.getName() + "][loginLigowave] Login against : " + deviceCredentials.getUrl() + "/cgi-bin/main.cgi/login" + " has been successful");
                     return true;
                 } else {
-                    SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED, Thread.currentThread().getName() + " [" + Rest.class.getName()
+                    Platform.writeDebugLog(DEBUG_LEVEL_DETAILED, Thread.currentThread().getName() + " [" + Rest.class.getName()
                             + "][LogIn][Deliberant] Login error , incorrect username or password");
                     return false;
                 }
             }
         } catch (IOException e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     "[" + Rest.class.getName() + "][loginLigowave] Login failed because of exception : " + e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         } finally {
@@ -156,7 +156,7 @@ public class Rest {
     }
 
     public static void getIndexSiteUbnt(DeviceCredentials deviceCredentials) throws CollectorException {
-        SubAgent.writeDebugLog(DEBUG_LEVEL,
+        Platform.writeDebugLog(DEBUG_LEVEL,
                 Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [getIndexSiteUbnt] ip : " + deviceCredentials.getIp()
                         + " , DeviceCredentials to website to get cookies ... ");
         HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
@@ -166,7 +166,7 @@ public class Rest {
             response = client.execute(get);
             EntityUtils.consumeQuietly(response.getEntity());
         } catch (IOException e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     " [" + Rest.class.getName() + "] [getIndexSiteUbnt] Exception occurred while executing http get, message : " + e
                             .getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
@@ -187,7 +187,7 @@ public class Rest {
     }
 
     public static Ubiquiti updateUbiquitiJsonObject(DeviceCredentials deviceCredentials, int loginTries) throws CollectorException {
-        SubAgent.writeDebugLog(DEBUG_LEVEL,
+        Platform.writeDebugLog(DEBUG_LEVEL,
                 Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                         + " , Ubiquiti json object update started ...");
         HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
@@ -201,7 +201,7 @@ public class Rest {
         String responseStr = null;
         try {
             response = client.execute(get);
-            SubAgent.writeDebugLog(DEBUG_LEVEL,
+            Platform.writeDebugLog(DEBUG_LEVEL,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                             + " Update UBNT obj response code : " + response.getStatusLine().getStatusCode());
             responseStr = EntityUtils.toString(response.getEntity());
@@ -212,11 +212,11 @@ public class Rest {
                 loginUbiquiti(deviceCredentials);
                 return updateUbiquitiJsonObject(deviceCredentials, --loginTries);
             }
-            SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
+            Platform.writeDebugLog(DEBUG_LEVEL_DETAILED,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                             + " , response text : " + responseStr);
         } catch (IOException e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] " + e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         } finally {
@@ -229,7 +229,7 @@ public class Rest {
         try {
             ubnt = gson.fromJson(responseStr, Ubiquiti.class);
         } catch (Exception e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] " + e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         }
@@ -237,7 +237,7 @@ public class Rest {
     }
 
     public static Ligowave updateLigowaveJsonObject(DeviceCredentials deviceCredentials, int loginTries) throws CollectorException {
-        SubAgent.writeDebugLog(DEBUG_LEVEL,
+        Platform.writeDebugLog(DEBUG_LEVEL,
                 Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                         + " , Ligowave json object update started ...");
         HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
@@ -247,7 +247,7 @@ public class Rest {
         String responseStr = null;
         try {
             response = client.execute(get);
-            SubAgent.writeDebugLog(DEBUG_LEVEL,
+            Platform.writeDebugLog(DEBUG_LEVEL,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                             + " Update ligowave obj response code : " + response.getStatusLine().getStatusCode());
             if (response.getStatusLine().getStatusCode() != 200) {
@@ -258,11 +258,11 @@ public class Rest {
                 return updateLigowaveJsonObject(deviceCredentials, --loginTries);
             }
             responseStr = EntityUtils.toString(response.getEntity());
-            SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
+            Platform.writeDebugLog(DEBUG_LEVEL_DETAILED,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                             + " , response text : " + responseStr);
         } catch (IOException e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+            Platform.writeLog(LogLevel.ERROR,
                     Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] " + e.getLocalizedMessage());
             e.printStackTrace();
         } finally {
@@ -275,7 +275,7 @@ public class Rest {
         try {
             ligowave = gson.fromJson(responseStr, Ligowave.class);
         } catch (Exception e) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR, " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] " + e.getLocalizedMessage());
+            Platform.writeLog(LogLevel.ERROR, " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] " + e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());
         }
         return ligowave;

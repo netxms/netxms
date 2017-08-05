@@ -1,20 +1,21 @@
 package com.github.tomaskir.netxms.subagents.bind9;
 
-import com.github.tomaskir.netxms.subagents.bind9.collection.CollectionResult;
-import com.github.tomaskir.netxms.subagents.bind9.collection.Collector;
-import com.github.tomaskir.netxms.subagents.bind9.exceptions.CollectionErrorException;
-import org.netxms.agent.Config;
-import org.netxms.agent.Parameter;
-import org.netxms.agent.ParameterType;
-import org.netxms.agent.Plugin;
-import org.netxms.agent.PluginInitException;
-import org.netxms.agent.adapters.ParameterAdapter;
-
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.netxms.agent.Parameter;
+import org.netxms.agent.ParameterType;
+import org.netxms.agent.Plugin;
+import org.netxms.agent.PluginInitException;
+import org.netxms.agent.adapters.ParameterAdapter;
+import org.netxms.bridge.Config;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
+import com.github.tomaskir.netxms.subagents.bind9.collection.CollectionResult;
+import com.github.tomaskir.netxms.subagents.bind9.collection.Collector;
+import com.github.tomaskir.netxms.subagents.bind9.exceptions.CollectionErrorException;
 
 /**
  * @author Tomas Kirnak
@@ -31,6 +32,18 @@ public final class Bind9Plugin extends Plugin {
 
     private final Collector collector;
     private final Thread collectionThread;
+    
+    /**
+     * Log message and throw Illegal state exception
+     * 
+     * @param msg message to log
+     * @throws IllegalStateException
+     */
+    private static void fail(final String msg) throws IllegalStateException
+    {
+       Platform.writeLog(LogLevel.ERROR, "BIND9: " + msg);
+       throw new IllegalStateException(msg);
+    }
 
     // constructor
     public Bind9Plugin(Config config) {
@@ -42,12 +55,10 @@ public final class Bind9Plugin extends Plugin {
 
         // check if all config values present
         if (statsFile.equals("")) {
-            throw new IllegalStateException("'statsFile' configuration value not found " +
-                    "in 'bind9' section of Agent configuration");
+            fail("'statsFile' configuration value not found in 'bind9' section of Agent configuration");
         }
         if (collectionInterval < 1) {
-            throw new IllegalStateException("'collectionInterval' configuration value not found or lower than 1" +
-                    "in 'bind9' section of Agent configuration");
+            fail("'collectionInterval' configuration value not found or lower than 1 in 'bind9' section of Agent configuration");
         }
 
         this.collector = new Collector(

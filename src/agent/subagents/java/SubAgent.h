@@ -42,12 +42,11 @@ private:
    static jmethodID m_tableHandler;
    static bool m_initialized;
 
-   JavaVM *m_jvm;
    jobject m_instance;
 
    static bool getMethodId(JNIEnv *curEnv, const char *name, const char *profile, jmethodID *id);
 
-   SubAgent(JavaVM *jvm, jobject instance);
+   SubAgent(jobject instance);
 
    JNIEnv *getCurrentEnv();
    StringList *getContributionItems(jmethodID method, const TCHAR *methodName);
@@ -60,12 +59,12 @@ public:
     * It will call the default constructor
     * @param jvm the Java VM
     */
-   static SubAgent *createInstance(JavaVM *jvm, JNIEnv *curEnv, jobject config);
+   static SubAgent *createInstance(JNIEnv *curEnv, jobject config);
 
    ~SubAgent();
 
    // Methods
-   bool init(jobject config);
+   bool init();
    void shutdown();
    bool loadPlugin(const TCHAR *path);
 

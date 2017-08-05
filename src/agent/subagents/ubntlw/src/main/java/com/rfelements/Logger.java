@@ -1,6 +1,7 @@
 package com.rfelements;
 
-import org.netxms.agent.SubAgent;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
 
 public class Logger {
 
@@ -15,14 +16,14 @@ public class Logger {
     }
 
     public void e(final String message) {
-        SubAgent.writeLog(SubAgent.LogLevel.ERROR, "[" + clazz.getName() + "] " + message);
+       Platform.writeLog(LogLevel.ERROR, "[" + clazz.getName() + "] " + message);
     }
 
     public void w(final String message) {
-        SubAgent.writeLog(SubAgent.LogLevel.WARNING, "[" + clazz.getName() + "] " + message);
+       Platform.writeLog(LogLevel.WARNING, "[" + clazz.getName() + "] " + message);
     }
 
     public void i(final String message) {
-        SubAgent.writeLog(SubAgent.LogLevel.INFO, "[" + clazz.getName() + "] " + message);
+       Platform.writeLog(LogLevel.INFO, "[" + clazz.getName() + "] " + message);
     }
 }

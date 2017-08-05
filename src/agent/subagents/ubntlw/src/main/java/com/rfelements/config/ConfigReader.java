@@ -1,9 +1,9 @@
 package com.rfelements.config;
 
+import org.netxms.bridge.Config;
 import com.rfelements.Protocol;
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.DeviceCredentials;
-import org.netxms.agent.Config;
 
 /**
  * @author Pichanič Ján

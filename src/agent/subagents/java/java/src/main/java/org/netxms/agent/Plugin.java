@@ -18,6 +18,9 @@
  */
 package org.netxms.agent;
 
+import org.netxms.bridge.Config;
+import org.netxms.bridge.Platform;
+
 /**
  * Base class for Java agent plugins
  */
@@ -54,7 +57,7 @@ public abstract class Plugin
     */
    public void init(Config config) throws PluginInitException
    {
-      SubAgent.writeDebugLog(6, "JAVA/" + getName() + ": initializing");
+      Platform.writeDebugLog(6, "JAVA/" + getName() + ": initializing");
    }
 
    /**
@@ -62,7 +65,7 @@ public abstract class Plugin
     */
    public void shutdown()
    {
-      SubAgent.writeDebugLog(6, "JAVA/" + getName() + ": shutdown called");
+      Platform.writeDebugLog(6, "JAVA/" + getName() + ": shutdown called");
    }
 
    /**

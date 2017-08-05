@@ -1,9 +1,5 @@
 package com.github.tomaskir.netxms.subagents.bind9.collection;
 
-import com.github.tomaskir.netxms.subagents.bind9.Parameters;
-import com.github.tomaskir.netxms.subagents.bind9.exceptions.StatsFileRemovalException;
-import org.netxms.agent.SubAgent;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -11,6 +7,10 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
+import com.github.tomaskir.netxms.subagents.bind9.Parameters;
+import com.github.tomaskir.netxms.subagents.bind9.exceptions.StatsFileRemovalException;
 
 /**
  * @author Tomas Kirnak
@@ -55,7 +55,7 @@ public final class Collector implements Runnable {
                 try {
                     statsFileCleanup();
                 } catch (StatsFileRemovalException e) {
-                    SubAgent.writeLog(SubAgent.LogLevel.WARNING,
+                    Platform.writeLog(LogLevel.WARNING,
                             "Failed to delete bind9 statistics file, error: '" + e.getCause().getMessage() + "'");
 
                     result.setCollectionError(true);
@@ -67,7 +67,7 @@ public final class Collector implements Runnable {
                 try {
                     rndc = Runtime.getRuntime().exec("rndc stats");
                 } catch (IOException e) {
-                    SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+                    Platform.writeLog(LogLevel.ERROR,
                             "Failed to run 'rndc stats', error: '" + e.getMessage() + "'");
 
                     result.setCollectionError(true);
@@ -85,7 +85,7 @@ public final class Collector implements Runnable {
 
                 // check for errors
                 if (rndc.exitValue() != 0) {
-                    SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+                    Platform.writeLog(LogLevel.ERROR,
                             "'rndc stats' exited with a non-0 exit code value");
 
                     result.setCollectionError(true);
@@ -97,7 +97,7 @@ public final class Collector implements Runnable {
                 try {
                     lines = Files.readAllLines(statsFile, StandardCharsets.UTF_8);
                 } catch (IOException e) {
-                    SubAgent.writeLog(SubAgent.LogLevel.WARNING,
+                    Platform.writeLog(LogLevel.WARNING,
                             "Unable to read bind9 statistics file, error: '" + e.getMessage() + "'");
 
                     result.setCollectionError(true);

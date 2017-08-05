@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>libnetxms</project>
+		<project>libnxjava</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

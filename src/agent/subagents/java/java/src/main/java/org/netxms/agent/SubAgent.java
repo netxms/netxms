@@ -29,6 +29,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.netxms.bridge.Config;
+import org.netxms.bridge.ConfigEntry;
+import org.netxms.bridge.DirectoryType;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
 
 /**
  * This class is a Java representation of native subagent exposing to it required APIs
@@ -36,23 +41,6 @@ import java.util.jar.Manifest;
  */
 public class SubAgent
 {
-   public enum LogLevel
-   {
-      INFO(0x0004), WARNING(0x0002), ERROR(0x0001);
-
-      private int value;
-
-      LogLevel(final int value)
-      {
-         this.value = value;
-      }
-
-      public int getValue()
-      {
-         return value;
-      }
-   }
-
    private static final String JAR = ".jar";
    private static final String PLUGIN_CLASSNAME_ATTRIBUTE_NAME = "NetXMS-Plugin-Classname";
    private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
@@ -81,7 +69,7 @@ public class SubAgent
       tables = new HashMap<String, TableParameter>();
 
       this.config = config;
-      writeDebugLog(1, "Java SubAgent created");
+      Platform.writeDebugLog(1, "Java SubAgent created");
 
       // load all Plugins
       ConfigEntry configEntry = config.getEntry("/Java/Plugin");
@@ -96,14 +84,14 @@ public class SubAgent
             }
             catch(Throwable e)
             {
-               writeLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-               writeDebugLog(6, "JAVA:   ", e);
+               Platform.writeLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+               Platform.writeDebugLog(6, "JAVA:   ", e);
             }
          }
       }
       else
       {
-         writeLog(LogLevel.WARNING, "No plugins defined in Java section");
+         Platform.writeLog(LogLevel.WARNING, "No plugins defined in Java section");
       }
    }
 
@@ -118,14 +106,6 @@ public class SubAgent
    }
 
    /*===== native methods exposed by agent (see nms_agent.h) =====*/
-   
-   /**
-    * Get NetXMS directory (internal bridge to native code)
-    * 
-    * @param type directory type
-    * @return path to directory or empty string on error
-    */
-   protected static native String getNetXMSDirectoryInternal(int type);
    
    /**
     * Extract argument from full parameter name.
@@ -145,48 +125,7 @@ public class SubAgent
 
    protected static native boolean pushParameterData(String name, String value);
 
-   protected static native void writeLog(int level, String message);
-
-   public static native void writeDebugLog(int level, String message);
-
    /*===== end of native methods exposed by agent =====*/
-
-   /**
-    * Wrapper for native writeLog call
-    * 
-    * @param level log level
-    * @param message message text
-    */
-   public static void writeLog(LogLevel level, String message)
-   {
-      writeLog(level.getValue(), message);
-   }
-
-   /**
-    * Write exception's stack trace to debug log
-    * 
-    * @param level log level
-    * @param prefix message prefix
-    * @param e exception to log
-    */
-   public static void writeDebugLog(int level, String prefix, Throwable e)
-   {
-      for(StackTraceElement s : e.getStackTrace())
-      {
-         writeDebugLog(level, prefix + s.toString());
-      }
-   }
-   
-   /**
-    * Get NetXMS directory
-    * 
-    * @param type directory type
-    * @return path to directory or empty string on error
-    */
-   public static String getNetXMSDirectory(DirectoryType type)
-   {
-      return getNetXMSDirectoryInternal(type.getValue());
-   }
 
    /**
     * Initialize (to be called from native subagent)
@@ -194,23 +133,23 @@ public class SubAgent
     * @param config agent configuration
     * @return true if initialization was successful
     */
-   public boolean init(Config config)
+   public boolean init()
    {
-      writeDebugLog(2, "JAVA: subagent initialization started");
+      Platform.writeDebugLog(2, "JAVA: subagent initialization started");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
          try
          {
-            writeDebugLog(5, "JAVA: calling init() method for plugin " + entry.getKey());
+            Platform.writeDebugLog(5, "JAVA: calling init() method for plugin " + entry.getKey());
             entry.getValue().init(config);
          }
          catch(Throwable e)
          {
-            writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " initialization handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-            writeDebugLog(6, "JAVA:   ", e);
+            Platform.writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " initialization handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(6, "JAVA:   ", e);
          }
       }
-      writeDebugLog(2, "JAVA: subagent initialization completed");
+      Platform.writeDebugLog(2, "JAVA: subagent initialization completed");
       return true;
    }
 
@@ -219,21 +158,21 @@ public class SubAgent
     */
    public void shutdown()
    {
-      writeDebugLog(2, "JAVA: subagent shutdown initiated");
+      Platform.writeDebugLog(2, "JAVA: subagent shutdown initiated");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
          try
          {
-            writeDebugLog(5, "JAVA: calling shutdown() method for plugin " + entry.getKey());
+            Platform.writeDebugLog(5, "JAVA: calling shutdown() method for plugin " + entry.getKey());
             entry.getValue().shutdown();
          }
          catch(Throwable e)
          {
-            writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " shutdown handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-            writeDebugLog(6, "JAVA:   ", e);
+            Platform.writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " shutdown handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(6, "JAVA:   ", e);
          }
       }
-      writeDebugLog(2, "JAVA: subagent shutdown completed");
+      Platform.writeDebugLog(2, "JAVA: subagent shutdown completed");
    }
 
    /**
@@ -244,7 +183,7 @@ public class SubAgent
     */
    protected boolean loadPlugin(String path)
    {
-      writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
+      Platform.writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
       Plugin[] loadList = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
       
       if ((loadList == null) || (loadList.length == 0))
@@ -253,7 +192,7 @@ public class SubAgent
       for(Plugin p : loadList)
       {
          plugins.put(p.getName(), p);
-         writeDebugLog(2, "Java plugin " + p.getName() + " (" + p.getClass().getName() + ") loaded");
+         Platform.writeDebugLog(2, "Java plugin " + p.getName() + " (" + p.getClass().getName() + ") loaded");
          
          // register actions
          Action[] _actions = p.getActions();
@@ -280,11 +219,11 @@ public class SubAgent
          for(int i = 0; i < _tableParameters.length; i++)
             tables.put(createContributionItemId(p, _tableParameters[i]), _tableParameters[i]);
       
-         writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
-         writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
-         writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + lists);
-         writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
-         writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tables);
+         Platform.writeDebugLog(8, "SubAgent.loadPlugin actions=" + actions);
+         Platform.writeDebugLog(8, "SubAgent.loadPlugin parameters=" + parameters);
+         Platform.writeDebugLog(8, "SubAgent.loadPlugin listParameters=" + lists);
+         Platform.writeDebugLog(8, "SubAgent.loadPlugin pushParameters=" + pushParameters);
+         Platform.writeDebugLog(8, "SubAgent.loadPlugin tableParameters=" + tables);
       }
       return true;
    }
@@ -301,15 +240,15 @@ public class SubAgent
       try
       {
          Class<?> pluginClass = Class.forName(classname);
-         writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
+         Platform.writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
          Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
-         writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
+         Platform.writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
          return new Plugin[] { plugin };
       }
       catch(Throwable e)
       {
-         writeLog(LogLevel.WARNING, "Failed to load plugin " + classname + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeLog(LogLevel.WARNING, "Failed to load plugin " + classname + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
          return null;
       }
    }
@@ -330,8 +269,8 @@ public class SubAgent
          File file = new File(jarFile);
          if (!file.isAbsolute())
          {
-            writeDebugLog(5, "Plugin file path \"" + jarFile + "\" is not absolute");
-            String libDir = getNetXMSDirectory(DirectoryType.LIB);
+            Platform.writeDebugLog(5, "Plugin file path \"" + jarFile + "\" is not absolute");
+            String libDir = Platform.getNetXMSDirectory(DirectoryType.LIB);
             if ((libDir != null) && !libDir.isEmpty())
             {
                file = new File(libDir + File.separatorChar + jarFile);
@@ -340,11 +279,11 @@ public class SubAgent
          
          if (!file.isFile())
          {
-            writeLog(LogLevel.WARNING, "File \"" + file.getAbsolutePath() + "\" does not exist or is not a regular file");
+            Platform.writeLog(LogLevel.WARNING, "File \"" + file.getAbsolutePath() + "\" does not exist or is not a regular file");
             return null;
          }
          
-         writeDebugLog(2, "Loading plugin file \"" + file.getAbsolutePath() + "\"");
+         Platform.writeDebugLog(2, "Loading plugin file \"" + file.getAbsolutePath() + "\"");
          classLoader = new URLClassLoader(new URL[] { file.toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
          URL url = classLoader.findResource(MANIFEST_PATH);
          if (url != null)
@@ -355,21 +294,21 @@ public class SubAgent
             if (classList == null)
             {
                classLoader.close();
-               writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+               Platform.writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
                return null;
             }
          }
          else
          {
             classLoader.close();
-            writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": manifest not found");
+            Platform.writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": manifest not found");
             return null;
          }
       }
       catch(Throwable e)
       {
-         writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
          return null;
       }
          
@@ -386,8 +325,8 @@ public class SubAgent
          }
          catch(Throwable e)
          {
-            writeLog(LogLevel.WARNING, "Failed to load plugin " + cn + " from jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-            writeDebugLog(6, "JAVA:   ", e);
+            Platform.writeLog(LogLevel.WARNING, "Failed to load plugin " + cn + " from jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Platform.writeDebugLog(6, "JAVA:   ", e);
          }
       }
       return pluginList.toArray(new Plugin[pluginList.size()]);
@@ -404,7 +343,7 @@ public class SubAgent
    protected Plugin instantiatePlugin(Class<? extends Plugin> pluginClass, Config config) throws Exception
    {
       Plugin plugin = null;
-      Constructor<? extends Plugin> constructor = pluginClass.getDeclaredConstructor(org.netxms.agent.Config.class);
+      Constructor<? extends Plugin> constructor = pluginClass.getDeclaredConstructor(Config.class);
       if (constructor != null)
       {
          plugin = constructor.newInstance(config);
@@ -437,8 +376,8 @@ public class SubAgent
       }
       catch(Throwable e)
       {
-         writeDebugLog(6, "JAVA: Exception in parameter handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeDebugLog(6, "JAVA: Exception in parameter handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
          throw e;
       }
    }
@@ -464,8 +403,8 @@ public class SubAgent
       }
       catch(Throwable e)
       {
-         writeDebugLog(6, "JAVA: Exception in list handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeDebugLog(6, "JAVA: Exception in list handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
          throw e;
       }
    }
@@ -485,15 +424,15 @@ public class SubAgent
          TableParameter tableParameter = tables.get(id);
          if (tableParameter != null)
          {
-            writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
+            Platform.writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
             return tableParameter.getValue(param);
          }
          return null;
       }
       catch(Throwable e)
       {
-         writeDebugLog(6, "JAVA: Exception in table handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeDebugLog(6, "JAVA: Exception in table handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
          throw e;
       }
    }
@@ -518,8 +457,8 @@ public class SubAgent
       }
       catch(Throwable e)
       {
-         writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         writeDebugLog(6, "JAVA:   ", e);
+         Platform.writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         Platform.writeDebugLog(6, "JAVA:   ", e);
       }
       return false;
    }

@@ -1,20 +1,27 @@
 package com.rfelements;
 
+import java.util.regex.Pattern;
+import org.netxms.agent.Action;
+import org.netxms.agent.ListParameter;
+import org.netxms.agent.Plugin;
+import org.netxms.agent.PushParameter;
+import org.netxms.agent.SubAgent;
+import org.netxms.agent.TableParameter;
+import org.netxms.bridge.Config;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import com.rfelements.provider.DataProvider;
 import com.rfelements.provider.DataProviderImpl;
-import org.netxms.agent.*;
-
-import java.util.regex.Pattern;
 
 /**
  * @author Pichanič Ján
  */
 abstract class AbstractCollector extends Plugin {
 
-    private static final String VERSION = "1.0";
+    private static final String VERSION = "2.1.1";
 
     private static final String IP_ADDRESS_PATTERN = "^([0" + "1]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
             "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
@@ -63,7 +70,7 @@ abstract class AbstractCollector extends Plugin {
     protected String parseDeviceIdentifierParameter(String param) throws CollectorException {
         String ip = SubAgent.getParameterArg(param, 1);
         if (!pattern.matcher(ip).matches()) {
-            SubAgent.writeLog(SubAgent.LogLevel.ERROR,
+           Platform.writeLog(LogLevel.ERROR,
                     "[" + this.getClass().getName() + "] [parseDeviceIdentifierParameter] IP passed as parameter does not match IP address pattern");
             throw new CollectorException("Parameter does not match IP address pattern !");
         }

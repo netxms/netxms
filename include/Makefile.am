@@ -38,6 +38,7 @@ include_HEADERS = \
 	nxcrypto.h \
 	nxdbapi.h \
 	nxevent.h \
+	nxjava.h \
 	nxlog.h \
 	nxlpapi.h \
 	nxmbapi.h \

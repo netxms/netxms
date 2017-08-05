@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -47,6 +47,7 @@ static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static UINT32 s_flags = 0;
 static int s_debugLevel = 0;
 static DWORD s_debugMsg = 0;
+static DWORD s_genericMsg = 0;
 static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
@@ -350,7 +351,8 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
  * Initialize log
  */
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
-                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages, DWORD debugMsg)
+                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages,
+                                     DWORD debugMsg, DWORD genericMsg)
 {
 	s_flags = flags & 0x7FFFFFFF;
 #ifdef _WIN32
@@ -360,6 +362,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 	m_messages = messages;
 #endif
 	s_debugMsg = debugMsg;
+	s_genericMsg = genericMsg;
 
    if (s_flags & NXLOG_USE_SYSLOG)
    {
@@ -794,6 +797,19 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
    while(--numStrings >= 0)
       free(strings[numStrings]);
+}
+
+/**
+ * Write generic message to log (useful for warning and error messages generated within libraries)
+ */
+void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   TCHAR msg[8192];
+   _vsntprintf(msg, 8192, format, args);
+   va_end(args);
+   nxlog_write(s_genericMsg, type, "s", msg);
 }
 
 /**

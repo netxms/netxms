@@ -5,6 +5,7 @@
 	<projects>
 		<project>libnetxms</project>
 		<project>libnxagent</project>
+		<project>libnxjava</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

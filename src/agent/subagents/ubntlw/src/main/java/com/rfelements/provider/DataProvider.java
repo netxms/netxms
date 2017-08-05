@@ -1,11 +1,11 @@
 package com.rfelements.provider;
 
+import org.netxms.bridge.Config;
 import com.rfelements.DeviceType;
 import com.rfelements.Protocol;
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
-import org.netxms.agent.Config;
 
 /**
  * @author Pichanič Ján

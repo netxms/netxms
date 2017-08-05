@@ -1,9 +1,9 @@
 package com.rfelements.cache;
 
-import com.rfelements.model.DeviceCredentials;
-import org.netxms.agent.SubAgent;
-
 import java.util.concurrent.ConcurrentHashMap;
+import org.netxms.bridge.LogLevel;
+import org.netxms.bridge.Platform;
+import com.rfelements.model.DeviceCredentials;
 
 /**
  * @author Pichanič Ján
@@ -23,7 +23,7 @@ public class CacheImpl implements Cache {
     }
 
     private CacheImpl() {
-        SubAgent.writeLog(SubAgent.LogLevel.INFO, "[" + this.getClass().getName() + "] Data provider initialized !");
+       Platform.writeLog(LogLevel.INFO, "[" + this.getClass().getName() + "] Data provider initialized !");
     }
 
     @Override
@@ -61,10 +61,10 @@ public class CacheImpl implements Cache {
     public Object putJsonObject(String key, Object object) {
         // DEBUG OUTPUT
         if (object != null)
-            SubAgent.writeDebugLog(DEBUG_LEVEL,
+           Platform.writeDebugLog(DEBUG_LEVEL,
                     "[" + this.getClass().getName() + "] Storing object into cache , key : " + key + " JSON obj : " + object.getClass().getName());
         else {
-            SubAgent.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Storing object into cache , key : " + key + " JSON obj : null");
+           Platform.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Storing object into cache , key : " + key + " JSON obj : null");
         }
 
         if (!cache.containsKey(key)) {
@@ -82,14 +82,14 @@ public class CacheImpl implements Cache {
     public Object getJsonObject(String key) {
         StorableItem store = (StorableItem) cache.get(key);
         if (store == null) {
-            SubAgent.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Getting object from cache, key : " + key + " JSON obj : null");
+           Platform.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Getting object from cache, key : " + key + " JSON obj : null");
             return null;
         }
         if (store.getJsonObject() == null) {
-            SubAgent.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Getting object from cache, key : " + key + " JSON obj : null");
+           Platform.writeDebugLog(DEBUG_LEVEL, "[" + this.getClass().getName() + "] Getting object from cache, key : " + key + " JSON obj : null");
             return null;
         }
-        SubAgent.writeDebugLog(DEBUG_LEVEL,
+        Platform.writeDebugLog(DEBUG_LEVEL,
                 "[" + this.getClass().getName() + "] Getting object from cache, key : " + key + " JSON obj : " + store.getJsonObject().getClass()
                         .getName());
         return store.getJsonObject();

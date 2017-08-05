@@ -20,7 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <jni.h>
+#include <nxjava.h>
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -35,11 +35,6 @@ static const char *s_optUser = "admin";
 static const char *s_optPassword = "";
 static const char *s_optJre = NULL;
 static const char *s_optClassPath = NULL;
-
-/**
- * Prototype for JNI_CreateJavaVM
- */
-typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
 
 /**
  * Start application
@@ -66,127 +61,55 @@ static int StartApp(int argc, char *argv[])
    }
    nxlog_debug(1, _T("Using JRE: %s"), jre);
 
-   TCHAR errorText[256];
-   HMODULE jvmModule = DLOpen(jre, errorText);
-   if (jvmModule == NULL)
-   {
-      _tprintf(_T("Unable to load JVM: %s\n"), errorText);
-      return 3;
-   }
-
-   TCHAR libdir[MAX_PATH];
-   GetNetXMSDirectory(nxDirLib, libdir);
-
-   String classpath = _T("-Djava.class.path=");
-   classpath.append(libdir);
-   classpath.append(FS_PATH_SEPARATOR_CHAR);
-   classpath.append(_T("nxshell.jar"));
-   if (s_optClassPath != NULL)
-   {
-      classpath.append(JAVA_CLASSPATH_SEPARATOR);
-#ifdef UNICODE
-      WCHAR *cp = WideStringFromMBString(s_optClassPath);
-      classpath.append(cp);
-      free(cp);
-#else      
-      classpath.append(s_optClassPath);
-#endif      
-   }
-   nxlog_debug(5, _T("Using classpath \"%s\""), (const TCHAR *)classpath);
-
-   char server[256], port[256], login[256], password[256];
-   snprintf(server, 256, "-Dnetxms.server=%s", s_optHost);
-   snprintf(port, 256, "-Dnetxms.port=%s", s_optPort);
-   snprintf(login, 256, "-Dnetxms.login=%s", s_optUser);
+   StringList vmOptions;
+   char buffer[256];
+   snprintf(buffer, 256, "-Dnetxms.server=%s", s_optHost);
+   vmOptions.addMBString(buffer);
+   snprintf(buffer, 256, "-Dnetxms.port=%s", s_optPort);
+   vmOptions.addMBString(buffer);
+   snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
+   vmOptions.addMBString(buffer);
 
    char clearPassword[128];
    DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
-   snprintf(password, 256, "-Dnetxms.password=%s", clearPassword);
-
-   JavaVMOption vmOptions[7];
-   memset(vmOptions, 0, sizeof(vmOptions));
-#ifdef UNICODE
-   vmOptions[0].optionString = classpath.getUTF8String();
-#else
-   vmOptions[0].optionString = strdup(classpath);
-#endif
-   vmOptions[1].optionString = server;
-   vmOptions[2].optionString = port;
-   vmOptions[3].optionString = login;
-   vmOptions[4].optionString = password;
+   if (clearPassword[0] != 0)
+   {
+      snprintf(buffer, 256, "-Dnetxms.password=%s", clearPassword);
+      vmOptions.addMBString(buffer);
+   }
 
    bool verboseVM = (nxlog_get_debug_level() > 0);
    if (verboseVM)
    {
-      vmOptions[5].optionString = strdup("-verbose:jni");
-      vmOptions[6].optionString = strdup("-verbose:class");
+      vmOptions.add(_T("-verbose:jni"));
+      vmOptions.add(_T("-verbose:class"));
    }
 
-   JavaVMInitArgs vmArgs;
-   vmArgs.version = JNI_VERSION_1_6;
-   vmArgs.options = vmOptions;
-   vmArgs.nOptions = verboseVM ? 7 : 5;
-   vmArgs.ignoreUnrecognized = JNI_TRUE;
+   int rc = 0;
 
-   int rc = 4;
-   T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(jvmModule, "JNI_CreateJavaVM", NULL);
-   if (CreateJavaVM != NULL)
+#ifdef UNICODE
+   TCHAR *cp = WideStringFromMBStringSysLocale(s_optClassPath);
+#else
+#define cp s_optClassPath
+#endif
+   JNIEnv *env;
+   JavaBridgeError err = CreateJavaVM(jre, _T("nxshell.jar"), cp, &vmOptions, &env);
+   if (err == NXJAVA_SUCCESS)
    {
-      nxlog_debug(6, _T("Creating JVM with options:"));
-      for(int i = 0; i < vmArgs.nOptions; i++)
-         nxlog_debug(6, _T("   %hs"), vmArgs.options[i].optionString);
-
-      JavaVM *jvm = NULL;
-      JNIEnv *jniEnv;
-      if (CreateJavaVM(&jvm, (void **)&jniEnv, &vmArgs) == JNI_OK)
+      nxlog_debug(5, _T("JVM created"));
+      err = StartJavaApplication(env, "org/netxms/Shell", argc, argv);
+      if (err != NXJAVA_SUCCESS)
       {
-         nxlog_debug(5, _T("JVM created"));
-         jclass shell = jniEnv->FindClass("org/netxms/Shell");
-         if (shell != NULL)
-         {
-            nxlog_debug(5, _T("Shell class found"));
-            jmethodID shellMain = jniEnv->GetStaticMethodID(shell, "main", "([Ljava/lang/String;)V");
-            if (shellMain != NULL)
-            {
-               nxlog_debug(5, _T("Shell main method found"));
-               jclass stringClass = jniEnv->FindClass("java/lang/String");
-               jobjectArray jargs = jniEnv->NewObjectArray(argc, stringClass, NULL);
-               for(int i = 0; i < argc; i++)
-               {
-                  jchar *tmp = (jchar *)UCS2StringFromMBString(argv[i]);
-                  jstring js = jniEnv->NewString(tmp, (jsize)ucs2_strlen((UCS2CHAR *)tmp));
-                  free(tmp);
-                  if (js != NULL)
-                  {
-                     jniEnv->SetObjectArrayElement(jargs, i, js);
-                     jniEnv->DeleteLocalRef(js);
-                  }
-               }
-               jniEnv->CallStaticVoidMethod(shell, shellMain, jargs);
-               rc = 0;
-            }
-            else
-            {
-               _tprintf(_T("Cannot find shell entry point\n"));
-            }
-         }
-         else
-         {
-            _tprintf(_T("Cannot find shell class\n"));
-         }
-         jvm->DestroyJavaVM();
+         _tprintf(_T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
+         rc = 4;
       }
-      else
-      {
-         _tprintf(_T("CreateJavaVM failed\n"));
-      }
+      DestroyJavaVM();
    }
    else
    {
-      _tprintf(_T("JNI_CreateJavaVM failed\n"));
+      _tprintf(_T("Unable to create Java VM (%s)\n"), GetJavaBridgeErrorMessage(err));
+      rc = 3;
    }
-
-   DLClose(jvmModule);
    return rc;
 }
 

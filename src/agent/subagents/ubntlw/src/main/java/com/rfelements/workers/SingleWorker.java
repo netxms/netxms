@@ -1,5 +1,8 @@
 package com.rfelements.workers;
 
+import java.util.Timer;
+import java.util.TimerTask;
+import org.netxms.bridge.Platform;
 import com.rfelements.DeviceType;
 import com.rfelements.cache.Cache;
 import com.rfelements.cache.CacheImpl;
@@ -9,10 +12,6 @@ import com.rfelements.model.DeviceCredentials;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import com.rfelements.rest.Rest;
-import org.netxms.agent.SubAgent;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * @author Pichanič Ján
@@ -29,8 +28,8 @@ public class SingleWorker extends Timer {
         super(true);
         this.deviceCredentials = deviceCredentials;
         this.type = type;
-        SubAgent.writeDebugLog(3, Thread.currentThread().getName() + " [SingleWorker] Construction ...");
-        SubAgent.writeDebugLog(3,
+        Platform.writeDebugLog(3, Thread.currentThread().getName() + " [SingleWorker] Construction ...");
+        Platform.writeDebugLog(3,
                 Thread.currentThread().getName() + " [SingleWorker] Args - deviceCredentials : " + deviceCredentials.hashCode() + ", type : " + type.toString());
     }
 
@@ -39,7 +38,7 @@ public class SingleWorker extends Timer {
 
             @Override
             public void run() {
-                SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+                Platform.writeDebugLog(3, Thread.currentThread().getName() +
                         " [SingleWorker] Reschedule, EntryPoint : " + type.toString() + "  URL : " + deviceCredentials.getUrl() + " , deviceCredentials : " + deviceCredentials.hashCode());
                 switch (type) {
                     case LIGOWAVE_AP:
@@ -62,7 +61,7 @@ public class SingleWorker extends Timer {
     }
 
     private void updateUbiquiti() {
-        SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+        Platform.writeDebugLog(3, Thread.currentThread().getName() +
                 " [SingleWorker] Calling update ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl() + " , deviceCredentials : "
                 + deviceCredentials.hashCode());
         try {
@@ -71,21 +70,21 @@ public class SingleWorker extends Timer {
 
             // DEBUG OUTPUT
             if (ubnt == null)
-                SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+                Platform.writeDebugLog(3, Thread.currentThread().getName() +
                         " [SingleWorker] JSON object updated ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl() + " JSON obj : null");
             else
-                SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+                Platform.writeDebugLog(3, Thread.currentThread().getName() +
                         " [SingleWorker] JSON object updated ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl() + " JSON obj : " + ubnt.getClass().getName());
         } catch (CollectorException e) {
-            SubAgent.writeDebugLog(3, e.getLocalizedMessage());
+            Platform.writeDebugLog(3, e.getLocalizedMessage());
             cache.putJsonObject(deviceCredentials.getIp(), null);
-            SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+            Platform.writeDebugLog(3, Thread.currentThread().getName() +
                     " [SingleWorker] JSON object updated as NULL ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl());
         }
     }
 
     private void updateLigowave() {
-        SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+        Platform.writeDebugLog(3, Thread.currentThread().getName() +
                 " [SingleWorker] Calling update ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl() + " , deviceCredentials : "
                 + deviceCredentials.hashCode());
         try {
@@ -94,17 +93,17 @@ public class SingleWorker extends Timer {
 
             // DEBUG OUTPUT
             if (ligowave == null)
-                SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+                Platform.writeDebugLog(3, Thread.currentThread().getName() +
                         " [SingleWorker] JSON object updated ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl()
                         + " JSON obj : null");
             else
-                SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+                Platform.writeDebugLog(3, Thread.currentThread().getName() +
                         " [SingleWorker] JSON object updated ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl()
                         + " JSON obj : " + ligowave.getClass().getName());
         } catch (CollectorException e) {
-            SubAgent.writeDebugLog(3, e.getLocalizedMessage());
+            Platform.writeDebugLog(3, e.getLocalizedMessage());
             cache.putJsonObject(deviceCredentials.getIp(), null);
-            SubAgent.writeDebugLog(3, Thread.currentThread().getName() +
+            Platform.writeDebugLog(3, Thread.currentThread().getName() +
                     " [SingleWorker] JSON object updated as NULL ! EntryPoint :" + type.toString() + " URL : " + deviceCredentials.getUrl());
         }
     }

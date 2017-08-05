@@ -1,7 +1,7 @@
 /* 
- ** Java-Bridge NetXMS subagent
+ ** NetXMS Java Bridge
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015 Raden Solutions SIA
+ ** Copyright (c) 2015-2017 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,17 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** File: ConfigHelper.cpp
+ ** File: config.cpp
  **
  **/
 
-#include "java_subagent.h"
+#include "libnxjava.h"
 
 /**
  * Java class names
  */
-static const char *s_configClassName = "org/netxms/agent/Config";
-static const char *s_configEntryClassName = "org/netxms/agent/ConfigEntry";
+static const char *s_configClassName = "org/netxms/bridge/Config";
+static const char *s_configEntryClassName = "org/netxms/bridge/ConfigEntry";
 
 /**
  * Global class references
@@ -45,13 +45,13 @@ static Config *RetrieveConfigNativePointer(JNIEnv *env, jobject obj)
    jclass objClass = env->GetObjectClass(obj);
    if (objClass == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not access to the class Config"));
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the class Config"));
       return NULL;
    }
    jfieldID nativePointerFieldId = env->GetFieldID(objClass, "configHandle", "J");
    if (nativePointerFieldId == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not access to the field Config.configHandle"));
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the field Config.configHandle"));
       return NULL;
    }
    jlong result = env->GetLongField(obj, nativePointerFieldId);
@@ -66,13 +66,13 @@ static ConfigEntry *RetrieveConfigEntryNativePointer(JNIEnv *env, jobject obj)
    jclass objClass = env->GetObjectClass(obj);
    if (objClass == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not access to the class ConfigEntry"));
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the class ConfigEntry"));
       return NULL;
    }
    jfieldID nativePointerFieldId = env->GetFieldID(objClass, "configEntryHandle", "J");
    if (nativePointerFieldId == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not access to the field ConfigEntry.configHandle"));
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the field ConfigEntry.configHandle"));
       return NULL;
    }
    jlong result = env->GetLongField(obj, nativePointerFieldId);
@@ -90,14 +90,14 @@ static jobject CreateConfigEntryInstance(JNIEnv *curEnv, ConfigEntry *configEntr
    jobject localInstance = curEnv->NewObject(s_configEntryClass, s_configEntryConstructor, CAST_FROM_POINTER(configEntry, jlong));
    if (localInstance == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not instantiate object of class %hs"), s_configEntryClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not instantiate object of class %hs"), s_configEntryClassName);
       return NULL;
    }
 
    jobject instance = curEnv->NewGlobalRef(localInstance);
    if (instance == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Could not create a new global reference of %hs"), s_configEntryClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not create a new global reference of %hs"), s_configEntryClassName);
    }
 
    curEnv->DeleteLocalRef(localInstance);
@@ -155,7 +155,7 @@ JNIEXPORT void JNICALL Java_org_netxms_agent_Config_deleteEntry(JNIEnv *jenv, jo
 /**
  * Class:     org_netxms_agent_Config
  * Method:    getEntry
- * Signature: (Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_Config_getEntry(JNIEnv *jenv, jobject jobj, jstring jpath)
 {
@@ -181,7 +181,7 @@ JNIEXPORT jobject JNICALL Java_org_netxms_agent_Config_getEntry(JNIEnv *jenv, jo
 /*
  * Class:     org_netxms_agent_Config
  * Method:    getSubEntries
- * Signature: (Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getSubEntries(JNIEnv *jenv, jobject jobj, jstring jpath, jstring jmask)
 {
@@ -219,7 +219,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getSubEntries(JNIEnv
 /*
  * Class:     org_netxms_agent_Config
  * Method:    getOrderedSubEntries
- * Signature: (Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_Config_getOrderedSubEntries(JNIEnv *jenv, jobject jobj, jstring jpath, jstring jmask)
 {
@@ -405,7 +405,7 @@ JNIEXPORT jboolean JNICALL Java_org_netxms_agent_Config_setValue__Ljava_lang_Str
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    getNext
- * Signature: ()Lorg/netxms/agent/ConfigEntry;
+ * Signature: ()Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_getNext(JNIEnv *jenv, jobject jobj)
 {
@@ -420,7 +420,7 @@ JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_getNext(JNIEnv *jenv
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    getParent
- * Signature: ()Lorg/netxms/agent/ConfigEntry;
+ * Signature: ()Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_getParent(JNIEnv *jenv, jobject jobj)
 {
@@ -582,7 +582,7 @@ JNIEXPORT jstring JNICALL Java_org_netxms_agent_ConfigEntry_getFile(JNIEnv *jenv
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    createEntry
- * Signature: (Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_createEntry(JNIEnv *jenv, jobject jobj, jstring jname)
 {
@@ -604,7 +604,7 @@ JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_createEntry(JNIEnv *
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    findEntry
- * Signature: (Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_findEntry(JNIEnv *jenv, jobject jobj, jstring jname)
 {
@@ -626,7 +626,7 @@ JNIEXPORT jobject JNICALL Java_org_netxms_agent_ConfigEntry_findEntry(JNIEnv *je
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    getSubEntries
- * Signature: (Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getSubEntries(JNIEnv *jenv, jobject jobj, jstring jmask)
 {
@@ -662,7 +662,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getSubEntries(J
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    getOrderedSubEntries
- * Signature: (Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;
+ * Signature: (Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;
  */
 JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getOrderedSubEntries(JNIEnv *jenv, jobject jobj, jstring jmask)
 {
@@ -698,7 +698,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_netxms_agent_ConfigEntry_getOrderedSubEn
 /*
  * Class:     org_netxms_agent_ConfigEntry
  * Method:    unlinkEntry
- * Signature: (Lorg/netxms/agent/ConfigEntry;)V
+ * Signature: (Lorg/netxms/bridge/ConfigEntry;)V
  */
 JNIEXPORT void JNICALL Java_org_netxms_agent_ConfigEntry_unlinkEntry(JNIEnv *jenv, jobject jobj, jobject jentry)
 {
@@ -873,9 +873,9 @@ static JNINativeMethod s_jniMethodsConfig[] =
    { (char *)"lock", (char *)"()V", (void *)Java_org_netxms_agent_Config_lock },
    { (char *)"unlock", (char *)"()V", (void *)Java_org_netxms_agent_Config_unlock },
    { (char *)"deleteEntry", (char *)"(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_Config_deleteEntry },
-   { (char *)"getEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getEntry },
-   { (char *)"getSubEntries", (char *)"(Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getSubEntries },
-   { (char *)"getOrderedSubEntries", (char *)"(Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getOrderedSubEntries },
+   { (char *)"getEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getEntry },
+   { (char *)"getSubEntries", (char *)"(Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getSubEntries },
+   { (char *)"getOrderedSubEntries", (char *)"(Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getOrderedSubEntries },
    { (char *)"getValue", (char *)"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void *) Java_org_netxms_agent_Config_getValue },
    { (char *)"getValueInt", (char *)"(Ljava/lang/String;I)I", (void *) Java_org_netxms_agent_Config_getValueInt },
    { (char *)"getValueLong", (char *)"(Ljava/lang/String;J)J", (void *) Java_org_netxms_agent_Config_getValueLong },
@@ -891,8 +891,8 @@ static JNINativeMethod s_jniMethodsConfig[] =
  */
 static JNINativeMethod s_jniMethodsConfigEntry[] =
 {
-   { (char *)"getNext", (char *)"()Lorg/netxms/agent/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getNext },
-   { (char *)"getParent", (char *)"()Lorg/netxms/agent/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getParent },
+   { (char *)"getNext", (char *)"()Lorg/netxms/bridge/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getNext },
+   { (char *)"getParent", (char *)"()Lorg/netxms/bridge/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getParent },
    { (char *)"getName", (char *)"()Ljava/lang/String;", (void *)Java_org_netxms_agent_ConfigEntry_getName },
    { (char *)"setName", (char *)"(Ljava/lang/String;)V", (void *)Java_org_netxms_agent_ConfigEntry_setName },
    { (char *)"getId", (char *)"()I", (void *)Java_org_netxms_agent_ConfigEntry_getId },
@@ -901,11 +901,11 @@ static JNINativeMethod s_jniMethodsConfigEntry[] =
    { (char *)"addValue", (char *)"(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_ConfigEntry_addValue },
    { (char *)"setValue", (char *)"(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_ConfigEntry_setValue },
    { (char *)"getFile", (char *)"()Ljava/lang/String;", (void *) Java_org_netxms_agent_ConfigEntry_getFile },
-   { (char *)"createEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_createEntry },
-   { (char *)"findEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_findEntry },
-   { (char *)"getSubEntries", (char *)"(Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getSubEntries },
-   { (char *)"getOrderedSubEntries", (char *)"(Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getOrderedSubEntries },
-   { (char *)"unlinkEntry", (char *)"(Lorg/netxms/agent/ConfigEntry;)V", (void *) Java_org_netxms_agent_ConfigEntry_unlinkEntry },
+   { (char *)"createEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_createEntry },
+   { (char *)"findEntry", (char *)"(Ljava/lang/String;)Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_findEntry },
+   { (char *)"getSubEntries", (char *)"(Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getSubEntries },
+   { (char *)"getOrderedSubEntries", (char *)"(Ljava/lang/String;)[Lorg/netxms/bridge/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getOrderedSubEntries },
+   { (char *)"unlinkEntry", (char *)"(Lorg/netxms/bridge/ConfigEntry;)V", (void *) Java_org_netxms_agent_ConfigEntry_unlinkEntry },
    { (char *)"getValue", (char *)"(I)Ljava/lang/String;", (void *) Java_org_netxms_agent_ConfigEntry_getValue__I },
    //    { "getValue", "(ILjava/lang/String;)Ljava/lang/String;", (void *) Java_org_netxms_agent_ConfigEntry_getValue__ILjava_lang_String_2 },
    { (char *)"getValueInt", (char *)"(II)I", (void *) Java_org_netxms_agent_ConfigEntry_getValueInt },
@@ -920,41 +920,41 @@ static JNINativeMethod s_jniMethodsConfigEntry[] =
 /**
  * Register native methods for Config related classes
  */
-bool RegisterConfigHelperNatives(JNIEnv *curEnv)
+bool RegisterConfigHelperNatives(JNIEnv *env)
 {
-   s_configClass = CreateClassGlobalRef(curEnv, s_configClassName);
+   s_configClass = CreateJavaClassGlobalRef(env, s_configClassName);
    if (s_configClass == NULL)
       return NULL;
 
-   s_configEntryClass = CreateClassGlobalRef(curEnv, s_configEntryClassName);
+   s_configEntryClass = CreateJavaClassGlobalRef(env, s_configEntryClassName);
    if (s_configEntryClass == NULL)
       return NULL;
 
-   s_configConstructor = curEnv->GetMethodID(s_configClass, "<init>", "(J)V");
+   s_configConstructor = env->GetMethodID(s_configClass, "<init>", "(J)V");
    if (s_configConstructor == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not retrieve constructor for class %hs"), s_configClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configClassName);
       return NULL;
    }
 
-   s_configEntryConstructor = curEnv->GetMethodID(s_configEntryClass, "<init>", "(J)V");
+   s_configEntryConstructor = env->GetMethodID(s_configEntryClass, "<init>", "(J)V");
    if (s_configEntryConstructor == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not retrieve constructor for class %hs"), s_configEntryClass);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configEntryClass);
       return NULL;
    }
 
    // register native methods exposed by Config
-   if (curEnv->RegisterNatives(s_configClass, s_jniMethodsConfig, (jint)(sizeof(s_jniMethodsConfig) / sizeof (s_jniMethodsConfig[0]))) != 0)
+   if (env->RegisterNatives(s_configClass, s_jniMethodsConfig, (jint)(sizeof(s_jniMethodsConfig) / sizeof (s_jniMethodsConfig[0]))) != 0)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("ConfigHelper: Failed to register native methods for %s"), s_configClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Failed to register native methods for %hs"), s_configClassName);
       return false;
    }
 
    // register native methods exposed by ConfigEntry
-   if (curEnv->RegisterNatives(s_configEntryClass, s_jniMethodsConfigEntry, (jint)(sizeof(s_jniMethodsConfigEntry) / sizeof(s_jniMethodsConfigEntry[0]))) != 0)
+   if (env->RegisterNatives(s_configEntryClass, s_jniMethodsConfigEntry, (jint)(sizeof(s_jniMethodsConfigEntry) / sizeof(s_jniMethodsConfigEntry[0]))) != 0)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to register native methods for %s"), s_configEntryClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Failed to register native methods for %hs"), s_configEntryClassName);
       return false;
    }
 
@@ -963,24 +963,28 @@ bool RegisterConfigHelperNatives(JNIEnv *curEnv)
 
 /**
  * Create Java Config object (wrapper around C++ Config class)
+ *
+ * @param env JNI environment for current thread
+ * @param config C++ Config object
+ * @return Java wrapper object or NULL on failure
  */
-jobject CreateConfigInstance(JNIEnv *curEnv, Config *config)
+jobject LIBNXJAVA_EXPORTABLE CreateConfigJavaInstance(JNIEnv *env, Config *config)
 {
-   if (s_configConstructor == NULL)
+   if ((env == NULL) || (s_configConstructor == NULL))
       return NULL;
 
-   jobject localInstance = curEnv->NewObject(s_configClass, s_configConstructor, CAST_FROM_POINTER(config, jlong));
+   jobject localInstance = env->NewObject(s_configClass, s_configConstructor, CAST_FROM_POINTER(config, jlong));
    if (localInstance == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not instantiate object of class %s"), s_configClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not instantiate object of class %s"), s_configClassName);
       return NULL;
    }
 
-   jobject instance = curEnv->NewGlobalRef(localInstance);
+   jobject instance = env->NewGlobalRef(localInstance);
    if (instance == NULL)
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not create a new global reference of %s"), s_configClassName);
+      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not create a new global reference of %s"), s_configClassName);
    }
-   curEnv->DeleteLocalRef(localInstance);
+   env->DeleteLocalRef(localInstance);
    return instance;
 }

@@ -2,9 +2,9 @@ package com.rfelements;
 
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.json.ligowave.Ligowave;
-import org.netxms.agent.Config;
 import org.netxms.agent.Parameter;
 import org.netxms.agent.ParameterType;
+import org.netxms.bridge.Config;
 
 /**
  * @author Pichanič Ján

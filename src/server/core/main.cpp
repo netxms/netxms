@@ -642,7 +642,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 #ifdef _WIN32
 				       0, NULL, MSG_DEBUG))
 #else
-				       g_dwNumMessages, g_szMessages, MSG_DEBUG))
+				       g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_OTHER))
 #endif
    {
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
