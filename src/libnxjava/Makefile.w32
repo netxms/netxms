@@ -1,0 +1,9 @@
+TARGET = libnxjava.dll
+TYPE = dll
+SOURCES = config.cpp jre.cpp jvm.cpp main.cpp platform.cpp tools.cpp
+
+CPPFLAGS = /DLIBNXJAVA_EXPORTS
+LIBS = libnetxms.lib
+SUBDIRS = java
+	  
+include ../../Makefile.inc.w32

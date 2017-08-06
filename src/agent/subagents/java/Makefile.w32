@@ -1,8 +1,8 @@
 TARGET = java.nsm
 TYPE = nsm
-SOURCES = ConfigHelper.cpp main.cpp SubAgent.cpp
+SOURCES = main.cpp SubAgent.cpp
 CPPFLAGS = /I "$(JDK_BASE)\include" /I "$(JDK_BASE)\include\win32"
-LIBS = libnxagent.lib libnetxms.lib
+LIBS = libnxagent.lib libnxjava.lib libnetxms.lib
 SUBDIRS = java
 	  
 include ..\..\..\..\Makefile.inc.w32

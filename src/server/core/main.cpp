@@ -640,7 +640,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
                    ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
-				       0, NULL, MSG_DEBUG))
+				       0, NULL, MSG_DEBUG, MSG_OTHER))
 #else
 				       g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_OTHER))
 #endif
