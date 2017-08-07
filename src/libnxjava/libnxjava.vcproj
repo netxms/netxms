@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="java"
-	ProjectGUID="{4967B29B-4272-4D7B-9CF6-8ABFF9D21348}"
-	RootNamespace="java"
+	Name="libnxjava"
+	ProjectGUID="{6D5E7620-AA4B-7144-94DC-1907C970A3FD}"
+	RootNamespace="libnxjava"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -43,15 +43,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXJAVA_EXPORTS"
 				MinimalRebuild="true"
-				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -65,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -122,10 +121,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXJAVA_EXPORTS"
 				MinimalRebuild="true"
-				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -144,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -200,13 +198,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
-				ExceptionHandling="0"
+				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXJAVA_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -220,7 +217,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -279,9 +276,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
-				ExceptionHandling="0"
+				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXJAVA_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -299,7 +295,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -342,11 +338,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\config.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\jre.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\jvm.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SubAgent.cpp"
+				RelativePath=".\platform.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tools.cpp"
 				>
 			</File>
 		</Filter>
@@ -356,39 +368,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\java_subagent.h"
+				RelativePath=".\libnxjava.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\netxms-version.h"
+				RelativePath="..\..\include\nms_common.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_agent.h"
+				RelativePath="..\..\include\nms_util.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_common.h"
+				RelativePath="..\..\include\nxjava.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_cscp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\include\nms_threads.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\include\nms_util.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SubAgent.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\include\unicode.h"
+				RelativePath="..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>
