@@ -29,3 +29,4 @@ Export-Package: com.jcraft.jzlib,
  org.simpleframework.xml.stream,
  org.simpleframework.xml.transform,
  org.simpleframework.xml.util
+Automatic-Module-Name: org.netxms.ui.base

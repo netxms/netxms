@@ -200,11 +200,10 @@ public class ObjectPopupDialog extends PopupDialog
    /* (non-Javadoc)
     * @see org.eclipse.jface.dialogs.PopupDialog#getForegroundColorExclusions()
     */
-   @SuppressWarnings("unchecked")
    @Override
-   protected List<Object> getForegroundColorExclusions()
+   protected List<Control> getForegroundColorExclusions()
    {
-      List<Object> e = super.getForegroundColorExclusions();
+      List<Control> e = super.getForegroundColorExclusions();
       e.add(statusLabel);
       return e;
    }

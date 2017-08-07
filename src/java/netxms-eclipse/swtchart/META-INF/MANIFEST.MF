@@ -7,3 +7,4 @@ Require-Bundle: org.eclipse.swt
 Export-Package: org.swtchart
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: org.netxms.client.datacollection
+Automatic-Module-Name: org.swtchart

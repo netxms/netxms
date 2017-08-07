@@ -73,10 +73,6 @@
                value="7,300,490,18">
          </property>
          <property
-               name="preferenceCustomization"
-               value="plugin_customization.ini">
-         </property>
-         <property
                name="aboutImage"
                value="icons/about.png">
          </property>
@@ -87,6 +83,14 @@
          <property
                name="startupProgressRect"
                value="0,325,500,5">
+         </property>
+         <property
+               name="applicationCSS"
+               value="platform:/plugin/org.netxms.ui.eclipse.console/css/default.css">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
          </property>
       </product>
    </extension>
@@ -283,14 +287,6 @@
       </splashHandlerProductBinding>
    </extension>
    <extension
-         point="org.eclipse.ui.presentationFactories">
-      <factory
-            class="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
-            id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
-            name="NetXMS Console Presentation Factory">
-      </factory>
-   </extension>
-   <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
             adaptableType="org.netxms.ui.eclipse.objects.ObjectWrapper"
@@ -478,6 +474,14 @@
             properties="isComponentRegistered"
             type="java.lang.Object">
       </propertyTester>
+   </extension>
+   <extension
+         point="org.eclipse.e4.ui.css.swt.theme">
+      <theme
+            basestylesheeturi="css/default.css"
+            id="org.eclipse.ui.themes.default"
+            label="Default">
+      </theme>
    </extension>
 
 </plugin>

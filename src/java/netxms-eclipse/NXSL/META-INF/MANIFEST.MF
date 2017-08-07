@@ -5,9 +5,9 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.nxsl;singleton:=true
 Bundle-Version: 3.0.0
 Bundle-Activator: org.netxms.ui.eclipse.nxsl.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
- org.eclipse.core.runtime;bundle-version="3.8.0",
- org.eclipse.jface.text;bundle-version="3.8.2",
+Require-Bundle: org.eclipse.ui;bundle-version="3.109.0",
+ org.eclipse.core.runtime;bundle-version="3.13.0",
+ org.eclipse.jface.text;bundle-version="3.12.0",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.8.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="3.0.0",
  org.netxms.ui.eclipse.console;bundle-version="3.0.0",

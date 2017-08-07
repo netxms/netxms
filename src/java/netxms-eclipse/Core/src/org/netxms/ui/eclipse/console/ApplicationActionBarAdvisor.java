@@ -25,7 +25,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
@@ -40,10 +39,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchCommandConstants;
@@ -51,24 +48,15 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.XMLMemento;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.eclipse.ui.internal.Perspective;
-import org.eclipse.ui.internal.WorkbenchPage;
 import org.eclipse.ui.internal.actions.CommandAction;
-import org.eclipse.ui.internal.dialogs.SelectPerspectiveDialog;
-import org.eclipse.ui.internal.registry.PerspectiveDescriptor;
-import org.eclipse.ui.internal.registry.PerspectiveRegistry;
-import org.eclipse.ui.internal.tweaklets.Tweaklets;
-import org.eclipse.ui.internal.tweaklets.WorkbenchImplementation;
 import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -87,10 +75,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionResetPerspective;
 	private IWorkbenchAction actionClosePerspective;
 	private IWorkbenchAction actionCloseAllPerspectives;
-	private Action actionExportPerspective;
-   private Action actionImportPerspective;
-	private IWorkbenchAction actionMinimize;
-	private IWorkbenchAction actionMaximize;
+	private Action actionMinimize;
+	private Action actionMaximize;
    private Action actionClose;
 	private IWorkbenchAction actionPrevView;
 	private IWorkbenchAction actionNextView;
@@ -169,10 +155,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionCloseAllPerspectives = ActionFactory.CLOSE_ALL_PERSPECTIVES.create(window);
 		register(actionCloseAllPerspectives);
 		
-		actionMinimize = ActionFactory.MINIMIZE.create(window);
+		actionMinimize = new CommandAction(window, IWorkbenchCommandConstants.WINDOW_MAXIMIZE_ACTIVE_VIEW_OR_EDITOR);
 		register(actionMinimize);
 		
-		actionMaximize = ActionFactory.MAXIMIZE.create(window);
+		actionMaximize = new CommandAction(window, IWorkbenchCommandConstants.WINDOW_MINIMIZE_ACTIVE_VIEW_OR_EDITOR);
 		register(actionMaximize);
 		
 		actionClose = new CommandAction(window, IWorkbenchCommandConstants.WINDOW_CLOSE_PART);
@@ -234,22 +220,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
-		actionExportPerspective = new Action(Messages.get().ApplicationActionBarAdvisor_ActionExportPerspective) {
-         @Override
-         public void run()
-         {
-            exportPerspective(window);
-         }
-      };
-		
-      actionImportPerspective = new Action(Messages.get().ApplicationActionBarAdvisor_ActionImportPerspective) {
-         @Override
-         public void run()
-         {
-            importPerspective(window);
-         }
-      };
-      
       actionLangArabic = new Action("&Arabic", Activator.getImageDescriptor("icons/lang/ar.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          public void run()
          {
@@ -383,9 +353,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionClosePerspective);
 		windowMenu.add(actionCloseAllPerspectives);
       windowMenu.add(new Separator());
-		windowMenu.add(actionExportPerspective);
-      windowMenu.add(actionImportPerspective);
-		windowMenu.add(new Separator());
 		
 		final MenuManager navMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Navigation, IWorkbenchActionConstants.M_NAVIGATE);
 		windowMenu.add(navMenu);
@@ -534,133 +501,5 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		}
 		System.getProperties().setProperty("eclipse.exitdata", "-nl " + locale); //$NON-NLS-1$ //$NON-NLS-2$
 		PlatformUI.getWorkbench().restart();
-	}
-	
-	/**
-	 * Export perspective 
-	 * @param window 
-	 */
-	private void exportPerspective(IWorkbenchWindow window)
-	{
-	   try
-	   {
-         SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(window.getShell(), window.getWorkbench().getPerspectiveRegistry());
-         if (dlg.open() == Window.OK)
-         {
-            WorkbenchPage page = (WorkbenchPage)window.getActivePage();
-            Perspective p = page.findPerspective(dlg.getSelection());
-            final XMLMemento memento = XMLMemento.createWriteRoot("perspective"); //$NON-NLS-1$
-            p.saveState(memento);
-            
-            FileDialog fd = new FileDialog(window.getShell());
-            fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-            fd.setFilterNames(new String[] { Messages.get().ApplicationActionBarAdvisor_XMLFiles, Messages.get().ApplicationActionBarAdvisor_AllFiles });
-            fd.setOverwrite(true);
-            fd.setText(Messages.get().ApplicationActionBarAdvisor_ExportPerspective);
-            final String fileName = fd.open();
-            if (fileName != null)
-            {
-               new ConsoleJob(Messages.get().ApplicationActionBarAdvisor_ExportPerspective, null, Activator.PLUGIN_ID, null) {
-                  @Override
-                  protected void runInternal(IProgressMonitor monitor) throws Exception
-                  {
-                     FileWriter writer = null;
-                     try
-                     {
-                        writer = new FileWriter(fileName);
-                        memento.save(writer);
-                     }
-                     finally
-                     {
-                        if (writer != null)
-                           writer.close();
-                     }
-                  }
-                  
-                  @Override
-                  protected String getErrorMessage()
-                  {
-                     return Messages.get().ApplicationActionBarAdvisor_PerspectiveExportFailed;
-                  }
-               }.start();
-            }
-         }
-	   }
-	   catch(Exception e)
-	   {
-	      Activator.logError("Exception in exportPerspective", e); //$NON-NLS-1$
-	      MessageDialogHelper.openError(window.getShell(), Messages.get().ApplicationActionBarAdvisor_Error, Messages.get().ApplicationActionBarAdvisor_PerspectiveExportFailed);
-	   }
-	}
-	
-	/**
-	 * Import perspective
-	 * @param window
-	 */
-	private void importPerspective(final IWorkbenchWindow window)
-	{
-      FileDialog fd = new FileDialog(window.getShell());
-      fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      fd.setFilterNames(new String[] { Messages.get().ApplicationActionBarAdvisor_XMLFiles, Messages.get().ApplicationActionBarAdvisor_AllFiles });
-      fd.setText(Messages.get().ApplicationActionBarAdvisor_ImportPerspective);
-      final String fileName = fd.open();
-      if (fileName == null)
-         return;
-      
-      if (!MessageDialogHelper.openConfirm(window.getShell(), Messages.get().ApplicationActionBarAdvisor_ConfirmRestart, Messages.get().ApplicationActionBarAdvisor_RestartConfirmationMessage))
-         return;
-      
-      new ConsoleJob(Messages.get().ApplicationActionBarAdvisor_ImportPerspective, null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            FileReader reader = null;
-            try
-            {
-               reader = new FileReader(fileName);
-               final XMLMemento memento = XMLMemento.createReadRoot(reader);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     try
-                     {
-                        Perspective p = ((WorkbenchImplementation)Tweaklets.get(WorkbenchImplementation.KEY)).createPerspective(null, (WorkbenchPage)window.getActivePage());
-                        p.restoreState(memento);
-                        
-                        PerspectiveRegistry reg = (PerspectiveRegistry)window.getWorkbench().getPerspectiveRegistry();
-                        PerspectiveDescriptor pd = reg.createPerspective(p.getDesc().getLabel(), (PerspectiveDescriptor)p.getDesc());
-                        
-                        WorkbenchPage page = (WorkbenchPage)window.getActivePage();
-                        page.savePerspectiveAs(pd);
-                        p = page.findPerspective(pd);
-                        p.restoreState(memento);
-                        p.restoreState();
-                        window.getWorkbench().showPerspective(pd.getId(), window);
-                        page.savePerspective();
-
-                        PlatformUI.getWorkbench().restart();
-                     }
-                     catch(Exception e)
-                     {
-                        Activator.logError("Exception in importPerspective", e); //$NON-NLS-1$
-                        MessageDialogHelper.openError(window.getShell(), Messages.get().ApplicationActionBarAdvisor_Error, Messages.get().ApplicationActionBarAdvisor_PerspectiveImportFailed);
-                     }
-                  }
-               });
-            }
-            finally
-            {
-               if (reader != null)
-                  reader.close();
-            }
-         }
-         
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().ApplicationActionBarAdvisor_PerspectiveImportFailed;
-         }
-      }.start();
 	}
 }
