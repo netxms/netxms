@@ -187,12 +187,12 @@ static int ScheduledTaskComparator(const ScheduledTask **e1, const ScheduledTask
    const ScheduledTask *s2 = *e2;
 
    // Executed schedules should go down
-   if (s1->checkFlag(SCHEDULED_TASK_EXECUTED) != s2->checkFlag(SCHEDULED_TASK_EXECUTED))
+   if (s1->checkFlag(SCHEDULED_TASK_COMPLETED) != s2->checkFlag(SCHEDULED_TASK_COMPLETED))
    {
-      return s1->checkFlag(SCHEDULED_TASK_EXECUTED) ? 1 : -1;
+      return s1->checkFlag(SCHEDULED_TASK_COMPLETED) ? 1 : -1;
    }
 
-   //Schedules with execution time 0 should go down, others should be compared
+   // Schedules with execution time 0 should go down, others should be compared
    if (s1->getExecutionTime() == s2->getExecutionTime())
    {
       return 0;
@@ -220,7 +220,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
    }
 
    removeFlag(SCHEDULED_TASK_RUNNING);
-   setFlag(SCHEDULED_TASK_EXECUTED);
+   setFlag(SCHEDULED_TASK_COMPLETED);
    saveToDatabase(false);
    if (oneTimeSchedule)
    {
@@ -414,7 +414,7 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
    }
    s_oneTimeScheduleLock.unlock();
 
-   if (!found)
+   if (!found && (rcc == RCC_SUCCESS))
    {
       //check in different queue and if exists - remove from one and add to another
       ScheduledTask *st = NULL;
@@ -423,7 +423,7 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
       {
          if (s_cronSchedules.get(i)->getId() == id)
          {
-            if(!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
+            if (!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
             {
                rcc = RCC_ACCESS_DENIED;
                break;
@@ -438,14 +438,13 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
       }
       s_cronScheduleLock.unlock();
 
-      if(found && st != NULL)
+      if (found && st != NULL)
       {
          s_oneTimeScheduleLock.lock();
          s_oneTimeSchedules.add(st);
          s_oneTimeSchedules.sort(ScheduledTaskComparator);
          s_oneTimeScheduleLock.unlock();
       }
-
    }
 
    if (found)
@@ -476,11 +475,11 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
    UINT32 rcc = RCC_SUCCESS;
 
    s_cronScheduleLock.lock();
-   for (int i = 0; i < s_cronSchedules.size(); i++)
+   for(int i = 0; i < s_cronSchedules.size(); i++)
    {
       if (s_cronSchedules.get(i)->getId() == id)
       {
-         if(!s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -492,18 +491,18 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
    }
    s_cronScheduleLock.unlock();
 
-   if(found)
+   if (!found)
    {
       DeleteScheduledTaskFromDB(id);
       return rcc;
    }
 
    s_oneTimeScheduleLock.lock();
-   for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+   for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       if (s_oneTimeSchedules.get(i)->getId() == id)
       {
-         if(!s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if (!s_cronSchedules.get(i)->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -728,49 +727,37 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
  */
 static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 {
-   int sleepTime = 1;
+   UINT32 sleepTime = 1;
    UINT32 watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
    nxlog_debug(3, _T("Ad hoc scheduler started"));
    while(true)
    {
       WatchdogStartSleep(watchdogId);
-      s_wakeupCondition.wait(sleepTime);
+      s_wakeupCondition.wait(sleepTime * 1000);
+      WatchdogNotify(watchdogId);
+
       if (g_flags & AF_SHUTDOWN)
          break;
 
-      WatchdogNotify(watchdogId);
-      time_t now = time(NULL);
-      struct tm currLocal;
-#if HAVE_LOCALTIME_R
-      localtime_r(&now, &currLocal);
-#else
-      memcpy(&currLocal, localtime(&now), sizeof(struct tm));
-#endif
-
       s_oneTimeScheduleLock.lock();
+      time_t now = time(NULL);
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          ScheduledTask *sh = s_oneTimeSchedules.get(i);
-         if (sh->checkFlag(SCHEDULED_TASK_DISABLED))
+         if (sh->isDisabled() || sh->isRunning() || sh->isCompleted())
             continue;
 
-         if (sh->checkFlag(SCHEDULED_TASK_EXECUTED))
-            break;
-
          SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
-         if(callback == NULL)
+         if (callback == NULL)
          {
             DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;
          }
 
-         if (sh->isRunning())
-            continue;
-
-         //execute all timmers that is expected to execute now
-         if(sh->getExecutionTime() != 0 && now >= sh->getExecutionTime())
+         // execute all tasks that is expected to execute now
+         if ((sh->getExecutionTime() != 0) && (now >= sh->getExecutionTime()))
          {
-            DbgPrintf(7, _T("AdHocScheduler: run schedule id=\'%d\', execution time =\'%d\'"), sh->getId(), sh->getExecutionTime());
+            nxlog_debug(6, _T("AdHocScheduler: run scheduled task with id = %d, execution time = %d"), sh->getId(), sh->getExecutionTime());
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
          else
@@ -779,24 +766,25 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
          }
       }
 
-      sleepTime = INFINITE;
+      sleepTime = 3600;
 
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          ScheduledTask *sh = s_oneTimeSchedules.get(i);
-         if(sh->getExecutionTime() == NEVER)
+         if (sh->getExecutionTime() == NEVER)
             break;
 
-         if(now >= sh->getExecutionTime())
-            continue;
-
-         sleepTime = (int)(sh->getExecutionTime() - now);
-         sleepTime = sleepTime < 0 ? 0 : sleepTime * 1000;
-         break;
+         if (now < sh->getExecutionTime())
+         {
+            time_t diff = sh->getExecutionTime() - now;
+            if (diff < (time_t)3600)
+               sleepTime = (UINT32)diff;
+            break;
+         }
       }
 
       s_oneTimeScheduleLock.unlock();
-      nxlog_debug(6, _T("AdHocScheduler: sleeping for %d"), sleepTime);
+      nxlog_debug(6, _T("AdHocScheduler: sleeping for %d seconds"), sleepTime);
    }
    nxlog_debug(3, _T("Ad hoc scheduler stopped"));
    return THREAD_OK;
