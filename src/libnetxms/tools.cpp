@@ -1537,14 +1537,23 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool m
 /**
  * Translate given code to text
  */
-const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText)
 {
-   int i;
+   for(int i = 0; translator[i].text != NULL; i++)
+      if (translator[i].code == code)
+         return translator[i].text;
+   return defaultText;
+}
 
-   for(i = 0; pTranslator[i].text != NULL; i++)
-      if (pTranslator[i].code == iCode)
-         return pTranslator[i].text;
-   return pszDefaultText;
+/**
+ * Translate code to text
+ */
+int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CODE_TO_TEXT *translator, int defaultCode)
+{
+   for(int i = 0; translator[i].text != NULL; i++)
+      if (!_tcsicmp(text, translator[i].text))
+         return translator[i].code;
+   return defaultCode;
 }
 
 /**
