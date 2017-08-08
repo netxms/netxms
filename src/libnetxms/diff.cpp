@@ -562,7 +562,7 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
    {
       Diff *diff = i.next();
       String text;
-      for(int y = 0; y < diff->text.length(); y++)
+      for(int y = 0; y < (int)diff->text.length(); y++)
       {
          text += lineArray.get(static_cast<int>(diff->text.charAt(y)));
       }
@@ -729,7 +729,7 @@ StringList *DiffEngine::diff_halfMatchI(const String &longtext, const String &sh
    {
       const int prefixLength = diff_commonPrefix(safeMid(longtext, i), safeMid(shorttext, j));
       const int suffixLength = diff_commonSuffix(longtext.left(i), shorttext.left(j));
-      if (best_common.length() < suffixLength + prefixLength)
+      if ((int)best_common.length() < suffixLength + prefixLength)
       {
          best_common = safeMid(shorttext, j - suffixLength, suffixLength);
          best_common.append(safeMid(shorttext, j, prefixLength));
@@ -799,8 +799,8 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
          }
          // Eliminate an equality that is smaller or equal to the edits on both
          // sides of it.
-         if (!lastequality.isEmpty() && (lastequality.length() <= max(length_insertions1, length_deletions1))
-                  && (lastequality.length() <= max(length_insertions2, length_deletions2)))
+         if (!lastequality.isEmpty() && ((int)lastequality.length() <= max(length_insertions1, length_deletions1))
+                  && ((int)lastequality.length() <= max(length_insertions2, length_deletions2)))
          {
             // printf("Splitting: '%s'\n", qPrintable(lastequality));
             // Walk back to offending equality.
@@ -1087,7 +1087,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
       if (thisDiff->operation == DIFF_EQUAL)
       {
          // Equality found.
-         if (thisDiff->text.length() < Diff_EditCost && (post_ins || post_del))
+         if ((int)thisDiff->text.length() < Diff_EditCost && (post_ins || post_del))
          {
             // Candidate found.
             equalities.push(thisDiff);
@@ -1125,7 +1125,7 @@ void DiffEngine::diff_cleanupEfficiency(ObjectArray<Diff> &diffs)
           */
          if (!lastequality.isEmpty()
                   && ((pre_ins && pre_del && post_ins && post_del)
-                           || ((lastequality.length() < Diff_EditCost / 2)
+                           || (((int)lastequality.length() < Diff_EditCost / 2)
                                     && ((pre_ins ? 1 : 0) + (pre_del ? 1 : 0) + (post_ins ? 1 : 0) + (post_del ? 1 : 0)) == 3)))
          {
             // printf("Splitting: '%s'\n", qPrintable(lastequality));

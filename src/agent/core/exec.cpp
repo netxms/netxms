@@ -334,7 +334,6 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
          }
 
          DebugPrintf(4, _T("H_ExternalParameter/POpenWorker: worker thread pipe read result: %p"), ret);
-         TCHAR *pTmp;
          RemoveTrailingCRLF(value);
          if (value[0] != 0)
          {
