@@ -31,23 +31,39 @@
 /**
  * iconv descriptor
  */
-struct ICONV_DESCRIPTOR
+class IconvDescriptor
 {
+public:
    char *from;
    char *to;
    iconv_t cd;
    bool busy;
+
+   IconvDescriptor(iconv_t _cd, const char *_from, const char *_to)
+   {
+      cd = _cd;
+      from = strdup(_from);
+      to = strdup(_to);
+      busy = true;
+   }
+
+   ~IconvDescriptor()
+   {
+      free(from);
+      free(to);
+      iconv_close(cd);
+   }
 };
 
 /**
  * iconv descriptor cache
  */
-static ObjectArray<ICONV_DESCRIPTOR> s_cache;
+static ObjectArray<IconvDescriptor> s_cache(16, 16, true);
 
 /**
  * Cache access mutex
  */
-static MUTEX s_cacheLock = MutexCreate();
+static Mutex s_cacheLock;
 
 /**
  * Open descriptor
@@ -56,11 +72,11 @@ iconv_t IconvOpen(const char *to, const char *from)
 {
    iconv_t cd = (iconv_t)(-1);
 
-   MutexLock(s_cacheLock);
+   s_cacheLock.lock();
 
    for(int i = 0; i < s_cache.size(); i++)
    {
-      ICONV_DESCRIPTOR *d = s_cache.get(i);
+      IconvDescriptor *d = s_cache.get(i);
       if (!d->busy && !strcmp(from, d->from) && !strcmp(to, d->to))
       {
          d->busy = true;
@@ -74,16 +90,12 @@ iconv_t IconvOpen(const char *to, const char *from)
       cd = iconv_open(to, from);
       if (cd != (iconv_t)(-1))
       {
-         ICONV_DESCRIPTOR *d = new ICONV_DESCRIPTOR;
-         d->cd = cd;
-         d->busy = true;
-         d->from = strdup(from);
-         d->to = strdup(to);
+         IconvDescriptor *d = new IconvDescriptor(cd, from, to);
          s_cache.add(d);
       }
    }
 
-   MutexUnlock(s_cacheLock);
+   s_cacheLock.unlock();
    return cd;
 }
 
@@ -92,10 +104,10 @@ iconv_t IconvOpen(const char *to, const char *from)
  */
 void IconvClose(iconv_t cd)
 {
-   MutexLock(s_cacheLock);
+   s_cacheLock.lock();
    for(int i = 0; i < s_cache.size(); i++)
    {
-      ICONV_DESCRIPTOR *d = s_cache.get(i);
+      IconvDescriptor *d = s_cache.get(i);
       if (d->cd == cd)
       {
 #if HAVE_ICONV_STATE_RESET
@@ -105,7 +117,7 @@ void IconvClose(iconv_t cd)
          break;
       }
    }
-   MutexUnlock(s_cacheLock);
+   s_cacheLock.unlock();
 }
 
 #endif /* !defined(__DISABLE_ICONV) && WITH_ICONV_CACHE */
