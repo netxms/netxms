@@ -403,6 +403,7 @@ static ObjectArray<VolumeGroup> *AcquireLvmData()
    time_t now = time(NULL);
    if ((now - s_timestamp > 60) || (s_volumeGroups == NULL))
    {
+      delete s_volumeGroups;
       s_volumeGroups = ReadVolumeGroups();
       s_timestamp = now;
    }
