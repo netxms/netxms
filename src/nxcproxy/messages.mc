@@ -92,4 +92,10 @@ Language=English
 Call to select() failed: %1
 .
 
+MessageId=
+SymbolicName=MSG_GENERIC
+Language=English
+%1
+.
+
 ;#endif

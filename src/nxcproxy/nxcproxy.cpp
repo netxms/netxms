@@ -211,9 +211,9 @@ bool Initialize()
 	                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXCPROXY.EXE"),
 #ifdef _WIN32
-                   0, NULL, MSG_DEBUG))
+                   0, NULL, MSG_DEBUG, MSG_GENERIC))
 #else
-	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_GENERIC))
 #endif
 	{
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
