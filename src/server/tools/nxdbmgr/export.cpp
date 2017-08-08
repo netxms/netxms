@@ -212,55 +212,12 @@ void ExportDatabase(const char *file)
    }
 
 	// Setup database schema
-#ifdef _WIN32
-	HKEY hKey;
-
-   // Read installation data from registry
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-   {
-      DWORD size = MAX_PATH - 16;
-      if (RegQueryValueExA(hKey, "InstallPath", NULL, NULL,
-                           (BYTE *)buffer, &size) == ERROR_SUCCESS)
-      {
-			strcat(buffer, "\\lib\\sql\\dbschema_sqlite.sql");
-			success = TRUE;
-      }
-      RegCloseKey(hKey);
-   }
-
-	if (!success)
-	{
-		// Try to use path to nxdbmgr executable as base
-		if (GetModuleFileNameA(NULL, buffer, MAX_PATH - 32) != 0)
-		{
-			char *p;
-
-			p = strrchr(buffer, '\\');
-			if (p != NULL)
-				*p = 0;
-			p = strrchr(buffer, '\\');
-			if (p != NULL)
-				*p = 0;
-			strcat(buffer, "\\lib\\sql\\dbschema_sqlite.sql");
-			success = TRUE;
-		}
-	}
-
-	if (!success)
-	{
-		_tprintf(_T("ERROR: unable to determine path to schema file\n"));
-		goto cleanup;
-	}
-
-	success = FALSE;	// Reset success flag
-#else
 #ifdef UNICODE
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, DATADIR, -1, buffer, MAX_PATH - 32, NULL, NULL);
-	strcat(buffer, "/sql/dbschema_sqlite.sql");
+   TCHAR tmp[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, tmp);
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, tmp, MAX_PATH, buffer, MAX_PATH, NULL, NULL);
 #else
-	strcpy(buffer, DATADIR "/sql/dbschema_sqlite.sql");
-#endif
+   GetNetXMSDirectory(nxDirData, buffer);
 #endif
 
    UINT32 size;
