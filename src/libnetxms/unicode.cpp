@@ -451,14 +451,14 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszStri
 #else
    if (pwszString == NULL)
       return NULL;
-   int nLen = (int)wcslen(pwszString) + 1;
-   char *pszOut = (char *)malloc(nLen);
+   size_t len = wcslen(pwszString) * 3 + 1;  // add extra bytes in case of UTF-8 as target encoding
+   char *out = (char *)malloc(len);
 #if HAVE_WCSTOMBS
-   wcstombs(pszOut, pwszString, nLen);
+   wcstombs(out, pwszString, len);
 #else
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, out, (int)len, NULL, NULL);
 #endif
-   return pszOut;
+   return out;
 #endif
 }
 
@@ -772,7 +772,7 @@ int wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
 
 int wsystem(const WCHAR *_cmd)
 {
-   char *cmd = MBStringFromWideString(_cmd);
+   char *cmd = MBStringFromWideStringSysLocale(_cmd);
    int rc = system(cmd);
    free(cmd);
    return rc;
