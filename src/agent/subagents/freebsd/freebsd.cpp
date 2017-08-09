@@ -98,13 +98,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"),             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 
-	{ _T("System.CPU.Count"),             H_CpuInfo,          _T("C"),			DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
-	{ _T("System.CPU.Freq"),              H_CpuInfo,          _T("F"),          DCI_DT_INT, DCIDESC_SYSTEM_CPU_COUNT },
-	{ _T("System.CPU.Model"),             H_CpuInfo,          _T("M"),          DCI_DT_STRING, DCIDESC_SYSTEM_CPU_COUNT },
-
-	{ _T("System.CPU.LoadAvg"),           H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
-	{ _T("System.CPU.LoadAvg5"),          H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
-	{ _T("System.CPU.LoadAvg15"),         H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
+	{ _T("System.CPU.Count"), H_CpuInfo, _T("C"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_COUNT },
+	{ _T("System.CPU.Frequency"), H_CpuInfo, _T("F"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_FREQUENCY },
+	{ _T("System.CPU.LoadAvg"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
+	{ _T("System.CPU.LoadAvg5"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
+	{ _T("System.CPU.LoadAvg15"), H_CpuLoad, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+	{ _T("System.CPU.Model"), H_CpuInfo, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_CPU_MODEL },
 
 	{ _T("System.CPU.Interrupts"), H_CpuInterrupts,        MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_INTERRUPTS),
             DCI_DT_UINT,  DCIDESC_SYSTEM_CPU_INTERRUPTS },
