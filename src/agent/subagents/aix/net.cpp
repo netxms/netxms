@@ -53,14 +53,19 @@ typedef struct
 static perfstat_netinterface_t *s_ifaceData = NULL;
 static int s_ifaceDataSize = 0;
 static time_t s_ifaceDataTimestamp = 0;
-static MUTEX s_ifaceDataLock = INVALID_MUTEX_HANDLE;
+static Mutex s_ifaceDataLock;
 
 /**
- * Initialize network stuff
+ * Clear network data
  */
-void InitNetworkDataCollection()
+void ClearNetworkData()
 {
-	s_ifaceDataLock = MutexCreate();
+	s_ifaceDataLock.lock();
+   free(s_ifaceData);
+   s_ifaceData = 0;
+   s_ifaceDataSize = 0;
+   s_ifaceDataTimestamp = 0;
+	s_ifaceDataLock.unlock();
 }
 
 /**
@@ -110,7 +115,7 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		}
 	}
 
-	MutexLock(s_ifaceDataLock);
+	s_ifaceDataLock.lock();
 
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	if (time(NULL) - s_ifaceDataTimestamp > 5)
@@ -169,7 +174,7 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		}
 	}
 
-	MutexUnlock(s_ifaceDataLock);
+	s_ifaceDataLock.unlock();
 	return nRet;
 }
 

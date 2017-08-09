@@ -203,6 +203,9 @@ void ShutdownCpuUsageCollector();
 void StartIOStatCollector();
 void ShutdownIOStatCollector();
 
+void ClearLvmData();
+
+void ClearNetworkData();
 
 //
 // Global variables

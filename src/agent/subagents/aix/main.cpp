@@ -99,6 +99,8 @@ static void SubAgentShutdown()
 	g_bShutdown = TRUE;
 	ShutdownCpuUsageCollector();
 	ShutdownIOStatCollector();
+	ClearLvmData();
+	ClearNetworkData();
 }
 
 /**

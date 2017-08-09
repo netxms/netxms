@@ -93,7 +93,7 @@ static void ConvertPathToNetwork(TCHAR *path)
  */
 static BOOL SubagentInit(Config *config)
 {
-   g_rootFileManagerFolders = new ObjectArray<RootFolder>;
+   g_rootFileManagerFolders = new ObjectArray<RootFolder>(16, 16, true);
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {

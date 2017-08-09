@@ -26,7 +26,7 @@
  * SNMP targets
  */
 static HashMap<uuid_t, SNMPTarget> s_snmpTargets(false);
-static MUTEX s_snmpTargetsLock = MutexCreate();
+static Mutex s_snmpTargetsLock;
 
 /**
  * Create SNMP target from NXCP message
@@ -136,7 +136,7 @@ SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
  */
 void UpdateSnmpTarget(SNMPTarget *target)
 {
-   MutexLock(s_snmpTargetsLock);
+   s_snmpTargetsLock.lock();
    SNMPTarget *oldTarget = s_snmpTargets.get(target->getGuid().getValue());
    if (oldTarget != NULL)
    {
@@ -145,7 +145,7 @@ void UpdateSnmpTarget(SNMPTarget *target)
    }
    s_snmpTargets.set(target->getGuid().getValue(), target);
    target->saveToDatabase();
-   MutexUnlock(s_snmpTargetsLock);
+   s_snmpTargetsLock.unlock();
 }
 
 /**
@@ -153,11 +153,11 @@ void UpdateSnmpTarget(SNMPTarget *target)
  */
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
-   MutexLock(s_snmpTargetsLock);
+   s_snmpTargetsLock.lock();
    SNMPTarget *t = s_snmpTargets.get(target.getValue());
    if (t == NULL)
    {
-      MutexUnlock(s_snmpTargetsLock);
+      s_snmpTargetsLock.unlock();
 
       TCHAR buffer[64];
       DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
@@ -165,7 +165,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
    }
 
    t->incRefCount();
-   MutexUnlock(s_snmpTargetsLock);
+   s_snmpTargetsLock.unlock();
 
    SNMP_Transport *snmp = t->getTransport(port);
    UINT32 rcc;

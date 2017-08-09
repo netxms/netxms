@@ -390,7 +390,7 @@ static ObjectArray<VolumeGroup> *ReadVolumeGroups()
 /**
  * LVM data cache
  */
-static MUTEX s_lvmAccessLock = MutexCreate();
+static Mutex s_lvmAccessLock;
 static ObjectArray<VolumeGroup> *s_volumeGroups = NULL;
 static time_t s_timestamp = 0;
 
@@ -399,7 +399,7 @@ static time_t s_timestamp = 0;
  */
 static ObjectArray<VolumeGroup> *AcquireLvmData()
 {
-   MutexLock(s_lvmAccessLock);
+   s_lvmAccessLock.lock();
    time_t now = time(NULL);
    if ((now - s_timestamp > 60) || (s_volumeGroups == NULL))
    {
@@ -415,7 +415,17 @@ static ObjectArray<VolumeGroup> *AcquireLvmData()
  */
 inline void ReleaseLvmData()
 {
-   MutexUnlock(s_lvmAccessLock);
+   s_lvmAccessLock.unlock();
+}
+
+/**
+ * Clear LVM data
+ */
+void ClearLvmData()
+{
+   s_lvmAccessLock.lock();
+   delete_and_null(s_volumeGroups);
+   s_lvmAccessLock.unlock();
 }
 
 /**
