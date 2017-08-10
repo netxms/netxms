@@ -40,11 +40,6 @@
 #include <arpa/inet.h>
 #include <kvm.h>
 #include <nlist.h>
-
-#if HAVE_NET_IF_VAR_H
-#include <net/if_var.h>
-#endif
-
 #include "net.h"
 
 typedef struct t_Addr
