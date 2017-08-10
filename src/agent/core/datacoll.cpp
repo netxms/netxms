@@ -599,7 +599,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             {
                DataCollectionItem *dci = s_items.get(i);
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
-                          dci->getLastPollTime(), dci->getServerId(), dci->getId());
+                          (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);

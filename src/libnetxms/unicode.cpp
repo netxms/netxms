@@ -914,8 +914,6 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 
 #endif /* !HAVE_WCSERROR_R && HAVE_STRERROR_R */
 
-#endif /* defined(UNICODE) */
-
 /**
  * Wrappers for wprintf/wscanf family
  *
@@ -1066,7 +1064,7 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
                case L'h':	// check for %hs
                   hmod = true;
                   break;
-               default:		// All other cahacters means end of format
+               default:		// All other characters means end of format
                   state = 0;
                   break;
 
@@ -1154,6 +1152,9 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
    free(fmt);
    return rc;
 }
+
+#endif /* defined(UNICODE) */
+
 #endif /* !defined(_WIN32) */
 
 /**

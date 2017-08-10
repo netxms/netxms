@@ -2494,6 +2494,7 @@ AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok wutime])
+AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H

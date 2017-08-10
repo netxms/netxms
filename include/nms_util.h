@@ -2174,6 +2174,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, cons
                                              int cchByteChar, WCHAR *pWideCharStr,
                                              int cchWideChar);
 
+#ifdef UNICODE
 int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
 int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
 int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
@@ -2187,6 +2188,7 @@ int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...);
 int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
 int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
 int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
+#endif
 
 #endif	/* _WIN32 */
 
