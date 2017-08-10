@@ -1,6 +1,7 @@
 /* 
 ** NetXMS subagent for OpenBSD
 ** Copyright (C) 2006 C.T.Co 
+** Copyright (C) 2017 Raden Solutions SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <sys/swap.h>
+#include <sys/vmmeter.h>
 #include <fcntl.h>
 #include <kvm.h>
 #include <paths.h>
@@ -36,7 +38,7 @@
 
 #include "system.h"
 
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
 	time_t nNow;
@@ -64,7 +66,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue, AbstractComm
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -78,7 +80,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommS
 				utsName.machine);
 		// TODO: processor & platform
 
-   		ret_string(pValue, szBuff);
+   		ret_mbstring(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -86,21 +88,21 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommS
    return nRet;
 }
 
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
 
 	if (gethostname(szBuff, sizeof(szBuff)) == 0)
 	{
-   	ret_string(pValue, szBuff);
+   	ret_mbstring(pValue, szBuff);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
    return nRet;
 }
 
-LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
    	char szArg[128] = {0};
@@ -130,12 +132,12 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue, AbstractCom
 	return nRet;
 }
 
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[] = {CTL_HW, HW_NCPU};
@@ -152,7 +154,7 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue, AbstractCo
 	return nRet;
 }
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
    	char szArg[128] = {0};
@@ -162,7 +164,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, Abstra
 	kvm_t *kd;
 	struct kinfo_proc *kp;
 
-   	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
@@ -207,7 +209,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, Abstra
 	return nRet;
 }
 
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -228,7 +230,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, Abstract
 	nUsedVirtCount = 0;
 	nSwapTotal = nSwapUsed = 0;
 
-   	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	// Physical memory
 
@@ -254,10 +256,10 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, Abstract
 	}
 	else
 	{
-		if ((int)pArg != PHYSICAL_FREE &&
-		    (int)pArg != PHYSICAL_TOTAL &&
-		    (int)pArg != PHYSICAL_USED &&
-		    (int)pArg != VIRTUAL_USED)
+		if (CAST_FROM_POINTER(pArg, int) != PHYSICAL_FREE &&
+		    CAST_FROM_POINTER(pArg, int) != PHYSICAL_TOTAL &&
+		    CAST_FROM_POINTER(pArg, int) != PHYSICAL_USED &&
+		    CAST_FROM_POINTER(pArg, int) != VIRTUAL_USED)
 		nRet = SYSINFO_RC_ERROR;
 	}
 
@@ -268,7 +270,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, Abstract
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
-		switch((int)pArg)
+		switch(CAST_FROM_POINTER(pArg, int))
 		{
 		case PHYSICAL_FREE: // ph-free
 			ret_uint64(pValue, PAGES_TO_BYTES(nFreePhysCount));
@@ -308,7 +310,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, Abstract
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;
@@ -338,7 +340,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, A
 						kp[i].p_pid, kp[i].p_comm
 #endif
 						);
-				pValue->add(szBuff);
+				pValue->addMBString(szBuff);
 			}
 		}
 
@@ -356,59 +358,8 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, A
 //
 // stub
 //
-LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.8  2005/05/30 14:39:32  alk
-* process list now works via kvm, compatible with freebsd 5+
-
-Revision 1.7  2005/05/29 22:44:59  alk
-* configure: pthreads & fbsd5+; detection code should be rewriten!
-* another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
-* server/nxadm & fbsd5.1: a**holes, in 5.1 there no define with version in readline.h...
-
-Revision 1.6  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.5  2005/01/23 05:36:11  alk
-+ System.Memory.Swap.*
-+ System.Memory.Virtual.*
-
-NB! r/o access to /dev/mem required! (e.g. chgrp kmem ; chmod g+s)
-
-Revision 1.4  2005/01/23 05:14:49  alk
-System's PageSize used instead of Hardware PageSize
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

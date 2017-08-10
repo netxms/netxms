@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
@@ -36,45 +34,16 @@ enum
 	VIRTUAL_TOTAL,
 };
 
-LONG H_ProcessList(const char *, const char *, StringList *, AbstractCommSession *);
-LONG H_Uptime(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Uname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_CpuCount(const char *, const char *, char *, AbstractCommSession *);
-LONG H_CpuLoad(const char *, const char *, char *, AbstractCommSession *);
-LONG H_CpuUsage(const char *, const char *, char *, AbstractCommSession *);
-LONG H_ProcessCount(const char *, const char *, char *, AbstractCommSession *);
-LONG H_MemoryInfo(const char *, const char *, char *, AbstractCommSession *);
-LONG H_SourcePkgSupport(const char *, const char *, char *, AbstractCommSession *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __SYSTEM_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:48  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

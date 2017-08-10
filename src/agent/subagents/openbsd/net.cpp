@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2004-2017 Raden Solutions SIA
 ** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -43,6 +41,10 @@
 #include <kvm.h>
 #include <nlist.h>
 
+#if HAVE_NET_IF_VAR_H
+#include <net/if_var.h>
+#endif
+
 #include "net.h"
 
 typedef struct t_Addr
@@ -68,9 +70,9 @@ struct nlist nl[] = {
 
 kvm_t *kvmd = NULL;
 
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
-	int nVer = (int)pArg;
+	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[4];
 	size_t nSize = sizeof(mib), nValSize;
@@ -91,7 +93,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, Abs
 	{
 		if (nVal == 0 || nVal == 1)
 		{
-			ret_int(pValue, nVal);
+			ret_int(value, nVal);
 			nRet = SYSINFO_RC_SUCCESS;
 		}
 	}
@@ -99,12 +101,12 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, Abs
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-   AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -131,19 +133,19 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue, Abst
 				int flags;
 
 				memset(&ifr, 0, sizeof(ifr));
-				nx_strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
+				strlcpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
 				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 				{
 					flags = ifr.ifr_flags;
 					if ((flags & IFF_UP) == IFF_UP)
 					{
 						// enabled
-						ret_int(pValue, 1);
+						ret_int(value, 1);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 					else
 					{
-						ret_int(pValue, 2);
+						ret_int(value, 2);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
@@ -155,12 +157,12 @@ LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue, Abst
 	return nRet;
 }
 
-LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
 
-   AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+   AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
 	{
@@ -186,25 +188,25 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue, AbstractC
 				struct ifmediareq ifmr;
 
 				memset(&ifmr, 0, sizeof(ifmr));
-				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
+				strlcpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
 					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
 							(ifmr.ifm_status & IFM_ACTIVE) == IFM_ACTIVE)
 					{
-						ret_int(pValue, 1);
+						ret_int(value, 1);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 					else
 					{
-						ret_int(pValue, 0);
+						ret_int(value, 0);
 						nRet = SYSINFO_RC_SUCCESS;
 					}
 				}
             else if (errno == EINVAL || errno == ENOTTY)
             {
                // ifmedia not supported, assume the status is NORMAL
-               ret_int(pValue, 1);
+               ret_int(value, 1);
                nRet = SYSINFO_RC_SUCCESS;
             }
 				close(nSocket);
@@ -215,7 +217,10 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue, AbstractC
 	return nRet;
 }
 
-LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.ArpCache list
+ */
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -278,13 +283,16 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, A
 				inet_ntoa(pSin->sin_addr),
 				pSdl->sdl_index);
 
-		pValue->add(szBuff);
+		value->addMBString(szBuff);
 	}
 
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.IP.RoutingTable list
+ */
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -387,7 +395,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
 				strcat(szOut, szTmp);
 
-				pValue->add(szOut);
+				value->addMBString(szOut);
 			}
 		}
 
@@ -400,7 +408,10 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 	return nRet;
 }
 
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.InterfaceList list
+ */
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -478,49 +489,54 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, Abs
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
+#if HAVE_DECL_SIOCGIFDATA
+			int s = socket(AF_INET, SOCK_DGRAM, 0);
+#endif
 			for (i = 0; i < nIfCount; i++)
 			{
-				int j;
-				char szOut[1024];
+				int ifType = IFTYPE_OTHER;
+				int mtu = 0;
+#if HAVE_DECL_SIOCGIFDATA
+				struct ifreq ifr;
+   			struct if_data ifdata;
+				strlcpy(ifr.ifr_name, pList[i].name, sizeof(ifr.ifr_name));
+				ifr.ifr_data = (caddr_t)&ifdata;
+   			if (ioctl(s, SIOCGIFDATA, (caddr_t)&ifr) == 0)
+				{
+					ifType = ifdata.ifi_type;
+					mtu = ifdata.ifi_mtu;
+				}
+#endif
 
+				char szOut[1024];
+				char macAddr[32];
 				if (pList[i].addrCount == 0)
 				{
-					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
+					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d(%d) %s %s",
 							pList[i].index,
-							IFTYPE_OTHER,
-							ether_ntoa(pList[i].mac),
+							ifType, mtu,
+							BinToStrA(pList[i].mac, 6, macAddr),
 							pList[i].name);
-					pValue->add(szOut);
+					value->addMBString(szOut);
 				}
 				else
 				{
-					for (j = 0; j < pList[i].addrCount; j++)
+					for(int j = 0; j < pList[i].addrCount; j++)
 					{
-						if (j > 0)
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
-									pList[i].name,
-									j - 1);
-						}
-						else
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
-									pList[i].name);
-						}
-						pValue->add(szOut);
+						snprintf(szOut, sizeof(szOut), "%d %s/%d %d(%d) %s %s",
+								pList[i].index,
+								inet_ntoa(pList[i].addr[j].ip),
+								pList[i].addr[j].mask,
+								ifType, mtu,
+								BinToStrA(pList[i].mac, 6, macAddr),
+								pList[i].name);
+						value->addMBString(szOut);
 					}
 				}
 			}
+#if HAVE_DECL_SIOCGIFDATA
+			close(s);
+#endif
 		}
 
 		for (i = 0; i < nIfCount; i++)
@@ -547,150 +563,172 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, Abs
 	return nRet;
 }
 
-LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+#if HAVE_DECL_SIOCGIFDATA
+
+/**
+ * Handler for interface stats parameters obtained via ioctl SIOCGIFDATA
+ */
+LONG H_NetIfInfoFromIOCTL(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_SUCCESS;
-	char szArg[512];
-	u_long ifnetaddr;
+   char ifName[64];
+   if (!AgentGetParameterArgA(param, 1, ifName, sizeof(ifName)))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (ifName[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (ifName[0] >= '0' && ifName[0] <= '9')
+   {
+      if (if_indextoname(atoi(ifName), ifName) != ifName)
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+   }
+
+	int s = socket(AF_INET, SOCK_DGRAM, 0);
+	if (s == -1)
+		return SYSINFO_RC_ERROR;
+
+	struct ifreq ifr;
+   struct if_data ifdata;
+	strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+	ifr.ifr_data = (caddr_t)&ifdata;
+
+	LONG ret = SYSINFO_RC_SUCCESS;
+   if (ioctl(s, SIOCGIFDATA, (caddr_t)&ifr) == 0)
+	{
+		switch(CAST_FROM_POINTER(arg, int))
+		{
+			case IF_INFO_BYTES_IN:
+				ret_uint(value, (UINT32)ifdata.ifi_ibytes);
+				break;
+			case IF_INFO_BYTES_IN_64:
+				ret_uint64(value, ifdata.ifi_ibytes);
+				break;
+			case IF_INFO_BYTES_OUT:
+				ret_uint(value, (UINT32)ifdata.ifi_obytes);
+				break;
+			case IF_INFO_BYTES_OUT_64:
+				ret_uint64(value, ifdata.ifi_obytes);
+				break;
+			case IF_INFO_IN_ERRORS:
+				ret_uint(value, (UINT32)ifdata.ifi_ierrors);
+				break;
+			case IF_INFO_IN_ERRORS_64:
+				ret_uint64(value, ifdata.ifi_ierrors);
+				break;
+			case IF_INFO_OUT_ERRORS:
+				ret_uint(value, (UINT32)ifdata.ifi_oerrors);
+				break;
+			case IF_INFO_OUT_ERRORS_64:
+				ret_uint64(value, ifdata.ifi_oerrors);
+				break;
+			case IF_INFO_PACKETS_IN:
+				ret_uint(value, (UINT32)ifdata.ifi_ipackets);
+				break;
+			case IF_INFO_PACKETS_IN_64:
+				ret_uint64(value, ifdata.ifi_ipackets);
+				break;
+			case IF_INFO_PACKETS_OUT:
+				ret_uint(value, (UINT32)ifdata.ifi_opackets);
+				break;
+			case IF_INFO_PACKETS_OUT_64:
+				ret_uint64(value, ifdata.ifi_opackets);
+				break;
+			case IF_INFO_MTU:
+				ret_uint(value, ifdata.ifi_mtu);
+				break;
+			case IF_INFO_SPEED:
+				ret_uint64(value, ifdata.ifi_baudrate);
+				break;
+			default:
+				ret = SYSINFO_RC_UNSUPPORTED;
+				break;
+		}
+	}
+
+	close(s);
+	return ret;
+}
+
+#else
+
+/**
+ * Handler for interface stats parameters obtained via KVM
+ */
+LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *value, AbstractCommSession *session)
+{
+	char ifName[512];
+	if (!AgentGetParameterArgA(pszParam, 1, ifName, sizeof(ifName)))
+      return SYSINFO_RC_UNSUPPORTED;
+
+	if (ifName[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+	if (ifName[0] >= '0' && ifName[0] <= '9')
+	{
+		if (if_indextoname(atoi(ifName), ifName) != ifName)
+			return SYSINFO_RC_NO_SUCH_INSTANCE;
+	}
+
+	if (kvmd == NULL)
+	{
+		kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
+		if (kvmd == NULL)
+			return SYSINFO_RC_ERROR;
+		if (kvm_nlist(kvmd, nl) < 0)
+			return SYSINFO_RC_ERROR;
+		if (nl[0].n_type == 0)
+			return SYSINFO_RC_ERROR;
+	}
+
 	struct ifnet ifnet;
 	struct ifnet_head ifnethead;
-	char szName[IFNAMSIZ];
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	u_long ifnetaddr = nl[N_IFNET].n_value;
+	if (kvm_read(kvmd, ifnetaddr, &ifnethead, sizeof(ifnethead)) != sizeof(ifnethead))
+		return SYSINFO_RC_ERROR;
+	ifnetaddr = (u_long)TAILQ_FIRST(&ifnethead);
 
-	if (szArg[0] != 0)
+	int nRet = SYSINFO_RC_NO_SUCH_INSTANCE;
+	while(ifnetaddr != 0)
 	{
-		if (szArg[0] >= '0' && szArg[0] <= '9')
+		if (kvm_read(kvmd, ifnetaddr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
+			return SYSINFO_RC_ERROR;
+		ifnetaddr = (u_long)TAILQ_NEXT(&ifnet, if_list);
+
+		char szName[IFNAMSIZ];
+		strlcpy(szName, ifnet.if_xname, sizeof(szName));
+		if (strcmp(szName, szArg) == 0)
 		{
-			// index
-			if (if_indextoname(atoi(szArg), szArg) != szArg)
+			nRet = SYSINFO_RC_SUCCESS;
+			switch((long)pArg)
 			{
-				// not found
-				nRet = SYSINFO_RC_ERROR;
-			}
-		}
-
-		if (nRet == SYSINFO_RC_SUCCESS)
-		{
-			nRet = SYSINFO_RC_ERROR;
-
-			if (kvmd == NULL) {
-				kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-				if (kvmd == NULL)
-					return SYSINFO_RC_ERROR;
-				if (kvm_nlist(kvmd, nl) < 0)
-					return SYSINFO_RC_ERROR;
-				if (nl[0].n_type == 0)
-					return SYSINFO_RC_ERROR;
-			}
-			ifnetaddr = nl[N_IFNET].n_value;
-			if (kvm_read(kvmd, ifnetaddr, &ifnethead, sizeof(ifnethead)) != sizeof(ifnethead))
-				return SYSINFO_RC_ERROR;
-			ifnetaddr = (u_long)TAILQ_FIRST(&ifnethead);
-			while (ifnetaddr) {
-				if (kvm_read(kvmd, ifnetaddr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
-					return SYSINFO_RC_ERROR;
-				ifnetaddr = (u_long)TAILQ_NEXT(&ifnet, if_list);
-				strlcpy(szName, ifnet.if_xname, sizeof(szName));
-				if (strcmp(szName, szArg) == 0) {
-					nRet = SYSINFO_RC_SUCCESS;
-					switch((long)pArg)
-					{
-						case IF_INFO_BYTES_IN:
-							ret_uint(pValue, ifnet.if_ibytes);
-							break;
-						case IF_INFO_BYTES_OUT:
-							ret_uint(pValue, ifnet.if_obytes);
-							break;
-						case IF_INFO_IN_ERRORS:
-							ret_uint(pValue, ifnet.if_ierrors);
-							break;
-						case IF_INFO_OUT_ERRORS:
-							ret_uint(pValue, ifnet.if_oerrors);
-							break;
-						case IF_INFO_PACKETS_IN:
-							ret_uint(pValue, ifnet.if_ipackets);
-							break;
-						case IF_INFO_PACKETS_OUT:
-							ret_uint(pValue, ifnet.if_opackets);
-							break;
-						default:
-							nRet = SYSINFO_RC_UNSUPPORTED;
-							break;
-					}
+				case IF_INFO_BYTES_IN:
+					ret_uint(value, ifnet.if_ibytes);
 					break;
-				}
-				else
-					continue;
+				case IF_INFO_BYTES_OUT:
+					ret_uint(value, ifnet.if_obytes);
+					break;
+				case IF_INFO_IN_ERRORS:
+					ret_uint(value, ifnet.if_ierrors);
+					break;
+				case IF_INFO_OUT_ERRORS:
+					ret_uint(value, ifnet.if_oerrors);
+					break;
+				case IF_INFO_PACKETS_IN:
+					ret_uint(value, ifnet.if_ipackets);
+					break;
+				case IF_INFO_PACKETS_OUT:
+					ret_uint(value, ifnet.if_opackets);
+					break;
+				default:
+					nRet = SYSINFO_RC_UNSUPPORTED;
+					break;
 			}
+			break;
 		}
 	}
 
 	return nRet;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.10  2005/10/17 20:45:46  victor
-Fixed incorrect usage of strncpy
-
-Revision 1.9  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.8  2005/06/12 17:58:36  victor
-Net.Interface.AdminStatus should return 2 for disabled interfaces
-
-Revision 1.7  2005/05/30 16:31:58  alk
-fix: InterfaceList now return interfaces w/o IP address
-
-Revision 1.6  2005/05/23 20:30:28  alk
-! memory allocation for address list now in sizeof * count, fixes "mixing" lists of aliases
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/03/10 12:23:56  alk
-issue #18
-alias handling on inet interfaces
-status: fixed
-
-Revision 1.3  2005/02/14 17:03:37  alk
-issue #9
-
-mask calculation chaged to BitsInMask()
-
-Revision 1.2  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.4  2005/01/05 12:21:24  victor
-- Added wrappers for new and delete from gcc2 libraries
-- sys/stat.h and fcntl.h included in nms_common.h
-
-Revision 1.3  2004/11/25 08:01:27  victor
-Processing of interface list will be stopped on error
-
-Revision 1.2  2004/10/23 22:53:23  alk
-ArpCache: ignore incomplete entries
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/
+#endif /* HAVE_DECL_SIOCGIFDATA */

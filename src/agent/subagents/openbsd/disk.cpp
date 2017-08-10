@@ -26,13 +26,13 @@
 
 #include "disk.h"
 
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};
 	struct statfs s;
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0 && statfs(szArg, &s) == 0)
 	{
@@ -75,30 +75,3 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCo
 
 	return nRet;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2007/09/27 09:20:41  alk
-DISK_* params fixed in all subagents
-
-Revision 1.1  2006/03/07 09:42:48  alk
-OpenBSD subagent incorporated
-flex params changed in libnxsl's makefile
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

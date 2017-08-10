@@ -2414,10 +2414,16 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xOpenBSD"; then
+	AC_CHECK_DECLS([SIOCGIFDATA],,,[
+#if HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#endif
+	])
 	AC_MSG_CHECKING(if kvm_getprocs requires sizeof kinfo_proc argument)
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/sysctl.h>
 #include <kvm.h>
 #include <sys/user.h>
         ]],[[
@@ -2437,6 +2443,7 @@ if test "x$PLATFORM" = "xOpenBSD"; then
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/sysctl.h>
 #include <kvm.h>
 #include <sys/user.h>
         ]],[[

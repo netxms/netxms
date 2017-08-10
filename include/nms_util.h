@@ -1514,6 +1514,7 @@ union SockAddrBuffer
 /**
  * sockaddr length calculation
  */
+#undef SA_LEN
 #ifdef WITH_IPV6
 #define SA_LEN(sa) (((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #else
