@@ -277,10 +277,12 @@ enum InterfaceAdminState
  */
 enum InterfaceOperState
 {
-   IF_OPER_STATE_UNKNOWN = 0,
-   IF_OPER_STATE_UP      = 1,
-   IF_OPER_STATE_DOWN    = 2,
-   IF_OPER_STATE_TESTING = 3
+   IF_OPER_STATE_UNKNOWN     = 0,
+   IF_OPER_STATE_UP          = 1,
+   IF_OPER_STATE_DOWN        = 2,
+   IF_OPER_STATE_TESTING     = 3,
+   IF_OPER_STATE_DORMANT     = 4,
+   IF_OPER_STATE_NOT_PRESENT = 5
 };
 
 /**

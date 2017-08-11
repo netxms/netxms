@@ -591,15 +591,21 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *att
          SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
          switch(state)
          {
+            case 1:
+               *operState = IF_OPER_STATE_UP;
+               break;
+            case 2:  // down: interface is down
+            case 7:  // lowerLayerDown: down due to state of lower-layer interface(s)
+               *operState = IF_OPER_STATE_DOWN;
+               break;
             case 3:
 					*operState = IF_OPER_STATE_TESTING;
                break;
-            case 2:  // down: interface is down
-				case 7:	// lowerLayerDown: down due to state of lower-layer interface(s)
-					*operState = IF_OPER_STATE_DOWN;
+            case 5:
+               *operState = IF_OPER_STATE_DORMANT;
                break;
-            case 1:
-					*operState = IF_OPER_STATE_UP;
+            case 6:
+               *operState = IF_OPER_STATE_NOT_PRESENT;
                break;
             default:
 					*operState = IF_OPER_STATE_UNKNOWN;

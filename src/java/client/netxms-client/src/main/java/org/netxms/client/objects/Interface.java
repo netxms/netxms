@@ -54,6 +54,8 @@ public class Interface extends GenericObject
 	public static final int OPER_STATE_UP            = 1;
 	public static final int OPER_STATE_DOWN          = 2;
 	public static final int OPER_STATE_TESTING       = 3;
+   public static final int OPER_STATE_DORMANT       = 4;
+   public static final int OPER_STATE_NOT_PRESENT   = 5;
 
    public static final int EXPECTED_STATE_UP        = 0;
    public static final int EXPECTED_STATE_DOWN      = 1;
@@ -86,7 +88,9 @@ public class Interface extends GenericObject
 			"UNKNOWN",
 			"UP",
 			"DOWN",
-			"TESTING"
+			"TESTING",
+			"DORMANT",
+			"NOT PRESENT"
 		};
 	private static final String[] paeStateText =
 		{

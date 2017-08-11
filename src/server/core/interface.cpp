@@ -567,11 +567,17 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
                   expectedState = IF_EXPECTED_STATE_DOWN;
                   setExpectedState(expectedState);
                }
-					newStatus = ((expectedState == IF_EXPECTED_STATE_UP) ? STATUS_CRITICAL : STATUS_NORMAL);
+					newStatus = (expectedState == IF_EXPECTED_STATE_UP) ? STATUS_CRITICAL : STATUS_NORMAL;
 					break;
 				case IF_OPER_STATE_TESTING:
 					newStatus = STATUS_TESTING;
 					break;
+				case IF_OPER_STATE_DORMANT:
+               newStatus = (expectedState == IF_EXPECTED_STATE_UP) ? STATUS_MINOR : STATUS_NORMAL;
+               break;
+            case IF_OPER_STATE_NOT_PRESENT:
+               newStatus = STATUS_DISABLED;
+               break;
 				default:
 					newStatus = STATUS_UNKNOWN;
 					break;

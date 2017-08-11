@@ -8,12 +8,13 @@
 - Fixed unrestricted node poller queue growth when discovery from SNMP traps or syslog is on
 - Server's database password can be supplied by external tool
 - Fixed OpenBSD compatibility issues
+- Correct handling of "dormant" and "not present" interface operational states
 - NXSL:
 	- New class "InetAddress"
 	- New attribute "ipAddressList" for class "Interface"
 - Management console:
 	- Improved status map
-- Fixed issues: NX-930, NX-1263, NX-1272, NX-1273, NX-1278, NX-1281, NX-1284, NX-1285
+- Fixed issues: NX-930, NX-1143, NX-1263, NX-1272, NX-1273, NX-1278, NX-1281, NX-1284, NX-1285
 
 *
 * 2.1
