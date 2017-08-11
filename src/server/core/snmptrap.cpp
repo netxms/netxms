@@ -26,11 +26,6 @@
 #define BY_POSITION 1
 
 /**
- * Externals
- */
-extern Queue g_nodePollerQueue;
-
-/**
  * Total number of received SNMP traps
  */
 UINT64 g_snmpTrapsReceived = 0;
@@ -386,7 +381,11 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
       if (pm->isPositional())
       {
 			// Extract by varbind position
-         SNMP_Variable *varbind = pdu->getVariable(pm->getPosition());
+         // Position numbering in mapping starts from 1,
+         // SNMP v2/v3 trap contains uptime and trap OID at positions 0 and 1,
+         // so map first mapping position to index 2 and so on
+         int index = (pdu->getVersion() == SNMP_VERSION_1) ? pm->getPosition() - 1 : pm->getPosition() + 1;
+         SNMP_Variable *varbind = pdu->getVariable(index);
          if (varbind != NULL)
          {
 				bool convertToHex = true;

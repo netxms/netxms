@@ -294,7 +294,7 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
 
             bResult = true;
          }
-         safe_free(oid->value);
+         free(oid->value);
          free(oid);
       }
    }

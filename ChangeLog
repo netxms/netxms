@@ -13,7 +13,7 @@
 	- New attribute "ipAddressList" for class "Interface"
 - Management console:
 	- Improved status map
-- Fixed issues: NX-930, NX-1263, NX-1272, NX-1273, NX-1278, NX-1281, NX-1284
+- Fixed issues: NX-930, NX-1263, NX-1272, NX-1273, NX-1278, NX-1281, NX-1284, NX-1285
 
 *
 * 2.1
