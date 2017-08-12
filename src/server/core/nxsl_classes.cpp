@@ -376,6 +376,14 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
 }
 
 /**
+ * enableRoutingTablePolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL);
+}
+
+/**
  * enableSnmp(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableSnmp)
@@ -410,6 +418,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
+   NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
