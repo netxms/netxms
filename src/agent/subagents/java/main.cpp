@@ -140,7 +140,7 @@ static NETXMS_SUBAGENT_INFO s_subagentInfo =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("JAVA"),
-   NETXMS_VERSION_STRING,
+   NETXMS_BUILD_TAG,
    SubAgentInit,
    SubAgentShutdown,
    NULL,                         // BOOL (*commandHandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)

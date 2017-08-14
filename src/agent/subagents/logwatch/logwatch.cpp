@@ -321,7 +321,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("LOGWATCH"), NETXMS_VERSION_STRING,
+	_T("LOGWATCH"), NETXMS_BUILD_TAG,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,

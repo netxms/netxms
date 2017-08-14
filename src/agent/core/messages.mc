@@ -23,7 +23,7 @@ NetXMS Agent stopped
 MessageId=
 SymbolicName=MSG_SUBAGENT_LOADED
 Language=English
-Subagent "%1" loaded successfully
+Subagent "%1" (%2) loaded successfully (version %3)
 .
 
 MessageId=
@@ -41,7 +41,7 @@ Unable to find entry point in subagent module "%1"
 MessageId=
 SymbolicName=MSG_SUBAGENT_INIT_FAILED
 Language=English
-Initialization of subagent "%1" failed
+Initialization of subagent "%1" (%2) failed
 .
 
 MessageId=
@@ -348,6 +348,12 @@ MessageId=
 SymbolicName=MSG_ADD_EXT_TABLE_FAILED
 Language=English
 Unable to add external table "%1"
+.
+
+MessageId=
+SymbolicName=MSG_AGENT_VERSION
+Language=English
+Core agent version %1
 .
 
 ;#endif

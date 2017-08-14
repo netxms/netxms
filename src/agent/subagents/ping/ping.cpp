@@ -440,7 +440,7 @@ static NETXMS_SUBAGENT_TABLE m_table[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PING"), NETXMS_VERSION_STRING,
+	_T("PING"), NETXMS_BUILD_TAG,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

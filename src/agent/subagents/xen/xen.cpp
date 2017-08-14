@@ -165,7 +165,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("XEN"), NETXMS_VERSION_STRING,
+	_T("XEN"), NETXMS_BUILD_TAG,
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,

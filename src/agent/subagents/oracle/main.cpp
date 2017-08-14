@@ -525,7 +525,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
 static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ORACLE"), NETXMS_VERSION_STRING,
+	_T("ORACLE"), NETXMS_BUILD_TAG,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,

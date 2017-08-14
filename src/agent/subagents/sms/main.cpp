@@ -112,7 +112,7 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SMS"), NETXMS_VERSION_STRING,
+	_T("SMS"), NETXMS_BUILD_TAG,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,

@@ -495,7 +495,7 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("Linux"), NETXMS_VERSION_STRING,
+	_T("Linux"), NETXMS_BUILD_TAG,
 	SubAgentInit,     /* initialization handler */
 	SubAgentShutdown, /* unload handler */
 	NULL,             /* command handler */

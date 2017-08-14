@@ -748,6 +748,7 @@ BOOL Initialize()
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }
    }
+	nxlog_write(MSG_AGENT_VERSION, NXLOG_INFO, "s", NETXMS_BUILD_TAG);
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", s_debugLevel);
 	nxlog_set_debug_level(s_debugLevel);

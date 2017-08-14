@@ -964,7 +964,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("FILEMGR"), NETXMS_VERSION_STRING,
+   _T("FILEMGR"), NETXMS_BUILD_TAG,
    SubagentInit, SubagentShutdown, ProcessCommands,
    0, NULL, // parameters
    0, NULL, // lists

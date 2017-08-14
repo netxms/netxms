@@ -256,7 +256,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("MYSQL"), NETXMS_VERSION_STRING,
+	_T("MYSQL"), NETXMS_BUILD_TAG,
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	0, NULL,    // lists

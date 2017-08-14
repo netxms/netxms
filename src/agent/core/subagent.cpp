@@ -111,14 +111,12 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 									 pInfo->name,
 									 pInfo->actions[i].description);
 
-					nxlog_write(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-								   "s", pszModuleName);
+					nxlog_write(MSG_SUBAGENT_LOADED, NXLOG_INFO, "sss", pInfo->name, pszModuleName, pInfo->version);
 					bSuccess = TRUE;
 				}
 				else
 				{
-					nxlog_write(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
-								   "s", pszModuleName);
+					nxlog_write(MSG_SUBAGENT_INIT_FAILED, NXLOG_ERROR, "ss", pInfo->name, pszModuleName);
 					DLClose(hModule);
 				}
          }
@@ -136,13 +134,13 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
       }
       else
       {
-         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", pszModuleName);
+         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, NXLOG_ERROR, "s", pszModuleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE, "s", pszModuleName);
+      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, NXLOG_ERROR, "s", pszModuleName);
       DLClose(hModule);
    }
 
@@ -165,15 +163,9 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
    {
       // Assume that subagent name without path given
       // Try to load it from pkglibdir
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/lib/netxms/%s"), homeDir, szModuleName);
-      }
-      else
-      {
-         _sntprintf(fullName, MAX_PATH, _T("%s/%s"), PKGLIBDIR, szModuleName);
-      }
+      TCHAR libDir[MAX_PATH];
+      GetNetXMSDirectory(nxDirLib, libDir);
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libDir, szModuleName);
    }
    else
    {

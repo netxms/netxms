@@ -197,7 +197,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PORTCHECK"),
-	NETXMS_VERSION_STRING,
+	NETXMS_BUILD_TAG,
 	SubagentInit, NULL, // init and shutdown routines
 	CommandHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
