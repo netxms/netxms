@@ -167,7 +167,7 @@ UINT32 Interface::getPingTime()
    if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
    {
       updatePingData();
-      DbgPrintf(7, _T("Interface::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
+      nxlog_debug(7, _T("Interface::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
    }
    return m_pingTime;
 }
@@ -717,7 +717,7 @@ void Interface::updatePingData()
    Node *pNode = getParentNode();
    if (pNode == NULL)
    {
-      DbgPrintf(7, _T("Interface::updatePingData: Can't find parent node"));
+      nxlog_debug(7, _T("Interface::updatePingData: Can't find parent node"));
       return;
    }
    UINT32 icmpProxy = pNode->getIcmpProxy();
@@ -733,11 +733,11 @@ void Interface::updatePingData()
 
    if (icmpProxy != 0)
    {
-      DbgPrintf(7, _T("Interface::updatePingData: ping via proxy [%u]"), icmpProxy);
+      nxlog_debug(7, _T("Interface::updatePingData: ping via proxy [%u]"), icmpProxy);
       Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
       if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
       {
-         DbgPrintf(7, _T("Interface::updatePingData: proxy node found: %s"), proxyNode->getName());
+         nxlog_debug(7, _T("Interface::updatePingData: proxy node found: %s"), proxyNode->getName());
          AgentConnection *conn = proxyNode->createAgentConnection();
          if (conn != NULL)
          {
@@ -750,7 +750,7 @@ void Interface::updatePingData()
 				   _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
 				   if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
 				   {
-                  DbgPrintf(7, _T("Interface::updatePingData: proxy response: \"%s\""), buffer);
+				      nxlog_debug(7, _T("Interface::updatePingData: proxy response: \"%s\""), buffer);
 					   TCHAR *eptr;
 					   value = _tcstol(buffer, &eptr, 10);
                   if (*eptr != 0)
@@ -767,19 +767,21 @@ void Interface::updatePingData()
             else
             {
                m_pingTime = PING_TIME_TIMEOUT;
-               DbgPrintf(7, _T("Interface::updatePingData: incorrect value or error while parsing"));
+               nxlog_debug(7, _T("Interface::updatePingData: incorrect value or error while parsing"));
             }
             m_pingLastTimeStamp = time(NULL);
             conn->decRefCount();
          }
          else
          {
-            DbgPrintf(7, _T("Interface::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+            nxlog_debug(7, _T("Interface::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+            m_pingTime = PING_TIME_TIMEOUT;
          }
       }
       else
       {
-         DbgPrintf(7, _T("Interface::updatePingData: proxy node not available [%u]"), icmpProxy);
+         nxlog_debug(7, _T("Interface::updatePingData: proxy node not available [%u]"), icmpProxy);
+         m_pingTime = PING_TIME_TIMEOUT;
       }
    }
    else	// not using ICMP proxy
@@ -789,13 +791,13 @@ void Interface::updatePingData()
       for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
       {
          const InetAddress *a = list->get(i);
-		   DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
+         nxlog_debug(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
             m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
 		   dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
       }
       if (dwPingStatus != ICMP_SUCCESS)
       {
-         DbgPrintf(7, _T("Interface::updatePingData: error: %d"), dwPingStatus);
+         nxlog_debug(7, _T("Interface::updatePingData: error: %d"), dwPingStatus);
          m_pingTime = PING_TIME_TIMEOUT;
       }
       m_pingLastTimeStamp = time(NULL);
