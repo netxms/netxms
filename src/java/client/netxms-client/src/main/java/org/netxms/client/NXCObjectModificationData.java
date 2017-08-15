@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
+import org.netxms.base.MacAddress;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;

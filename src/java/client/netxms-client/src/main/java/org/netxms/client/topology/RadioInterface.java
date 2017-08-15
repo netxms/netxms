@@ -18,8 +18,8 @@
  */
 package org.netxms.client.topology;
 
+import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.MacAddress;
 import org.netxms.client.objects.AccessPoint;
 
 /**

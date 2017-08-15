@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.netxms.client.MacAddress;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;

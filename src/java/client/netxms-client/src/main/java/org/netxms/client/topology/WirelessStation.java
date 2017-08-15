@@ -19,8 +19,8 @@
 package org.netxms.client.topology;
 
 import java.net.InetAddress;
+import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.MacAddress;
 
 /**
  * Information about wireless station

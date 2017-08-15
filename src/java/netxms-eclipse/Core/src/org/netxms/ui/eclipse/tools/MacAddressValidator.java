@@ -18,8 +18,8 @@
  */
 package org.netxms.ui.eclipse.tools;
 
-import org.netxms.client.MacAddress;
-import org.netxms.client.MacAddressFormatException;
+import org.netxms.base.MacAddress;
+import org.netxms.base.MacAddressFormatException;
 import org.netxms.ui.eclipse.console.Messages;
 
 /**

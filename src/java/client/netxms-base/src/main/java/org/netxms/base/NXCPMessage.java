@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.CRC32;
-import org.netxms.client.MacAddress;
+import org.netxms.base.MacAddress;
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.DeflaterOutputStream;
 import com.jcraft.jzlib.InflaterInputStream;
