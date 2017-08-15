@@ -18,7 +18,9 @@
  */
 package org.netxms.base;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netxms.base.MacAddressFormatException;
@@ -135,16 +137,24 @@ public class MacAddress
 		if (matcher.matches())
 		{
 		   int count = matcher.groupCount();
-			byte[] bytes = new byte[count];
+			List<Byte> byteList = new ArrayList<Byte>();
 			try
 			{
 				for(int i = 0; i < count; i++)
-					bytes[i] = (byte)Integer.parseInt(matcher.group(i + 1), 16);
+				{
+		         if (matcher.group(i + 1) != null)
+		            byteList.add((byte)Integer.parseInt(matcher.group(i + 1), 16));
+				}
 			}
 			catch(NumberFormatException e)
 			{
 				throw new MacAddressFormatException();
 			}
+			
+
+         byte[] bytes = new byte[byteList.size()];
+         for(int i = 0; i < byteList.size(); i++)
+            bytes[i] = byteList.get(i).byteValue();
 			return new MacAddress(bytes);
 		}
 		else
