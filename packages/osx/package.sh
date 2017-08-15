@@ -2,7 +2,11 @@
 
 set -e
 
-version=`grep AC_INIT ../../configure.ac|cut -d'[' -f3|cut -d']' -f1`
+if [ -z $1 ]; then
+   version=`grep AC_INIT ../../configure.ac|cut -d'[' -f3|cut -d']' -f1`
+else
+   version=$1
+fi
 
 rm -rf dist/* nxmc-${version}.dmg
 ~/Development/yoursway-eclipse-osx-repackager/EclipseOSXRepackager out/eclipse dist/NetXMS\ Console.app
