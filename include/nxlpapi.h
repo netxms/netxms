@@ -219,6 +219,7 @@ private:
 	int m_recordsProcessed;
 	int m_recordsMatched;
 	bool m_processAllRules;
+   bool m_suspended;
 	int m_traceLevel;
 	void (*m_traceCallback)(int, const TCHAR *, va_list);
 	TCHAR m_status[MAX_PARSER_STATUS_LEN];
@@ -303,6 +304,9 @@ public:
    int getRuleMatchCount(const TCHAR *ruleName, UINT32 objectId = 0) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount(objectId) : -1; }
 
    void restoreCounters(const LogParser *parser);
+
+   void suspend();
+   void resume();
 };
 
 /**

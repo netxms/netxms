@@ -118,6 +118,7 @@ LogParser::LogParser()
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = false;
+   m_suspended = false;
 	m_traceLevel = 0;
 	m_traceCallback = NULL;
 	_tcscpy(m_status, LPS_INIT);
@@ -163,6 +164,7 @@ LogParser::LogParser(const LogParser *src)
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = src->m_processAllRules;
+   m_suspended = src->m_suspended;
 	m_traceLevel = src->m_traceLevel;
 	m_traceCallback = src->m_traceCallback;
 	_tcscpy(m_status, LPS_INIT);
@@ -897,6 +899,9 @@ int LogParser::getCharSize() const
  */
 bool LogParser::isExclusionPeriod()
 {
+   if (m_suspended)
+      return true;
+
    if (m_exclusionSchedules.isEmpty())
       return false;
 
@@ -913,4 +918,20 @@ bool LogParser::isExclusionPeriod()
          return true;
    }
    return false;
+}
+
+/**
+ * Suspend parser
+ */
+void LogParser::suspend()
+{
+   m_suspended = true;
+}
+
+/**
+ * Resume parser
+ */
+void LogParser::resume()
+{
+   m_suspended = false;
 }
