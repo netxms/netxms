@@ -27,7 +27,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TableRow;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.AbstractObject;
@@ -200,8 +200,8 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long code = Long.parseLong(value);
-					EventTemplate evt = session.findEventTemplateByCode(code);
-					return (evt != null) ? evt.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+					EventObject evo = session.findEventObjectByCode(code);
+					return (evo != null) ? evo.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				catch(NumberFormatException e)
 				{

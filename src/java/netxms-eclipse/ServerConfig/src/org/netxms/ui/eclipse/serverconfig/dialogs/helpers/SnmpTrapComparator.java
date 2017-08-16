@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -64,10 +64,10 @@ public class SnmpTrapComparator extends ViewerComparator
 				rc = trap1.getObjectId().compareTo(trap2.getObjectId());
 				break;
 			case SelectSnmpTrapDialog.COLUMN_EVENT:
-				EventTemplate evt1 = session.findEventTemplateByCode(trap1.getEventCode());
-				EventTemplate evt2 = session.findEventTemplateByCode(trap2.getEventCode());
-				String name1 = (evt1 != null) ? evt1.getName() : ("[" + Integer.toString(trap1.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-				String name2 = (evt2 != null) ? evt2.getName() : ("[" + Integer.toString(trap2.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+			   EventObject evo1 = session.findEventObjectByCode(trap1.getEventCode());
+            EventObject evo2 = session.findEventObjectByCode(trap2.getEventCode());
+				String name1 = (evo1 != null) ? evo1.getName() : ("[" + Integer.toString(trap1.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				String name2 = (evo2 != null) ? evo2.getName() : ("[" + Integer.toString(trap2.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 				rc = name1.compareToIgnoreCase(name2);
 				break;
 			case SelectSnmpTrapDialog.COLUMN_DESCRIPTION:

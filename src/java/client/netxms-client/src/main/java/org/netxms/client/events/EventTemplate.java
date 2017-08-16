@@ -25,16 +25,11 @@ import org.netxms.client.constants.Severity;
 /**
  * Event template
  */
-public class EventTemplate
+public class EventTemplate extends EventObject
 {
-	public static final int FLAG_WRITE_TO_LOG = 0x0001;
-	
-	private long code;
-	private String name;
 	private Severity severity;
 	private int flags;
 	private String message;
-	private String description;
 	
 	/**
 	 * Create new empty event template.
@@ -43,27 +38,24 @@ public class EventTemplate
 	 */
 	public EventTemplate(long code)
 	{
-		this.code = code;
-		name = "";
+	   super(code);
 		severity = Severity.NORMAL;
 		flags = FLAG_WRITE_TO_LOG;
 		message = "";
-		description = "";
 	}
 	
 	/**
 	 * Create event template object from NXCP message.
 	 * 
 	 * @param msg NXCP message
+    * @param base base field id
 	 */
-	public EventTemplate(final NXCPMessage msg)
+	public EventTemplate(final NXCPMessage msg, long base)
 	{
-		code = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
-		severity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SEVERITY));
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
-		message = msg.getFieldAsString(NXCPCodes.VID_MESSAGE);
-		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+	   super(msg, base);
+		severity = Severity.getByValue(msg.getFieldAsInt32(base + 4));
+		flags = msg.getFieldAsInt32(base + 5);
+		message = msg.getFieldAsString(base + 6);
 	}
 	
 	/**
@@ -73,7 +65,19 @@ public class EventTemplate
 	 */
 	public EventTemplate(final EventTemplate src)
 	{
+	   super(src);
 		setAll(src);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.client.events.EventObject#fillMessage(org.netxms.base.NXCPMessage)
+	 */
+	public void fillMessage(NXCPMessage msg)
+	{
+	   super.fillMessage(msg);
+      msg.setFieldInt32(NXCPCodes.VID_SEVERITY, severity.getValue());
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      msg.setField(NXCPCodes.VID_MESSAGE, message);
 	}
 	
 	/**
@@ -81,30 +85,15 @@ public class EventTemplate
 	 * 
 	 * @param src Original event template object
 	 */
-	public void setAll(final EventTemplate src)
+	public void setAll(final EventObject src)
 	{
-		code = src.code;
-		severity = src.severity;
-		flags = src.flags;
-		name = src.name;
-		message = src.message;
-		description = src.description;
-	}
-
-	/**
-	 * @return the name
-	 */
-	public String getName()
-	{
-		return name;
-	}
-
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name)
-	{
-		this.name = name;
+	   if (!(src instanceof EventTemplate))
+	      return;
+	   
+	   super.setAll(src);
+		severity = ((EventTemplate)src).severity;
+		flags = ((EventTemplate)src).flags;
+		message = ((EventTemplate)src).message;
 	}
 
 	/**
@@ -153,37 +142,5 @@ public class EventTemplate
 	public void setMessage(String message)
 	{
 		this.message = message;
-	}
-
-	/**
-	 * @return the description
-	 */
-	public String getDescription()
-	{
-		return description;
-	}
-
-	/**
-	 * @param description the description to set
-	 */
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
-
-	/**
-	 * @return the code
-	 */
-	public long getCode()
-	{
-		return code;
-	}
-
-	/**
-	 * @param code the code to set
-	 */
-	public void setCode(long code)
-	{
-		this.code = code;
 	}
 }

@@ -66,6 +66,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.AlarmCategory;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -542,32 +543,35 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_EventIs, needAnd, rule.isEventsInverted(), listener);
 
-         List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
+         List<EventObject> sortedEvents = new ArrayList<EventObject>(rule.getEvents().size());
          for(Long code : rule.getEvents())
          {
-            EventTemplate event = session.findEventTemplateByCode(code);
+            EventObject event = session.findEventObjectByCode(code);
             if (event == null)
             {
                event = new EventTemplate(code);
-               event.setSeverity(Severity.UNKNOWN);
+               ((EventTemplate)event).setSeverity(Severity.UNKNOWN);
                event.setName("<" + code.toString() + ">"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             sortedEvents.add(event);
          }
-         Collections.sort(sortedEvents, new Comparator<EventTemplate>() {
+         Collections.sort(sortedEvents, new Comparator<EventObject>() {
             @Override
-            public int compare(EventTemplate t1, EventTemplate t2)
+            public int compare(EventObject t1, EventObject t2)
             {
                return t1.getName().compareToIgnoreCase(t2.getName());
             }
          });
 
-         for(EventTemplate e : sortedEvents)
+         for(EventObject e : sortedEvents)
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
             clabel.addMouseListener(listener);
             clabel.setText(e.getName());
-            clabel.setImage(StatusDisplayInfo.getStatusImage(e.getSeverity()));
+            if (e instanceof EventTemplate)
+               clabel.setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)e).getSeverity()));
+            else
+               clabel.setImage(SharedIcons.IMG_CONTAINER);
          }
          needAnd = true;
       }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -40,11 +39,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicyRule;
-import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Messages;
+import org.netxms.ui.eclipse.epp.propertypages.helpers.EventObjectLabelProvider;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -61,7 +60,7 @@ public class RuleEvents extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
+	private Map<Long, EventObject> events = new HashMap<Long, EventObject>();
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
@@ -91,7 +90,7 @@ public class RuleEvents extends PropertyPage
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new WorkbenchLabelProvider());
+      viewer.setLabelProvider(new EventObjectLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -102,8 +101,8 @@ public class RuleEvents extends PropertyPage
 			}
       });
 
-      for(EventTemplate e : session.findMultipleEventTemplates(rule.getEvents().toArray(new Long[0])))
-      	events.put(e.getCode(), e);
+      for(EventObject o : session.findMultipleEventObjects(rule.getEvents().toArray(new Long[0])))
+      	events.put(o.getCode(), o);
       viewer.setInput(events.values().toArray());
       
       GridData gridData = new GridData();
@@ -172,11 +171,11 @@ public class RuleEvents extends PropertyPage
 	 */
 	private void addEvent()
 	{
-		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell(), true);
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{
-			for(EventTemplate e : dlg.getSelectedEvents())
+			for(EventObject e : dlg.getSelectedEvents())
 				events.put(e.getCode(), e);
 		}
       viewer.setInput(events.values().toArray());
@@ -193,7 +192,7 @@ public class RuleEvents extends PropertyPage
 		{
 			while(it.hasNext())
 			{
-				EventTemplate e = (EventTemplate)it.next();
+			   EventObject e = (EventObject)it.next();
 				events.remove(e.getCode());
 			}
 	      viewer.setInput(events.values().toArray());

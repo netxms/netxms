@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.eventmanager.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.EventObject;
 
 /**
  * Filter for event list
@@ -39,7 +39,7 @@ public class EventListFilter extends ViewerFilter
 		if (filterString == null)
 			return true;
 		
-		return ((EventTemplate)element).getName().toLowerCase().contains(filterString);
+		return ((EventObject)element).getName().toLowerCase().contains(filterString);
 	}
 
 	/**

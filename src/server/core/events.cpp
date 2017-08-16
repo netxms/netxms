@@ -31,21 +31,93 @@ EventPolicy *g_pEventPolicy = NULL;
 /**
  * Static data
  */
-static RefCountHashMap<UINT32, EventTemplate> m_eventTemplates(true);
+static RefCountHashMap<UINT32, EventObject> m_eventObjects(true);
 static RWLOCK m_rwlockTemplateAccess;
+
+/**
+ * Create event object from DB record
+ */
+EventObject::EventObject(DB_RESULT hResult, int row)
+{
+   m_code = DBGetFieldULong(hResult, row, 0);
+   m_description = DBGetField(hResult, row, 1, NULL, 0);
+   DBGetField(hResult, row, 2, m_name, MAX_EVENT_NAME);
+   m_guid = DBGetFieldGUID(hResult, row, 3);
+}
+
+/**
+ * Create event object from message
+ */
+EventObject::EventObject(NXCPMessage *msg)
+{
+   m_code = 0;
+   m_description = msg->getFieldAsString(VID_DESCRIPTION);
+   msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
+   m_guid = uuid::generate();
+}
+
+/**
+ * Event object destructor
+ */
+EventObject::~EventObject()
+{
+   free(m_description);
+}
+
+/**
+ * Modify event object from message
+ */
+void EventObject::modifyFromMessage(NXCPMessage *msg)
+{
+   m_code = msg->getFieldAsUInt32(VID_EVENT_CODE);
+   free(m_description);
+   m_description = msg->getFieldAsString(VID_DESCRIPTION);
+   msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
+}
+
+/**
+ * Fill message with event object data
+ */
+void EventObject::fillMessage(NXCPMessage *msg, UINT32 base) const
+{
+   msg->setField(base + 1, m_code);
+   msg->setField(base + 2, m_description);
+   msg->setField(base + 3, m_name);
+}
+
+/**
+ * Convert event object to JSON
+ */
+json_t *EventObject::toJson() const
+{
+   json_t *root = json_object();
+
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "code", json_integer(m_code));
+   json_object_set_new(root, "description", json_string_t(m_description));
+
+   return root;
+}
 
 /**
  * Create event template from DB record
  */
-EventTemplate::EventTemplate(DB_RESULT hResult, int row)
+EventTemplate::EventTemplate(DB_RESULT hResult, int row) : EventObject(hResult, row)
 {
-   m_code = DBGetFieldULong(hResult, row, 0);
-   m_severity = DBGetFieldLong(hResult, row, 1);
-   m_flags = DBGetFieldLong(hResult, row, 2);
-   m_messageTemplate = DBGetField(hResult, row, 3, NULL, 0);
-   m_description = DBGetField(hResult, row, 4, NULL, 0);
-   DBGetField(hResult, row, 5, m_name, MAX_EVENT_NAME);
-   m_guid = DBGetFieldGUID(hResult, row, 6);
+   m_severity = DBGetFieldLong(hResult, row, 4);
+   m_flags = DBGetFieldLong(hResult, row, 5);
+   m_messageTemplate = DBGetField(hResult, row, 6, NULL, 0);
+}
+
+/**
+ * Create event template from message
+ */
+EventTemplate::EventTemplate(NXCPMessage *msg) : EventObject(msg)
+{
+   m_code = CreateUniqueId(IDG_EVENT);
+   m_severity = msg->getFieldAsInt32(VID_SEVERITY);
+   m_flags = msg->getFieldAsInt32(VID_FLAGS);
+   m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
 }
 
 /**
@@ -54,7 +126,6 @@ EventTemplate::EventTemplate(DB_RESULT hResult, int row)
 EventTemplate::~EventTemplate()
 {
    free(m_messageTemplate);
-   free(m_description);
 }
 
 /**
@@ -62,14 +133,261 @@ EventTemplate::~EventTemplate()
  */
 json_t *EventTemplate::toJson() const
 {
-   json_t *root = json_object();
-   json_object_set_new(root, "code", json_integer(m_code));
+   json_t *root = EventObject::toJson();
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "severity", json_integer(m_severity));
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "message", json_string_t(m_messageTemplate));
-   json_object_set_new(root, "description", json_string_t(m_description));
+
    return root;
+}
+
+/**
+ * Modify event template from message
+ */
+void EventTemplate::modifyFromMessage(NXCPMessage *msg)
+{
+   EventObject::modifyFromMessage(msg);
+   m_severity = msg->getFieldAsInt32(VID_SEVERITY);
+   m_flags = msg->getFieldAsInt32(VID_FLAGS);
+   free(m_messageTemplate);
+   m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
+}
+
+/**
+ * Fill message with event template data
+ */
+void EventTemplate::fillMessage(NXCPMessage *msg, UINT32 base) const
+{
+   EventObject::fillMessage(msg, base);
+   msg->setField(base + 4, m_severity);
+   msg->setField(base + 5, m_flags);
+   msg->setField(base + 6, m_messageTemplate);
+}
+
+/**
+ * Save event template to database
+ */
+bool EventTemplate::saveToDatabase() const
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+   bool success = false;
+
+   bool recordExists = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), m_code);
+   if (recordExists)
+      hStmt = DBPrepare(hdb, _T("UPDATE event_cfg SET event_name=?,severity=?,flags=?,message=?,description=? WHERE event_code=?"));
+   else
+      hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code,guid) VALUES (?,?,?,?,?,?,?)"));
+
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_severity);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_messageTemplate, DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH - 1);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, m_description, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_code);
+
+      if (!recordExists)
+      {
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
+      }
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return success;
+}
+
+/**
+ * Create event group from message
+ */
+EventGroup::EventGroup(NXCPMessage *msg) : EventObject(msg)
+{
+   m_code = CreateUniqueId(IDG_EVENT_GROUP);
+   m_eventCodeList = new IntegerArray<UINT32>;
+   msg->getFieldAsInt32Array(VID_EVENT_LIST, m_eventCodeList);
+}
+
+/**
+ * Create event group from DB
+ */
+EventGroup::EventGroup(DB_RESULT result, int row, IntegerArray<UINT32> *memberCache) : EventObject(result, row)
+{
+   m_eventCodeList = new IntegerArray<UINT32>(16, 16);
+   int i = 0;
+   while((i < memberCache->size()) && (memberCache->get(i) != m_code))
+      i += 2;
+   while((i < memberCache->size()) && (memberCache->get(i) == m_code))
+   {
+      m_eventCodeList->add(memberCache->get(i + 1));
+      i += 2;
+   }
+}
+
+/**
+ * Event group destructor
+ */
+EventGroup::~EventGroup()
+{
+   free(m_eventCodeList);
+}
+
+/**
+ * Check if event is a member of specific group
+ */
+static bool CheckGroupMembership(UINT32 eventCode, UINT32 groupId)
+{
+   if (!(groupId & GROUP_FLAG_BIT))
+      return false;
+
+   EventGroup *g = (EventGroup *)m_eventObjects.get(groupId);
+   if (g != NULL)
+   {
+      for(int i = 0; i < g->getMemberCount(); i++)
+      {
+         if (eventCode == g->getMember(i))
+            return true;
+         if (CheckGroupMembership(eventCode, g->getMember(i)))
+            return true;
+      }
+   }
+
+   return false;
+}
+/**
+ * Modify event template from message
+ */
+void EventGroup::modifyFromMessage(NXCPMessage *msg)
+{
+   EventObject::modifyFromMessage(msg);
+   IntegerArray<UINT32> eventCodeList;
+   msg->getFieldAsInt32Array(VID_EVENT_LIST, &eventCodeList);
+   m_eventCodeList->clear();
+   for(int i = 0; i < eventCodeList.size(); i++)
+   {
+      if (!m_eventCodeList->contains(eventCodeList.get(i)) &&
+         !CheckGroupMembership(m_code, eventCodeList.get(i)) &&
+         !CheckGroupMembership(eventCodeList.get(i), m_code))
+      {
+         m_eventCodeList->add(eventCodeList.get(i));
+      }
+   }
+}
+
+/**
+ * Fill message with event group data
+ */
+void EventGroup::fillMessage(NXCPMessage *msg, UINT32 base) const
+{
+   EventObject::fillMessage(msg, base);
+   msg->setFieldFromInt32Array(base + 4, m_eventCodeList);
+}
+
+/**
+ * Save event group to database
+ */
+bool EventGroup::saveToDatabase() const
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      DB_STATEMENT hStmt;
+      bool recordExists = IsDatabaseRecordExist(hdb, _T("event_groups"), _T("id"), m_code);
+      if (recordExists)
+         hStmt = DBPrepare(hdb, _T("UPDATE event_groups SET name=?,description=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO event_groups (name,description,id,guid) VALUES (?,?,?,?)"));
+
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_description, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_code);
+         if (!recordExists)
+            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_guid);
+
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("DELETE FROM event_group_members WHERE group_id=?"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_code);
+            success = DBExecute(hStmt);
+            DBFreeStatement(hStmt);
+         }
+         else
+            success = false;
+      }
+
+      if (success)
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO event_group_members (group_id,event_code) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_code);
+            for(int i = 0; i < m_eventCodeList->size() && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_eventCodeList->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+      }
+
+      if (success)
+         success = DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return success;
+}
+
+/**
+ * Convert event group to JSON
+ */
+json_t *EventGroup::toJson() const
+{
+   json_t *root = EventObject::toJson();
+
+   json_t *groupList =  json_array();
+   for(int i = 0; i < m_eventCodeList->size(); i++)
+      json_array_append_new(groupList, json_integer(m_eventCodeList->get(i)));
+   json_object_set_new(root, "groups", groupList);
+
+   return root;
+}
+
+/**
+ * Check if event object is member of group (recursive)
+ */
+bool EventGroup::isMember(UINT32 eventCode)
+{
+   if (m_eventCodeList->contains(eventCode))
+      return true;
+
+   for(int i = 0; i < m_eventCodeList->size(); i++)
+   {
+      if (m_eventCodeList->get(i) & GROUP_FLAG_BIT)
+      {
+         EventGroup *g = (EventGroup*)FindEventObjectByCode(m_eventCodeList->get(i));
+         if (g != NULL)
+            return g->isMember(m_eventCodeList->get(i));
+         return false;
+      }
+   }
+
+   return false;
 }
 
 /**
@@ -772,19 +1090,43 @@ static bool LoadEvents()
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name,guid FROM event_cfg"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,description,event_name,guid,severity,flags,message FROM event_cfg"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          EventTemplate *t = new EventTemplate(hResult, i);
-         m_eventTemplates.set(t->getCode(), t);
+         m_eventObjects.set(t->getCode(), t);
          t->decRefCount();
       }
-
       DBFreeResult(hResult);
-      success = true;
+
+      IntegerArray<UINT32> memberCache(256, 256);
+      hResult = DBSelect(hdb, _T("SELECT group_id,event_code FROM event_group_members ORDER BY group_id"));
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            memberCache.add(DBGetFieldULong(hResult, i, 0));
+            memberCache.add(DBGetFieldULong(hResult, i, 1));
+         }
+         DBFreeResult(hResult);
+      }
+
+      hResult = DBSelect(hdb, _T("SELECT id,description,name,guid FROM event_groups"));
+      if (hResult != NULL)
+      {
+         UINT32 numRows = DBGetNumRows(hResult);
+         for(int i = 0; i < numRows; i++)
+         {
+            EventGroup *g = new EventGroup(hResult, i, &memberCache);
+            m_eventObjects.set(g->getCode(), g);
+            g->decRefCount();
+         }
+         success = true;
+      }
    }
    else
    {
@@ -802,7 +1144,7 @@ BOOL InitEventSubsystem()
 {
    BOOL bSuccess;
 
-   // Create template access mutex
+   // Create object access mutex
    m_rwlockTemplateAccess = RWLockCreate();
 
    // Create event queue
@@ -842,18 +1184,18 @@ void ShutdownEventSubsystem()
 void ReloadEvents()
 {
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
-   m_eventTemplates.clear();
+   m_eventObjects.clear();
    LoadEvents();
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 
 /**
- * Delete event template from list
+ * Delete event object from list
  */
-void DeleteEventTemplateFromList(UINT32 eventCode)
+void DeleteEventObjectFromList(UINT32 eventCode)
 {
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
-   m_eventTemplates.remove(eventCode);
+   m_eventObjects.remove(eventCode);
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 
@@ -887,7 +1229,7 @@ static bool RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT3
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
-   eventTemplate = m_eventTemplates.get(eventCode);
+   eventTemplate = (EventTemplate *)m_eventObjects.get(eventCode);
    if (eventTemplate != NULL)
    {
       // Template found, create new event
@@ -1227,23 +1569,38 @@ void CreateNXMPEventRecord(String &str, UINT32 eventCode)
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
    // Find event template
-   EventTemplate *p = m_eventTemplates.get(eventCode);
-   if (p != NULL)
+   EventObject *o = m_eventObjects.get(eventCode);
+   if (o != NULL)
    {
       str.appendFormattedString(_T("\t\t<event id=\"%d\">\n")
-                             _T("\t\t\t<name>%s</name>\n")
-                             _T("\t\t\t<guid>%s</guid>\n")
-                             _T("\t\t\t<code>%d</code>\n")
-                             _T("\t\t\t<severity>%d</severity>\n")
-                             _T("\t\t\t<flags>%d</flags>\n")
-                             _T("\t\t\t<message>%s</message>\n")
-                             _T("\t\t\t<description>%s</description>\n")
-                             _T("\t\t</event>\n"),
-                             p->getCode(), (const TCHAR *)EscapeStringForXML2(p->getName()),
-                             (const TCHAR *)p->getGuid().toString(), p->getCode(), p->getSeverity(),
-                             p->getFlags(), (const TCHAR *)EscapeStringForXML2(p->getMessageTemplate()),
-                             (const TCHAR *)EscapeStringForXML2(p->getDescription()));
-      p->decRefCount();
+                                      _T("\t\t\t<name>%s</name>\n")
+                                      _T("\t\t\t<code>%d</code>\n")
+                                      _T("\t\t\t<description>%s</description>\n"),
+                                      o->getCode(), (const TCHAR *)EscapeStringForXML2(o->getName()),
+                                     (const TCHAR *)EscapeStringForXML2(o->getDescription()));
+      if (eventCode & GROUP_FLAG_BIT)
+      {
+         str.appendFormattedString(_T("\t\t\t<members>\n"));
+         for(int i = 0; i < ((EventGroup *) o)->getMemberCount(); i++)
+         {
+            str.appendFormattedString(_T("\t\t\t\t<code>%d</code>\n"),
+                                     ((EventGroup *) o)->getMember(i));
+         }
+         str.appendFormattedString(_T("\t\t\t</members>\n"));
+      }
+      else
+      {
+         str.appendFormattedString(_T("\t\t\t<guid>%s</guid>\n")
+                                _T("\t\t\t<severity>%d</severity>\n")
+                                _T("\t\t\t<flags>%d</flags>\n")
+                                _T("\t\t\t<message>%s</message>\n")
+                                _T("\t\t</event>\n"),
+                                (const TCHAR *)((EventTemplate *)o)->getGuid().toString(), o->getCode(),
+                                ((EventTemplate *)o)->getSeverity(), ((EventTemplate *)o)->getFlags(),
+                                (const TCHAR *)EscapeStringForXML2(((EventTemplate *)o)->getMessageTemplate()),
+                                (const TCHAR *)EscapeStringForXML2(((EventTemplate *)o)->getDescription()));
+      }
+      o->decRefCount();
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
@@ -1258,11 +1615,11 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
-   EventTemplate *p = m_eventTemplates.get(eventCode);
-   if (p != NULL)
+   EventObject *o = m_eventObjects.get(eventCode);
+   if (o != NULL)
    {
-      _tcscpy(buffer, p->getName());
-      p->decRefCount();
+      _tcscpy(buffer, o->getName());
+      o->decRefCount();
       bRet = true;
    }
    else
@@ -1275,31 +1632,31 @@ bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 }
 
 /**
- * Find event template by code - suitable for external call
+ * Find event object by code - suitable for external call
  */
-EventTemplate *FindEventTemplateByCode(UINT32 eventCode)
+EventObject *FindEventObjectByCode(UINT32 eventCode)
 {
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
-   EventTemplate *p = m_eventTemplates.get(eventCode);
+   EventObject *o = m_eventObjects.get(eventCode);
    RWLockUnlock(m_rwlockTemplateAccess);
-   return p;
+   return o;
 }
 
 /**
- * Find event template by name - suitable for external call
+ * Find event object by name - suitable for external call
  */
-EventTemplate *FindEventTemplateByName(const TCHAR *name)
+EventObject *FindEventObjectByName(const TCHAR *name)
 {
-   EventTemplate *result = NULL;
+   EventObject *result = NULL;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
-   Iterator<EventTemplate> *it = m_eventTemplates.iterator();
+   Iterator<EventObject> *it = m_eventObjects.iterator();
    while(it->hasNext())
    {
-      EventTemplate *t = it->next();
-      if (!_tcscmp(t->getName(), name))
+      EventObject *o = it->next();
+      if (!_tcscmp(o->getName(), name))
       {
-         result = t;
+         result = o;
          result->incRefCount();
          break;
       }
@@ -1315,11 +1672,11 @@ EventTemplate *FindEventTemplateByName(const TCHAR *name)
  */
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
-	EventTemplate *p = FindEventTemplateByName(name);
-	if (p == NULL)
+   EventObject *o = FindEventObjectByName(name);
+	if (o == NULL)
 	   return defaultValue;
-	UINT32 code = p->getCode();
-	p->decRefCount();
+	UINT32 code = o->getCode();
+	o->decRefCount();
 	return code;
 }
 
@@ -1339,4 +1696,172 @@ const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
    {
       return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : _T("INTERNAL ERROR");
    }
+}
+
+/**
+ * Callback for sending event configuration change notifications
+ */
+static void SendEventDBChangeNotification(ClientSession *session, void *arg)
+{
+   if (session->isAuthenticated() &&
+       (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
+        session->checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
+        session->checkSysAccessRights(SYSTEM_ACCESS_EPP)))
+      session->postMessage((NXCPMessage *)arg);
+}
+
+/**
+ * Update or create new event object from request
+ */
+UINT32 UpdateEventObject(NXCPMessage *request, NXCPMessage *response, json_t **oldValue, json_t **newValue)
+{
+   TCHAR name[MAX_EVENT_NAME] = _T("");
+   request->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
+   if (!IsValidObjectName(name, TRUE))
+      return RCC_INVALID_OBJECT_NAME;
+
+   EventObject *obj;
+   UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
+   RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
+
+   if (eventCode == 0)
+   {
+      if (request->getFieldAsBoolean(VID_IS_GROUP))
+         obj = new EventGroup(request);
+      else
+         obj = new EventTemplate(request);
+      m_eventObjects.set(obj->getCode(), obj);
+      *oldValue = NULL;
+   }
+   else
+   {
+      obj = m_eventObjects.get(eventCode);
+      if (obj == NULL)
+      {
+         RWLockUnlock(m_rwlockTemplateAccess);
+         return RCC_INVALID_EVENT_CODE;
+      }
+      *oldValue = obj->toJson();
+      obj->modifyFromMessage(request);
+   }
+   *newValue = obj->toJson();
+   bool success = obj->saveToDatabase();
+   if (success)
+   {
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+      obj->fillMessage(&nmsg, VID_ELEMENT_LIST_BASE);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+
+      response->setField(VID_EVENT_CODE, obj->getCode());
+   }
+
+   RWLockUnlock(m_rwlockTemplateAccess);
+
+   if (!success)
+   {
+      if (*oldValue != NULL)
+      {
+         json_decref(*oldValue);
+         *oldValue = NULL;
+      }
+      json_decref(*newValue);
+      *newValue = NULL;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Delete event template
+ */
+UINT32 DeleteEventObject(UINT32 eventCode)
+{
+   UINT32 rcc = RCC_SUCCESS;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt;
+
+   RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
+   if (eventCode & GROUP_FLAG_BIT)
+   {
+      if(m_eventObjects.contains(eventCode))
+      {
+         bool success = DBBegin(hdb);
+         if (success)
+         {
+            hStmt = DBPrepare(hdb, _T("DELETE FROM event_groups WHERE id=?"));
+            if (hStmt != NULL)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
+               success = DBExecute(hStmt);
+               DBFreeStatement(hStmt);
+            }
+            else
+               success = false;
+            if (success)
+            {
+               hStmt = DBPrepare(hdb, _T("DELETE FROM event_group_members WHERE group_id=?"));
+               if (hStmt != NULL)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
+                  success = DBExecute(hStmt);
+                  DBFreeStatement(hStmt);
+               }
+               else
+                  success = false;
+            }
+            if (success)
+               success = DBCommit(hdb);
+            else
+               DBRollback(hdb);
+         }
+         rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
+      }
+   }
+   else if (m_eventObjects.contains(eventCode))
+   {
+      hStmt = DBPrepare(hdb, _T("DELETE FROM event_cfg WHERE event_code=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, eventCode);
+         rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+         DBFreeStatement(hStmt);
+      }
+   }
+   else
+      rcc = RCC_INVALID_EVENT_CODE;
+
+   if (rcc == RCC_SUCCESS)
+   {
+      m_eventObjects.remove(eventCode);
+      NXCPMessage nmsg;
+      nmsg.setCode(CMD_EVENT_DB_UPDATE);
+      nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_DELETED);
+      nmsg.setField(VID_EVENT_CODE, eventCode);
+      EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+   }
+   RWLockUnlock(m_rwlockTemplateAccess);
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Get event configuration
+ */
+void GetEventConfiguration(NXCPMessage *msg)
+{
+   RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
+   UINT32 base = VID_ELEMENT_LIST_BASE;
+   msg->setField(VID_NUM_EVENTS, m_eventObjects.size());
+   Iterator<EventObject> *it = m_eventObjects.iterator();
+   while(it->hasNext())
+   {
+      EventObject *o = it->next();
+      o->fillMessage(msg, base);
+      base += 10;
+   }
+   RWLockUnlock(m_rwlockTemplateAccess);
 }

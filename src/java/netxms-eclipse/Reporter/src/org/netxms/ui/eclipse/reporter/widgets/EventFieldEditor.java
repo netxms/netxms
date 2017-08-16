@@ -29,6 +29,7 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -113,16 +114,17 @@ public class EventFieldEditor extends FieldEditor
 	 */
 	private void selectEvent()
 	{
-		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell(), false);
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-		   EventTemplate[] events = dlg.getSelectedEvents();
+		   EventObject[] events = dlg.getSelectedEvents();
 			if (events.length > 0)
 			{
 				eventCode = events[0].getCode();
 				text.setText(events[0].getName());
-				text.setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
+				if (events[0] instanceof EventTemplate)
+				   text.setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)events[0]).getSeverity()));
 			}
 			else
 			{

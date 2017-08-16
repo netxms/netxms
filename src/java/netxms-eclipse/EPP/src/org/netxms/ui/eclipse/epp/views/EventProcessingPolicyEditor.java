@@ -62,6 +62,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.AlarmCategory;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -1291,8 +1292,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       // check event names
       for(Long code : rule.getEvents())
       {
-         EventTemplate evt = session.findEventTemplateByCode(code);
-         if ((evt != null) && evt.getName().toLowerCase().contains(filterText))
+         EventObject evo = session.findEventObjectByCode(code);
+         if ((evo != null) && evo.getName().toLowerCase().contains(filterText))
             return true;
       }
 

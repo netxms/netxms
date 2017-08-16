@@ -1300,7 +1300,6 @@ typedef struct
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
    bool merge;
-   bool expandEnv;
 } XML_PARSER_STATE;
 
 /**
@@ -1398,7 +1397,7 @@ static void EndElement(void *userData, const char *name)
       ps->level--;
       if (ps->trimValue[ps->level])
          ps->charData[ps->level].trim();
-      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level], true, ps->expandEnv));
+      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level], true, ps->config->isExpansionAllowed()));
    }
 }
 
@@ -1431,7 +1430,6 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
    state.parser = parser;
    state.file = (name != NULL) ? name : _T("<mem>");
    state.merge = merge;
-   state.expandEnv = m_allowMacroExpansion;
 
    bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
    if (!success)

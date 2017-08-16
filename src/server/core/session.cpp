@@ -693,7 +693,7 @@ void ClientSession::processingThread()
             deleteAlarmCategory(pMsg);
             break;
          case CMD_LOAD_EVENT_DB:
-            sendEventDB(pMsg->getId());
+            sendEventDB(pMsg);
             break;
          case CMD_SET_EVENT_INFO:
             modifyEventTemplate(pMsg);
@@ -1970,77 +1970,26 @@ void ClientSession::deleteAlarmCategory(NXCPMessage *request)
 /**
  * Send event configuration to client
  */
-void ClientSession::sendEventDB(UINT32 dwRqId)
+void ClientSession::sendEventDB(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
    TCHAR szBuffer[4096];
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   msg.setId(pRequest->getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       if (!(g_flags & AF_DB_CONNECTION_LOST))
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
-         sendMessage(&msg);
-         msg.deleteAllFields();
-
-         // Prepare data message
-         msg.setCode(CMD_EVENT_DB_RECORD);
-         msg.setId(dwRqId);
-
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
-         if (hResult != NULL)
-         {
-            while(DBFetch(hResult))
-            {
-               msg.setField(VID_EVENT_CODE, DBGetFieldULong(hResult, 0));
-               msg.setField(VID_NAME, DBGetField(hResult, 1, szBuffer, 1024));
-               msg.setField(VID_SEVERITY, DBGetFieldULong(hResult, 2));
-               msg.setField(VID_FLAGS, DBGetFieldULong(hResult, 3));
-
-               DBGetField(hResult, 4, szBuffer, 4096);
-               msg.setField(VID_MESSAGE, szBuffer);
-
-               DBGetField(hResult, 5, szBuffer, 4096);
-               msg.setField(VID_DESCRIPTION, szBuffer);
-
-               sendMessage(&msg);
-               msg.deleteAllFields();
-            }
-            DBFreeResult(hResult);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-
-         // End-of-list indicator
-         msg.setField(VID_EVENT_CODE, (UINT32)0);
-			msg.setEndOfSequence();
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_CONNECTION_LOST);
+         GetEventConfiguration(&msg);
       }
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
    sendMessage(&msg);
-}
-
-/**
- * Callback for sending event configuration change notifications
- */
-static void SendEventDBChangeNotification(ClientSession *session, void *arg)
-{
-	if (session->isAuthenticated() &&
-       (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) ||
-        session->checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) ||
-        session->checkSysAccessRights(SYSTEM_ACCESS_EPP)))
-		session->postMessage((NXCPMessage *)arg);
 }
 
 /**
@@ -2053,92 +2002,25 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    // Prepare reply message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-
-   UINT32 eventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
-
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-		bool bEventExist = IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), eventCode);
-
-      // Check that we are not trying to create event below 100000
-      if (bEventExist || (eventCode >= FIRST_USER_EVENT_ID))
+      json_t *oldValue, *newValue;
+      UINT32 rcc = UpdateEventObject(pRequest, &msg, &oldValue, &newValue);
+      if (rcc == RCC_SUCCESS)
       {
-         // Prepare and execute SQL query
          TCHAR name[MAX_EVENT_NAME];
          pRequest->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
-         if (IsValidObjectName(name, TRUE))
-         {
-            EventTemplate *evt = FindEventTemplateByCode(eventCode);
-            json_t *oldValue = (evt != NULL) ? evt->toJson() : NULL;
-
-            DB_STATEMENT hStmt;
-            if (bEventExist)
-            {
-               hStmt = DBPrepare(hdb, _T("UPDATE event_cfg SET event_name=?,severity=?,flags=?,message=?,description=? WHERE event_code=?"));
-            }
-            else
-            {
-               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code,guid) VALUES (?,?,?,?,?,?,?)"));
-            }
-
-            if (hStmt != NULL)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pRequest->getFieldAsInt32(VID_SEVERITY));
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsInt32(VID_FLAGS));
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_MESSAGE), DB_BIND_DYNAMIC, MAX_EVENT_MSG_LENGTH - 1);
-               DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pRequest->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, eventCode);
-               if (!bEventExist)
-               {
-                  DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
-               }
-
-               if (DBExecute(hStmt))
-               {
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-                  ReloadEvents();
-
-					   NXCPMessage nmsg(pRequest);
-					   nmsg.setCode(CMD_EVENT_DB_UPDATE);
-					   nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
-					   EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
-
-					   evt = FindEventTemplateByCode(eventCode);
-					   json_t *newValue = (evt != NULL) ? evt->toJson() : NULL;
-					   writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, eventCode);
-					   json_decref(newValue);
-               }
-               else
-               {
-                  msg.setField(VID_RCC, RCC_DB_FAILURE);
-               }
-               DBFreeStatement(hStmt);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
-            json_decref(oldValue);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
-         }
+         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, pRequest->getFieldAsUInt32(VID_EVENT_CODE));
+         json_decref(oldValue);
+         json_decref(newValue);
       }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_EVENT_CODE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
+      msg.setField(VID_RCC, rcc);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify event template [%d]"), eventCode);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify event template [%d]"), pRequest->getFieldAsUInt32(VID_EVENT_CODE)); // TODO change message
    }
 
    // Send response
@@ -2162,28 +2044,11 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      TCHAR szQuery[256];
-      _sntprintf(szQuery, 256, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
-      if (DBQuery(hdb, szQuery))
-      {
-         DeleteEventTemplateFromList(dwEventCode);
-
-			NXCPMessage nmsg;
-			nmsg.setCode(CMD_EVENT_DB_UPDATE);
-			nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_DELETED);
-			nmsg.setField(VID_EVENT_CODE, dwEventCode);
-			EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
-
-         msg.setField(VID_RCC, RCC_SUCCESS);
-
+      UINT32 rcc = DeleteEventObject(dwEventCode);
+      if (rcc == RCC_SUCCESS)
 			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event template [%d] deleted"), dwEventCode);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
+
+      msg.setField(VID_RCC, rcc);
    }
    else
    {

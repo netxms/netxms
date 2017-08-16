@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -55,8 +55,8 @@ public class TrapListLabelProvider extends LabelProvider implements ITableLabelP
 			case SelectSnmpTrapDialog.COLUMN_OID:
 				return trap.getObjectId().toString();
 			case SelectSnmpTrapDialog.COLUMN_EVENT:
-				EventTemplate evt = session.findEventTemplateByCode(trap.getEventCode());
-				return (evt != null) ? evt.getName() : ("[" + Integer.toString(trap.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				EventObject evo = session.findEventObjectByCode(trap.getEventCode());
+				return (evo != null) ? evo.getName() : ("[" + Integer.toString(trap.getEventCode()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case SelectSnmpTrapDialog.COLUMN_DESCRIPTION:
 				return trap.getDescription();
 		}

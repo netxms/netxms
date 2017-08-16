@@ -298,10 +298,10 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,65535);
 #define ID_GROUP_1 -2147483647
 #define ID_GROUP_2 -2147483646
 
-INSERT INTO event_groups (id,name,description,range_start,range_end)
-   VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change',0,0);
-INSERT INTO event_groups (id,name,description,range_start,range_end)
-   VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation',0,0);
+INSERT INTO event_groups (guid,id,name,description)
+   VALUES (04b326c0-5cc0-411f-8587-2836cb87c920,ID_GROUP_1,'NodeStatus','All events reporting about node status change');
+INSERT INTO event_groups (guid,id,name,description)
+   VALUES (b61859c6-1768-4a61-a0cf-eed07d688f66,ID_GROUP_2,'NewObjects','All events reporting about new objects creation');
 
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);
