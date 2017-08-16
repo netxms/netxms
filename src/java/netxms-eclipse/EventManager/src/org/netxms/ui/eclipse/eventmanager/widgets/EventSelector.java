@@ -125,7 +125,7 @@ public class EventSelector extends AbstractSelector
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
-			EventTemplate event = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByCode(eventCode);
+			EventTemplate event = (EventTemplate)((NXCSession)ConsoleSharedData.getSession()).findEventObjectByCode(eventCode);
 			if (event != null)
 			{
 				setText(event.getName());

@@ -585,6 +585,21 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V458 to V459
+ */
+static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE event_groups DROP range_start\n")
+            _T("ALTER TABLE event_groups DROP range_end\n")
+            _T("ALTER TABLE event_groups ADD guid varchar(36) not null\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch))
+   CHK_EXEC(SetSchemaVersion(459));
+   return TRUE;
+}
+
+/**
  * Upgrade from V456 to V457
  */
 static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
@@ -691,6 +706,7 @@ static BOOL H_UpgradeFromV454(int currVersion, int newVersion)
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("interfaces"), _T("parent_iface")));
+
    CHK_EXEC(SetSchemaVersion(455));
    return TRUE;
 }
@@ -11907,6 +11923,7 @@ static struct
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
+   { 458, 459, H_UpgradeFromV458 },
    { 0, 0, NULL }
 };
 

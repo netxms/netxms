@@ -122,7 +122,7 @@ public class EventSelectionDialog extends Dialog
 		if (filterString != null)
 			filter.setFilterString(filterString);
 		eventList.addFilter(filter);
-		eventList.setInput(ConsoleSharedData.getSession().getCachedEventTemplates());
+		eventList.setInput(ConsoleSharedData.getSession().getCachedEventObjects());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.eventmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -41,22 +42,31 @@ public class EventTemplateComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case EventConfigurator.COLUMN_CODE:
-				result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());
+				result = (int)(((EventObject)e1).getCode() - ((EventObject)e2).getCode());
 				break;
 			case EventConfigurator.COLUMN_NAME:
-				result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
+				result = ((EventObject)e1).getName().compareToIgnoreCase(((EventObject)e2).getName());
 				break;
 			case EventConfigurator.COLUMN_SEVERITY:
-				result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
+			   if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
+			      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
+			   else
+			      result = 0;
 				break;
 			case EventConfigurator.COLUMN_FLAGS:
-				result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();
+            if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
+               result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();
+            else
+               result = 0;
 				break;
 			case EventConfigurator.COLUMN_MESSAGE:
-				result = ((EventTemplate)e1).getMessage().compareToIgnoreCase(((EventTemplate)e2).getMessage());
+            if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
+               result = ((EventTemplate)e1).getMessage().compareToIgnoreCase(((EventTemplate)e2).getMessage());
+            else
+               result = 0;
 				break;
 			case EventConfigurator.COLUMN_DESCRIPTION:
-				result = ((EventTemplate)e1).getDescription().compareToIgnoreCase(((EventTemplate)e2).getDescription());
+				result = ((EventObject)e1).getDescription().compareToIgnoreCase(((EventObject)e2).getDescription());
 				break;
 			default:
 				result = 0;

@@ -37,7 +37,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -60,6 +59,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -95,7 +95,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	public static final int COLUMN_MESSAGE = 4;
 	public static final int COLUMN_DESCRIPTION = 5;
 
-	private HashMap<Long, EventTemplate> eventTemplates;
+	private HashMap<Long, EventObject> eventObjects;
 	private SortableTableViewer viewer;
    private FilterText filterControl;
 	private Action actionNew;
@@ -227,17 +227,17 @@ public class EventConfigurator extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<EventTemplate> list = session.getEventTemplates();
+				final List<EventObject> list = session.getEventObjects();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						eventTemplates = new HashMap<Long, EventTemplate>(list.size());
-						for(final EventTemplate t: list)
+						eventObjects = new HashMap<Long, EventObject>(list.size());
+						for(final EventObject o: list)
 						{
-							eventTemplates.put(t.getCode(), t);
+							eventObjects.put(o.getCode(), o);
 						}
-						viewer.setInput(eventTemplates.values().toArray());
+						viewer.setInput(eventObjects.values().toArray());
 					}
 				});
 			}
@@ -257,16 +257,16 @@ public class EventConfigurator extends ViewPart implements SessionListener
 					@Override
 					public void run()
 					{
-						EventTemplate oldTmpl = eventTemplates.get(n.getSubCode());
-						if (oldTmpl != null)
+						EventObject oldObj = eventObjects.get(n.getSubCode());
+						if (oldObj != null)
 						{
-							oldTmpl.setAll((EventTemplate)n.getObject());
-							viewer.update(oldTmpl, null);
+						   oldObj.setAll((EventObject)n.getObject());
+							viewer.update(oldObj, null);
 						}
 						else
 						{
-							eventTemplates.put(n.getSubCode(), (EventTemplate)n.getObject());
-							viewer.setInput(eventTemplates.values().toArray());
+							eventObjects.put(n.getSubCode(), (EventTemplate)n.getObject());
+							viewer.setInput(eventObjects.values().toArray());
 						}
 					}
 				});
@@ -276,8 +276,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 					@Override
 					public void run()
 					{
-						eventTemplates.remove(n.getSubCode());
-						viewer.setInput(eventTemplates.values().toArray());
+						eventObjects.remove(n.getSubCode());
+						viewer.setInput(eventObjects.values().toArray());
 					}
 				});
 				break;
@@ -456,18 +456,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					long code = session.generateEventCode();
-					etmpl.setCode(code);
 					session.modifyEventTemplate(etmpl);
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							eventTemplates.put(etmpl.getCode(), etmpl);
-							viewer.setInput(eventTemplates.values().toArray());
-							viewer.setSelection(new StructuredSelection(etmpl), true);
-						}
-					});
 				}
 			}.start();
 		}
@@ -497,15 +486,6 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					session.modifyEventTemplate(etmpl);
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							eventTemplates.put(etmpl.getCode(), etmpl);
-							viewer.setInput(eventTemplates.values());
-							viewer.setSelection(new StructuredSelection(etmpl));
-						}
-					});
 				}
 			}.start();
 		}

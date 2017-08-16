@@ -34,35 +34,83 @@
 #define EVENTLOG_MAX_MESSAGE_SIZE   255
 #define EVENTLOG_MAX_USERTAG_SIZE   63
 
+class EventObject : public RefCountObject
+{
+protected:
+   UINT32 m_code;
+   TCHAR m_name[MAX_EVENT_NAME];
+   TCHAR *m_description;
+
+   EventObject(DB_RESULT hResult, int row);
+   EventObject(NXCPMessage *msg);
+   ~EventObject();
+
+
+public:
+   UINT32 getCode() const { return m_code; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+
+   virtual void modifyFromMessage(NXCPMessage *msg);
+   virtual void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   virtual bool saveToDatabase() const = 0;
+
+   virtual json_t *toJson() const;
+};
+
 /**
  * Event template
  */
-class EventTemplate : public RefCountObject
+class EventTemplate : public EventObject
 {
 private:
-   UINT32 m_code;
    int m_severity;
-   uuid m_guid;
-   TCHAR m_name[MAX_EVENT_NAME];
    UINT32 m_flags;
    TCHAR *m_messageTemplate;
-   TCHAR *m_description;
+   uuid m_guid;
 
 protected:
    virtual ~EventTemplate();
 
 public:
    EventTemplate(DB_RESULT hResult, int row);
+   EventTemplate(NXCPMessage *msg);
 
-   UINT32 getCode() const { return m_code; }
    int getSeverity() const { return m_severity; }
-   const uuid& getGuid() const { return m_guid; }
-   const TCHAR *getName() const { return m_name; }
    UINT32 getFlags() const { return m_flags; }
+   const uuid& getGuid() const { return m_guid; }
    const TCHAR *getMessageTemplate() const { return m_messageTemplate; }
-   const TCHAR *getDescription() const { return m_description; }
 
-   json_t *toJson() const;
+   virtual void modifyFromMessage(NXCPMessage *msg);
+   virtual void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   virtual bool saveToDatabase() const;
+
+   virtual json_t *toJson() const;
+};
+
+/**
+ * Event group
+ */
+class EventGroup : public EventObject
+{
+private:
+   IntegerArray<UINT32> *m_eventCodeList;
+
+protected:
+   ~EventGroup();
+
+public:
+   EventGroup(DB_RESULT result, int row, IntegerArray<UINT32> *memberCache);
+   EventGroup(NXCPMessage *msg);
+
+   virtual void fillMessage(NXCPMessage *msg, UINT32 base) const;
+   virtual bool saveToDatabase() const;
+
+   UINT32 getMemberCount() { return m_eventCodeList->size(); }
+   UINT32 getMember(int index) { return m_eventCodeList->get(index); }
+   bool isMember(UINT32 eventCode) { return m_eventCodeList->contains(eventCode); }
+
+   virtual json_t *toJson() const;
 };
 
 /**
@@ -236,14 +284,17 @@ public:
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
-void DeleteEventTemplateFromList(UINT32 eventCode);
+UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValue);
+UINT32 DeleteEventObject(UINT32 eventCode);
+void GetEventConfiguration(NXCPMessage *msg);
+void DeleteEventObjectFromList(UINT32 eventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-EventTemplate *FindEventTemplateByCode(UINT32 eventCode);
-EventTemplate *FindEventTemplateByName(const TCHAR *pszName);
+EventObject *FindEventObjectByCode(UINT32 eventCode);
+EventObject *FindEventObjectByName(const TCHAR *pszName);
 
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...);

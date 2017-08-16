@@ -27,7 +27,7 @@
  */
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
-	if (FindEventTemplateByName(name) != NULL)
+	if (FindEventObjectByName(name) != NULL)
 		return true;
 
 	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
@@ -154,10 +154,10 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 				ConfigEntry *e = event->findEntry(_T("name"));
 				if (e != NULL)
 				{
-				   EventTemplate *pEvent = FindEventTemplateByName(e->getValue());
-					if (pEvent != NULL)
+				   EventObject *eventObject = FindEventObjectByName(e->getValue());
+					if (eventObject != NULL)
 					{
-					   pEvent->decRefCount();
+					   eventObject->decRefCount();
 						if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_NAME))
 						{
 							_sntprintf(errorText, errorTextLen, _T("Event with name %s already exist"), e->getValue());
@@ -173,17 +173,17 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 			}
 			else
 			{
-			   EventTemplate *pEvent = FindEventTemplateByCode(code);
-				if (pEvent != NULL)
+			   EventObject *eventObject = FindEventObjectByCode(code);
+				if (eventObject != NULL)
 				{
 					if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_CODE))
 					{
 						_sntprintf(errorText, errorTextLen, _T("Event with code %d already exist (existing event name: %s; new event name: %s)"),
-						           pEvent->getCode(), pEvent->getName(), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
-						pEvent->decRefCount();
+						         eventObject->getCode(), eventObject->getName(), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+						eventObject->decRefCount();
 						goto stop_processing;
 					}
-               pEvent->decRefCount();
+					eventObject->decRefCount();
 				}
 			}
 		}
@@ -328,8 +328,8 @@ static UINT32 ImportEvent(ConfigEntry *event)
 static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
 {
    UINT32 rcc = RCC_INTERNAL_ERROR;
-	EventTemplate *event = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
-	if (event == NULL)
+	EventObject *eventObject = FindEventObjectByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
+	if (eventObject == NULL)
 		return rcc;
 
 	uuid guid = trap->getSubEntryValueAsUUID(_T("guid"));
@@ -339,7 +339,7 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
       nxlog_debug(4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
    }
    UINT32 id = ResolveTrapGuid(guid);
-	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, event->getCode());
+	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventObject->getCode());
 
 	if (!trapCfg->getOid().isValid())
 	{
