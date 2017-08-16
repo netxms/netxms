@@ -1,6 +1,6 @@
 TARGET = libnxagent.dll
 TYPE = dll
-SOURCES = bridge.cpp cmdexec.cpp dfile_info.cpp main.cpp registry.cpp tools.cpp
+SOURCES = bridge.cpp cmdexec.cpp dfile_info.cpp lora_device_data.cpp main.cpp registry.cpp tools.cpp
 
 CPPFLAGS = /DLIBNXAGENT_EXPORTS
 LIBS = libnxdb.lib libnetxms.lib ws2_32.lib

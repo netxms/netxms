@@ -6,7 +6,7 @@ mqtt_la_CPPFLAGS=-I@top_srcdir@/include @MQTT_CPPFLAGS@
 mqtt_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @MQTT_LDFLAGS@
 mqtt_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @MQTT_LIBS@
 
-EXTRA_DIST = mqtt_subagent.h
+EXTRA_DIST = Makefile.w32 mqtt_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:
