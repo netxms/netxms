@@ -811,6 +811,9 @@ bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
  */
 typedef BYTE lorawan_payload_t[36];
 
+/**
+ * Lora device data
+ */
 class LIBNXAGENT_EXPORTABLE LoraDeviceData
 {
 private:

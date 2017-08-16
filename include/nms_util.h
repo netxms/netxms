@@ -1573,7 +1573,7 @@ public:
    MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, src.m_length); m_length = src.m_length; }
 
    static MacAddress parse(const char *str);
-   static MacAddress parse(const TCHAR *str);
+   static MacAddress parse(const WCHAR *str);
 
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
