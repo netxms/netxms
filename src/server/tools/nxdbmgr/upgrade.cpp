@@ -11906,6 +11906,7 @@ static struct
    { 454, 455, H_UpgradeFromV454 },
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
+   { 457, 458, H_UpgradeFromV457 },
    { 0, 0, NULL }
 };
 
