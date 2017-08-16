@@ -2006,15 +2006,15 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
       json_t *oldValue, *newValue;
-      UINT32 rcc = UpdateEventObject(pRequest, oldValue, newValue);
+      UINT32 rcc = UpdateEventObject(pRequest, &oldValue, &newValue);
       if (rcc == RCC_SUCCESS)
       {
          TCHAR name[MAX_EVENT_NAME];
          pRequest->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
          writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Event template %s [%d] modified"), name, pRequest->getFieldAsUInt32(VID_EVENT_CODE));
+         json_decref(oldValue);
+         json_decref(newValue);
       }
-      json_decref(oldValue);
-      json_decref(newValue);
       msg.setField(VID_RCC, rcc);
    }
    else

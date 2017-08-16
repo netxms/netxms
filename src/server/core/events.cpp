@@ -1647,14 +1647,12 @@ static void SendEventDBChangeNotification(ClientSession *session, void *arg)
 /**
  * Update or create new event object from request
  */
-UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValue)
+UINT32 UpdateEventObject(NXCPMessage *request, json_t **oldValue, json_t **newValue)
 {
-   TCHAR name[MAX_EVENT_NAME];
+   TCHAR name[MAX_EVENT_NAME] = _T("");
    request->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
-   if (name == NULL || !IsValidObjectName(name, TRUE))
-   {
+   if (!IsValidObjectName(name, TRUE))
       return RCC_INVALID_OBJECT_NAME;
-   }
 
    EventObject *obj;
    UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
@@ -1667,6 +1665,7 @@ UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValu
       else
          obj = new EventTemplate(request);
       m_eventObjects.set(obj->getCode(), obj);
+      *oldValue = NULL;
    }
    else
    {
@@ -1676,10 +1675,10 @@ UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValu
          RWLockUnlock(m_rwlockTemplateAccess);
          return RCC_INVALID_EVENT_CODE;
       }
-      oldValue = obj->toJson();
+      *oldValue = obj->toJson();
       obj->modifyFromMessage(request);
    }
-   newValue = obj->toJson();
+   *newValue = obj->toJson();
    bool success = obj->saveToDatabase();
    if (success)
    {
@@ -1692,7 +1691,19 @@ UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValu
 
    RWLockUnlock(m_rwlockTemplateAccess);
 
-   return success ? RCC_SUCCESS : RCC_DB_FAILURE;
+   if (!success)
+   {
+      if (*oldValue != NULL)
+      {
+         json_decref(*oldValue);
+         *oldValue = NULL;
+      }
+      json_decref(*newValue);
+      *newValue = NULL;
+      return RCC_DB_FAILURE;
+   }
+
+   return RCC_SUCCESS;
 }
 
 /**
