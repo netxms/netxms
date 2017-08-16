@@ -114,5 +114,5 @@ LONG H_Communication(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
  * Device map functions
  */
 UINT32 AddDevice(LoraDeviceData *data);
-UINT32 RemoveDevice(uuid guid);
+UINT32 RemoveDevice(LoraDeviceData *data);
 LoraDeviceData *FindDevice(uuid guid);

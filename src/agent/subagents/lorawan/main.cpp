@@ -55,6 +55,40 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 
 /**
+ * Add LoraDeviceData object to DB and local hashmap
+ */
+UINT32 AddDevice(LoraDeviceData *device)
+{
+   UINT32 rcc = device->saveToDB(true);
+
+   if (rcc == ERR_SUCCESS)
+   {
+      MutexLock(g_deviceMapMutex);
+      g_deviceMap.set(device->getGuid(), device);
+      MutexUnlock(g_deviceMapMutex);
+   }
+
+   return rcc;
+}
+
+/**
+ * Remove LoraDeviceData object from DB and local hashmap
+ */
+UINT32 RemoveDevice(LoraDeviceData *device)
+{
+   UINT32 rcc = device->deleteFromDB();
+
+   if (rcc == ERR_SUCCESS)
+   {
+      MutexLock(g_deviceMapMutex);
+      g_deviceMap.remove(device->getGuid());
+      MutexUnlock(g_deviceMapMutex);
+   }
+
+   return rcc;
+}
+
+/**
  * Find device in local map
  */
 LoraDeviceData *FindDevice(uuid guid)

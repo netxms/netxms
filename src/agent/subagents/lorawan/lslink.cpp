@@ -39,8 +39,8 @@ LoraWanServerLink::LoraWanServerLink(const ConfigEntry *config)
    m_pass = strdup(config->getSubEntryValue("Password", 0, "admin"));
    m_url =  strdup(config->getSubEntryValue("URL", 0, "http://localhost"));
    m_app = strdup(config->getSubEntryValue("Application", 0, "backend"));
-   m_appId = strdup(config->getSubEntryValue("ApplicationId", 0, L"LoraWAN Devices"));
-   m_region = strdup(config->getSubEntryValue("Region", 0, L"EU863-870"));
+   m_appId = strdup(config->getSubEntryValue("ApplicationId", 0, "LoraWAN Devices"));
+   m_region = strdup(config->getSubEntryValue("Region", 0, "EU863-870"));
 #endif
    m_adr = config->getSubEntryValueAsBoolean(_T("ADR"), 0, true);
    m_fcntCheck = config->getSubEntryValueAsUInt(_T("FcntCheck"), 0, 3);
@@ -194,7 +194,7 @@ UINT32 LoraWanServerLink::registerDevice(NXCPMessage *request)
       if (m_response == 204)
       {
          nxlog_debug(4, _T("LoraWAN Module: New LoraWAN device successfully registered"));
-         rcc = data->saveDeviceData();
+         rcc = AddDevice(data);
       }
       else
       {
@@ -222,11 +222,16 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
       return rcc;
 
    char url[MAX_PATH];
-   char addr[24];
+   char *addr = NULL;
    if (data->isOtaa())  // if OTAA
    {
-      WideCharToMultiByte(CP_UTF8, 0, (const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING), -1, addr, 24, NULL, NULL);
+#ifdef UNICODE
+      addr = UTF8StringFromWideString((const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING));
       snprintf(url, MAX_PATH, "%s/devices/%s", m_url, addr);
+      free(addr);
+#else
+      snprintf(url, MAX_PATH, "%s/devices/%s", m_url, (const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING));
+#endif
       if (sendRequest("DELETE", url) == CURLE_OK)
       {
          curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &m_response);
@@ -243,8 +248,13 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
    }
    if (data->getDevAddr().length() != 0)
    {
-      WideCharToMultiByte(CP_UTF8, 0, (const TCHAR *)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING), -1, addr, 24, NULL, NULL);
+#ifdef UNICODE
+      addr = UTF8StringFromWideString((const TCHAR *)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING));
       snprintf(url, MAX_PATH, "%s/nodes/%s", m_url, addr);
+      free(addr);
+#else
+      snprintf(url, MAX_PATH, "%s/nodes/%s", m_url, (const TCHAR *)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING));
+#endif
       struct curl_slist *headers = NULL;
       headers = curl_slist_append(headers, "Accept: application/json");
       char *responseData;
@@ -272,7 +282,7 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
       free(responseData);
    }
    if (m_response == 204)
-      rcc = data->deleteDeviceData();
+      rcc = RemoveDevice(data);
 
    return rcc;
 }

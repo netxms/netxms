@@ -834,42 +834,41 @@ public:
    LoraDeviceData(NXCPMessage *request);
    LoraDeviceData(DB_RESULT result, int row);
 
-   UINT32 saveDeviceData();
-   UINT32 updateDeviceData();
-   UINT32 deleteDeviceData();
+   UINT32 saveToDB (bool isNew = false) const;
+   UINT32 deleteFromDB () const;
 
-   bool isOtaa() { return (m_devEui.length() > 0) ? true : false; }
+   bool isOtaa() const { return (m_devEui.length() > 0) ? true : false; }
 
-   uuid getGuid() { return m_guid; }
+   const uuid& getGuid() const { return m_guid; }
 
-   MacAddress getDevAddr() { return m_devAddr; }
-   void setDevAddr(MacAddress devAddr) { m_devAddr = devAddr; updateDeviceData(); }
-   MacAddress getDevEui() { return m_devEui; }
+   const MacAddress& getDevAddr() const { return m_devAddr; }
+   void setDevAddr(MacAddress devAddr) { m_devAddr = devAddr; saveToDB(); }
+   const MacAddress& getDevEui() const { return m_devEui; }
 
-   const BYTE *getPayload() { return m_payload; }
+   const BYTE *getPayload() const { return m_payload; }
    void setPayload(const char *payload) {  StrToBinA(payload, m_payload, 36); }
 
    UINT32 getDecoder() { return m_decoder; }
 
-   const char *getDataRate() { return m_dataRate; }
+   const char *getDataRate() const { return m_dataRate; }
    void setDataRate(const char *dataRate) { strncpy(m_dataRate, dataRate, 24); }
 
-   INT32 getRssi() { return m_rssi; }
+   INT32 getRssi() const { return m_rssi; }
    void setRssi(INT32 rssi) { m_rssi = rssi; }
 
-   double getSnr() { return m_snr; }
+   double getSnr() const { return m_snr; }
    void setSnr(double snr) { m_snr = snr; }
 
-   double getFreq() { return m_freq; }
+   double getFreq() const { return m_freq; }
    void setFreq(double freq) { m_freq = freq; }
 
-   UINT32 getFcnt() { return m_fcnt; }
+   UINT32 getFcnt() const { return m_fcnt; }
    void setFcnt(UINT32 fcnt) { m_fcnt = fcnt; }
 
-   UINT32 getPort() { return m_port; }
+   UINT32 getPort() const { return m_port; }
    void setPort(UINT32 port) { m_port = port; }
 
-   const INT32 getLastContact() { return (INT32)m_lastContact; }
+   INT32 getLastContact() const { return (INT32)m_lastContact; }
    void updateLastContact() { m_lastContact = time(NULL); }
 };
 
