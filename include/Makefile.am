@@ -58,3 +58,5 @@ include_HEADERS = \
 	unicode.h \
 	uthash.h \
 	uuid.h
+
+SUBDIRS = msvc

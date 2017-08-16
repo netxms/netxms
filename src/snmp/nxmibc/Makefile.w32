@@ -2,6 +2,7 @@ TARGET = nxmibc.exe
 TYPE = exe
 SOURCES = lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
 GENERATED = lex.parser.cpp parser.tab.hpp parser.tab.cpp
+CPPFLAGS = /D__STDC_VERSION__=199901L
 LIBS = libnetxms.lib libnxsnmp.lib
 	  
 include ..\..\..\Makefile.inc.w32
