@@ -29,7 +29,7 @@
  */
 bool MacAddress::isMulticast() const
 {
-   return (m_length == 6) ? !(m_value[0] & 0x01) > 0 : false;
+   return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false;
 }
 
 /**
