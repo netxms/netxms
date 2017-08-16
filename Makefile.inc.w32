@@ -42,6 +42,9 @@ CURL_BASE = C:\SDK\cURL
 !ifndef JDK_BASE
 JDK_BASE = C:\Program Files\Java\jdk1.8.0_121
 !endif
+!ifndef LIBMOSQUITTO_BASE
+LIBMOSQUITTO_BASE = C:\SDK\libmosquitto
+!endif
 
 # Binaries directory
 NETXMS_LIBDIR = $(NETXMS_BASE)\bin\$(OBJDIR)
@@ -82,6 +85,7 @@ CPPFLAGS = $(CPPFLAGS) /MD /O2 /Gd /EHs- /GR- \
 	/I "$(NETXMS_BASE)\build" \
 	/I "$(CURL_BASE)\$(ARCH)\include" \
 	/I "$(OPENSSL_BASE)\$(ARCH)\include" \
+	/I "$(LIBMOSQUITTO_BASE)\include" \
 	/D_MT /DUNICODE
 
 # Common linker flags
@@ -89,7 +93,8 @@ MANIFEST = $(TARGET).intermediate.manifest
 LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
 	/LIBPATH:"$(NETXMS_LIBDIR)" \
 	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
-	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib"
+	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
+	/LIBPATH:"$(LIBMOSQUITTO_BASE)\$(ARCH)\lib"
 	
 # Common headers
 HEADERS = $(HEADERS) \
@@ -114,7 +119,7 @@ HEADERS = $(HEADERS) \
 	$(NETXMS_BASE)\include\uuid.h
 
 # Common libraries
-LIBS = $(LIBS) ssleay32.lib libeay32.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
+LIBS = $(LIBS) libssl.lib libcrypto.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
 
 # Prepare list of object files	
 __sources = $(SOURCES:.cpp=.obj)

@@ -1,5 +1,5 @@
 SUBDIRS = db2 dbquery devemu ecs filemgr gps informix java jmx logwatch \
-          mysql netsvc odbcquery oracle ping portCheck sms ubntlw ups \
-          winnt winperf wmi
+          lorawan mqtt mysql netsvc odbcquery oracle ping portCheck sms \
+		  ubntlw ups winnt winperf wmi
 
 include ..\..\..\Makefile.inc.w32
