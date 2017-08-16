@@ -3572,6 +3572,7 @@ AC_CONFIG_FILES([
 	doc/misc/Makefile
 	images/Makefile
 	include/Makefile
+	include/msvc/Makefile
 	m4/Makefile
 	src/Makefile
 	src/agent/Makefile
