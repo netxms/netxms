@@ -182,14 +182,21 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    }
 
    Config regConfig;
-   char regXml[MAX_CONFIG_VALUE];
-   WideCharToMultiByte(CP_UTF8, 0, sensor->getXmlRegConfig(), -1, regXml, MAX_CONFIG_VALUE, NULL, NULL);
-   regConfig.loadXmlConfigFromMemory(regXml, MAX_CONFIG_VALUE, NULL, "config", false);
-
    Config config;
-   char xml[MAX_CONFIG_VALUE];
-   WideCharToMultiByte(CP_UTF8, 0, sensor->getXmlConfig(), -1, xml, MAX_CONFIG_VALUE, NULL, NULL);
-   config.loadXmlConfigFromMemory(xml, MAX_CONFIG_VALUE, NULL, "config", false);
+#ifdef UNICODE
+   char *regXml = UTF8StringFromWideString(sensor->getXmlRegConfig());
+   regConfig.loadXmlConfigFromMemory(regXml, (UINT32)strlen(regXml), NULL, "config", false);
+   free(regXml);
+
+   char *xml = UTF8StringFromWideString(sensor->getXmlConfig());
+   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), NULL, "config", false);
+   free(xml);
+#else
+   regConfig.loadXmlConfigFromMemory(sensor->getXmlRegConfig(), (UINT32)strlen(sensor->getXmlRegConfig()), NULL, "config", false);
+   config.loadXmlConfigFromMemory(sensor->getXmlConfig(), (UINT32)strlen(sensor->getXmlConfig()), NULL, "config", false);
+#endif
+
+
 
    NXCPMessage msg(sensor->getAgentConnection()->getProtocolVersion());
    msg.setCode(CMD_REGISTER_LORAWAN_SENSOR);
