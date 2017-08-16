@@ -1,12 +1,12 @@
 SUBAGENT = lorawan
 
 pkglib_LTLIBRARIES = lorawan.la
-lorawan_la_SOURCES = main.cpp mqtt_client.cpp lorawan_server_link.cpp communication_processor.cpp
+lorawan_la_SOURCES = commproc.cpp lslink.cpp main.cpp mqtt_client.cpp
 lorawan_la_CPPFLAGS=-I@top_srcdir@/include @MQTT_CPPFLAGS@
 lorawan_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @MQTT_LDFLAGS@
 lorawan_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../libnxmb/libnxmb.la -lcurl @MQTT_LIBS@
 
-EXTRA_DIST = lorawan.h
+EXTRA_DIST = lorawan.h Makefile.w32
 
 if !STATIC_BUILD
 install-exec-hook:

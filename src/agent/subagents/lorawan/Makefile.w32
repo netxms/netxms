@@ -1,0 +1,7 @@
+TARGET = lorawan.nsm
+TYPE = nsm
+SOURCES = commproc.cpp lslink.cpp main.cpp mqtt_client.cpp
+
+LIBS = libnxagent.lib libnetxms.lib libcurl.lib libmosquitto.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
