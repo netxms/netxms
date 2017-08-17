@@ -838,7 +838,7 @@ CREATE TABLE actions
 */
 CREATE TABLE event_groups
 (
-  guid integer(36) not null,
+  guid varchar(36) not null,
   id integer not null,
   name varchar(63) not null,
   description varchar(255) not null,
