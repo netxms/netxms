@@ -7171,7 +7171,6 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
 void ClientSession::getUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
    DB_RESULT hResult;
    UINT32 dwUserId;
 
@@ -7185,39 +7184,37 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Try to read variable from database
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
-      _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                 _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                 dwUserId, szVarName);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM user_profiles WHERE user_id=? AND var_name=?"));
+      if (hStmt != NULL)
       {
-         if (DBGetNumRows(hResult) > 0)
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_NAME, NULL, 0), DB_BIND_DYNAMIC);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
          {
-            TCHAR *pszData;
-
-            pszData = DBGetField(hResult, 0, 0, NULL, 0);
-            DecodeSQLString(pszData);
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            msg.setField(VID_VALUE, pszData);
-            free(pszData);
+            if (DBGetNumRows(hResult) > 0)
+            {
+               TCHAR *pszData;
+               pszData = DBGetField(hResult, 0, 0, NULL, 0);
+               DecodeSQLString(pszData);
+               msg.setField(VID_RCC, RCC_SUCCESS);
+               msg.setField(VID_VALUE, pszData);
+               free(pszData);
+            }
+            else
+               msg.setField(VID_RCC, RCC_VARIABLE_NOT_FOUND);
+            DBFreeResult(hResult);
          }
          else
-         {
-            msg.setField(VID_RCC, RCC_VARIABLE_NOT_FOUND);
-         }
-         DBFreeResult(hResult);
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
+         DBFreeStatement(hStmt);
       }
       else
-      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
 
    // Send response
    sendMessage(&msg);
@@ -7229,7 +7226,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
 void ClientSession::setUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszValue, *pszRawValue;
+   TCHAR szVarName[MAX_VARIABLE_NAME];
    DB_RESULT hResult;
    BOOL bExist = FALSE;
    UINT32 dwUserId;
@@ -7248,52 +7245,51 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
          // Check if variable already exist in database
-         _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                    _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                    dwUserId, szVarName);
-         hResult = DBSelect(hdb, szQuery);
-         if (hResult != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?"));
+         if (hStmt != NULL)
          {
-            if (DBGetNumRows(hResult) > 0)
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+            hResult = DBSelectPrepared(hStmt);
+            if (hResult != NULL)
             {
-               bExist = TRUE;
+               if (DBGetNumRows(hResult) > 0)
+                  bExist = TRUE;
+               DBFreeResult(hResult);
             }
-            DBFreeResult(hResult);
+            DBFreeStatement(hStmt);
          }
+         else
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
 
          // Update value in database
-         pszRawValue = pRequest->getFieldAsString(VID_VALUE);
-         pszValue = EncodeSQLString(pszRawValue);
-         free(pszRawValue);
          if (bExist)
-            _sntprintf(szQuery, 8192,
-                       _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
-                       pszValue, dwUserId, szVarName);
+            hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
          else
-            _sntprintf(szQuery, 8192,
-                       _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
-                       dwUserId, szVarName, pszValue);
-         free(pszValue);
-         if (DBQuery(hdb, szQuery))
+            hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)"));
+
+         if (hStmt != NULL)
          {
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
+
+            if (DBExecute(hStmt))
+               msg.setField(VID_RCC, RCC_SUCCESS);
+            else
+               msg.setField(VID_RCC, RCC_DB_FAILURE);
+            DBFreeStatement(hStmt);
          }
          else
-         {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
 
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
-      {
          msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
-      }
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
 
    // Send response
    sendMessage(&msg);
@@ -7357,7 +7353,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
 void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
+   TCHAR szVarName[MAX_VARIABLE_NAME];
    UINT32 dwUserId;
 
    // Prepare response message
@@ -7372,23 +7368,25 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
       // Try to delete variable from database
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
       TranslateStr(szVarName, _T("*"), _T("%"));
-      _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                 _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
-                 dwUserId, szVarName);
-      if (DBQuery(hdb, szQuery))
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
+      if (hStmt != NULL)
       {
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+
+         if (DBExecute(hStmt))
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         else
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
+
+         DBFreeStatement(hStmt);
       }
       else
-      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
 
    // Send response
    sendMessage(&msg);
@@ -7400,8 +7398,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 void ClientSession::copyUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME],
-         szQuery[32768], *pszValue;
+   TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME];
    UINT32 dwSrcUserId, dwDstUserId;
    int i, nRows;
    BOOL bMove, bExist;
@@ -7420,65 +7417,87 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
       bMove = (BOOL)pRequest->getFieldAsUInt16(VID_MOVE_FLAG);
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
       TranslateStr(szVarName, _T("*"), _T("%"));
-      _sntprintf(szQuery, 8192,
-                 _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
-                 dwSrcUserId, szVarName);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
+      if (hStmt != NULL)
       {
-         nRows = DBGetNumRows(hResult);
-         for(i = 0; i < nRows; i++)
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+
+         hResult = DBSelectPrepared(hStmt);
+         DBFreeStatement(hStmt);
+         if (hResult != NULL)
          {
-            DBGetField(hResult, i, 0, szCurrVar, MAX_VARIABLE_NAME);
-
-            // Check if variable already exist in database
-            _sntprintf(szQuery, 32768,
-                       _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                       dwDstUserId, szCurrVar);
-            hResult2 = DBSelect(hdb, szQuery);
-            if (hResult2 != NULL)
+            nRows = DBGetNumRows(hResult);
+            for(i = 0; i < nRows; i++)
             {
-               bExist = (DBGetNumRows(hResult2) > 0);
-               DBFreeResult(hResult2);
-            }
-            else
-            {
-               bExist = FALSE;
-            }
+               DBGetField(hResult, i, 0, szCurrVar, MAX_VARIABLE_NAME);
 
-            pszValue = DBGetField(hResult, i, 1, NULL, 0);
-            if (bExist)
-               _sntprintf(szQuery, 32768,
-                          _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
-                          pszValue, dwDstUserId, szCurrVar);
-            else
-               _sntprintf(szQuery, 32768,
-                          _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
-                          dwDstUserId, szCurrVar, pszValue);
-            free(pszValue);
-            DBQuery(hdb, szQuery);
+               // Check if variable already exist in database
+               hStmt = DBPrepare(hdb, _T("SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?"));
+               if (hStmt != NULL)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwDstUserId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
 
-            if (bMove)
-            {
-               _sntprintf(szQuery, 32768,
-                          _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                          dwSrcUserId, szCurrVar);
-               DBQuery(hdb, szQuery);
+                  hResult2 = DBSelectPrepared(hStmt);
+                  if (hResult2 != NULL)
+                  {
+                     bExist = (DBGetNumRows(hResult2) > 0);
+                     DBFreeResult(hResult2);
+                  }
+                  else
+                  {
+                     bExist = FALSE;
+                  }
+                  DBFreeStatement(hStmt);
+               }
+               else
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+
+               if (bExist)
+                  hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
+               else
+                  hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (?,?,?)"));
+
+               if (hStmt != NULL)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, 1, NULL, 0), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwDstUserId);
+                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+
+                  DBExecute(hStmt);
+                  DBFreeStatement(hStmt);
+               }
+               else
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+
+               if (bMove)
+               {
+                  hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name=?"));
+                  if (hStmt != NULL)
+                  {
+                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+
+                     DBExecute(hStmt);
+                     DBFreeStatement(hStmt);
+                  }
+                  else
+                     msg.setField(VID_RCC, RCC_DB_FAILURE);
+               }
             }
+            DBFreeResult(hResult);
+            msg.setField(VID_RCC, RCC_SUCCESS);
          }
-         DBFreeResult(hResult);
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         else
+            msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
       else
-      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
-   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
 
    // Send response
    sendMessage(&msg);
