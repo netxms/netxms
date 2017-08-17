@@ -77,6 +77,8 @@ public class UserManagementView extends ViewPart
    public static final int COLUMN_AUTH_METHOD = 5;
 	public static final int COLUMN_GUID = 6;
    public static final int COLUMN_LDAP_DN = 7;
+   public static final int COLUMN_LAST_LOGIN = 8;
+   public static final int COLUMN_CREATED = 9;
 
 	private TableViewer viewer;
 	private NXCSession session;
@@ -109,9 +111,11 @@ public class UserManagementView extends ViewPart
 		      Messages.get().UserManagementView_Source, 
 		      Messages.get().UserManagementView_Authentication, 
 		      Messages.get().UserManagementView_GUID,
-		      "LDAP DN"
+		      "LDAP DN",
+            "Last Login",
+            "Created"
 		   };
-		final int[] widths = { 100, 80, 180, 250, 80, 170, 250, 400 };
+		final int[] widths = { 100, 80, 180, 250, 80, 170, 250, 400, 250, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new UserLabelProvider());

@@ -585,7 +585,26 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
- * Upgrade from V456 to V457
+ * Upgrade from V458 to V459
+ */
+static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE users ADD created integer null\n")
+            _T("ALTER TABLE user_groups ADD created integer null\n")
+            _T("UPDATE users SET created=0\n")
+            _T("UPDATE user_groups SET created=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("users"), _T("created")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("created")));
+
+   CHK_EXEC(SetSchemaVersion(459));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V457 to V458
  */
 static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
 {
@@ -11907,6 +11926,7 @@ static struct
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
+   { 458, 459, H_UpgradeFromV458 },
    { 0, 0, NULL }
 };
 

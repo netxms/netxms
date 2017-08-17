@@ -191,6 +191,7 @@ protected:
 	StringMap m_attributes;		// Custom attributes
    TCHAR *m_ldapDn;
    TCHAR *m_ldapId;
+   time_t m_created;
 
 	bool loadCustomAttributes(DB_HANDLE hdb);
 	bool saveCustomAttributes(DB_HANDLE hdb);

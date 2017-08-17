@@ -18,6 +18,7 @@
  */
 package org.netxms.client.users;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -69,6 +70,7 @@ public abstract class AbstractUserObject
 	protected String ldapDn;
 	protected String ldapId;
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
+   private Date created = null;
 
 	/**
 	 * Default constructor
@@ -96,6 +98,7 @@ public abstract class AbstractUserObject
 		this.description = src.description;
 		this.ldapDn = src.ldapDn;
 		this.ldapId = src.ldapId;
+		this.created = src.created;
 		this.customAttributes = new HashMap<String, String>(0);
 		Iterator<Entry<String, String>> it  = src.customAttributes.entrySet().iterator();
 		while(it.hasNext())
@@ -119,6 +122,7 @@ public abstract class AbstractUserObject
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		ldapDn = msg.getFieldAsString(NXCPCodes.VID_LDAP_DN);
       ldapId = msg.getFieldAsString(NXCPCodes.VID_LDAP_ID);
+      created = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
@@ -319,5 +323,15 @@ public abstract class AbstractUserObject
 	public boolean isPasswordChangeForbidden()
 	{
 		return ((flags & CANNOT_CHANGE_PASSWORD) == CANNOT_CHANGE_PASSWORD);
+	}
+	
+	
+	/**
+	 * Get creation date
+	 * @return creation date
+	 */
+	public Date getCreationTime()
+	{
+	   return created;
 	}
 }

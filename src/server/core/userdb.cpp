@@ -222,7 +222,7 @@ BOOL LoadUsers()
    // Load users
    hResult = DBSelect(hdb,
 	                   _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,")
-							 _T("ldap_unique_id,password,full_name,grace_logins,auth_method,")
+							 _T("ldap_unique_id,created,password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
 							 _T("last_login,xmpp_id FROM users"));
@@ -250,7 +250,7 @@ BOOL LoadUsers()
    }
 
    // Load groups
-   hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,ldap_unique_id FROM user_groups"));
+   hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created FROM user_groups"));
    if (hResult == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);

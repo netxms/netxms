@@ -56,7 +56,8 @@ public class UserComparator extends ViewerComparator
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
-	@Override
+	@SuppressWarnings("deprecation")
+   @Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int result;
@@ -91,6 +92,14 @@ public class UserComparator extends ViewerComparator
 			case UserManagementView.COLUMN_TYPE:
 				result = compareTypes(e1, e2);
 				break;
+			case UserManagementView.COLUMN_LAST_LOGIN:
+			   int l1 = (e1 instanceof User) ? ((User)e1).getLastLogin().getSeconds() : -1;
+			   int l2 = (e2 instanceof User) ? ((User)e2).getLastLogin().getSeconds() : -1;
+			   result = l1 - l2;
+		      break;
+			case UserManagementView.COLUMN_CREATED:
+			   result = Long.signum(((AbstractUserObject)e1).getCreationTime().getSeconds() - ((AbstractUserObject)e2).getCreationTime().getSeconds());
+			   break;
 			default:
 				result = 0;
 				break;

@@ -87,6 +87,7 @@ UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row
 	m_guid = DBGetFieldGUID(hResult, row, 5);
 	m_ldapDn = DBGetField(hResult, row, 6, NULL, 0);
 	m_ldapId = DBGetField(hResult, row, 7, NULL, 0);
+	m_created = (time_t)DBGetFieldULong(hResult, row, 8);
 }
 
 /**
@@ -102,6 +103,7 @@ UserDatabaseObject::UserDatabaseObject()
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = 0;
+	m_created = time(NULL);
 }
 
 /**
@@ -117,6 +119,7 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 	m_flags = UF_MODIFIED;
 	m_ldapDn = NULL;
 	m_ldapId = NULL;
+   m_created = time(NULL);
 }
 
 /**
@@ -157,6 +160,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_LDAP_DN, m_ldapDn);
    msg->setField(VID_LDAP_ID, m_ldapId);
+   msg->setField(VID_CREATION_TIME, (UINT32)m_created);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
@@ -377,6 +381,7 @@ json_t *UserDatabaseObject::toJson() const
    json_object_set_new(root, "attributes", m_attributes.toJson());
    json_object_set_new(root, "ldapDn", json_string_t(m_ldapDn));
    json_object_set_new(root, "ldapId", json_string_t(m_ldapId));
+   json_object_set_new(root, "created", json_integer((UINT32)m_created));
    return root;
 }
 
@@ -397,7 +402,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 	TCHAR buffer[256];
 
    bool validHash = false;
-   DBGetField(hResult, row, 8, buffer, 256);
+   DBGetField(hResult, row, 9, buffer, 256);
    if (buffer[0] == _T('$'))
    {
       // new format - with hash type indicator
@@ -426,17 +431,17 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
 
-	DBGetField(hResult, row, 9, m_fullName, MAX_USER_FULLNAME);
-	m_graceLogins = DBGetFieldLong(hResult, row, 10);
-	m_authMethod = DBGetFieldLong(hResult, row, 11);
-	m_certMappingMethod = DBGetFieldLong(hResult, row, 12);
-	m_certMappingData = DBGetField(hResult, row, 13, NULL, 0);
-	m_authFailures = DBGetFieldLong(hResult, row, 14);
-	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 15);
-	m_minPasswordLength = DBGetFieldLong(hResult, row, 16);
-	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 17);
-	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 18);
-   DBGetField(hResult, row, 19, m_xmppId, MAX_XMPP_ID_LEN);
+	DBGetField(hResult, row, 10, m_fullName, MAX_USER_FULLNAME);
+	m_graceLogins = DBGetFieldLong(hResult, row, 11);
+	m_authMethod = DBGetFieldLong(hResult, row, 12);
+	m_certMappingMethod = DBGetFieldLong(hResult, row, 13);
+	m_certMappingData = DBGetField(hResult, row, 14, NULL, 0);
+	m_authFailures = DBGetFieldLong(hResult, row, 15);
+	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 16);
+	m_minPasswordLength = DBGetFieldLong(hResult, row, 17);
+	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 18);
+	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 19);
+   DBGetField(hResult, row, 20, m_xmppId, MAX_XMPP_ID_LEN);
 
 	// Set full system access for superuser
 	if (m_id == 0)
@@ -527,14 +532,14 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb,
          _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
 			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
-         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=?,ldap_dn=?,ldap_unique_id=? WHERE id=?"));
+         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=?,ldap_dn=?,ldap_unique_id=?,created=? WHERE id=?"));
    }
    else
    {
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,xmpp_id,ldap_dn,ldap_unique_id,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?)"));
+         _T("  disabled_until,last_login,xmpp_id,ldap_dn,ldap_unique_id,,created,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
       return false;
@@ -558,7 +563,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (UINT32)m_created);
+   DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -841,11 +847,11 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("user_groups"), _T("id"), m_id))
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=?,created=? WHERE id=?"));
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,id) VALUES (?,?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,created,id) VALUES (?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
       return false;
@@ -857,7 +863,8 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_created);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)

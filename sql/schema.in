@@ -85,6 +85,7 @@ CREATE TABLE users
   xmpp_id varchar(127) null,
   ldap_dn SQL_TEXT null,
   ldap_unique_id varchar(64) null,
+  created integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -102,6 +103,7 @@ CREATE TABLE user_groups
   description varchar(255),
   ldap_dn SQL_TEXT null,
   ldap_unique_id varchar(64) null,
+  created integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
