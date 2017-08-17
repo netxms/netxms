@@ -284,7 +284,7 @@ public:
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
 void ReloadEvents();
-UINT32 UpdateEventObject(NXCPMessage *request, json_t **oldValue, json_t **newValue);
+UINT32 UpdateEventObject(NXCPMessage *request, json_t *oldValue, json_t *newValue);
 UINT32 DeleteEventObject(UINT32 eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void DeleteEventObjectFromList(UINT32 eventCode);
