@@ -572,12 +572,12 @@ static BOOL CopyFile(NX_STAT_STRUCT *st, const TCHAR *oldName, const TCHAR *newN
 /**
  * Move file/folder
  */
-static BOOL MoveFile(TCHAR* oldName, TCHAR* newName, overwrite)
+static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 {
 #ifdef _WIN32
    return MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED);
 #else
-   if (Rename(oldName, newName, true))
+   if (Rename(oldName, newName))
    {
       return TRUE;
    }
