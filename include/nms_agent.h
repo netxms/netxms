@@ -118,7 +118,12 @@
 #define ERR_OUT_OF_STATE_REQUEST    ((UINT32)922)
 #define ERR_ENCRYPTION_ERROR        ((UINT32)923)
 #define ERR_MALFORMED_RESPONSE      ((UINT32)924)
+<<<<<<< Updated upstream
 #define ERR_INVALID_OBJECT          ((UINT32)925)
+=======
+#define ERR_FILE_ALREADY_EXISTS     ((UINT32)925)
+#define ERR_FOLDER_ALREADY_EXISTS   ((UINT32)926)
+>>>>>>> Stashed changes
 
 /**
  * Bulk data reconciliation DCI processing status codes

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
@@ -114,6 +114,10 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
          return RCC_ENCRYPTION_ERROR;
       case ERR_OUT_OF_STATE_REQUEST:
          return RCC_OUT_OF_STATE_REQUEST;
+      case ERR_FILE_ALREADY_EXISTS:
+         return RCC_FILE_ALREADY_EXISTS;
+      case ERR_FOLDER_ALREADY_EXISTS:
+         return RCC_FOLDER_ALREADY_EXISTS;
    }
    return RCC_AGENT_ERROR;
 }

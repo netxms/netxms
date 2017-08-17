@@ -13323,7 +13323,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                   }
                   else
                   {
-                     msg.setField(VID_RCC, rcc);
+                     msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                      debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d"), rcc);
                   }
                }

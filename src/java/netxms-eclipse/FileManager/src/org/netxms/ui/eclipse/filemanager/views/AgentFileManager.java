@@ -65,12 +65,14 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -81,6 +83,7 @@ import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.Node;
 import org.netxms.client.server.AgentFile;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -96,6 +99,7 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.DialogData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -422,7 +426,7 @@ public class AgentFileManager extends ViewPart
     */
    private void doRename(final AgentFile agentFile, final String newName)
    {
-      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob("Rename file", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -432,16 +436,35 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.renameAgentFile(objectId, agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
-
-            runInUIThread(new Runnable() {
+            final NestedVerifyOverwrite verify =  new NestedVerifyOverwrite(agentFile.getType(), newName, true, true, false) {
+               
                @Override
-               public void run()
+               public void executeAction() throws NXCException, IOException
                {
-                  agentFile.setName(newName);
-                  viewer.refresh(agentFile, true);
+                  session.renameAgentFile(objectId, agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, false); //$NON-NLS-1$
                }
-            });
+               
+               @Override
+               public void executeSameFunctionWithOverwrite() throws IOException, NXCException
+               {
+                  session.renameAgentFile(objectId, agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName, true); //$NON-NLS-1$
+               }
+            };
+            verify.run(viewer.getControl().getDisplay());
+    
+            if(verify.isOkPressed())
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if(verify.isOkPressed())
+                        refreshFileOrDirectory();
+                     agentFile.setName(newName);
+                     viewer.refresh(agentFile, true);
+                  }
+               });
+            }
          }
       }.start();
    }
@@ -475,7 +498,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            uploadFile();
+            uploadFile(false);
          }
       };
       actionUploadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.uploadFile"); //$NON-NLS-1$
@@ -783,7 +806,7 @@ public class AgentFileManager extends ViewPart
    /**
     * Upload local file to agent
     */
-   private void uploadFile()
+   private void uploadFile(final boolean overvrite)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
@@ -808,25 +831,56 @@ public class AgentFileManager extends ViewPart
                   String remoteFile = fileList.get(i).getName();
                   if(fileList.size() == 1)
                      remoteFile = dlg.getRemoteFileName();
+                  final String rFileName = remoteFile;
                   
-                  session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+remoteFile, new ProgressListener() { //$NON-NLS-1$
-                     private long prevWorkDone = 0;
-   
+                  new NestedVerifyOverwrite(localFile.isDirectory() ? AgentFile.DIRECTORY : AgentFile.FILE, localFile.getName(), true, true, false) {
+                     
                      @Override
-                     public void setTotalWorkAmount(long workTotal)
-                     {
-                        monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
-                              (int)workTotal);
+                     public void executeAction() throws NXCException, IOException
+                     {                        
+                        session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+rFileName, overvrite, new ProgressListener() { //$NON-NLS-1$
+                           private long prevWorkDone = 0;
+         
+                           @Override
+                           public void setTotalWorkAmount(long workTotal)
+                           {
+                              monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                                    (int)workTotal);
+                           }
+         
+                           @Override
+                           public void markProgress(long workDone)
+                           {
+                              monitor.worked((int)(workDone - prevWorkDone));
+                              prevWorkDone = workDone;
+                           }
+                        });
+                        monitor.done(); 
                      }
-   
+
                      @Override
-                     public void markProgress(long workDone)
+                     public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                      {
-                        monitor.worked((int)(workDone - prevWorkDone));
-                        prevWorkDone = workDone;
+                        session.uploadLocalFileToAgent(objectId, localFile, upladFolder.getFullName()+"/"+rFileName, true, new ProgressListener() { //$NON-NLS-1$
+                           private long prevWorkDone = 0;
+         
+                           @Override
+                           public void setTotalWorkAmount(long workTotal)
+                           {
+                              monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                                    (int)workTotal);
+                           }
+         
+                           @Override
+                           public void markProgress(long workDone)
+                           {
+                              monitor.worked((int)(workDone - prevWorkDone));
+                              prevWorkDone = workDone;
+                           }
+                        });
+                        monitor.done(); 
                      }
-                  });
-                  monitor.done(); 
+                  }.run(viewer.getControl().getDisplay());
                }
                
                upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
@@ -849,6 +903,157 @@ public class AgentFileManager extends ViewPart
       }
    }
    
+   class UploadConsoleJob extends ConsoleJob
+   {
+      private boolean askFolderOverwrite;
+      private boolean askFileOverwrite;
+      private boolean overwrite;
+      private File folder;
+      private AgentFile uploadFolder;
+      private String remoteFileName;
+
+      public UploadConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily, File folder, final AgentFile uploadFolder, final String remoteFileName)
+      {
+         super(name, wbPart, pluginId, jobFamily);
+         askFolderOverwrite = true;
+         askFileOverwrite = true;
+         overwrite = false;
+         this.folder = folder;
+         this.uploadFolder = uploadFolder;
+         this.remoteFileName = remoteFileName;
+      }
+
+      @Override
+      protected void runInternal(IProgressMonitor monitor) throws Exception
+      {
+         NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.DIRECTORY, folder.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
+            
+            @Override
+            public void executeAction() throws NXCException, IOException
+            {                        
+               session.createFolderOnAgent(objectId, uploadFolder.getFullName()+"/"+remoteFileName, false); //$NON-NLS-1$
+            }
+
+            @Override
+            public void executeSameFunctionWithOverwrite() throws NXCException, IOException
+            {
+               session.createFolderOnAgent(objectId, uploadFolder.getFullName()+"/"+remoteFileName, true); //$NON-NLS-1$
+            }
+         };
+         verify.run(viewer.getControl().getDisplay());
+         askFolderOverwrite = verify.askFolderOverwrite();
+         
+         uploadFilesInFolder(folder, uploadFolder.getFullName()+"/"+remoteFileName, monitor); //$NON-NLS-1$
+         
+         uploadFolder.setChildren(session.listAgentFiles(uploadFolder, uploadFolder.getFullName(), objectId));
+         runInUIThread(new Runnable() {
+            @Override
+            public void run()
+            {
+               viewer.refresh(uploadFolder, true);
+            }
+         });
+      }
+
+      @Override
+      protected String getErrorMessage()
+      {
+         return Messages.get().UploadFileToServer_JobError;
+      }
+      
+      /**
+       * Recursively uploads files to agent and creates correct folders
+       * 
+       * @param folder
+       * @param upladFolder
+       * @param monitor
+       * @throws NXCException
+       * @throws IOException
+       */
+      public void uploadFilesInFolder(final File folder, final String uploadFolder, final IProgressMonitor monitor) throws NXCException, IOException 
+      {
+         for(final File fileEntry : folder.listFiles())
+         {
+             if (fileEntry.isDirectory()) 
+             {
+                NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.DIRECTORY, fileEntry.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
+                   
+                   @Override
+                   public void executeAction() throws NXCException, IOException
+                   {                        
+                      session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName(), false); //$NON-NLS-1$
+                   }
+
+                   @Override
+                   public void executeSameFunctionWithOverwrite() throws NXCException, IOException
+                   {
+                      session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName(), true); //$NON-NLS-1$
+                   }
+                };
+                verify.run(viewer.getControl().getDisplay());
+                askFolderOverwrite = verify.askFolderOverwrite();
+                
+                uploadFilesInFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
+             } 
+             else 
+             {      
+                NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.FILE, fileEntry.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
+                   
+                   @Override
+                   public void executeAction() throws NXCException, IOException
+                   {                        
+                      session.uploadLocalFileToAgent(objectId, fileEntry, uploadFolder + "/" + fileEntry.getName(), overwrite, new ProgressListener() { //$NON-NLS-1$
+                         private long prevWorkDone = 0;
+
+                         @Override
+                         public void setTotalWorkAmount(long workTotal)
+                         {
+                            monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
+                                  (int)workTotal);
+                         }
+
+                         @Override
+                         public void markProgress(long workDone)
+                         {
+                            monitor.worked((int)(workDone - prevWorkDone));
+                            prevWorkDone = workDone;
+                         }
+                      });
+                      monitor.done();
+                   }
+
+                   @Override
+                   public void executeSameFunctionWithOverwrite() throws NXCException, IOException
+                   {
+                      session.uploadLocalFileToAgent(objectId, fileEntry, uploadFolder + "/" + fileEntry.getName(), true, new ProgressListener() { //$NON-NLS-1$
+                      private long prevWorkDone = 0;
+
+                      @Override
+                      public void setTotalWorkAmount(long workTotal)
+                      {
+                         monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
+                               (int)workTotal);
+                      }
+
+                      @Override
+                      public void markProgress(long workDone)
+                      {
+                         monitor.worked((int)(workDone - prevWorkDone));
+                         prevWorkDone = workDone;
+                      }
+                   });
+                   monitor.done(); 
+                   }
+                };
+                verify.run(viewer.getControl().getDisplay());
+                askFileOverwrite = verify.askFileOverwrite();
+                if(!askFileOverwrite)
+                   overwrite = verify.isOkPressed();
+             }
+         }
+     }
+   }
+   
    /**
     * Upload local folder to agent
     */
@@ -865,75 +1070,10 @@ public class AgentFileManager extends ViewPart
       final StartClientToAgentFolderUploadDialog dlg = new StartClientToAgentFolderUploadDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
       {
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().AgentFileManager_UploadFolderJobTitle, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(final IProgressMonitor monitor) throws Exception
-            {
-               File folder = dlg.getLocalFile();
-               session.createFolderOnAgent(objectId, upladFolder.getFullName()+"/"+dlg.getRemoteFileName()); //$NON-NLS-1$
-               uploadFilesInFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor); //$NON-NLS-1$
-               
-               upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.refresh(upladFolder, true);
-                  }
-               });
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().UploadFileToServer_JobError;
-            }
-         }.start();
+         ConsoleJob job = new UploadConsoleJob(Messages.get().AgentFileManager_UploadFolderJobTitle, null, Activator.PLUGIN_ID, null, dlg.getLocalFile(), upladFolder, dlg.getRemoteFileName());
+         job.start();
       }
-   }
-   
-   /**
-    * Recursively uploads files to agent and creates correct folders
-    * 
-    * @param folder
-    * @param upladFolder
-    * @param monitor
-    * @throws NXCException
-    * @throws IOException
-    */
-   public void uploadFilesInFolder(final File folder, final String uploadFolder, final IProgressMonitor monitor) throws NXCException, IOException 
-   {
-      for(final File fileEntry : folder.listFiles())
-      {
-          if (fileEntry.isDirectory()) 
-          {
-             session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName()); //$NON-NLS-1$
-             uploadFilesInFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
-          } 
-          else 
-          {
-             session.uploadLocalFileToAgent(objectId, fileEntry, uploadFolder + "/" + fileEntry.getName(), new ProgressListener() { //$NON-NLS-1$
-                private long prevWorkDone = 0;
-
-                @Override
-                public void setTotalWorkAmount(long workTotal)
-                {
-                   monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
-                         (int)workTotal);
-                }
-
-                @Override
-                public void markProgress(long workDone)
-                {
-                   monitor.worked((int)(workDone - prevWorkDone));
-                   prevWorkDone = workDone;
-                }
-             });
-             monitor.done(); 
-          }
-      }
-  }
+   }   
 
    /**
     * Delete selected file
@@ -1048,6 +1188,7 @@ public class AgentFileManager extends ViewPart
          String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
          dlg.setFilterNames(filterNames);
          dlg.setFileName(sf.getName());
+         dlg.setOverwrite(true);
          target = dlg.open();
       }
       else
@@ -1232,19 +1373,36 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.renameAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName()); //$NON-NLS-1$
-
-            runInUIThread(new Runnable() {
+            NestedVerifyOverwrite verify = new NestedVerifyOverwrite(object.getType(), object.getName(), true, true, false) {
+               
                @Override
-               public void run()
+               public void executeAction() throws NXCException, IOException
                {
-                  object.getParent().removeChield(object);
-                  viewer.refresh(object.getParent(), true);
-                  object.setParent(target);
-                  target.addChield(object);
-                  viewer.refresh(object.getParent(), true);
+                  session.renameAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName(), false); //$NON-NLS-1$
                }
-            });
+
+               @Override
+               public void executeSameFunctionWithOverwrite() throws IOException, NXCException
+               {
+                  session.renameAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName(), true); //$NON-NLS-1$                  
+               }
+            };
+            verify.run(viewer.getControl().getDisplay());
+            
+            if(verify.isOkPressed())
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     object.getParent().removeChield(object);
+                     viewer.refresh(object.getParent(), true);
+                     object.setParent(target);
+                     target.addChield(object);
+                     viewer.refresh(object.getParent(), true);
+                  }
+               });
+            }
          }
       }.start();
    }
@@ -1277,8 +1435,22 @@ public class AgentFileManager extends ViewPart
 
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder); //$NON-NLS-1$
+         { 
+            NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.DIRECTORY, newFolder, true, true, false) {
+               
+               @Override
+               public void executeAction() throws NXCException, IOException
+               {
+                  session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder, false); //$NON-NLS-1$
+               }
+   
+               @Override
+               public void executeSameFunctionWithOverwrite() throws IOException, NXCException
+               {
+                  session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder, true); //$NON-NLS-1$             
+               }
+            };
+            verify.run(viewer.getControl().getDisplay());
             parentFolder.setChildren(session.listAgentFiles(parentFolder, parentFolder.getFullName(), objectId));
 
             runInUIThread(new Runnable() {
@@ -1352,7 +1524,9 @@ public class AgentFileManager extends ViewPart
          return;
 
       String filePath = ((AgentFile)selection.getFirstElement()).getFullName();
-      WidgetHelper.copyToClipboard(filePath.substring(1, filePath.length())); // Substring is made to remove first "/"
+      filePath = filePath.replace("\\\\", "\\");
+      filePath = filePath.replace("//", "/");      
+      WidgetHelper.copyToClipboard(filePath);
    }
 
    /*
@@ -1397,5 +1571,103 @@ public class AgentFileManager extends ViewPart
       final String text = filterText.getText();
       filter.setFilterString(text);
       viewer.refresh(false);
+   }
+   
+   /**
+    * Nested class that check if file already exist and it should be overwritten
+    *
+    */
+   abstract class NestedVerifyOverwrite
+   {
+      private boolean okPresseed;
+      private int type;
+      private String name;
+      private boolean askFolderOverwrite;
+      private boolean askFileOverwrite;
+      private boolean overwrite;
+      
+      public NestedVerifyOverwrite(int fileType, String fileName, boolean askFolderOverwrite, boolean askFileOverwrite, boolean overwrite)
+      {
+         type = fileType;
+         name = fileName;
+         this.askFolderOverwrite = askFolderOverwrite;
+         this.askFileOverwrite = askFileOverwrite;
+         this.overwrite = overwrite;
+         okPresseed = true;
+      }
+      
+      public boolean askFolderOverwrite()
+      {
+         return askFolderOverwrite;
+      }
+      
+      public boolean askFileOverwrite()
+      {
+         return askFileOverwrite;
+      }
+      
+      public void run(Display disp) throws IOException, NXCException
+      {         
+         try
+         {
+            executeAction();
+         }
+         catch(final NXCException e)
+         {
+            if(e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST || type == AgentFile.DIRECTORY)
+            {
+               if(askFolderOverwrite)
+               {
+                  disp.syncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        DialogData data = MessageDialogHelper.openOneButtonWarningWithCheckbox(getSite().getShell(), 
+                              String.format("%s already exist", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File"), 
+                              "Do not show again for this upload", String.format("%s %s already exist",e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                        askFolderOverwrite = !data.getSaveSelection();
+                        okPresseed = false;
+                     }
+                  });
+               }
+            }   
+            else if(e.getErrorCode() == RCC.FILE_ALREADY_EXISTS ||  e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST)
+            {
+               if(askFileOverwrite)
+               {
+                  disp.syncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+   
+                        DialogData data = MessageDialogHelper.openWarningWithCheckbox(getSite().getShell(), 
+                              String.format("%s overwrite confirmation", type == AgentFile.DIRECTORY ? "Folder" : "File"), 
+                              "Save chose for current upload files",
+                              String.format("%s with %s name already exists. Are you sure you want to overwrite it?", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                        askFileOverwrite = !data.getSaveSelection();
+                        okPresseed = data.isOkPressed();                           
+                     }
+                  });
+                  if(okPresseed)                     
+                     executeSameFunctionWithOverwrite();
+               }
+               else
+               {
+                  if(overwrite)
+                  {
+                     executeSameFunctionWithOverwrite();
+                  }
+               }
+            }
+            else
+               throw e;
+         }
+      }
+      public boolean isOkPressed()
+      {
+         return okPresseed;
+      }
+      public abstract void executeAction() throws NXCException, IOException;
+      public abstract void executeSameFunctionWithOverwrite() throws NXCException, IOException;
    }
 }

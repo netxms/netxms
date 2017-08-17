@@ -242,6 +242,36 @@ static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false
 #define DIRECTORY       2
 #define SYMLINC         4
 
+/**
+ * Returns if file already exist
+ */
+int CheckFileType(const TCHAR *fileName)
+{
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(fileName, &st) == 0)
+   {
+      if(S_ISDIR(st.st_mode))
+      {
+         return DIRECTORY;
+      }
+      else
+         return REGULAR_FILE;
+   }
+   return -1;
+}
+
+bool CheckAndRequestForOverwritePermissions(const TCHAR *fileName, bool allowOvervirite, NXCPMessage *response)
+{
+   int fileType = CheckFileType(fileName);
+   if(fileType > 0 && !allowOvervirite)
+   {
+      response->setField(VID_RCC, fileType == DIRECTORY ? ERR_FOLDER_ALREADY_EXISTS : ERR_FILE_ALREADY_EXISTS);
+      return false;
+   }
+   else
+      return true;
+}
+
 #ifdef _WIN32
 
 TCHAR *GetFileOwnerWin(const TCHAR *file)
@@ -339,7 +369,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
  */
 static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFolder, bool allowMultipart, AbstractCommSession *session)
 {
-   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" (root=%s, multipart=%s)"), 
+   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" (root=%s, multipart=%s)"),
       folder, rootFolder ? _T("true") : _T("false"), allowMultipart ? _T("true") : _T("false"));
 
    NXCPMessage *msg;
@@ -378,7 +408,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
          session->sendMessage(msg);
          delete msg;
       }
-      nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder); 
+      nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder);
       return;
    }
 
@@ -431,7 +461,7 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
    if (allowMultipart)
       delete msg;
 
-   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder); 
+   nxlog_debug(5, _T("FILEMGR: GetFolderContent: reading \"%s\" completed"), folder);
 }
 
 /**
@@ -542,12 +572,12 @@ static BOOL CopyFile(NX_STAT_STRUCT *st, const TCHAR *oldName, const TCHAR *newN
 /**
  * Move file/folder
  */
-static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
+static BOOL MoveFile(TCHAR* oldName, TCHAR* newName, overwrite)
 {
 #ifdef _WIN32
    return MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED);
 #else
-   if (Rename(oldName, newName))
+   if (Rename(oldName, newName, true))
    {
       return TRUE;
    }
@@ -759,6 +789,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (oldName[0] == 0 && newName[0] == 0)
          {
@@ -771,14 +802,15 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if (Rename(oldName, newName))
-            {
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               response->setField(VID_RCC, ERR_IO_FAILURE);
-            }
+            if(CheckAndRequestForOverwritePermissions(newName, allowOvervirite, response))
+               if (Rename(oldName, newName))
+               {
+                  response->setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  response->setField(VID_RCC, ERR_IO_FAILURE);
+               }
          }
          else
          {
@@ -793,6 +825,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if ((oldName[0] == 0) && (newName[0] == 0))
          {
@@ -805,13 +838,16 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if(MoveFile(oldName, newName))
+            if(CheckAndRequestForOverwritePermissions(newName, allowOvervirite, response))
             {
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               response->setField(VID_RCC, ERR_IO_FAILURE);
+               if(MoveFile(oldName, newName))
+               {
+                  response->setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  response->setField(VID_RCC, ERR_IO_FAILURE);
+               }
             }
          }
          else
@@ -825,6 +861,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR name[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
+         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (name[0] == 0)
          {
@@ -836,7 +873,8 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(name, false, true) && session->isMasterServer())
          {
-            response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
+            if(CheckAndRequestForOverwritePermissions(name, allowOvervirite, response))
+               response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
          }
          else
          {
@@ -925,6 +963,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR directory[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
+         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (directory[0] == 0)
          {
@@ -936,14 +975,17 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(directory, false, true) && session->isMasterServer())
          {
-            if (CreateFolder(directory))
+            if(CheckAndRequestForOverwritePermissions(directory, allowOvervirite, response))
             {
-               response->setField(VID_RCC, ERR_SUCCESS);
-            }
-            else
-            {
-               AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Could not create directory"));
-               response->setField(VID_RCC, ERR_IO_FAILURE);
+               if (CreateFolder(directory))
+               {
+                  response->setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Could not create directory"));
+                  response->setField(VID_RCC, ERR_IO_FAILURE);
+               }
             }
          }
          else

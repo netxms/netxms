@@ -8009,7 +8009,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, ProgressListener listener)
+   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overvrite, ProgressListener listener)
       throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
@@ -8020,6 +8020,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
+      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
@@ -8033,11 +8034,12 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createFolderOnAgent(long nodeId, String folder) throws IOException, NXCException
+   public void createFolderOnAgent(long nodeId, String folder, boolean overvrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, folder);
+      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -8193,12 +8195,13 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void renameAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
+   public void renameAgentFile(long nodeId, String oldName, String newFileName, boolean overvrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_RENAME_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -8212,12 +8215,13 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void moveAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
+   public void moveAgentFile(long nodeId, String oldName, String newFileName, boolean overvrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_MOVE_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
