@@ -548,6 +548,8 @@ enum SessionState
 #define RCC_CATEGORY_NAME_EMPTY       ((UINT32)123)
 #define RCC_AGENT_FILE_DOWNLOAD_ERROR ((UINT32)124)
 #define RCC_INVALID_TUNNEL_ID         ((UINT32)125)
+#define RCC_FILE_ALREADY_EXISTS       ((UINT32)126)
+#define RCC_FOLDER_ALREADY_EXISTS     ((UINT32)127)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

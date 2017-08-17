@@ -181,13 +181,17 @@ public class AgentFile
     */
    public void addChield(AgentFile chield)
    {
+      if(children == null)
+         return;
       boolean childReplaced = false;
       for(int i=0; i<children.size(); i++)
       {
          if(children.get(i).getName().equalsIgnoreCase(chield.getName()))
          {
-            children.add(i, chield);
+            if(chield.getType() != DIRECTORY)
+               children.set(i, chield);
             childReplaced = true;
+            break;
          }
       }
       if(!childReplaced)
@@ -202,8 +206,22 @@ public class AgentFile
    public String getFullName()
    {
       if (parent == null)
+      {
          return name;
+      }
       return parent.getFullName() + "/" + name;
+   }
+
+   /**
+    * @return the fullName
+    */
+   public String getFilePath()
+   {
+      if (parent == null)
+      {
+         return name;
+      }
+      return parent.getFilePath() + ((parent.getFilePath().endsWith("/") || parent.getFilePath().endsWith("\\")) ? "" : ((parent.getFilePath().contains("\\") || parent.getFilePath().contains(":")) ? "\\" : "/")) + name;
    }
 
    /**

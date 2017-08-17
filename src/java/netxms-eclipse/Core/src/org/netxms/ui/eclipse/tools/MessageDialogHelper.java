@@ -154,6 +154,24 @@ public class MessageDialogHelper
                                                 IDialogConstants.CANCEL_LABEL }, parent, title, label, message);
       return msg.openMsg();
    }
+   
+   /**
+    * Convenience method to open a standard one button (OK) warning dialog with a check box
+    * to remember selection. 
+    * 
+    * @param parent the parent shell of the dialog, or <code>null</code> if none
+    * @param title the dialog's title, or <code>null</code> if none
+    * @param label the label for the check box
+    * @param message the message
+    * @return 
+    */
+   public static DialogData openOneButtonWarningWithCheckbox(Shell parent, String title, String label, String message)
+   {
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
+                                                MessageDialog.WARNING, new String[] { IDialogConstants.OK_LABEL}, 
+                                                parent, title, label, message);
+      return msg.openMsg();
+   }
 
 	/**
 	 * Helper class to show message dialog with check box (for example to add "do not show again" option)

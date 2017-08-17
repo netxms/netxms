@@ -119,6 +119,8 @@ public final class RCC extends CommonRCC
    public static final int CATEGORY_NAME_EMPTY = 123;
    public static final int AGENT_FILE_DOWNLOAD_ERROR = 124;
    public static final int INVALID_TUNNEL_ID = 125;
+   public static final int FILE_ALREADY_EXISTS = 126;
+   public static final int FOLDER_ALREADY_EXIST = 127;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
