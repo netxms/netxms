@@ -31,6 +31,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -80,12 +81,27 @@ public class ApplyTemplate implements IObjectActionDelegate
 				{
 					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(AbstractObject o : objects)
-					   if (parentId == null) {
+					{
+					   if (parentId == null)
+					   {
                      session.applyTemplate(0, o.getObjectId());
-					   } else
-					   for (Long l : parentId) {
-					      session.applyTemplate(l, o.getObjectId());
 					   }
+					   else
+					   {
+   					   for (Long l : parentId)
+   					   {
+   		               if (o instanceof Container)
+		                  {
+		                     for(AbstractObject obj : ((Container)o).getAllChilds(AbstractObject.OBJECT_NODE))
+		                     {
+		                        session.applyTemplate(l, obj.getObjectId());
+		                     }
+		                  }
+   		               else
+   		                  session.applyTemplate(l, o.getObjectId());
+   					   }
+					   }
+					}
 				}
 			}.start();
 		}
