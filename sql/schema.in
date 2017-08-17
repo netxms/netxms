@@ -838,7 +838,6 @@ CREATE TABLE actions
 */
 CREATE TABLE event_groups
 (
-  guid integer(36) not null,
   id integer not null,
   name varchar(63) not null,
   description varchar(255) not null,
@@ -874,7 +873,6 @@ CREATE TABLE event_policy
 ) TABLE_TYPE;
 
 /**
- *
  *
  */
 CREATE TABLE policy_source_list
@@ -1689,6 +1687,7 @@ CREATE TABLE country_codes
 	PRIMARY KEY(numeric_code)
 ) TABLE_TYPE;
 
+/**
  * Config repositories
  */
 CREATE TABLE config_repositories

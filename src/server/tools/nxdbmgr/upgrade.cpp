@@ -592,12 +592,9 @@ static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
    static const TCHAR *batch =
             _T("ALTER TABLE event_groups DROP range_start\n")
             _T("ALTER TABLE event_groups DROP range_end\n")
-            _T("ALTER TABLE event_groups ADD guid varchar(36) null\n")
-            _T("UPDATE event_groups SET guid='04b326c0-5cc0-411f-8587-2836cb87c920' WHERE id=-2147483647\n")
-            _T("UPDATE event_groups SET guid='b61859c6-1768-4a61-a0cf-eed07d688f66' WHERE id=-2147483646\n")
+            _T("ALTER TABLE event_groups ADD guid varchar(36) not null\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   DBSetNotNullConstraint(g_hCoreDB, _T("event_groups"), _T("guid"));
    CHK_EXEC(SetSchemaVersion(459));
    return TRUE;
 }
