@@ -1689,7 +1689,6 @@ CREATE TABLE country_codes
 	PRIMARY KEY(numeric_code)
 ) TABLE_TYPE;
 
-/**
  * Config repositories
  */
 CREATE TABLE config_repositories
