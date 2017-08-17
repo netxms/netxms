@@ -594,7 +594,7 @@ static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
             _T("ALTER TABLE event_groups DROP range_end\n")
             _T("ALTER TABLE event_groups ADD guid varchar(36) not null\n")
             _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLBatch(batch))
    CHK_EXEC(SetSchemaVersion(459));
    return TRUE;
 }
