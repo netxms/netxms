@@ -29,10 +29,10 @@
 /**
  * Version constants 
  */
-#define NETXMS_VERSION_MAJOR        2
-#define NETXMS_VERSION_MINOR        1
-#define NETXMS_VERSION_STRING       _T("2.1")
-#define NETXMS_VERSION_STRING_A     "2.1"
+#define NETXMS_VERSION_MAJOR        3
+#define NETXMS_VERSION_MINOR        0
+#define NETXMS_VERSION_STRING       _T("3.0-M0")
+#define NETXMS_VERSION_STRING_A     "3.0-M0"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
