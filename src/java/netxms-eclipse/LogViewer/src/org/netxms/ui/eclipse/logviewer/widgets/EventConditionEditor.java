@@ -33,7 +33,6 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -124,11 +123,11 @@ public class EventConditionEditor extends ConditionEditor
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
          eventCode = initialFilter.getNumericValue();
-         EventObject o = ConsoleSharedData.getSession().findEventObjectByCode(eventCode);
-         if (o != null && o instanceof EventTemplate)
+         EventTemplate e = ConsoleSharedData.getSession().findEventTemplateByCode(eventCode);
+         if (e != null)
          {
-            objectName.setText(o.getName());
-            objectName.setImage(labelProvider.getImage(o));
+            objectName.setText(e.getName());
+            objectName.setImage(labelProvider.getImage(e));
          }
          else
          {

@@ -92,7 +92,7 @@ public class ConnectionTest extends AbstractSessionTest
                   final NXCSession session = connect(true);
                   
                   session.syncObjects();
-                  session.syncEventObjects();
+                  session.syncEventTemplates();
                   session.syncUserDatabase();
 
                   Thread.sleep(rand.nextInt(60000) + 10000);

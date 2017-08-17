@@ -39,7 +39,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
 import org.netxms.ui.eclipse.serverconfig.Messages;
@@ -407,9 +407,9 @@ public class LogParserRuleEditor extends DashboardComposite
 			}
 			catch(NumberFormatException e)
 			{
-				EventObject o = ((NXCSession)ConsoleSharedData.getSession()).findEventObjectByName(rule.getEvent().getEvent());
-				if (o != null)
-					eventCode = o.getCode();
+				EventTemplate t = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByName(rule.getEvent().getEvent());
+				if (t != null)
+					eventCode = t.getCode();
 			}
 		}
 		

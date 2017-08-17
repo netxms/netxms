@@ -177,8 +177,6 @@ public:
 
    void setAlias(const TCHAR *alias, const TCHAR *value) { if (alias != NULL) m_aliases.set(alias, value); else m_aliases.remove(alias); }
    const TCHAR *getAlias(const TCHAR *alias) const { return m_aliases.get(alias); }
-
-   bool isExpansionAllowed() { return m_allowMacroExpansion; }
 };
 
 

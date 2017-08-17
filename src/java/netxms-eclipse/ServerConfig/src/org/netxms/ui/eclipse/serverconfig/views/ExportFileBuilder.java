@@ -64,7 +64,6 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.market.Repository;
@@ -117,7 +116,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer summaryTableViewer;
 	private Action actionSave;
 	private Action actionPublish;
-	private Map<Long, EventObject> events = new HashMap<Long, EventObject>();
+	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
 	private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
@@ -879,8 +878,8 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	{
       final long[] eventList = new long[events.size()];
       int i = 0;
-      for(EventObject o : events.values())
-         eventList[i++] = o.getCode();
+      for(EventTemplate t : events.values())
+         eventList[i++] = t.getCode();
       
       final long[] templateList = new long[templates.size()];
       i = 0;
@@ -1135,7 +1134,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 						@Override
 						public void run()
 						{
-						   for(EventObject e : session.findMultipleEventObjects(eventCodes.toArray(new Long[eventCodes.size()])))
+						   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
 						   {
 						      events.put(e.getCode(), e);
 						   }
@@ -1177,9 +1176,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				for(EventObject o : session.findMultipleEventObjects(eventCodes.toArray(new Long[eventCodes.size()])))
+				for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
 				{
-				   events.put(o.getCode(), o);
+				   events.put(e.getCode(), e);
 				}
 				eventViewer.setInput(events.values().toArray());
 			};
@@ -1210,9 +1209,9 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				for(EventObject o : session.findMultipleEventObjects(eventCodes.toArray(new Long[eventCodes.size()])))
+				for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
 				{
-				   events.put(o.getCode(), o);
+				   events.put(e.getCode(), e);
 				}
 				eventViewer.setInput(events.values().toArray());
 			};

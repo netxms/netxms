@@ -531,7 +531,7 @@ private:
    void getAlarmCategories(UINT32 requestId);
    void modifyAlarmCategory(NXCPMessage *pRequest);
    void deleteAlarmCategory(NXCPMessage *pRequest);
-   void sendEventDB(NXCPMessage *pRequest);
+   void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(NXCPMessage *pRequest);
    void deleteEventTemplate(NXCPMessage *pRequest);
    void generateEventCode(UINT32 dwRqId);

@@ -100,7 +100,6 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -323,9 +322,9 @@ public class NXCSession
    // Users
    private Map<Long, AbstractUserObject> userDB = new HashMap<Long, AbstractUserObject>();
 
-   // Event objects
-   private Map<Long, EventObject> eventObjects = new HashMap<Long, EventObject>();
-   private boolean eventObjectsNeedSync = false;
+   // Event templates
+   private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
+   private boolean eventTemplatesNeedSync = false;
    
    // Alarm categories
    private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
@@ -694,9 +693,9 @@ public class NXCSession
                strictAlarmStatusFlow = ((int)data != 0);
                break;
             case SessionNotification.RELOAD_EVENT_DB:
-               if (eventObjectsNeedSync)
+               if (eventTemplatesNeedSync)
                {
-                  resyncEventObjects();
+                  resyncEventTemplates();
                }
                break;
             case SessionNotification.SESSION_KILLED:
@@ -852,18 +851,18 @@ public class NXCSession
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
          long eventCode = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
-         EventTemplate et = (code != SessionNotification.EVENT_TEMPLATE_DELETED) ? new EventTemplate(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) : null;
-         if (eventObjectsNeedSync)
+         EventTemplate et = (code != SessionNotification.EVENT_TEMPLATE_DELETED) ? new EventTemplate(msg) : null;
+         if (eventTemplatesNeedSync)
          {
-            synchronized(eventObjects)
+            synchronized(eventTemplates)
             {
                if (code == SessionNotification.EVENT_TEMPLATE_DELETED)
                {
-                  eventObjects.remove(eventCode);
+                  eventTemplates.remove(eventCode);
                }
                else
                {
-                  eventObjects.put(eventCode, et);
+                  eventTemplates.put(eventCode, et);
                }
             }
          }
@@ -2119,7 +2118,7 @@ public class NXCSession
       objectList.clear();
       objectListGUID.clear();
       zoneList.clear();
-      eventObjects.clear();
+      eventTemplates.clear();
       userDB.clear();
       alarmCategories.clear();
    }
@@ -6149,24 +6148,24 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncEventObjects() throws IOException, NXCException
+   public void syncEventTemplates() throws IOException, NXCException
    {
-      List<EventObject> objects = getEventObjects();
-      synchronized(eventObjects)
+      List<EventTemplate> templates = getEventTemplates();
+      synchronized(eventTemplates)
       {
-         eventObjects.clear();
-         for(EventObject o : objects)
+         eventTemplates.clear();
+         for(EventTemplate t : templates)
          {
-            eventObjects.put(o.getCode(), o);
+            eventTemplates.put(t.getCode(), t);
          }
-         eventObjectsNeedSync = true;
+         eventTemplatesNeedSync = true;
       }
    }
    
    /**
     * Re-synchronize event templaytes in background
     */
-   private void resyncEventObjects()
+   private void resyncEventTemplates()
    {
       new Thread(new Runnable() {
          @Override
@@ -6174,11 +6173,11 @@ public class NXCSession
          {
             try
             {
-               syncEventObjects();
+               syncEventTemplates();
             }
             catch(Exception e)
             {
-               Logger.error("NXCSession.resyncEventObjects", "Exception in worker thread", e);
+               Logger.error("NXCSession.resyncEventTemplates", "Exception in worker thread", e);
             }
          }
       }).start();
@@ -6189,12 +6188,12 @@ public class NXCSession
     *
     * @return List of event templates cached by client library
     */
-   public EventTemplate[] getCachedEventObjects()
+   public EventTemplate[] getCachedEventTemplates()
    {
       EventTemplate[] events = null;
-      synchronized(eventObjects)
+      synchronized(eventTemplates)
       {
-         events = eventObjects.values().toArray(new EventTemplate[eventObjects.size()]);
+         events = eventTemplates.values().toArray(new EventTemplate[eventTemplates.size()]);
       }
       return events;
    }
@@ -6202,22 +6201,22 @@ public class NXCSession
    /**
     * Find event template by name in event template database internally
     * maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
+    * NXCSession.syncEventTemplates() first to make local copy of event template
     * database.
     *
     * @param name Event name
     * @return Event template object or null if not found
     */
-   public EventObject findEventObjectByName(String name)
+   public EventTemplate findEventTemplateByName(String name)
    {
-      EventObject result = null;
-      synchronized(eventObjects)
+      EventTemplate result = null;
+      synchronized(eventTemplates)
       {
-         for(EventObject o : eventObjects.values())
+         for(EventTemplate e : eventTemplates.values())
          {
-            if (o.getName().equalsIgnoreCase(name))
+            if (e.getName().equalsIgnoreCase(name))
             {
-               result = o;
+               result = e;
                break;
             }
          }
@@ -6233,9 +6232,9 @@ public class NXCSession
     */
    public String getEventName(long code)
    {
-      synchronized(eventObjects)
+      synchronized(eventTemplates)
       {
-         EventObject e = eventObjects.get(code);
+         EventTemplate e = eventTemplates.get(code);
          return (e != null) ? e.getName() : ("[" + Long.toString(code) + "]");
       }
    }
@@ -6243,38 +6242,38 @@ public class NXCSession
    /**
     * Find event template by code in event template database internally
     * maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
+    * NXCSession.syncEventTemplates() first to make local copy of event template
     * database.
     *
     * @param code Event code
     * @return Event template object or null if not found
     */
-   public EventObject findEventObjectByCode(long code)
+   public EventTemplate findEventTemplateByCode(long code)
    {
-      synchronized(eventObjects)
+      synchronized(eventTemplates)
       {
-         return eventObjects.get(code);
+         return eventTemplates.get(code);
       }
    }
 
    /**
     * Find multiple event templates by event codes in event template database
     * internally maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
+    * NXCSession.syncEventTemplates() first to make local copy of event template
     * database.
     *
     * @param codes List of event codes
     * @return List of found event templates
     */
-   public List<EventObject> findMultipleEventObjects(final Long[] codes)
+   public List<EventTemplate> findMultipleEventTemplates(final Long[] codes)
    {
-      List<EventObject> list = new ArrayList<EventObject>();
-      synchronized(eventObjects)
+      List<EventTemplate> list = new ArrayList<EventTemplate>();
+      synchronized(eventTemplates)
       {
          for(long code : codes)
          {
-            EventObject o = eventObjects.get(code);
-            if (o != null) list.add(o);
+            EventTemplate e = eventTemplates.get(code);
+            if (e != null) list.add(e);
          }
       }
       return list;
@@ -6283,45 +6282,45 @@ public class NXCSession
    /**
     * Find multiple event templates by event codes in event template database
     * internally maintained by session object. You must call
-    * NXCSession.syncEventObjects() first to make local copy of event template
+    * NXCSession.syncEventTemplates() first to make local copy of event template
     * database.
     *
     * @param codes List of event codes
     * @return List of found event templates
     */
-   public List<EventObject> findMultipleEventObjects(final long[] codes)
+   public List<EventTemplate> findMultipleEventTemplates(final long[] codes)
    {
-      List<EventObject> list = new ArrayList<EventObject>();
-      synchronized(eventObjects)
+      List<EventTemplate> list = new ArrayList<EventTemplate>();
+      synchronized(eventTemplates)
       {
          for(long code : codes)
          {
-            EventObject o = eventObjects.get(code);
-            if (o != null) list.add(o);
+            EventTemplate e = eventTemplates.get(code);
+            if (e != null) list.add(e);
          }
       }
       return list;
    }
 
    /**
-    * Get event objects from server
+    * Get event templates from server
     *
-    * @return List of configured event objects
+    * @return List of configured event templates
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<EventObject> getEventObjects() throws IOException, NXCException
+   public List<EventTemplate> getEventTemplates() throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_EVENT_DB);
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS);
-      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      ArrayList<EventObject> list = new ArrayList<EventObject>();
-      for(int i = 0; i < count; i++)
+      waitForRCC(msg.getMessageId());
+      ArrayList<EventTemplate> list = new ArrayList<EventTemplate>();
+      while(true)
       {
-         list.add(EventObject.createFromMessage(response, base));
-         base += 10;
+         final NXCPMessage response = waitForMessage(NXCPCodes.CMD_EVENT_DB_RECORD, msg.getMessageId());
+         if (response.isEndOfSequence()) 
+            break;
+         list.add(new EventTemplate(response));
       }
       return list;
    }
@@ -6372,7 +6371,6 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_NAME, evt.getName());
       msg.setField(NXCPCodes.VID_MESSAGE, evt.getMessage());
       msg.setField(NXCPCodes.VID_DESCRIPTION, evt.getDescription());
-      
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

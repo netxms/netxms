@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.eventmanager.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
@@ -49,26 +48,17 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 		switch(columnIndex)
 		{
 			case EventConfigurator.COLUMN_CODE:
-				return Long.toString(((EventObject)element).getCode());
+				return Long.toString(((EventTemplate)element).getCode());
 			case EventConfigurator.COLUMN_NAME:
-				   return getText(element);
+				return getText(element);
 			case EventConfigurator.COLUMN_SEVERITY:
-            if (element instanceof EventTemplate)
-               return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
-            else
-               return "";
+				return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
 			case EventConfigurator.COLUMN_FLAGS:
-            if (element instanceof EventTemplate)
-               return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
-            else
-               return "";
+				return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
 			case EventConfigurator.COLUMN_MESSAGE:
-            if (element instanceof EventTemplate)
-               return ((EventTemplate)element).getMessage();
-            else
-               return "";
+				return ((EventTemplate)element).getMessage();
 			case EventConfigurator.COLUMN_DESCRIPTION:
-				return ((EventObject)element).getDescription();
+				return ((EventTemplate)element).getDescription();
 		}
 		return null;
 	}

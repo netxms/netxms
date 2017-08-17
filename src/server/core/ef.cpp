@@ -65,7 +65,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 			if (name != NULL)
 			{
 				DbgPrintf(5, _T("Event specified by name (%s)"), name);
-				EventTemplate *pt = (EventTemplate *)FindEventObjectByName(name);
+				EventTemplate *pt = FindEventTemplateByName(name);
 				if (pt != NULL)
 				{
 					code = pt->getCode();

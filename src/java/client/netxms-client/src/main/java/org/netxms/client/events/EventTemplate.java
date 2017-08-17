@@ -18,17 +18,23 @@
  */
 package org.netxms.client.events;
 
+import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.Severity;
 
 /**
  * Event template
  */
-public class EventTemplate extends EventObject
+public class EventTemplate
 {
+	public static final int FLAG_WRITE_TO_LOG = 0x0001;
+	
+	private long code;
+	private String name;
 	private Severity severity;
 	private int flags;
 	private String message;
+	private String description;
 	
 	/**
 	 * Create new empty event template.
@@ -37,24 +43,27 @@ public class EventTemplate extends EventObject
 	 */
 	public EventTemplate(long code)
 	{
-	   super(code);
+		this.code = code;
+		name = "";
 		severity = Severity.NORMAL;
 		flags = FLAG_WRITE_TO_LOG;
 		message = "";
+		description = "";
 	}
 	
 	/**
 	 * Create event template object from NXCP message.
 	 * 
 	 * @param msg NXCP message
-    * @param base base field id
 	 */
-	public EventTemplate(final NXCPMessage msg, long base)
+	public EventTemplate(final NXCPMessage msg)
 	{
-	   super(msg, base);
-		severity = Severity.getByValue(msg.getFieldAsInt32(base + 4));
-		flags = msg.getFieldAsInt32(base + 5);
-		message = msg.getFieldAsString(base + 6);
+		code = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
+		severity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SEVERITY));
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		message = msg.getFieldAsString(NXCPCodes.VID_MESSAGE);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 	}
 	
 	/**
@@ -64,7 +73,6 @@ public class EventTemplate extends EventObject
 	 */
 	public EventTemplate(final EventTemplate src)
 	{
-	   super(src);
 		setAll(src);
 	}
 	
@@ -75,9 +83,28 @@ public class EventTemplate extends EventObject
 	 */
 	public void setAll(final EventTemplate src)
 	{
+		code = src.code;
 		severity = src.severity;
 		flags = src.flags;
+		name = src.name;
 		message = src.message;
+		description = src.description;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName()
+	{
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 
 	/**
@@ -126,5 +153,37 @@ public class EventTemplate extends EventObject
 	public void setMessage(String message)
 	{
 		this.message = message;
+	}
+
+	/**
+	 * @return the description
+	 */
+	public String getDescription()
+	{
+		return description;
+	}
+
+	/**
+	 * @param description the description to set
+	 */
+	public void setDescription(String description)
+	{
+		this.description = description;
+	}
+
+	/**
+	 * @return the code
+	 */
+	public long getCode()
+	{
+		return code;
+	}
+
+	/**
+	 * @param code the code to set
+	 */
+	public void setCode(long code)
+	{
+		this.code = code;
 	}
 }

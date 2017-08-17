@@ -51,12 +51,12 @@ public class TableThresholdLabelProvider extends LabelProvider implements ITable
 				return thresholdIcon;
 			case 2:
 			{
-				final EventTemplate event = (EventTemplate)session.findEventObjectByCode(((TableThreshold)element).getActivationEvent());
+				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getActivationEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
 			}
 			case 3:
 			{
-				final EventTemplate event = (EventTemplate)session.findEventObjectByCode(((TableThreshold)element).getDeactivationEvent());
+				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getDeactivationEvent());
 				return StatusDisplayInfo.getStatusImage((event != null) ? event.getSeverity() : Severity.UNKNOWN);
 			}
 		}
@@ -77,12 +77,12 @@ public class TableThresholdLabelProvider extends LabelProvider implements ITable
 			   return Integer.toString(((TableThreshold)element).getSampleCount());
 			case 2:
 			{
-				final EventTemplate event = (EventTemplate)session.findEventObjectByCode(((TableThreshold)element).getActivationEvent());
+				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getActivationEvent());
 				return eventLabelProvider.getText(event);
 			}
 			case 3:
 			{
-				final EventTemplate event = (EventTemplate)session.findEventObjectByCode(((TableThreshold)element).getDeactivationEvent());
+				final EventTemplate event = session.findEventTemplateByCode(((TableThreshold)element).getDeactivationEvent());
 				return eventLabelProvider.getText(event);
 			}
 		}

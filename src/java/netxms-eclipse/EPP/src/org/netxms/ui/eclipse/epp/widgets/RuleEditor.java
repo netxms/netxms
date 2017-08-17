@@ -545,7 +545,7 @@ public class RuleEditor extends Composite
          List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
          for(Long code : rule.getEvents())
          {
-            EventTemplate event = (EventTemplate)session.findEventObjectByCode(code);
+            EventTemplate event = session.findEventTemplateByCode(code);
             if (event == null)
             {
                event = new EventTemplate(code);

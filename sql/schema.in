@@ -841,6 +841,8 @@ CREATE TABLE event_groups
   id integer not null,
   name varchar(63) not null,
   description varchar(255) not null,
+  range_start integer not null,
+  range_end integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

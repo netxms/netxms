@@ -557,7 +557,7 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 static bool EventNameResolver(const TCHAR *name, UINT32 *code)
 {
 	bool success = false;
-	EventObject *event = FindEventObjectByName(name);
+	EventTemplate *event = FindEventTemplateByName(name);
 	if (event != NULL)
 	{
 		*code = event->getCode();

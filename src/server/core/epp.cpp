@@ -70,11 +70,11 @@ EPRule::EPRule(ConfigEntry *config)
       m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->size());
       for(int i = 0; i < events->size(); i++)
       {
-         EventObject *o = FindEventObjectByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
-         if (o != NULL)
+         EventTemplate *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         if (e != NULL)
          {
-            m_pdwEventList[m_dwNumEvents++] = o->getCode();
-            o->decRefCount();
+            m_pdwEventList[m_dwNumEvents++] = e->getCode();
+            e->decRefCount();
          }
       }
    }
@@ -399,12 +399,7 @@ bool EPRule::matchEvent(UINT32 dwEventCode)
       for(i = 0; i < m_dwNumEvents; i++)
          if (m_pdwEventList[i] & GROUP_FLAG_BIT)
          {
-            EventGroup *g = (EventGroup *)FindEventObjectByCode(m_pdwEventList[i]);
-            if (g->isMember(dwEventCode))
-            {
-               bMatch = true;
-               break;
-            }
+            /* TODO: check group membership */
          }
          else
          {

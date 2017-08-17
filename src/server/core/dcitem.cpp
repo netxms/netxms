@@ -453,7 +453,7 @@ void DCItem::checkThresholds(ItemValue &value)
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_description, t->getStringValue(),
                   (const TCHAR *)checkValue, m_id, m_instance, 0);
-				   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
@@ -483,7 +483,7 @@ void DCItem::checkThresholds(ItemValue &value)
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_description, t->getStringValue(),
 						   (const TCHAR *)checkValue, m_id, m_instance, 1);
-					   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());
@@ -782,7 +782,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
                   m_id, m_instance, 0);
-               EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+               EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
@@ -807,7 +807,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
 						   m_id, m_instance, 1);
-					   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());

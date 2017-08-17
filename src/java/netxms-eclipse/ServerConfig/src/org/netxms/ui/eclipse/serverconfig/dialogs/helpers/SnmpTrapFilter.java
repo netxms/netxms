@@ -67,7 +67,7 @@ public class SnmpTrapFilter extends ViewerFilter
    public boolean eventMatch(Object element)
    {
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      if(session.findEventObjectByCode(((SnmpTrap)element).getEventCode()).toString().toLowerCase().contains(filterString))
+      if(session.findEventTemplateByCode(((SnmpTrap)element).getEventCode()).toString().toLowerCase().contains(filterString))
          return true;
       return false;
    }
