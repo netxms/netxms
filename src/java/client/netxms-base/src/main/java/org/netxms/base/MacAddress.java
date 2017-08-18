@@ -132,7 +132,7 @@ public class MacAddress
 	 */
 	public static MacAddress parseMacAddress(String str) throws MacAddressFormatException
 	{	   
-		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})[ :\\-]?([0-9a-fA-F]{2})?[ :\\-]?([0-9a-fA-F]{2})?$");
+		Pattern pattern = Pattern.compile("^([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})[ :-]?([0-9a-fA-F]{2})?[ :-]?([0-9a-fA-F]{2})?$");
 		Matcher matcher = pattern.matcher(str.trim());
 		if (matcher.matches())
 		{

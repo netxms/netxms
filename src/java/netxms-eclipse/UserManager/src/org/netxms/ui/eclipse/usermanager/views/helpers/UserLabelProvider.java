@@ -92,9 +92,9 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
 			case UserManagementView.COLUMN_TYPE:
 				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
 			case UserManagementView.COLUMN_LAST_LOGIN:
-			   return (element instanceof User) ? ((User)element).getLastLogin().toString() : null;
+			   return (element instanceof User) ? (((User)element).getLastLogin().getTime() == 0 ? "Never" : ((User)element).getLastLogin().toString()) : null;
 			case UserManagementView.COLUMN_CREATED:
-			   return ((AbstractUserObject)element).getCreationTime().toString();
+			   return ((AbstractUserObject)element).getCreationTime().getTime() == 0 ? "" : ((AbstractUserObject)element).getCreationTime().toString();
 		}
 		return null;
 	}

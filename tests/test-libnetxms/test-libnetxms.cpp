@@ -326,7 +326,7 @@ static void TestMacAddress()
    AssertTrue(a.isMulticast());
    b = MacAddress::parse("09-80-C2-FF-FF-FF");
    AssertTrue(b.isMulticast());
-   c = MacAddress::parse("48\\2C\\6A\\1E\\59\\3D");
+   c = MacAddress::parse("48.2C.6A.1E.59.3D");
    AssertFalse(c.isMulticast());
    EndTest();
 
@@ -335,14 +335,14 @@ static void TestMacAddress()
    AssertTrue(a.isBroadcast());
    b = MacAddress::parse("FF-2C-6A-1E-59-3D");
    AssertFalse(b.isBroadcast());
-   c = MacAddress::parse("FF\\FF\\C2\\FF\\FF\\FF");
+   c = MacAddress::parse("FF.FF.C2.FF.FF.FF");
    AssertFalse(c.isBroadcast());
    EndTest();
 
    StartTest(_T("MacAddress - equals()"));
    a = MacAddress::parse("09-80-C2-FF-FF-FF");
    b = MacAddress::parse("48:2C:6A:1E:59:3D");
-   c = MacAddress::parse("09\\80\\C2\\FF\\FF\\FF");
+   c = MacAddress::parse("09.80.C2.FF.FF.FF");
    AssertFalse(a.equals(b));
    AssertFalse(b.equals(c));
    AssertTrue(c.equals(a));
