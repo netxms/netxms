@@ -30,11 +30,6 @@
 #define MAX_SYSLOG_MSG_LEN    1024
 
 /**
- * Externals
- */
-extern Queue g_nodePollerQueue;
-
-/**
  * Queued syslog message structure
  */
 class QueuedSyslogMessage
@@ -43,6 +38,7 @@ public:
    InetAddress sourceAddr;
    time_t timestamp;
    UINT32 zoneId;
+   UINT32 nodeId;
    char *message;
    int messageLength;
 
@@ -52,14 +48,16 @@ public:
       messageLength = msgLen;
       timestamp = time(NULL);
       zoneId = 0;
+      nodeId = 0;
    }
 
-   QueuedSyslogMessage(const InetAddress& addr, time_t t, UINT32 zid, const char *msg, int msgLen) : sourceAddr(addr)
+   QueuedSyslogMessage(const InetAddress& addr, time_t t, UINT32 zid, UINT32 nid, const char *msg, int msgLen) : sourceAddr(addr)
    {
       message = (char *)nx_memdup(msg, msgLen + 1);
       messageLength = msgLen;
       timestamp = t;
       zoneId = zid;
+      nodeId = nid;
    }
 
    ~QueuedSyslogMessage()
@@ -315,12 +313,22 @@ static Node *FindNodeByHostname(const char *hostName, UINT32 zoneId)
  * Bind syslog message to NetXMS node object
  * sourceAddr is an IP address from which we receive message
  */
-static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneId)
+static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneId, UINT32 nodeId)
 {
    nxlog_debug(6, _T("BindMsgToNode: addr=%s zoneId=%d"), (const TCHAR *)sourceAddr.toString(), zoneId);
 
    Node *node = NULL;
-   if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
+   if (nodeId != 0)
+   {
+      nxlog_debug(6, _T("BindMsgToNode: node ID explicitly set to %d"), nodeId);
+      node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+   }
+   else if (sourceAddr.isLoopback() && (zoneId == 0))
+   {
+      nxlog_debug(6, _T("BindMsgToNode: source is loopback in default zone, binding to management node (ID %d)"), g_dwMgmtNode);
+      node = (Node *)FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+   }
+   else if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
       node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, sourceAddr);
       if (node == NULL)
@@ -448,7 +456,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       g_syslogMessagesReceived++;
 
       record.qwMsgId = s_msgId++;
-      Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneId);
+      Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneId, msg->nodeId);
 
       g_syslogWriteQueue.put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
@@ -517,9 +525,9 @@ static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceA
 /**
  * Queue proxied syslog message for processing
  */
-void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, time_t timestamp, const char *msg, int msgLen)
+void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen)
 {
-   g_syslogProcessingQueue.put(new QueuedSyslogMessage(addr, timestamp, zoneId, msg, msgLen));
+   g_syslogProcessingQueue.put(new QueuedSyslogMessage(addr, timestamp, zoneId, nodeId, msg, msgLen));
 }
 
 /**

@@ -27,7 +27,7 @@
  * Externals
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
-void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, time_t timestamp, const char *msg, int msgLen);
+void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
 
 /**
  * Create normal agent connection
@@ -205,7 +205,14 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
          {
             char message[2048];
             msg->getFieldAsBinary(VID_MESSAGE, (BYTE *)message, msgLen + 1);
-            QueueProxiedSyslogMessage(msg->getFieldAsInetAddress(VID_IP_ADDRESS), zoneId,
+            InetAddress sourceAddr = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
+            UINT32 sourceNodeId = 0;
+            if (sourceAddr.isLoopback())
+            {
+               debugPrintf(5, _T("Source IP address for syslog message is loopback, setting source node ID to %d"), m_nodeId);
+               sourceNodeId = m_nodeId;
+            }
+            QueueProxiedSyslogMessage(sourceAddr, zoneId, sourceNodeId,
                                       msg->getFieldAsTime(VID_TIMESTAMP), message, msgLen);
          }
       }

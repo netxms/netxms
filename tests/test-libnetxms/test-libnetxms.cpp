@@ -356,6 +356,20 @@ static void TestInetAddress()
 {
    InetAddress a, b, c;
 
+   StartTest(_T("InetAddress - isLoopback() - IPv4"));
+   a = InetAddress::parse("127.0.0.1");
+   AssertTrue(a.isLoopback());
+   a = InetAddress::parse("192.168.1.1");
+   AssertFalse(a.isLoopback());
+   EndTest();
+
+   StartTest(_T("InetAddress - isLoopback() - IPv6"));
+   a = InetAddress::parse("::1");
+   AssertTrue(a.isLoopback());
+   a = InetAddress::parse("2000:1234::1");
+   AssertFalse(a.isLoopback());
+   EndTest();
+
    StartTest(_T("InetAddress - isSubnetBroadcast() - IPv4"));
    a = InetAddress::parse("192.168.0.255");
    AssertTrue(a.isSubnetBroadcast(24));
