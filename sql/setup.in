@@ -241,11 +241,11 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
-                   disabled_until,last_login)
+                   disabled_until,last_login,created)
    VALUES (0,'system',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
            274877906943,12,'','Built-in system account',5,0,  /* Flags: change password + disabled */
-           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );
 
 /*
@@ -255,27 +255,27 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    description,grace_logins,auth_method,guid,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
-                   disabled_until,last_login)
+                   disabled_until,last_login,created)
    VALUES (1,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
            0,8,'','Default administrator account',5,0,
-           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );
 
 /*
 ** Special "Everyone" user group
 */
-INSERT INTO user_groups (id,name,system_access,flags,description,guid)
+INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
    VALUES (-2147483648, 'Everyone', 274877906960, 0, 'Built-in everyone group',
-           '00000000-0000-0000-0000-000000000000'
+           '00000000-0000-0000-0000-000000000000',0
           );
 
 /*
 ** Default "Admins" group
 */
-INSERT INTO user_groups (id,name,system_access,flags,description,guid)
+INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
    VALUES (-2147483647, 'Admins', 549755813887, 0, 'Default administrative group',
-           '00000000-0000-0000-0000-000000000000'
+           '00000000-0000-0000-0000-000000000000',0
           );
 
 INSERT INTO user_group_members (group_id,user_id) VALUES (-2147483647,1);
