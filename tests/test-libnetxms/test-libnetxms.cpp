@@ -315,6 +315,41 @@ static void TestString()
 }
 
 /**
+ * Test MacAddress class
+ */
+static void TestMacAddress()
+{
+   MacAddress a, b, c;
+
+   StartTest(_T("MacAddress - isMulticast()"));
+   a = MacAddress::parse("01:80:C2:00:00:00");
+   AssertTrue(a.isMulticast());
+   b = MacAddress::parse("09-80-C2-FF-FF-FF");
+   AssertTrue(b.isMulticast());
+   c = MacAddress::parse("48\\2C\\6A\\1E\\59\\3D");
+   AssertFalse(c.isMulticast());
+   EndTest();
+
+   StartTest(_T("MacAddress - isBroadcast()"));
+   a = MacAddress::parse("FF:FF:FF:FF:FF:FF");
+   AssertTrue(a.isBroadcast());
+   b = MacAddress::parse("FF-2C-6A-1E-59-3D");
+   AssertFalse(b.isBroadcast());
+   c = MacAddress::parse("FF\\FF\\C2\\FF\\FF\\FF");
+   AssertFalse(c.isBroadcast());
+   EndTest();
+
+   StartTest(_T("MacAddress - equals()"));
+   a = MacAddress::parse("09-80-C2-FF-FF-FF");
+   b = MacAddress::parse("48:2C:6A:1E:59:3D");
+   c = MacAddress::parse("09\\80\\C2\\FF\\FF\\FF");
+   AssertFalse(a.equals(b));
+   AssertFalse(b.equals(c));
+   AssertTrue(c.equals(a));
+   EndTest();
+}
+
+/**
  * Test InetAddress class
  */
 static void TestInetAddress()
@@ -845,6 +880,7 @@ int main(int argc, char *argv[])
    TestStringSet();
    TestMessageClass();
    TestMsgWaitQueue();
+   TestMacAddress();
    TestInetAddress();
    TestItoa();
    TestQueue();

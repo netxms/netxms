@@ -23,6 +23,7 @@
 
 #include "libnetxms.h"
 #include <nxcpapi.h>
+#include <netxms-regex.h>
 
 /**
  * Returns true if it is the multicast address
@@ -134,13 +135,39 @@ String MacAddress::toString(MacAddressNotation notation) const
  */
 MacAddress MacAddress::parse(const char *str)
 {
-   if (str == NULL || strlen(str) > 16)
+   if (str == NULL || strlen(str) > 23)
       return MacAddress();
 
-   BYTE buffer[16];
-   size_t size = StrToBinA(str, buffer, strlen(str));
+   regex_t compRegex;
+   char exp[254] = { "^([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})[ :\\-]?"
+                      "([0-9a-fA-F]{2})?[ :\\-]?"
+                      "([0-9a-fA-F]{2})?$" };
 
-   return MacAddress(buffer, size);
+   String mac;
+   if (tre_regcomp(&compRegex, exp, REG_EXTENDED) == 0)
+   {
+      regmatch_t match[9];
+      if (tre_regexec(&compRegex, str, 9, match, 0) == 0)
+      {
+         for(int i = 1; i < 9; i++)
+            mac.appendMBString(str+match[i].rm_so, (match[i].rm_eo - match[i].rm_so), CP_ACP);
+      }
+      regfree(&compRegex);
+   }
+
+   if (mac.length() > 0)
+   {
+      BYTE buffer[16];
+      size_t size = StrToBin(mac, buffer, mac.length());
+      return MacAddress(buffer, size);
+   }
+
+   return MacAddress();
 }
 
 /**
