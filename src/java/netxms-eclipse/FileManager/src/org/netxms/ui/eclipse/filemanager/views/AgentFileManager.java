@@ -931,13 +931,13 @@ public class AgentFileManager extends ViewPart
             @Override
             public void executeAction() throws NXCException, IOException
             {                        
-               session.createFolderOnAgent(objectId, uploadFolder.getFullName()+"/"+remoteFileName, false); //$NON-NLS-1$
+               session.createFolderOnAgent(objectId, uploadFolder.getFullName()+"/"+remoteFileName); //$NON-NLS-1$
             }
 
             @Override
             public void executeSameFunctionWithOverwrite() throws NXCException, IOException
             {
-               session.createFolderOnAgent(objectId, uploadFolder.getFullName()+"/"+remoteFileName, true); //$NON-NLS-1$
+               //do nothing
             }
          };
          verify.run(viewer.getControl().getDisplay());
@@ -981,13 +981,13 @@ public class AgentFileManager extends ViewPart
                    @Override
                    public void executeAction() throws NXCException, IOException
                    {                        
-                      session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName(), false); //$NON-NLS-1$
+                      session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName()); //$NON-NLS-1$
                    }
 
                    @Override
                    public void executeSameFunctionWithOverwrite() throws NXCException, IOException
                    {
-                      session.createFolderOnAgent(objectId, uploadFolder + "/" + fileEntry.getName(), true); //$NON-NLS-1$
+                      //do nothing
                    }
                 };
                 verify.run(viewer.getControl().getDisplay());
@@ -1441,13 +1441,13 @@ public class AgentFileManager extends ViewPart
                @Override
                public void executeAction() throws NXCException, IOException
                {
-                  session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder, false); //$NON-NLS-1$
+                  session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder); //$NON-NLS-1$
                }
    
                @Override
                public void executeSameFunctionWithOverwrite() throws IOException, NXCException
                {
-                  session.createFolderOnAgent(objectId, parentFolder.getFullName() + "/" + newFolder, true); //$NON-NLS-1$             
+                  //do nothing
                }
             };
             verify.run(viewer.getControl().getDisplay());
@@ -1523,10 +1523,7 @@ public class AgentFileManager extends ViewPart
       if (selection.size() != 1)
          return;
 
-      String filePath = ((AgentFile)selection.getFirstElement()).getFullName();
-      filePath = filePath.replace("\\\\", "\\");
-      filePath = filePath.replace("//", "/");      
-      WidgetHelper.copyToClipboard(filePath);
+      WidgetHelper.copyToClipboard(((AgentFile)selection.getFirstElement()).getFilePath());
    }
 
    /*

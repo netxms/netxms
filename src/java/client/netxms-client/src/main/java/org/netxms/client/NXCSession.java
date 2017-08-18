@@ -8034,12 +8034,11 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createFolderOnAgent(long nodeId, String folder, boolean overvrite) throws IOException, NXCException
+   public void createFolderOnAgent(long nodeId, String folder) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, folder);
-      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

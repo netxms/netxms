@@ -209,7 +209,19 @@ public class AgentFile
       {
          return name;
       }
-      return parent.getFullName() + ((parent.getFullName().contains("\\") || parent.getFullName().contains(":")) ? "\\" : "/") + name;
+      return parent.getFullName() + "/" + name;
+   }
+
+   /**
+    * @return the fullName
+    */
+   public String getFilePath()
+   {
+      if (parent == null)
+      {
+         return name;
+      }
+      return parent.getFilePath() + ((parent.getFilePath().endsWith("/") || parent.getFilePath().endsWith("\\")) ? "" : ((parent.getFilePath().contains("\\") || parent.getFilePath().contains(":")) ? "\\" : "/")) + name;
    }
 
    /**

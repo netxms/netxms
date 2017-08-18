@@ -260,10 +260,10 @@ int CheckFileType(const TCHAR *fileName)
    return -1;
 }
 
-bool CheckAndRequestForOverwritePermissions(const TCHAR *fileName, bool allowOvervirite, NXCPMessage *response)
+bool VerifyFileOperation(const TCHAR *fileName, bool allowOverwirite, NXCPMessage *response)
 {
    int fileType = CheckFileType(fileName);
-   if(fileType > 0 && !allowOvervirite)
+   if(fileType > 0 && !allowOverwirite)
    {
       response->setField(VID_RCC, fileType == DIRECTORY ? ERR_FOLDER_ALREADY_EXISTS : ERR_FILE_ALREADY_EXISTS);
       return false;
@@ -789,7 +789,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (oldName[0] == 0 && newName[0] == 0)
          {
@@ -802,7 +802,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if(CheckAndRequestForOverwritePermissions(newName, allowOvervirite, response))
+            if(VerifyFileOperation(newName, allowOverwirite, response))
                if (Rename(oldName, newName))
                {
                   response->setField(VID_RCC, ERR_SUCCESS);
@@ -825,7 +825,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if ((oldName[0] == 0) && (newName[0] == 0))
          {
@@ -838,7 +838,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if(CheckAndRequestForOverwritePermissions(newName, allowOvervirite, response))
+            if(VerifyFileOperation(newName, allowOverwirite, response))
             {
                if(MoveFile(oldName, newName))
                {
@@ -861,7 +861,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR name[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
-         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (name[0] == 0)
          {
@@ -873,7 +873,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(name, false, true) && session->isMasterServer())
          {
-            if(CheckAndRequestForOverwritePermissions(name, allowOvervirite, response))
+            if(VerifyFileOperation(name, allowOverwirite, response))
                response->setField(VID_RCC, session->openFile(name, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
          }
          else
@@ -963,7 +963,6 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR directory[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
-         bool allowOvervirite = request->getFieldAsBoolean(VID_OVERVRITE);
          response->setId(request->getId());
          if (directory[0] == 0)
          {
@@ -975,7 +974,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(directory, false, true) && session->isMasterServer())
          {
-            if(CheckAndRequestForOverwritePermissions(directory, allowOvervirite, response))
+            if(VerifyFileOperation(directory, false, response))
             {
                if (CreateFolder(directory))
                {
