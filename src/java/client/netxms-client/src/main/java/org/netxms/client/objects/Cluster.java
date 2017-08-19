@@ -28,7 +28,7 @@ import org.netxms.client.NXCSession;
 /**
  * Cluster object
  */
-public class Cluster extends DataCollectionTarget
+public class Cluster extends DataCollectionTarget implements ZoneMember
 {
 	private int clusterType;
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
@@ -112,11 +112,22 @@ public class Cluster extends DataCollectionTarget
 		return "Cluster";
 	}
 
-	/**
-	 * @return the zoneId
-	 */
-	public long getZoneId()
-	{
-		return zoneId;
-	}
+	/* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    */
+   @Override
+   public long getZoneId()
+   {
+      return zoneId;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    */
+   @Override
+   public String getZoneName()
+   {
+      Zone zone = session.findZone(zoneId);
+      return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
+   }
 }

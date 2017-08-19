@@ -29,8 +29,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
-import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.ZoneMember;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
@@ -123,11 +122,8 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
          case AlarmList.COLUMN_ZONE:
             if (session.isZoningEnabled())
             {
-               Node node = session.findObjectById(((Alarm)element).getSourceObjectId(), Node.class);
-               if (node == null)
-                  return "";
-               Zone zone = session.findZone(node.getZoneId());
-               return (zone != null) ? zone.getObjectName() : Long.toString(node.getZoneId());
+               ZoneMember zm = session.findObjectById(((Alarm)element).getSourceObjectId(), ZoneMember.class);
+               return (zm != null) ? zm.getZoneName() : "";
             }
             return "";
 			case AlarmList.COLUMN_MESSAGE:

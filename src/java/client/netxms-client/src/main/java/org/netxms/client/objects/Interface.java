@@ -35,7 +35,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 /**
  * Network interface object
  */
-public class Interface extends GenericObject
+public class Interface extends GenericObject implements ZoneMember
 {
 	// Interface flags
 	public static final int IF_SYNTHETIC_MASK         = 0x00000001;
@@ -572,13 +572,24 @@ public class Interface extends GenericObject
 		return peerInterfaceId;
 	}
 
-	/**
-	 * @return the zoneId
-	 */
-	public long getZoneId()
-	{
-		return zoneId;
-	}
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    */
+   @Override
+   public long getZoneId()
+   {
+      return zoneId;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    */
+   @Override
+   public String getZoneName()
+   {
+      Zone zone = session.findZone(zoneId);
+      return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
+   }
 
 	/**
 	 * @return the description
