@@ -28,7 +28,7 @@ import org.netxms.client.NXCSession;
 /**
  * Subnet object
  */
-public class Subnet extends GenericObject
+public class Subnet extends GenericObject implements ZoneMember
 {
 	private long zoneId;
 	private InetAddressEx networkAddress;
@@ -97,14 +97,24 @@ public class Subnet extends GenericObject
       return true;
    }
 
-	/**
-	 * @return the zoneId
-	 */
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    */
+   @Override
 	public long getZoneId()
 	{
 		return zoneId;
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    */
+   @Override
+   public String getZoneName()
+   {
+      Zone zone = session.findZone(zoneId);
+      return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
+   }
 
    /* (non-Javadoc)
     * @see org.netxms.client.objects.AbstractObject#getStrings()

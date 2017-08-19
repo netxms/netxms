@@ -33,7 +33,7 @@ import org.netxms.client.constants.NodeType;
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends DataCollectionTarget implements RackElement
+public abstract class AbstractNode extends DataCollectionTarget implements RackElement, ZoneMember
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -581,12 +581,23 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		return driverVersion;
 	}
 
-	/**
-	 * @return the zoneId
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.ZoneMember#getZoneId()
 	 */
+	@Override
 	public long getZoneId()
 	{
 		return zoneId;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.netxms.client.objects.ZoneMember#getZoneName()
+	 */
+	@Override
+	public String getZoneName()
+	{
+	   Zone zone = session.findZone(zoneId);
+	   return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
 	}
 
 	/**
