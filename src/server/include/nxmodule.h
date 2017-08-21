@@ -105,10 +105,11 @@ typedef struct
 /**
  * Module metadata
  */
-typedef struct
+struct NXMODULE_METADATA
 {
    UINT32 size;   // structure size in bytes
-   int unicode;  // unicode flag
+   UINT32 unicode;  // unicode flag
+   char tagBegin[16];
    char name[MAX_OBJECT_NAME];
    char vendor[128];
    char coreVersion[16];
@@ -116,7 +117,34 @@ typedef struct
    char moduleVersion[16];
    char moduleBuildTag[32];
    char compiler[256];
-} NXMODULE_METADATA;
+   char tagEnd[16];
+};
+
+#ifdef _WIN32
+#define METADATA_EXPORT __declspec(dllexport) 
+#else
+#define METADATA_EXPORT
+#endif
+
+#ifdef UNICODE
+#define METADATA_UNICODE   1
+#else
+#define METADATA_UNICODE   0
+#endif
+
+/**
+ * Define module metadata
+ */
+#define DEFINE_MODULE_METADATA(name,vendor,version,tag) \
+extern "C" NXMODULE_METADATA METADATA_EXPORT NXM_metadata = \
+{ sizeof(struct NXMODULE_METADATA), METADATA_UNICODE, \
+   "$$$NXMINFO>$$$", \
+   name, vendor, \
+   NETXMS_VERSION_STRING_A, NETXMS_BUILD_TAG_A, \
+   version, tag, \
+   CPP_COMPILER_VERSION, \
+   "$$$NXMINFO<$$$" \
+};
 
 /**
  * Enumerate all modules where given entry point available
