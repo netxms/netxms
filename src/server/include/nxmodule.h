@@ -136,7 +136,8 @@ struct NXMODULE_METADATA
  * Define module metadata
  */
 #define DEFINE_MODULE_METADATA(name,vendor,version,tag) \
-extern "C" NXMODULE_METADATA METADATA_EXPORT NXM_metadata = \
+extern "C" NXMODULE_METADATA METADATA_EXPORT NXM_metadata; \
+NXMODULE_METADATA METADATA_EXPORT NXM_metadata = \
 { sizeof(struct NXMODULE_METADATA), METADATA_UNICODE, \
    "$$$NXMINFO>$$$", \
    name, vendor, \
