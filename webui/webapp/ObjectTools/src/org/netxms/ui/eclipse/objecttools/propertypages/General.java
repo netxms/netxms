@@ -129,7 +129,7 @@ public class General extends PropertyPage
 		textData.setLayoutData(gd);
 		textData.setText(objectTool.getData());
 		
-		switch(objectTool.getType())
+		switch(objectTool.getToolType())
 		{
 			case ObjectTool.TYPE_INTERNAL:
 				textData.setLabel(Messages.get().General_Operation);
@@ -479,13 +479,13 @@ public class General extends PropertyPage
 	{
 		objectTool.setName(textName.getText());
 		objectTool.setDescription(textDescription.getText());
-		if (objectTool.getType() == ObjectTool.TYPE_TABLE_AGENT)
+		if (objectTool.getToolType() == ObjectTool.TYPE_TABLE_AGENT)
 		{
 			objectTool.setData(textData.getText() + "\u007F" + textParameter.getText() + "\u007F" + textRegexp.getText()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else
 		{
-		   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD)
+		   if(objectTool.getToolType() == ObjectTool.TYPE_FILE_DOWNLOAD)
    		{
 		      objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + checkFollow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
    		}
@@ -525,7 +525,7 @@ public class General extends PropertyPage
          objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.DISABLED);
       }
 		
-		if (objectTool.getType() == ObjectTool.TYPE_TABLE_SNMP)
+		if (objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP)
 		{
 			if (radioIndexValue.getSelection())
 			{
@@ -537,10 +537,10 @@ public class General extends PropertyPage
 			}
 		}
 		
-		if ((objectTool.getType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
-		    (objectTool.getType() == ObjectTool.TYPE_SERVER_COMMAND) ||
-          (objectTool.getType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
-		    (objectTool.getType() == ObjectTool.TYPE_ACTION))
+		if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
+		    (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) ||
+          (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
+		    (objectTool.getToolType() == ObjectTool.TYPE_ACTION))
 		{
 			if (checkOutput.getSelection())
 			{

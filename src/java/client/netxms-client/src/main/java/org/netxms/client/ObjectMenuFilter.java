@@ -5,6 +5,7 @@ import java.io.Writer;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.netxms.base.Glob;
+import org.netxms.base.Logger;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.simpleframework.xml.Element;
@@ -58,19 +59,8 @@ public class ObjectMenuFilter
    }
    
    /**
-    * Create XML from configuration.
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
+    * Create empty filter
     */
-   public String createXml() throws Exception
-   {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
-   }
-   
    public ObjectMenuFilter()
    {
       toolNodeOS = "";
@@ -78,6 +68,28 @@ public class ObjectMenuFilter
       toolTemplate = "";
       toolCustomAttributes = "";
       snmpOid = "";
+   }
+   
+   /**
+    * Create XML from configuration.
+    * 
+    * @return XML document
+    * @throws Exception if the schema for the object is not valid
+    */
+   public String createXml()
+   {
+      try
+      {
+         Serializer serializer = new Persister();
+         Writer writer = new StringWriter();
+         serializer.write(this, writer);
+         return writer.toString();
+      }
+      catch(Exception e)
+      {
+         Logger.warning("ObjectMenuFilter", "Exception during object menu filter serialization", e);
+         return "";
+      }
    }
    
    /**

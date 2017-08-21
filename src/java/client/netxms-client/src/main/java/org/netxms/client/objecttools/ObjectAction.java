@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2017 RadenSolutions
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,31 +16,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools;
+package org.netxms.client.objecttools;
 
-import org.eclipse.core.expressions.PropertyTester;
-import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.ObjectMenuFilter;
+import org.netxms.client.objects.AbstractNode;
 
 /**
- * Property tester for ObjectTool
+ * Generic interface for user-defined object actions (object tools, graph templates, etc.)
  */
-public class ObjectToolsPopertyTester extends PropertyTester
+public interface ObjectAction
 {
-   @Override
-   public boolean test(Object receiver, String property, Object[] args, Object expectedValue)
-   {
-      if (!(receiver instanceof ObjectTool) || !property.equals("hasObjectToolsType"))
-         return false;
+   /**
+    * Get menu filter associated with the tool
+    */
+   public ObjectMenuFilter getMenuFilter();
 
-      ObjectTool objectTool = (ObjectTool)receiver;
-      switch(objectTool.getToolType())
-      {
-         case ObjectTool.TYPE_TABLE_AGENT:
-         case ObjectTool.TYPE_TABLE_SNMP:
-            return true;
-         default:
-            return false;
-      }
-   }
+   /**
+    * Sets menu filter for the tool
+    */
+   public void setMenuFilter(ObjectMenuFilter filter);
+   
+   /**
+    * Get tool type
+    */
+   public int getToolType();
 
+   /**
+    * Check if this action is applicable to given node
+    * 
+    * @param node node object
+    * @return true if applicable
+    */
+   public boolean isApplicableForNode(AbstractNode node);
 }

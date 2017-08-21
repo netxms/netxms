@@ -53,7 +53,7 @@ public class ObjectToolsTest extends AbstractSessionTest
 		System.out.println("Object tool details:");
 		System.out.println("   id = " + td.getId());
 		System.out.println("   name = " + td.getName());
-		System.out.println("   type = " + td.getType());
+		System.out.println("   type = " + td.getToolType());
 		System.out.println("   OID = " + td.getSnmpOid());
 		System.out.println("   confirmation = " + td.getConfirmationText());
 		System.out.println("   columnCount = " + td.getColumns().size());

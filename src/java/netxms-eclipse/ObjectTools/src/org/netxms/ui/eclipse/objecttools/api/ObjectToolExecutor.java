@@ -76,7 +76,7 @@ public final class ObjectToolExecutor
     */
    public static boolean isToolAllowed(ObjectTool tool, Set<ObjectContext> nodes)
    {
-      if (tool.getType() != ObjectTool.TYPE_INTERNAL)
+      if (tool.getToolType() != ObjectTool.TYPE_INTERNAL)
          return true;
       
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
@@ -236,7 +236,7 @@ public final class ObjectToolExecutor
     */
    private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
    {
-      switch(tool.getType())
+      switch(tool.getToolType())
       {
          case ObjectTool.TYPE_ACTION:
             executeAgentAction(node, tool, inputValues);
@@ -597,7 +597,7 @@ public final class ObjectToolExecutor
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
-                  monitor.beginTask("Tail file " + fileName, (int)workTotal);
+                  monitor.beginTask("Download file " + fileName, (int)workTotal);
                }
 
                @Override

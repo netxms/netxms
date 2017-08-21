@@ -69,7 +69,7 @@ public class ObjectToolsFilter extends ViewerFilter
    
    public boolean containsType(Object element)
    {
-      if (toolTypes[((ObjectTool)element).getType()].toLowerCase().contains(filterString))
+      if (toolTypes[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
          return true;
       return false;
    }

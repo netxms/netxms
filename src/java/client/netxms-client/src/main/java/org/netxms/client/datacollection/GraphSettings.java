@@ -27,7 +27,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.MenuFiltringObj;
+import org.netxms.client.objecttools.ObjectAction;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
@@ -35,7 +35,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Settings for predefined graph
  */
-public class GraphSettings extends ChartConfig  implements MenuFiltringObj
+public class GraphSettings extends ChartConfig implements ObjectAction
 {
 	public static final int MAX_GRAPH_ITEM_COUNT = 16;
 	
@@ -73,7 +73,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 	private String name;
 	private String shortName;
 	private List<AccessListElement> accessList;
-	private ObjectMenuFilter filters;
+	private ObjectMenuFilter filter;
 	
 	/**
 	 * Create default settings
@@ -86,7 +86,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 		name = "noname";
 		shortName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
-		filters = new ObjectMenuFilter();
+		filter = new ObjectMenuFilter();
 	}
 	
 	/**
@@ -101,7 +101,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 		this.flags = flags;
 		this.accessList = new ArrayList<AccessListElement>(accessList.size());
 		this.accessList.addAll(accessList);
-      filters = new ObjectMenuFilter();
+      filter = new ObjectMenuFilter();
 	}
 	
    public GraphSettings(GraphSettings data, String name)
@@ -113,7 +113,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
       flags = data.flags & ~GRAPH_FLAG_TEMPLATE;
       this.accessList = new ArrayList<AccessListElement>(data.accessList.size());
       this.accessList.addAll(data.accessList);
-      filters = data.filters;
+      filter = data.filter;
       setConfig(data);
       setTitle(name);
    }
@@ -157,12 +157,12 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
       
       try
       {
-         gs.filters = ObjectMenuFilter.createFromXml(msg.getFieldAsString(baseId + 5));
+         gs.filter = ObjectMenuFilter.createFromXml(msg.getFieldAsString(baseId + 5));
       }
       catch(Exception e)
       {
          Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ObjectMenuFilter XML: ", e);
-         gs.filters = new ObjectMenuFilter();
+         gs.filter = new ObjectMenuFilter();
       }
 		
 		String[] parts = gs.name.split("->");
@@ -185,7 +185,7 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 	   msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) id);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
-      msg.setField(NXCPCodes.VID_FILTER, getFiltersAsXML());
+      msg.setField(NXCPCodes.VID_FILTER, filter.createXml());
       try
       {
          msg.setField(NXCPCodes.VID_GRAPH_CONFIG, createXml());
@@ -271,50 +271,6 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
    }
 
    /**
-    * @return the filters
-    */
-   public ObjectMenuFilter getFilters()
-   {
-      return filters;
-   }
-
-   /**
-    * @return the filters as string
-    */
-   public String getFiltersAsXML()
-   {
-      try
-      {
-         return filters.createXml();
-      }
-      catch(Exception e)
-      {
-         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot create XML from ObjectMenuFilter: ", e);
-         return "";
-      }
-   }
-
-   /**
-    * @param filters the filters to set
-    */
-   public void setFilters(ObjectMenuFilter filters)
-   {
-      this.filters = filters;
-   }
-   
-   /**
-    * Checks if this graph template is applicable for node
-    * 
-    * @param node The node object
-    * @return true if applicable
-    */
-   public boolean isApplicableForNode(AbstractNode node)
-   {      
-      return filters.isApplicableForNode(node);
-   }
-
-   
-   /**
     * Checks if this graph is template
     * 
     * @return isTemplate
@@ -324,20 +280,38 @@ public class GraphSettings extends ChartConfig  implements MenuFiltringObj
       return (flags & GRAPH_FLAG_TEMPLATE) > 0;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.objecttools.ObjectAction#isApplicableForNode(org.netxms.client.objects.AbstractNode)
+    */
    @Override
-   public ObjectMenuFilter getFilter()
+   public boolean isApplicableForNode(AbstractNode node)
+   {      
+      return filter.isApplicableForNode(node);
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.client.objecttools.ObjectAction#getMenuFilter()
+    */
+   @Override
+   public ObjectMenuFilter getMenuFilter()
    {
-      return filters;
+      return filter;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.objecttools.ObjectAction#setMenuFilter(org.netxms.client.ObjectMenuFilter)
+    */
    @Override
-   public void setFilter(ObjectMenuFilter filter)
+   public void setMenuFilter(ObjectMenuFilter filter)
    {
-      this.filters = filter;
+      this.filter = filter;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.objecttools.ObjectAction#getToolType()
+    */
    @Override
-   public int getType()
+   public int getToolType()
    {
       return 0;
    }
