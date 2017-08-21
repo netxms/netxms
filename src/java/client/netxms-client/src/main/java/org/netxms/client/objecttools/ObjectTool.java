@@ -27,13 +27,12 @@ import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.MenuFiltringObj;
 
 /**
  * NetXMS object tool representation
  *
  */
-public class ObjectTool implements MenuFiltringObj
+public class ObjectTool implements ObjectAction
 {
 	public static final int TYPE_INTERNAL       = 0;
 	public static final int TYPE_ACTION         = 1;
@@ -245,7 +244,7 @@ public class ObjectTool implements MenuFiltringObj
 	/**
 	 * @return the type
 	 */
-	public int getType()
+	public int getToolType()
 	{
 		return type;
 	}
@@ -383,13 +382,13 @@ public class ObjectTool implements MenuFiltringObj
    }
 
    @Override
-   public ObjectMenuFilter getFilter()
+   public ObjectMenuFilter getMenuFilter()
    {
       return filter;
    }
 
    @Override
-   public void setFilter(ObjectMenuFilter filter)
+   public void setMenuFilter(ObjectMenuFilter filter)
    {
       this.filter = filter;      
    }

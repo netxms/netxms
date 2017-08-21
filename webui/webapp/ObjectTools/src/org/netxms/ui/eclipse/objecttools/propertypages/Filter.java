@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.objects.MenuFiltringObj;
+import org.netxms.client.objecttools.ObjectAction;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -71,11 +71,11 @@ public class Filter extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-	   MenuFiltringObj obj = (MenuFiltringObj)getElement().getAdapter(MenuFiltringObj.class);
-	   if(obj instanceof ObjectTool)
+	   ObjectAction action = (ObjectAction)getElement().getAdapter(ObjectAction.class);
+	   if (action instanceof ObjectTool)
 	      objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);	   
 	   
-	   filter = obj.getFilter();
+	   filter = action.getMenuFilter();
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -149,7 +149,7 @@ public class Filter extends PropertyPage
 		textNodeOS.setLayoutData(gd);
 		textNodeOS.setEnabled(checkMatchNodeOS.getSelection());
 		
-		if (obj instanceof ObjectTool && obj.getType() == ObjectTool.TYPE_LOCAL_COMMAND)
+		if (action instanceof ObjectTool && action.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
 		{
    		checkMatchWorkstationOS = new Button(dialogArea, SWT.CHECK);
    		checkMatchWorkstationOS.setText("Workstation OS name should match this template(coma separated regular expression list)");
@@ -247,48 +247,48 @@ public class Filter extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		if (checkAgent.getSelection())
-		   addFlag(ObjectMenuFilter.REQUIRES_AGENT);
+		   setFlag(ObjectMenuFilter.REQUIRES_AGENT);
 		else
-		   removeFlag(ObjectMenuFilter.REQUIRES_AGENT);
+		   clearFlag(ObjectMenuFilter.REQUIRES_AGENT);
 
 		if (checkSNMP.getSelection())
-		   addFlag(ObjectMenuFilter.REQUIRES_SNMP);
+		   setFlag(ObjectMenuFilter.REQUIRES_SNMP);
 		else
-		   removeFlag(ObjectMenuFilter.REQUIRES_SNMP);
+		   clearFlag(ObjectMenuFilter.REQUIRES_SNMP);
 
 		if (checkMatchOID.getSelection())
-			addFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
+			setFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
 		else
-		   removeFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
+		   clearFlag(ObjectMenuFilter.REQUIRES_OID_MATCH);
 		
       setFilter(textOID.getText(), ObjectMenuFilter.REQUIRES_OID_MATCH);	
 
       if (checkMatchNodeOS.getSelection())
-         addFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
+         setFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       else
-         removeFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
+         clearFlag(ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
       setFilter(textNodeOS.getText().trim(), ObjectMenuFilter.REQUIRES_NODE_OS_MATCH);
       
       if ((checkMatchWorkstationOS != null) && checkMatchWorkstationOS.getSelection())
-         addFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
+         setFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
       else
-         removeFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
+         clearFlag(ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
       
       if (textWorkstationOS != null)
          setFilter(textWorkstationOS.getText().trim(), ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH);
 
       if (checkMatchTemplate.getSelection())
-         addFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
+         setFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       else
-         removeFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
+         clearFlag(ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);
       
       setFilter(textTemplate.getText().trim(), ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH);    
 
       if (checkMatchCustomAttributes.getSelection())
-         addFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
+         setFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
       else
-         removeFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
+         clearFlag(ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);
       
       setFilter(textCustomAttributes.getText().trim(), ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH);    
 	}
@@ -305,11 +305,16 @@ public class Filter extends PropertyPage
       }
 	}
 	
-	private void addFlag(int flag)
+	/**
+	 * Set filter flag
+	 * 
+	 * @param flag
+	 */
+	private void setFlag(int flag)
 	{
-      if(objectTool != null)
+      if (objectTool != null)
       {
-         objectTool.setFilterFlags(objectTool.getFilter().flags | flag);
+         objectTool.setFilterFlags(objectTool.getMenuFilter().flags | flag);
       }
       else
       {
@@ -317,11 +322,16 @@ public class Filter extends PropertyPage
       }
 	}
 	
-	private void removeFlag(int flag)
+	/**
+	 * Clear filter flag
+	 * 
+	 * @param flag
+	 */
+	private void clearFlag(int flag)
    {
-      if(objectTool != null)
+      if (objectTool != null)
       {
-         objectTool.setFilterFlags(objectTool.getFilter().flags & ~flag);
+         objectTool.setFilterFlags(objectTool.getMenuFilter().flags & ~flag);
       }
       else
       {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2017 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.netxms.client.objecttools.ObjectTool;
 
 /**
  * Property tester for ObjectTool
- * 
  */
 public class ObjectToolsPopertyTester extends PropertyTester
 {
@@ -34,7 +33,7 @@ public class ObjectToolsPopertyTester extends PropertyTester
          return false;
 
       ObjectTool objectTool = (ObjectTool)receiver;
-      switch(objectTool.getType())
+      switch(objectTool.getToolType())
       {
          case ObjectTool.TYPE_TABLE_AGENT:
          case ObjectTool.TYPE_TABLE_SNMP:

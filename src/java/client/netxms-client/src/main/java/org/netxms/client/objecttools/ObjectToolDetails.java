@@ -138,20 +138,10 @@ public class ObjectToolDetails extends ObjectTool
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-	   String filterData;
-      try
-      {
-         filterData = filter.createXml();
-      }
-      catch(Exception e)
-      {
-         filterData = "";
-         Logger.debug("ObjectTool.ObjectTool", "Failed to convert object tool filter to XML");
-      }
 		msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)id);
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setField(NXCPCodes.VID_TOOL_FILTER, filterData);
+		msg.setField(NXCPCodes.VID_TOOL_FILTER, filter.createXml());
 		msg.setField(NXCPCodes.VID_CONFIRMATION_TEXT, confirmationText);
 		msg.setField(NXCPCodes.VID_TOOL_DATA, data);
 		msg.setFieldInt16(NXCPCodes.VID_TOOL_TYPE, type);

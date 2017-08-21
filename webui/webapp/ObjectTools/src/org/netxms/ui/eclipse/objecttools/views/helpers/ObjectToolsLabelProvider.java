@@ -76,7 +76,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		{
 		   if ((((ObjectTool)element).getFlags() & ObjectTool.DISABLED) == 0)
 		   {
-		      return toolTypeImages[((ObjectTool)element).getType()];
+		      return toolTypeImages[((ObjectTool)element).getToolType()];
 		   }
 		   else
 		   {
@@ -105,7 +105,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 			case ObjectToolsEditor.COLUMN_TYPE:
 				try
 				{
-					return toolTypes[tool.getType()];
+					return toolTypes[tool.getToolType()];
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
@@ -137,7 +137,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	{
 		try
 		{
-			return toolTypes[tool.getType()];
+			return toolTypes[tool.getToolType()];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
