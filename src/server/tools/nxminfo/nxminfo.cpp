@@ -1,6 +1,6 @@
 /*
 ** nxminfo - NetXMS module info tool
-** Copyright (C) 2016 Raden Solutions
+** Copyright (C) 2016-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,22 @@
 #include <netxms-version.h>
 #include <nms_core.h>
 #include <nxmodule.h>
+
+/**
+ * Module metadata version 1
+ */
+struct NXMODULE_METADATA_V1
+{
+   UINT32 size;   // structure size in bytes
+   int unicode;  // unicode flag
+   char name[MAX_OBJECT_NAME];
+   char vendor[128];
+   char coreVersion[16];
+   char coreBuildTag[32];
+   char moduleVersion[16];
+   char moduleBuildTag[32];
+   char compiler[256];
+};
 
 /**
  * Check if entry point is present
@@ -96,6 +112,11 @@ int main(int argc, char *argv[])
    NXMODULE_METADATA module;
    memset(&module, 0, sizeof(NXMODULE_METADATA));
    memcpy(&module, metadata, min(metadata->size, sizeof(NXMODULE_METADATA)));
+
+   if (strcmp(module.tagBegin, "$$$NXMINFO>$$$"))
+   {
+      memcpy(module.name, ((NXMODULE_METADATA_V1 *)metadata)->name, min(metadata->size - 8, sizeof(NXMODULE_METADATA) - 24));
+   }
 
    _tprintf(_T("Module:         %s\n"), modname);
    _tprintf(_T("Name:           %hs\n"), module.name);
