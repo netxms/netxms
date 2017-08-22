@@ -1566,6 +1566,7 @@ private:
    size_t m_length;
 
    TCHAR *toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair = false) const;
+   TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
 
 public:
    MacAddress() { m_length = 0; memset(m_value, 0, 16); }

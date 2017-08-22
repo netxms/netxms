@@ -73,12 +73,32 @@ TCHAR *MacAddress::toString(TCHAR *buffer, MacAddressNotation notation) const
          toStringInternal(buffer, _T('-'));
          break;
       case MAC_ADDR_DOT_SEPARATED:
-         toStringInternal(buffer, _T('.'));
+         toStringInternal3(buffer, _T('.'));
          break;
       case MAC_ADDR_BYTEPAIR_DOT_SEPARATED:
          toStringInternal(buffer, _T('.'), true);
          break;
    }
+   return buffer;
+}
+
+/**
+ * Internal method to string for inserting separator every third char
+ */
+TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
+{
+   TCHAR *curr = buffer;
+
+   for(int i = 0; i < m_length; i++)
+   {
+      *curr++ = bin2hex(m_value[i] >> 4);
+      if (((curr+1) - buffer) % 4 == 0)
+         *curr++ = separator;
+      *curr++ = bin2hex(m_value[i] & 15);
+      if (((curr+1) - buffer) % 4 == 0)
+         *curr++ = separator;
+   }
+   *(curr - 1) = 0;
    return buffer;
 }
 
@@ -93,7 +113,7 @@ TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool b
    {
       *curr++ = bin2hex(m_value[i] >> 4);
       *curr++ = bin2hex(m_value[i] & 15);
-      if(!bytePair || (i % 2 == 0))
+      if (!bytePair || (((i+1) % 2 == 0)))
          *curr++ = separator;
    }
    *(curr - 1) = 0;
@@ -117,13 +137,14 @@ String MacAddress::toString(MacAddressNotation notation) const
       case MAC_ADDR_COLON_SEPARATED:
       case MAC_ADDR_HYPHEN_SEPARATED:
       case MAC_ADDR_DOT_SEPARATED:
-         stringSize = m_length * 2 + m_length/2; //-1 separator +1 for
+         stringSize = m_length * 2 + m_length; //-1 separator +1 for 0 termination
          break;
       case MAC_ADDR_BYTEPAIR_DOT_SEPARATED:
       case MAC_ADDR_BYTEPAIR_COLON_SEPARATED:
-         stringSize = m_length * 2 + m_length/2; //-1 separator +1 for
+         stringSize = m_length * 2 + m_length/2; //-1 separator +1 for 0 termination
          break;
    }
+   _tprintf(_T("\n Stringsize: %d\n"), stringSize);
    TCHAR *buf = (TCHAR *)malloc(stringSize * sizeof(TCHAR));
    String str(toString(buf, notation));
    free(buf);
@@ -139,23 +160,41 @@ MacAddress MacAddress::parse(const char *str)
       return MacAddress();
 
    regex_t compRegex;
-   char exp[254] = { "^([0-9a-fA-F]{2})[ :-]?"
+   char exp1[254] = { "^([0-9a-fA-F]{2})[ :-]?"
+                      "([0-9a-fA-F]{2})[ .:-]?"
                       "([0-9a-fA-F]{2})[ :-]?"
+                      "([0-9a-fA-F]{2})[ .:-]?"
                       "([0-9a-fA-F]{2})[ :-]?"
-                      "([0-9a-fA-F]{2})[ :-]?"
-                      "([0-9a-fA-F]{2})[ :-]?"
-                      "([0-9a-fA-F]{2})[ :-]?"
+                      "([0-9a-fA-F]{2})[ .:-]?"
                       "([0-9a-fA-F]{2})?[ :-]?"
                       "([0-9a-fA-F]{2})?$" };
 
+   char exp2[128] = { "^([0-9a-fA-F]{3})\\."
+                       "([0-9a-fA-F]{3})\\."
+                       "([0-9a-fA-F]{3})\\."
+                       "([0-9a-fA-F]{3})$" };
+
    String mac;
-   if (tre_regcomp(&compRegex, exp, REG_EXTENDED) == 0)
+   if (tre_regcomp(&compRegex, exp1, REG_EXTENDED) == 0)
    {
       regmatch_t match[9];
       if (tre_regexec(&compRegex, str, 9, match, 0) == 0)
       {
          for(int i = 1; i < 9; i++)
             mac.appendMBString(str+match[i].rm_so, (match[i].rm_eo - match[i].rm_so), CP_ACP);
+      }
+      else
+      {
+         regfree(&compRegex);
+         if (tre_regcomp(&compRegex, exp2, REG_EXTENDED) == 0)
+         {
+            regmatch_t match[5];
+            if (tre_regexec(&compRegex, str, 5, match, 0) == 0)
+            {
+               for(int i = 1; i < 5; i++)
+                  mac.appendMBString(str+match[i].rm_so, (match[i].rm_eo - match[i].rm_so), CP_ACP);
+            }
+         }
       }
       regfree(&compRegex);
    }

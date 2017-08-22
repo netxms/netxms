@@ -319,14 +319,92 @@ static void TestString()
  */
 static void TestMacAddress()
 {
-   MacAddress a, b, c;
+   MacAddress a, b, c, d, e, f;
+
+   StartTest(_T("MacAddress - parse()"));
+   a = MacAddress::parse("0180C2300100");
+   AssertTrue(_tcscmp(_T("0180C2300100"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("01:80:C2:30:01:00"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("01-80-C2-30-01-00"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("018.0C2.300.100"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0180.C230.0100"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0180:C230:0100"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("01:80:C2:00:00:00");
+   AssertTrue(_tcscmp(_T("0180C2000000"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("01:80:C2:00:00:00"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("01-80-C2-00-00-00"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("018.0C2.000.000"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0180.C200.0000"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0180:C200:0000"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("09-80-C2-FF-FF-FF");
+   AssertTrue(_tcscmp(_T("0980C2FFFFFF"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("09:80:C2:FF:FF:FF"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("09-80-C2-FF-FF-FF"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("098.0C2.FFF.FFF"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0980.C2FF.FFFF"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("0980:C2FF:FFFF"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("482.C6A.1E5.93D");
+   AssertTrue(_tcscmp(_T("482C6A1E593D"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("48:2C:6A:1E:59:3D"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48-2C-6A-1E-59-3D"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482.C6A.1E5.93D"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482C.6A1E.593D"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482C:6A1E:593D"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("48AC.6B1A.F6FD");
+   AssertTrue(_tcscmp(_T("48AC6B1AF6FD"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("48:AC:6B:1A:F6:FD"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48-AC-6B-1A-F6-FD"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48A.C6B.1AF.6FD"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48AC.6B1A.F6FD"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48AC:6B1A:F6FD"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("482C:6A1E:593D");
+   AssertTrue(_tcscmp(_T("482C6A1E593D"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("48:2C:6A:1E:59:3D"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("48-2C-6A-1E-59-3D"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482.C6A.1E5.93D"), (const TCHAR*)a.toString(MAC_ADDR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482C.6A1E.593D"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("482C:6A1E:593D"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("70B3D5B020035F11");
+   AssertTrue(_tcscmp(_T("70B3D5B020035F11"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("70:B3:D5:B0:20:03:5F:11"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70-B3-D5-B0-20-03-5F-11"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3.D5B0.2003.5F11"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3:D5B0:2003:5F11"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("70:B3:D5:B0:20:03:5F:16");
+   AssertTrue(_tcscmp(_T("70B3D5B020035F16"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("70:B3:D5:B0:20:03:5F:16"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70-B3-D5-B0-20-03-5F-16"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3.D5B0.2003.5F16"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3:D5B0:2003:5F16"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("70-B3-D5-B0-20-00-00-39");
+   AssertTrue(_tcscmp(_T("70B3D5B020000039"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("70:B3:D5:B0:20:00:00:39"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70-B3-D5-B0-20-00-00-39"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3.D5B0.2000.0039"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3:D5B0:2000:0039"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+
+   a = MacAddress::parse("70B3.D5B0.2003.5D5E");
+   AssertTrue(_tcscmp(_T("70B3D5B020035D5E"), (const TCHAR*)a.toString(MAC_ADDR_FLAT_STRING)) == 0);
+   AssertTrue(_tcscmp(_T("70:B3:D5:B0:20:03:5D:5E"), (const TCHAR*)a.toString(MAC_ADDR_COLON_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70-B3-D5-B0-20-03-5D-5E"), (const TCHAR*)a.toString(MAC_ADDR_HYPHEN_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3.D5B0.2003.5D5E"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_DOT_SEPARATED)) == 0);
+   AssertTrue(_tcscmp(_T("70B3:D5B0:2003:5D5E"), (const TCHAR*)a.toString(MAC_ADDR_BYTEPAIR_COLON_SEPARATED)) == 0);
+   EndTest();
 
    StartTest(_T("MacAddress - isMulticast()"));
    a = MacAddress::parse("01:80:C2:00:00:00");
    AssertTrue(a.isMulticast());
    b = MacAddress::parse("09-80-C2-FF-FF-FF");
    AssertTrue(b.isMulticast());
-   c = MacAddress::parse("48.2C.6A.1E.59.3D");
+   c = MacAddress::parse("482.C6A.1E5.93D");
    AssertFalse(c.isMulticast());
    EndTest();
 
@@ -335,17 +413,23 @@ static void TestMacAddress()
    AssertTrue(a.isBroadcast());
    b = MacAddress::parse("FF-2C-6A-1E-59-3D");
    AssertFalse(b.isBroadcast());
-   c = MacAddress::parse("FF.FF.C2.FF.FF.FF");
+   c = MacAddress::parse("FFF.FC2.FFF.FFF");
    AssertFalse(c.isBroadcast());
    EndTest();
 
    StartTest(_T("MacAddress - equals()"));
    a = MacAddress::parse("09-80-C2-FF-FF-FF");
    b = MacAddress::parse("48:2C:6A:1E:59:3D");
-   c = MacAddress::parse("09.80.C2.FF.FF.FF");
+   c = MacAddress::parse("098.0C2.FFF.FFF");
+   d = MacAddress::parse("70B3D5B020035F11");
+   e = MacAddress::parse("70B3:D5B0:2003:5F11");
+   f = MacAddress::parse("70B3.D5B0.2003.5D5E");
    AssertFalse(a.equals(b));
    AssertFalse(b.equals(c));
+   AssertFalse(e.equals(f));
+   AssertFalse(d.equals(b));
    AssertTrue(c.equals(a));
+   AssertTrue(d.equals(e));
    EndTest();
 }
 
