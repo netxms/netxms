@@ -139,7 +139,7 @@ public class ObjectToolsCache
 				objectTools.clear();
 				for(ObjectTool tool : list)
 				{
-					if (tool.getType() != ObjectTool.TYPE_LOCAL_COMMAND)
+					if (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND)
 						objectTools.put(tool.getId(), tool);
 				}
 			}
