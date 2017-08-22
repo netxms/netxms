@@ -1435,6 +1435,14 @@ public:
    UINT32 getProxyNodeId() const { return m_proxyNodeId; }
    const TCHAR *getDeviceAddress() const { return m_deviceAddress; }
    const MacAddress getMacAddress() const { return m_macAddress; }
+   time_t getLastContact() const { return m_lastConnectionTime; }
+   UINT32 getSensorClass() const { return m_deviceClass; }
+   const TCHAR *getVendor() const { return m_vendor; }
+   UINT32 getCommProtocol() const { return m_commProtocol; }
+   const TCHAR *getSerialNumber() const { return m_serialNumber; }
+   const TCHAR *getMetaType() const { return m_metaType; }
+   const TCHAR *getDescription() const { return m_description; }
+   UINT32 getFrameCount() const { return m_frameCount; }
 
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
    void statusPoll(PollerInfo *poller);
@@ -1455,6 +1463,8 @@ public:
    virtual NXSL_Value *createNXSLObject();
 
    virtual json_t *toJson();
+
+   virtual bool isDataCollectionDisabled();
 
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();

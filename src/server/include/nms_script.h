@@ -150,6 +150,17 @@ public:
 };
 
 /**
+ * NXSL "Sensor" class
+ */
+class NXSL_SensorClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_SensorClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
  * NXSL "SNMP_Transport" class
  */
 class NXSL_SNMPTransportClass : public NXSL_Class
@@ -257,6 +268,7 @@ extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
+extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_ZoneClass g_nxslZoneClass;

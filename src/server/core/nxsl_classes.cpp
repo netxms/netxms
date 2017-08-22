@@ -1482,6 +1482,59 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * Implementation of "Sensor" class: constructor
+ */
+NXSL_SensorClass::NXSL_SensorClass() : NXSL_NetObjClass()
+{
+   setName(_T("Sensor"));
+}
+
+/**
+ * Implementation of "Sensor" class: get attribute
+ */
+NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NULL;
+   Sensor *s;
+
+   s = (Sensor*)object->getData();
+   if (!_tcscmp(attr, _T("description")))
+   {
+      value = new NXSL_Value(s->getDescription());
+   }
+   else if (!_tcscmp(attr, _T("frameCount")))
+   {
+      value = new NXSL_Value(s->getFrameCount());
+   }
+   else if (!_tcscmp(attr, _T("lastContact")))
+   {
+      value = new NXSL_Value((UINT32)s->getLastContact());
+   }
+   else if (!_tcscmp(attr, _T("metaType")))
+   {
+      value = new NXSL_Value(s->getMetaType());
+   }
+   else if (!_tcscmp(attr, _T("protocol")))
+   {
+      value = new NXSL_Value(s->getCommProtocol());
+   }
+   else if (!_tcscmp(attr, _T("serial")))
+   {
+      value = new NXSL_Value(s->getSerialNumber());
+   }
+   else if (!_tcscmp(attr, _T("type")))
+   {
+      value = new NXSL_Value(s->getSensorClass());
+   }
+   else if (!_tcscmp(attr, _T("vendor")))
+   {
+      value = new NXSL_Value(s->getVendor());
+   }
+
+   return value;
+}
+
+/**
  * Implementation of "SNMP_Transport" class: constructor
  */
 NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
@@ -1641,6 +1694,7 @@ NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
+NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_ZoneClass g_nxslZoneClass;

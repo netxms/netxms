@@ -383,10 +383,12 @@ bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
    return success;
 }
 
-
+/**
+ * Create NXSL object for this object
+ */
 NXSL_Value *Sensor::createNXSLObject()
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslMobileDeviceClass, this));
+   return new NXSL_Value(new NXSL_Object(&g_nxslSensorClass, this));
 }
 
 /**
@@ -799,4 +801,3 @@ void Sensor::prepareForDeletion()
 
    DataCollectionTarget::prepareForDeletion();
 }
-
