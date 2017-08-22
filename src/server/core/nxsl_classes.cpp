@@ -1494,7 +1494,10 @@ NXSL_SensorClass::NXSL_SensorClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   NXSL_Value *value = NULL;
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
    Sensor *s;
 
    s = (Sensor*)object->getData();
