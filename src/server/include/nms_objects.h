@@ -1464,8 +1464,6 @@ public:
 
    virtual json_t *toJson();
 
-   virtual bool isDataCollectionDisabled();
-
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
 
