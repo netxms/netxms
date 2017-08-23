@@ -792,47 +792,47 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux ds18x20"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS linux ds18x20"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la ../subagents/ds18x20/ds18x20.la"
 			STATIC_SUBAGENT_LIST="linux ds18x20 $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
-			SUBAGENT_DIRS="freebsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS freebsd"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/freebsd/freebsd.la"
 			STATIC_SUBAGENT_LIST="freebsd $STATIC_SUBAGENT_LIST"
 			;;
 		OpenBSD)
-			SUBAGENT_DIRS="openbsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS openbsd"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/openbsd/openbsd.la"
 			STATIC_SUBAGENT_LIST="openbsd $STATIC_SUBAGENT_LIST"
 			;;
 		NetBSD)
-			SUBAGENT_DIRS="netbsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS netbsd"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/netbsd/netbsd.la"
 			STATIC_SUBAGENT_LIST="netbsd $STATIC_SUBAGENT_LIST"
 			;;
 		SunOS)
-			SUBAGENT_DIRS="sunos"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS sunos"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/sunos/sunos.la"
 			STATIC_SUBAGENT_LIST="sunos $STATIC_SUBAGENT_LIST"
 			;;
 		AIX)
-			SUBAGENT_DIRS="aix"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS aix"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/aix/aix.la"
 			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
 			;;
 		HP-UX)
-			SUBAGENT_DIRS="hpux"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS hpux"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/hpux.la"
 			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
 			;;
 		Darwin)
-			SUBAGENT_DIRS="darwin"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS darwin"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
 			STATIC_SUBAGENT_LIST="darwin $STATIC_SUBAGENT_LIST"
 			;;
 		Minix)
-			SUBAGENT_DIRS="minix"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS minix"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/minix/minix.la"
 			STATIC_SUBAGENT_LIST="minix $STATIC_SUBAGENT_LIST"
 			;;
@@ -855,7 +855,7 @@ if test $? = 0; then
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
-	SUBAGENT_DIRS="ipso"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS ipso"
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 fi
 
@@ -866,31 +866,31 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux ds18x20"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS linux ds18x20"
 			;;
 		FreeBSD)
-			SUBAGENT_DIRS="freebsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS freebsd"
 			;;
 		OpenBSD)
-			SUBAGENT_DIRS="openbsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS openbsd"
 			;;
 		NetBSD)
-			SUBAGENT_DIRS="netbsd"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS netbsd"
 			;;
 		SunOS)
-			SUBAGENT_DIRS="sunos"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS sunos"
 			;;
 		AIX)
-			SUBAGENT_DIRS="aix"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS aix"
 			;;
 		HP-UX)
-			SUBAGENT_DIRS="hpux"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS hpux"
       ;;
 		Darwin)
-			SUBAGENT_DIRS="darwin"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS darwin"
 			;;
 		Minix)
-			SUBAGENT_DIRS="minix"
+			SUBAGENT_DIRS="$SUBAGENT_DIRS minix"
 			;;
 		*)
 			# unknown
@@ -3842,8 +3842,8 @@ else
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
-	echo "Agent extra components  : ${AGENT_DIRS}"
-	echo "Subagents list          : ${SUBAGENT_DIRS}"
+	echo "Agent extra components  :${AGENT_DIRS}"
+	echo "Subagents list          :${SUBAGENT_DIRS}"
 else
 	echo "Build Agent             : NO"
 fi
