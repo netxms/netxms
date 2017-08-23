@@ -361,7 +361,7 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if (m_pSessionList[i] != NULL)
+      if ((m_pSessionList[i] != NULL) && !m_pSessionList[i]->isTerminated())
       {
          pHandler(m_pSessionList[i], pArg);
       }
@@ -391,7 +391,10 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((m_pSessionList[i] != NULL) && m_pSessionList[i]->isAuthenticated() && m_pSessionList[i]->isSubscribedTo(NXC_CHANNEL_USERDB))
+      if ((m_pSessionList[i] != NULL) &&
+          m_pSessionList[i]->isAuthenticated() &&
+          !m_pSessionList[i]->isTerminated() &&
+          m_pSessionList[i]->isSubscribedTo(NXC_CHANNEL_USERDB))
          m_pSessionList[i]->postMessage(&msg);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
@@ -403,7 +406,10 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 {
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((m_pSessionList[i] != NULL) && (GetGraphAccessCheckResult(graphId, m_pSessionList[i]->getUserId()) == RCC_SUCCESS))
+      if ((m_pSessionList[i] != NULL) &&
+          m_pSessionList[i]->isAuthenticated() &&
+          !m_pSessionList[i]->isTerminated() &&
+          (GetGraphAccessCheckResult(graphId, m_pSessionList[i]->getUserId()) == RCC_SUCCESS))
          m_pSessionList[i]->postMessage(update);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
@@ -413,12 +419,16 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 {
-   int i;
-
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL)
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      if ((m_pSessionList[i] != NULL) &&
+          m_pSessionList[i]->isAuthenticated() &&
+          !m_pSessionList[i]->isTerminated())
+      {
          m_pSessionList[i]->notify(dwCode, dwData);
+      }
+   }
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
@@ -427,10 +437,8 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
  */
 void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData)
 {
-   int i;
-
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == sessionId))
          m_pSessionList[i]->notify(dwCode, dwData);
    RWLockUnlock(m_rwlockSessionListAccess);
