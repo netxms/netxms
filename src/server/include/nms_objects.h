@@ -1768,7 +1768,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *acquireSnmpProxyConnection();
+   AgentConnectionEx *acquireSnmpProxyConnection(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;
