@@ -17,6 +17,7 @@
 - Correct handling of "dormant" and "not present" interface operational states
 - Syslog messages received on loopback bound to receiving node (local management node or syslog proxy node)
 - Fixed mail sender address encoding
+- Fixed bug with lost agent connectivity after tunnel reconnect
 - NXSL:
 	- New class "InetAddress"
 	- New attribute "ipAddressList" for class "Interface"
