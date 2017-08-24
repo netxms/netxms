@@ -640,20 +640,11 @@ public:
 
    virtual int readMessage(SNMP_PDU **data, UINT32 timeout = INFINITE,
                            struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL)
-	{
-		return -1;
-	}
-   virtual int sendMessage(SNMP_PDU *pdu)
-	{
-		return -1;
-	}
-   virtual InetAddress getPeerIpAddress()
-   {
-      return InetAddress();
-   }
-
-   virtual WORD getPort()=0;
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) = 0;
+   virtual int sendMessage(SNMP_PDU *pdu) = 0;
+   virtual InetAddress getPeerIpAddress() = 0;
+   virtual UINT16 getPort() = 0;
+   virtual bool isProxyTransport() = 0;
 
    UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
 
@@ -701,11 +692,12 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pPDU);
    virtual InetAddress getPeerIpAddress();
+   virtual UINT16 getPort();
+   virtual bool isProxyTransport();
 
    UINT32 createUDPTransport(const TCHAR *hostName, UINT16 port = SNMP_DEFAULT_PORT);
    UINT32 createUDPTransport(const InetAddress& hostAddr, UINT16 port = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
-   UINT16 getPort() { return m_port; }
 };
 
 struct SNMP_SnapshotIndexEntry;

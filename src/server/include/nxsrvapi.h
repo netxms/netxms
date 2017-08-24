@@ -619,11 +619,11 @@ protected:
 	AgentConnection *m_agentConnection;
 	NXCPMessage *m_response;
 	InetAddress m_ipAddr;
-	WORD m_port;
+	UINT16 m_port;
 	bool m_waitForResponse;
 
 public:
-	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port);
+	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, UINT16 port);
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
@@ -631,7 +631,8 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual InetAddress getPeerIpAddress();
-   WORD getPort() { return m_port; }
+   virtual UINT16 getPort();
+   virtual bool isProxyTransport();
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };

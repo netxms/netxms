@@ -526,3 +526,19 @@ InetAddress SNMP_UDPTransport::getPeerIpAddress()
 {
    return InetAddress::createFromSockaddr((struct sockaddr *)&m_peerAddr);
 }
+
+/**
+ * Get port number
+ */
+UINT16 SNMP_UDPTransport::getPort()
+{
+   return m_port;
+}
+
+/**
+ * Check if transport is a proxy transport
+ */
+bool SNMP_UDPTransport::isProxyTransport()
+{
+   return false;
+}

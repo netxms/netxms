@@ -26,7 +26,7 @@
 /**
  * Constructor
  */
-SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port)
+SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, UINT16 port)
 {
    m_reliable = true;   // no need for retries on server side, agent will do retry if needed
 	m_agentConnection = conn;
@@ -128,4 +128,20 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 InetAddress SNMP_ProxyTransport::getPeerIpAddress()
 {
    return m_ipAddr;
+}
+
+/**
+ * Get port number
+ */
+UINT16 SNMP_ProxyTransport::getPort()
+{
+   return m_port;
+}
+
+/**
+ * Check if this transport is a proxy transport
+ */
+bool SNMP_ProxyTransport::isProxyTransport()
+{
+   return true;
 }
