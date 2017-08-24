@@ -492,17 +492,27 @@ public:
 template <class T> class ObjectLock
 {
 private:
-   MUTEX m_mutex;
-   T *m_data;
+   Mutex m_mutex;
+   T *m_object;
+
 public:
-   ObjectLock(T *obj) { m_data = obj;  m_mutex = MutexCreate(); }
-   ObjectLock() { m_data = NULL;  m_mutex = MutexCreate(); }
-   ~ObjectLock() { MutexDestroy(m_mutex); }
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
-   T *get() { return m_data; }
-   void set(T *newObj) { m_data = newObj; }
-   operator T*() { return m_data; }
+   ObjectLock() { m_object = NULL; }
+   ObjectLock(T *object) { m_object = object; }
+   ObjectLock(const ObjectLock<T> &src) { m_object = src.m_object; m_mutex = src.m_mutex; }
+
+   void lock() { m_mutex.lock(); }
+   void unlock() { m_mutex.unlock(); }
+
+   T *get() { return m_object; }
+   void set(T *object) { m_object = object; }
+
+   operator T*() { return m_object; }
+   ObjectLock<T>& operator =(const ObjectLock<T> &src)
+   {
+      m_object = src.m_object;
+      m_mutex = src.m_mutex;
+      return *this;
+   }
 };
 
 /**
