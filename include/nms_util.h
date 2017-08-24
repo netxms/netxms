@@ -487,6 +487,25 @@ public:
 };
 
 /**
+ * Class that can store any object with connected to it mutex
+ */
+template <class T> class ObjectLock
+{
+private:
+   MUTEX m_mutex;
+   T *m_data;
+public:
+   ObjectLock(T *obj) { m_data = obj;  m_mutex = MutexCreate(); }
+   ObjectLock() { m_data = NULL;  m_mutex = MutexCreate(); }
+   ~ObjectLock() { MutexDestroy(m_mutex); }
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
+   T *get() { return m_data; }
+   void set(T *newObj) { m_data = newObj; }
+   operator T*() { return m_data; }
+};
+
+/**
  * Pair class (stores pair of items)
  */
 template <typename T1, typename T2> class Pair
