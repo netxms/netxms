@@ -755,7 +755,7 @@ UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *s
          parameter.replace(_T("*"), m_guid.toString());
          break;
       case COMM_DLMS:
-         if(parameter.find("Sensor") != -1)
+         if(parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
    }
