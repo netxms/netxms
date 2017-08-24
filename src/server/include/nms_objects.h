@@ -1403,8 +1403,6 @@ protected:
    time_t m_lastStatusPoll;
    time_t m_lastConfigurationPoll;
    MUTEX m_hPollerMutex;
-   MUTEX m_hAgentAccessMutex;
-   AgentConnection *m_proxyAgentConn;
 
 	virtual void fillMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
@@ -1417,11 +1415,6 @@ protected:
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
-
-   void agentLock() { MutexLock(m_hAgentAccessMutex); }
-   void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
-
-   AgentConnection *getAgentConnection() { return m_proxyAgentConn; }
 
 public:
    Sensor();
@@ -1470,8 +1463,10 @@ public:
    void lockForStatusPoll();
    void lockForConfigurationPoll();
 
-   UINT32 connectToAgent();
-   void deleteAgentConnection();
+   AgentConnectionEx *getAgentConnection();
+
+   void checkDlmsConverterAccessability();
+   void prepareDlmsDciParameters(String &parameter);
 
    virtual void prepareForDeletion();
 };
@@ -1569,6 +1564,13 @@ public:
    UINT64 getEventId() const { return m_eventId; }
 };
 
+enum ProxyType
+{
+   SNMP_PROXY = 0,
+   SENSOR_PROXY = 1,
+   MAX_PROXY_TYPE = 2
+};
+
 /**
  * Node
  */
@@ -1645,9 +1647,8 @@ protected:
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
-	MUTEX m_snmpProxyConnectionLock;
    AgentConnectionEx *m_agentConnection;
-   AgentConnectionEx *m_snmpProxyConnection;
+   ObjectLock<AgentConnectionEx> *m_proxyConnections;
    SMCLP_Connection *m_smclpConnection;
 	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
    UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
@@ -1937,7 +1938,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *acquireSnmpProxyConnection();
+   AgentConnectionEx *acquireProxyConnection(ProxyType type);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;
