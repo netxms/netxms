@@ -1406,7 +1406,7 @@ restart_agent_check:
             if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
             {
                nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
-               AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
+               AgentConnectionEx *pconn = acquireSnmpProxyConnection(true);
                if (pconn != NULL)
                {
                   pconn->decRefCount();
@@ -5603,7 +5603,7 @@ AgentConnectionEx *Node::acquireSnmpProxyConnection(bool validate)
 
    if ((m_snmpProxyConnection != NULL) && validate)
    {
-      UINT32 rcc = conn->nop();
+      UINT32 rcc = m_snmpProxyConnection->nop();
       if (rcc != ERR_SUCCESS)
       {
          m_snmpProxyConnection->decRefCount();
