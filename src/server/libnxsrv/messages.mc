@@ -1070,4 +1070,10 @@ Language=English
 Server is waiting for database password to be supplied
 .
 
+MessageId=
+SymbolicName=MSG_SENSOR_LOAD_FAILED
+Language=English
+Failed to load sensor object with id %1 from database
+.
+
 ;#endif

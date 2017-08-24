@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1396,7 +1396,7 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Load mobile devices
+   // Load sensors
    DbgPrintf(2, _T("Loading sensors..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM sensors"));
    if (hResult != NULL)
@@ -1413,7 +1413,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             delete sensor;
-            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(MSG_SENSOR_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
