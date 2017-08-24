@@ -1564,6 +1564,9 @@ public:
    UINT64 getEventId() const { return m_eventId; }
 };
 
+/**
+ * Proxy types
+ */
 enum ProxyType
 {
    SNMP_PROXY = 0,
@@ -1938,7 +1941,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *acquireProxyConnection(ProxyType type);
+   AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;

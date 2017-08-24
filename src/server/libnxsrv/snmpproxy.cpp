@@ -95,7 +95,8 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 	if (m_response == NULL)
 		return -1;
 
-	if (m_response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+	UINT32 rcc = m_response->getFieldAsUInt32(VID_RCC);
+	if (rcc == ERR_SUCCESS)
 	{
 		dwSize = m_response->getFieldAsUInt32(VID_PDU_SIZE);
 		pBuffer = (BYTE *)malloc(dwSize);
@@ -112,6 +113,10 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 		}
 		free(pBuffer);
 		nRet = (int)dwSize;
+	}
+	else if (rcc == ERR_REQUEST_TIMEOUT)
+	{
+	   nRet = 0;
 	}
 	else
 	{

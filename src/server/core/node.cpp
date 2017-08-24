@@ -1341,11 +1341,13 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_name);
-   DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
    tNow = time(NULL);
+
+   int retryCount = 5;
 
 restart_agent_check:
    if (g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
@@ -1359,7 +1361,7 @@ restart_agent_check:
       TCHAR szBuffer[256];
       UINT32 dwResult;
 
-      DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_name);
+      nxlog_debug(6, _T("StatusPoll(%s): check SNMP"), m_name);
       pTransport = createSnmpTransport();
       if (pTransport != NULL)
       {
@@ -1388,21 +1390,38 @@ restart_agent_check:
                unlockProperties();
             }
          }
-         else if ((dwResult == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3))
+         else if ((dwResult == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3) && (retryCount > 0))
          {
             // Reset authoritative engine data
             lockProperties();
             m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine());
             unlockProperties();
+            delete pTransport;
+            retryCount--;
             goto restart_agent_check;
          }
          else
          {
+            if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
+            {
+               nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
+               AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
+               if (pconn != NULL)
+               {
+                  pconn->decRefCount();
+                  if (retryCount > 0)
+                  {
+                     retryCount--;
+                     delete pTransport;
+                     goto restart_agent_check;
+                  }
+               }
+            }
+
             sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
             {
-               if ((tNow > m_failTimeSNMP + tExpire) &&
-                   (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
+               if ((tNow > m_failTimeSNMP + tExpire) && (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
                {
                   m_flags &= ~NF_IS_SNMP;
                   m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
@@ -1421,15 +1440,15 @@ restart_agent_check:
       }
       else
       {
-         DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
+         nxlog_debug(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
       }
-      DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_name);
+      nxlog_debug(6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
    // Check native agent connectivity
    if ((m_flags & NF_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_name);
+      nxlog_debug(6, _T("StatusPoll(%s): checking agent"), m_name);
       poller->setStatus(_T("check agent"));
       sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
@@ -1438,7 +1457,7 @@ restart_agent_check:
       agentLock();
       if (connectToAgent(&error, &socketError, &newConnection, true))
       {
-         DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_name);
+         nxlog_debug(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
@@ -1448,7 +1467,7 @@ restart_agent_check:
       }
       else
       {
-         DbgPrintf(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_name, (int)error, (int)socketError);
+         nxlog_debug(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_name, (int)error, (int)socketError);
          sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
@@ -1471,7 +1490,7 @@ restart_agent_check:
          }
       }
       agentUnlock();
-      DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_name);
+      nxlog_debug(7, _T("StatusPoll(%s): agent check finished"), m_name);
 
       // If file update connection is active, send NOP command to prevent disconnection by idle timeout
       AgentConnection *fileUpdateConnection;
@@ -5570,30 +5589,44 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
 /**
  * Acquire SNMP proxy agent connection
  */
-AgentConnectionEx *Node::acquireProxyConnection(ProxyType type)
+AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
 {
    m_proxyConnections[type].lock();
 
-   if ((m_proxyConnections[type].get() != NULL) && !m_proxyConnections[type].get()->isConnected())
-   {
-      m_proxyConnections[type].get()->decRefCount();
-      m_proxyConnections[type].set(NULL);
-      nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): existing agent connection dropped"), m_name, (int)m_id);
-   }
-
-   if (m_proxyConnections[type].get() == NULL)
-   {
-      m_proxyConnections[type].set(createAgentConnection());
-      if (m_proxyConnections[type].get()!= NULL)
-         nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): new agent connection created"), m_name, (int)m_id);
-   }
-
    AgentConnectionEx *conn = m_proxyConnections[type].get();
+   if ((conn != NULL) && !conn->isConnected())
+   {
+      conn->decRefCount();
+      conn = NULL;
+      m_proxyConnections[type].set(NULL);
+      nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
+   }
+
+   if ((conn != NULL) && validate)
+   {
+      UINT32 rcc = conn->nop();
+      if (rcc != ERR_SUCCESS)
+      {
+         conn->decRefCount();
+         conn = NULL;
+         m_proxyConnections[type].set(NULL);
+         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
+      }
+   }
+
+   if (conn == NULL)
+   {
+      conn = createAgentConnection();
+      m_proxyConnections[type].set(conn);
+      if (conn != NULL)
+         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
+   }
+
    if (conn != NULL)
       conn->incRefCount();
 
    m_proxyConnections[type].unlock();
-   return m_proxyConnections[type];
+   return conn;
 }
 
 /**
