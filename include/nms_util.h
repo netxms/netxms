@@ -1160,6 +1160,7 @@ public:
    RefCountHashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
 
    V *get(const K& key) { V *v = (V*)_get(&key); if (v != NULL) v->incRefCount(); return v; }
+   V *peek(const K& key) { return (V*)_get(&key); }
    void set(const K& key, V *value) { if (value != NULL) value->incRefCount(); _set(&key, (void *)value); }
    void remove(const K& key) { _remove(&key); }
    bool contains(const K& key) { return _contains(&key); }

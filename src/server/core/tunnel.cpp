@@ -59,7 +59,11 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      s_boundTunnels.remove(tunnel->getNodeId());
+      // Check that current tunnel for node is tunnel being unregistered
+      // New tunnel could be established while old one still finishing
+      // outstanding requests
+      if (s_boundTunnels.peek(tunnel->getNodeId()) == tunnel)
+         s_boundTunnels.remove(tunnel->getNodeId());
    }
    else
    {
