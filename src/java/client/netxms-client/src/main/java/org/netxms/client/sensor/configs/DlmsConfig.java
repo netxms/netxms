@@ -31,7 +31,7 @@ public class DlmsConfig extends SensorConfig
 {
    
    
-   @ElementList(inline=true)
+   @ElementList(name="connections")
    public List<DlmsConverterCredentials> connections;
    
    public DlmsConfig()

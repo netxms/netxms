@@ -25,6 +25,7 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.sensor.configs.DlmsConfig;
 import org.netxms.client.sensor.configs.LoraWanConfig;
 import org.netxms.client.sensor.configs.LoraWanRegConfig;
 import org.netxms.client.sensor.configs.SensorConfig;
@@ -193,6 +194,18 @@ public class Sensor extends DataCollectionTarget
             catch(Exception e)
             {
                config = new LoraWanConfig();
+               Logger.debug("Sensor.Sensor", "Cannot parse LoraWanConfig XML", e);
+            }
+            break;
+         case COMM_DLMS:
+            try
+            {
+               config = SensorConfig.createFromXml(DlmsConfig.class, xml);
+            }
+            catch(Exception e)
+            {
+               config = new DlmsConfig();
+               System.out.println(xml);
                Logger.debug("Sensor.Sensor", "Cannot parse LoraWanConfig XML", e);
             }
             break;

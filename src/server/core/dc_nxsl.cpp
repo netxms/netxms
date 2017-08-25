@@ -129,7 +129,7 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName())
-	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()))
+	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslSensorClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
@@ -213,7 +213,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName())
-	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()))
+	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslSensorClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
@@ -423,7 +423,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName())
-	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()))
+	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName())&& _tcscmp(object->getClass()->getName(), g_nxslSensorClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 
@@ -484,7 +484,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 
    NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName())
-	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()))
+	    && _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) && _tcscmp(object->getClass()->getName(), g_nxslSensorClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 
