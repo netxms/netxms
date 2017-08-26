@@ -37,13 +37,16 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentTunnel;
+import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.TunnelListComparator;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.TunnelListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateNodeDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -68,6 +71,7 @@ public class TunnelManager extends ViewPart
    
    private SortableTableViewer viewer;
    private Action actionRefresh;
+   private Action actionCreateNode;
    private Action actionBind;
    private Action actionUnbind;
    
@@ -120,6 +124,14 @@ public class TunnelManager extends ViewPart
          public void run()
          {
             refresh();
+         }
+      };
+      
+      actionCreateNode = new Action("&Create node and bind...") {
+         @Override
+         public void run()
+         {
+            createNode();
          }
       };
       
@@ -201,6 +213,7 @@ public class TunnelManager extends ViewPart
       if ((selection.size() == 1) && !((AgentTunnel)selection.getFirstElement()).isBound())
       {
          manager.add(actionBind);
+         manager.add(actionCreateNode);
       }
       else
       {
@@ -244,6 +257,65 @@ public class TunnelManager extends ViewPart
    }
    
    /**
+    * Create new node and bind tunnel
+    */
+   private void createNode()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final AgentTunnel tunnel = (AgentTunnel)selection.getFirstElement();
+      if (tunnel.isBound())
+         return;
+      
+      CreateNodeDialog dlg = new CreateNodeDialog(getSite().getShell(), null);
+      dlg.setEnableShowAgainFlag(false);
+      dlg.setObjectName(tunnel.getSystemName());
+      dlg.setZoneId(tunnel.getZoneId());
+      if (dlg.open() != Window.OK)
+         return;
+      
+      final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), 2);
+      cd.setCreationFlags(dlg.getCreationFlags());
+      cd.setPrimaryName(dlg.getHostName());
+      cd.setAgentPort(dlg.getAgentPort());
+      cd.setSnmpPort(dlg.getSnmpPort());
+      cd.setAgentProxyId(dlg.getAgentProxy());
+      cd.setSnmpProxyId(dlg.getSnmpProxy());
+      cd.setIcmpProxyId(dlg.getIcmpProxy());
+      cd.setSshProxyId(dlg.getSshProxy());
+      cd.setZoneId(dlg.getZoneId());
+      cd.setSshLogin(dlg.getSshLogin());
+      cd.setSshPassword(dlg.getSshPassword());
+      
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Create new node and bind tunnel", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            long nodeId = session.createObject(cd);
+            session.bindAgentTunnel(tunnel.getId(), nodeId);
+
+            final List<AgentTunnel> tunnels = session.getAgentTunnels();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(tunnels);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot create node and bind tunnel";
+         }
+      }.start();
+   }
+   
+   /**
     * Bind tunnel to node
     */
    private void bindTunnel()
@@ -281,7 +353,7 @@ public class TunnelManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot unbind tunnel";
+            return "Cannot bind tunnel";
          }
       }.start();
    }

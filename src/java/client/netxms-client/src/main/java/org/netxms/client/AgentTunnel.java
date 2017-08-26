@@ -35,6 +35,7 @@ public class AgentTunnel
    private String systemInformation;
    private String platformName;
    private String agentVersion;
+   private long zoneId;
    private int activeChannelCount;
    
    /**
@@ -54,6 +55,7 @@ public class AgentTunnel
       platformName = msg.getFieldAsString(baseId + 6);
       agentVersion = msg.getFieldAsString(baseId + 7);
       activeChannelCount = msg.getFieldAsInt32(baseId + 8);
+      zoneId = msg.getFieldAsInt64(baseId + 9);
    }
    
    /**
@@ -128,6 +130,14 @@ public class AgentTunnel
    public String getAgentVersion()
    {
       return agentVersion;
+   }
+
+   /**
+    * @return the zoneId
+    */
+   public long getZoneId()
+   {
+      return zoneId;
    }
 
    /**
