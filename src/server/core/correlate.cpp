@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,9 +72,9 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	}
 
 	// Check proxy nodes
-	if (IsZoningEnabled() && (pNode->getZoneId() != 0))
+	if (IsZoningEnabled() && (pNode->getZoneUIN() != 0))
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
+		Zone *zone = FindZoneByUIN(pNode->getZoneUIN());
 		if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != pNode->getId()))
 		{
 		   if (CheckAgentDown(pNode, pEvent, zone->getProxyNodeId(), _T("zone proxy")))

@@ -37,10 +37,10 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateZoneDialog extends Dialog
 {
 	private LabeledText nameField;
-	private LabeledText zoneIdField;
+	private LabeledText uinField;
 	
 	private String name;
-	private long zoneId;
+	private long zoneUIN;
 	
 	/**
 	 * @param parentShell
@@ -83,13 +83,13 @@ public class CreateZoneDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
-		zoneIdField = new LabeledText(dialogArea, SWT.NONE);
-		zoneIdField.setLabel(Messages.get().CreateZoneDialog_ZoneId);
-		zoneIdField.getTextControl().setTextLimit(12);
+		uinField = new LabeledText(dialogArea, SWT.NONE);
+		uinField.setLabel(Messages.get().CreateZoneDialog_ZoneId);
+		uinField.getTextControl().setTextLimit(12);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		zoneIdField.setLayoutData(gd);
+		uinField.setLayoutData(gd);
 		
 		return dialogArea;
 	}
@@ -100,19 +100,19 @@ public class CreateZoneDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-	   String zoneIdText = zoneIdField.getText().trim();
+	   String zoneIdText = uinField.getText().trim();
 	   if (!zoneIdText.isEmpty())
 	   {
    		try
    		{
-   			zoneId = Long.parseLong(zoneIdField.getText());
+   			zoneUIN = Long.parseLong(uinField.getText());
    		}
    		catch(NumberFormatException e)
    		{
    			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
    			return;
    		}
-   		if (zoneId <= 0)
+   		if (zoneUIN <= 0)
    		{
    			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
    			return;
@@ -120,7 +120,7 @@ public class CreateZoneDialog extends Dialog
 	   }
 	   else
 	   {
-	      zoneId = 0;
+	      zoneUIN = 0;
 	   }
 		
 		name = nameField.getText().trim();
@@ -142,10 +142,12 @@ public class CreateZoneDialog extends Dialog
 	}
 
 	/**
-	 * @return the zoneId
+	 * Get zone UIN
+	 * 
+	 * @return zone UIN
 	 */
-	public long getZoneId()
+	public long getZoneUIN()
 	{
-		return zoneId;
+		return zoneUIN;
 	}
 }

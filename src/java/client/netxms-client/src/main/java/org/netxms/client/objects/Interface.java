@@ -440,7 +440,7 @@ public class Interface extends GenericObject implements ZoneMember
 		peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
 		peerInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
 		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
 		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);

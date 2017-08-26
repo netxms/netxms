@@ -39,7 +39,7 @@ Node::Node() : DataCollectionTarget()
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
    m_dwDynamicFlags = 0;
-   m_zoneId = 0;
+   m_zoneUIN = 0;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentAuthMethod = AUTH_NONE;
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
@@ -129,7 +129,7 @@ Node::Node() : DataCollectionTarget()
 /**
  * Constructor for new node object
  */
-Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneId) : DataCollectionTarget()
+Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneUIN) : DataCollectionTarget()
 {
    addr.toString(m_primaryName);
    m_status = STATUS_UNKNOWN;
@@ -138,7 +138,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_ipAddress = addr;
    m_flags = dwFlags;
    m_dwDynamicFlags = 0;
-   m_zoneId = zoneId;
+   m_zoneUIN = zoneUIN;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentAuthMethod = AUTH_NONE;
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
@@ -335,7 +335,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetField(hResult, 0, 9, m_agentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 10, m_platformName, MAX_PLATFORM_NAME_LEN);
    m_pollerNode = DBGetFieldULong(hResult, 0, 11);
-   m_zoneId = DBGetFieldULong(hResult, 0, 12);
+   m_zoneUIN = DBGetFieldULong(hResult, 0, 12);
    m_agentProxy = DBGetFieldULong(hResult, 0, 13);
    m_snmpProxy = DBGetFieldULong(hResult, 0, 14);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 15);
@@ -551,7 +551,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_agentVersion, DB_BIND_STATIC);
    DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_platformName, DB_BIND_STATIC);
    DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_pollerNode);
-   DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneId);
+   DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneUIN);
    DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
    DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
@@ -1056,11 +1056,11 @@ bool Node::filterInterface(InterfaceInfo *info)
    if (info->name[0] != 0)
    {
       iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
-                                 info->index, info->ipAddrList, info->type, m_zoneId);
+                                 info->index, info->ipAddrList, info->type, m_zoneUIN);
    }
    else
    {
-      iface = new Interface(info->ipAddrList, m_zoneId, false);
+      iface = new Interface(info->ipAddrList, m_zoneUIN, false);
    }
    iface->setMacAddr(info->macAddr, false);
    iface->setBridgePortNumber(info->bridgePort);
@@ -1138,7 +1138,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
                    (pCluster != NULL) ? pCluster->getId() : 0, addToSubnet ? _T("yes") : _T("no"));
          if (addToSubnet)
          {
-            Subnet *pSubnet = FindSubnetForNode(m_zoneId, addr);
+            Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, addr);
             if (pSubnet == NULL)
             {
                // Check if netmask is 0 (detect), and if yes, create
@@ -1183,9 +1183,9 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
    Interface *iface;
    if (info->name[0] != 0)
       iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
-                                 info->index, info->ipAddrList, info->type, m_zoneId);
+                                 info->index, info->ipAddrList, info->type, m_zoneUIN);
    else
-      iface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
+      iface = new Interface(info->ipAddrList, m_zoneUIN, bSyntheticMask);
    iface->setMacAddr(info->macAddr, false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setSlotNumber(info->slot);
@@ -1258,7 +1258,7 @@ void Node::deleteInterface(Interface *iface)
          if (doUnlink)
          {
             // Last interface in subnet, should unlink node
-            Subnet *pSubnet = FindSubnetByIP(m_zoneId, addr->getSubnetAddress());
+            Subnet *pSubnet = FindSubnetByIP(m_zoneUIN, addr->getSubnetAddress());
             if (pSubnet != NULL)
             {
                deleteParent(pSubnet);
@@ -1875,9 +1875,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
    time_t now = time(NULL);
 
    // Check proxy node(s)
-   if (IsZoningEnabled() && (m_zoneId != 0))
+   if (IsZoningEnabled() && (m_zoneUIN != 0))
    {
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != m_id))
       {
          if (checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, requestId, secondPass))
@@ -2173,7 +2173,7 @@ void Node::updatePrimaryIpAddr()
    if (m_primaryName[0] == 0)
       return;
 
-   InetAddress ipAddr = ResolveHostName(m_zoneId, m_primaryName);
+   InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryName);
    if (!ipAddr.equals(m_ipAddress) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
    {
       TCHAR buffer1[64], buffer2[64];
@@ -3507,7 +3507,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                if (m_ipAddress.isValidUnicast())
                {
                   memset(macAddr, 0, MAC_ADDR_LENGTH);
-                  Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
+                  Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
                   if (pSubnet != NULL)
                      pSubnet->findMacAddress(m_ipAddress, macAddr);
                   pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
@@ -3523,7 +3523,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             {
                // check MAC address
                memset(macAddr, 0, MAC_ADDR_LENGTH);
-               Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
+               Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
                if (pSubnet != NULL)
                   pSubnet->findMacAddress(m_ipAddress, macAddr);
                if (memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
@@ -3548,7 +3548,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          if (m_ipAddress.isValidUnicast())
          {
             memset(macAddr, 0, MAC_ADDR_LENGTH);
-            Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
+            Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
             if (pSubnet != NULL)
                pSubnet->findMacAddress(m_ipAddress, macAddr);
             pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
@@ -4940,7 +4940,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
    pMsg->setField(VID_PLATFORM_NAME, m_platformName);
    pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
-   pMsg->setField(VID_ZONE_ID, m_zoneId);
+   pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
    pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
@@ -4993,14 +4993,14 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          if (IsZoningEnabled())
          {
-            Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+            Zone *zone = FindZoneByUIN(m_zoneUIN);
             if (zone != NULL)
             {
                zone->addToIndex(this);
             }
             else
             {
-               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
             }
          }
          else
@@ -5012,14 +5012,14 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          if (IsZoningEnabled())
          {
-            Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+            Zone *zone = FindZoneByUIN(m_zoneUIN);
             if (zone != NULL)
             {
                zone->removeFromIndex(this);
             }
             else
             {
-               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+               DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
             }
          }
          else
@@ -5057,7 +5057,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          }
 
          // Check that there is no node with same IP as we try to change
-         if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+         if ((FindNodeByIP(m_zoneUIN, ipAddr) != NULL) || (FindSubnetByIP(m_zoneUIN, ipAddr) != NULL))
          {
             return RCC_ALREADY_EXIST;
          }
@@ -5082,7 +5082,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       TCHAR primaryName[MAX_DNS_NAME];
       pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
-      InetAddress ipAddr = ResolveHostName(m_zoneId, primaryName);
+      InetAddress ipAddr = ResolveHostName(m_zoneUIN, primaryName);
       if (ipAddr.isValid() && !(m_flags & NF_REMOTE_AGENT))
       {
          // Check if received IP address is one of node's interface addresses
@@ -5096,7 +5096,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          if (i == count)
          {
             // Check that there is no node with same IP as we try to change
-            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+            if ((FindNodeByIP(m_zoneUIN, ipAddr) != NULL) || (FindSubnetByIP(m_zoneUIN, ipAddr) != NULL))
             {
                return RCC_ALREADY_EXIST;
             }
@@ -5640,10 +5640,10 @@ void Node::setPrimaryIPAddress(const InetAddress& addr)
 
    if (IsZoningEnabled())
    {
-      Zone *zone = FindZoneByGUID(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone == NULL)
       {
-         DbgPrintf(1, _T("Internal error: zone is NULL in Node::setPrimaryIPAddress (zone ID = %d)"), (int)m_zoneId);
+         DbgPrintf(1, _T("Internal error: zone is NULL in Node::setPrimaryIPAddress (zone ID = %d)"), (int)m_zoneUIN);
          return;
       }
       if (m_ipAddress.isValid())
@@ -5722,7 +5722,7 @@ void Node::changeZone(UINT32 newZone)
    pollerLock();
 
    lockProperties();
-   m_zoneId = newZone;
+   m_zoneUIN = newZone;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    m_lastConfigurationPoll = 0;
    unlockProperties();
@@ -5747,7 +5747,7 @@ void Node::changeZone(UINT32 newZone)
    lockChildList(false);
    for(i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
-         ((Interface *)m_childList->get(i))->updateZoneId();
+         ((Interface *)m_childList->get(i))->updateZoneUIN();
    unlockChildList();
 
    lockProperties();
@@ -6039,9 +6039,9 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
 {
    UINT32 proxyNode = m_agentProxy;
 
-   if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneId != 0))
+   if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneUIN != 0))
    {
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if ((zone != NULL) && (zone->getProxyNodeId() != m_id))
       {
          proxyNode = zone->getProxyNodeId();
@@ -6152,10 +6152,10 @@ Cluster *Node::getMyCluster()
 UINT32 Node::getEffectiveSnmpProxy() const
 {
    UINT32 snmpProxy = m_snmpProxy;
-   if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneId != 0))
+   if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
          snmpProxy = zone->getProxyNodeId();
@@ -6876,7 +6876,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
-      while(FindSubnetByIP(m_zoneId, addr) != NULL)
+      while(FindSubnetByIP(m_zoneUIN, addr) != NULL)
       {
          baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
          addr = baseAddr.getSubnetAddress();
@@ -6887,18 +6887,18 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          return NULL;
    }
 
-   Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
+   Subnet *s = new Subnet(addr, m_zoneUIN, syntheticMask);
    NetObjInsert(s, true, false);
    if (g_flags & AF_ENABLE_ZONING)
    {
-      Zone *zone = FindZoneByGUID(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
          zone->addSubnet(s);
       }
       else
       {
-         DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneId);
+         DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
       }
    }
    else
@@ -6958,7 +6958,7 @@ void Node::checkSubnetBinding()
       // Is cluster interconnect interface?
       bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(addr) : false;
 
-      Subnet *pSubnet = FindSubnetForNode(m_zoneId, addr);
+      Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, addr);
       if (pSubnet != NULL)
       {
          DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
@@ -7038,7 +7038,7 @@ void Node::checkSubnetBinding()
    // to find subnet node primary IP
    if (m_ipAddress.isValidUnicast() && !(m_flags & NF_REMOTE_AGENT) && !addrList.hasAddress(m_ipAddress))
    {
-      Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
+      Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
       if (pSubnet != NULL)
       {
          // Check if node is linked to this subnet
@@ -7732,9 +7732,9 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
 void Node::updatePingData()
 {
    UINT32 icmpProxy = m_icmpProxy;
-   if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+   if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
    {
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
          icmpProxy = zone->getProxyNodeId();
@@ -8152,7 +8152,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "iPendingStatus", json_integer(m_iPendingStatus));
    json_object_set_new(root, "iPollCount", json_integer(m_iPollCount));
    json_object_set_new(root, "iRequiredPollCount", json_integer(m_iRequiredPollCount));
-   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "agentPort", json_integer(m_agentPort));
    json_object_set_new(root, "agentAuthMethod", json_integer(m_agentAuthMethod));
    json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));

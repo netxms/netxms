@@ -577,14 +577,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
                if (zone != NULL)
                {
                   zone->dumpInterfaceIndex(pCtx);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
@@ -602,14 +602,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
                if (zone != NULL)
                {
                   zone->dumpNodeIndex(pCtx);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
@@ -631,14 +631,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             if (IsCommand(_T("ZONE"), szBuffer, 1))
             {
                ExtractWord(pArg, szBuffer);
-               Zone *zone = FindZoneByGUID(_tcstoul(szBuffer, NULL, 0));
+               Zone *zone = FindZoneByUIN(_tcstoul(szBuffer, NULL, 0));
                if (zone != NULL)
                {
                   zone->dumpSubnetIndex(pCtx);
                }
                else
                {
-                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone ID\n\n"));
+                  ConsoleWrite(pCtx, _T("ERROR: Invalid zone UIN\n\n"));
                }
             }
             else if (szBuffer[0] == 0)
@@ -652,13 +652,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else if (IsCommand(_T("ZONE"), szBuffer, 1))
          {
-            DumpIndex(pCtx, &g_idxZoneByGUID);
+            DumpIndex(pCtx, &g_idxZoneByUIN);
          }
          else
          {
             if (szBuffer[0] == 0)
                ConsoleWrite(pCtx, _T("ERROR: Missing parameters\n")
-                                  _T("Syntax:\n   SHOW INDEX name [ZONE id]\n")
+                                  _T("Syntax:\n   SHOW INDEX name [ZONE uin]\n")
                                   _T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
             else
                ConsoleWrite(pCtx, _T("ERROR: Invalid index name\n\n"));

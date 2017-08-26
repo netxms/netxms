@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -137,23 +137,23 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  * @param sshLogin SSH login name
  * @param sshPassword SSH password
  * @param cluster pointer to parent cluster object or NULL
- * @param zoneId zone ID
+ * @param zoneUIN zone ID
  * @param doConfPoll if set to true, Node::configurationPoll will be called before exit
  * @param discoveredNode must be set to true if node being added automatically by discovery thread
  */
 Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
                                     UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
                                     UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,
-                                    Cluster *cluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
+                                    Cluster *cluster, UINT32 zoneUIN, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
    TCHAR szIpAddr[64];
    UINT32 dwFlags = 0;
 
-   DbgPrintf(4, _T("PollNode(%s/%d) zone %d"), ipAddr.toString(szIpAddr), ipAddr.getMaskBits(), (int)zoneId);
+   DbgPrintf(4, _T("PollNode(%s/%d) zone %d"), ipAddr.toString(szIpAddr), ipAddr.getMaskBits(), (int)zoneUIN);
    // Check for node existence
-   if ((FindNodeByIP(zoneId, ipAddr) != NULL) ||
-       (FindSubnetByIP(zoneId, ipAddr) != NULL))
+   if ((FindNodeByIP(zoneUIN, ipAddr) != NULL) ||
+       (FindSubnetByIP(zoneUIN, ipAddr) != NULL))
    {
       DbgPrintf(4, _T("PollNode: Node %s already exist in database"), szIpAddr);
       return NULL;
@@ -165,7 +165,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
       dwFlags |= NF_DISABLE_SNMP;
    if (creationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(ipAddr, dwFlags, agentProxyId, snmpProxyId, icmpProxyId, sshProxyId, zoneId);
+   pNode = new Node(ipAddr, dwFlags, agentProxyId, snmpProxyId, icmpProxyId, sshProxyId, zoneUIN);
 	if (agentPort != 0)
 		pNode->setAgentPort(agentPort);
 	if (snmpPort != 0)
@@ -220,12 +220,12 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
  * Find existing node by MAC address to detect IP address change for already known node.
  *
  * @param ipAddr new (discovered) IP address
- * @param dwZoneID zone ID
+ * @param zoneUIN zone ID
  * @param bMacAddr MAC address of discovered node, or NULL if not known
  *
  * @return pointer to existing interface object with given MAC address or NULL if no such interface found
  */
-static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 dwZoneId, BYTE *bMacAddr)
+static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN, BYTE *bMacAddr)
 {
 	Subnet *subnet;
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
@@ -237,7 +237,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 dwZoneId
 
 	if (bMacAddr == NULL)
 	{
-		subnet = FindSubnetForNode(dwZoneId, ipAddr);
+		subnet = FindSubnetForNode(zoneUIN, ipAddr);
 		if (subnet != NULL)
 		{
 			BOOL found = subnet->findMacAddress(ipAddr, nodeMacAddr);
@@ -269,7 +269,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 dwZoneId
 /**
  * Check if host at given IP address is reachable by NetXMS server
  */
-static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
+static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool fullCheck, SNMP_Transport **transport, AgentConnection **agentConn)
 {
 	bool reachable = false;
 
@@ -282,9 +282,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 	UINT32 icmpProxy = 0;
 	UINT32 snmpProxy = 0;
 
-	if (IsZoningEnabled() && (zoneId != 0))
+	if (IsZoningEnabled() && (zoneUIN != 0))
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		Zone *zone = FindZoneByUIN(zoneUIN);
 		if (zone != NULL)
 		{
 			agentProxy = zone->getProxyNodeId();
@@ -397,7 +397,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 /**
  * Check if newly discovered node should be added
  */
-static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
+static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneUIN, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
    TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
@@ -407,8 +407,8 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 	SNMP_Transport *pTransport;
 
 	addr.toString(szIpAddr);
-   if ((FindNodeByIP(zoneId, addr) != NULL) ||
-       (FindSubnetByIP(zoneId, addr) != NULL))
+   if ((FindNodeByIP(zoneUIN, addr) != NULL) ||
+       (FindSubnetByIP(zoneUIN, addr) != NULL))
 	{
 		DbgPrintf(4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
       return FALSE;  // Node already exist in database
@@ -428,7 +428,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
       hook->setGlobalVariable(_T("$ipNetMask"), new NXSL_Value(addr.getMaskBits()));
       MACToStr(macAddr, szBuffer);
       hook->setGlobalVariable(_T("$macAddr"), new NXSL_Value(szBuffer));
-      hook->setGlobalVariable(_T("$zoneId"), new NXSL_Value(zoneId));
+      hook->setGlobalVariable(_T("$zoneUIN"), new NXSL_Value(zoneUIN));
       if (hook->run())
       {
          NXSL_Value *result = hook->getResult();
@@ -447,10 +447,10 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
          return FALSE;  // blocked by hook
    }
 
-	Interface *iface = GetOldNodeWithNewIP(addr, zoneId, macAddr);
+	Interface *iface = GetOldNodeWithNewIP(addr, zoneUIN, macAddr);
 	if (iface != NULL)
 	{
-		if (!HostIsReachable(addr, zoneId, false, NULL, NULL))
+		if (!HostIsReachable(addr, zoneUIN, false, NULL, NULL))
 		{
 			DbgPrintf(4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
 			return FALSE;
@@ -473,7 +473,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 	{
 		if (g_pModuleList[i].pfAcceptNewNode != NULL)
 		{
-			if (!g_pModuleList[i].pfAcceptNewNode(addr, zoneId, macAddr))
+			if (!g_pModuleList[i].pfAcceptNewNode(addr, zoneUIN, macAddr))
 				return FALSE;	// filtered out by module
 		}
 	}
@@ -485,7 +485,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
    // Check for filter script
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
 	{
-		if (!HostIsReachable(addr, zoneId, false, NULL, NULL))
+		if (!HostIsReachable(addr, zoneUIN, false, NULL, NULL))
 		{
 			DbgPrintf(4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
 			return FALSE;
@@ -527,7 +527,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
    }
 
 	// Check if host is reachable
-	if (!HostIsReachable(addr, zoneId, true, &pTransport, &pAgentConn))
+	if (!HostIsReachable(addr, zoneUIN, true, &pTransport, &pAgentConn))
 	{
 		DbgPrintf(4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
       return FALSE;
@@ -668,7 +668,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
    NEW_NODE *pInfo;
 	TCHAR szIpAddr[64];
 
-   DbgPrintf(1, _T("Node poller started"));
+   nxlog_debug(1, _T("Node poller started"));
 
    while(!IsShutdownInProgress())
    {
@@ -677,15 +677,15 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
          break;   // Shutdown indicator received
 
 		DbgPrintf(4, _T("NodePoller: processing node %s/%d in zone %d"),
-		          pInfo->ipAddr.toString(szIpAddr), pInfo->ipAddr.getMaskBits(), (int)pInfo->zoneId);
-      if (pInfo->ignoreFilter || AcceptNewNode(pInfo->ipAddr, pInfo->zoneId, pInfo->bMacAddr))
+		          pInfo->ipAddr.toString(szIpAddr), pInfo->ipAddr.getMaskBits(), (int)pInfo->zoneUIN);
+      if (pInfo->ignoreFilter || AcceptNewNode(pInfo->ipAddr, pInfo->zoneUIN, pInfo->bMacAddr))
 		{
          ObjectTransactionStart();
-         PollNewNode(pInfo->ipAddr, 0, 0, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, pInfo->zoneId, true, true);
+         PollNewNode(pInfo->ipAddr, 0, 0, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, pInfo->zoneUIN, true, true);
          ObjectTransactionEnd();
 		}
       free(pInfo);
    }
-   DbgPrintf(1, _T("Node poller thread terminated"));
+   nxlog_debug(1, _T("Node poller thread terminated"));
    return THREAD_OK;
 }

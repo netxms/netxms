@@ -197,7 +197,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		vrrpVersion = msg.getFieldAsInt32(NXCPCodes.VID_VRRP_VERSION);
 		driverName = msg.getFieldAsString(NXCPCodes.VID_DRIVER_NAME);
 		driverVersion = msg.getFieldAsString(NXCPCodes.VID_DRIVER_VERSION);
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
 		rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);

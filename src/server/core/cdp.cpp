@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	
    TCHAR ipAddrText[16];
 	DbgPrintf(6, _T("CDP(%s [%d]): remote IP address %s"), node->getName(), node->getId(), IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(node->getZoneId(), remoteIp);
+	Node *remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
 	if (remoteNode == NULL)
 	{
 		DbgPrintf(6, _T("CDP(%s [%d]): node object for remote IP %s not found"), node->getName(), node->getId(), ipAddrText);

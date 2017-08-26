@@ -35,7 +35,7 @@ public class AgentTunnel
    private String systemInformation;
    private String platformName;
    private String agentVersion;
-   private long zoneId;
+   private long zoneUIN;
    private int activeChannelCount;
    
    /**
@@ -55,7 +55,7 @@ public class AgentTunnel
       platformName = msg.getFieldAsString(baseId + 6);
       agentVersion = msg.getFieldAsString(baseId + 7);
       activeChannelCount = msg.getFieldAsInt32(baseId + 8);
-      zoneId = msg.getFieldAsInt64(baseId + 9);
+      zoneUIN = msg.getFieldAsInt64(baseId + 9);
    }
    
    /**
@@ -135,9 +135,9 @@ public class AgentTunnel
    /**
     * @return the zoneId
     */
-   public long getZoneId()
+   public long getZoneUIN()
    {
-      return zoneId;
+      return zoneUIN;
    }
 
    /**
@@ -156,6 +156,6 @@ public class AgentTunnel
    {
       return "AgentTunnel [id=" + id + ", guid=" + guid + ", address=" + address + ", nodeId=" + nodeId + ", systemName="
             + systemName + ", systemInformation=" + systemInformation + ", platformName=" + platformName + ", agentVersion="
-            + agentVersion + ", activeChannelCount=" + activeChannelCount + "]";
+            + agentVersion + ", zoneUIN=" + zoneUIN + ", activeChannelCount=" + activeChannelCount + "]";
    }
 }

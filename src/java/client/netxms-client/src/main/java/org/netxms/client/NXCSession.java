@@ -435,7 +435,7 @@ public class NXCSession
                            objectList.put(obj.getObjectId(), obj);
                            objectListGUID.put(obj.getGuid(), obj);
                            if (obj instanceof Zone)
-                              zoneList.put(((Zone)obj).getZoneId(), (Zone)obj);
+                              zoneList.put(((Zone)obj).getUIN(), (Zone)obj);
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
@@ -453,7 +453,7 @@ public class NXCSession
                               objectListGUID.remove(object.getGuid());
                               objectList.remove(objectId);
                               if (object instanceof Zone)
-                                 zoneList.remove(((Zone)object).getZoneId());
+                                 zoneList.remove(((Zone)object).getUIN());
                            }
                         }
                         sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
@@ -2715,16 +2715,16 @@ public class NXCSession
    }
 
    /**
-    * Find zone object by zone ID.
+    * Find zone object by zone UIN (unique identification number).
     *
-    * @param zoneId zone ID to find
+    * @param zoneUIN zone UIN to find
     * @return zone object or null
     */
-   public Zone findZone(long zoneId)
+   public Zone findZone(long zoneUIN)
    {
       synchronized(objectList)
       {
-         return zoneList.get(zoneId);
+         return zoneList.get(zoneUIN);
       }
    }
    
@@ -4429,7 +4429,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int) data.getParentId());
       msg.setFieldInt16(NXCPCodes.VID_OBJECT_CLASS, data.getObjectClass());
       msg.setField(NXCPCodes.VID_OBJECT_NAME, data.getName());
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_ID, (int) data.getZoneId());
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, (int)data.getZoneUIN());
       if (data.getComments() != null) msg.setField(NXCPCodes.VID_COMMENTS, data.getComments());
 
       // Class-specific attributes
@@ -4547,7 +4547,7 @@ public class NXCSession
             objectList.remove(objectId);
             objectListGUID.remove(object.getGuid());
             if (object instanceof Zone)
-               zoneList.remove(((Zone)object).getZoneId());
+               zoneList.remove(((Zone)object).getUIN());
             removeOrphanedObjects(object);
          }
       }
@@ -4570,7 +4570,7 @@ public class NXCSession
             objectList.remove(object.getObjectId());
             objectListGUID.remove(object.getGuid());
             if (object instanceof Zone)
-               zoneList.remove(((Zone)object).getZoneId());
+               zoneList.remove(((Zone)object).getUIN());
             removeOrphanedObjects(object);
          }
       }
@@ -5190,15 +5190,15 @@ public class NXCSession
     * between zones.
     *
     * @param objectId Node or cluster object ID
-    * @param zoneId The zone ID
+    * @param zoneUIN The zone UIN (unique identification number)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeObjectZone(final long objectId, final long zoneId) throws IOException, NXCException
+   public void changeObjectZone(final long objectId, final long zoneUIN) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_ZONE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_ID, (int) zoneId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, (int)zoneUIN);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -7534,7 +7534,7 @@ public class NXCSession
    public ConnectionPoint findConnectionPoint(int zoneId, InetAddress ipAddr) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_IP_LOCATION);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_ID, zoneId);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneId);
       msg.setField(NXCPCodes.VID_IP_ADDRESS, ipAddr);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -7553,7 +7553,7 @@ public class NXCSession
    public List<AbstractNode> findNodesByHostname(int zoneId, String hostname) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_HOSTNAME_LOCATION);
-      msg.setFieldInt32(NXCPCodes.VID_ZONE_ID, zoneId);
+      msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneId);
       msg.setField(NXCPCodes.VID_HOSTNAME, hostname);
       sendMessage(msg);
       

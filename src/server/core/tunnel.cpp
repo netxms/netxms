@@ -206,7 +206,7 @@ static VolatileCounter s_nextTunnelId = 0;
 /**
  * Agent tunnel constructor
  */
-AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId) : RefCountObject(), m_channels(true)
+AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, UINT32 nodeId, UINT32 zoneUIN) : RefCountObject(), m_channels(true)
 {
    m_id = InterlockedIncrement(&s_nextTunnelId);
    m_address = addr;
@@ -216,6 +216,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_sslLock = MutexCreate();
    m_requestId = 0;
    m_nodeId = nodeId;
+   m_zoneUIN = zoneUIN;
    m_state = AGENT_TUNNEL_INIT;
    m_systemName = NULL;
    m_platformName = NULL;
@@ -444,11 +445,16 @@ void AgentTunnel::setup(const NXCPMessage *request)
       response.setField(VID_RCC, ERR_SUCCESS);
       response.setField(VID_IS_ACTIVE, m_state == AGENT_TUNNEL_BOUND);
 
+      // For bound tunnels zone UIN taken from node object
+      if (m_state != AGENT_TUNNEL_BOUND)
+         m_zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
+
       debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
       debugPrintf(5, _T("   System name:        %s"), m_systemName);
       debugPrintf(5, _T("   System information: %s"), m_systemInfo);
       debugPrintf(5, _T("   Platform name:      %s"), m_platformName);
       debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
+      debugPrintf(5, _T("   Zone UIN:           %u"), m_zoneUIN);
    }
    else
    {
@@ -676,6 +682,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    MutexLock(m_channelLock);
    msg->setField(baseId + 8, m_channels.size());
    MutexUnlock(m_channelLock);
+   msg->setField(baseId + 9, m_zoneUIN);
 }
 
 /**
@@ -922,6 +929,7 @@ static void SetupTunnel(void *arg)
    AgentTunnel *tunnel = NULL;
    int rc;
    UINT32 nodeId = 0;
+   UINT32 zoneUIN = 0;
    X509 *cert = NULL;
 
    // Setup secure connection
@@ -1001,6 +1009,7 @@ retry:
                   {
                      nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
                      nodeId = node->getId();
+                     zoneUIN = node->getZoneUIN();
                   }
                   else
                   {
@@ -1035,7 +1044,7 @@ retry:
       nxlog_debug(4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
    }
 
-   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId);
+   tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN);
    RegisterTunnel(tunnel);
    tunnel->start();
    tunnel->decRefCount();

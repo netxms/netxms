@@ -39,7 +39,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
    private Text hostnameText;
    private ZoneSelector zoneSelector;
    private String hostname;
-   private long zoneId;
+   private long zoneUIN;
    private boolean zoningEnabled;
 
    /**
@@ -102,7 +102,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
    protected void okPressed()
    {
       hostname = hostnameText.getText();
-      zoneId = zoningEnabled ? zoneSelector.getZoneId() : 0;
+      zoneUIN = zoningEnabled ? zoneSelector.getZoneUIN() : 0;
       super.okPressed();
    }
 
@@ -111,7 +111,7 @@ public class EnterPrimaryHostnameDlg extends Dialog
     */
    public long getZoneId()
    {
-      return zoneId;
+      return zoneUIN;
    }
 
    /**

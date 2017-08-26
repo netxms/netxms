@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ZoneSelector extends AbstractSelector
 {
-   private long zoneId = 0;
+   private long zoneUIN = 0;
    private String emptySelectionName = "<none>";
    
    /**
@@ -53,7 +53,7 @@ public class ZoneSelector extends AbstractSelector
       ZoneSelectionDialog dlg = new ZoneSelectionDialog(getShell());
       if (dlg.open() == Window.OK)
       {
-         zoneId = dlg.getZoneId();
+         zoneUIN = dlg.getZoneUIN();
          setText(dlg.getZoneName());
          fireModifyListeners();
       }
@@ -65,19 +65,19 @@ public class ZoneSelector extends AbstractSelector
    @Override
    protected void clearButtonHandler()
    {
-      zoneId = -1;
+      zoneUIN = -1;
       setText(emptySelectionName);
       fireModifyListeners();
    }
 
    /**
-    * Get ID of selected zone
+    * Get UIN of selected zone
     * 
-    * @return selected zone ID
+    * @return selected zone UIN
     */
-   public long getZoneId()
+   public long getZoneUIN()
    {
-      return zoneId;
+      return zoneUIN;
    }
 
    /**
@@ -91,19 +91,21 @@ public class ZoneSelector extends AbstractSelector
    }
 
    /**
-    * @param objectId the objectId to set
+    * Set zone UIN
+    * 
+    * @param zoneUIN new zone UIN
     */
-   public void setZoneId(long zoneId)
+   public void setZoneUIN(long zoneUIN)
    {
-      this.zoneId = zoneId;
-      if (zoneId == -1)
+      this.zoneUIN = zoneUIN;
+      if (zoneUIN == -1)
       {
          setText(emptySelectionName); //$NON-NLS-1$
       }
       else
       {
-         final Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-         setText((zone != null) ? zone.getObjectName() : ("<" + Long.toString(zoneId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+         final Zone zone = ConsoleSharedData.getSession().findZone(zoneUIN);
+         setText((zone != null) ? zone.getObjectName() : ("<" + Long.toString(zoneUIN) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
       }
    }
 }

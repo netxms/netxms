@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ static void DeleteEmptySubnets()
 {
    if (IsZoningEnabled())
    {
-      ObjectArray<NetObj> *zones = g_idxZoneByGUID.getObjects(true);
+      ObjectArray<NetObj> *zones = g_idxZoneByUIN.getObjects(true);
       for(int i = 0; i < zones->size(); i++)
       {
          Zone *zone = (Zone *)zones->get(i);

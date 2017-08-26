@@ -44,7 +44,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember
 		super(msg, session);
 		
 		clusterType = msg.getFieldAsInt32(NXCPCodes.VID_CLUSTER_TYPE);
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS);
       long fieldId = NXCPCodes.VID_SYNC_SUBNETS_BASE;

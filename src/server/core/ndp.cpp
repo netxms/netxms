@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
 	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
-	Node *remoteNode = FindNodeByIP(node->getZoneId(), remoteIp);
+	Node *remoteNode = FindNodeByIP(node->getZoneUIN(), remoteIp);
 	if (remoteNode == NULL)
 	{
 		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->getName(), node->getId(), ipAddrText);

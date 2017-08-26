@@ -27,7 +27,7 @@ import org.netxms.client.NXCSession;
  */
 public class Zone extends GenericObject
 {
-	private long zoneId;
+	private long uin;
 	private long proxyNodeId;
 	
 	/**
@@ -39,7 +39,7 @@ public class Zone extends GenericObject
 	public Zone(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		uin = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		proxyNodeId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_PROXY);
 	}
 
@@ -62,11 +62,13 @@ public class Zone extends GenericObject
    }
 
 	/**
-	 * @return the zoneId
+	 * Get zone UIN (unique identification number)
+	 * 
+	 * @return zone UIN
 	 */
-	public long getZoneId()
+	public long getUIN()
 	{
-		return zoneId;
+		return uin;
 	}
 	
    /**

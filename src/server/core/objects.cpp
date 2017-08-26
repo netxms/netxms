@@ -42,7 +42,7 @@ Queue *g_pTemplateUpdateQueue = NULL;
 ObjectIndex g_idxObjectById;
 InetAddressIndex g_idxSubnetByAddr;
 InetAddressIndex g_idxInterfaceByAddr;
-ObjectIndex g_idxZoneByGUID;
+ObjectIndex g_idxZoneByUIN;
 ObjectIndex g_idxNodeById;
 InetAddressIndex g_idxNodeByAddr;
 ObjectIndex g_idxClusterById;
@@ -338,7 +338,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             {
 			      if (IsZoningEnabled())
 			      {
-				      Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				      Zone *zone = (Zone *)g_idxZoneByUIN.get(((Node *)pObject)->getZoneUIN());
 				      if (zone != NULL)
 				      {
 					      zone->addToIndex((Node *)pObject);
@@ -346,7 +346,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 				      else
 				      {
 					      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					                (int)((Node *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+					                (int)((Node *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 				      }
                }
                else
@@ -374,7 +374,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             {
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
+						Zone *zone = (Zone *)g_idxZoneByUIN.get(((Subnet *)pObject)->getZoneUIN());
 						if (zone != NULL)
 						{
 							zone->addToIndex((Subnet *)pObject);
@@ -382,7 +382,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 						else
 						{
 							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-							          (int)((Subnet *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+							          (int)((Subnet *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 						}
 					}
 					else
@@ -401,7 +401,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             {
 					if (IsZoningEnabled())
 					{
-						Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
+						Zone *zone = (Zone *)g_idxZoneByUIN.get(((Interface *)pObject)->getZoneUIN());
 						if (zone != NULL)
 						{
 							zone->addToIndex((Interface *)pObject);
@@ -409,7 +409,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 						else
 						{
 							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-							          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+							          (int)((Interface *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 						}
 					}
 					else
@@ -420,7 +420,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             MacDbAddInterface((Interface *)pObject);
             break;
          case OBJECT_ZONE:
-				g_idxZoneByGUID.put(((Zone *)pObject)->getZoneId(), pObject);
+				g_idxZoneByUIN.put(((Zone *)pObject)->getUIN(), pObject);
             break;
          case OBJECT_CONDITION:
 				g_idxConditionById.put(pObject->getId(), pObject);
@@ -502,7 +502,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          {
 			   if (IsZoningEnabled())
 			   {
-				   Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				   Zone *zone = (Zone *)g_idxZoneByUIN.get(((Node *)pObject)->getZoneUIN());
 				   if (zone != NULL)
 				   {
 					   zone->removeFromIndex((Node *)pObject);
@@ -510,7 +510,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				   else
 				   {
 					   DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					             (int)((Node *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+					             (int)((Node *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 				   }
             }
             else
@@ -538,7 +538,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          {
 				if (IsZoningEnabled())
 				{
-					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Subnet *)pObject)->getZoneId());
+					Zone *zone = (Zone *)g_idxZoneByUIN.get(((Subnet *)pObject)->getZoneUIN());
 					if (zone != NULL)
 					{
 						zone->removeFromIndex((Subnet *)pObject);
@@ -546,7 +546,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					else
 					{
 						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-						          (int)((Subnet *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+						          (int)((Subnet *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 					}
 				}
 				else
@@ -558,7 +558,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_INTERFACE:
 			if (IsZoningEnabled())
 			{
-				Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
+				Zone *zone = (Zone *)g_idxZoneByUIN.get(((Interface *)pObject)->getZoneUIN());
 				if (zone != NULL)
 				{
 					zone->removeFromIndex((Interface *)pObject);
@@ -566,7 +566,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				else
 				{
 					DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-					          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
+					          (int)((Interface *)pObject)->getZoneUIN(), pObject->getName(), (int)pObject->getId());
 				}
 			}
 			else
@@ -588,7 +588,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          MacDbRemove(((Interface *)pObject)->getMacAddr());
          break;
       case OBJECT_ZONE:
-			g_idxZoneByGUID.remove(((Zone *)pObject)->getZoneId());
+			g_idxZoneByUIN.remove(((Zone *)pObject)->getUIN());
          break;
       case OBJECT_CONDITION:
 			g_idxConditionById.remove(pObject->getId());
@@ -652,9 +652,9 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 	return (MobileDevice *)g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId);
 }
 
-static Node *FindNodeByIPInternal(UINT32 zoneId, const InetAddress& ipAddr)
+static Node *FindNodeByIPInternal(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
-   Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
+   Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByUIN.get(zoneUIN) : NULL;
 
    Node *node = NULL;
    if (IsZoningEnabled())
@@ -718,33 +718,33 @@ static bool NodeFindCB(NetObj *zone, void *data)
 /**
  * Find node by IP address
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr)
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return NULL;
 
-   if ((zoneId == ALL_ZONES) && IsZoningEnabled())
+   if ((zoneUIN == ALL_ZONES) && IsZoningEnabled())
    {
       NodeFindCBData data;
       data.addr = &ipAddr;
       data.node = NULL;
-      g_idxZoneByGUID.find(NodeFindCB, &data);
+      g_idxZoneByUIN.find(NodeFindCB, &data);
       return data.node;
    }
    else
    {
-      return FindNodeByIPInternal(zoneId, ipAddr);
+      return FindNodeByIPInternal(zoneUIN, ipAddr);
    }
 }
 
 /**
  * Find node by IP address using first match from IP address list
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAddrList)
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList)
 {
    for(int i = 0; i < ipAddrList->size(); i++)
    {
-      Node *node = FindNodeByIP(zoneId, ipAddrList->get(i));
+      Node *node = FindNodeByIP(zoneUIN, ipAddrList->get(i));
       if (node != NULL)
          return node;
    }
@@ -754,7 +754,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAdd
 /**
  * Find interface by IP address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr)
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return NULL;
@@ -762,7 +762,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress&
 	Interface *iface = NULL;
 	if (IsZoningEnabled())
 	{
-	   Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+	   Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
 		if (zone != NULL)
 		{
 			iface = zone->getInterfaceByAddr(ipAddr);
@@ -799,7 +799,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 struct NodeFindHostnameData
 {
    TCHAR *hostname;
-   UINT32 zoneId;
+   UINT32 zoneUIN;
 };
 
 /**
@@ -818,17 +818,17 @@ static bool HostnameComparator(NetObj *object, void *data)
       return false;
 
    return ((_tcsstr(primaryName, ((NodeFindHostnameData *)data)->hostname) != NULL) &&
-            (IsZoningEnabled() ? (((Node *)object)->getZoneId() == ((NodeFindHostnameData *)data)->zoneId) : true));
+            (IsZoningEnabled() ? (((Node *)object)->getZoneUIN() == ((NodeFindHostnameData *)data)->zoneUIN) : true));
 }
 
 /**
  * Find a list of nodes that contain the hostname
  */
-ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneId)
+ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneUIN)
 {
    NodeFindHostnameData data;
    data.hostname = hostname;
-   data.zoneId = zoneId;
+   data.zoneUIN = zoneUIN;
 
    ObjectArray<NetObj> *nodes = g_idxNodeById.findObjects(HostnameComparator, &data);
    return nodes;
@@ -911,7 +911,7 @@ Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId)
 /**
  * Find subnet by IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
    if (!ipAddr.isValidUnicast())
       return NULL;
@@ -919,7 +919,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAdd
 	Subnet *subnet = NULL;
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
 		if (zone != NULL)
 		{
 			subnet = zone->getSubnetByAddr(ipAddr);
@@ -962,7 +962,7 @@ static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *a
 /**
  * Find subnet for given IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& nodeAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr)
 {
    if (!nodeAddr.isValidUnicast())
       return NULL;
@@ -973,7 +973,7 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& no
    matchData.subnet = NULL;
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
+		Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
 		if (zone != NULL)
 		{
 			zone->forEachSubnet(SubnetMatchCallback, &matchData);
@@ -1027,7 +1027,7 @@ NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void
          index = &g_idxNodeById;
          break;
       case OBJECT_ZONE:
-         index = &g_idxZoneByGUID;
+         index = &g_idxZoneByUIN;
          break;
       case OBJECT_SENSOR:
          index = &g_idxSensorById;
@@ -1117,28 +1117,12 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 }
 
 /**
- * Callback for FindClusterByResourceIP
- */
-static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
-{
-	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(*((const InetAddress *)ipAddr));
-}
-
-/**
- * Find cluster by resource IP
- */
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(const InetAddress& ipAddr)
-{
-	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, (void *)&ipAddr);
-}
-
-/**
  * Data structure for IsClusterIP callback
  */
 struct __cluster_ip_data
 {
 	InetAddress ipAddr;
-	UINT32 zoneId;
+	UINT32 zoneUIN;
 };
 
 /**
@@ -1148,7 +1132,7 @@ static bool ClusterIPComparator(NetObj *object, void *data)
 {
 	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
 	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
-	       (((Cluster *)object)->getZoneId() == d->zoneId) &&
+	       (((Cluster *)object)->getZoneUIN() == d->zoneUIN) &&
 			 (((Cluster *)object)->isVirtualAddr(d->ipAddr) ||
 			  ((Cluster *)object)->isSyncAddr(d->ipAddr));
 }
@@ -1157,47 +1141,47 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  * Check if given IP address is used by cluster (it's either
  * resource IP or located on one of sync subnets)
  */
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneId, const InetAddress& ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 {
 	struct __cluster_ip_data data;
-	data.zoneId = zoneId;
+	data.zoneUIN = zoneUIN;
 	data.ipAddr = ipAddr;
 	return g_idxObjectById.find(ClusterIPComparator, &data) != NULL;
 }
 
 /**
- * Find zone object by GUID
+ * Find zone object by UIN (unique identification number)
  */
-Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID)
+Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 uin)
 {
-	return (Zone *)g_idxZoneByGUID.get(dwZoneGUID);
+	return (Zone *)g_idxZoneByUIN.get(uin);
 }
 
 /**
  * Zone ID selector data
  */
-static Mutex s_zoneIdSelectorLock;
-static IntegerArray<UINT32> s_zoneIdSelectorHistory;
+static Mutex s_zoneUinSelectorLock;
+static IntegerArray<UINT32> s_zoneUinSelectorHistory;
 
 /**
- * Find unused zone ID
+ * Find unused zone UIN
  */
-UINT32 FindUnusedZoneGUID()
+UINT32 FindUnusedZoneUIN()
 {
-   UINT32 id = 0;
-   s_zoneIdSelectorLock.lock();
+   UINT32 uin = 0;
+   s_zoneUinSelectorLock.lock();
    for(UINT32 i = 1; i < 0x7FFFFFFF; i++)
    {
-      if (g_idxZoneByGUID.get(i) != NULL)
+      if (g_idxZoneByUIN.get(i) != NULL)
          continue;
-      if (s_zoneIdSelectorHistory.contains(i))
+      if (s_zoneUinSelectorHistory.contains(i))
          continue;
-      s_zoneIdSelectorHistory.add(i);
-      id = i;
+      s_zoneUinSelectorHistory.add(i);
+      uin = i;
       break;
    }
-   s_zoneIdSelectorLock.unlock();
-   return id;
+   s_zoneUinSelectorLock.unlock();
+   return uin;
 }
 
 /**
@@ -1332,11 +1316,9 @@ BOOL LoadObjects()
             {
                if (g_flags & AF_ENABLE_ZONING)
                {
-                  Zone *pZone;
-
-                  pZone = FindZoneByGUID(subnet->getZoneId());
-                  if (pZone != NULL)
-                     pZone->addSubnet(subnet);
+                  Zone *zone = FindZoneByUIN(subnet->getZoneUIN());
+                  if (zone != NULL)
+                     zone->addSubnet(subnet);
                }
                else
                {
@@ -1918,7 +1900,7 @@ BOOL LoadObjects()
    // Recalculate status for zone objects
    if (g_flags & AF_ENABLE_ZONING)
    {
-		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
+		g_idxZoneByUIN.forEach(RecalcStatusCallback, NULL);
    }
 
    // Start map update thread
@@ -2181,7 +2163,7 @@ void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIp
 {
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(iface->getZoneId());
+		Zone *zone = (Zone *)g_idxZoneByUIN.get(iface->getZoneUIN());
 		if (zone != NULL)
 		{
 			zone->updateInterfaceIndex(oldIpAddr, newIpAddr, iface);
@@ -2189,7 +2171,7 @@ void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIp
 		else
 		{
 			DbgPrintf(1, _T("UpdateInterfaceIndex: Cannot find zone object for interface %s [%d] (zone id %d)"),
-			          iface->getName(), (int)iface->getId(), (int)iface->getZoneId());
+			          iface->getName(), (int)iface->getId(), (int)iface->getZoneUIN());
 		}
 	}
 	else
@@ -2330,7 +2312,7 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
          index = &g_idxNodeById;
          break;
       case OBJECT_ZONE:
-         index = &g_idxZoneByGUID;
+         index = &g_idxZoneByUIN;
          break;
       case OBJECT_SENSOR:
          index = &g_idxSensorById;

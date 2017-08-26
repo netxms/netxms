@@ -239,7 +239,7 @@ enum CertificateType
 typedef struct
 {
    InetAddress ipAddr;
-	UINT32 zoneId;
+	UINT32 zoneUIN;
 	BOOL ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
 } NEW_NODE;
@@ -1062,11 +1062,11 @@ void AddDriverSpecificOids(StringList *list);
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId);
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN);
 Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
                                     UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
                                     UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,
-                                    Cluster *cluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode);
+                                    Cluster *cluster, UINT32 zoneUIN, bool doConfPoll, bool discoveredNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
@@ -1081,7 +1081,7 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
-InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostname);
+InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname);
 
 BOOL ExecCommand(TCHAR *pszCommand);
 BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets);

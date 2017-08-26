@@ -77,7 +77,7 @@ public class ChangeZone implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.changeObjectZone(node.getObjectId(), dlg.getZoneId());
+				session.changeObjectZone(node.getObjectId(), dlg.getZoneUIN());
 			}
 
 			@Override
