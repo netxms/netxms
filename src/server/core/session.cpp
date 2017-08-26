@@ -5084,6 +5084,8 @@ void ClientSession::createObject(NXCPMessage *request)
 								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_ZONE:
+							      if (zoneId == 0)
+							         zoneId = FindUnusedZoneGUID();
 								   if ((zoneId > 0) && (zoneId != ALL_ZONES) && (g_idxZoneByGUID.get(zoneId) == NULL))
 								   {
 									   object = new Zone(zoneId, objectName);
