@@ -65,7 +65,7 @@ public class ZoneSelector extends AbstractSelector
    @Override
    protected void clearButtonHandler()
    {
-      zoneId = 0;
+      zoneId = -1;
       setText(emptySelectionName);
       fireModifyListeners();
    }
@@ -96,7 +96,7 @@ public class ZoneSelector extends AbstractSelector
    public void setZoneId(long zoneId)
    {
       this.zoneId = zoneId;
-      if (zoneId == 0)
+      if (zoneId == -1)
       {
          setText(emptySelectionName); //$NON-NLS-1$
       }

@@ -65,8 +65,8 @@ public class CreateNodeDialog extends Dialog
    private ObjectSelector sshProxySelector;
 	private ZoneSelector zoneSelector;
 	
-	private String objectName;
-	private String hostName;
+	private String objectName = "";
+	private String hostName = "";
 	private int creationFlags = 0;
 	private long agentProxy = 0;
 	private long snmpProxy = 0;
@@ -78,6 +78,7 @@ public class CreateNodeDialog extends Dialog
 	private String sshLogin = "";
 	private String sshPassword; 
 	private boolean showAgain = false;
+	private boolean enableShowAgainFlag = true;
 	
 	/**
 	 * @param parentShell
@@ -135,9 +136,10 @@ public class CreateNodeDialog extends Dialog
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.widthHint = 300;
+		gd.widthHint = 600;
 		gd.horizontalSpan = 2;
 		objectNameField.setLayoutData(gd);
+		objectNameField.setText(objectName);
 		
 		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
@@ -158,6 +160,7 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		hostNameField.setLayoutData(gd);
+		hostNameField.setText(hostName);
 		
 		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		agentPortField.setSelection(agentPort);
@@ -242,18 +245,20 @@ public class CreateNodeDialog extends Dialog
 			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
 			Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-			zoneSelector.setZoneId((zone != null) ? zone.getZoneId() : 0);
+			zoneSelector.setZoneId((zone != null) ? zone.getZoneId() : -1);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			gd.horizontalSpan = 2;
 			zoneSelector.setLayoutData(gd);
 		}
-		
-		checkCreateAnother = new Button(dialogArea, SWT.CHECK);
-		checkCreateAnother.setText(Messages.get().CreateNodeDialog_ShowAgain);
-		checkCreateAnother.setSelection(showAgain);
-		
+
+		if (enableShowAgainFlag)
+		{
+   		checkCreateAnother = new Button(dialogArea, SWT.CHECK);
+   		checkCreateAnother.setText(Messages.get().CreateNodeDialog_ShowAgain);
+   		checkCreateAnother.setSelection(showAgain);
+		}		
 		return dialogArea;
 	}
 
@@ -301,7 +306,7 @@ public class CreateNodeDialog extends Dialog
 		   zoneId = zoneSelector.getZoneId();
 		}
 		
-		showAgain = checkCreateAnother.getSelection();
+		showAgain = enableShowAgainFlag ? checkCreateAnother.getSelection() : false;
 		super.okPressed();
 	}
 
@@ -313,7 +318,15 @@ public class CreateNodeDialog extends Dialog
 		return objectName;
 	}
 
-	/**
+   /**
+    * @param objectName the objectName to set
+    */
+   public void setObjectName(String objectName)
+   {
+      this.objectName = objectName;
+   }
+
+   /**
 	 * @return the hostName
 	 */
 	public String getHostName()
@@ -370,6 +383,14 @@ public class CreateNodeDialog extends Dialog
 	}
 
 	/**
+    * @param zoneId the zoneId to set
+    */
+   public void setZoneId(long zoneId)
+   {
+      this.zoneId = zoneId;
+   }
+
+   /**
 	 * @return the agentPort
 	 */
 	public int getAgentPort()
@@ -407,5 +428,21 @@ public class CreateNodeDialog extends Dialog
    public boolean isShowAgain()
    {
       return showAgain;
+   }
+
+   /**
+    * @return the enableShowAgainFlag
+    */
+   public boolean isEnableShowAgainFlag()
+   {
+      return enableShowAgainFlag;
+   }
+
+   /**
+    * @param enableShowAgainFlag the enableShowAgainFlag to set
+    */
+   public void setEnableShowAgainFlag(boolean enableShowAgainFlag)
+   {
+      this.enableShowAgainFlag = enableShowAgainFlag;
    }
 }
