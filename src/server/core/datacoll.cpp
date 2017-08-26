@@ -109,7 +109,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                {
                   if (IsZoningEnabled())
                   {
-                     Zone *zone = (Zone *)FindZoneByGUID(((Node *)dcTarget)->getZoneId());
+                     Zone *zone = FindZoneByUIN(((Node *)dcTarget)->getZoneUIN());
                      if ((zone != NULL) && (zone->getProxyNodeId() != 0))
                         proxyId = zone->getProxyNodeId();
                      else

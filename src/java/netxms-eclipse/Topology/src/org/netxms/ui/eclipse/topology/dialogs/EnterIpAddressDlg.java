@@ -42,7 +42,7 @@ public class EnterIpAddressDlg extends Dialog
 	private LabeledText ipAddressText;
 	private ZoneSelector zoneSelector;
 	private InetAddress ipAddress;
-	private long zoneId;
+	private long zoneUIN;
 	private boolean zoningEnabled;
 	
 	/**
@@ -117,7 +117,7 @@ public class EnterIpAddressDlg extends Dialog
 			return;
 		}
 		
-		zoneId = zoningEnabled ? zoneSelector.getZoneId() : 0;
+		zoneUIN = zoningEnabled ? zoneSelector.getZoneUIN() : 0;
 		super.okPressed();
 	}
 
@@ -126,7 +126,7 @@ public class EnterIpAddressDlg extends Dialog
 	 */
 	public long getZoneId()
 	{
-		return zoneId;
+		return zoneUIN;
 	}
 
 	/**

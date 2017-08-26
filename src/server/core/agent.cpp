@@ -26,8 +26,8 @@
 /**
  * Externals
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
-void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
+void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 nodeId, time_t timestamp, const char *msg, int msgLen);
 
 /**
  * Create normal agent connection
@@ -188,12 +188,12 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
    TCHAR buffer[64];
    debugPrintf(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
 
-   UINT32 zoneId = msg->getFieldAsUInt32(VID_ZONE_ID);
+   UINT32 zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
    Node *node = NULL;
    if (m_nodeId != 0)
       node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == NULL)
-      node = FindNodeByIP(zoneId, getIpAddr());
+      node = FindNodeByIP(zoneUIN, getIpAddr());
    if (node != NULL)
    {
       // Check for duplicate messages - only accept messages with ID
@@ -212,7 +212,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
                debugPrintf(5, _T("Source IP address for syslog message is loopback, setting source node ID to %d"), m_nodeId);
                sourceNodeId = m_nodeId;
             }
-            QueueProxiedSyslogMessage(sourceAddr, zoneId, sourceNodeId,
+            QueueProxiedSyslogMessage(sourceAddr, zoneUIN, sourceNodeId,
                                       msg->getFieldAsTime(VID_TIMESTAMP), message, msgLen);
          }
       }
@@ -449,8 +449,8 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          InetAddress originSenderIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
          size_t pduLenght;
          const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
-         UINT32 zoneId = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_ID) : 0;
-         Node *originNode = FindNodeByIP(zoneId, originSenderIP);
+         UINT32 zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
+         Node *originNode = FindNodeByIP(zoneUIN, originSenderIP);
          if ((originNode != NULL) || ConfigReadInt(_T("LogAllSNMPTraps"), FALSE))
          {
             SNMP_PDU *pdu = new SNMP_PDU;
@@ -467,7 +467,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                      SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
-                  ProcessTrap(pdu, originSenderIP, zoneId, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
+                  ProcessTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
                   delete snmpTransport;
                }
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))

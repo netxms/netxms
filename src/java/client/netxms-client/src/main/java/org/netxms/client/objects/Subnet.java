@@ -40,7 +40,7 @@ public class Subnet extends GenericObject implements ZoneMember
 	{
 		super(msg, session);
 		
-		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
       networkAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 	}
 	

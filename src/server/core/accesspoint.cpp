@@ -445,9 +445,9 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 
 		UINT32 icmpProxy = 0;
 
-      if (IsZoningEnabled() && (controller->getZoneId() != 0))
+      if (IsZoningEnabled() && (controller->getZoneUIN() != 0))
 		{
-			Zone *zone = (Zone *)g_idxZoneByGUID.get(controller->getZoneId());
+			Zone *zone = FindZoneByUIN(controller->getZoneUIN());
 			if (zone != NULL)
 			{
 				icmpProxy = zone->getProxyNodeId();
@@ -547,9 +547,9 @@ void AccessPoint::updatePingData()
    }
    UINT32 icmpProxy = pNode->getIcmpProxy();
 
-   if (IsZoningEnabled() && (pNode->getZoneId() != 0) && (icmpProxy == 0))
+   if (IsZoningEnabled() && (pNode->getZoneUIN() != 0) && (icmpProxy == 0))
    {
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
+      Zone *zone = FindZoneByUIN(pNode->getZoneUIN());
       if (zone != NULL)
       {
          icmpProxy = zone->getProxyNodeId();

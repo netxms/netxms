@@ -169,6 +169,7 @@ NXSL_Environment::NXSL_Environment()
    m_numSelectors = sizeof(m_builtinSelectors) / sizeof(NXSL_ExtSelector);
    m_selectors = (NXSL_ExtSelector *)nx_memdup(m_builtinSelectors, sizeof(m_builtinSelectors));
    m_library = NULL;
+
 }
 
 /**

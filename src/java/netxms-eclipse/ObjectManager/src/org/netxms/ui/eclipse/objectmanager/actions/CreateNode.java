@@ -79,7 +79,7 @@ public class CreateNode implements IObjectActionDelegate
          cd.setSnmpProxyId(dlg.getSnmpProxy());
          cd.setIcmpProxyId(dlg.getIcmpProxy());
          cd.setSshProxyId(dlg.getSshProxy());
-         cd.setZoneId(dlg.getZoneId());
+         cd.setZoneUIN(dlg.getZoneUIN());
          cd.setSshLogin(dlg.getSshLogin());
          cd.setSshPassword(dlg.getSshPassword());
    		

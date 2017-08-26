@@ -72,7 +72,7 @@ public class CreateNodeDialog extends Dialog
 	private long snmpProxy = 0;
    private long icmpProxy = 0;
    private long sshProxy = 0;
-	private long zoneId = 0;
+	private long zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
 	private String sshLogin = "";
@@ -94,7 +94,7 @@ public class CreateNodeDialog extends Dialog
          snmpProxy = prev.snmpProxy;
          icmpProxy = prev.snmpProxy;
          sshProxy = prev.snmpProxy;
-		   zoneId = prev.zoneId;
+		   zoneUIN = prev.zoneUIN;
 		   agentPort = prev.agentPort;
 		   snmpPort = prev.snmpPort;
 		   sshLogin = prev.sshLogin;
@@ -244,8 +244,8 @@ public class CreateNodeDialog extends Dialog
 		{
 			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
-			Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
-			zoneSelector.setZoneId((zone != null) ? zone.getZoneId() : -1);
+			Zone zone = ConsoleSharedData.getSession().findZone(zoneUIN);
+			zoneSelector.setZoneUIN((zone != null) ? zone.getUIN() : -1);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -303,7 +303,7 @@ public class CreateNodeDialog extends Dialog
 		snmpProxy = snmpProxySelector.getObjectId();
 		if (session.isZoningEnabled())
 		{
-		   zoneId = zoneSelector.getZoneId();
+		   zoneUIN = zoneSelector.getZoneUIN();
 		}
 		
 		showAgain = enableShowAgainFlag ? checkCreateAnother.getSelection() : false;
@@ -377,17 +377,19 @@ public class CreateNodeDialog extends Dialog
    /**
 	 * @return the zoneId
 	 */
-	public long getZoneId()
+	public long getZoneUIN()
 	{
-		return zoneId;
+		return zoneUIN;
 	}
 
 	/**
-    * @param zoneId the zoneId to set
+	 * Set default zone UIN before opening dialog
+	 * 
+    * @param zoneUIN zone UIN
     */
-   public void setZoneId(long zoneId)
+   public void setZoneUIN(long zoneUIN)
    {
-      this.zoneId = zoneId;
+      this.zoneUIN = zoneUIN;
    }
 
    /**

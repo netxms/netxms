@@ -33,13 +33,13 @@ Cluster::Cluster() : DataCollectionTarget()
 	m_pResourceList = NULL;
 	m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
-	m_zoneId = 0;
+	m_zoneUIN = 0;
 }
 
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(pszName)
+Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : DataCollectionTarget(pszName)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
@@ -47,7 +47,7 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(psz
 	m_pResourceList = NULL;
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
-	m_zoneId = zoneId;
+	m_zoneUIN = zoneUIN;
 }
 
 /**
@@ -84,7 +84,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		return false;
 
 	m_dwClusterType = DBGetFieldULong(hResult, 0, 0);
-	m_zoneId = DBGetFieldULong(hResult, 0, 1);
+	m_zoneUIN = DBGetFieldULong(hResult, 0, 1);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -216,7 +216,7 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwClusterType);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_zoneUIN);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -392,7 +392,7 @@ void Cluster::fillMessageInternal(NXCPMessage *pMsg)
 
    DataCollectionTarget::fillMessageInternal(pMsg);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
-	pMsg->setField(VID_ZONE_ID, m_zoneId);
+	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
 
    pMsg->setField(VID_NUM_SYNC_SUBNETS, (UINT32)m_syncNetworks->size());
    for(i = 0, dwId = VID_SYNC_SUBNETS_BASE; i < (UINT32)m_syncNetworks->size(); i++)
@@ -924,7 +924,7 @@ json_t *Cluster::toJson()
    json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
    json_object_set_new(root, "lastStatusPoll", json_integer(m_lastStatusPoll));
    json_object_set_new(root, "lastConfigurationPoll", json_integer(m_lastConfigurationPoll));
-   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
 
    json_t *resources = json_array();
    for(UINT32 i = 0; i < m_dwNumResources; i++)

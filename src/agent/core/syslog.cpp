@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2016 Raden Solutions
+** Copyright (C) 2014-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ THREAD_RESULT THREAD_CALL SyslogSender(void *)
       msg.setFieldFromTime(VID_TIMESTAMP, rec->timestamp);
       msg.setField(VID_MESSAGE, (BYTE *)rec->message, rec->messageLength + 1);
       msg.setField(VID_MESSAGE_LENGTH, rec->messageLength);
-      msg.setField(VID_ZONE_ID, g_zoneId);
+      msg.setField(VID_ZONE_UIN, g_zoneUIN);
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {

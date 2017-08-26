@@ -12,6 +12,7 @@
 - Syslog messages received on loopback bound to receiving node (local management node or syslog proxy node)
 - Fixed mail sender address encoding
 - Fixed bug with lost agent connectivity after tunnel reconnect
+- Zone ID now referenced as Zone UIN (unique identification number) to avoid confusion with zone object ID
 - NXSL:
 	- New class "InetAddress"
 	- New attribute "ipAddressList" for class "Interface"

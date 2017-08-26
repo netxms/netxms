@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index);
 Zone::Zone() : NetObj()
 {
    m_id = 0;
-   m_zoneId = 0;
+   m_uin = 0;
    _tcscpy(m_name, _T("Default"));
    m_proxyNodeId = 0;
 	m_idxNodeByAddr = new InetAddressIndex;
@@ -44,10 +44,10 @@ Zone::Zone() : NetObj()
 /**
  * Constructor for new zone object
  */
-Zone::Zone(UINT32 zoneId, const TCHAR *name) : NetObj()
+Zone::Zone(UINT32 uin, const TCHAR *name) : NetObj()
 {
    m_id = 0;
-   m_zoneId = zoneId;
+   m_uin = uin;
    nx_strncpy(m_name, name, MAX_OBJECT_NAME);
    m_proxyNodeId = 0;
 	m_idxNodeByAddr = new InetAddressIndex;
@@ -86,7 +86,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       DBFreeResult(hResult);
       if (dwId == BUILTIN_OID_ZONE0)
       {
-         m_zoneId = 0;
+         m_uin = 0;
          return true;
       }
       else
@@ -96,7 +96,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
    }
 
-   m_zoneId = DBGetFieldULong(hResult, 0, 0);
+   m_uin = DBGetFieldULong(hResult, 0, 0);
    m_proxyNodeId = DBGetFieldULong(hResult, 0, 1);
 
    DBFreeResult(hResult);
@@ -128,7 +128,7 @@ BOOL Zone::saveToDatabase(DB_HANDLE hdb)
       }
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneId);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_uin);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
@@ -165,7 +165,7 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 void Zone::fillMessageInternal(NXCPMessage *msg)
 {
    NetObj::fillMessageInternal(msg);
-   msg->setField(VID_ZONE_ID, m_zoneId);
+   msg->setField(VID_ZONE_UIN, m_uin);
    msg->setField(VID_ZONE_PROXY, m_proxyNodeId);
 }
 
@@ -255,7 +255,7 @@ void Zone::dumpSubnetIndex(CONSOLE_CTX console)
 json_t *Zone::toJson()
 {
    json_t *root = NetObj::toJson();
-   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "uin", json_integer(m_uin));
    json_object_set_new(root, "proxyNodeId", json_integer(m_proxyNodeId));
    return root;
 }

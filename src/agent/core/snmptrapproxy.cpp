@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2016 Raden Solutions
+** Copyright (C) 2014-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       msg->setField(VID_PORT, pdu->port);
       msg->setField(VID_PDU_SIZE, pdu->lenght);
       msg->setField(VID_PDU, pdu->rawMessage, pdu->lenght);
-      msg->setField(VID_ZONE_ID, g_zoneId);
+      msg->setField(VID_ZONE_UIN, g_zoneUIN);
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {

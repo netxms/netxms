@@ -71,7 +71,7 @@ public class CreateZone implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ZONE, dlg.getName(), parentId);
-				cd.setZoneId(dlg.getZoneId());
+				cd.setZoneUIN(dlg.getZoneUIN());
 				session.createObject(cd);
 			}
 

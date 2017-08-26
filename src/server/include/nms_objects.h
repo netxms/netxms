@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -858,7 +858,7 @@ protected:
 	int m_statusPollCount;
 	int m_operStatePollCount;
 	int m_requiredPollCount;
-   UINT32 m_zoneId;
+   UINT32 m_zoneUIN;
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
    int m_ifTableSuffixLen;
@@ -877,8 +877,8 @@ protected:
 
 public:
    Interface();
-   Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneId);
+   Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask);
+   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN);
    virtual ~Interface();
 
    virtual int getObjectClass() const { return OBJECT_INTERFACE; }
@@ -896,7 +896,7 @@ public:
 
    const InetAddressList *getIpAddressList() { return &m_ipAddressList; }
    const InetAddress& getFirstIpAddress();
-   UINT32 getZoneId() const { return m_zoneId; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getIfIndex() const { return m_index; }
    UINT32 getIfType() const { return m_type; }
    UINT32 getMTU() const { return m_mtu; }
@@ -952,7 +952,7 @@ public:
    void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); safe_free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(); unlockProperties(); }
    void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(); }
 
-	void updateZoneId();
+	void updateZoneUIN();
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
@@ -1245,7 +1245,7 @@ protected:
 	CLUSTER_RESOURCE *m_pResourceList;
 	time_t m_lastStatusPoll;
    time_t m_lastConfigurationPoll;
-	UINT32 m_zoneId;
+	UINT32 m_zoneUIN;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -1256,7 +1256,7 @@ protected:
 
 public:
 	Cluster();
-   Cluster(const TCHAR *pszName, UINT32 zoneId);
+   Cluster(const TCHAR *pszName, UINT32 zoneUIN);
 	virtual ~Cluster();
 
    virtual int getObjectClass() const { return OBJECT_CLUSTER; }
@@ -1276,7 +1276,7 @@ public:
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
 	UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, NULL); }
    UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
-   UINT32 getZoneId() { return m_zoneId; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
 
    void statusPoll(PollerInfo *poller);
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
@@ -1434,7 +1434,7 @@ protected:
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
-   UINT32 m_zoneId;
+   UINT32 m_zoneUIN;
    UINT16 m_agentPort;
    INT16 m_agentAuthMethod;
    INT16 m_agentCacheMode;
@@ -1589,7 +1589,7 @@ protected:
 
 public:
    Node();
-   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneId);
+   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneUIN);
    virtual ~Node();
 
    virtual int getObjectClass() const { return OBJECT_NODE; }
@@ -1607,7 +1607,7 @@ public:
 	Cluster *getMyCluster();
 
    const InetAddress& getIpAddress() const { return m_ipAddress; }
-   UINT32 getZoneId() const { return m_zoneId; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
    NodeType getType() const { return m_type; }
    const TCHAR *getSubType() const { return m_subType; }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
@@ -1954,7 +1954,7 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 
 protected:
    InetAddress m_ipAddress;
-   UINT32 m_zoneId;
+   UINT32 m_zoneUIN;
 	bool m_bSyntheticMask;
 
    virtual void prepareForDeletion();
@@ -1965,7 +1965,7 @@ protected:
 
 public:
    Subnet();
-   Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask);
+   Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask);
    virtual ~Subnet();
 
    virtual int getObjectClass() const { return OBJECT_SUBNET; }
@@ -1980,9 +1980,9 @@ public:
 
 	virtual bool showThresholdSummary();
 
-   const InetAddress& getIpAddress() { return m_ipAddress; }
-   UINT32 getZoneId() { return m_zoneId; }
-	bool isSyntheticMask() { return m_bSyntheticMask; }
+   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
+	bool isSyntheticMask() const { return m_bSyntheticMask; }
 
 	void setCorrectMask(const InetAddress& addr);
 
@@ -2133,7 +2133,7 @@ public:
 class NXCORE_EXPORTABLE Zone : public NetObj
 {
 protected:
-   UINT32 m_zoneId;
+   UINT32 m_uin;
    UINT32 m_proxyNodeId;
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
@@ -2144,7 +2144,7 @@ protected:
 
 public:
    Zone();
-   Zone(UINT32 zoneId, const TCHAR *name);
+   Zone(UINT32 uin, const TCHAR *name);
    virtual ~Zone();
 
    virtual int getObjectClass() const { return OBJECT_ZONE; }
@@ -2159,7 +2159,7 @@ public:
 
    virtual json_t *toJson();
 
-   UINT32 getZoneId() const { return m_zoneId; }
+   UINT32 getUIN() const { return m_uin; }
 	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
 
    void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
@@ -2773,25 +2773,24 @@ NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr);
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAddrList);
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName);
-ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneId);
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
+ObjectArray<NetObj> *FindNodesByHostname(TCHAR *hostname, UINT32 zoneUIN);
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAddr);
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& nodeAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneUIN, const InetAddress& ipAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& nodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
-Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
-UINT32 FindUnusedZoneGUID();
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
+Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 zoneUIN);
+UINT32 FindUnusedZoneUIN();
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
 
 BOOL LoadObjects();
@@ -2830,7 +2829,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByUIN;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;

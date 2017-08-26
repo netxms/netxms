@@ -54,7 +54,7 @@ Interface::Interface() : NetObj()
 	m_statusPollCount = 0;
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
-	m_zoneId = 0;
+	m_zoneUIN = 0;
 	m_pingTime = PING_TIME_TIMEOUT;
    m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
@@ -64,7 +64,7 @@ Interface::Interface() : NetObj()
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask) : NetObj()
+Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : NetObj()
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -97,7 +97,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
    m_statusPollCount = 0;
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
-	m_zoneId = zoneId;
+	m_zoneUIN = zoneUIN;
    m_isHidden = true;
 	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
@@ -108,7 +108,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
 /**
  * Constructor for normal interface object
  */
-Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneId)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN)
           : NetObj()
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
@@ -143,7 +143,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_statusPollCount = 0;
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
-	m_zoneId = zoneId;
+	m_zoneUIN = zoneUIN;
    m_isHidden = true;
 	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
@@ -260,7 +260,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             object->addChild(this);
             addParent(object);
-				m_zoneId = ((Node *)object)->getZoneId();
+				m_zoneUIN = ((Node *)object)->getZoneUIN();
             bResult = true;
          }
       }
@@ -722,9 +722,9 @@ void Interface::updatePingData()
    }
    UINT32 icmpProxy = pNode->getIcmpProxy();
 
-   if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+   if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
    {
-      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
          icmpProxy = zone->getProxyNodeId();
@@ -812,9 +812,9 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
    // Use ICMP ping as a last option
 	UINT32 icmpProxy = nodeIcmpProxy;
 
-	if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+	if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
 	{
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		Zone *zone = FindZoneByUIN(m_zoneUIN);
 		if (zone != NULL)
 		{
 			icmpProxy = zone->getProxyNodeId();
@@ -1033,7 +1033,7 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_OPER_STATE, m_operState);
 	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
-	pMsg->setField(VID_ZONE_ID, m_zoneId);
+	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
    pMsg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
    pMsg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
 }
@@ -1148,23 +1148,23 @@ UINT32 Interface::getParentNodeId()
 /**
  * Update zone ID. New zone ID taken from parent node.
  */
-void Interface::updateZoneId()
+void Interface::updateZoneUIN()
 {
 	Node *node = getParentNode();
 	if (node != NULL)
 	{
 		// Unregister from old zone
-		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		Zone *zone = FindZoneByUIN(m_zoneUIN);
 		if (zone != NULL)
 			zone->removeFromIndex(this);
 
 		lockProperties();
-		m_zoneId = node->getZoneId();
+		m_zoneUIN = node->getZoneUIN();
 		setModified();
 		unlockProperties();
 
 		// Register in new zone
-		zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+		zone = FindZoneByUIN(m_zoneUIN);
 		if (zone != NULL)
 			zone->addToIndex(this);
 	}
@@ -1276,14 +1276,14 @@ void Interface::addIpAddress(const InetAddress& addr)
    {
 		if (IsZoningEnabled())
 		{
-			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			Zone *zone = FindZoneByUIN(m_zoneUIN);
 			if (zone != NULL)
 			{
 				zone->addToIndex(addr, this);
 			}
 			else
 			{
-				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
 			}
 		}
 		else
@@ -1306,14 +1306,14 @@ void Interface::deleteIpAddress(InetAddress addr)
    {
 		if (IsZoningEnabled())
 		{
-			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			Zone *zone = FindZoneByUIN(m_zoneUIN);
 			if (zone != NULL)
 			{
             zone->removeFromInterfaceIndex(addr);
 			}
 			else
 			{
-				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneUIN, m_name, (int)m_id);
 			}
 		}
 		else
@@ -1375,7 +1375,7 @@ json_t *Interface::toJson()
    json_object_set_new(root, "statusPollCount", json_integer(m_statusPollCount));
    json_object_set_new(root, "operStatePollCount", json_integer(m_operStatePollCount));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
-   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "pingTime", json_integer(m_pingTime));
    json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
    json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));

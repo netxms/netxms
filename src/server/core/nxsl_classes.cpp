@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -318,9 +318,9 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value(zone->getProxyNodeId());
    }
-   else if (!_tcscmp(attr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("uin")))
    {
-      value = new NXSL_Value(zone->getZoneId());
+      value = new NXSL_Value(zone->getUIN());
    }
    return value;
 }
@@ -579,7 +579,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 	{
       if (g_flags & AF_ENABLE_ZONING)
       {
-         Zone *zone = FindZoneByGUID(node->getZoneId());
+         Zone *zone = FindZoneByUIN(node->getZoneUIN());
 		   if (zone != NULL)
 		   {
 			   value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
@@ -594,9 +594,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 		   value = new NXSL_Value;
 	   }
 	}
-   else if (!_tcscmp(attr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("zoneUIN")))
 	{
-      value = new NXSL_Value(node->getZoneId());
+      value = new NXSL_Value(node->getZoneUIN());
    }
    return value;
 }
@@ -846,7 +846,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 	{
       if (g_flags & AF_ENABLE_ZONING)
       {
-         Zone *zone = FindZoneByGUID(iface->getZoneId());
+         Zone *zone = FindZoneByUIN(iface->getZoneUIN());
 		   if (zone != NULL)
 		   {
 			   value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
@@ -861,9 +861,9 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 		   value = new NXSL_Value;
 	   }
 	}
-   else if (!_tcscmp(attr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("zoneUIN")))
 	{
-      value = new NXSL_Value(iface->getZoneId());
+      value = new NXSL_Value(iface->getZoneUIN());
    }
    return value;
 }
@@ -1036,7 +1036,7 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       if (g_flags & AF_ENABLE_ZONING)
       {
-         Zone *zone = FindZoneByGUID(cluster->getZoneId());
+         Zone *zone = FindZoneByUIN(cluster->getZoneUIN());
          if (zone != NULL)
          {
             value = zone->createNXSLObject();
@@ -1051,9 +1051,9 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
          value = new NXSL_Value;
       }
    }
-   else if (!_tcscmp(attr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("zoneUIN")))
    {
-      value = new NXSL_Value(cluster->getZoneId());
+      value = new NXSL_Value(cluster->getZoneUIN());
    }
    return value;
 }

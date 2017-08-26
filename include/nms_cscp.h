@@ -748,7 +748,7 @@ typedef struct
 #define VID_NUM_VARIABLES           ((UINT32)144)
 #define VID_COMMAND                 ((UINT32)145)
 #define VID_PROTOCOL_VERSION        ((UINT32)146)
-#define VID_ZONE_ID                 ((UINT32)147)
+#define VID_ZONE_UIN                ((UINT32)147)
 #define VID_ZONING_ENABLED          ((UINT32)148)
 #define VID_ICMP_PROXY              ((UINT32)149)
 #define VID_IP_ADDRESS_COUNT        ((UINT32)150)

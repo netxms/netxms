@@ -205,7 +205,7 @@ public class GeneralInfo extends TableElement
 				break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
-				addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(zone.getZoneId()));
+				addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(zone.getUIN()));
 				break;
 			case AbstractObject.OBJECT_NODELINK:
 				AbstractNode linkedNode = (AbstractNode)session.findObjectById(((NodeLink)object).getNodeId(), AbstractNode.class);

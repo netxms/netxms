@@ -453,7 +453,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    UINT32 dwBufPos, dwBufSize;
    TCHAR *pszTrapArgs, szBuffer[4096];
@@ -481,7 +481,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
 	}
 
    // Match IP address to object
-   Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, srcAddr);
+   Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, srcAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps || (node != NULL))
@@ -624,7 +624,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int s
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
       nxlog_debug(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
-      CheckPotentialNode(srcAddr, zoneId);
+      CheckPotentialNode(srcAddr, zoneUIN);
    }
    else  // unknown node, discovery disabled
    {

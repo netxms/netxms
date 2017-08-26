@@ -1610,6 +1610,16 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
 {
    vm->setStorage(&g_nxslPstorage);
+
+   // Add DCI data types
+   vm->addConstant(_T("DCI::INT32"), new NXSL_Value(DCI_DT_INT));
+   vm->addConstant(_T("DCI::UINT32"), new NXSL_Value(DCI_DT_UINT));
+   vm->addConstant(_T("DCI::INT64"), new NXSL_Value(DCI_DT_INT64));
+   vm->addConstant(_T("DCI::UINT64"), new NXSL_Value(DCI_DT_UINT64));
+   vm->addConstant(_T("DCI::FLOAT"), new NXSL_Value(DCI_DT_FLOAT));
+   vm->addConstant(_T("DCI::STRING"), new NXSL_Value(DCI_DT_STRING));
+   vm->addConstant(_T("DCI::NULL"), new NXSL_Value(DCI_DT_NULL));
+
    CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
 }
 

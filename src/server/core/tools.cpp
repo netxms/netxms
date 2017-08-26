@@ -332,13 +332,13 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 /**
  * Resolve host name using zone if needed
  */
-InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostname)
+InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname)
 {
    InetAddress ipAddr = InetAddress::parse(hostname);
-   if (!ipAddr.isValid() && IsZoningEnabled() && (zoneId != 0))
+   if (!ipAddr.isValid() && IsZoningEnabled() && (zoneUIN != 0))
    {
       // resolve address through proxy agent
-      Zone *zone = FindZoneByGUID(zoneId);
+      Zone *zone = FindZoneByUIN(zoneUIN);
       if (zone != NULL)
       {
          Node *proxy = (Node *)FindObjectById(zone->getProxyNodeId(), OBJECT_NODE);

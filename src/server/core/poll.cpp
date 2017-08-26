@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -234,17 +234,17 @@ static bool PollerQueueElementComparator(void *key, void *element)
 /**
  * Check potential new node from sysog or SNMP trap
  */
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
 {
 	TCHAR buffer[64];
-	nxlog_debug(6, _T("CheckPotentialNode(): checking address %s in zone %d"), ipAddr.toString(buffer), zoneId);
+	nxlog_debug(6, _T("CheckPotentialNode(): checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
       nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
       return;
    }
 
-   Node *curr = FindNodeByIP(zoneId, ipAddr);
+   Node *curr = FindNodeByIP(zoneUIN, ipAddr);
    if (curr != NULL)
    {
       nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address already known at node %s [%d])"),
@@ -252,7 +252,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
       return;
    }
 
-   if (IsClusterIP(zoneId, ipAddr))
+   if (IsClusterIP(zoneUIN, ipAddr))
    {
       nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
       return;
@@ -264,7 +264,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
       return;
    }
 
-   Subnet *subnet = FindSubnetForNode(zoneId, ipAddr);
+   Subnet *subnet = FindSubnetForNode(zoneUIN, ipAddr);
    if (subnet != NULL)
    {
       if (!subnet->getIpAddress().equals(ipAddr) && !ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
@@ -272,7 +272,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
          NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
          pInfo->ipAddr = ipAddr;
          pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-         pInfo->zoneId = zoneId;
+         pInfo->zoneUIN = zoneUIN;
          pInfo->ignoreFilter = FALSE;
          memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
          nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
@@ -287,7 +287,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneId)
    {
       NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
       pInfo->ipAddr = ipAddr;
-      pInfo->zoneId = zoneId;
+      pInfo->zoneUIN = zoneUIN;
       pInfo->ignoreFilter = FALSE;
       memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
       nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
@@ -308,7 +308,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       return;
    }
 
-   Node *curr = FindNodeByIP(node->getZoneId(), ipAddr);
+   Node *curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
    if (curr != NULL)
    {
       nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address already known at node %s [%d])"),
@@ -316,7 +316,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       return;
    }
 
-   if (IsClusterIP(node->getZoneId(), ipAddr))
+   if (IsClusterIP(node->getZoneUIN(), ipAddr))
    {
       nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
       return;
@@ -341,7 +341,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
             NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->ipAddr = ipAddr;
             pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
-            pInfo->zoneId = node->getZoneId();
+            pInfo->zoneUIN = node->getZoneUIN();
             pInfo->ignoreFilter = FALSE;
             if (macAddr == NULL)
                memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -411,7 +411,7 @@ static void DiscoveryPoller(void *arg)
 	}
 
    DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneId());
+	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
    ARP_CACHE *pArpCache = node->getArpCache();
@@ -491,7 +491,7 @@ static void CheckRange(const InetAddressListElement& range)
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                   pInfo->ipAddr = addr;
                   pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
-						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+						pInfo->zoneUIN = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
 						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
                   g_nodePollerQueue.put(pInfo);
@@ -503,7 +503,7 @@ static void CheckRange(const InetAddressListElement& range)
 
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                pInfo->ipAddr = addr;
-					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+					pInfo->zoneUIN = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
                g_nodePollerQueue.put(pInfo);

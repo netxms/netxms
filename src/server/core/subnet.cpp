@@ -26,19 +26,19 @@
  */
 Subnet::Subnet() : NetObj()
 {
-   m_zoneId = 0;
+   m_zoneUIN = 0;
 	m_bSyntheticMask = false;
 }
 
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask) : NetObj()
+Subnet::Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask) : NetObj()
 {
    TCHAR szBuffer[64];
    _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
    m_ipAddress = addr;
-   m_zoneId = dwZone;
+   m_zoneUIN = zoneUIN;
 	m_bSyntheticMask = bSyntheticMask;
 }
 
@@ -75,7 +75,7 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_ipAddress = DBGetFieldInetAddr(hResult, 0, 0);
    m_ipAddress.setMaskBits(DBGetFieldLong(hResult, 0, 1));
-   m_zoneId = DBGetFieldULong(hResult, 0, 2);
+   m_zoneUIN = DBGetFieldULong(hResult, 0, 2);
 	m_bSyntheticMask = DBGetFieldLong(hResult, 0, 3) ? true : false;
 
    DBFreeResult(hResult);
@@ -102,11 +102,11 @@ BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
    if (IsDatabaseRecordExist(hdb, _T("subnets"), _T("id"), m_id))
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask=%d,zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
-                 m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneId, m_bSyntheticMask ? 1 : 0, m_id);
+                 m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0, m_id);
    else
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s',%d,%d,%d)"),
-                 m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneId, m_bSyntheticMask ? 1 : 0);
+                 m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
@@ -150,7 +150,7 @@ void Subnet::fillMessageInternal(NXCPMessage *pMsg)
 {
    NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
-   pMsg->setField(VID_ZONE_ID, m_zoneId);
+   pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
 	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 
@@ -281,7 +281,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
    UINT32 addr = m_ipAddress.getAddressV4() + 1;
    for(int i = 1; i < *length - 1; i++, addr++)
    {
-      Node *node = FindNodeByIP(m_zoneId, addr);
+      Node *node = FindNodeByIP(m_zoneUIN, addr);
       map[i] = (node != NULL) ? node->getId() : 0;
    }
 
@@ -304,7 +304,7 @@ json_t *Subnet::toJson()
 {
    json_t *root = NetObj::toJson();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
-   json_object_set_new(root, "zoneId", json_integer(m_zoneId));
+   json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));
    return root;
 }

@@ -2759,13 +2759,13 @@ void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
 /**
  * Set information about conflicting nodes to VID_VALUE field
  */
-static void SetNodesConflictString(NXCPMessage *msg, UINT32 zoneId, InetAddress ipAddr)
+static void SetNodesConflictString(NXCPMessage *msg, UINT32 zoneUIN, InetAddress ipAddr)
 {
    if (!ipAddr.isValid())
       return;
 
-   Node *sameNode = FindNodeByIP(zoneId, ipAddr);
-   Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
+   Node *sameNode = FindNodeByIP(zoneUIN, ipAddr);
+   Subnet *sameSubnet = FindSubnetByIP(zoneUIN, ipAddr);
    if (sameNode != NULL)
    {
       msg->setField(VID_VALUE, sameNode->getName());
@@ -2838,7 +2838,7 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
                   pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
                   ipAddr = InetAddress::resolveHostName(primaryName);
                }
-               SetNodesConflictString(&msg, ((Node*)object)->getZoneId(), ipAddr);
+               SetNodesConflictString(&msg, ((Node*)object)->getZoneUIN(), ipAddr);
             }
 			}
          msg.setField(VID_RCC, dwResult);
@@ -4850,7 +4850,7 @@ void ClientSession::createObject(NXCPMessage *request)
    msg.setId(request->getId());
 
    int objectClass = request->getFieldAsUInt16(VID_OBJECT_CLASS);
-	UINT32 zoneId = request->getFieldAsUInt32(VID_ZONE_ID);
+	UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 
    // Find parent object
    NetObj *parent = FindObjectById(request->getFieldAsUInt32(VID_PARENT_ID));
@@ -4864,7 +4864,7 @@ void ClientSession::createObject(NXCPMessage *request)
 		if (request->isFieldExist(VID_PRIMARY_NAME))
 		{
 			request->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
-         ipAddr = ResolveHostName(zoneId, nodePrimaryName);
+         ipAddr = ResolveHostName(zoneUIN, nodePrimaryName);
 		}
 		else
 		{
@@ -4873,7 +4873,7 @@ void ClientSession::createObject(NXCPMessage *request)
 		}
       if ((parent == NULL) && ipAddr.isValidUnicast())
       {
-         parent = FindSubnetForNode(zoneId, ipAddr);
+         parent = FindSubnetForNode(zoneUIN, ipAddr);
          parentAlwaysValid = true;
       }
    }
@@ -4890,9 +4890,9 @@ void ClientSession::createObject(NXCPMessage *request)
          {
 				// Check zone
 				bool zoneIsValid;
-				if (IsZoningEnabled() && (zoneId != 0) && (objectClass != OBJECT_ZONE))
+				if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE))
 				{
-					zoneIsValid = (g_idxZoneByGUID.get(zoneId) != NULL);
+					zoneIsValid = (FindZoneByUIN(zoneUIN) != NULL);
 				}
 				else
 				{
@@ -4912,7 +4912,7 @@ void ClientSession::createObject(NXCPMessage *request)
 	               {
 		               if (g_pModuleList[i].pfValidateObjectCreation != NULL)
 		               {
-                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneId, request);
+                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
 			               if (moduleRCC != RCC_SUCCESS)
                         {
                            DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), objectName, objectClass, g_pModuleList[i].szName, moduleRCC);
@@ -4950,7 +4950,7 @@ void ClientSession::createObject(NXCPMessage *request)
                            NetObjInsert(object, true, false);
                            break;
                         case OBJECT_CLUSTER:
-                           object = new Cluster(objectName, zoneId);
+                           object = new Cluster(objectName, zoneUIN);
                            NetObjInsert(object, true, false);
                            break;
                         case OBJECT_CONDITION:
@@ -5030,7 +5030,7 @@ void ClientSession::createObject(NXCPMessage *request)
                                                 request->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN),
                                                 request->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN),
 															   (parent != NULL) ? ((parent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)parent : NULL) : NULL,
-															   zoneId, false, false);
+															   zoneUIN, false, false);
 								   if (object != NULL)
 								   {
 									   ((Node *)object)->setPrimaryName(nodePrimaryName);
@@ -5077,11 +5077,11 @@ void ClientSession::createObject(NXCPMessage *request)
 								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_ZONE:
-							      if (zoneId == 0)
-							         zoneId = FindUnusedZoneGUID();
-								   if ((zoneId > 0) && (zoneId != ALL_ZONES) && (g_idxZoneByGUID.get(zoneId) == NULL))
+							      if (zoneUIN == 0)
+							         zoneUIN = FindUnusedZoneUIN();
+								   if ((zoneUIN > 0) && (zoneUIN != ALL_ZONES) && (FindZoneByUIN(zoneUIN) == NULL))
 								   {
-									   object = new Zone(zoneId, objectName);
+									   object = new Zone(zoneUIN, objectName);
 									   NetObjInsert(object, true, false);
 								   }
 								   else
@@ -5154,7 +5154,7 @@ void ClientSession::createObject(NXCPMessage *request)
 							   {
                   		   msg.setField(VID_RCC, RCC_ALREADY_EXIST);
                   		   //Add to description IP of new created node and name of node with the same IP
-                           SetNodesConflictString(&msg, zoneId, ipAddr);
+                           SetNodesConflictString(&msg, zoneUIN, ipAddr);
 							   }
 							   else if (objectClass == OBJECT_ZONE)
 							   {
@@ -7497,16 +7497,16 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				Node *node = (Node *)object;
-				UINT32 zoneId = pRequest->getFieldAsUInt32(VID_ZONE_ID);
-				Zone *zone = FindZoneByGUID(zoneId);
+				UINT32 zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+				Zone *zone = FindZoneByUIN(zoneUIN);
 				if (zone != NULL)
 				{
 					// Check if target zone already have object with same primary IP
 					if ((node->getFlags() & NF_REMOTE_AGENT) ||
-					    ((FindNodeByIP(zoneId, node->getIpAddress()) == NULL) &&
-						  (FindSubnetByIP(zoneId, node->getIpAddress()) == NULL)))
+					    ((FindNodeByIP(zoneUIN, node->getIpAddress()) == NULL) &&
+						  (FindSubnetByIP(zoneUIN, node->getIpAddress()) == NULL)))
 					{
-						node->changeZone(zoneId);
+						node->changeZone(zoneUIN);
 						msg.setField(VID_RCC, RCC_SUCCESS);
 					}
 					else
@@ -10325,7 +10325,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 
 				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             info->ipAddr = InetAddress::createFromSockaddr(m_clientAddr);
-				info->zoneId = 0;	// Add to default zone
+				info->zoneUIN = 0;	// Add to default zone
 				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
 				g_nodePollerQueue.put(info);
 			}
@@ -11476,9 +11476,9 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 	BYTE macAddr[6];
 	bool found = false;
 
-	UINT32 zoneId = request->getFieldAsUInt32(VID_ZONE_ID);
+	UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 	UINT32 ipAddr = request->getFieldAsUInt32(VID_IP_ADDRESS);
-	Interface *iface = FindInterfaceByIP(zoneId, ipAddr);
+	Interface *iface = FindInterfaceByIP(zoneUIN, ipAddr);
 	if ((iface != NULL) && memcmp(iface->getMacAddr(), "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
 	{
 		memcpy(macAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
@@ -11489,7 +11489,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 	{
 		// no interface object with this IP or MAC address not known, try to find it in ARP caches
 		debugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
-		Subnet *subnet = FindSubnetForNode(zoneId, ipAddr);
+		Subnet *subnet = FindSubnetForNode(zoneUIN, ipAddr);
 		if (subnet != NULL)
 		{
 			debugPrintf(5, _T("findIpAddress(%s): found subnet %s"), ipAddrText, subnet->getName());
@@ -11571,11 +11571,11 @@ void ClientSession::findHostname(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setField(VID_RCC, RCC_SUCCESS);
 
-   UINT32 zoneId = request->getFieldAsUInt32(VID_ZONE_ID);
+   UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
    TCHAR hostname[MAX_STRING_VALUE];
    request->getFieldAsString(VID_HOSTNAME, hostname, MAX_STRING_VALUE);
 
-   ObjectArray<NetObj> *nodes = FindNodesByHostname(hostname, zoneId);
+   ObjectArray<NetObj> *nodes = FindNodesByHostname(hostname, zoneUIN);
 
    msg.setField(VID_NUM_ELEMENTS, nodes->size());
 

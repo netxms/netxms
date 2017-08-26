@@ -676,7 +676,7 @@ extern UINT32 g_snmpTimeout;
 extern UINT16 g_snmpTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
-extern UINT32 g_zoneId;
+extern UINT32 g_zoneUIN;
 extern UINT16 g_syslogListenPort;
 
 extern Config *g_config;

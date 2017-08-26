@@ -534,7 +534,7 @@ public class NXCPCodes
 	public static final long VID_NUM_VARIABLES = 144;
 	public static final long VID_COMMAND = 145;
 	public static final long VID_PROTOCOL_VERSION = 146;
-	public static final long VID_ZONE_ID = 147;
+	public static final long VID_ZONE_UIN = 147;
 	public static final long VID_ZONING_ENABLED = 148;
 	public static final long VID_ICMP_PROXY = 149;
 	public static final long VID_IP_ADDRESS_COUNT = 150;

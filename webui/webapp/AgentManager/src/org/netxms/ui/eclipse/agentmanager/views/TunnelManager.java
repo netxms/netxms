@@ -272,7 +272,7 @@ public class TunnelManager extends ViewPart
       CreateNodeDialog dlg = new CreateNodeDialog(getSite().getShell(), null);
       dlg.setEnableShowAgainFlag(false);
       dlg.setObjectName(tunnel.getSystemName());
-      dlg.setZoneId(tunnel.getZoneId());
+      dlg.setZoneUIN(tunnel.getZoneUIN());
       if (dlg.open() != Window.OK)
          return;
       
@@ -285,7 +285,7 @@ public class TunnelManager extends ViewPart
       cd.setSnmpProxyId(dlg.getSnmpProxy());
       cd.setIcmpProxyId(dlg.getIcmpProxy());
       cd.setSshProxyId(dlg.getSshProxy());
-      cd.setZoneId(dlg.getZoneId());
+      cd.setZoneUIN(dlg.getZoneUIN());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());
       
