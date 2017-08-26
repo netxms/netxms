@@ -2789,6 +2789,7 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
+UINT32 FindUnusedZoneGUID();
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);

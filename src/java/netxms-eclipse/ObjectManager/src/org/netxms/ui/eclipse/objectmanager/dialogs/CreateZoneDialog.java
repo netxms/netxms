@@ -100,20 +100,28 @@ public class CreateZoneDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		try
-		{
-			zoneId = Long.parseLong(zoneIdField.getText());
-		}
-		catch(NumberFormatException e)
-		{
-			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
-			return;
-		}
-		if (zoneId <= 0)
-		{
-			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
-			return;
-		}
+	   String zoneIdText = zoneIdField.getText().trim();
+	   if (!zoneIdText.isEmpty())
+	   {
+   		try
+   		{
+   			zoneId = Long.parseLong(zoneIdField.getText());
+   		}
+   		catch(NumberFormatException e)
+   		{
+   			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
+   			return;
+   		}
+   		if (zoneId <= 0)
+   		{
+   			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningInvalidZoneId);
+   			return;
+   		}
+	   }
+	   else
+	   {
+	      zoneId = 0;
+	   }
 		
 		name = nameField.getText().trim();
 		if (name.isEmpty())

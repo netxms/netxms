@@ -1163,6 +1163,33 @@ Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID)
 }
 
 /**
+ * Zone ID selector data
+ */
+static Mutex s_zoneIdSelectorLock;
+static IntegerArray<UINT32> s_zoneIdSelectorHistory;
+
+/**
+ * Find unused zone ID
+ */
+UINT32 FindUnusedZoneGUID()
+{
+   UINT32 id = 0;
+   s_zoneIdSelectorLock.lock();
+   for(UINT32 i = 1; i < 0x7FFFFFFF; i++)
+   {
+      if (g_idxZoneByGUID.get(i) != NULL)
+         continue;
+      if (s_zoneIdSelectorHistory.contains(i))
+         continue;
+      s_zoneIdSelectorHistory.add(i);
+      id = i;
+      break;
+   }
+   s_zoneIdSelectorLock.unlock();
+   return id;
+}
+
+/**
  * Object comparator for FindLocalMgmtNode()
  */
 static bool LocalMgmtNodeComparator(NetObj *object, void *data)
