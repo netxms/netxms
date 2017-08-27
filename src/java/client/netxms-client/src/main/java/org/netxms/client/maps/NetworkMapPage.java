@@ -193,7 +193,7 @@ public class NetworkMapPage
 	/**
 	 * Get IDs of all objects on map
 	 * 
-	 * @return
+	 * @return IDs of all objects on map
 	 */
 	public List<Long> getObjectIds()
 	{
@@ -209,7 +209,7 @@ public class NetworkMapPage
    /**
     * Get all object elements
     * 
-    * @return
+    * @return all object elements
     */
    public List<NetworkMapElement> getObjectElements()
    {
@@ -224,7 +224,8 @@ public class NetworkMapPage
    
 	/**
 	 * Create new unique element ID
-	 * @return
+	 * 
+	 * @return new unique element ID
 	 */
 	public long createElementId()
 	{

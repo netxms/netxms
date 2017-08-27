@@ -499,7 +499,7 @@ public class Interface extends GenericObject implements ZoneMember
 	/**
 	 * Get symbolic name for interface type
 	 * 
-	 * @return
+	 * @return symbolic name for interface type
 	 */
 	public String getIfTypeName()
 	{
@@ -507,6 +507,8 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
+	 * Get interface MAC address
+	 * 
 	 * @return Interface MAC address
 	 */
 	public MacAddress getMacAddress()
@@ -608,7 +610,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
-	 * @return the dot1xPaeState
+    * Get 802.1x PAE state
+    * 
+	 * @return 802.1x PAE state
 	 */
 	public int getDot1xPaeState()
 	{
@@ -618,7 +622,7 @@ public class Interface extends GenericObject implements ZoneMember
 	/**
 	 * Get 802.1x PAE state as text
 	 * 
-	 * @return
+	 * @return 802.1x PAE state as text
 	 */
 	public String getDot1xPaeStateAsText()
 	{
@@ -633,7 +637,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
-	 * @return the dot1xBackendState
+	 * Get 802.1x backend state
+	 * 
+	 * @return 802.1x backend state
 	 */
 	public int getDot1xBackendState()
 	{
@@ -643,7 +649,7 @@ public class Interface extends GenericObject implements ZoneMember
 	/**
 	 * Get 802.1x backend state as text
 	 * 
-	 * @return
+	 * @return 802.1x backend state as text
 	 */
 	public String getDot1xBackendStateAsText()
 	{
@@ -658,7 +664,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
-	 * @return the adminState
+    * Get administrative state
+    * 
+    * @return administrative state
 	 */
 	public int getAdminState()
 	{
@@ -666,7 +674,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
-	 * @return the adminState
+    * Get administrative state as text
+    * 
+    * @return administrative state as text
 	 */
 	public String getAdminStateAsText()
 	{
@@ -681,7 +691,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
 	/**
-	 * @return the operState
+    * Get operational state
+    * 
+    * @return operational state
 	 */
 	public int getOperState()
 	{
@@ -689,7 +701,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 	
 	/**
-	 * @return the operState
+	 * Get operational state as text
+	 * 
+	 * @return operational state as text
 	 */
 	public String getOperStateAsText()
 	{
@@ -706,7 +720,7 @@ public class Interface extends GenericObject implements ZoneMember
 	/**
 	 * Get interface expected state
 	 * 
-	 * @return
+	 * @return interface expected state
 	 */
 	public int getExpectedState()
 	{
@@ -714,7 +728,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 	
 	/**
-	 * @return
+	 * Check if this interface is a physical port
+	 * 
+	 * @return true if this interface is a physical port
 	 */
 	public boolean isPhysicalPort()
 	{
@@ -722,7 +738,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 	
 	/**
-	 * @return
+    * Check if this interface is a loopback
+    * 
+    * @return true if this interface is a loopback
 	 */
 	public boolean isLoopback()
 	{
@@ -730,7 +748,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 	
 	/**
-	 * @return
+    * Check if this interface is excluded from network topology calculation
+    * 
+    * @return true if this interface is excluded from network topology calculation
 	 */
 	public boolean isExcludedFromTopology()
 	{
@@ -738,7 +758,9 @@ public class Interface extends GenericObject implements ZoneMember
 	}
 
    /**
-    * @return the peerDiscoveryProtocol
+    * Get peer discovery protocol
+    * 
+    * @return peer discovery protocol
     */
    public LinkLayerDiscoveryProtocol getPeerDiscoveryProtocol()
    {
@@ -788,8 +810,8 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Check if given address present on interface
     * 
-    * @param addr
-    * @return
+    * @param addr IP address
+    * @return true if given address present on interface
     */
    public boolean hasAddress(InetAddressEx addr)
    {
@@ -799,8 +821,8 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Check if given address present on interface
     * 
-    * @param addr
-    * @return
+    * @param addr IP address
+    * @return true if given address present on interface
     */
    public boolean hasAddress(InetAddress addr)
    {
@@ -813,7 +835,7 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Get first unicast address
     * 
-    * @return
+    * @return first unicast address
     */
    public InetAddress getFirstUnicastAddress()
    {
@@ -824,7 +846,7 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Get first unicast address
     * 
-    * @return
+    * @return first unicast address
     */
    public InetAddressEx getFirstUnicastAddressEx()
    {
@@ -837,7 +859,7 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Get IP address list as string
     * 
-    * @return
+    * @return IP address list as string
     */
    public String getIpAddressListAsString()
    {
@@ -854,8 +876,8 @@ public class Interface extends GenericObject implements ZoneMember
    /**
     * Get symbolic name for interface type
     * 
-    * @param ifType
-    * @return
+    * @param ifType interface type
+    * @return symbolic name for interface type
     */
    public static String getIfTypeName(int ifType)
    {

@@ -35,8 +35,8 @@ public class WinPerfObject
 	/**
 	 * Create WinPerf objects list from NXCP message
 	 * 
-	 * @param msg
-	 * @return
+	 * @param msg NXCP message
+	 * @return list of WinPerf objects
 	 */
 	public static List<WinPerfObject> createListFromMessage(NXCPMessage msg)
 	{
@@ -73,7 +73,9 @@ public class WinPerfObject
 	}
 
 	/**
-	 * @return the name
+	 * Get object name
+	 * 
+	 * @return object name
 	 */
 	public String getName()
 	{
@@ -81,7 +83,9 @@ public class WinPerfObject
 	}
 
 	/**
-	 * @return the counters
+	 * Get counters supported by this object
+	 * 
+	 * @return list of supported counetrs
 	 */
 	public WinPerfCounter[] getCounters()
 	{
@@ -89,7 +93,9 @@ public class WinPerfObject
 	}
 
 	/**
-	 * @return the instances
+	 * Get instances of this object
+	 * 
+	 * @return list of object instances
 	 */
 	public String[] getInstances()
 	{
@@ -97,9 +103,9 @@ public class WinPerfObject
 	}
 	
 	/**
-	 * Returns true if this object has counters
+	 * Check if this object has counters
 	 * 
-	 * @return
+	 * @return true if this object has counters
 	 */
 	public boolean hasCounters()
 	{
@@ -107,9 +113,9 @@ public class WinPerfObject
 	}
 	
 	/**
-	 * Returns true if this object has instances
+	 * Check if this object has instances
 	 * 
-	 * @return
+	 * @return true if this object has instances
 	 */
 	public boolean hasInstances()
 	{

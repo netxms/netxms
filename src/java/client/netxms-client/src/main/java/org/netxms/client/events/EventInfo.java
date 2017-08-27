@@ -112,7 +112,9 @@ public class EventInfo
 	}
 
 	/**
-	 * @return the name
+	 * Get event name
+	 * 
+	 * @return event name
 	 */
 	public String getName()
 	{
@@ -144,7 +146,9 @@ public class EventInfo
 	}
 	
 	/**
-	 * @return
+	 * Check if this object has children
+	 * 
+	 * @return true if this object has children
 	 */
 	public boolean hasChildren()
 	{

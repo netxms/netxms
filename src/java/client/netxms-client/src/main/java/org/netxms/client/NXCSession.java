@@ -4276,7 +4276,7 @@ public class NXCSession
    }
 
    /**
-    * Resolve names of given DCIs
+    * Get names for given DCI list
     *
     * @param nodeIds node identifiers
     * @param dciIds  DCI identifiers (length must match length of node identifiers list)
@@ -4284,7 +4284,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String[] resolveDciNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
+   public String[] dciIdsToNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
    {
       if (nodeIds.length == 0) return new String[0];
 
@@ -4305,14 +4305,14 @@ public class NXCSession
    }
 
    /**
-    * Resolve names of given DCIs
+    * Get names for given DCI list
     *
     * @param dciList DCI list
     * @return array of resolved DCI names
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String[] resolveDciNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
+   public String[] dciIdsToNames(Collection<ConditionDciInfo> dciList) throws IOException, NXCException
    {
       final long[] nodeIds = new long[dciList.size()];
       final long[] dciIds = new long[dciList.size()];
@@ -4323,19 +4323,19 @@ public class NXCSession
          dciIds[i] = dci.getDciId();
          i++;
       }
-      return resolveDciNames(nodeIds, dciIds);
+      return dciIdsToNames(nodeIds, dciIds);
    }
 
    /**
-    * Resolve id of given DCI names
+    * Get DCI ID for given DCI name
     *
-    * @param nodeIds node identifiers
-    * @param dciIds  DCI identifiers (length must match length of node identifiers list)
-    * @return id of resolved DCI
+    * @param nodeId node object identifier
+    * @param dciName  DCI name
+    * @return id of DCI with given name
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long resolveDciId(long nodeId, String dciName) throws IOException, NXCException
+   public long dciNameToId(long nodeId, String dciName) throws IOException, NXCException
    {
       if (nodeId == 0 || dciName == null || dciName.isEmpty()) 
          return 0;

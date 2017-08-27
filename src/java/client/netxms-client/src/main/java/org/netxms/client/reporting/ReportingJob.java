@@ -112,7 +112,9 @@ public class ReportingJob
    }
 
    /**
-	 * @return
+    * Get unique report ID
+    * 
+	 * @return unique report ID
 	 */
 	public UUID getReportId()
 	{
@@ -120,7 +122,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param reportId
+	 * Set unique report ID
+	 * 
+	 * @param reportId report unique ID
 	 */
 	public void setReportId(UUID reportId)
 	{
@@ -128,7 +132,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get job ID
+	 * 
+	 * @return job ID
 	 */
 	public UUID getJobId()
 	{
@@ -136,7 +142,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param jobId
+	 * Set job ID
+	 * 
+	 * @param jobId job ID
 	 */
 	public void setJobId(UUID jobId)
 	{
@@ -144,7 +152,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get days of week bit mask
+	 * 
+	 * @return days of week bit mask
 	 */
 	public int getDaysOfWeek()
 	{
@@ -152,7 +162,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param daysOfWeek
+	 * Set days of week bit mask
+	 * 
+	 * @param daysOfWeek new days of week bit mask
 	 */
 	public void setDaysOfWeek(int daysOfWeek)
 	{
@@ -160,7 +172,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get days of month bit mask
+	 * 
+	 * @return days of month bit mask
 	 */
 	public int getDaysOfMonth()
 	{
@@ -168,7 +182,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param daysOfMonth
+	 * Set days of month bit mask
+	 * 
+	 * @param daysOfMonth new days of month bit mask
 	 */
 	public void setDaysOfMonth(int daysOfMonth)
 	{
@@ -176,7 +192,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get user ID
+	 * 
+	 * @return user ID
 	 */
 	public int getUserId()
 	{
@@ -184,7 +202,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get job type
+	 * 
+	 * @return job type
 	 */
 	public int getType()
 	{
@@ -192,7 +212,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param type
+	 * Set job type
+	 * 
+	 * @param type new job type
 	 */
 	public void setType(int type)
 	{
@@ -200,7 +222,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get job start time
+	 * 
+	 * @return job start time
 	 */
 	public Date getStartTime()
 	{
@@ -208,7 +232,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param startTime
+	 * Set job start time
+	 * 
+	 * @param startTime job start time
 	 */
 	public void setStartTime(Date startTime)
 	{
@@ -216,7 +242,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @return
+	 * Get comments
+	 * 
+	 * @return comments
 	 */
 	public String getComments()
 	{
@@ -224,7 +252,9 @@ public class ReportingJob
 	}
 
 	/**
-	 * @param comments
+	 * Set comments
+	 * 
+	 * @param comments comments
 	 */
 	public void setComments(String comments)
 	{
@@ -232,7 +262,9 @@ public class ReportingJob
 	}
 
 	/**
-    * @return the notifyOnCompletion
+	 * Check if notification on completion is on
+	 * 
+    * @return true if notification on completion is on
     */
    public boolean isNotifyOnCompletion()
    {
@@ -240,7 +272,9 @@ public class ReportingJob
    }
 
    /**
-    * @param notifyOnCompletion the notifyOnCompletion to set
+    * Set notification on completion flag
+    * 
+    * @param notifyOnCompletion new notification on completion flag
     */
    public void setNotifyOnCompletion(boolean notifyOnCompletion)
    {

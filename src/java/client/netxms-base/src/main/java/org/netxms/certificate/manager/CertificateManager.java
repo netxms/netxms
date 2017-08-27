@@ -20,21 +20,31 @@ public class CertificateManager
    private KeyStore keyStore;
    private Certificate[] certs;
    private final KeyStoreLoader loader;
-   private KeyStoreEntryPasswordRequestListener entryListener;
+   private KeyStoreEntryPasswordRequestListener passwordRequestListener;
 
+   /**
+    * Create new certificate manager
+    * 
+    * @param loader key store loader to use
+    */
    CertificateManager(KeyStoreLoader loader)
    {
       this.loader = loader;
    }
 
-   public void setEntryListener(KeyStoreEntryPasswordRequestListener entryListener)
+   /**
+    * Set password request listener
+    * 
+    * @param passwordRequestListener new password request listener
+    */
+   public void setPasswordRequestListener(KeyStoreEntryPasswordRequestListener passwordRequestListener)
    {
-      this.entryListener = entryListener;
+      this.passwordRequestListener = passwordRequestListener;
    }
 
-   public void setKeyStoreRequestListener(KeyStoreRequestListener keyStoreListener)
+   public void setKeyStoreRequestListener(KeyStoreRequestListener keyStoreRequestListener)
    {
-      loader.setKeyStoreRequestListener(keyStoreListener);
+      loader.setKeyStoreRequestListener(keyStoreRequestListener);
    }
 
    public Certificate[] getCerts()
@@ -42,6 +52,9 @@ public class CertificateManager
       return certs;
    }
 
+   /**
+    * Load certificates
+    */
    private void loadCerts()
    {
       try
@@ -130,13 +143,15 @@ public class CertificateManager
    }
 
    /**
-    * @param cert
-    * @return
-    * @throws KeyStoreException
-    * @throws CertificateNotInKeyStoreException
-    * @throws CertificateHasNoPrivateKeyException
-    * @throws NoSuchAlgorithmException
-    * @throws UnrecoverableEntryException
+    * Get private key from certificate
+    * 
+    * @param cert certificate
+    * @return private key for given certificate
+    * @throws KeyStoreException on key store error
+    * @throws CertificateNotInKeyStoreException when certificate not in key store
+    * @throws CertificateHasNoPrivateKeyException when certificate has no private key
+    * @throws NoSuchAlgorithmException when a particular cryptographic algorithm is requested but is not available in the environment.
+    * @throws UnrecoverableEntryException if an entry in the keystore cannot be recovered
     */
    protected PrivateKey getPrivateKey(Certificate cert)
       throws KeyStoreException, CertificateNotInKeyStoreException, CertificateHasNoPrivateKeyException,
@@ -168,23 +183,26 @@ public class CertificateManager
    }
 
    /**
-    * @return
+    * Get password for key store entry from password request listener
+    * 
+    * @return password
     */
    protected String getEntryPassword()
    {
-      if (entryListener == null) 
+      if (passwordRequestListener == null) 
          return "";
 
-      return entryListener.keyStoreEntryPasswordRequested();
+      return passwordRequestListener.keyStoreEntryPasswordRequested();
    }
 
    /**
-    * @throws KeyStoreLoaderException
+    * Load certificates from key store
+    * 
+    * @throws KeyStoreLoaderException on loader error
     */
    public void load() throws KeyStoreLoaderException
    {
       keyStore = loader.loadKeyStore();
-
       loadCerts();
    }
 

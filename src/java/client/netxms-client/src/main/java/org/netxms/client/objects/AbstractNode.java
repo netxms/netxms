@@ -532,7 +532,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	/**
     * Get SNMP system contact (value of sysContact MIB entry)
     * 
-	 * @return
+	 * @return SNMP system contact (value of sysContact MIB entry)
 	 */
 	public String getSnmpSysContact()
    {
@@ -542,7 +542,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    /**
     * Get SNMP system location (value of sysLocation MIB entry)
     * 
-    * @return
+    * @return SNMP system location (value of sysLocation MIB entry)
     */
    public String getSnmpSysLocation()
    {
@@ -627,7 +627,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	/**
 	 * Get MAC address of interface with node's primary IP
 	 * 
-	 * @return
+	 * @return MAC address of interface with node's primary IP
 	 */
 	public MacAddress getPrimaryMAC()
 	{
@@ -656,7 +656,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    /**
     * Get primary IP address
     * 
-    * @return
+    * @return primary IP address
     */
    public InetAddressEx getPrimaryIP()
    {
@@ -700,7 +700,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    }
 
    /**
-    * @return
+    * Get last agent communications time
+    * 
+    * @return last agent communications time
     */
    public Date getLastAgentCommTime()
    {
@@ -740,7 +742,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    }
    
    /**
-    * @return
+    * Get number of rows for physical ports
+    * 
+    * @return number of rows for physical ports
     */
    public int getPortRowCount()
    {
@@ -748,7 +752,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    }
    
    /**
-    * @return
+    * Get physical port numbering scheme
+    * 
+    * @return physical port numbering scheme
     */
    public int getPortNumberingScheme()
    {

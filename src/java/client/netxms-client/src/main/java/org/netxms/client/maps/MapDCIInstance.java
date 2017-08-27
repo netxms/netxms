@@ -176,7 +176,9 @@ public class MapDCIInstance
    }  
 
    /**
-    * @param id
+    * Add map reference
+    * 
+    * @param id map ID
     */
    public void addMap(String id)
    {
@@ -184,13 +186,15 @@ public class MapDCIInstance
    }
    
    /**
-    * @param id
-    * @return
+    * Remove map reference
+    * 
+    * @param id map ID
+    * @return true if last map reference was removed
     */
    public boolean removeMap(String id)
    {
       mapList.remove(id);
-      if(mapList.size() == 0)
+      if (mapList.size() == 0)
          return true;
       return false;
    }

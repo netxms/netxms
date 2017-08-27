@@ -41,7 +41,7 @@ public class CertificateManagerProvider
    {
       if (manager == null) return;
 
-      manager.setEntryListener(null);
+      manager.setPasswordRequestListener(null);
       manager = null;
    }
 }

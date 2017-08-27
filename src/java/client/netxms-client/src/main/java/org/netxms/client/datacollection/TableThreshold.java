@@ -34,7 +34,7 @@ public class TableThreshold
 	private int deactivationEvent;
 	private int sampleCount;
 	private List<List<TableCondition>> conditions;
-	private long nextVarId;
+	private long nextFieldId;
 	
 	/**
 	 * Create new empty threshold
@@ -96,15 +96,15 @@ public class TableThreshold
 			}
 			conditions.add(list);
 		}
-		nextVarId = fieldId;
+		nextFieldId = fieldId;
 	}
 	
 	/**
 	 * Fill NXCP message with threshold data
 	 * 
-	 * @param msg
-	 * @param baseId
-	 * @return
+	 * @param msg NXCP message
+	 * @param baseId base field ID
+	 * @return next free field ID
 	 */
 	protected long fillMessage(NXCPMessage msg, long baseId)
 	{
@@ -132,7 +132,7 @@ public class TableThreshold
 	/**
 	 * Get threshold condition as text
 	 * 
-	 * @return
+	 * @return textual representation of threshold condition
 	 */
 	public String getConditionAsText()
 	{
@@ -167,15 +167,19 @@ public class TableThreshold
 	}
 
 	/**
-	 * @return the nextVarId
+	 * Get next available field ID
+	 * 
+	 * @return next available field ID
 	 */
-	public long getNextVarId()
+	public long getNextFieldId()
 	{
-		return nextVarId;
+		return nextFieldId;
 	}
 
 	/**
-	 * @return the activationEvent
+	 * Get activation event code
+	 * 
+	 * @return activation event code
 	 */
 	public int getActivationEvent()
 	{
@@ -183,7 +187,9 @@ public class TableThreshold
 	}
 
 	/**
-	 * @param activationEvent the activationEvent to set
+	 * Set activation event code
+	 * 
+	 * @param activationEvent new activation event code
 	 */
 	public void setActivationEvent(int activationEvent)
 	{
@@ -191,7 +197,9 @@ public class TableThreshold
 	}
 
 	/**
-	 * @return the deactivationEvent
+	 * Get deactivation event code
+	 * 
+	 * @return deactivation event code
 	 */
 	public int getDeactivationEvent()
 	{
@@ -199,7 +207,8 @@ public class TableThreshold
 	}
 
 	/**
-	 * @param deactivationEvent the deactivationEvent to set
+	 * Set deactivation event code
+	 * @param deactivationEvent new deactivation event code
 	 */
 	public void setDeactivationEvent(int deactivationEvent)
 	{
@@ -207,7 +216,9 @@ public class TableThreshold
 	}
 
 	/**
-    * @return the sampleCount
+	 * Get sample count
+	 * 
+    * @return sample count
     */
    public int getSampleCount()
    {
@@ -215,7 +226,9 @@ public class TableThreshold
    }
 
    /**
-    * @param sampleCount the sampleCount to set
+    * Set sample count
+    * 
+    * @param sampleCount new sample count
     */
    public void setSampleCount(int sampleCount)
    {

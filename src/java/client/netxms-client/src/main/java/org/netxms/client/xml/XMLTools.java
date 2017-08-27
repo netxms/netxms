@@ -33,8 +33,8 @@ public final class XMLTools
    /**
     * Create serializer with registered converters
     * 
-    * @return
-    * @throws Exception
+    * @return serializer with registered converters
+    * @throws Exception on XML library failures
     */
    public static Serializer createSerializer() throws Exception
    {

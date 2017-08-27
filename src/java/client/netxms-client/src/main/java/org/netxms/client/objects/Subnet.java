@@ -63,7 +63,7 @@ public class Subnet extends GenericObject implements ZoneMember
    /**
 	 * Get number of bits in subnet mask
 	 * 
-	 * @return
+	 * @return number of bits in subnet mask
 	 */
 	public int getSubnetMask()
 	{

@@ -102,7 +102,7 @@ public class DciSelector extends AbstractSelector
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final String[] names = session.resolveDciNames(new long[] { nodeId }, new long[] { DciSelector.this.dciId });
+				final String[] names = session.dciIdsToNames(new long[] { nodeId }, new long[] { DciSelector.this.dciId });
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

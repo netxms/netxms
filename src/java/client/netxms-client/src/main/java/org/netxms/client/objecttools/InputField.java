@@ -64,8 +64,8 @@ public class InputField
    /**
     * Create input field from NXCP message
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected InputField(NXCPMessage msg, long baseId)
    {
@@ -79,8 +79,8 @@ public class InputField
    /**
     * Fill NXCP message with field data
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected void fillMessage(NXCPMessage msg, long baseId)
    {

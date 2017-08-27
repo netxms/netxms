@@ -110,8 +110,10 @@ public class MappingTable
 	}
 	
 	/**
-	 * @param key
-	 * @return
+	 * Lookup value in mapping table
+	 * 
+	 * @param key key value
+	 * @return value for given key
 	 */
 	public String lookup(String key)
 	{

@@ -18,7 +18,7 @@ public class MSCKeyStoreLoader implements KeyStoreLoader
       }
       catch(Exception e)
       {
-         throw new KeyStoreLoaderException(e.getMessage());
+         throw new KeyStoreLoaderException(e.getMessage(), e);
       }
 
       return ks;

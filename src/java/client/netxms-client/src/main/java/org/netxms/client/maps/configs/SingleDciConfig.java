@@ -126,7 +126,8 @@ public class SingleDciConfig
 	
 	/**
 	 * Get DCI name. Always returns non-empty string.
-	 * @return
+	 * 
+	 * @return DCI name
 	 */
 	public String getName()
 	{
