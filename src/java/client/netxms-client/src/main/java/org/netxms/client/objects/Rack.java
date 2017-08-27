@@ -91,7 +91,7 @@ public class Rack extends GenericObject
    /**
 	 * Get rack units, ordered by unit numbers
 	 * 
-	 * @return
+	 * @return rack units, ordered by unit numbers
 	 */
 	public List<RackElement> getUnits()
 	{

@@ -43,7 +43,7 @@ public enum InputFieldType
    }
 
    /**
-    * @param value
+    * @param value integer value
     */
    private InputFieldType(int value)
    {
@@ -51,7 +51,9 @@ public enum InputFieldType
    }
 
    /**
-    * @return
+    * Get integer value
+    * 
+    * @return integer value
     */
    public int getValue()
    {
@@ -59,8 +61,10 @@ public enum InputFieldType
    }
 
    /**
-    * @param value
-    * @return
+    * Get enum element from integer value
+    * 
+    * @param value integer value
+    * @return corresponding enum element
     */
    public static InputFieldType getByValue(int value)
    {

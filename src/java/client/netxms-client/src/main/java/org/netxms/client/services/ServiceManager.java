@@ -48,9 +48,9 @@ public final class ServiceManager
    /**
     * Get service handler by name and check if handler class is correct.
     * 
-    * @param name
-    * @param serviceClass
-    * @return
+    * @param name service name
+    * @param serviceClass service handler class
+    * @return service handler for given service
     */
    public static synchronized ServiceHandler getServiceHandler(String name, Class<? extends ServiceHandler> serviceClass)
    {
@@ -66,8 +66,8 @@ public final class ServiceManager
    /**
     * Get service handler by name
     * 
-    * @param name
-    * @return
+    * @param name service name
+    * @return service handler for given service
     */
    public static synchronized ServiceHandler getServiceHandler(String name)
    {
@@ -83,8 +83,8 @@ public final class ServiceManager
    /**
     * Get service handler by class
     * 
-    * @param serviceClass
-    * @return
+    * @param serviceClass service handler class
+    * @return service handler for given service
     */
    public static synchronized ServiceHandler getServiceHandler(Class<? extends ServiceHandler> serviceClass)
    {

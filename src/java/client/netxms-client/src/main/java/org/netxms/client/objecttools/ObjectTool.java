@@ -30,7 +30,6 @@ import org.netxms.client.objects.AbstractNode;
 
 /**
  * NetXMS object tool representation
- *
  */
 public class ObjectTool implements ObjectAction
 {
@@ -207,8 +206,8 @@ public class ObjectTool implements ObjectAction
 	/**
 	 * Get input field definition by name
 	 * 
-	 * @param name
-	 * @return
+	 * @param name input field name
+	 * @return input field or null if not found
 	 */
 	public InputField getInputField(String name)
 	{
@@ -218,7 +217,7 @@ public class ObjectTool implements ObjectAction
 	/**
 	 * Get all input fields
 	 * 
-	 * @return
+	 * @return list of all defined input fields
 	 */
 	public InputField[] getInputFields()
 	{
@@ -226,7 +225,9 @@ public class ObjectTool implements ObjectAction
 	}
 	
    /**
-	 * @return the id
+    * Get tool ID
+    * 
+	 * @return tool ID
 	 */
 	public long getId()
 	{
@@ -258,7 +259,9 @@ public class ObjectTool implements ObjectAction
 	}
 	
 	/**
-	 * @return
+	 * Check if this tool should be visible in commands
+	 * 
+	 * @return true if this tool should be visible in commands
 	 */
 	public boolean isVisibleInCommands()
 	{
@@ -266,7 +269,9 @@ public class ObjectTool implements ObjectAction
 	}
 	
 	/**
-	 * @return
+	 * Check if tool is enabled
+	 * 
+	 * @return true if enabled
 	 */
 	public boolean isEnabled()
 	{
@@ -314,7 +319,9 @@ public class ObjectTool implements ObjectAction
 	}
 
    /**
-    * @return the commandName
+    * Get command name
+    * 
+    * @return command name
     */
    public String getCommandName()
    {
@@ -322,7 +329,9 @@ public class ObjectTool implements ObjectAction
    }
    
    /**
-    * @return
+    * Get command display name
+    * 
+    * @return command display name
     */
    public String getCommandDisplayName()
    {
@@ -332,7 +341,9 @@ public class ObjectTool implements ObjectAction
    }
 
    /**
-    * @return the commandShortName
+    * Get command short name
+    * 
+    * @return command short name
     */
    public String getCommandShortName()
    {
@@ -340,7 +351,9 @@ public class ObjectTool implements ObjectAction
    }
 
    /**
-    * @return
+    * Get command short display name
+    * 
+    * @return command short display name
     */
    public String getCommandShortDisplayName()
    {

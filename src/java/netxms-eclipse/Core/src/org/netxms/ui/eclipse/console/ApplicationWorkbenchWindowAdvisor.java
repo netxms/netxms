@@ -217,7 +217,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       CertificateManager certMgr = CertificateManagerProvider.provideCertificateManager();
       certMgr.setKeyStoreRequestListener(this);
-      certMgr.setEntryListener(this);
+      certMgr.setPasswordRequestListener(this);
 
       for(String s : Platform.getCommandLineArgs())
       {

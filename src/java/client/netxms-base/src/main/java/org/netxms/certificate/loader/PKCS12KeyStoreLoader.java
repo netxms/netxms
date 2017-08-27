@@ -10,6 +10,9 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
 {
    private KeyStoreRequestListener listener;
 
+   /* (non-Javadoc)
+    * @see org.netxms.certificate.loader.KeyStoreLoader#loadKeyStore()
+    */
    @Override
    public KeyStore loadKeyStore() throws KeyStoreLoaderException
    {
@@ -64,6 +67,9 @@ public class PKCS12KeyStoreLoader implements KeyStoreLoader
       return ks;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.certificate.loader.KeyStoreLoader#setKeyStoreRequestListener(org.netxms.certificate.loader.KeyStoreRequestListener)
+    */
    @Override
    public void setKeyStoreRequestListener(KeyStoreRequestListener listener)
    {

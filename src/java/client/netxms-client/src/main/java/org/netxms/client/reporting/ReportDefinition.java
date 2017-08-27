@@ -39,7 +39,7 @@ public class ReportDefinition
 	/**
 	 * Create report definition from NXCP message
 	 * 
-	 * @param msg
+	 * @param msg NXCP message
 	 */
 	public ReportDefinition(UUID id, NXCPMessage msg)
 	{
@@ -62,7 +62,9 @@ public class ReportDefinition
 	}
 
 	/**
-	 * @return
+	 * Get report definition ID
+	 * 
+	 * @return report definition ID
 	 */
 	public UUID getId()
 	{
@@ -70,7 +72,9 @@ public class ReportDefinition
 	}
 
 	/**
-	 * @return
+	 * Get report definition name
+	 * 
+	 * @return report definition name
 	 */
 	public String getName()
 	{
@@ -78,7 +82,9 @@ public class ReportDefinition
 	}
 
 	/**
-	 * @return
+	 * Get report parameters
+	 * 
+	 * @return list of report parameters
 	 */
 	public List<ReportParameter> getParameters()
 	{
@@ -86,7 +92,9 @@ public class ReportDefinition
 	}
 
 	/**
-	 * @return
+	 * Get number of columns in input form
+	 * 
+	 * @return number of columns in input form
 	 */
 	public int getNumberOfColumns()
 	{

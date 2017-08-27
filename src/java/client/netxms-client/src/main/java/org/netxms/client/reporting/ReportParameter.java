@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ public class ReportParameter
    /**
     * Create parameter definition from NXCP message
     * 
-    * @param msg
-    * @param baseId
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    public ReportParameter(NXCPMessage msg, long baseId)
    {
@@ -51,7 +51,9 @@ public class ReportParameter
    }
 
 	/**
-	 * @return
+	 * Get parameter index
+	 * 
+	 * @return parameter index
 	 */
 	public int getIndex()
 	{
@@ -59,7 +61,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get parameter name
+	 * 
+	 * @return parameter name
 	 */
 	public String getName()
 	{
@@ -67,7 +71,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get dependencies
+	 * 
+	 * @return dependencies
 	 */
 	public String getDependsOn()
 	{
@@ -75,7 +81,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get description
+	 * 
+	 * @return description
 	 */
 	public String getDescription()
 	{
@@ -83,7 +91,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get parameter type
+	 * 
+	 * @return parameter type
 	 */
 	public String getType()
 	{
@@ -91,7 +101,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get default value
+	 * 
+	 * @return default value
 	 */
 	public String getDefaultValue()
 	{
@@ -99,7 +111,9 @@ public class ReportParameter
 	}
 
 	/**
-	 * @return
+	 * Get column span for this parameter
+	 * 
+	 * @return column span for this parameter
 	 */
 	public int getSpan()
 	{

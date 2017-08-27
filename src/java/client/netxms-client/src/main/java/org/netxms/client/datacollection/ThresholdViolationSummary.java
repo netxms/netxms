@@ -34,8 +34,8 @@ public class ThresholdViolationSummary
 	/**
 	 * Create from NXCP message.
 	 * 
-	 * @param msg
-	 * @param baseId
+	 * @param msg NXCP message
+	 * @param baseId base field ID
 	 */
 	public ThresholdViolationSummary(NXCPMessage msg, long baseId)
 	{
@@ -51,7 +51,9 @@ public class ThresholdViolationSummary
 	}
 
 	/**
-	 * @return the nodeId
+	 * Get owning node ID
+	 * 
+	 * @return owning node ID
 	 */
 	public long getNodeId()
 	{
@@ -69,7 +71,7 @@ public class ThresholdViolationSummary
 	/**
 	 * Get current most critical severity level from active thresholds.
 	 * 
-	 * @return
+	 * @return current most critical severity level from active thresholds
 	 */
 	public Severity getCurrentSeverity()
 	{

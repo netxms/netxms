@@ -25,7 +25,7 @@ public class CertificateManagerTest
    {
       manager = CertificateManagerProvider.provideCertificateManager();
       manager.setKeyStoreRequestListener(listener);
-      manager.setEntryListener(listener);
+      manager.setPasswordRequestListener(listener);
       manager.load();
    }
 

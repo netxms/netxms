@@ -67,7 +67,7 @@ public class DataCollectionTable extends DataCollectionObject
 		{
 			final TableThreshold t = new TableThreshold(msg, fieldId);
 			thresholds.add(t);
-			fieldId = t.getNextVarId();
+			fieldId = t.getNextFieldId();
 		}
 	}
 

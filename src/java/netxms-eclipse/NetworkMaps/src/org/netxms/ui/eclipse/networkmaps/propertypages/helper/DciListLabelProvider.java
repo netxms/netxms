@@ -144,7 +144,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 					dciIds[i] = dci.dciId;
 					i++;
 				}
-				final String[] names = session.resolveDciNames(nodeIds, dciIds);
+				final String[] names = session.dciIdsToNames(nodeIds, dciIds);
 				
 				runInUIThread(new Runnable() {
 					@Override

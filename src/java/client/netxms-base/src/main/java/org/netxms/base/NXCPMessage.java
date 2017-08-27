@@ -295,7 +295,7 @@ public class NXCPMessage
 	 * Check if field with given ID present in the message
 	 * 
 	 * @param fieldId field ID
-	 * @return
+	 * @return true if field with given ID present in the message
 	 */
 	public boolean isFieldPresent(final long fieldId)
 	{
@@ -461,18 +461,18 @@ public class NXCPMessage
     * @param fieldId field ID
     * @param value MacAddress object (can be null)
     */
-   public void setField(long fieldId, MacAddress macAddress)
+   public void setField(long fieldId, MacAddress value)
    {
-      if(macAddress == null)
+      if (value == null)
          return;
-      setField(fieldId, macAddress.getValue());      
+      setField(fieldId, value.getValue());      
    }
    
 	/**
 	 * Get field as byte array
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field ID
+    * @return field value as byte array
 	 */
 	public byte[] getFieldAsBinary(final long fieldId)
 	{
@@ -483,8 +483,8 @@ public class NXCPMessage
 	/**
 	 * Get field as string
 	 * 
-	 * @param fieldId
-	 * @return
+	 * @param fieldId field ID
+    * @return field value as string
 	 */
 	public String getFieldAsString(final long fieldId)
 	{
@@ -495,8 +495,8 @@ public class NXCPMessage
 	/**
 	 * Get field as double
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field id
+    * @return field value as double
 	 */
 	public Double getFieldAsDouble(final long fieldId)
 	{
@@ -507,8 +507,8 @@ public class NXCPMessage
    /**
     * Get field as 16 bit integer
     * 
-    * @param fieldId
-    * @return
+    * @param fieldId field id
+    * @return field value as 16 bit integer
     */
    public short getFieldAsInt16(final long fieldId)
    {
@@ -519,8 +519,8 @@ public class NXCPMessage
 	/**
 	 * Get field as 32 bit integer
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field id
+    * @return field value as 32 bit integer
 	 */
 	public int getFieldAsInt32(final long fieldId)
 	{
@@ -531,8 +531,8 @@ public class NXCPMessage
 	/**
 	 * Get field as 64 bit integer
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field id
+    * @return field value as 64 bit integer
 	 */
 	public long getFieldAsInt64(final long fieldId)
 	{
@@ -543,8 +543,8 @@ public class NXCPMessage
 	/**
 	 * Get field as InetAddress
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field id
+    * @return field value as IP address
 	 */
 	public InetAddress getFieldAsInetAddress(final long fieldId)
 	{
@@ -556,7 +556,7 @@ public class NXCPMessage
 	 *  Get field as MacAddress
 	 *  
 	 * @param fieldId field id
-	 * @return Mac Address
+	 * @return field value as MAC address
 	 */
 	public MacAddress getFieldAsMacAddress(final long fieldId)
 	{
@@ -567,8 +567,8 @@ public class NXCPMessage
    /**
     * Get field as InetAddressEx
     * 
-    * @param fieldId
-    * @return
+    * @param fieldId field ID
+    * @return field value as IP address
     */
    public InetAddressEx getFieldAsInetAddressEx(final long fieldId)
    {
@@ -579,8 +579,8 @@ public class NXCPMessage
 	/**
 	 * Get field as UUID (GUID)
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field ID
+    * @return field value as UUID
 	 */
 	public UUID getFieldAsUUID(final long fieldId)
 	{
@@ -591,8 +591,8 @@ public class NXCPMessage
 	/**
 	 * Get field as array of 32 bit integers
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field ID
+    * @return field value as array of long integers
 	 */
 	public long[] getFieldAsUInt32Array(final long fieldId)
 	{
@@ -603,8 +603,8 @@ public class NXCPMessage
 	/**
 	 * Get field as array of 32 bit integers
 	 * 
-	 * @param fieldId
-	 * @return
+    * @param fieldId field ID
+	 * @return field value as array of Long objects
 	 */
 	public Long[] getFieldAsUInt32ArrayEx(final long fieldId)
 	{
@@ -615,8 +615,8 @@ public class NXCPMessage
 	/**
 	 * Get field as boolean
 	 * 
-	 * @param fieldId
-	 * @return
+	 * @param fieldId field ID
+	 * @return field value as boolean
 	 */
 	public boolean getFieldAsBoolean(final long fieldId)
 	{
@@ -627,8 +627,8 @@ public class NXCPMessage
 	/**
 	 * Get field as date
 	 * 
-	 * @param fieldId
-	 * @return
+	 * @param fieldId field ID
+	 * @return field value as Date object
 	 */
 	public Date getFieldAsDate(final long fieldId)
 	{

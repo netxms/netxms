@@ -246,7 +246,7 @@ public class MibObject
 	/**
 	 * Get object's full name (including all parents)
 	 * 
-	 * @return
+	 * @return object's full name (including all parents)
 	 */
 	public String getFullName()
 	{
@@ -323,8 +323,9 @@ public class MibObject
 	
 	/**
 	 * Find child object with given ID
-	 * @param oid
-	 * @return
+	 * 
+	 * @param oid SNMP object ID
+	 * @return MIB object with given OID or null
 	 */
 	protected MibObject findChildObject(SnmpObjectId oid)
 	{
