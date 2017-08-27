@@ -52,7 +52,7 @@ public class HistoricalData extends AbstractObjectHandler
       }
       catch(NumberFormatException e)
       {
-         dciId = session.resolveDciId(obj.getObjectId(), id);
+         dciId = session.dciNameToId(obj.getObjectId(), id);
       }
       
       if(obj == null || dciId == 0 || !(obj instanceof DataCollectionTarget))
