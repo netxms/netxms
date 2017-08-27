@@ -19,6 +19,8 @@
 package org.netxms.client;
 
 import junit.framework.TestCase;
+import org.netxms.base.MacAddress;
+import org.netxms.base.MacAddressFormatException;
 
 /**
  * Tests for MacAddress class

@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.InetAddressEx;
-import org.netxms.client.MacAddress;
+import org.netxms.base.MacAddress;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.IPAddressValidator;
 import org.netxms.ui.eclipse.tools.IPNetMaskValidator;

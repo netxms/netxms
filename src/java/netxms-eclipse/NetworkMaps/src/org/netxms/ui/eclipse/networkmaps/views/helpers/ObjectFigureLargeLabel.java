@@ -28,7 +28,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.netxms.client.MacAddress;
+import org.netxms.base.MacAddress;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.Node;

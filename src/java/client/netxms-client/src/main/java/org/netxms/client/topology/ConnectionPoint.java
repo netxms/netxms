@@ -19,9 +19,9 @@
 package org.netxms.client.topology;
 
 import java.net.InetAddress;
+import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.MacAddress;
 import org.netxms.client.constants.ConnectionPointType;
 
 /**

@@ -20,9 +20,9 @@ package org.netxms.client.objects;
 
 import java.util.Set;
 import org.netxms.base.InetAddressEx;
+import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AccessPointState;
 import org.netxms.client.topology.RadioInterface;

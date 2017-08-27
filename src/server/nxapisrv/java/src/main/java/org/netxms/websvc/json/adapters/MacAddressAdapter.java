@@ -19,8 +19,8 @@
 package org.netxms.websvc.json.adapters;
 
 import java.io.IOException;
-import org.netxms.client.MacAddress;
-import org.netxms.client.MacAddressFormatException;
+import org.netxms.base.MacAddress;
+import org.netxms.base.MacAddressFormatException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;

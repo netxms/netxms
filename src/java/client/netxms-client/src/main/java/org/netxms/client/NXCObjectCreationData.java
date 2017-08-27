@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.InetAddressEx;
+import org.netxms.base.MacAddress;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
 
