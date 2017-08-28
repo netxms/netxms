@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
@@ -780,5 +781,19 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    public void setCustomColor(RGB color)
    {
       customColor = color;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#takeSnapshot()
+    */
+   @Override
+   public Image takeSnapshot()
+   {
+      Rectangle rect = getClientArea();
+      Image image = new Image(getDisplay(), rect.width, rect.height);
+      GC gc = new GC(image);
+      this.print(gc);
+      gc.dispose();
+      return image;
    }
 }

@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.charts.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -132,20 +131,5 @@ public class CurrentValueWidget extends GaugeWidget
 			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
-	}
-	
-	/**
-     * Take snapshot of network map
-     * 
-     * @return
-     */
-	public Image takeSnapshot()
-	{
-		Rectangle rect = getClientArea();
-		Image image = new Image(getDisplay(), rect.width, rect.height);
-		GC gc = new GC(image);
-		this.print(gc);
-		gc.dispose();
-		return image;
 	}
 }

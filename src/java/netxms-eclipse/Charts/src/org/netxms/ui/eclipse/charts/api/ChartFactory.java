@@ -4,6 +4,7 @@
 package org.netxms.ui.eclipse.charts.api;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.ui.eclipse.charts.widgets.BarGaugeWidget;
 import org.netxms.ui.eclipse.charts.widgets.CurrentValueWidget;
 import org.netxms.ui.eclipse.charts.widgets.DataComparisonBirtChart;
 import org.netxms.ui.eclipse.charts.widgets.DialChartWidget;
@@ -74,6 +75,18 @@ public class ChartFactory
 		return new DialChartWidget(parent, style);
 	}
 	
+   /**
+    * Create bar gauge chart
+    * 
+    * @param parent parent composite
+    * @param style widget style
+    * @return bar gauge chart widget
+    */
+   public static Gauge createBarGaugeChart(Composite parent, int style)
+   {
+      return new BarGaugeWidget(parent, style);
+   }
+   
 	/**
 	 * Create "current values" pseudo-chart
 	 * 
