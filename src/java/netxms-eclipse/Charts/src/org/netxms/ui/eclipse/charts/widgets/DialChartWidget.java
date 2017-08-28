@@ -23,7 +23,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
@@ -322,21 +321,6 @@ public class DialChartWidget extends GaugeWidget
 		}
 	}
 	
-	/**
-     * Take snapshot of network map
-     * 
-     * @return
-     */
-	public Image takeSnapshot()
-	{
-		Rectangle rect = getClientArea();
-		Image image = new Image(getDisplay(), rect.width, rect.height);
-		GC gc = new GC(image);
-		this.print(gc);
-		gc.dispose();
-		return image;
-	}
-
    /**
     * Get minimal element size
     * 
