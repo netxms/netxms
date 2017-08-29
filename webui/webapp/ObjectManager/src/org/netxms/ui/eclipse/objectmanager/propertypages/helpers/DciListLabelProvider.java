@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -148,7 +149,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final String[] names = session.resolveDciNames(dciList);
+				final String[] names = session.dciIdsToNames(dciList);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
