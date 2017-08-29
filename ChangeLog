@@ -28,6 +28,7 @@
 	- Fixed bug in sorting alarms by zone name
 	- Zone ID can be generated automatically on zone creation
 	- New node can be created directly from agent tunnel manager
+	- "Bar" mode for gauge dashboard elements working correctly
 - Fixed issues: NX-930, NX-1143, NX-1170, NX-1263, NX-1272, NX-1273, NX-1278, NX-1281, NX-1284, NX-1285, NX-1286
 
 

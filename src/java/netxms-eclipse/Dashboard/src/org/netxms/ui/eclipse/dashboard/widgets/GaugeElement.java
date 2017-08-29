@@ -59,6 +59,9 @@ public class GaugeElement extends ComparisonChartElement
 		
 		switch(config.getGaugeType())
 		{
+         case GaugeConfig.BAR:
+            chart = ChartFactory.createBarGaugeChart(this, SWT.NONE);
+            break;
 			case GaugeConfig.TEXT:
 				chart = ChartFactory.createCurrentValueChart(this, SWT.NONE);
 				break;
@@ -69,6 +72,7 @@ public class GaugeElement extends ComparisonChartElement
 		chart.setChartTitle(config.getTitle());
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setLegendVisible(config.isShowLegend());
+      chart.setLegendPosition(config.getLegendPosition());
 		((Gauge)chart).setLegendInside(config.isLegendInside());
 		((Gauge)chart).setVertical(config.isVertical());
       ((Gauge)chart).setElementBordersVisible(config.isElementBordersVisible());
