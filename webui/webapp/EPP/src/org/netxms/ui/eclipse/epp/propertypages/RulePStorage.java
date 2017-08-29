@@ -214,7 +214,6 @@ public class RulePStorage extends PropertyPage
    /**
     * Edit delete value
     */
-   @SuppressWarnings("unchecked")
    private void editPStorageDeleteAction()
    {
       IStructuredSelection selection = (IStructuredSelection)viewerDeleteValue.getSelection();
@@ -241,7 +240,6 @@ public class RulePStorage extends PropertyPage
       {
          while(it.hasNext())
          {
-            @SuppressWarnings("unchecked")
             String e = (String)it.next();
             pStorageDelete.remove(e);
          }
