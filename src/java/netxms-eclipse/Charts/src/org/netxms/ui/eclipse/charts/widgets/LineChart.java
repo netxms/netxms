@@ -810,7 +810,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 * @param upper
 	 * @return
 	 */
-	private double adjustRange(double upper)
+	private static double adjustRange(double upper)
 	{
 		double adjustedUpper = upper;
       for(double d = 0.00001; d < 10000000000000000000.0; d *= 10)

@@ -79,11 +79,12 @@ public class CurrentValueWidget extends GaugeWidget
 		
 		if (elementBordersVisible)
 		{
+         gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		   gc.drawRectangle(rect);
 		   rect.x += INNER_MARGIN_WIDTH;
 		   rect.y += INNER_MARGIN_HEIGHT;
-		   rect.width -= INNER_MARGIN_WIDTH / 2;
-         rect.height -= INNER_MARGIN_HEIGHT / 2;
+		   rect.width -= INNER_MARGIN_WIDTH * 2;
+         rect.height -= INNER_MARGIN_HEIGHT * 2;
 		}
 		
 		if (legendVisible)
@@ -121,14 +122,14 @@ public class CurrentValueWidget extends GaugeWidget
             break;
 		}
 		Point ext = gc.textExtent(value);
-		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2);
+		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
          gc.setFont(null);
 			ext = gc.textExtent(dci.getName());
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

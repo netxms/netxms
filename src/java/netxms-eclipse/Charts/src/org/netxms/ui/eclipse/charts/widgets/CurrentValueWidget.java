@@ -80,11 +80,12 @@ public class CurrentValueWidget extends GaugeWidget
 		
 		if (elementBordersVisible)
 		{
+         gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		   gc.drawRectangle(rect);
 		   rect.x += INNER_MARGIN_WIDTH;
 		   rect.y += INNER_MARGIN_HEIGHT;
-		   rect.width -= INNER_MARGIN_WIDTH / 2;
-         rect.height -= INNER_MARGIN_HEIGHT / 2;
+		   rect.width -= INNER_MARGIN_WIDTH * 2;
+         rect.height -= INNER_MARGIN_HEIGHT * 2;
 		}
 		
 		if (legendVisible)
@@ -122,7 +123,7 @@ public class CurrentValueWidget extends GaugeWidget
             break;
 		}
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
-		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2, SWT.TRANSPARENT);
+		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		
 		// Draw legend, ignore legend position
 		if (legendVisible)
