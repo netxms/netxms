@@ -20,12 +20,12 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v4:23.4.0'
-    compile('org.netxms:netxms-client:2.1') {
+    compile('org.netxms:netxms-client:2.1.1') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    compile('org.netxms:netxms-base:2.1') {
+    compile('org.netxms:netxms-base:2.1.1') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
