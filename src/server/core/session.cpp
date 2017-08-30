@@ -8997,6 +8997,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
                   DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszText);
                   msg.setField(VID_CONFIG_ID, dwCfgId);
                   free(pszText);
+                  delete vm;
                   break;
                }
                else
