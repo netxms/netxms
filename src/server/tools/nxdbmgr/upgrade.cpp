@@ -115,7 +115,7 @@ static bool IsConfigurationVariableExist(const TCHAR *name)
 }
 
 /**
- * Create configuration parameter if it doesn`t exist (unless bForceUpdate set to true)
+ * Create configuration parameter if it doesn't exist (unless forceUpdate set to true)
  */
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
@@ -123,10 +123,18 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *descr
    TCHAR szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%d,%d,'%c','%c',%s)"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0,
-                 isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255));
+      if (DBGetSchemaVersion(g_hCoreDB) >= 454)
+         _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%s,%d,%d,'%c','%c',%s)"),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    isVisible ? 1 : 0, needRestart ? 1 : 0,
+                    isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255));
+      else
+         _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%d,%d,'%c','%c',%s)"),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0,
+                    isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255));
       success = SQLQuery(szQuery);
    }
 	else if (forceUpdate)
@@ -147,9 +155,16 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bo
    TCHAR szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (%s,%s,%d,%d)"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0);
+      if (DBGetSchemaVersion(g_hCoreDB) >= 454)
+         _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart) VALUES (%s,%s,%s,%d,%d)"),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    isVisible ? 1 : 0, needRestart ? 1 : 0);
+      else
+         _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (%s,%s,%d,%d)"),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0);
       success = SQLQuery(szQuery);
    }
 	else if (forceUpdate)
@@ -585,9 +600,9 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
- * Upgrade from V458 to V459
+ * Upgrade from V500 to V501
  */
-static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV500(int currVersion, int newVersion)
 {
    static const TCHAR *batch =
             _T("ALTER TABLE users ADD created integer null\n")
@@ -599,14 +614,14 @@ static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
    CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("users"), _T("created")));
    CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("created")));
 
-   CHK_EXEC(SetSchemaVersion(459));
+   CHK_EXEC(SetSchemaVersion(501));
    return TRUE;
 }
 
 /**
- * Upgrade from V457 to V458
+ * Upgrade from V458 to V500
  */
-static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE sensors (")
@@ -631,6 +646,17 @@ static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
       _T("  runtime_flags integer null,")
       _T("PRIMARY KEY(id))")));
 
+   CHK_EXEC(SetSchemaVersion(500));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V457 to V458
+ */
+static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',need_server_restart=0 WHERE var_name='DeleteUnreachableNodesPeriod'")));
+   CHK_EXEC(CreateConfigParam(_T("LongRunningQueryThreshold"), _T("0"), _T("Threshold in milliseconds to report long running SQL queries (0 to disable)"), 'I', true, true, false, false));
    CHK_EXEC(SetSchemaVersion(458));
    return TRUE;
 }
@@ -11926,7 +11952,8 @@ static struct
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
-   { 458, 459, H_UpgradeFromV458 },
+   { 458, 500, H_UpgradeFromV458 },
+   { 500, 501, H_UpgradeFromV500 },
    { 0, 0, NULL }
 };
 
