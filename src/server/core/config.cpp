@@ -52,6 +52,11 @@ TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 
 /**
+ * Debug tags from config
+ */
+static TCHAR *s_debugTags = NULL;
+
+/**
  * Peer node information
  */
 static TCHAR s_peerNode[MAX_DB_STRING];
@@ -75,6 +80,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
+   { _T("DebugTags"), CT_STRING_LIST, ',', 0, 0, 0, &s_debugTags, NULL },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
    { _T("EnableServerConsole"), CT_BOOLEAN64, 0, 0, AF_ENABLE_LOCAL_CONSOLE, 0, &g_flags, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
@@ -171,6 +177,27 @@ stop_search:
 
 	if (*debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
 	   *debugLevel = (int)s_debugLevel;
+
+   int numTags = 0, lvl = 0;
+   TCHAR tagBuffer[254], lvlBuffer[2];
+   TCHAR const *ptr;
+
+   TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
+   if (tagList != NULL)
+   {
+      for(int i = 0; i < numTags; i++)
+      {
+         ptr = ExtractWord(tagList[i], tagBuffer);
+         ExtractWord(ptr, lvlBuffer);
+         lvl = _tcstol(lvlBuffer, NULL, 0);
+
+         if(lvl != 0 && tagBuffer != NULL)
+            nxlog_set_debug_level_tag(tagBuffer, lvl);
+      }
+   }
+
+   free(s_debugTags);
+   free(tagList);
 
 	// Decrypt password
    DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);

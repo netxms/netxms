@@ -121,12 +121,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("DEBUG"), szBuffer, 2))
    {
-      // Get argument
-      ExtractWord(pArg, szBuffer);
-      int level = (int)_tcstol(szBuffer, &eptr, 0);
+      StringList *list = ParseCommandLine(pArg);
+
+      int level;
+      if (list->size() == 1)
+         level = (int)_tcstol(list->get(0), &eptr, 0);
+      else if (list->size() == 2)
+         level = (int)_tcstol(list->get(1), &eptr, 0);
+
       if ((*eptr == 0) && (level >= 0) && (level <= 9))
       {
-         nxlog_set_debug_level(level);
+         if (list->size() == 1)
+            nxlog_set_debug_level(level);
+         else if (list->size() == 2)
+            nxlog_set_debug_level_tag(list->get(1), level);
          ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
       }
       else if (IsCommand(_T("OFF"), szBuffer, 2))
@@ -141,6 +149,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          else
             ConsoleWrite(pCtx, _T("ERROR: Invalid debug level\n\n"));
       }
+      delete(list);
    }
    else if (IsCommand(_T("DOWN"), szBuffer, 4))
    {
