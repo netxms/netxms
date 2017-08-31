@@ -980,6 +980,13 @@ public class NXCPCodes
    public static final long VID_FREQUENCY = 591;
    public static final long VID_SENSOR_PROXY = 592;
    public static final long VID_XML_REG_CONFIG = 593;
+   public static final long VID_REG_TYPE = 594;
+   public static final long VID_DECODER = 595;
+   public static final long VID_LORA_APP_EUI = 596;
+   public static final long VID_LORA_APP_KEY = 597;
+   public static final long VID_LORA_APP_S_KEY = 598;
+   public static final long VID_LORA_NWK_S_KWY = 599;
+   public static final long VID_DCI_NAME = 600;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

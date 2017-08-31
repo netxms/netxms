@@ -389,6 +389,7 @@ public:
  * Summary table flags
  */
 #define SUMMARY_TABLE_MULTI_INSTANCE      0x0001
+#define SUMMARY_TABLE_TABLE_VALUE        0x0002
 
 /**
  * Summary table column flags
@@ -430,6 +431,7 @@ private:
    time_t m_periodStart;
    time_t m_periodEnd;
    TCHAR m_menuPath[MAX_DB_STRING];
+   TCHAR m_tableDciName[MAX_PARAM_NAME];
 
    SummaryTable(INT32 id, DB_RESULT hResult);
 
@@ -440,7 +442,7 @@ public:
    ~SummaryTable();
 
    bool filter(DataCollectionTarget *node);
-   Table *createEmptyResultTable();
+   Table *createEmptyResultTable(const Table *source = NULL);
 
    int getNumColumns() { return m_columns->size(); }
    SummaryTableColumn *getColumn(int index) { return m_columns->get(index); }
@@ -448,6 +450,9 @@ public:
    time_t getPeriodStart() { return m_periodStart; }
    time_t getPeriodEnd() { return m_periodEnd; }
    bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
+
+   UINT32 getFlags() const { return m_flags; }
+   const TCHAR *getTableDciName() const { return m_tableDciName; }
 
    void createExportRecord(String &xml);
 };
@@ -1111,7 +1116,8 @@ public:
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);
 	UINT32 getPerfTabDCIList(NXCPMessage *pMsg);
-   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+   void getDciValuesSummarySingleValue(SummaryTable *tableDefinition, Table *tableData);
+   void getDciValuesSummaryTableValue(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

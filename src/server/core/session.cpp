@@ -12847,7 +12847,7 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
 	{
       LONG id = (LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns,guid FROM dci_summary_tables WHERE id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns,guid,table_dci_name FROM dci_summary_tables WHERE id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -12875,6 +12875,7 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
                }
                uuid guid = DBGetFieldGUID(hResult, 0, 5);
                msg.setField(VID_GUID, guid);
+               msg.setField(VID_DCI_NAME, DBGetField(hResult, 0, 6, buffer, 256));
             }
             else
             {

@@ -838,7 +838,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
 /**
  * Get last (current) DCI values for summary table.
  */
-void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getDciValuesSummarySingleValue(SummaryTable *tableDefinition, Table *tableData)
 {
    int offset = tableDefinition->isMultiInstance() ? 2 : 1;
    int baseRow = tableData->getNumRows();
@@ -929,6 +929,60 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
       }
    }
    unlockDciAccess();
+}
+
+void DataCollectionTarget::getDciValuesSummaryTableValue(SummaryTable *tableDefinition, Table *tableData)
+{
+   DCObject *o;
+   Table *lastValue;
+   int collIndex;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      o = m_dcObjects->get(i);
+      if ((o->getType() == DCO_TYPE_TABLE) && o->hasValue() &&
+           (o->getStatus() == ITEM_STATUS_ACTIVE) &&
+           !_tcscmp(o->getName(), tableDefinition->getTableDciName()))
+      {
+         lastValue = ((DCTable*)o)->getLastValue();
+         for(int j = 0; j < lastValue->getNumRows(); j++)
+         {
+            tableData->addRow();
+            tableData->set(0, m_name);
+            for(int k = 0; k < lastValue->getNumColumns(); k++)
+            {
+               collIndex = tableData->getColumnIndex(lastValue->getColumnName(k));
+               if (collIndex == -1)
+               {
+                  tableData->addColumn(lastValue->getColumnName(k), lastValue->getColumnDataType(k));
+                  collIndex = tableData->getNumColumns() - 1;
+               }
+               switch(lastValue->getColumnDataType(k))
+               {
+                  case DCI_DT_INT:
+                     tableData->set(collIndex, lastValue->getAsInt(j, k));
+                     continue;
+                  case DCI_DT_UINT:
+                     tableData->set(collIndex, lastValue->getAsUInt(j, k));
+                     continue;
+                  case DCI_DT_INT64:
+                     tableData->set(collIndex, lastValue->getAsInt64(j, k));
+                     continue;
+                  case DCI_DT_UINT64:
+                     tableData->set(collIndex, lastValue->getAsUInt64(j, k));
+                     continue;
+                  case DCI_DT_STRING:
+                     tableData->set(collIndex, lastValue->getAsString(j, k));
+                     continue;
+                  case DCI_DT_FLOAT:
+                     tableData->set(collIndex, lastValue->getAsDouble(j, k));
+                     continue;
+               }
+            }
+         }
+      }
+   }
 }
 
 /**

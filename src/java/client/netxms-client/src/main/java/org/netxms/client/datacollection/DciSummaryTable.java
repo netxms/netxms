@@ -29,6 +29,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class DciSummaryTable
 {
+   public static final int SUMMARY_TABLE_TABLE_VALUE = 0x0002;
+   
 	private int id;
    private UUID guid;
 	private String menuPath;
@@ -36,6 +38,7 @@ public class DciSummaryTable
 	private int flags;
 	private String nodeFilter;
 	private List<DciSummaryTableColumn> columns;
+	private String tableDciName;
 	
 	/**
 	 * Create new empty summary table object
@@ -43,15 +46,16 @@ public class DciSummaryTable
 	 * @param menuPath The menu path
 	 * @param title The title
 	 */
-	public DciSummaryTable(String menuPath, String title)
+	public DciSummaryTable(String menuPath, String title, boolean isSingleValue)
 	{
 		id = 0;
       guid = UUID.randomUUID();
 		this.menuPath = menuPath;
 		this.title = title;
-		flags = 0;
+		flags = isSingleValue ? 0 : SUMMARY_TABLE_TABLE_VALUE;
 		nodeFilter = "";
 		columns = new ArrayList<DciSummaryTableColumn>();
+		tableDciName = "";
 	}
 	
 	/**
@@ -67,6 +71,7 @@ public class DciSummaryTable
 		title = msg.getFieldAsString(NXCPCodes.VID_TITLE);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		nodeFilter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
+		tableDciName = msg.getFieldAsString(NXCPCodes.VID_DCI_NAME);
 		
 		String s = msg.getFieldAsString(NXCPCodes.VID_COLUMNS);
 		if ((s != null) && (s.length() > 0))
@@ -114,6 +119,7 @@ public class DciSummaryTable
 		msg.setField(NXCPCodes.VID_TITLE, title);
 		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_FILTER, nodeFilter);
+		msg.setField(NXCPCodes.VID_DCI_NAME, tableDciName);
 		
 		StringBuilder sb = new StringBuilder();
 		for(DciSummaryTableColumn c : columns)
@@ -225,5 +231,33 @@ public class DciSummaryTable
 	public List<DciSummaryTableColumn> getColumns()
 	{
 		return columns;
+	}
+	
+	/**
+	 * Check if table is single value or table value
+	 * 
+	 * @return true if single value
+	 */
+	public boolean isSingleValue()
+	{
+	   return (flags & SUMMARY_TABLE_TABLE_VALUE) > 0 ? false : true;
+	}
+	
+	/**
+	 * Return table dci name
+	 * @return table dci name if set
+	 */
+	public String getTableDciName()
+	{
+	   return tableDciName;
+	}
+	
+	/**
+	 * Set table dci name
+	 * @param name of table DCI
+	 */
+	public void setTableDciName(String name)
+	{
+	   tableDciName = name;
 	}
 }
