@@ -2405,18 +2405,21 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
                                      unsigned int msgCount, const TCHAR **messages,
-                                     DWORD debugMsg, DWORD genericMsg);
+                                     DWORD debugMsg, DWORD debugMsgTag, DWORD genericMsg);
 void LIBNETXMS_EXPORTABLE nxlog_close();
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
 bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 maxLogSize, int historySize, const TCHAR *dailySuffix);
 bool LIBNETXMS_EXPORTABLE nxlog_rotate();
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
 
-typedef void (*NxLogDebugWriter)(const TCHAR *);
+typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);

@@ -177,9 +177,12 @@ static void usage(bool showVersion)
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *msg)
+static void DebugWriter(const TCHAR *tag, const TCHAR *msg)
 {
-   _tprintf(_T("DBG: %s\n"), msg);
+   if (tag == NULL)      
+      _tprintf(_T("DBG: %s\n"), msg);
+   else
+      _tprintf(_T("DBG: <%s> %s\n"), tag, msg);
 }
 
 /**

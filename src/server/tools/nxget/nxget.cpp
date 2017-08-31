@@ -49,9 +49,12 @@ enum Operation
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *text)
+static void DebugWriter(const TCHAR *tag, const TCHAR *text)
 {
-   _tprintf(_T("%s\n"), text);
+   if (tag == NULL)      
+      _tprintf(_T("%s\n"), tag);
+   else
+      _tprintf(_T("<%s> %s\n"), tag, text);
 }
 
 /**

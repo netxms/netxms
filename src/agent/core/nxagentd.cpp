@@ -233,6 +233,7 @@ static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static TCHAR s_executableName[MAX_PATH];
 static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+static TCHAR *s_debugTags = NULL;
 
 static CONDITION s_subAgentsStopCondition = INVALID_CONDITION_HANDLE;
 #if defined(_WIN32)
@@ -260,6 +261,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, NULL },
 	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
+   { _T("DebugTags"), CT_STRING_LIST, ',', 0, 0, 0, &s_debugTags, NULL },
    { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, NULL },
    { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, NULL },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, NULL },
@@ -722,9 +724,9 @@ BOOL Initialize()
                    ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXAGENTD.EXE"),
 #ifdef _WIN32
-	                0, NULL, MSG_DEBUG, MSG_SUBAGENT_MSG))
+	                0, NULL, MSG_DEBUG, MSG_DEBUG_TAG, MSG_SUBAGENT_MSG))
 #else
-	                g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_SUBAGENT_MSG))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_DEBUG_TAG, MSG_SUBAGENT_MSG))
 #endif
 	{
 	   //TODO: set flag that log have been opened with errors
@@ -735,9 +737,9 @@ BOOL Initialize()
                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	               _T("NXAGENTD.EXE"),
 #ifdef _WIN32
-	               0, NULL, MSG_DEBUG, MSG_SUBAGENT_MSG);
+	               0, NULL, MSG_DEBUG, MSG_DEBUG_TAG, MSG_SUBAGENT_MSG);
 #else
-	               g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_SUBAGENT_MSG);
+	               g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_DEBUG_TAG, MSG_SUBAGENT_MSG);
 #endif
 		_ftprintf(stderr, _T("ERROR: Cannot open log file, logs will be written to syslog with debug level 1\n"));
 
@@ -754,6 +756,29 @@ BOOL Initialize()
 	nxlog_write(MSG_AGENT_VERSION, NXLOG_INFO, "s", NETXMS_BUILD_TAG);
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", s_debugLevel);
+
+	int numTags = 0, lvl = 0;
+   TCHAR tagBuffer[254], lvlBuffer[2];
+   TCHAR const *ptr;
+
+   _tprintf(_T("Taglist: %s\n"), s_debugTags);
+   TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
+   if (tagList != NULL)
+   {
+      for(int i = 0; i < numTags; i++)
+      {
+         ptr = ExtractWord(tagList[i], tagBuffer);
+         ExtractWord(ptr, lvlBuffer);
+         lvl = _tcstol(lvlBuffer, NULL, 0);
+
+         if(lvl != 0 && tagBuffer != NULL)
+            nxlog_set_debug_level_tag(tagBuffer, lvl);
+      }
+   }
+
+   free(s_debugTags);
+   free(tagList);
+
 	nxlog_set_debug_level(s_debugLevel);
 
 	if (_tcscmp(g_masterAgent, _T("not_set")))
@@ -1832,7 +1857,8 @@ int main(int argc, char *argv[])
 
 				if (g_config->parseTemplate(configSection, m_cfgTemplate))
 				{
-               DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
+				   _tprintf(_T("Taglist main: %s\n"), s_debugTags);
+				   DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
 
                // try to guess executable path
 #ifdef _WIN32

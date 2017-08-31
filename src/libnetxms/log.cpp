@@ -23,6 +23,7 @@
 
 #include "libnetxms.h"
 #include <nxstat.h>
+#include "debug_tag_tree.h"
 
 #if HAVE_SYSLOG_H
 #include <syslog.h>
@@ -45,8 +46,8 @@ static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static UINT32 s_flags = 0;
-static int s_debugLevel = 0;
 static DWORD s_debugMsg = 0;
+static DWORD s_debugMsgTag = 0;
 static DWORD s_genericMsg = 0;
 static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
@@ -58,14 +59,34 @@ static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
 static NxLogDebugWriter s_debugWriter = NULL;
+static DebugTagTree tagTree;
+static MUTEX m_mutexDebugTagTreeAccess = INVALID_MUTEX_HANDLE;
 
 /**
  * Set debug level
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 {
+   MutexLock(m_mutexDebugTagTreeAccess);
    if ((level >= 0) && (level <= 9))
-      s_debugLevel = level;
+      tagTree.add(_T("*"), level);
+   MutexUnlock(m_mutexDebugTagTreeAccess);
+}
+
+/**
+ * Set debug level for tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
+{
+   if (tag != NULL)
+   {
+      MutexLock(m_mutexDebugTagTreeAccess);
+      if((level >= 0) && (level <= 9))
+         tagTree.add(tag, level);
+      else if (level < 0)
+         tagTree.remove(tag);
+      MutexUnlock(m_mutexDebugTagTreeAccess);
+   }
 }
 
 /**
@@ -73,7 +94,23 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 {
-   return s_debugLevel;
+   int level;
+   MutexLock(m_mutexDebugTagTreeAccess);
+   level = tagTree.getDebugLvl(_T("*"));
+   MutexUnlock(m_mutexDebugTagTreeAccess);
+   return level;
+}
+
+/**
+ * Get current debug level for tag
+ */
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag)
+{
+   int level;
+   MutexLock(m_mutexDebugTagTreeAccess);
+   level = tagTree.getDebugLvl(tag);
+   MutexUnlock(m_mutexDebugTagTreeAccess);
+   return level;
 }
 
 /**
@@ -352,7 +389,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
  */
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
                                      const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages,
-                                     DWORD debugMsg, DWORD genericMsg)
+                                     DWORD debugMsg, DWORD debugMsgTag, DWORD genericMsg)
 {
 	s_flags = flags & 0x7FFFFFFF;
 #ifdef _WIN32
@@ -362,6 +399,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 	m_messages = messages;
 #endif
 	s_debugMsg = debugMsg;
+   s_debugMsgTag = debugMsgTag;
 	s_genericMsg = genericMsg;
 
    if (s_flags & NXLOG_USE_SYSLOG)
@@ -412,6 +450,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       }
 
       m_mutexLogAccess = MutexCreate();
+      m_mutexDebugTagTreeAccess = MutexCreate();
 		SetDayStart();
    }
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
@@ -444,6 +483,8 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
             fclose(m_logFileHandle);
          if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
             MutexDestroy(m_mutexLogAccess);
+         if (m_mutexDebugTagTreeAccess != INVALID_MUTEX_HANDLE)
+            MutexDestroy(m_mutexDebugTagTreeAccess);
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
    }
@@ -817,7 +858,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ..
  */
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
 {
-   if (level > s_debugLevel)
+   if (level > nxlog_get_debug_level_tag(_T("*")))
       return;
 
    va_list args;
@@ -828,7 +869,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
    nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
 
    if (s_debugWriter != NULL)
-      s_debugWriter(buffer);
+      s_debugWriter(NULL, buffer);
 }
 
 /**
@@ -836,7 +877,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
  */
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args)
 {
-   if (level > s_debugLevel)
+   if (level > nxlog_get_debug_level_tag(_T("*")))
       return;
 
    TCHAR buffer[8192];
@@ -844,5 +885,24 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
    nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
 
    if (s_debugWriter != NULL)
-      s_debugWriter(buffer);
+      s_debugWriter(NULL, buffer);
+}
+
+/**
+ * Write debug message with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...)
+{
+   if (level > nxlog_get_debug_level_tag(tag))
+      return;
+
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+   nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tag, buffer);
+
+   if (s_debugWriter != NULL)
+      s_debugWriter(tag, buffer);
 }

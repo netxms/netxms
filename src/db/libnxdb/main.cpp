@@ -43,7 +43,7 @@ void __DBWriteLog(WORD level, const TCHAR *format, ...)
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)
 {
 	g_sqlQueryExecTimeThreshold = threshold;
-   nxlog_debug(3, _T("DB Library: long running query threshold set to %u"), threshold);
+   nxlog_debug_tag(_T("db.query"), 3, _T("DB Library: long running query threshold set to %u"), threshold);
 }
 
 #ifdef _WIN32

@@ -932,6 +932,147 @@ static void TestRingBuffer()
    EndTest();
 }
 
+static void TestDebugTags()
+{
+   StartTest(_T("Default debug level"));
+   AssertEquals(nxlog_get_debug_level(), 0);
+   AssertEquals(nxlog_get_debug_level_tag(_T("server.db")), 0);
+   EndTest();
+
+   StartTest(_T("Debug Tags"));
+   nxlog_set_debug_level_tag(_T("*"), 1);
+   nxlog_set_debug_level_tag(_T("db"), 2);
+   nxlog_set_debug_level_tag(_T("db.*"), 3);
+   nxlog_set_debug_level_tag(_T("db.local"), 4);
+   nxlog_set_debug_level_tag(_T("db.local.*"), 5);
+   nxlog_set_debug_level_tag(_T("db.local.sql"), 6);
+   nxlog_set_debug_level_tag(_T("db.local.sql.*"), 7);
+   nxlog_set_debug_level_tag(_T("db.local.sql.testing"), 8);
+   nxlog_set_debug_level_tag(_T("db.local.sql.testing.*"), 9);
+   nxlog_set_debug_level_tag(_T("server.objects.lock"), 9);
+
+   AssertEquals(nxlog_get_debug_level_tag(_T("server.objects.db")), 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("node")) == 1);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status")) == 1);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status.test")) == 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db")) == 2);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.status")) == 3);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.status.test")) == 3);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local")) == 4);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.server")) == 5);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.server.test")) == 5);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql")) == 6);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.server")) == 7);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.server.status")) == 7);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing")) == 8);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server")) == 9);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server.status")) == 9);
+   EndTest();
+
+   StartTest(_T("Debug Tags: change debug level"));
+   nxlog_set_debug_level_tag(_T("*"), 9);
+   nxlog_set_debug_level_tag(_T("db"), 8);
+   nxlog_set_debug_level_tag(_T("db.*"), 7);
+   nxlog_set_debug_level_tag(_T("db.local"), 6);
+   nxlog_set_debug_level_tag(_T("db.local.*"), 5);
+   nxlog_set_debug_level_tag(_T("db.local.sql"), 4);
+   nxlog_set_debug_level_tag(_T("db.local.sql.*"), 3);
+   nxlog_set_debug_level_tag(_T("db.local.sql.testing"), 2);
+   nxlog_set_debug_level_tag(_T("db.local.sql.testing.*"), 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("node")) == 9);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status")) == 9);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status.test")) == 9);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db")) == 8);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.status")) == 7);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.status.test")) == 7);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local")) == 6);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.server")) == 5);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.server.test")) == 5);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql")) == 4);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.server")) == 3);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.server.status")) == 3);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing")) == 2);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server")) == 1);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server.status")) == 1);
+   EndTest();
+
+   StartTest(_T("Debug Tags: remove"));
+   nxlog_set_debug_level_tag(_T("db.test.remove.*"), 4);
+   nxlog_set_debug_level_tag(_T("db.test.remove.child.tag"), 3);
+   nxlog_set_debug_level_tag(_T("db.local.child"), 2);
+   nxlog_set_debug_level_tag(_T("db.local.child.*"), 5);
+
+   nxlog_set_debug_level_tag(_T("*"), -1);
+   nxlog_set_debug_level_tag(_T("db"), -1);
+   nxlog_set_debug_level_tag(_T("db.*"), -1);
+   nxlog_set_debug_level_tag(_T("db.local"), -1);
+   nxlog_set_debug_level_tag(_T("db.local.*"), -1);
+   nxlog_set_debug_level_tag(_T("db.local.sql"), -1);
+   nxlog_set_debug_level_tag(_T("db.local.sql.*"), -1);;
+
+   nxlog_set_debug_level_tag(_T("*"), 9);
+   nxlog_set_debug_level_tag(_T("server"), 8);
+   nxlog_set_debug_level_tag(_T("server.*"), 7);
+   nxlog_set_debug_level_tag(_T("server.node"), 6);
+   nxlog_set_debug_level_tag(_T("server.node.*"), 5);
+   nxlog_set_debug_level_tag(_T("server.node.status"), 4);
+   nxlog_set_debug_level_tag(_T("server.node.status.*"), 3);
+   nxlog_set_debug_level_tag(_T("server.node.status.poll"), 2);
+   nxlog_set_debug_level_tag(_T("server.node.status.poll.*"), 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("node")) == 9);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status")) == 9);
+   AssertTrue(nxlog_get_debug_level_tag(_T("node.status.test")) == 9);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("server")) == 8);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.object")) == 7);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.object.add")) == 7);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node")) == 6);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.add")) == 5);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.add.new")) == 5);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status")) == 4);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status.interface")) == 3);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status.interface.state")) == 3);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status.poll")) == 2);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status.poll.time")) == 1);
+   AssertTrue(nxlog_get_debug_level_tag(_T("server.node.status.poll.time.ms")) == 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing")) == 2);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server")) == 1);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.sql.testing.server.status")) == 1);
+
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.test.remove.something")) == 4);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.test.remove.child.tag")) == 3);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.child")) == 2);
+   AssertTrue(nxlog_get_debug_level_tag(_T("db.local.child.remove.something.else")) == 5);
+
+   AssertFalse(nxlog_get_debug_level_tag(_T("db")) == 8);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.status")) == 7);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.status.test")) == 7);
+
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local")) == 6);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local.server")) == 5);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local.server.test")) == 5);
+
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local.sql")) == 4);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local.sql.server")) == 3);
+   AssertFalse(nxlog_get_debug_level_tag(_T("db.local.sql.server.status")) == 3);
+   EndTest();
+}
+
 /**
  * Test get/set debug level
  */
@@ -986,6 +1127,7 @@ int main(int argc, char *argv[])
    TestDiff();
    TestRingBuffer();
    TestDebugLevel();
+   TestDebugTags();
 
    MsgWaitQueue::shutdown();
    return 0;
