@@ -1632,6 +1632,7 @@ CREATE TABLE dci_summary_tables
   node_filter SQL_TEXT null,
   flags integer not null,
   columns SQL_TEXT null,
+  table_dci_name varchar(256) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

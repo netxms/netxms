@@ -1407,16 +1407,16 @@ public:
    void copyRow(Table *src, int row);
 
    int getNumRows() { return m_data->size(); }
-   int getNumColumns() { return m_columns->size(); }
+   int getNumColumns() const { return m_columns->size(); }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
    int getSource() { return m_source; }
 
    bool isExtendedFormat() { return m_extendedFormat; }
    void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
 
-   const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
-   INT32 getColumnDataType(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
-	int getColumnIndex(const TCHAR *name);
+   const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
+   INT32 getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
+	int getColumnIndex(const TCHAR *name) const;
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = _tcsdup_ex(title); }

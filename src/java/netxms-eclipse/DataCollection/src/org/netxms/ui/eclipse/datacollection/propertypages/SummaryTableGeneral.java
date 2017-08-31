@@ -19,9 +19,13 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -29,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -42,6 +47,8 @@ public class SummaryTableGeneral extends PropertyPage
 	private DciSummaryTable table;
 	private LabeledText menuPath;
 	private LabeledText title;
+	private LabeledText dciName;
+	private Button select;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -57,19 +64,65 @@ public class SummaryTableGeneral extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
       menuPath = new LabeledText(dialogArea, SWT.NONE);
       menuPath.setLabel(Messages.get().SummaryTableGeneral_MenuPath);
       menuPath.setText(table.getMenuPath());
-      menuPath.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      menuPath.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1));
 
       title = new LabeledText(dialogArea, SWT.NONE);
       title.setLabel(Messages.get().SummaryTableGeneral_Title);
       title.setText(table.getTitle());
-      title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1));
+      
+      if (!table.isSingleValue())
+      {         
+         dciName = new LabeledText(dialogArea, SWT.NONE);
+         dciName.setLabel("DCI name");
+         dciName.getTextControl().setTextLimit(255);
+         dciName.setText(table.getTableDciName());
+         dciName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+         select = new Button(dialogArea, SWT.PUSH);
+         select.setText("Select");
+         GridData gd = new GridData(SWT.FILL);
+         gd.verticalIndent = 20;
+         select.setLayoutData(gd);
+         select.addSelectionListener(new SelectionListener() {            
+            /* (non-Javadoc)
+             * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
+             */
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               selectDci();
+            }
+            
+            /* (non-Javadoc)
+             * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
+             */
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);               
+            }
+         });
+         
+      }
 
       return dialogArea;
+	}
+	
+	private void selectDci()
+	{
+	   SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
+	   if (dlg.open() == Window.OK)
+	   {
+	      table.setTableDciName(dlg.getSelection().get(0).getName());
+	      dciName.setText(table.getTableDciName());
+	   }
 	}
 
 	/**

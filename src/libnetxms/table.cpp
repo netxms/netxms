@@ -573,7 +573,7 @@ int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName
  * @param name column name
  * @return column index or -1 if there are no such column
  */
-int Table::getColumnIndex(const TCHAR *name)
+int Table::getColumnIndex(const TCHAR *name) const
 {
    for(int i = 0; i < m_columns->size(); i++)
       if (!_tcsicmp(name, m_columns->get(i)->getName()))

@@ -42,11 +42,11 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
    DB_STATEMENT hStmt;
    if (isNew)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,id,guid) VALUES (?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,table_dci_name,id,guid) VALUES (?,?,?,?,?,?,?,?)"));
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?"));
    }
 
    UINT32 rcc;
@@ -57,11 +57,12 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
       DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getFieldAsUInt32(VID_FLAGS));
       DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_COLUMNS), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_DCI_NAME), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, id);
 
       if (isNew)
       {
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid::generate());
       }
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -200,6 +201,7 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
       m_columns->add(new SummaryTableColumn(msg, id));
       id += 10;
    }
+   msg->getFieldAsString(VID_DCI_NAME, m_tableDciName, MAX_PARAM_NAME);
 }
 
 /**
@@ -261,6 +263,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
       }
       free(config);
    }
+   DBGetField(hResult, 0, 6, m_tableDciName, MAX_PARAM_NAME);
 }
 
 /**
@@ -271,7 +274,7 @@ SummaryTable *SummaryTable::loadFromDB(INT32 id, UINT32 *rcc)
    nxlog_debug(4, _T("Loading configuration for DCI summary table %d"), id);
    SummaryTable *table = NULL;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns FROM dci_summary_tables WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns,table_dci_name FROM dci_summary_tables WHERE id=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -344,7 +347,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
 /**
  * Create empty result table
  */
-Table *SummaryTable::createEmptyResultTable()
+Table *SummaryTable::createEmptyResultTable(const Table *source)
 {
    Table *result = new Table();
    result->setTitle(m_title);
@@ -352,9 +355,20 @@ Table *SummaryTable::createEmptyResultTable()
    result->addColumn(_T("Node"), DCI_DT_STRING);
    if (m_flags & SUMMARY_TABLE_MULTI_INSTANCE)
       result->addColumn(_T("Instance"), DCI_DT_STRING);
-   for(int i = 0; i < m_columns->size(); i++)
+
+   if (m_flags & SUMMARY_TABLE_TABLE_VALUE)
    {
-      result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
+      for(int i = 0; i < source->getNumColumns(); i++)
+      {
+         result->addColumn(source->getColumnName(i), source->getColumnDataType(i));
+      }
+   }
+   else
+   {
+      for(int i = 0; i < m_columns->size(); i++)
+      {
+         result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
+      }
    }
    return result;
 }
@@ -415,7 +429,15 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
       return NULL;
 
    ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
-   Table *tableData = tableDefinition->createEmptyResultTable();
+   Table *tableData = NULL;
+   if (tableDefinition->getFlags() & SUMMARY_TABLE_TABLE_VALUE)
+   {
+      DCObject *o = ((DataCollectionTarget *)childObjects->get(0))->getDCObjectByName(tableDefinition->getTableDciName());
+      if (o != NULL && (o->getType() == DCO_TYPE_TABLE))
+         tableData = tableDefinition->createEmptyResultTable(((DCTable *)o)->getLastValue());
+   }
+   else
+      tableData = tableDefinition->createEmptyResultTable();
 
    for(int i = 0; i < childObjects->size(); i++)
    {
@@ -429,7 +451,10 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData);
+         if (tableDefinition->getFlags() & SUMMARY_TABLE_TABLE_VALUE)
+            ((DataCollectionTarget *)obj)->getDciValuesSummaryTableValue(tableDefinition, tableData);
+         else
+            ((DataCollectionTarget *)obj)->getDciValuesSummarySingleValue(tableDefinition, tableData);
       }
       obj->decRefCount();
    }
