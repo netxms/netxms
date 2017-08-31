@@ -491,7 +491,7 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 }
 
 /**
- * Delets child DCI objects of instance discovery DCI.
+ * Deletes child DCI objects of instance discovery DCI.
  * It is assumed that list is already locked
  */
 void Template::deleteChildDCIs(UINT32 dcObjectId)

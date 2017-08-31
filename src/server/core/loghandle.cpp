@@ -115,7 +115,7 @@ bool LogHandle::query(LogFilter *filter, INT64 *rowCount, const UINT32 userId)
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult != NULL)
 	{
-		if (DBGetNumRows > 0)
+		if (DBGetNumRows(hResult) > 0)
 			m_maxRecordId = DBGetFieldInt64(hResult, 0, 0);
 		DBFreeResult(hResult);
 	}
