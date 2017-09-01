@@ -144,7 +144,6 @@ String MacAddress::toString(MacAddressNotation notation) const
          stringSize = m_length * 2 + m_length/2; //-1 separator +1 for 0 termination
          break;
    }
-   _tprintf(_T("\n Stringsize: %d\n"), stringSize);
    TCHAR *buf = (TCHAR *)malloc(stringSize * sizeof(TCHAR));
    String str(toString(buf, notation));
    free(buf);
