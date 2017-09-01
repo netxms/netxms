@@ -946,6 +946,9 @@ void DataCollectionTarget::getDciValuesSummaryTableValue(SummaryTable *tableDefi
            !_tcscmp(o->getName(), tableDefinition->getTableDciName()))
       {
          lastValue = ((DCTable*)o)->getLastValue();
+         if (lastValue == NULL)
+            continue;
+
          for(int j = 0; j < lastValue->getNumRows(); j++)
          {
             tableData->addRow();
@@ -983,6 +986,7 @@ void DataCollectionTarget::getDciValuesSummaryTableValue(SummaryTable *tableDefi
          }
       }
    }
+   unlockDciAccess();
 }
 
 /**
