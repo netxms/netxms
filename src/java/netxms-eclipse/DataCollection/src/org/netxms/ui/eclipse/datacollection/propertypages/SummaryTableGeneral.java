@@ -118,6 +118,8 @@ public class SummaryTableGeneral extends PropertyPage
 	private void selectDci()
 	{
 	   SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
+	   dlg.setDcObjectType(2);
+	   dlg.setSingleSelection(true);
 	   if (dlg.open() == Window.OK)
 	   {
 	      table.setTableDciName(dlg.getSelection().get(0).getName());

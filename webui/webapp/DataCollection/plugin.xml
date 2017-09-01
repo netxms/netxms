@@ -312,9 +312,17 @@
               id="org.netxms.ui.eclipse.datacollection.propertypages.SummaryTableColumns#10"
               name="%page.name.Columns">
            <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.datacollection.DciSummaryTable">
-              </instanceof>
+              <and>
+                 <or>
+                    <instanceof
+                          value="org.netxms.client.datacollection.DciSummaryTable">
+                    </instanceof>
+                 </or>
+                 <test
+                       forcePluginActivation="true"
+                       property="org.netxms.ui.eclipse.datacollection.isSingleValue">
+                 </test>
+              </and>
            </enabledWhen>
         </page>
         <page
@@ -523,6 +531,13 @@
             namespace="org.netxms.ui.eclipse.datacollection"
             properties="isClusterObject,isTemplateObject"
             type="org.netxms.client.datacollection.DataCollectionObject">
+      </propertyTester>
+      <propertyTester
+            class="org.netxms.ui.eclipse.datacollection.DciSummaryTablePropertyTester"
+            id="org.netxms.ui.eclipse.datacollection.SummaryTableDciPropertyTester"
+            namespace="org.netxms.ui.eclipse.datacollection"
+            properties="isSingleValue"
+            type="org.netxms.client.datacollection.DciSummaryTable">
       </propertyTester>
    </extension>
    <extension
