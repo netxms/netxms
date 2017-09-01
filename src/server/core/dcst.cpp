@@ -429,12 +429,27 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
       return NULL;
 
    ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
-   Table *tableData = NULL;
+   Table *tableData = NULL, *lastValue = NULL;
+
    if (tableDefinition->getFlags() & SUMMARY_TABLE_TABLE_VALUE)
    {
-      DCObject *o = ((DataCollectionTarget *)childObjects->get(0))->getDCObjectByName(tableDefinition->getTableDciName());
-      if (o != NULL && (o->getType() == DCO_TYPE_TABLE))
-         tableData = tableDefinition->createEmptyResultTable(((DCTable *)o)->getLastValue());
+      for(int i = 0; i < childObjects->size(); i++)
+      {
+         if (((childObjects->get(i)->getObjectClass() == OBJECT_NODE) || (childObjects->get(i)->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+             (childObjects->get(i)->getObjectClass() == OBJECT_SENSOR)) && childObjects->get(i)->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         {
+            DCObject *o = ((DataCollectionTarget *)childObjects->get(i))->getDCObjectByName(tableDefinition->getTableDciName());
+            if (o != NULL && (o->getType() == DCO_TYPE_TABLE))
+            {
+               lastValue = ((DCTable *)o)->getLastValue();
+               if (lastValue != NULL)
+               {
+                  tableData = tableDefinition->createEmptyResultTable(((DCTable *)o)->getLastValue());
+                  break;
+               }
+            }
+         }
+      }
    }
    else
       tableData = tableDefinition->createEmptyResultTable();
