@@ -20,9 +20,12 @@ package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.ui.eclipse.widgets.helpers.TreeSortingListener;
 
 /**
@@ -116,6 +119,29 @@ public class SortableTreeViewer extends TreeViewer
 		return null;
 	}
 
+   /**
+    * Get column index at given point
+    * 
+    * @param p
+    * @return
+    */
+   public TreeColumn getColumnAtPoint(Point p)
+   {
+      TreeItem item = getTree().getItem(p);
+      if (item == null)
+         return null;
+      int columnCount = getTree().getColumnCount();
+      for(int i = 0; i < columnCount; i++)
+      {
+         Rectangle rect = item.getBounds(i);
+         if (rect.contains(p))
+         {
+            return getTree().getColumn(i);
+         }
+      }
+      return null;
+   }
+	
 	/**
 	 * @return the initialized
 	 */
