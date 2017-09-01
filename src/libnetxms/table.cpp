@@ -37,6 +37,7 @@ TableRow::TableRow(int columnCount)
    for(int i = 0; i < columnCount; i++)
       m_cells->add(new TableCell());
    m_objectId = 0;
+   m_baseRow = -1;
 }
 
 /**
@@ -48,6 +49,7 @@ TableRow::TableRow(TableRow *src)
    for(int i = 0; i < src->m_cells->size(); i++)
       m_cells->add(new TableCell(src->m_cells->get(i)));
    m_objectId = src->m_objectId;
+   m_baseRow = src->m_baseRow;
 }
 
 /**
@@ -200,7 +202,8 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       if (ps->state == XML_STATE_DATA)
       {
          ps->table->addRow();
-         ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", DEFAULT_OBJECT_ID));
+         ps->table->setObjectId(XMLGetAttrInt(attrs, "objectId", DEFAULT_OBJECT_ID));
+         ps->table->setBaseRow(XMLGetAttrInt(attrs, "baseRow", -1));
          ps->column = 0;
 		   ps->state = XML_STATE_ROW;
       }
@@ -364,10 +367,21 @@ TCHAR *Table::createXML()
    for(i = 0; i < m_data->size(); i++)
    {
       UINT32 objectId = m_data->get(i)->getObjectId();
+      int baseRow = m_data->get(i)->getBaseRow();
       if (objectId != DEFAULT_OBJECT_ID)
-         xml.appendFormattedString(_T("<tr objectId=\"%u\">\r\n"), objectId);
+      {
+         if (baseRow != -1)
+            xml.appendFormattedString(_T("<tr objectId=\"%u\" baseRow=\"%d\">\r\n"), objectId, baseRow);
+         else
+            xml.appendFormattedString(_T("<tr objectId=\"%u\">\r\n"), objectId);
+      }
       else
-         xml.append(_T("<tr>\r\n"));
+      {
+         if (baseRow != -1)
+            xml.appendFormattedString(_T("<tr baseRow=\"%d\">\r\n"), baseRow);
+         else
+            xml.append(_T("<tr>\r\n"));
+      }
       for(int j = 0; j < m_columns->size(); j++)
       {
          int status = m_data->get(i)->getStatus(j);
@@ -458,6 +472,8 @@ void Table::createFromMessage(NXCPMessage *msg)
       if (m_extendedFormat)
       {
          row->setObjectId(msg->getFieldAsUInt32(dwId++));
+         if (msg->isFieldExist(dwId))
+            row->setBaseRow(msg->getFieldAsInt32(dwId));
          dwId += 9;
       }
       for(int j = 0; j < columns; j++)
@@ -518,7 +534,8 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
       if (m_extendedFormat)
       {
 			msg.setField(id++, r->getObjectId());
-         id += 9;
+         msg.setField(id++, r->getBaseRow());
+         id += 8;
       }
 		for(int col = 0; col < m_columns->size(); col++)
 		{
@@ -759,6 +776,18 @@ void Table::setCellObjectIdAt(int row, int col, UINT32 objectId)
    if (r != NULL)
    {
       r->setCellObjectId(col, objectId);
+   }
+}
+
+/**
+ * Set base row for given row
+ */
+void Table::setBaseRowAt(int row, int baseRow)
+{
+   TableRow *r = m_data->get(row);
+   if (r != NULL)
+   {
+      r->setBaseRow(baseRow);
    }
 }
 

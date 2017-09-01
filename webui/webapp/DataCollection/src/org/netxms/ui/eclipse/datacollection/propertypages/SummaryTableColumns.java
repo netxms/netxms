@@ -479,7 +479,7 @@ public class SummaryTableColumns extends PropertyPage
 	 */
 	private void addColumn()
 	{
-		DciSummaryTableColumn column = new DciSummaryTableColumn("", "", 0); //$NON-NLS-1$ //$NON-NLS-2$
+		DciSummaryTableColumn column = new DciSummaryTableColumn("", "", 0, ";"); //$NON-NLS-1$ //$NON-NLS-2$
 		EditDciSummaryTableColumnDlg dlg = new EditDciSummaryTableColumnDlg(getShell(), column);
 		if (dlg.open() == Window.OK)
 		{
@@ -503,7 +503,7 @@ public class SummaryTableColumns extends PropertyPage
 			List<DciSummaryTableColumn> select = new ArrayList<DciSummaryTableColumn>();
 			for (DciValue item : selection)
 			{
-   			DciSummaryTableColumn column = new DciSummaryTableColumn(item.getDescription(), item.getName(), 0);
+   			DciSummaryTableColumn column = new DciSummaryTableColumn(item.getDescription(), item.getName(), 0, ";");
    			select.add(column);
    			columns.add(column);
 			}

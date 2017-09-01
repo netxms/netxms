@@ -394,6 +394,7 @@ public:
  * Summary table column flags
  */
 #define COLUMN_DEFINITION_REGEXP_MATCH    0x0001
+#define COLUMN_DEFINITION_MULTIVALUED     0x0002
 
 /**
  * Column definition for DCI summary table
@@ -404,6 +405,7 @@ public:
    TCHAR m_name[MAX_DB_STRING];
    TCHAR m_dciName[MAX_PARAM_NAME];
    UINT32 m_flags;
+   TCHAR m_separator[16];
 
    SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);

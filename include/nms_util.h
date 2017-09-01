@@ -1328,14 +1328,14 @@ public:
    void set(const TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
    void setPreallocated(TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = value; m_status = status; m_objectId = objectId; }
 
-   const TCHAR *getValue() { return m_value; }
+   const TCHAR *getValue() const { return m_value; }
    void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
    void setPreallocatedValue(TCHAR *value) { free(m_value); m_value = value; }
 
-   int getStatus() { return m_status; }
+   int getStatus() const { return m_status; }
    void setStatus(int status) { m_status = status; }
 
-   int getObjectId() { return m_objectId; }
+   int getObjectId() const { return m_objectId; }
    void setObjectId(UINT32 id) { m_objectId = id; }
 };
 
@@ -1347,6 +1347,7 @@ class TableRow
 private:
    ObjectArray<TableCell> *m_cells;
    UINT32 m_objectId;
+   int m_baseRow;
 
 public:
    TableRow(int columnCount);
@@ -1364,13 +1365,16 @@ public:
 
    void setStatus(int index, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setStatus(status); }
 
-   const TCHAR *getValue(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getValue() : NULL; }
-   int getStatus(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getStatus() : -1; }
+   const TCHAR *getValue(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getValue() : NULL; }
+   int getStatus(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getStatus() : -1; }
 
-   UINT32 getObjectId() { return m_objectId; }
+   UINT32 getObjectId() const { return m_objectId; }
    void setObjectId(UINT32 id) { m_objectId = id; }
 
-   UINT32 getCellObjectId(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getObjectId() : 0; }
+   int getBaseRow() const { return m_baseRow; }
+   void setBaseRow(int baseRow) { m_baseRow = baseRow; }
+
+   UINT32 getCellObjectId(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getObjectId() : 0; }
    void setCellObjectId(int index, UINT32 id) { TableCell *c = m_cells->get(index); if (c != NULL) c->setObjectId(id); }
 };
 
@@ -1460,12 +1464,17 @@ public:
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
    int findRowByInstance(const TCHAR *instance);
 
-   UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
-   void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+   UINT32 getObjectId(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
+   void setObjectIdAt(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+   void setObjectId(UINT32 id) { setObjectIdAt(getNumRows() - 1, id); }
 
    void setCellObjectIdAt(int row, int col, UINT32 objectId);
    void setCellObjectId(int col, UINT32 objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
-   UINT32 getCellObjectId(int row, int col) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getCellObjectId(col) : 0; }
+   UINT32 getCellObjectId(int row, int col) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getCellObjectId(col) : 0; }
+
+   void setBaseRowAt(int row, int baseRow);
+   void setBaseRow(int baseRow) { setBaseRowAt(getNumRows() - 1, baseRow); }
+   int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getBaseRow() : 0; }
 
    static Table *createFromXML(const char *xml);
    TCHAR *createXML();

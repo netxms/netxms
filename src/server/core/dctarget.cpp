@@ -873,7 +873,7 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
                   tableData->addRow();
                   tableData->set(0, m_name);
                   tableData->set(1, instance);
-                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+                  tableData->setObjectId(m_id);
                }
             }
             else
@@ -882,7 +882,7 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
                {
                   tableData->addRow();
                   tableData->set(0, m_name);
-                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+                  tableData->setObjectId(m_id);
                   rowAdded = true;
                }
                row = tableData->getNumRows() - 1;
@@ -892,7 +892,27 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
             tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
             if (tableDefinition->getAggregationFunction() == F_LAST)
             {
-               tableData->setAt(row, i + offset, ((DCItem *)object)->getLastValue());
+               if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
+               {
+                  StringList *values = String(((DCItem *)object)->getLastValue()).split(tc->m_separator);
+                  tableData->setAt(row, i + offset, values->get(0));
+                  for(int r = 1; r < values->size(); r++)
+                  {
+                     if (row + r >= tableData->getNumRows())
+                     {
+                        tableData->addRow();
+                        tableData->setObjectId(m_id);
+                        tableData->setBaseRow(row);
+                     }
+                     tableData->setAt(row + r, i + offset, values->get(r));
+                     tableData->setStatusAt(row + r, i + offset, ((DCItem *)object)->getThresholdSeverity());
+                     tableData->setCellObjectIdAt(row + r, i + offset, object->getId());
+                  }
+               }
+               else
+               {
+                  tableData->setAt(row, i + offset, ((DCItem *)object)->getLastValue());
+               }
             }
             else
             {

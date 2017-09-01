@@ -30,6 +30,7 @@ public class TableRow
 {
    private List<TableCell> cells;
    private long objectId;
+   private int baseRow;
    
    /**
     * Create new row
@@ -39,6 +40,7 @@ public class TableRow
    public TableRow(int rowCount)
    {
       objectId = 0;
+      baseRow = -1;
       cells = new ArrayList<TableCell>(rowCount);
       for(int i = 0; i < rowCount; i++)
          cells.add(new TableCell(""));
@@ -52,6 +54,7 @@ public class TableRow
    public TableRow(TableRow src)
    {
       objectId = src.objectId;
+      baseRow = src.baseRow;
       cells = new ArrayList<TableCell>(src.cells.size());
       for(int i = 0; i < src.cells.size(); i++)
          cells.add(new TableCell(src.get(i)));
@@ -87,7 +90,8 @@ public class TableRow
       if (extendedFormat)
       {
          msg.setFieldInt32(varId++, (int)objectId);
-         varId += 9;
+         msg.setFieldInt32(varId++, baseRow);
+         varId += 8;
       }
       for(TableCell c : cells)
       {
@@ -118,6 +122,22 @@ public class TableRow
       this.objectId = objectId;
    }
 
+   /**
+    * @return the baseRow
+    */
+   public int getBaseRow()
+   {
+      return baseRow;
+   }
+
+   /**
+    * @param baseRow the baseRow to set
+    */
+   public void setBaseRow(int baseRow)
+   {
+      this.baseRow = baseRow;
+   }
+
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
@@ -126,6 +146,7 @@ public class TableRow
       return "TableRow{" +
               "cells=" + cells +
               ", objectId=" + objectId +
+              ", baseRow=" + baseRow +
               '}';
    }
 }

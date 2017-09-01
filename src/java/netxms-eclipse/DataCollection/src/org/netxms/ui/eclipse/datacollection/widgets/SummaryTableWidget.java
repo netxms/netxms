@@ -40,7 +40,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -53,8 +53,8 @@ import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.ObjectSelectionProvider;
-import org.netxms.ui.eclipse.datacollection.widgets.internal.TableContentProvider;
-import org.netxms.ui.eclipse.datacollection.widgets.internal.TableItemComparator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.SummaryTableContentProvider;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.SummaryTableItemComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -64,7 +64,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * DCI summary table display widget
@@ -74,7 +74,7 @@ public class SummaryTableWidget extends Composite
    private int tableId;
    private long baseObjectId;
    private IViewPart viewPart;
-   private SortableTableViewer viewer;
+   private SortableTreeViewer viewer;
    private TableLabelProvider labelProvider;
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
@@ -82,7 +82,7 @@ public class SummaryTableWidget extends Composite
    private Action actionShowObjectDetails;
    private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
-   private TableColumn currentColumn = null;
+   private TreeColumn currentColumn = null;
    private ObjectSelectionProvider objectSelectionProvider;
 
    /**
@@ -104,8 +104,8 @@ public class SummaryTableWidget extends Composite
       
       setLayout(new FillLayout());
 
-      viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.setContentProvider(new TableContentProvider());
+      viewer = new SortableTreeViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.setContentProvider(new SummaryTableContentProvider());
       labelProvider = new TableLabelProvider();
       labelProvider.setUseMultipliers(useMultipliers);
       viewer.setLabelProvider(labelProvider);
@@ -133,7 +133,7 @@ public class SummaryTableWidget extends Composite
          }
       });
       
-      viewer.getTable().addMouseListener(new MouseListener() {
+      viewer.getTree().addMouseListener(new MouseListener() {
          @Override
          public void mouseUp(MouseEvent e)
          {
@@ -302,29 +302,30 @@ public class SummaryTableWidget extends Composite
          viewer.createColumns(names, widths, 0, SWT.UP);
          final IDialogSettings settings = Activator.getDefault().getDialogSettings();
          final String key = viewPart.getViewSite().getId() + ".SummaryTable." + Integer.toString(tableId); //$NON-NLS-1$
-         WidgetHelper.restoreTableViewerSettings(viewer, settings, key);
+         WidgetHelper.restoreTreeViewerSettings(viewer, settings, key);
          String value = settings.get(key + ".useMultipliers"); //$NON-NLS-1$
          if (value != null)
             useMultipliers = Boolean.parseBoolean(value);
          labelProvider.setUseMultipliers(useMultipliers);
-         viewer.getTable().addDisposeListener(new DisposeListener() {
+         viewer.getControl().addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e)
             {
-               WidgetHelper.saveTableViewerSettings(viewer, settings, key);
+               WidgetHelper.saveTreeViewerSettings(viewer, settings, key);
                settings.put(key + ".useMultipliers", useMultipliers); //$NON-NLS-1$
             }
          });
-         viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
+         viewer.setComparator(new SummaryTableItemComparator(table));
       }
       labelProvider.setColumnDataTypes(table.getColumnDataTypes());
       viewer.setInput(table);
+      viewer.expandAll();
    }
 
    /**
     * @return the viewer
     */
-   public SortableTableViewer getViewer()
+   public SortableTreeViewer getViewer()
    {
       return viewer;
    }

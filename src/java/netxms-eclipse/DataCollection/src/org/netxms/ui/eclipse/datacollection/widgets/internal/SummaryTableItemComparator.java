@@ -21,23 +21,26 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.Table;
 import org.netxms.client.TableRow;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Comparator for table items
  */
-public class TableItemComparator extends ViewerComparator
+public class SummaryTableItemComparator extends ViewerComparator
 {
+   private Table table;
 	private int[] formats;
 	
 	/**
 	 * 
 	 */
-	public TableItemComparator(int[] formats)
+	public SummaryTableItemComparator(Table table)
 	{
-		this.formats = formats;
+	   this.table = table;
+		this.formats = table.getColumnDataTypes();
 	}
 
 	/* (non-Javadoc)
@@ -46,13 +49,13 @@ public class TableItemComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
+		final int column = (Integer)((SortableTreeViewer) viewer).getTree().getSortColumn().getData("ID"); //$NON-NLS-1$
 		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
-		
-		final String value1 = ((TableRow)e1).get(column).getValue();
-		final String value2 = ((TableRow)e2).get(column).getValue();
-		
-		int result;
+
+      final String value1 = getCellValue((TableRow)e1, column);
+      final String value2 = getCellValue((TableRow)e2, column);
+      
+      int result;
 		switch(format)
 		{
 			case DataCollectionItem.DT_INT:
@@ -70,8 +73,15 @@ public class TableItemComparator extends ViewerComparator
 				result = value1.compareToIgnoreCase(value2);
 				break;
 		}
-		
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return (((SortableTreeViewer)viewer).getTree().getSortDirection() == SWT.UP) ? result : -result;
+	}
+	
+	private String getCellValue(TableRow r, int column)
+	{
+      String value = r.get(column).getValue();
+      if (((value == null) || value.isEmpty()) && (r.getBaseRow() != -1))
+        return table.getCellValue(r.getBaseRow(), column);
+      return value;
 	}
 	
 	/**

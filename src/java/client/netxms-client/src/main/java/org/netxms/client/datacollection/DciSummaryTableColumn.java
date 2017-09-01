@@ -26,21 +26,25 @@ import org.netxms.base.NXCPMessage;
 public class DciSummaryTableColumn
 {
 	public static int REGEXP_MATCH = 0x0001;
+   public static int MULTIVALUED = 0x0002;
 	
 	private String name;
 	private String dciName;
 	private int flags;
+	private String separator;
 
 	/**
 	 * @param name The column name
 	 * @param dciName The dci name
 	 * @param flags The flags
+	 * @param separator Separator for multivalued columns
 	 */
-	public DciSummaryTableColumn(String name, String dciName, int flags)
+	public DciSummaryTableColumn(String name, String dciName, int flags, String separator)
 	{
 		this.name = name;
 		this.dciName = dciName;
 		this.flags = flags;
+		this.separator = separator;
 	}
 	
 	/**
@@ -53,6 +57,7 @@ public class DciSummaryTableColumn
 		name = src.name;
 		dciName = src.dciName;
 		flags = src.flags;
+		separator = src.separator;
 	}
 	
 	/**
@@ -64,6 +69,7 @@ public class DciSummaryTableColumn
 	   msg.setField(baseId, name);
       msg.setField(baseId + 1, dciName);
       msg.setFieldInt32(baseId + 2, flags);
+      msg.setField(baseId + 3, separator);
 	}
 
 	/**
@@ -99,6 +105,26 @@ public class DciSummaryTableColumn
 	}
 	
 	/**
+    * Get separator for multivalued column
+    * 
+    * @return separator for multivalued column
+    */
+   public String getSeparator()
+   {
+      return separator;
+   }
+
+   /**
+    * Set separator for multivalued column
+    * 
+    * @param separator new separator for multivalued column
+    */
+   public void setSeparator(String separator)
+   {
+      this.separator = ((separator != null) && !separator.isEmpty()) ? separator : ";";
+   }
+
+   /**
 	 * @return true if match
 	 */
 	public boolean isRegexpMatch()
@@ -117,6 +143,25 @@ public class DciSummaryTableColumn
 			flags &= ~REGEXP_MATCH;
 	}
 
+   /**
+    * @return true if column is multivalued
+    */
+   public boolean isMultivalued()
+   {
+      return (flags & MULTIVALUED) != 0;
+   }
+   
+   /**
+    * @param enable true to set column as multivalued
+    */
+   public void setMultivalued(boolean enable)
+   {
+      if (enable)
+         flags |= MULTIVALUED;
+      else
+         flags &= ~MULTIVALUED;
+   }
+
 	/**
 	 * @return the flags
 	 */
@@ -125,12 +170,12 @@ public class DciSummaryTableColumn
 		return flags;
 	}
 
-	@Override
-	public String toString() {
-		return "DciSummaryTableColumn{" +
-				"name='" + name + '\'' +
-				", dciName='" + dciName + '\'' +
-				", flags=" + flags +
-				'}';
-	}
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciSummaryTableColumn [name=" + name + ", dciName=" + dciName + ", flags=" + flags + ", separator=" + separator + "]";
+   }
 }

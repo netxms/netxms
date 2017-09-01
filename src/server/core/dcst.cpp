@@ -109,6 +109,10 @@ SummaryTableColumn::SummaryTableColumn(NXCPMessage *msg, UINT32 baseId)
    msg->getFieldAsString(baseId, m_name, MAX_DB_STRING);
    msg->getFieldAsString(baseId + 1, m_dciName, MAX_PARAM_NAME);
    m_flags = msg->getFieldAsUInt32(baseId + 2);
+   if (msg->isFieldExist(baseId + 3))
+      msg->getFieldAsString(baseId + 3, m_separator, 16);
+   else
+      _tcscpy(m_separator, _T(";"));
 }
 
 /**
@@ -124,7 +128,9 @@ void SummaryTableColumn::createExportRecord(String &xml, int id)
    xml.appendPreallocated(EscapeStringForXML(m_dciName, -1));
    xml.append(_T("</dci>\n\t\t\t\t\t<flags>"));
    xml.append(m_flags);
-   xml.append(_T("</flags>\n\t\t\t\t</column>\n"));
+   xml.append(_T("</flags>\n\t\t\t\t\t<separator>\n"));
+   xml.append(m_separator);
+   xml.append(_T("</separator>\n\t\t\t\t</column>\n"));
 }
 
 /**
@@ -142,6 +148,17 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
       {
          *opt = 0;
          opt += 3;
+         TCHAR *sep = _tcsstr(opt, _T("^#^"));
+         if (sep != NULL)
+         {
+            *sep = 0;
+            sep += 3;
+            nx_strncpy(m_separator, sep, 16);
+         }
+         else
+         {
+            _tcscpy(m_separator, _T(";"));
+         }
          m_flags = _tcstoul(opt, NULL, 10);
       }
       else
@@ -212,7 +229,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
          m_filter = NXSLCompileAndCreateVM(m_filterSource, errorText, 1024, new NXSL_ServerEnv);
          if (m_filter == NULL)
          {
-            DbgPrintf(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
+            nxlog_debug(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
          }
       }
       else
@@ -251,7 +268,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
  */
 SummaryTable *SummaryTable::loadFromDB(INT32 id, UINT32 *rcc)
 {
-   DbgPrintf(4, _T("Loading configuration for DCI summary table %d"), id);
+   nxlog_debug(4, _T("Loading configuration for DCI summary table %d"), id);
    SummaryTable *table = NULL;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns FROM dci_summary_tables WHERE id=?"));
@@ -283,7 +300,7 @@ SummaryTable *SummaryTable::loadFromDB(INT32 id, UINT32 *rcc)
       *rcc = RCC_DB_FAILURE;
    }
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(4, _T("SummaryTable::loadFromDB(%d): object=%p, rcc=%d"), id, table, (int)*rcc);
+   nxlog_debug(4, _T("SummaryTable::loadFromDB(%d): object=%p, rcc=%d"), id, table, (int)*rcc);
    return table;
 }
 
@@ -294,7 +311,7 @@ SummaryTable::~SummaryTable()
 {
    delete m_columns;
    delete m_filter;
-   safe_free(m_filterSource);
+   free(m_filterSource);
 }
 
 /**
@@ -308,7 +325,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
    bool result = true;
    m_filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
    if (object->getObjectClass() == OBJECT_NODE)
-      m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+      m_filter->setGlobalVariable(_T("$node"), object->createNXSLObject());
    if (m_filter->run())
    {
       NXSL_Value *value = m_filter->getResult();
@@ -319,7 +336,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
    }
    else
    {
-      DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
+      nxlog_debug(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
    }
    return result;
 }
@@ -458,6 +475,8 @@ static TCHAR *BuildColumnList(ConfigEntry *root)
       s.append(c->getSubEntryValue(_T("dci")));
       s.append(_T("^#^"));
       s.append(c->getSubEntryValueAsUInt(_T("flags")));
+      s.append(_T("^#^"));
+      s.append(c->getSubEntryValue(_T("separator")));
    }
    delete columns;
    return _tcsdup((const TCHAR *)s);

@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Content provider for NetXMS table viewer
  */
-public class TableContentProvider implements IStructuredContentProvider
+public class SummaryTableContentProvider implements ITreeContentProvider
 {
 	private Table table = null;
 	
@@ -54,7 +54,7 @@ public class TableContentProvider implements IStructuredContentProvider
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
+	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
 	 */
 	@Override
 	public Object[] getElements(Object inputElement)
@@ -66,12 +66,63 @@ public class TableContentProvider implements IStructuredContentProvider
 		TableRow[] rows = table.getAllRows();
 		for(int i = 0; i < rows.length; i++)
 		{
-		   list.add(new RowWrapper(rows[i]));		   
+		   if (rows[i].getBaseRow() == -1)
+		   {
+		      list.add(new RowWrapper(rows[i], i, null));
+		   }
+		   else
+		   {
+		      RowWrapper p = findParent(list, rows[i].getBaseRow());
+		      if (p != null)
+		         p.add(new RowWrapper(rows[i], i, p));
+		   }
 		}
 		
 		return list.toArray();
 	}
 
+	/**
+	 * Find parent row
+	 * 
+	 * @param list row list
+	 * @param id parent ID
+	 * @return parent row
+	 */
+	private RowWrapper findParent(List<RowWrapper> list, int id)
+	{
+	   for(RowWrapper r : list)
+	      if (r.id == id)
+	         return r;
+	   return null;
+	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
+    */
+   @Override
+   public Object[] getChildren(Object parentElement)
+   {
+      return ((RowWrapper)parentElement).children.toArray();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
+    */
+   @Override
+   public Object getParent(Object element)
+   {
+      return ((RowWrapper)element).parent;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+    */
+   @Override
+   public boolean hasChildren(Object element)
+   {
+      return !((RowWrapper)element).children.isEmpty();
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
 	 */
@@ -85,9 +136,20 @@ public class TableContentProvider implements IStructuredContentProvider
 	 */
 	private class RowWrapper extends TableRow implements ObjectWrapper
 	{
-      protected RowWrapper(TableRow src)
+	   protected RowWrapper parent;
+	   protected int id;
+	   protected List<RowWrapper> children = new ArrayList<RowWrapper>(0);
+	   
+      protected RowWrapper(TableRow src, int id, RowWrapper parent)
       {
          super(src);
+         this.id = id;
+         this.parent = parent;
+      }
+      
+      protected void add(RowWrapper r)
+      {
+         children.add(r);
       }
 
       @Override

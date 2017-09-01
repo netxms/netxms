@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -40,6 +42,8 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 	private LabeledText name;
 	private LabeledText dciName;
 	private Button checkRegexpMatch;
+   private Button checkMultivalued;
+   private LabeledText separator;
 
 	/**
 	 * @param parentShell
@@ -88,6 +92,27 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       checkRegexpMatch.setText(Messages.get().EditDciSummaryTableColumnDlg_UseRegExp);
       checkRegexpMatch.setSelection(column.isRegexpMatch());
       
+      checkMultivalued = new Button(dialogArea, SWT.CHECK);
+      checkMultivalued.setText("&Multivalued column");
+      checkMultivalued.setSelection(column.isMultivalued());
+      checkMultivalued.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            separator.setEnabled(checkMultivalued.getSelection());
+         }
+      });
+      
+      separator = new LabeledText(dialogArea, SWT.NONE);
+      separator.setLabel("&Separator for multiple values");
+      separator.getTextControl().setTextLimit(15);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      separator.setLayoutData(gd);
+      separator.setText(column.getSeparator());
+      separator.setEnabled(column.isMultivalued());
+      
 		return dialogArea;
 	}
 
@@ -110,6 +135,8 @@ public class EditDciSummaryTableColumnDlg extends Dialog
 		column.setName(name.getText());
 		column.setDciName(dciName.getText());
 		column.setRegexpMatch(checkRegexpMatch.getSelection());
+      column.setMultivalued(checkMultivalued.getSelection());
+      column.setSeparator(separator.getText().trim());
 		super.okPressed();
 	}
 }

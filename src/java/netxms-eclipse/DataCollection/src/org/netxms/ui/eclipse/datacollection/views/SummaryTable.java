@@ -141,7 +141,7 @@ public class SummaryTable extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		viewer.getViewer().getTable().setFocus();
+		viewer.getViewer().getControl().setFocus();
 	}
 	
 	/**
