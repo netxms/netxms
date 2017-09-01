@@ -80,6 +80,8 @@ public class Table
 			if (extendedFormat)
 			{
 			   row.setObjectId(msg.getFieldAsInt64(varId++));
+            if (msg.isFieldPresent(varId))
+               row.setBaseRow(msg.getFieldAsInt32(varId));
 			   varId += 9;
 			}
 			for(int j = 0; j < columnCount; j++)
@@ -111,6 +113,8 @@ public class Table
          if (extendedFormat)
          {
             row.setObjectId(msg.getFieldAsInt64(varId++));
+            if (msg.isFieldPresent(varId))
+               row.setBaseRow(msg.getFieldAsInt32(varId));
             varId += 9;
          }
          for(int j = 0; j < columns.size(); j++)
