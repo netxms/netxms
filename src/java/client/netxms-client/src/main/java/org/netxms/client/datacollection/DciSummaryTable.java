@@ -45,6 +45,7 @@ public class DciSummaryTable
 	 * 
 	 * @param menuPath The menu path
 	 * @param title The title
+	 * @param isSingleValue if table is single value DCI
 	 */
 	public DciSummaryTable(String menuPath, String title, boolean isSingleValue)
 	{

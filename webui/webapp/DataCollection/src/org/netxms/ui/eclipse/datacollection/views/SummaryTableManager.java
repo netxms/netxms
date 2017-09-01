@@ -90,7 +90,8 @@ public class SummaryTableManager extends ViewPart
 	private Map<Integer, DciSummaryTableDescriptor> descriptors = new HashMap<Integer, DciSummaryTableDescriptor>();
 	
 	private Action actionRefresh;
-	private Action actionCreate;
+	private Action actionCreateSingleValue;
+   private Action actionCreateTableValue;
 	private Action actionEdit;
 	private Action actionDelete;
 	private Action actionShowFilter;
@@ -345,13 +346,21 @@ public class SummaryTableManager extends ViewPart
 			}
 		};
 
-		// create add action
-		actionCreate = new Action(Messages.get().SummaryTableManager_ActionNew, SharedIcons.ADD_OBJECT) {
+		// create add action for single value table
+		actionCreateSingleValue = new Action("Create new single value table", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
-				createSummaryTable();
+				createSummaryTable(true);
 			}
+		};
+		
+		actionCreateTableValue = new Action("Create new table value table", Activator.getImageDescriptor("icons/new.png")) {
+		   @Override
+		   public void run()
+		   {
+		      createSummaryTable(false);
+		   }
 		};
 
 		// create edit action
@@ -392,7 +401,8 @@ public class SummaryTableManager extends ViewPart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionCreate);
+		manager.add(actionCreateSingleValue);
+      manager.add(actionCreateTableValue);
 		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -405,7 +415,8 @@ public class SummaryTableManager extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionCreate);
+      manager.add(actionCreateSingleValue);
+      manager.add(actionCreateTableValue);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -421,7 +432,8 @@ public class SummaryTableManager extends ViewPart
 		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
-					mgr.add(actionCreate);
+					mgr.add(actionCreateSingleValue);
+					mgr.add(actionCreateTableValue);
 					mgr.add(actionEdit);
 					mgr.add(actionDelete);
 			}
@@ -438,9 +450,9 @@ public class SummaryTableManager extends ViewPart
 	/**
 	 * Create new loyalty program
 	 */
-	private void createSummaryTable()
+	private void createSummaryTable(boolean isSingleValue)
 	{
-		DciSummaryTable t = new DciSummaryTable("", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		DciSummaryTable t = new DciSummaryTable("", "", isSingleValue); //$NON-NLS-1$ //$NON-NLS-2$
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
 		if (dlg != null)
 		{
