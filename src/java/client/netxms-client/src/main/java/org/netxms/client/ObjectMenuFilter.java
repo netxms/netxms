@@ -74,7 +74,6 @@ public class ObjectMenuFilter
     * Create XML from configuration.
     * 
     * @return XML document
-    * @throws Exception if the schema for the object is not valid
     */
    public String createXml()
    {
