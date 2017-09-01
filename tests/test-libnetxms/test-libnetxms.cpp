@@ -312,6 +312,17 @@ static void TestString()
    rs = s.right(15);
    AssertTrue(rs.equals(_T("alpha")));
    EndTest();
+
+   StartTest(_T("String - split"));
+   s = _T("alpha;;beta;gamma;;delta");
+   StringList *list = s.split(_T(";;"));
+   AssertNotNull(list);
+   AssertEquals(list->size(), 3);
+   AssertTrue(!_tcscmp(list->get(0), _T("alpha")));
+   AssertTrue(!_tcscmp(list->get(1), _T("beta;gamma")));
+   AssertTrue(!_tcscmp(list->get(2), _T("delta")));
+   delete list;
+   EndTest();
 }
 
 /**

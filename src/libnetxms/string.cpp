@@ -603,11 +603,35 @@ bool String::endsWith(const TCHAR *s) const
  */
 StringList *String::split(const TCHAR *separator) const
 {
-   int count;
-   TCHAR **strings = SplitString(CHECK_NULL_EX(m_buffer), *separator, &count);
    StringList *result = new StringList();
-   for(int i = 0; i < count; i++)
-      result->addPreallocated(strings[i]);
-   free(strings);
+
+   size_t slen = _tcslen(separator);
+   if (slen == 0)
+   {
+      result->add(CHECK_NULL(m_buffer));
+      return result;
+   }
+   if (m_length < slen)
+   {
+      result->add(_T(""));
+      return result;
+   }
+
+   TCHAR *curr = m_buffer;
+   while(true)
+   {
+      TCHAR *next = _tcsstr(curr, separator);
+      if (next == NULL)
+      {
+         result->add(curr);
+         break;
+      }
+
+      *next = 0;
+      result->add(curr);
+      *next = *separator;
+      curr = next + slen;
+   }
+
    return result;
 }
