@@ -47,6 +47,25 @@ public class DciSummaryTableColumn
 		this.separator = separator;
 	}
 	
+   /**
+    * @param name The column name
+    * @param dciName The dci name
+    * @param flags The flags
+    */
+   public DciSummaryTableColumn(String name, String dciName, int flags)
+   {
+      this(name, dciName, flags, ";");
+   }
+   
+   /**
+    * @param name The column name
+    * @param dciName The dci name
+    */
+   public DciSummaryTableColumn(String name, String dciName)
+   {
+      this(name, dciName, 0, ";");
+   }
+   
 	/**
 	 * Copy constructor.
 	 * 

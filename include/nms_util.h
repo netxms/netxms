@@ -1292,16 +1292,16 @@ private:
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance);
-   TableColumnDefinition(NXCPMessage *msg, UINT32 baseId);
-   TableColumnDefinition(TableColumnDefinition *src);
+   TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId);
+   TableColumnDefinition(const TableColumnDefinition *src);
    ~TableColumnDefinition();
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getDisplayName() { return m_displayName; }
-   INT32 getDataType() { return m_dataType; }
-   bool isInstanceColumn() { return m_instanceColumn; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDisplayName() const { return m_displayName; }
+   INT32 getDataType() const { return m_dataType; }
+   bool isInstanceColumn() const { return m_instanceColumn; }
 
    void setDataType(INT32 type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
@@ -1416,12 +1416,14 @@ public:
 
    const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
    INT32 getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
+   const TableColumnDefinition *getColumnDefinition(int col) const { return m_columns->get(col); }
 	int getColumnIndex(const TCHAR *name) const;
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
 	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = _tcsdup_ex(title); }
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
+   int addColumn(const TableColumnDefinition *d);
    void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
    int addRow();
 

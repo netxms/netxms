@@ -389,7 +389,7 @@ public:
  * Summary table flags
  */
 #define SUMMARY_TABLE_MULTI_INSTANCE      0x0001
-#define SUMMARY_TABLE_TABLE_VALUE        0x0002
+#define SUMMARY_TABLE_TABLE_DCI_SOURCE    0x0002
 
 /**
  * Summary table column flags
@@ -442,19 +442,18 @@ public:
    ~SummaryTable();
 
    bool filter(DataCollectionTarget *node);
-   Table *createEmptyResultTable(const Table *source = NULL);
+   Table *createEmptyResultTable();
 
-   int getNumColumns() { return m_columns->size(); }
-   SummaryTableColumn *getColumn(int index) { return m_columns->get(index); }
-   AggregationFunction getAggregationFunction() { return m_aggregationFunction; }
-   time_t getPeriodStart() { return m_periodStart; }
-   time_t getPeriodEnd() { return m_periodEnd; }
-   bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
-
-   UINT32 getFlags() const { return m_flags; }
+   int getNumColumns() const { return m_columns->size(); }
+   SummaryTableColumn *getColumn(int index) const { return m_columns->get(index); }
+   AggregationFunction getAggregationFunction() const { return m_aggregationFunction; }
    const TCHAR *getTableDciName() const { return m_tableDciName; }
+   time_t getPeriodStart() const { return m_periodStart; }
+   time_t getPeriodEnd() const { return m_periodEnd; }
+   bool isMultiInstance() const { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
+   bool isTableDciSource() const { return (m_flags & SUMMARY_TABLE_TABLE_DCI_SOURCE) ? true : false; }
 
-   void createExportRecord(String &xml);
+   void createExportRecord(String &xml) const;
 };
 
 /**
@@ -1084,6 +1083,9 @@ protected:
    void applyUserTemplates();
    void updateContainerMembership();
 
+   void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+   void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+
    void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
    virtual void collectProxyInfo(ProxyInfo *info);
@@ -1116,8 +1118,7 @@ public:
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);
 	UINT32 getPerfTabDCIList(NXCPMessage *pMsg);
-   void getDciValuesSummarySingleValue(SummaryTable *tableDefinition, Table *tableData);
-   void getDciValuesSummaryTableValue(SummaryTable *tableDefinition, Table *tableData);
+   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);

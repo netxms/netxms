@@ -14,10 +14,9 @@ public class DciSummaryTablePropertyTester extends PropertyTester
       if (!(receiver instanceof DciSummaryTable))
          return false;
       
-      if (property.equals("isSingleValue"))
-         return ((DciSummaryTable)receiver).isSingleValue();
+      if (property.equals("isTableSource"))
+         return ((DciSummaryTable)receiver).isTableSoure();
       
       return false;
    }
-   
 }

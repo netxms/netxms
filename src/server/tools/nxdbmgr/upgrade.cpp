@@ -600,6 +600,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V458 to V459
+ */
+static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD table_dci_name varchar(255)")));
+   CHK_EXEC(SetSchemaVersion(459));
+   return TRUE;
+}
+
+/**
  * Upgrade from V457 to V458
  */
 static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
@@ -11901,6 +11911,7 @@ static struct
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
+   { 458, 459, H_UpgradeFromV458 },
    { 0, 0, NULL }
 };
 
