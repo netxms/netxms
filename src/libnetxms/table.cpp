@@ -568,6 +568,17 @@ int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName
 }
 
 /**
+ * Add new column
+ */
+int Table::addColumn(const TableColumnDefinition *d)
+{
+   m_columns->add(new TableColumnDefinition(d));
+   for(int i = 0; i < m_data->size(); i++)
+      m_data->get(i)->addColumn();
+   return m_columns->size() - 1;
+}
+
+/**
  * Get column index by name
  *
  * @param name column name
@@ -892,7 +903,7 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
 /**
  * Create copy of existing table column definition
  */
-TableColumnDefinition::TableColumnDefinition(TableColumnDefinition *src)
+TableColumnDefinition::TableColumnDefinition(const TableColumnDefinition *src)
 {
    m_name = _tcsdup(src->m_name);
    m_displayName = _tcsdup(src->m_displayName);
@@ -903,7 +914,7 @@ TableColumnDefinition::TableColumnDefinition(TableColumnDefinition *src)
 /**
  * Create table column definition from NXCP message
  */
-TableColumnDefinition::TableColumnDefinition(NXCPMessage *msg, UINT32 baseId)
+TableColumnDefinition::TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId)
 {
    m_name = msg->getFieldAsString(baseId);
    if (m_name == NULL)
@@ -927,7 +938,7 @@ TableColumnDefinition::~TableColumnDefinition()
 /**
  * Fill message with table column definition data
  */
-void TableColumnDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void TableColumnDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
    msg->setField(baseId, m_name);
    msg->setField(baseId + 1, (UINT32)m_dataType);

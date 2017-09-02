@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -48,7 +48,7 @@ public class SummaryTableGeneral extends PropertyPage
 	private LabeledText menuPath;
 	private LabeledText title;
 	private LabeledText dciName;
-	private Button select;
+	private Button importButton;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -77,7 +77,7 @@ public class SummaryTableGeneral extends PropertyPage
       title.setText(table.getTitle());
       title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1));
       
-      if (!table.isSingleValue())
+      if (table.isTableSoure())
       {         
          dciName = new LabeledText(dialogArea, SWT.NONE);
          dciName.setLabel("DCI name");
@@ -85,31 +85,19 @@ public class SummaryTableGeneral extends PropertyPage
          dciName.setText(table.getTableDciName());
          dciName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-         select = new Button(dialogArea, SWT.PUSH);
-         select.setText("Select");
-         GridData gd = new GridData(SWT.FILL);
-         gd.verticalIndent = 20;
-         select.setLayoutData(gd);
-         select.addSelectionListener(new SelectionListener() {            
-            /* (non-Javadoc)
-             * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-             */
+         importButton = new Button(dialogArea, SWT.PUSH);
+         importButton.setText("Import...");
+         GridData gd = new GridData();
+         gd.verticalAlignment = SWT.BOTTOM;
+         gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+         importButton.setLayoutData(gd);
+         importButton.addSelectionListener(new SelectionAdapter() {            
             @Override
             public void widgetSelected(SelectionEvent e)
             {
                selectDci();
             }
-            
-            /* (non-Javadoc)
-             * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
-             */
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e);               
-            }
          });
-         
       }
 
       return dialogArea;

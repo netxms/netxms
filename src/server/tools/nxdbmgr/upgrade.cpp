@@ -600,16 +600,6 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
- * Upgrade from V501 to V502
- */
-static BOOL H_UpgradeFromV501(int currVersion, int newVersion)
-{
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD table_dci_name varchar(256) null")));
-   CHK_EXEC(SetSchemaVersion(502));
-   return TRUE;
-}
-
-/**
  * Upgrade from V500 to V501
  */
 static BOOL H_UpgradeFromV500(int currVersion, int newVersion)
@@ -629,9 +619,9 @@ static BOOL H_UpgradeFromV500(int currVersion, int newVersion)
 }
 
 /**
- * Upgrade from V458 to V500
+ * Upgrade from V459 to V500
  */
-static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV459(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE sensors (")
@@ -657,6 +647,16 @@ static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
       _T("PRIMARY KEY(id))")));
 
    CHK_EXEC(SetSchemaVersion(500));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V458 to V459
+ */
+static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD table_dci_name varchar(255)")));
+   CHK_EXEC(SetSchemaVersion(459));
    return TRUE;
 }
 
@@ -11962,9 +11962,9 @@ static struct
    { 455, 456, H_UpgradeFromV455 },
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
-   { 458, 500, H_UpgradeFromV458 },
+   { 458, 459, H_UpgradeFromV458 },
+   { 459, 500, H_UpgradeFromV459 },
    { 500, 501, H_UpgradeFromV500 },
-   { 501, 502, H_UpgradeFromV501 },
    { 0, 0, NULL }
 };
 

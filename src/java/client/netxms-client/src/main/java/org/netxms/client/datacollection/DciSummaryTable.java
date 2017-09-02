@@ -29,7 +29,8 @@ import org.netxms.base.NXCPMessage;
  */
 public class DciSummaryTable
 {
-   public static final int SUMMARY_TABLE_TABLE_VALUE = 0x0002;
+   public static final int MULTI_INSTANCE = 0x0001;
+   public static final int TABLE_DCI_SOURCE = 0x0002;
    
 	private int id;
    private UUID guid;
@@ -45,20 +46,31 @@ public class DciSummaryTable
 	 * 
 	 * @param menuPath The menu path
 	 * @param title The title
-	 * @param isSingleValue if table is single value DCI
+	 * @param isTableSource true if summary table's source is table DCIs
 	 */
-	public DciSummaryTable(String menuPath, String title, boolean isSingleValue)
+	public DciSummaryTable(String menuPath, String title, boolean isTableSource)
 	{
 		id = 0;
       guid = UUID.randomUUID();
 		this.menuPath = menuPath;
 		this.title = title;
-		flags = isSingleValue ? 0 : SUMMARY_TABLE_TABLE_VALUE;
+		flags = isTableSource ? TABLE_DCI_SOURCE : 0;
 		nodeFilter = "";
 		columns = new ArrayList<DciSummaryTableColumn>();
 		tableDciName = "";
 	}
 	
+   /**
+    * Create new empty summary table object for single valued DCIs
+    * 
+    * @param menuPath The menu path
+    * @param title The title
+    */
+   public DciSummaryTable(String menuPath, String title)
+   {
+      this(menuPath, title, false);
+   }
+   
 	/**
 	 * Create full object from NXCP message.
 	 * 
@@ -235,22 +247,32 @@ public class DciSummaryTable
 	}
 	
 	/**
-	 * Check if table is single value or table value
+	 * Check if summary table is multi-instance
 	 * 
-	 * @return true if single value
+	 * @return true if summary table is multi-instance
 	 */
-	public boolean isSingleValue()
+	public boolean isMultiInstance()
 	{
-	   return (flags & SUMMARY_TABLE_TABLE_VALUE) > 0 ? false : true;
+	   return (flags & MULTI_INSTANCE) != 0;
 	}
 	
+   /**
+    * Check if source is table DCI
+    * 
+    * @return true if source is table DCI
+    */
+   public boolean isTableSoure()
+   {
+      return (flags & TABLE_DCI_SOURCE) != 0;
+   }
+   
 	/**
 	 * Return table dci name
 	 * @return table dci name if set
 	 */
 	public String getTableDciName()
 	{
-	   return tableDciName;
+	   return (tableDciName != null) ? tableDciName : "";
 	}
 	
 	/**

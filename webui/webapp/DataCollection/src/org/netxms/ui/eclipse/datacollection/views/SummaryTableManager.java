@@ -347,19 +347,19 @@ public class SummaryTableManager extends ViewPart
 		};
 
 		// create add action for single value table
-		actionCreateSingleValue = new Action("Create new single value table", SharedIcons.ADD_OBJECT) {
+		actionCreateSingleValue = new Action("Create new summary table...", SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
-				createSummaryTable(true);
+				createSummaryTable(false);
 			}
 		};
 		
-		actionCreateTableValue = new Action("Create new table value table", Activator.getImageDescriptor("icons/new.png")) {
+		actionCreateTableValue = new Action("Create new summary table for table DCIs...", Activator.getImageDescriptor("icons/new.png")) {
 		   @Override
 		   public void run()
 		   {
-		      createSummaryTable(false);
+		      createSummaryTable(true);
 		   }
 		};
 
@@ -450,9 +450,9 @@ public class SummaryTableManager extends ViewPart
 	/**
 	 * Create new loyalty program
 	 */
-	private void createSummaryTable(boolean isSingleValue)
+	private void createSummaryTable(boolean isTableSource)
 	{
-		DciSummaryTable t = new DciSummaryTable("", "", isSingleValue); //$NON-NLS-1$ //$NON-NLS-2$
+		DciSummaryTable t = new DciSummaryTable("", "", isTableSource); //$NON-NLS-1$ //$NON-NLS-2$
 		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, t);
 		if (dlg != null)
 		{

@@ -313,15 +313,15 @@
               name="%page.name.Columns">
            <enabledWhen>
               <and>
-                 <or>
-                    <instanceof
-                          value="org.netxms.client.datacollection.DciSummaryTable">
-                    </instanceof>
-                 </or>
-                 <test
-                       forcePluginActivation="true"
-                       property="org.netxms.ui.eclipse.datacollection.isSingleValue">
-                 </test>
+                 <instanceof
+                       value="org.netxms.client.datacollection.DciSummaryTable">
+                 </instanceof>
+                 <not>
+                    <test
+                          forcePluginActivation="true"
+                          property="org.netxms.ui.eclipse.datacollection.isTableSource">
+                    </test>
+                 </not>
               </and>
            </enabledWhen>
         </page>
@@ -536,7 +536,7 @@
             class="org.netxms.ui.eclipse.datacollection.DciSummaryTablePropertyTester"
             id="org.netxms.ui.eclipse.datacollection.SummaryTableDciPropertyTester"
             namespace="org.netxms.ui.eclipse.datacollection"
-            properties="isSingleValue"
+            properties="isTableSource"
             type="org.netxms.client.datacollection.DciSummaryTable">
       </propertyTester>
    </extension>

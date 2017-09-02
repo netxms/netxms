@@ -347,7 +347,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
 /**
  * Create empty result table
  */
-Table *SummaryTable::createEmptyResultTable(const Table *source)
+Table *SummaryTable::createEmptyResultTable()
 {
    Table *result = new Table();
    result->setTitle(m_title);
@@ -356,14 +356,7 @@ Table *SummaryTable::createEmptyResultTable(const Table *source)
    if (m_flags & SUMMARY_TABLE_MULTI_INSTANCE)
       result->addColumn(_T("Instance"), DCI_DT_STRING);
 
-   if (m_flags & SUMMARY_TABLE_TABLE_VALUE)
-   {
-      for(int i = 0; i < source->getNumColumns(); i++)
-      {
-         result->addColumn(source->getColumnName(i), source->getColumnDataType(i));
-      }
-   }
-   else
+   if (!(m_flags & SUMMARY_TABLE_TABLE_DCI_SOURCE))
    {
       for(int i = 0; i < m_columns->size(); i++)
       {
@@ -376,7 +369,7 @@ Table *SummaryTable::createEmptyResultTable(const Table *source)
 /**
  * Create export record
  */
-void SummaryTable::createExportRecord(String &xml)
+void SummaryTable::createExportRecord(String &xml) const
 {
    TCHAR buffer[64];
 
@@ -392,7 +385,9 @@ void SummaryTable::createExportRecord(String &xml)
    xml.appendPreallocated(EscapeStringForXML(m_menuPath, -1));
    xml.append(_T("</path>\n\t\t\t<filter>"));
    xml.appendPreallocated(EscapeStringForXML(m_filterSource, -1));
-   xml.append(_T("</filter>\n\t\t\t<columns>\n"));
+   xml.append(_T("</filter>\n\t\t\t<tableDci>\n"));
+   xml.appendPreallocated(EscapeStringForXML(m_tableDciName, -1));
+   xml.append(_T("</tableDci>\n\t\t\t<columns>\n"));
    for(int i = 0; i < m_columns->size(); i++)
    {
       m_columns->get(i)->createExportRecord(xml, i + 1);
@@ -429,36 +424,11 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
       return NULL;
 
    ObjectArray<NetObj> *childObjects = object->getFullChildList(true, true);
-   Table *tableData = NULL, *lastValue = NULL;
-
-   if (tableDefinition->getFlags() & SUMMARY_TABLE_TABLE_VALUE)
-   {
-      for(int i = 0; i < childObjects->size(); i++)
-      {
-         if (((childObjects->get(i)->getObjectClass() == OBJECT_NODE) || (childObjects->get(i)->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-             (childObjects->get(i)->getObjectClass() == OBJECT_SENSOR)) && childObjects->get(i)->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         {
-            DCObject *o = ((DataCollectionTarget *)childObjects->get(i))->getDCObjectByName(tableDefinition->getTableDciName());
-            if (o != NULL && (o->getType() == DCO_TYPE_TABLE))
-            {
-               lastValue = ((DCTable *)o)->getLastValue();
-               if (lastValue != NULL)
-               {
-                  tableData = tableDefinition->createEmptyResultTable(((DCTable *)o)->getLastValue());
-                  break;
-               }
-            }
-         }
-      }
-   }
-   else
-      tableData = tableDefinition->createEmptyResultTable();
-
+   Table *tableData = tableDefinition->createEmptyResultTable();
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
-      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE) &&
-          (obj->getObjectClass() != OBJECT_SENSOR)) || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      if (!obj->isDataCollectionTarget() || !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          obj->decRefCount();
          continue;
@@ -466,10 +436,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         if (tableDefinition->getFlags() & SUMMARY_TABLE_TABLE_VALUE)
-            ((DataCollectionTarget *)obj)->getDciValuesSummaryTableValue(tableDefinition, tableData);
-         else
-            ((DataCollectionTarget *)obj)->getDciValuesSummarySingleValue(tableDefinition, tableData);
+         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData);
       }
       obj->decRefCount();
    }
