@@ -336,7 +336,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
    lock();
 
@@ -406,26 +406,19 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Create record in raw_dci_values if needed
-   _sntprintf(query, 256, _T("SELECT item_id FROM raw_dci_values WHERE item_id=%d"), m_id);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (!IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
    {
-      if (DBGetNumRows(hResult) == 0)
+      hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (?,?,?)"));
+      if (hStmt == NULL)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (?,?,?)"));
-         if (hStmt == NULL)
-         {
-            DBFreeResult(hResult);
-            unlock();
-            return FALSE;
-         }
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)m_tPrevValueTimeStamp);
-         bResult = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
+         unlock();
+         return false;
       }
-      DBFreeResult(hResult);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)m_tPrevValueTimeStamp);
+      bResult = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
    }
 
    unlock();
