@@ -50,6 +50,7 @@ public abstract class AbstractSessionTest extends TestCase
         });
 
         NXCSession session = new NXCSession(TestConstants.serverAddress, TestConstants.serverPort, useEncryption);
+        session.setRecvBufferSize(65536, 33554432);
         session.connect(new int[]{ProtocolVersion.INDEX_FULL});
         session.login(TestConstants.loginName, TestConstants.password);
         return session;
