@@ -29,6 +29,7 @@ Makefile
 Makefile.in
 pom.xml.versionsBackup
 *.swp
+language.settings.xml
 
 Debug
 Release
