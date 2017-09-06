@@ -759,7 +759,10 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
    if (lrt != 0)
+   {
       DBSetLongRunningThreshold(lrt);
+      nxlog_write_generic(NXLOG_INFO, _T("Long running query threshold set at %d milliseconds"), lrt);
+   }
 
    MetaDataPreLoad();
 
@@ -778,7 +781,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
       _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
 		MetaDataWriteStr(_T("ServerID"), buffer);
 	}
-	nxlog_debug(1, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
+	nxlog_write_generic(NXLOG_INFO, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
 	// Initialize locks
 retry_db_lock:
