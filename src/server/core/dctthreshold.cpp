@@ -660,7 +660,7 @@ void DCTableThreshold::createNXMPRecord(String &str, int id)
    str.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<activationEvent>%s</activationEvent>\n")
                           _T("\t\t\t\t\t\t\t<deactivationEvent>%s</deactivationEvent>\n")
-                          _T("\t\t\t\t\t\t\t<sampleCount>%s</sampleCount>\n")
+                          _T("\t\t\t\t\t\t\t<sampleCount>%d</sampleCount>\n")
                           _T("\t\t\t\t\t\t\t<groups>\n"),
 								  id, (const TCHAR *)EscapeStringForXML2(activationEvent),
 								  (const TCHAR *)EscapeStringForXML2(deactivationEvent),
