@@ -9513,7 +9513,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
-         safe_free(pdwList);
+         free(pdwList);
          str += _T("\t</events>\n");
 
          // Write templates
