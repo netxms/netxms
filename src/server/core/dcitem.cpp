@@ -29,8 +29,8 @@
 /**
  * Event parameter names
  */
-static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
-static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
+static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent"), _T("dciValue") };
+static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue") };
 
 /**
  * DCI cache loader queue
@@ -443,9 +443,9 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ACTIVATED:
             {
-               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                  (const TCHAR *)checkValue, m_id, m_instance, 0);
+                  (const TCHAR *)checkValue, m_id, m_instance, 0, (const TCHAR *)value);
 				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
@@ -457,9 +457,9 @@ void DCItem::checkThresholds(ItemValue &value)
             }
             break;
          case DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssisss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
 					s_paramNamesRearm, m_name, m_description, m_id, m_instance,
-					t->getStringValue(), (const TCHAR *)checkValue);
+					t->getStringValue(), (const TCHAR *)checkValue, (const TCHAR *)value);
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold

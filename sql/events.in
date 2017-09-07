@@ -11,7 +11,8 @@
 	'   4) Actual value' CONCAT CRLF CONCAT \
 	'   5) Data collection item ID' CONCAT CRLF CONCAT \
 	'   6) Instance' CONCAT CRLF CONCAT \
-	'   7) Repeat flag'
+	'   7) Repeat flag' CONCAT CRLF CONCAT \
+	'   8) Current DCI value'
 
 
 /*
@@ -276,7 +277,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) Data collection item ID' CONCAT CRLF CONCAT
 		'   4) Instance' CONCAT CRLF CONCAT
 		'   5) Threshold value' CONCAT CRLF CONCAT
-		'   6) Actual value'
+		'   6) Actual value' CONCAT CRLF CONCAT
+		'   7) Current DCI value'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

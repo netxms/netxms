@@ -10,6 +10,7 @@
 
 - Summary tables for table DCIs
 - Multi-valued columns in summary table
+- Threshold violation events have current DCI value as parameter 8 (named as "dciValue")
 
 
 *
