@@ -54,8 +54,6 @@ enum
 LONG H_ProcessList(const char *, const char *, StringList *, AbstractCommSession *);
 LONG H_Uptime(const char *, const char *, char *, AbstractCommSession *);
 LONG H_Uname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
 LONG H_CpuCount(const char *, const char *, char *, AbstractCommSession *);
 LONG H_CpuLoad(const char *, const char *, char *, AbstractCommSession *);
 LONG H_CpuUsage(const char *, const char *, char *, AbstractCommSession *);

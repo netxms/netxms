@@ -86,23 +86,6 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
 }
 
 /**
- * Handler for System.Hostname parameter
- */
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	char szBuff[128];
-
-	if (gethostname(szBuff, sizeof(szBuff)) == 0)
-	{
-		ret_mbstring(pValue, szBuff);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
-
-/**
  * Handler for System.ConnectedUsers parameter
  */
 LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)

@@ -531,3 +531,11 @@ LONG H_ThreadPoolList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
    delete pools;
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for System.Hostname and System.FQDN parameters
+ */
+LONG H_HostName(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   return (GetLocalHostName(value, MAX_RESULT_LENGTH, arg != NULL) != NULL) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}

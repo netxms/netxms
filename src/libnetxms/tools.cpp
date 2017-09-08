@@ -2932,3 +2932,82 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
    _tprintf(_T("\n"));
    return true;
 }
+
+/**
+ * Get system name
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fqdn)
+{
+   *buffer = 0;
+#ifdef _WIN32
+   DWORD s = (DWORD)size;
+   return GetComputerNameEx(fqdn ? ComputerNamePhysicalDnsFullyQualified : ComputerNamePhysicalDnsHostname, buffer, &s) ? buffer : NULL;
+#else    /* _WIN32 */
+   char hostname[256];
+   if (gethostname(hostname, 256) != 0)
+      return NULL;
+   if (fqdn)
+   {
+#if HAVE_GETADDRINFO
+      struct addrinfo hints;
+      memset(&hints, 0, sizeof hints);
+      hints.ai_family = AF_UNSPEC; /*either IPV4 or IPV6*/
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_flags = AI_CANONNAME;
+
+      struct addrinfo *info;
+      if (getaddrinfo(hostname, "http", &hints, &info) != 0)
+         return NULL;
+
+      bool found = false;
+      for(struct addrinfo *p = info; p != NULL; p = p->ai_next)
+      {
+         if (strchr(p->ai_canonname, '.') != NULL)
+         {
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p->ai_canonname, -1, buffer, size);
+#else
+            strncpy(buffer, p->ai_canonname, size);
+#endif
+            found = true;
+            break;
+         }
+      }
+
+      if (!found && (info != NULL))
+      {
+         // Use first available name as last resort
+#ifdef UNICODE
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, info->ai_canonname, -1, buffer, size);
+#else
+         strncpy(buffer, info->ai_canonname, size);
+#endif
+         found = true;
+      }
+
+      freeaddrinfo(info);
+      if (!found)
+         return NULL;
+#else    /* HAVE_GETADDRINFO */
+      struct hostent *h = gethostbyname(hostname);
+      if (h == NULL)
+         return NULL;
+#ifdef UNICODE
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, h->h_name, -1, buffer, size);
+#else
+      strncpy(buffer, h->h_name, size);
+#endif
+#endif   /* HAVE_GETADDRINFO */
+   }
+   else
+   {
+#ifdef UNICODE
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostname, -1, buffer, size);
+#else
+      strncpy(buffer, hostname, size);
+#endif
+   }
+   buffer[size - 1] = 0;
+   return buffer;
+#endif   /* _WIN32 */
+}

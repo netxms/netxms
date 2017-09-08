@@ -112,8 +112,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.Usage15"),           H_CpuUsage,        NULL,
 	DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
 */
-	{ _T("System.Hostname"),              H_Hostname,        NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_HOSTNAME },
 	{ _T("System.Memory.Physical.Free"),  H_MemoryInfo,      (const TCHAR *)PHYSICAL_FREE,
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ _T("System.Memory.Physical.Total"), H_MemoryInfo,      (const TCHAR *)PHYSICAL_TOTAL,
