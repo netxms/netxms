@@ -226,6 +226,7 @@ public class Messages extends NLS
 	public static String EditThresholdDialog_Title;
 	public static String EditThresholdDialog_UseDefault;
 	public static String EditThresholdDialog_Value;
+   public static String ForceDciPoll_ErrorText;
    public static String ForceDciPoll_TaskName;
 	public static String General_Active;
    public static String General_AgentCacheMode;
