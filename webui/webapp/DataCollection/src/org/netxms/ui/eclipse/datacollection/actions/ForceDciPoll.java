@@ -62,7 +62,7 @@ public class ForceDciPoll implements IObjectActionDelegate
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final Set<DCI> dciToPoll = objects;
-		new ConsoleJob(Messages.get().ClearCollectedData_TaskName, part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().ForceDciPoll_TaskName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -78,7 +78,7 @@ public class ForceDciPoll implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().ClearCollectedData_ErrorText;
+				return Messages.get().ForceDciPoll_ErrorText;
 			}
 		}.start();
 	}
