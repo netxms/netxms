@@ -446,6 +446,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\macaddr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

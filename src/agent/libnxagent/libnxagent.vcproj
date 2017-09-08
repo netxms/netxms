@@ -350,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\lora_device_data.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

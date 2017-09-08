@@ -128,7 +128,7 @@ String MacAddress::toString(MacAddressNotation notation) const
    if (m_length == 0)
       return String();
 
-   int stringSize;
+   size_t stringSize;
    switch(notation)
    {
       case MAC_ADDR_FLAT_STRING:
@@ -141,7 +141,7 @@ String MacAddress::toString(MacAddressNotation notation) const
          break;
       case MAC_ADDR_BYTEPAIR_DOT_SEPARATED:
       case MAC_ADDR_BYTEPAIR_COLON_SEPARATED:
-         stringSize = m_length * 2 + m_length/2; //-1 separator +1 for 0 termination
+         stringSize = m_length * 2 + m_length / 2; //-1 separator +1 for 0 termination
          break;
    }
    TCHAR *buf = (TCHAR *)malloc(stringSize * sizeof(TCHAR));
