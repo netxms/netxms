@@ -563,6 +563,11 @@ bool Tunnel::connectToServer()
    msg.setId(InterlockedIncrement(&m_requestId));
    msg.setField(VID_AGENT_VERSION, NETXMS_BUILD_TAG);
    msg.setField(VID_SYS_NAME, g_systemName);
+   msg.setField(VID_ZONE_UIN, g_zoneUIN);
+
+   TCHAR fqdn[256];
+   if (GetLocalHostName(fqdn, 256, true))
+      msg.setField(VID_HOSTNAME, fqdn);
 
    VirtualSession session(0);
    TCHAR buffer[MAX_RESULT_LENGTH];

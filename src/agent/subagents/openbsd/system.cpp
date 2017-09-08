@@ -88,20 +88,6 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
    return nRet;
 }
 
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	char szBuff[128];
-
-	if (gethostname(szBuff, sizeof(szBuff)) == 0)
-	{
-   	ret_mbstring(pValue, szBuff);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-   return nRet;
-}
-
 LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;

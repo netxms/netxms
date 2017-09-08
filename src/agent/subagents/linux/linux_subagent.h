@@ -224,8 +224,6 @@ LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSessi
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);

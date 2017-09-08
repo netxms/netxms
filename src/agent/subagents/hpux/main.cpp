@@ -128,8 +128,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.Usage5"), H_CpuUsage, (const TCHAR *)5, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
 	{ _T("System.CPU.Usage15"), H_CpuUsage, (const TCHAR *)15, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
 
-	{ _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-
 	{ _T("System.IO.BytesReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
 	{ _T("System.IO.BytesReadRate(*)"), H_IOStats, (const TCHAR *)IOSTAT_NUM_RBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
 	{ _T("System.IO.BytesWriteRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_WBYTES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },

@@ -74,20 +74,6 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
 }
 
 /**
- * Handler for System.Hostname parameter
- */
-LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-   DWORD dwSize;
-   TCHAR szBuffer[MAX_COMPUTERNAME_LENGTH + 1];
-
-   dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-   GetComputerName(szBuffer, &dwSize);
-   ret_string(pValue, szBuffer);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
  * Handler for FileSystem.Stats table
  */
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session)

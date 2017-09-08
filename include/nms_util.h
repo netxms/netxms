@@ -2239,6 +2239,8 @@ INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 
 TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size);
 
+TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fqdn);
+
 #if !HAVE_DAEMON || !HAVE_DECL_DAEMON
 int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
 #define daemon __daemon

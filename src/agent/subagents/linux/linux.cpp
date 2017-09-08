@@ -396,7 +396,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_GUEST_EX },
 
 	/**************************************************************/
-	{ _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.Memory.Physical.Available"),  H_MemoryInfo, (TCHAR *)PHYSICAL_AVAILABLE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)PHYSICAL_AVAILABLE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Buffers"),  H_MemoryInfo, (TCHAR *)PHYSICAL_BUFFERS, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_BUFFERS },
