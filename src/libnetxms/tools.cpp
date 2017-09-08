@@ -2913,7 +2913,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
 #endif
 
    /* Read the password. */
-   if (_fgetts(buffer, bufferSize, stdin) != NULL)
+   if (_fgetts(buffer, (int)bufferSize, stdin) != NULL)
    {
       TCHAR *nl = _tcschr(buffer, _T('\n'));
       if (nl != NULL)
