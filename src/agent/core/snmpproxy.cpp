@@ -102,7 +102,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                int nRetries;
                for(nRetries = 0; nRetries < 3; nRetries++)
                {
-                  if (send(hSocket, (char *)pduIn, sizeIn, 0) == (int)sizeIn)
+                  if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)
                   {
                      s_snmpRequests++;
                      UINT32 dwSizeOut;
