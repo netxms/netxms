@@ -974,9 +974,9 @@ template <typename T, typename R> void __ThreadPoolExecute_Wrapper(void *arg)
 /**
  * Execute task as soon as possible (use class member with one argument)
  */
-template <typename T, typename R> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (T::*f)(R), R arg)
+template <typename T, typename B, typename R> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<T,R>, new __ThreadPoolExecute_WrapperData<T, R>(object, f, arg));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<B,R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
 }
 
 /* Interlocked increment/decrement functions */
