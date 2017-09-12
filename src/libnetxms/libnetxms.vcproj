@@ -474,6 +474,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\nxproc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nxproc_win32.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pa.cpp"
 				>
 			</File>

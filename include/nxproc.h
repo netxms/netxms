@@ -28,7 +28,7 @@ public:
 
    const TCHAR *name() const { return m_name; }
    HPIPE handle() { return m_handle; }
-   const TCHAR *user() const { return m_user; }
+   const TCHAR *user();
 
    bool write(const void *data, size_t size);
 

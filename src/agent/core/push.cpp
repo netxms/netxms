@@ -96,7 +96,7 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 		}
 		delete msg;
 	}
-	AgentWriteDebugLog(5, _T("ProcessPushRequest: connection closed"));
+	AgentWriteDebugLog(5, _T("ProcessPushRequest: connection by user %s closed"), pipe->user());
 }
 
 /**
