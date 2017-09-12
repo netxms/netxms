@@ -23,11 +23,12 @@
 
 #include "libnetxms.h"
 #include <nxproc.h>
+#include <pwd.h>
 
 /**
  * Create listener end for named pipe
  */
-NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg)
+NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user)
 {
    mode_t prevMask = 0;
 
@@ -61,7 +62,7 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
       goto failure;
    }
 
-   return new NamedPipeListener(name, s, reqHandler, userArg);
+   return new NamedPipeListener(name, s, reqHandler, userArg, user);
 
 failure:
    close(s);
@@ -98,9 +99,48 @@ void NamedPipeListener::serverThread()
       SOCKET cs = accept(m_handle, (struct sockaddr *)&addrRemote, &size);
       if (cs > 0)
       {
-         NamedPipe *cp = new NamedPipe(m_name, cs);
-         m_reqHandler(cp, m_userArg);
-         delete cp;
+         TCHAR user[64];
+
+         struct ucred peer;
+         unsigned int len = sizeof(peer);
+         if (getsockopt(cs, SOL_SOCKET, SO_PEERCRED, &peer, &len) == 0)
+         {
+#if HAVE_GETPWUID_R
+            struct passwd pwbuf, *pw;
+            char sbuf[4096];
+            getpwuid_r(peer.uid, &pwbuf, sbuf, 4096, &pw);
+#else
+            struct passwd *pw = getpwuid(peer.uid);
+#endif
+            if (pw != NULL)
+            {
+#ifdef UNICODE
+               MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pw->pw_name, -1, user, 64);
+#else
+               nx_strncpy(user, pw->pw_name, 64);
+#endif
+            }
+            else
+            {
+               _sntprintf(user, 64, _T("[%d]"), (int)peer.uid);
+            }
+         }
+         else
+         {
+            _tcscpy(user, _T("[unknown]"));
+         }
+
+         if ((m_user[0] == 0) || !_tcscmp(m_user, user))
+         {
+            nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection by user %s"), m_name, user);
+            NamedPipe *cp = new NamedPipe(m_name, cs, user);
+            m_reqHandler(cp, m_userArg);
+            delete cp;
+         }
+         else
+         {
+            nxlog_debug(5, _T("NamedPipeListener(%s): rejected connection by user %s"), m_name, user);
+         }
       }
       else
       {
@@ -143,7 +183,7 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
       return NULL;
    }
 
-   return new NamedPipe(name, s);
+   return new NamedPipe(name, s, NULL);
 }
 
 /**

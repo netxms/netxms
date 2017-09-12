@@ -27,7 +27,7 @@
 /**
  * Create listener end for named pipe
  */
-NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg)
+NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user)
 {
    mode_t prevMask = 0;
 
