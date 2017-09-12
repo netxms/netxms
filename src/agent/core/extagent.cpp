@@ -35,6 +35,7 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 	nx_strncpy(m_name, name, MAX_SUBAGENT_NAME);
 	nx_strncpy(m_user, user, MAX_ESA_USER_NAME);
 	m_connected = false;
+	m_listener = NULL;
 	m_pipe = INVALID_PIPE_HANDLE;
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
@@ -48,6 +49,27 @@ ExternalSubagent::~ExternalSubagent()
 {
 	delete m_msgQueue;
 	MutexDestroy(m_mutexPipeWrite);
+	delete m_listener;
+}
+
+/**
+ * Pipe request handler
+ */
+static void RequestHandler(NamedPipe *pipe, void *userArg)
+{
+   static_cast<ExternalSubagent*>(userArg)->connect(pipe->handle());
+}
+
+/**
+ * Start listener
+ */
+void ExternalSubagent::startListener()
+{
+   TCHAR name[MAX_PIPE_NAME_LEN];
+   _sntprintf(name, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), m_name);
+   m_listener = NamedPipe::createListener(name, RequestHandler, this);
+   if (m_listener != NULL)
+      m_listener->startServer();
 }
 
 /*
@@ -454,199 +476,6 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 	return rcc;
 }
 
-/**
- * Listener for external subagents
- */
-#ifdef _WIN32
-
-static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
-{
-	ExternalSubagent *subagent = (ExternalSubagent *)arg;
-	SECURITY_ATTRIBUTES sa;
-	PSECURITY_DESCRIPTOR sd = NULL;
-	SID_IDENTIFIER_AUTHORITY sidAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
-	EXPLICIT_ACCESS ea;
-	PSID sidEveryone = NULL;
-	ACL *acl = NULL;
-	TCHAR pipeName[MAX_PATH], errorText[1024];
-
-	// Create a well-known SID for the Everyone group.
-	if(!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidEveryone))
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): AllocateAndInitializeSid failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	// Initialize an EXPLICIT_ACCESS structure for an ACE.
-	// The ACE will allow either Everyone or given user to access pipe
-	ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
-	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
-	ea.grfAccessMode = SET_ACCESS;
-	ea.grfInheritance = NO_INHERITANCE;
-	const TCHAR *user = subagent->getUserName();
-	if ((user[0] == 0) || !_tcscmp(user, _T("*")))
-	{
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): using \"Everyone\" group"), subagent->getName());
-	}
-	else
-	{
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
-		ea.Trustee.ptstrName  = (LPTSTR)user;
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): using \"%s\" user"), subagent->getName(), user);
-	}
-
-	// Create a new ACL that contains the new ACEs.
-	if (SetEntriesInAcl(1, &ea, NULL, &acl) != ERROR_SUCCESS)
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): SetEntriesInAcl failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	sd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-	if (sd == NULL)
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): LocalAlloc failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	if (!InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION))
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): InitializeSecurityDescriptor failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	// Add the ACL to the security descriptor. 
-   if (!SetSecurityDescriptorDacl(sd, TRUE, acl, FALSE))
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): SetSecurityDescriptorDacl failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.bInheritHandle = FALSE;
-	sa.lpSecurityDescriptor = sd;
-	_sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), subagent->getName());
-	HANDLE hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
-	if (hPipe == INVALID_HANDLE_VALUE)
-	{
-		nxlog_debug(2, _T("ExternalSubagentConnector(%s): CreateNamedPipe failed (%s)"), 
-         subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	nxlog_debug(2, _T("ExternalSubagentConnector(%s): named pipe created, waiting for connection"), subagent->getName());
-	int connectErrors = 0;
-	while(!(g_dwFlags & AF_SHUTDOWN))
-	{
-		BOOL connected = ConnectNamedPipe(hPipe, NULL);
-		if (connected || (GetLastError() == ERROR_PIPE_CONNECTED))
-		{
-			subagent->connect(hPipe);
-			DisconnectNamedPipe(hPipe);
-			connectErrors = 0;
-		}
-		else
-		{
-			nxlog_debug(2, _T("ExternalSubagentConnector(%s): ConnectNamedPipe failed (%s)"), 
-            subagent->getName(), GetSystemErrorText(GetLastError(), errorText, 1024));
-			connectErrors++;
-			if (connectErrors > 10)
-				break;	// Stop this connector if ConnectNamedPipe fails instantly
-		}
-	}
-
-cleanup:
-	if (hPipe != NULL)
-		CloseHandle(hPipe);
-
-	if (sd != NULL)
-		LocalFree(sd);
-
-	if (acl != NULL)
-		LocalFree(acl);
-
-	if (sidEveryone != NULL)
-		FreeSid(sidEveryone);
-
-	return THREAD_OK;
-}
-
-#else
-
-static THREAD_RESULT THREAD_CALL ExternalSubagentConnector(void *arg)
-{
-	ExternalSubagent *subagent = (ExternalSubagent *)arg;
-	mode_t prevMask = 0;
-
-	int s = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s == INVALID_SOCKET)
-	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: socket failed (%s)"), _tcserror(errno));
-		goto cleanup;
-	}
-	
-	struct sockaddr_un addrLocal;
-	addrLocal.sun_family = AF_UNIX;
-#ifdef UNICODE
-   sprintf(addrLocal.sun_path, "/tmp/.nxagentd.subagent.%S", subagent->getName());
-#else
-	sprintf(addrLocal.sun_path, "/tmp/.nxagentd.subagent.%s", subagent->getName());
-#endif
-	unlink(addrLocal.sun_path);
-	prevMask = umask(S_IWGRP | S_IWOTH);
-	if (bind(s, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
-	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: bind failed (%s)"), _tcserror(errno));
-		umask(prevMask);
-		goto cleanup;
-	}
-	umask(prevMask);
-
-	if (listen(s, 5) == -1)
-	{
-		AgentWriteDebugLog(2, _T("ExternalSubagentConnector: listen failed (%s)"), _tcserror(errno));
-		goto cleanup;
-	}
-	
-	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): UNIX socket created, waiting for connection"), subagent->getName());
-	while(!(g_dwFlags & AF_SHUTDOWN))
-	{
-		struct sockaddr_un addrRemote;
-		socklen_t size = sizeof(struct sockaddr_un);
-		SOCKET cs = accept(s, (struct sockaddr *)&addrRemote, &size);
-		if (cs > 0)
-		{
-			subagent->connect(cs);
-			shutdown(cs, 2);
-			close(cs);
-		}
-		else
-		{
-			AgentWriteDebugLog(2, _T("ExternalSubagentConnector: accept failed (%s)"), _tcserror(errno));
-		}
-	}
-
-cleanup:
-	if (s != -1)
-	{
-		close(s);
-	}
-
-	AgentWriteDebugLog(2, _T("ExternalSubagentConnector: listener thread stopped"));
-	return THREAD_OK;
-}
-
-#endif
-
 /*
  * Send message to external subagent
  */
@@ -695,7 +524,7 @@ bool AddExternalSubagent(const TCHAR *config)
 
 	ExternalSubagent *subagent = new ExternalSubagent(buffer, user);
 	s_subagents.add(subagent);
-	ThreadCreate(ExternalSubagentConnector, 0, subagent);
+	subagent->startListener();
 	return true;
 }
 
