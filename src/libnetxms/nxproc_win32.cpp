@@ -17,56 +17,110 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxproc_unix.cpp
+** File: nxproc_win32.cpp
 **
 **/
 
 #include "libnetxms.h"
 #include <nxproc.h>
+#include <aclapi.h>
 
 /**
  * Create listener end for named pipe
  */
 NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user)
 {
-   mode_t prevMask = 0;
+   NamedPipeListener *listener = NULL;
 
-   int s = socket(AF_UNIX, SOCK_STREAM, 0);
-   if (s == INVALID_SOCKET)
-   {
-      nxlog_debug(2, _T("NamedPipeListener(%s): socket() call failed (%s)"), name, _tcserror(errno));
-      return NULL;
-   }
+	PSID sidEveryone = NULL;
+	ACL *acl = NULL;
+	PSECURITY_DESCRIPTOR sd = NULL;
 
-   struct sockaddr_un addrLocal;
-   addrLocal.sun_family = AF_UNIX;
-#ifdef UNICODE
-   sprintf(addrLocal.sun_path, "/tmp/.%S", name);
-#else
-   sprintf(addrLocal.sun_path, "/tmp/.%s", name);
-#endif
-   unlink(addrLocal.sun_path);
-   prevMask = umask(S_IWGRP | S_IWOTH);
-   if (bind(s, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
-   {
-      nxlog_debug(2, _T("NamedPipeListener(%s): bind failed (%s)"), name, _tcserror(errno));
-      umask(prevMask);
-      goto failure;
-   }
-   umask(prevMask);
+	TCHAR errorText[1024];
 
-   if (listen(s, 5) == -1)
-   {
-      nxlog_debug(2, _T("NamedPipeListener(%s): listen() call failed (%s)"), name, _tcserror(errno));
-      goto failure;
-   }
+	// Create a well-known SID for the Everyone group.
+	SID_IDENTIFIER_AUTHORITY sidAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+	if (!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidEveryone))
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): AllocateAndInitializeSid failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
 
-   return new NamedPipeListener(name, s, reqHandler, userArg);
+	// Initialize an EXPLICIT_ACCESS structure for an ACE.
+	// The ACE will allow either Everyone or given user to access pipe
+	EXPLICIT_ACCESS ea;
+	ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
+	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
+	ea.grfAccessMode = SET_ACCESS;
+	ea.grfInheritance = NO_INHERITANCE;
+	if ((user == NULL) || (user[0] == 0) || !_tcscmp(user, _T("*")))
+	{
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
+	}
+	else
+	{
+		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
+		ea.Trustee.ptstrName  = (LPTSTR)user;
+		nxlog_debug(2, _T("NamedPipeListener(%s): will allow connections only for user %s"), name, user);
+	}
 
-failure:
-   close(s);
-   unlink(addrLocal.sun_path);
-   return NULL;
+	// Create a new ACL that contains the new ACEs.
+	if (SetEntriesInAcl(1, &ea, NULL, &acl) != ERROR_SUCCESS)
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): SetEntriesInAcl failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
+
+	sd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+	if (sd == NULL)
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): LocalAlloc failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
+
+	if (!InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION))
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): InitializeSecurityDescriptor failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
+
+	// Add the ACL to the security descriptor. 
+   if (!SetSecurityDescriptorDacl(sd, TRUE, acl, FALSE))
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): SetSecurityDescriptorDacl failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
+
+   TCHAR path[MAX_PATH];
+   _sntprintf(path, MAX_PATH, _T("\\\\.\\pipe\\%s"), name);
+
+	SECURITY_ATTRIBUTES sa;
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = FALSE;
+	sa.lpSecurityDescriptor = sd;
+	HANDLE hPipe = CreateNamedPipe(path, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
+	if (hPipe == INVALID_HANDLE_VALUE)
+	{
+		nxlog_debug(2, _T("NamedPipeListener(%s): CreateNamedPipe failed (%s)"), name, GetSystemErrorText(GetLastError(), errorText, 1024));
+		goto cleanup;
+	}
+
+   listener = new NamedPipeListener(name, hPipe, reqHandler, userArg, user);
+
+cleanup:
+	if (sd != NULL)
+		LocalFree(sd);
+
+	if (acl != NULL)
+		LocalFree(acl);
+
+	if (sidEveryone != NULL)
+		FreeSid(sidEveryone);
+
+   return listener;
 }
 
 /**
@@ -86,6 +140,20 @@ void NamedPipeListener::serverThread()
    nxlog_debug(2, _T("NamedPipeListener(%s): waiting for connection"), m_name);
    while(!m_stop)
    {
+      BOOL connected = ConnectNamedPipe(m_handle, NULL);
+		if (connected || (GetLastError() == ERROR_PIPE_CONNECTED))
+		{
+         nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection"), m_name);
+         NamedPipe *pipe = new NamedPipe(m_name, m_handle, NULL);
+         m_reqHandler(pipe, m_userArg);
+         delete pipe;
+		}
+		else
+		{
+         TCHAR errorText[1024];
+			nxlog_debug(2, _T("NamedPipeListener(%s): ConnectNamedPipe failed (%s)"), m_name, GetSystemErrorText(GetLastError(), errorText, 1024));
+         ThreadSleep(5);
+		}
    }
 }
 
@@ -94,7 +162,12 @@ void NamedPipeListener::serverThread()
  */
 NamedPipe::~NamedPipe()
 {
-   CloseHandle(m_handle);
+   DWORD flags = 0;
+   GetNamedPipeInfo(m_handle, &flags, NULL, NULL, NULL);
+   if (flags & PIPE_SERVER_END)
+		DisconnectNamedPipe(m_handle);
+   else
+      CloseHandle(m_handle);
    MutexDestroy(m_writeLock);
 }
 
@@ -107,7 +180,7 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
    _sntprintf(path, MAX_PATH, _T("\\\\.\\pipe\\%s"), name);
 
 reconnect:
-	HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+   HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (h == INVALID_HANDLE_VALUE)
 	{
 		if (GetLastError() == ERROR_PIPE_BUSY)
@@ -129,7 +202,27 @@ reconnect:
 bool NamedPipe::write(const void *data, size_t size)
 {
 	DWORD bytes;
-	if (!WriteFile(s_handle, data, size, &bytes, NULL))
+	if (!WriteFile(m_handle, data, (DWORD)size, &bytes, NULL))
 		return false;
    return bytes == (DWORD)size;
+}
+
+/**
+ * Get user name
+ */
+const TCHAR *NamedPipe::user()
+{
+   if (m_user[0] == 0)
+   {
+      if (!GetNamedPipeHandleState(m_handle, NULL, NULL, NULL, NULL, m_user, 64))
+      {
+         if (GetLastError() != ERROR_CANNOT_IMPERSONATE)
+         {
+            TCHAR errorText[1024];
+			   nxlog_debug(5, _T("NamedPipeListener(%s): GetNamedPipeHandleState failed (%s)"), m_name, GetSystemErrorText(GetLastError(), errorText, 1024));
+            _tcscpy(m_user, _T("[unknown]"));
+         }
+      }
+   }
+   return m_user;
 }

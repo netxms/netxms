@@ -193,3 +193,11 @@ bool NamedPipe::write(const void *data, size_t size)
 {
    return SendEx(m_handle, data, size, 0, m_writeLock) == (int)size;
 }
+
+/**
+ * Get user name
+ */
+const TCHAR *NamedPipe::user()
+{
+   return m_user;
+}
