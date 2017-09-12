@@ -19,14 +19,16 @@ private:
    TCHAR m_name[MAX_PIPE_NAME_LEN];
    HPIPE m_handle;
    MUTEX m_writeLock;
+   TCHAR m_user[64];
 
-   NamedPipe(const TCHAR *name, HPIPE handle);
+   NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user);
 
 public:
    ~NamedPipe();
 
    const TCHAR *name() const { return m_name; }
    HPIPE handle() { return m_handle; }
+   const TCHAR *user() const { return m_user; }
 
    bool write(const void *data, size_t size);
 
@@ -50,11 +52,12 @@ private:
    void *m_userArg;
    THREAD m_serverThread;
    bool m_stop;
+   TCHAR m_user[64];
 
    void serverThread();
    static THREAD_RESULT THREAD_CALL serverThreadStarter(void *arg);
 
-   NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeRequestHandler reqHandler, void *userArg);
+   NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user);
 
 public:
    ~NamedPipeListener();
@@ -64,7 +67,7 @@ public:
    void start();
    void stop();
 
-   static NamedPipeListener *create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg);
+   static NamedPipeListener *create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user = NULL);
 };
 
 #endif   /* _nxproc_h_ */

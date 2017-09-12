@@ -65,7 +65,8 @@ void ExternalSubagent::startListener()
 {
    TCHAR name[MAX_PIPE_NAME_LEN];
    _sntprintf(name, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), m_name);
-   m_listener = NamedPipeListener::create(name, RequestHandler, this);
+   m_listener = NamedPipeListener::create(name, RequestHandler, this,
+            (m_user[0] != 0) && _tcscmp(m_user, _T("*")) ? m_user : NULL);
    if (m_listener != NULL)
       m_listener->start();
 }
