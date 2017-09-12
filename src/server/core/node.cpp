@@ -1348,6 +1348,8 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
    tNow = time(NULL);
 
+   bool agentConnected = false;
+
    int retryCount = 5;
 
 restart_agent_check:
@@ -1465,6 +1467,7 @@ restart_agent_check:
             PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
             sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
          }
+         agentConnected = true;
       }
       else
       {
@@ -1588,7 +1591,8 @@ restart_agent_check:
 
    // Check if entire node is down
    // This check is disabled for nodes without IP address
-   if (m_ipAddress.isValidUnicast())
+   // The only exception is node without valid address connected via agent tunnel
+   if (m_ipAddress.isValidUnicast() || agentConnected)
    {
       bool allDown = true;
       lockChildList(false);
