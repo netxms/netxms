@@ -225,12 +225,11 @@ class ExternalSubagent
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	TCHAR m_user[MAX_ESA_USER_NAME];
-	NamedPipe *m_listener;
-	HPIPE m_pipe;
+	NamedPipeListener *m_listener;
+	NamedPipe *m_pipe;
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
 	UINT32 m_requestId;
-	MUTEX m_mutexPipeWrite;
 
 	bool sendMessage(NXCPMessage *msg);
 	NXCPMessage *waitForMessage(WORD code, UINT32 id);
@@ -244,7 +243,7 @@ public:
 	~ExternalSubagent();
 
 	void startListener();
-	void connect(HPIPE hPipe);
+	void connect(NamedPipe *pipe);
 
 	bool isConnected() { return m_connected; }
 	const TCHAR *getName() { return m_name; }
@@ -594,7 +593,6 @@ void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListListsFromExtSubagents(StringList *list);
 void ListTablesFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListTablesFromExtSubagents(StringList *list);
-bool SendMessageToPipe(HPIPE hPipe, NXCP_MESSAGE *msg);
 bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents();

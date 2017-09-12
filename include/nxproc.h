@@ -6,9 +6,32 @@
 /**
  * Max pipe name length
  */
-#define MAX_PIPE_NAME_LEN     64
+#define MAX_PIPE_NAME_LEN     128
 
-class NamedPipe;
+/**
+ * Named pipe class
+ */
+class LIBNETXMS_EXPORTABLE NamedPipe
+{
+   friend class NamedPipeListener;
+
+private:
+   TCHAR m_name[MAX_PIPE_NAME_LEN];
+   HPIPE m_handle;
+   MUTEX m_writeLock;
+
+   NamedPipe(const TCHAR *name, HPIPE handle);
+
+public:
+   ~NamedPipe();
+
+   const TCHAR *name() const { return m_name; }
+   HPIPE handle() { return m_handle; }
+
+   bool write(const void *data, size_t size);
+
+   static NamedPipe *connect(const TCHAR *name, UINT32 timeout = 1000);
+};
 
 /**
  * Client request handler
@@ -16,45 +39,32 @@ class NamedPipe;
 typedef void (*NamedPipeRequestHandler)(NamedPipe *pipe, void *userArg);
 
 /**
- * Named pipe class
+ * Named pipe listener (server)
  */
-class LIBNETXMS_EXPORTABLE NamedPipe
+class LIBNETXMS_EXPORTABLE NamedPipeListener
 {
 private:
    TCHAR m_name[MAX_PIPE_NAME_LEN];
    HPIPE m_handle;
-   bool m_isListener;
    NamedPipeRequestHandler m_reqHandler;
    void *m_userArg;
    THREAD m_serverThread;
    bool m_stop;
 
-   NamedPipe(const TCHAR *name, HPIPE handle, bool listener, NamedPipeRequestHandler reqHandler = NULL, void *userArg = NULL)
-   {
-      nx_strncpy(m_name, name, MAX_PIPE_NAME_LEN);
-      m_handle = handle;
-      m_isListener = listener;
-      m_reqHandler = reqHandler;
-      m_userArg = userArg;
-      m_serverThread = INVALID_THREAD_HANDLE;
-      m_stop = false;
-   }
-
    void serverThread();
    static THREAD_RESULT THREAD_CALL serverThreadStarter(void *arg);
 
+   NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeRequestHandler reqHandler, void *userArg);
+
 public:
-   ~NamedPipe();
+   ~NamedPipeListener();
 
    const TCHAR *name() const { return m_name; }
-   HPIPE handle() { return m_handle; }
-   bool isListener() const { return m_isListener; }
 
-   void startServer();
-   void stopServer();
+   void start();
+   void stop();
 
-   static NamedPipe *createListener(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg);
-   static NamedPipe *connectTo(const TCHAR *name);
+   static NamedPipeListener *create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg);
 };
 
 #endif   /* _nxproc_h_ */

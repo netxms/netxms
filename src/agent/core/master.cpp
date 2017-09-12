@@ -82,12 +82,7 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Pipe to master agent
  */
-#ifdef _WIN32
-static HANDLE s_pipe = INVALID_HANDLE_VALUE;
-#else
-static int s_pipe = -1;
-#endif
-static MUTEX s_mutexPipeWrite = MutexCreate();
+static NamedPipe *s_pipe = NULL;
 
 /**
  * Listener thread for master agent commands
@@ -96,39 +91,15 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 {
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
-#ifdef _WIN32
       TCHAR pipeName[MAX_PATH];
-      _sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\nxagentd.subagent.%s"), g_masterAgent);
+      _sntprintf(pipeName, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), g_masterAgent);
+      s_pipe = NamedPipe::connect(pipeName, 5000);
 
-		s_pipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-		if (s_pipe != INVALID_HANDLE_VALUE)
-		{
-			DWORD pipeMode = PIPE_READMODE_MESSAGE;
-			SetNamedPipeHandleState(s_pipe, &pipeMode, NULL, NULL);
-#else
-      s_pipe = socket(AF_UNIX, SOCK_STREAM, 0);
-      if (s_pipe != INVALID_SOCKET)
+      if (s_pipe != NULL)
       {
-	      struct sockaddr_un remote;
-	      remote.sun_family = AF_UNIX;
-#ifdef UNICODE
-         sprintf(remote.sun_path, "/tmp/.nxagentd.subagent.%S", g_masterAgent);
-#else
-         sprintf(remote.sun_path, "/tmp/.nxagentd.subagent.%s", g_masterAgent);
-#endif
-	      if (connect(s_pipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
-         {
-            close(s_pipe);
-            s_pipe = -1;
-         }
-      }
-
-      if (s_pipe != -1)
-      {
-#endif
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
-         PipeMessageReceiver receiver(s_pipe, 8192, 1048576);  // 8K initial, 1M max
+         PipeMessageReceiver receiver(s_pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
             MessageReceiverResult result;
@@ -186,31 +157,18 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 
 				// Send response to pipe
 				NXCP_MESSAGE *rawMsg = response.createMessage();
-            bool sendSuccess = SendMessageToPipe(s_pipe, rawMsg);
+            bool sendSuccess = s_pipe->write(rawMsg, ntohl(rawMsg->size));
             free(rawMsg);
             if (!sendSuccess)
                break;
 			}
-#ifdef _WIN32
-			CloseHandle(s_pipe);
-#else
-         close(s_pipe);
-#endif
+			delete_and_null(s_pipe);
 			AgentWriteDebugLog(1, _T("Disconnected from master agent"));
 		}
 		else
 		{
-#ifdef _WIN32
-			if (GetLastError() == ERROR_PIPE_BUSY)
-			{
-				WaitNamedPipe(pipeName, 5000);
-			}
-			else
-#endif
-			{
-				AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
-				ThreadSleep(5);
-			}
+         AgentWriteDebugLog(1, _T("Cannot connect to master agent, will retry in 5 seconds"));
+         ThreadSleep(5);
 		}
 	}
 	AgentWriteDebugLog(1, _T("Master agent listener stopped"));
@@ -233,8 +191,7 @@ bool SendMessageToMasterAgent(NXCPMessage *msg)
  */
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg)
 {
-	MutexLock(s_mutexPipeWrite);
-   bool success = SendMessageToPipe(s_pipe, msg);
-	MutexUnlock(s_mutexPipeWrite);
-   return success;
+   if (s_pipe == NULL)
+      return false;
+   return s_pipe->write(msg, ntohl(msg->size));
 }

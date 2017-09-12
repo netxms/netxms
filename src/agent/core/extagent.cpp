@@ -36,10 +36,9 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 	nx_strncpy(m_user, user, MAX_ESA_USER_NAME);
 	m_connected = false;
 	m_listener = NULL;
-	m_pipe = INVALID_PIPE_HANDLE;
+	m_pipe = NULL;
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
-	m_mutexPipeWrite = MutexCreate();
 }
 
 /**
@@ -48,7 +47,6 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 ExternalSubagent::~ExternalSubagent()
 {
 	delete m_msgQueue;
-	MutexDestroy(m_mutexPipeWrite);
 	delete m_listener;
 }
 
@@ -57,7 +55,7 @@ ExternalSubagent::~ExternalSubagent()
  */
 static void RequestHandler(NamedPipe *pipe, void *userArg)
 {
-   static_cast<ExternalSubagent*>(userArg)->connect(pipe->handle());
+   static_cast<ExternalSubagent*>(userArg)->connect(pipe);
 }
 
 /**
@@ -67,9 +65,9 @@ void ExternalSubagent::startListener()
 {
    TCHAR name[MAX_PIPE_NAME_LEN];
    _sntprintf(name, MAX_PIPE_NAME_LEN, _T("nxagentd.subagent.%s"), m_name);
-   m_listener = NamedPipe::createListener(name, RequestHandler, this);
+   m_listener = NamedPipeListener::create(name, RequestHandler, this);
    if (m_listener != NULL)
-      m_listener->startServer();
+      m_listener->start();
 }
 
 /*
@@ -81,9 +79,7 @@ bool ExternalSubagent::sendMessage(NXCPMessage *msg)
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
 	NXCP_MESSAGE *rawMsg = msg->createMessage();
-	MutexLock(m_mutexPipeWrite);
-   bool success = SendMessageToPipe(m_pipe, rawMsg);
-	MutexUnlock(m_mutexPipeWrite);
+	bool success = (m_pipe != NULL) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
 	free(rawMsg);
 	return success;
 }
@@ -99,15 +95,15 @@ NXCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 /**
  * Main connection thread
  */
-void ExternalSubagent::connect(HPIPE hPipe)
+void ExternalSubagent::connect(NamedPipe *pipe)
 {
 	TCHAR buffer[256];
    UINT32 i;
 
-	m_pipe = hPipe;
+	m_pipe = pipe;
 	m_connected = true;
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
-   PipeMessageReceiver receiver(hPipe, 8192, 1048576);  // 8K initial, 1M max
+   PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
 	while(true)
 	{
       MessageReceiverResult result;
@@ -144,6 +140,7 @@ void ExternalSubagent::connect(HPIPE hPipe)
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection closed"), m_name);
 	m_connected = false;
 	m_msgQueue->clear();
+	m_pipe = NULL;
 }
 
 /**
@@ -474,32 +471,6 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 		rcc = ERR_CONNECTION_BROKEN;
 	}
 	return rcc;
-}
-
-/*
- * Send message to external subagent
- */
-bool SendMessageToPipe(HPIPE hPipe, NXCP_MESSAGE *msg)
-{
-	bool success = false;
-
-#ifdef _WIN32
-   if (hPipe == INVALID_HANDLE_VALUE)
-      return false;
-
-	DWORD bytes = 0;
-   if (WriteFile(hPipe, msg, ntohl(msg->size), &bytes, NULL))
-	{
-		success = (bytes == ntohl(msg->size));
-	}
-#else
-   if (hPipe == -1)
-      return false;
-
-	int bytes = SendEx(hPipe, msg, ntohl(msg->size), 0, NULL); 
-	success = (bytes == ntohl(msg->size));
-#endif
-	return success;
 }
 
 /**
