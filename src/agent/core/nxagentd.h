@@ -32,6 +32,7 @@
 #include <nxlog.h>
 #include <nxcldefs.h>
 #include <nxdbapi.h>
+#include <nxproc.h>
 #include "messages.h"
 #include "nxsnmp.h"
 #include "localdb.h"
@@ -224,6 +225,7 @@ class ExternalSubagent
 private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	TCHAR m_user[MAX_ESA_USER_NAME];
+	NamedPipe *m_listener;
 	HPIPE m_pipe;
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
@@ -241,6 +243,7 @@ public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
 	~ExternalSubagent();
 
+	void startListener();
 	void connect(HPIPE hPipe);
 
 	bool isConnected() { return m_connected; }
