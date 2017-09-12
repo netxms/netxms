@@ -25,21 +25,34 @@
 #include <nxproc.h>
 
 /**
+ * Named pipe listener constructor
+ */
+NamedPipeListener::NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeRequestHandler reqHandler, void *userArg)
+{
+   nx_strncpy(m_name, name, MAX_PIPE_NAME_LEN);
+   m_handle = handle;
+   m_reqHandler = reqHandler;
+   m_userArg = userArg;
+   m_serverThread = INVALID_THREAD_HANDLE;
+   m_stop = false;
+}
+
+/**
  * Start named pipe server
  */
-void NamedPipe::startServer()
+void NamedPipeListener::start()
 {
    if (m_serverThread != INVALID_THREAD_HANDLE)
       return;  // already started
 
    m_stop = false;
-   m_serverThread = ThreadCreateEx(NamedPipe::serverThreadStarter, 0, this);
+   m_serverThread = ThreadCreateEx(NamedPipeListener::serverThreadStarter, 0, this);
 }
 
 /**
  * Stop named pipe server
  */
-void NamedPipe::stopServer()
+void NamedPipeListener::stop()
 {
    m_stop = true;
    ThreadJoin(m_serverThread);
@@ -49,8 +62,18 @@ void NamedPipe::stopServer()
 /**
  * Named pipe server thread starter
  */
-THREAD_RESULT THREAD_CALL NamedPipe::serverThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL NamedPipeListener::serverThreadStarter(void *arg)
 {
-   static_cast<NamedPipe*>(arg)->serverThread();
+   static_cast<NamedPipeListener*>(arg)->serverThread();
    return THREAD_OK;
+}
+
+/**
+ * Named pipe constructor
+ */
+NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle)
+{
+   nx_strncpy(m_name, name, MAX_PIPE_NAME_LEN);
+   m_handle = handle;
+   m_writeLock = MutexCreate();
 }

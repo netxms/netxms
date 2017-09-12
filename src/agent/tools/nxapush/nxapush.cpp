@@ -23,28 +23,16 @@
 #include <nms_agent.h>
 #include <nms_util.h>
 #include <nxcpapi.h>
+#include <nxproc.h>
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/un.h>
-#endif
-
-#ifndef SUN_LEN
-#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
-#endif
-
 /**
  * Pipe handle
  */
-#ifdef _WIN32
-static HANDLE s_hPipe = NULL;
-#else
-static int s_hPipe = -1;
-#endif
+static NamedPipe *s_pipe = NULL;
 
 /**
  * Data to send
@@ -95,36 +83,9 @@ static BOOL AddValue(TCHAR *pair)
  */
 static BOOL Startup()
 {
-#ifdef _WIN32
-reconnect:
-	s_hPipe = CreateFile(_T("\\\\.\\pipe\\nxagentd.push"), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-	if (s_hPipe == INVALID_HANDLE_VALUE)
-	{
-		if (GetLastError() == ERROR_PIPE_BUSY)
-		{
-			if (WaitNamedPipe(_T("\\\\.\\pipe\\nxagentd.push"), 5000))
-				goto reconnect;
-		}
-		return FALSE;
-	}
-
-	DWORD pipeMode = PIPE_READMODE_MESSAGE;
-	SetNamedPipeHandleState(s_hPipe, &pipeMode, NULL, NULL);
-#else
-	s_hPipe = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s_hPipe == INVALID_SOCKET)
-		return FALSE;
-
-	struct sockaddr_un remote;
-	remote.sun_family = AF_UNIX;
-	strcpy(remote.sun_path, "/tmp/.nxagentd.push");
-	if (connect(s_hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
-	{
-		close(s_hPipe);
-		s_hPipe = -1;
-		return FALSE;
-	}
-#endif
+   s_pipe = NamedPipe::connect(_T("nxagentd.push"));
+   if (s_pipe == NULL)
+      return FALSE;
 
 	if (s_optVerbose > 2)
 		_tprintf(_T("Connected to NetXMS agent\n"));
@@ -135,10 +96,8 @@ reconnect:
 /**
  * Send all DCIs
  */
-static BOOL Send()
+static bool Send()
 {
-	BOOL success = FALSE;
-
 	NXCPMessage msg;
 	msg.setCode(CMD_PUSH_DCI_DATA);
    msg.setField(VID_OBJECT_ID, s_optObjectId);
@@ -147,21 +106,8 @@ static BOOL Send()
 
 	// Send response to pipe
 	NXCP_MESSAGE *rawMsg = msg.createMessage();
-#ifdef _WIN32
-	DWORD bytes;
-	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->size), &bytes, NULL))
-		goto cleanup;
-	if (bytes != ntohl(rawMsg->size))
-		goto cleanup;
-#else
-	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->size), 0, NULL); 
-	if (bytes != (int)ntohl(rawMsg->size))
-		goto cleanup;
-#endif
+	bool success = s_pipe->write(rawMsg, ntohl(rawMsg->size));
 
-	success = TRUE;
-
-cleanup:
 	free(rawMsg);
 	return success;
 }
@@ -171,17 +117,7 @@ cleanup:
  */
 static BOOL Teardown()
 {
-#ifdef _WIN32
-	if (s_hPipe != NULL)
-	{
-		CloseHandle(s_hPipe);
-	}
-#else
-	if (s_hPipe != -1)
-	{
-		close(s_hPipe);
-	}
-#endif
+	delete s_pipe;
 	delete s_data;
 	return TRUE;
 }

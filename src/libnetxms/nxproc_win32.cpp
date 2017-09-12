@@ -74,15 +74,8 @@ failure:
  */
 NamedPipeListener::~NamedPipeListener()
 {
-   close(m_handle);
+   CloseHandle(m_handle);
    stop();
-   char path[MAX_PATH];
-#ifdef UNICODE
-   sprintf(path, "/tmp/.%S", m_name);
-#else
-   sprintf(path, "/tmp/.%s", m_name);
-#endif
-   unlink(path);
 }
 
 /**
@@ -93,19 +86,6 @@ void NamedPipeListener::serverThread()
    nxlog_debug(2, _T("NamedPipeListener(%s): waiting for connection"), m_name);
    while(!m_stop)
    {
-      struct sockaddr_un addrRemote;
-      socklen_t size = sizeof(struct sockaddr_un);
-      SOCKET cs = accept(m_handle, (struct sockaddr *)&addrRemote, &size);
-      if (cs > 0)
-      {
-         NamedPipe *cp = new NamedPipe(m_name, cs);
-         m_reqHandler(cp, m_userArg);
-         delete cp;
-      }
-      else
-      {
-         nxlog_debug(2, _T("NamedPipeListener(%s): accept failed (%s)"), m_name, _tcserror(errno));
-      }
    }
 }
 
@@ -114,7 +94,7 @@ void NamedPipeListener::serverThread()
  */
 NamedPipe::~NamedPipe()
 {
-   close(m_handle);
+   CloseHandle(m_handle);
    MutexDestroy(m_writeLock);
 }
 
@@ -123,27 +103,24 @@ NamedPipe::~NamedPipe()
  */
 NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
 {
-   int s = socket(AF_UNIX, SOCK_STREAM, 0);
-   if (s == INVALID_SOCKET)
-   {
-      nxlog_debug(2, _T("NamedPipe(%s): socket() call failed (%s)"), name, _tcserror(errno));
-      return NULL;
-   }
+   TCHAR path[MAX_PATH];
+   _sntprintf(path, MAX_PATH, _T("\\\\.\\pipe\\%s"), name);
 
-   struct sockaddr_un remote;
-   remote.sun_family = AF_UNIX;
-#ifdef UNICODE
-   sprintf(remote.sun_path, "/tmp/.%S", name);
-#else
-   sprintf(remote.sun_path, "/tmp/.%s", name);
-#endif
-   if (::connect(s, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
-   {
-      close(s);
-      return NULL;
-   }
+reconnect:
+	HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (h == INVALID_HANDLE_VALUE)
+	{
+		if (GetLastError() == ERROR_PIPE_BUSY)
+		{
+			if (WaitNamedPipe(path, timeout))
+				goto reconnect;
+		}
+		return NULL;
+	}
 
-   return new NamedPipe(name, s);
+	DWORD pipeMode = PIPE_READMODE_MESSAGE;
+	SetNamedPipeHandleState(h, &pipeMode, NULL, NULL);
+   return new NamedPipe(name, h, false);
 }
 
 /**
@@ -151,5 +128,8 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
  */
 bool NamedPipe::write(const void *data, size_t size)
 {
-   return SendEx(m_handle, data, size, 0, m_writeLock) == (int)size;
+	DWORD bytes;
+	if (!WriteFile(s_handle, data, size, &bytes, NULL))
+		return false;
+   return bytes == (DWORD)size;
 }
