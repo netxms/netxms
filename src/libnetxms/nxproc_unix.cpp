@@ -25,6 +25,10 @@
 #include <nxproc.h>
 #include <pwd.h>
 
+#ifdef __sun
+#include <ucred.h>
+#endif
+
 /**
  * Create listener end for named pipe
  */
@@ -87,6 +91,41 @@ NamedPipeListener::~NamedPipeListener()
 }
 
 /**
+ * Get UNIX socket peer user ID
+ */
+static bool GetPeerUID(SOCKET s, unsigned int *uid)
+{
+#if defined(__sun)
+   ucred_t *peer;
+   if (getpeerucred(s, &peer) == 0)
+   {
+      *uid = (unsigned int)ucred_geteuid(peer);
+      ucred_free(peer);
+      return true;
+   }
+#elif defined(SO_PEERID)
+   struct peercred_struct peer;
+   unsigned int len = sizeof(peer);
+   if (getsockopt(s, SOL_SOCKET, SO_PEERID, &peer, &len) == 0)
+   {
+      *uid = (unsigned int)peer.euid;
+      return true;
+   }
+#elif defined(SO_PEERCRED)
+   struct ucred peer;
+   unsigned int len = sizeof(peer);
+   if (getsockopt(s, SOL_SOCKET, SO_PEERCRED, &peer, &len) == 0)
+   {
+      *uid = (unsigned int)peer.uid;
+      return true;
+   }
+#else
+#error no valid method to get socket peer UID
+#endif
+   return false;
+}
+
+/**
  * Named pipe server thread
  */
 void NamedPipeListener::serverThread()
@@ -100,17 +139,15 @@ void NamedPipeListener::serverThread()
       if (cs > 0)
       {
          TCHAR user[64];
-
-         struct ucred peer;
-         unsigned int len = sizeof(peer);
-         if (getsockopt(cs, SOL_SOCKET, SO_PEERCRED, &peer, &len) == 0)
+         unsigned int uid;
+         if (GetPeerUID(cs, &uid))
          {
 #if HAVE_GETPWUID_R
             struct passwd pwbuf, *pw;
             char sbuf[4096];
-            getpwuid_r(peer.uid, &pwbuf, sbuf, 4096, &pw);
+            getpwuid_r(uid, &pwbuf, sbuf, 4096, &pw);
 #else
-            struct passwd *pw = getpwuid(peer.uid);
+            struct passwd *pw = getpwuid(uid);
 #endif
             if (pw != NULL)
             {
@@ -122,7 +159,7 @@ void NamedPipeListener::serverThread()
             }
             else
             {
-               _sntprintf(user, 64, _T("[%d]"), (int)peer.uid);
+               _sntprintf(user, 64, _T("[%u]"), uid);
             }
          }
          else
