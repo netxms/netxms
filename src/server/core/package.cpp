@@ -231,8 +231,8 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      BOOL bConnected = FALSE;
                      UINT32 i;
 
-                     // Disconnect from agent
-                     pAgentConn->disconnect();
+                     // Delete current connection
+                     pAgentConn->decRefCount();
 
                      // Change deployment status to "Package installation"
                      msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
@@ -243,7 +243,8 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      for(i = 20; i < dwMaxWait; i += 20)
                      {
                         ThreadSleep(20);
-                        if (pAgentConn->connect(g_pServerKey))
+                        pAgentConn = pNode->createAgentConnection();
+                        if (pAgentConn != NULL)
                         {
                            bConnected = TRUE;
                            break;   // Connected successfully
@@ -252,7 +253,11 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 
                      // Last attempt to reconnect
                      if (!bConnected)
-                        bConnected = pAgentConn->connect(g_pServerKey);
+                     {
+                        pAgentConn = pNode->createAgentConnection();
+                        if (pAgentConn != NULL)
+                           bConnected = TRUE;
+                     }
 
                      if (bConnected)
                      {
@@ -292,8 +297,8 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             {
                pszErrorMsg = _T("Package is not compatible with target machine");
             }
-
-            pAgentConn->decRefCount();
+            if (pAgentConn != NULL)
+               pAgentConn->decRefCount();
          }
          else
          {
