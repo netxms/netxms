@@ -492,14 +492,23 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
    DbgPrintf(2, _T("DCI cache loader thread started"));
    while(true)
    {
-      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.getOrBlock();
-      if (dci == INVALID_POINTER_VALUE)
+      DCObjectInfo *ref = (DCObjectInfo *)g_dciCacheLoaderQueue.getOrBlock();
+      if (ref == INVALID_POINTER_VALUE)
          break;
 
-      DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
-                dci->getName(), dci->getId(), dci->getOwnerName(), dci->getOwnerId());
-      dci->reloadCache();
-      dci->getOwner()->decRefCount();
+      NetObj *object = FindObjectById(ref->getOwnerId());
+      if ((object != NULL) && object->isDataCollectionTarget())
+      {
+         object->incRefCount();
+         DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), true);
+         if (dci->getType() == DCO_TYPE_ITEM)
+         {
+            DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
+                      ref->getName(), ref->getId(), object->getName(), object->getId());
+            static_cast<DCItem*>(dci)->reloadCache();
+         }
+         object->decRefCount();
+      }
    }
    DbgPrintf(2, _T("DCI cache loader thread stopped"));
    return THREAD_OK;
