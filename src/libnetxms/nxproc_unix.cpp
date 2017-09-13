@@ -96,7 +96,7 @@ NamedPipeListener::~NamedPipeListener()
 static bool GetPeerUID(SOCKET s, unsigned int *uid)
 {
 #if defined(__sun)
-   ucred_t *peer;
+   ucred_t *peer = NULL;
    if (getpeerucred(s, &peer) == 0)
    {
       *uid = (unsigned int)ucred_geteuid(peer);
