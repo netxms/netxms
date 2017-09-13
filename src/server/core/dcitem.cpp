@@ -1066,10 +1066,9 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
       // to reduce load on database at server startup
       if ((m_owner != NULL) && (((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
       {
-         m_owner->incRefCount();
          m_requiredCacheSize = dwRequiredSize;
          m_bCacheLoaded = false;
-         g_dciCacheLoaderQueue.put(this);
+         g_dciCacheLoaderQueue.put(new DCObjectInfo(this));
       }
       else
       {

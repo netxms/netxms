@@ -668,6 +668,7 @@ private:
    int m_status;
    UINT32 m_errorCount;
    time_t m_lastPollTime;
+   UINT32 m_ownerId;
 
 public:
    DCObjectInfo(DCObject *object);
@@ -685,6 +686,7 @@ public:
    int getStatus() const { return m_status; }
    UINT32 getErrorCount() const { return m_errorCount; }
    time_t getLastPollTime() const { return m_lastPollTime; }
+   UINT32 getOwnerId() const { return m_ownerId; }
 };
 
 /**

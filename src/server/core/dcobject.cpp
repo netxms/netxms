@@ -1309,6 +1309,7 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    m_status = object->getStatus();
    m_errorCount = object->getErrorCount();
    m_lastPollTime = object->getLastPollTime();
+   m_ownerId = object->getOwnerId();
 }
 
 /**
