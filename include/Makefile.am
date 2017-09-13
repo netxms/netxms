@@ -42,6 +42,7 @@ include_HEADERS = \
 	nxlog.h \
 	nxlpapi.h \
 	nxmbapi.h \
+	nxproc.h \
 	nxqueue.h \
 	nxsdapi.h \
 	nxsl_classes.h \
