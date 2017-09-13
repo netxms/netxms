@@ -119,6 +119,14 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
       *uid = (unsigned int)peer.uid;
       return true;
    }
+#elif HAVE_GETPEEREID
+   uid_t euid;
+   gid_t egid;
+   if (getpeereid(s, &euid, &egid) == 0)
+   {
+      *uid = (unsigned int)euid;
+      return true;
+   }
 #else
 #error no valid method to get socket peer UID
 #endif
