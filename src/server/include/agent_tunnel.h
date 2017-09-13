@@ -134,6 +134,7 @@ public:
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }
    UINT32 getNodeId() const { return m_nodeId; }
+   UINT32 getState() const { return m_state; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 
