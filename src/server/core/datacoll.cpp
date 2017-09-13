@@ -512,6 +512,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
          }
          object->decRefCount();
       }
+      delete ref;
    }
    DbgPrintf(2, _T("DCI cache loader thread stopped"));
    return THREAD_OK;
