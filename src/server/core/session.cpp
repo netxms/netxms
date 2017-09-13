@@ -7838,14 +7838,20 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
+               String args;
                for(int i = 0; i < argc; i++)
+               {
+                  args.appendFormattedString(_T("%s, "), argv[i]);
                   free(argv[i]);
+               }
+               args.shrink(2);
 
                switch(rcc)
                {
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
-                     writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Executed agent action %s"), action);
+                     writeAuditLog(AUDIT_OBJECTS, true, object->getId(), (args.length() > 0 ? _T("Executed agent action %s, with fields: %s") :
+                                                                                             _T("Executed agent action %s")), action, (const TCHAR*)args);
                      break;
                   case ERR_ACCESS_DENIED:
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
