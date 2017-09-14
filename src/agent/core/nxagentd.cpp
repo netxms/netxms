@@ -757,27 +757,33 @@ BOOL Initialize()
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", s_debugLevel);
 
-	int numTags = 0, lvl = 0;
-   TCHAR tagBuffer[254], lvlBuffer[2];
-   TCHAR const *ptr;
-
-   _tprintf(_T("Taglist: %s\n"), s_debugTags);
-   TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
-   if (tagList != NULL)
+   if (s_debugTags != NULL)
    {
-      for(int i = 0; i < numTags; i++)
+      TCHAR const *ptr;
+      int numTags;
+      TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
+      if (tagList != NULL)
       {
-         ptr = ExtractWord(tagList[i], tagBuffer);
-         ExtractWord(ptr, lvlBuffer);
-         lvl = _tcstol(lvlBuffer, NULL, 0);
+         TCHAR tagBuffer[254], lvlBuffer[2];
 
-         if(lvl != 0 && tagBuffer != NULL)
-            nxlog_set_debug_level_tag(tagBuffer, lvl);
+         for(int i = 0; i < numTags; i++)
+         {
+            ptr = ExtractWord(tagList[i], tagBuffer);
+            if (tagBuffer[0] != 0)
+            {
+               ExtractWord(ptr, lvlBuffer);
+               if (lvlBuffer[0] != 0)
+               {
+                  int lvl = _tcstol(lvlBuffer, NULL, 0);
+                  nxlog_set_debug_level_tag(tagBuffer, lvl);
+               }
+            }
+            free(tagList[i]);
+         }
       }
+      free(s_debugTags);
+      free(tagList);
    }
-
-   free(s_debugTags);
-   free(tagList);
 
 	nxlog_set_debug_level(s_debugLevel);
 
@@ -1857,7 +1863,6 @@ int main(int argc, char *argv[])
 
 				if (g_config->parseTemplate(configSection, m_cfgTemplate))
 				{
-				   _tprintf(_T("Taglist main: %s\n"), s_debugTags);
 				   DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
 
                // try to guess executable path
