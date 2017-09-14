@@ -3001,6 +3001,10 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
    }
    else
    {
+      // some systems return FQDN in gethostname call
+      char *p = strchr(hostname, '.');
+      if (p != NULL)
+         *p = 0;
 #ifdef UNICODE
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostname, -1, buffer, size);
 #else
