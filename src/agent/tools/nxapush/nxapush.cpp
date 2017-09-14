@@ -85,7 +85,11 @@ static BOOL Startup()
 {
    s_pipe = NamedPipe::connect(_T("nxagentd.push"));
    if (s_pipe == NULL)
+   {
+      if (s_optVerbose > 1)
+         _tprintf(_T("ERROR: named pipe connection failed\n"));
       return FALSE;
+   }
 
 	if (s_optVerbose > 2)
 		_tprintf(_T("Connected to NetXMS agent\n"));
@@ -104,7 +108,7 @@ static bool Send()
    msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);
    s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
-	// Send response to pipe
+	// Send message to pipe
 	NXCP_MESSAGE *rawMsg = msg.createMessage();
 	bool success = s_pipe->write(rawMsg, ntohl(rawMsg->size));
 
@@ -119,6 +123,8 @@ static BOOL Teardown()
 {
 	delete s_pipe;
 	delete s_data;
+	if (s_optVerbose > 2)
+		_tprintf(_T("Disconnected from NetXMS agent\n"));
 	return TRUE;
 }
 
@@ -184,6 +190,17 @@ _T("      nxapush @file\n")
 }
 
 /**
+ * Debug writer
+ */
+static void DebugWriter(const TCHAR *tag, const TCHAR *text)
+{
+   if (tag == NULL)      
+      _tprintf(_T("%s\n"), text);
+   else
+      _tprintf(_T("<%s> %s\n"), tag, text);
+}
+
+/**
  * Entry point
  */
 int main(int argc, char *argv[])
@@ -192,6 +209,7 @@ int main(int argc, char *argv[])
 	int c;
 
 	InitNetXMSProcess(true);
+   nxlog_set_debug_writer(DebugWriter);
 
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG
@@ -235,15 +253,17 @@ int main(int argc, char *argv[])
 	{
 		if (s_optVerbose > 0)
 		{
-			printf("Not enough arguments\n\n");
+			_tprintf(_T("Not enough arguments\n\n"));
 #if HAVE_GETOPT_LONG
-			printf("Try `%s --help' for more information.\n", argv[0]);
+			_tprintf(_T("Try `%hs --help' for more information.\n"), argv[0]);
 #else
-			printf("Try `%s -h' for more information.\n", argv[0]);
+			_tprintf(_T("Try `%hs -h' for more information.\n"), argv[0]);
 #endif
 		}
 		exit(1);
 	}
+
+   nxlog_set_debug_level(s_optVerbose);
 
 	// Parse
 	if (optind < argc)
@@ -285,7 +305,7 @@ int main(int argc, char *argv[])
 				{
 					if (s_optVerbose > 0)
 					{
-						printf("Cannot open \"%s\": %s\n", p + 1, strerror(errno));
+						_tprintf(_T("Cannot open \"%hs\": %hs\n"), p + 1, strerror(errno));
 					}
 				}
 			}
@@ -306,6 +326,8 @@ int main(int argc, char *argv[])
 
 	if (s_data->size() > 0)
 	{
+		if (s_optVerbose > 1)
+			_tprintf(_T("%d data pair%s to send\n"), s_data->size(), (s_data->size() == 1) ? _T("") : _T("s"));
 		if (Startup())
 		{
 			if (Send() != TRUE)
@@ -318,7 +340,7 @@ int main(int argc, char *argv[])
 	{
 		if (s_optVerbose > 0)
 		{
-			printf("No valid pairs found; nothing to send\n");
+			_tprintf(_T("No valid pairs found; nothing to send\n"));
 			ret = 2;
 		}
 	}
