@@ -1667,16 +1667,58 @@ EventObject *FindEventObjectByName(const TCHAR *name)
 }
 
 /**
+ * Find event template by code - suitable for external call
+ */
+EventTemplate *FindEventTemplateByCode(UINT32 code)
+{
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+   EventObject *o = m_eventObjects.get(code);
+   RWLockUnlock(m_rwlockTemplateAccess);
+   if (o == NULL)
+      return NULL;
+   if (o->isGroup())
+   {
+      o->decRefCount();
+      return NULL;
+   }
+   return static_cast<EventTemplate*>(o);
+}
+
+/**
+ * Find event template by name - suitable for external call
+ */
+EventTemplate *FindEventTemplateByName(const TCHAR *name)
+{
+   EventTemplate *result = NULL;
+
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+   Iterator<EventObject> *it = m_eventObjects.iterator();
+   while(it->hasNext())
+   {
+      EventObject *o = it->next();
+      if (!o->isGroup() && !_tcscmp(o->getName(), name))
+      {
+         result = static_cast<EventTemplate*>(o);
+         result->incRefCount();
+         break;
+      }
+   }
+   delete it;
+   RWLockUnlock(m_rwlockTemplateAccess);
+   return result;
+}
+
+/**
  * Translate event name to code
  * If event with given name does not exist, returns supplied default value
  */
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
-   EventObject *o = FindEventObjectByName(name);
-	if (o == NULL)
+   EventTemplate *evt = FindEventTemplateByName(name);
+	if (evt == NULL)
 	   return defaultValue;
-	UINT32 code = o->getCode();
-	o->decRefCount();
+	UINT32 code = evt->getCode();
+	evt->decRefCount();
 	return code;
 }
 

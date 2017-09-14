@@ -445,8 +445,8 @@ void DCItem::checkThresholds(ItemValue &value)
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                  (const TCHAR *)checkValue, m_id, m_instance, 0);
-				   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+                  (const TCHAR *)checkValue, m_id, m_instance, 0, (const TCHAR *)value);
+				   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
@@ -476,7 +476,7 @@ void DCItem::checkThresholds(ItemValue &value)
                   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
                      s_paramNamesReach, m_name, m_description, t->getStringValue(),
                            (const TCHAR *)checkValue, m_id, m_instance, 1, (const TCHAR *)value);
-                          EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+                  EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());

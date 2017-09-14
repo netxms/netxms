@@ -34,6 +34,9 @@
 #define EVENTLOG_MAX_MESSAGE_SIZE   255
 #define EVENTLOG_MAX_USERTAG_SIZE   63
 
+/**
+ * Base event object
+ */
 class EventObject : public RefCountObject
 {
 protected:
@@ -52,6 +55,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
    const uuid& getGuid() const { return m_guid; }
+   bool isGroup() const { return (m_code & GROUP_FLAG) != 0; }
 
    virtual void modifyFromMessage(NXCPMessage *msg);
    virtual void fillMessage(NXCPMessage *msg, UINT32 base) const;
@@ -294,8 +298,10 @@ void CreateNXMPEventRecord(String &str, UINT32 eventCode);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-EventObject *FindEventObjectByCode(UINT32 eventCode);
-EventObject *FindEventObjectByName(const TCHAR *pszName);
+EventObject *FindEventObjectByCode(UINT32 code);
+EventObject *FindEventObjectByName(const TCHAR *name);
+EventTemplate *FindEventTemplateByCode(UINT32 code);
+EventTemplate *FindEventTemplateByName(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...);
