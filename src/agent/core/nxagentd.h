@@ -613,8 +613,6 @@ void ForwardTrap(NXCPMessage *msg);
 void StartPushConnector();
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);
 
-void StartStorageDiscoveryConnector();
-
 void StartControlConnector();
 bool SendControlMessage(NXCPMessage *msg);
 

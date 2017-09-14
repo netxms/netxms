@@ -5,7 +5,7 @@ SOURCES = \
 	ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp epp.cpp \
 	exec.cpp extagent.cpp getparam.cpp hddinfo.cpp localdb.cpp master.cpp \
 	nxagentd.cpp policy.cpp push.cpp register.cpp sa.cpp \
-	sd.cpp service.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
+	service.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
 	subagent.cpp sysinfo.cpp syslog.cpp \
 	tools.cpp trap.cpp tunnel.cpp upgrade.cpp watchdog.cpp win32.cpp
 RESOURCES = nxagentd.rc
