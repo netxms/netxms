@@ -6359,7 +6359,6 @@ public class NXCSession
     * Modify event object.
     *
     * @param obj Event Object
-    * @return new event object code
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

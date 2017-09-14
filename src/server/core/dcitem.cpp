@@ -473,10 +473,10 @@ void DCItem::checkThresholds(ItemValue &value)
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now)))
 				   {
-					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-						   s_paramNamesReach, m_name, m_description, t->getStringValue(),
-						   (const TCHAR *)checkValue, m_id, m_instance, 1);
-					   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+                  PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
+                     s_paramNamesReach, m_name, m_description, t->getStringValue(),
+                           (const TCHAR *)checkValue, m_id, m_instance, 1, (const TCHAR *)value);
+                          EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());

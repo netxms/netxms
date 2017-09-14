@@ -12,8 +12,6 @@ public class EventGroup extends EventObject
 
    /**
     * Create new empty event group
-    * 
-    * @param code event code
     */
    public EventGroup()
    {
