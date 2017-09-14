@@ -475,13 +475,8 @@ void DCItem::checkThresholds(ItemValue &value)
 				   {
 					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 						   s_paramNamesReach, m_name, m_description, t->getStringValue(),
-<<<<<<< HEAD
-						   (const TCHAR *)checkValue, m_id, m_instance, 1, (const TCHAR *)value);
-					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
-=======
 						   (const TCHAR *)checkValue, m_id, m_instance, 1);
 					   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
->>>>>>> 771ed10dd... Implemented event group functionality. Fixes #NX-1102
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());
