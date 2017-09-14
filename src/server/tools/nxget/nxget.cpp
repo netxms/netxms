@@ -52,7 +52,7 @@ enum Operation
 static void DebugWriter(const TCHAR *tag, const TCHAR *text)
 {
    if (tag == NULL)      
-      _tprintf(_T("%s\n"), tag);
+      _tprintf(_T("%s\n"), text);
    else
       _tprintf(_T("<%s> %s\n"), tag, text);
 }
