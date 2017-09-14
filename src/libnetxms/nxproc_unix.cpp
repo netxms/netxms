@@ -103,6 +103,14 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
       ucred_free(peer);
       return true;
    }
+#elif HAVE_GETPEEREID
+   uid_t euid;
+   gid_t egid;
+   if (getpeereid(s, &euid, &egid) == 0)
+   {
+      *uid = (unsigned int)euid;
+      return true;
+   }
 #elif defined(SO_PEERID)
    struct peercred_struct peer;
    unsigned int len = sizeof(peer);
@@ -117,14 +125,6 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
    if (getsockopt(s, SOL_SOCKET, SO_PEERCRED, &peer, &len) == 0)
    {
       *uid = (unsigned int)peer.uid;
-      return true;
-   }
-#elif HAVE_GETPEEREID
-   uid_t euid;
-   gid_t egid;
-   if (getpeereid(s, &euid, &egid) == 0)
-   {
-      *uid = (unsigned int)euid;
       return true;
    }
 #else
