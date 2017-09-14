@@ -1120,7 +1120,6 @@ BOOL Initialize()
 		s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
 		s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		StartPushConnector();
-		StartStorageDiscoveryConnector();
       StartSessionAgentConnector();
       if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
 	   {
