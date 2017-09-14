@@ -182,22 +182,26 @@ stop_search:
    TCHAR tagBuffer[254], lvlBuffer[2];
    TCHAR const *ptr;
 
-   TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
-   if (tagList != NULL)
+   if (s_debugTags != NULL)
    {
-      for(int i = 0; i < numTags; i++)
+      TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
+      if (tagList != NULL)
       {
-         ptr = ExtractWord(tagList[i], tagBuffer);
-         ExtractWord(ptr, lvlBuffer);
-         lvl = _tcstol(lvlBuffer, NULL, 0);
+         for(int i = 0; i < numTags; i++)
+         {
+            ptr = ExtractWord(tagList[i], tagBuffer);
+            ExtractWord(ptr, lvlBuffer);
+            lvl = _tcstol(lvlBuffer, NULL, 0);
 
-         if(lvl != 0 && tagBuffer != NULL)
-            nxlog_set_debug_level_tag(tagBuffer, lvl);
+            if(lvl != 0 && tagBuffer != NULL)
+               nxlog_set_debug_level_tag(tagBuffer, lvl);
+         }
+         for(int i = 0; i < numTags; i++)
+            free(tagList[i]);
+         free(tagList);
       }
+      free(s_debugTags);
    }
-
-   free(s_debugTags);
-   free(tagList);
 
 	// Decrypt password
    DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
