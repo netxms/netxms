@@ -5,7 +5,7 @@
 - Summary tables for table DCIs
 - Multi-valued columns in summary tables
 - Threshold violation events have current DCI value as parameter 8 (named as "dciValue")
-- Fixed issues: NX-1309, NX-1314
+- Fixed issues: NX-1265, NX-1296, NX-1300, NX-1309, NX-1314
 
 
 *
