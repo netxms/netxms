@@ -51,7 +51,7 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
    sprintf(addrLocal.sun_path, "/tmp/.%s", name);
 #endif
    unlink(addrLocal.sun_path);
-   prevMask = umask(S_IWGRP | S_IWOTH);
+   prevMask = umask(0);
    if (bind(s, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
    {
       nxlog_debug(2, _T("NamedPipeListener(%s): bind failed (%s)"), name, _tcserror(errno));
@@ -224,6 +224,7 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
 #endif
    if (::connect(s, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
    {
+      nxlog_debug(2, _T("NamedPipe(%s): connect() call failed (%s)"), name, _tcserror(errno));
       close(s);
       return NULL;
    }
