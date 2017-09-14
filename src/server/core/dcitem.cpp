@@ -772,10 +772,10 @@ void DCItem::processNewError(bool noInstance, time_t now)
       {
          case ACTIVATED:
             {
-               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
-                  m_id, m_instance, 0);
-               EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+                  m_id, m_instance, 0, _T(""));
+               EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != NULL)
 				   {
 					   t->markLastEvent(evt->getSeverity());
@@ -788,8 +788,8 @@ void DCItem::processNewError(bool noInstance, time_t now)
             }
             break;
          case DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssisss",
-					s_paramNamesRearm, m_name, m_description, m_id, m_instance, _T(""), _T(""));
+            PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
+					s_paramNamesRearm, m_name, m_description, m_id, m_instance, _T(""), _T(""), _T(""));
             break;
          case ALREADY_ACTIVE:
             {
@@ -797,10 +797,10 @@ void DCItem::processNewError(bool noInstance, time_t now)
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisd",
+					   PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 						   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
-						   m_id, m_instance, 1);
-					   EventTemplate *evt = (EventTemplate *)FindEventObjectByCode(t->getEventCode());
+						   m_id, m_instance, 1, _T(""));
+					   EventTemplate *evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != NULL)
 					   {
 						   t->markLastEvent(evt->getSeverity());

@@ -382,7 +382,11 @@ bool EventGroup::isMember(UINT32 eventCode)
       {
          EventGroup *g = (EventGroup*)FindEventObjectByCode(m_eventCodeList->get(i));
          if (g != NULL)
-            return g->isMember(m_eventCodeList->get(i));
+         {
+            bool result = g->isMember(m_eventCodeList->get(i));
+            g->decRefCount();
+            return result;
+         }
          return false;
       }
    }

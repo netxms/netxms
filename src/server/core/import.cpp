@@ -27,8 +27,12 @@
  */
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
-	if (FindEventObjectByName(name) != NULL)
+   EventObject *eo = FindEventObjectByName(name);
+	if (eo != NULL)
+	{
+	   eo->decRefCount();
 		return true;
+	}
 
 	ConfigEntry *eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
@@ -328,8 +332,8 @@ static UINT32 ImportEvent(ConfigEntry *event)
 static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
 {
    UINT32 rcc = RCC_INTERNAL_ERROR;
-	EventObject *eventObject = FindEventObjectByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
-	if (eventObject == NULL)
+	EventTemplate *eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
+	if (eventTemplate == NULL)
 		return rcc;
 
 	uuid guid = trap->getSubEntryValueAsUUID(_T("guid"));
@@ -339,7 +343,8 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
       nxlog_debug(4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
    }
    UINT32 id = ResolveTrapGuid(guid);
-	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventObject->getCode());
+	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventTemplate->getCode());
+	eventTemplate->decRefCount();
 
 	if (!trapCfg->getOid().isValid())
 	{

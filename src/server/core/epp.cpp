@@ -400,9 +400,11 @@ bool EPRule::matchEvent(UINT32 dwEventCode)
          if (m_pdwEventList[i] & GROUP_FLAG_BIT)
          {
             EventGroup *g = (EventGroup *)FindEventObjectByCode(m_pdwEventList[i]);
-            if (g != NULL && g->isMember(dwEventCode))
+            if (g != NULL)
             {
-               bMatch = true;
+               if (g->isMember(dwEventCode))
+                  bMatch = true;
+               g->decRefCount();
                break;
             }
          }
