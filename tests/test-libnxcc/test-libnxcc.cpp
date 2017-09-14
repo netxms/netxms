@@ -6,10 +6,10 @@
 static MUTEX cbLock = MutexCreate();
 static UINT32 s_nodeId;
 
-static void DebugCallback(const TCHAR *message)
+static void DebugCallback(const TCHAR *tag, const TCHAR *message)
 {
    MutexLock(cbLock);
-   _tprintf(_T("%s\n"), message);
+   _tprintf(_T("[%s] %s\n"), (tag != NULL) ? tag : _T(""), message);
    MutexUnlock(cbLock);
 }
 
