@@ -48,6 +48,7 @@ import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.PollingTarget;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -76,7 +77,7 @@ public class NodePollerView extends ViewPart
    private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
 
    private NXCSession session;
-   private AbstractNode node;
+   private PollingTarget target;
    private NodePollType pollType;
    private Display display;
    private StyledText textArea;
@@ -103,12 +104,12 @@ public class NodePollerView extends ViewPart
          throw new PartInitException("Internal error"); //$NON-NLS-1$
 
       AbstractObject obj = session.findObjectById(Long.parseLong(parts[0]));
-      node = ((obj != null) && (obj instanceof AbstractNode)) ? (AbstractNode)obj : null;
-      if (node == null)
+      target = ((obj != null) && (obj instanceof PollingTarget)) ? (PollingTarget)obj : null;
+      if (target == null)
          throw new PartInitException(Messages.get().NodePollerView_InvalidObjectID);
       pollType = NodePollType.valueOf(parts[1]);
 
-      setPartName(POLL_NAME[pollType.getValue()] + " - " + node.getObjectName()); //$NON-NLS-1$
+      setPartName(POLL_NAME[pollType.getValue()] + " - " + target.getObjectName()); //$NON-NLS-1$
    }
 
    /*
@@ -331,13 +332,13 @@ public class NodePollerView extends ViewPart
          }
       };
 
-      Job job = new Job(String.format(Messages.get().NodePollerView_JobName, node.getObjectName(), node.getObjectId())) {
+      Job job = new Job(String.format(Messages.get().NodePollerView_JobName, target.getObjectName(), target.getObjectId())) {
          @Override
          protected IStatus run(IProgressMonitor monitor)
          {
             try
             {
-               session.pollNode(node.getObjectId(), pollType, listener);
+               session.pollNode(target.getObjectId(), pollType, listener);
                onPollComplete(true, null);
             }
             catch(Exception e)

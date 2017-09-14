@@ -1189,7 +1189,7 @@ UINT32 FindUnusedZoneUIN()
  */
 static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 {
-	return (((Node *)object)->getFlags() & NF_IS_LOCAL_MGMT) ? true : false;
+	return (((Node *)object)->getCapabilities() & NC_IS_LOCAL_MGMT) ? true : false;
 }
 
 /**

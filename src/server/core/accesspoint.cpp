@@ -33,8 +33,8 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
-   m_state = AP_ADOPTED;
-   m_prevState = m_state;
+	m_apState = AP_ADOPTED;
+   m_prevState = m_apState;
 }
 
 /**
@@ -49,8 +49,8 @@ AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) :
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
-   m_state = AP_ADOPTED;
-   m_prevState = m_state;
+	m_apState = AP_ADOPTED;
+   m_prevState = m_apState;
 	m_isHidden = true;
 }
 
@@ -89,8 +89,8 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
 	m_nodeId = DBGetFieldULong(hResult, 0, 4);
-   m_state = (AccessPointState)DBGetFieldLong(hResult, 0, 5);
-   m_prevState = (m_state != AP_DOWN) ? m_state : AP_ADOPTED;
+	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 5);
+   m_prevState = (m_apState != AP_DOWN) ? m_apState : AP_ADOPTED;
    m_index = DBGetFieldULong(hResult, 0, 6);
 	DBFreeResult(hResult);
 
@@ -153,7 +153,7 @@ BOOL AccessPoint::saveToDatabase(DB_HANDLE hdb)
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_state);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
 		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
@@ -209,7 +209,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg)
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-   msg->setField(VID_STATE, (UINT16)m_state);
+   msg->setField(VID_STATE, (UINT16)m_apState);
    msg->setField(VID_AP_INDEX, m_index);
 
    if (m_radioInterfaces != NULL)
@@ -389,13 +389,13 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
  */
 void AccessPoint::updateState(AccessPointState state)
 {
-   if (state == m_state)
+   if (state == m_apState)
       return;
 
 	lockProperties();
    if (state == AP_DOWN)
-      m_prevState = m_state;
-   m_state = state;
+      m_prevState = m_apState;
+   m_apState = state;
    if (m_status != STATUS_UNMANAGED)
    {
       switch(state)
@@ -625,7 +625,7 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
    json_object_set_new(root, "radioInterfaces", json_object_array(m_radioInterfaces));
-   json_object_set_new(root, "state", json_integer(m_state));
+   json_object_set_new(root, "state", json_integer(m_apState));
    json_object_set_new(root, "prevState", json_integer(m_prevState));
    return root;
 }

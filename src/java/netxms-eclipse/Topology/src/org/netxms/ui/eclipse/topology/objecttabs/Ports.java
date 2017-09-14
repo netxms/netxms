@@ -125,7 +125,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	{
 		if (object instanceof Node)
 		{
-			if ((((Node)object).getFlags() & Node.NF_IS_BRIDGE) != 0)
+			if ((((Node)object).getCapabilities() & Node.NC_IS_BRIDGE) != 0)
 				return true;
 		}
 		return false;

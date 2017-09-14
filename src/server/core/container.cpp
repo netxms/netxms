@@ -74,7 +74,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (!loadCommonProperties(hdb))
       return false;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT flags,auto_bind_filter FROM object_containers WHERE id=%d"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT auto_bind_filter FROM object_containers WHERE id=%d"), dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;     // Query failed
@@ -86,8 +86,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
    }
 
-	m_flags = DBGetFieldULong(hResult, 0, 0);
-   m_bindFilterSource = DBGetField(hResult, 0, 1, NULL, 0);
+   m_bindFilterSource = DBGetField(hResult, 0, 0, NULL, 0);
    if (m_bindFilterSource != NULL)
    {
       TCHAR error[256];
@@ -141,11 +140,11 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE object_containers SET object_class=?,flags=?,auto_bind_filter=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE object_containers SET object_class=?,auto_bind_filter=? WHERE id=?"));
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (object_class,flags,auto_bind_filter,id) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (object_class,auto_bind_filter,id) VALUES (?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -154,9 +153,8 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 	}
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
@@ -247,7 +245,6 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 void Container::fillMessageInternal(NXCPMessage *msg)
 {
    NetObj::fillMessageInternal(msg);
-	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
 }
 

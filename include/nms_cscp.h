@@ -1204,6 +1204,8 @@ typedef struct
 #define VID_LORA_APP_S_KEY          ((UINT32)598)
 #define VID_LORA_NWK_S_KWY          ((UINT32)599)
 #define VID_DCI_NAME                ((UINT32)600)
+#define VID_STATE_FLAGS             ((UINT32)601)
+#define VID_CAPABILITIES            ((UINT32)602)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -85,6 +85,9 @@ NetObj::NetObj()
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
    m_urls = new ObjectArray<ObjectUrl>(4, 4, true);
+   m_state = 0;
+   m_runtimeFlags = 0;
+   m_flags = 0;
 }
 
 /**
@@ -226,7 +229,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode,maint_mode,maint_event_id FROM object_properties ")
+                             _T("street_address,postcode,maint_mode,maint_event_id,state,flags FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -280,6 +283,10 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
             m_maintenanceMode = DBGetFieldLong(hResult, 0, 26) ? true : false;
             m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 27);
+
+            m_state = DBGetFieldULong(hResult, 0, 28);
+            m_runtimeFlags = 0;
+            m_flags = DBGetFieldULong(hResult, 0, 29);
 
 				success = true;
 			}
@@ -431,7 +438,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
 						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=?,maint_mode=?,maint_event_id=? WHERE object_id=?"));
+                    _T("street_address=?,postcode=?,maint_mode=?,maint_event_id=?,state=?,flags=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -442,8 +449,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
 						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,")
-						  _T("maint_event_id,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("maint_event_id,state,flags,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return false;
@@ -485,7 +492,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
    DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
    DBBind(hStmt, 28, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
-	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_state);
+	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_flags);
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1065,6 +1074,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
+   pMsg->setField(VID_FLAGS, m_flags);
 
    pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);

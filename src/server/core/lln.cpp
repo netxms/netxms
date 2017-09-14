@@ -90,15 +90,15 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 {
 	LinkLayerNeighbors *nbs = new LinkLayerNeighbors();
 
-	if (node->getFlags() & NF_IS_LLDP)
+	if (node->getCapabilities() & NC_IS_LLDP)
 	{
 		AddLLDPNeighbors(node, nbs);
 	}
-	if (node->getFlags() & NF_IS_CDP)
+	if (node->getCapabilities() & NC_IS_CDP)
 	{
 		AddCDPNeighbors(node, nbs);
 	}
-	if (node->getFlags() & NF_IS_NDP)
+	if (node->getCapabilities() & NC_IS_NDP)
 	{
 		AddNDPNeighbors(node, nbs);
 	}

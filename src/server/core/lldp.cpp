@@ -284,7 +284,7 @@ static UINT32 LLDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, voi
  */
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
-	if (!(node->getFlags() & NF_IS_LLDP))
+	if (!(node->getCapabilities() & NC_IS_LLDP))
 		return;
 
 	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());

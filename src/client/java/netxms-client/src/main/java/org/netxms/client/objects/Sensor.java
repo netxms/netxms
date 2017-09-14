@@ -25,6 +25,7 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.sensor.configs.DlmsConfig;
 import org.netxms.client.sensor.configs.LoraWanConfig;
 import org.netxms.client.sensor.configs.LoraWanRegConfig;
@@ -34,7 +35,7 @@ import org.netxms.client.sensor.configs.SensorRegistrationConfig;
 /**
  * Mobile device object
  */
-public class Sensor extends DataCollectionTarget
+public class Sensor extends DataCollectionTarget implements PollingTarget
 {
    /**
     * Sensor flags
@@ -205,8 +206,7 @@ public class Sensor extends DataCollectionTarget
             catch(Exception e)
             {
                config = new DlmsConfig();
-               System.out.println(xml);
-               Logger.debug("Sensor.Sensor", "Cannot parse LoraWanConfig XML", e);
+               //Logger.debug("Sensor.Sensor", "Cannot parse DlmsConfig XML", e);
             }
             break;
          default:
@@ -349,4 +349,39 @@ public class Sensor extends DataCollectionTarget
       return config;
    }
 
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   @Override
+   public boolean containAgent()
+   {
+      return false;
+   }
+
+   @Override
+   public boolean containInterfaces()
+   {
+      return false;
+   }
+
+   @Override
+   public boolean containPollerNode()
+   {
+      return false;
+   }
 }

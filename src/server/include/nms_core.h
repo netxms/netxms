@@ -504,7 +504,7 @@ private:
    void readThread();
    void writeThread();
    void processingThread();
-   void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
+   void pollerThread(DataCollectionTarget *pNode, int iPollType, UINT32 dwRqId);
 
    void debugPrintf(int level, const TCHAR *format, ...);
 

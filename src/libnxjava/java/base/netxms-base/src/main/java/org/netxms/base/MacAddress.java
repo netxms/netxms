@@ -49,7 +49,7 @@ public class MacAddress
 	 */
 	public MacAddress(byte[] src)
 	{
-		if (src != null)
+		if (src != null && src.length > 0)
 		{
 			value = Arrays.copyOf(src, src.length);
 		}

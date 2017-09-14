@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
@@ -74,7 +74,7 @@ static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *obj
 
    TCHAR name[32];
    nx_strncpy(name, o->getName(), 31);
-   ConsolePrintf((CONSOLE_CTX)arg, _T("%s | %9d | %-30s | %s\n"), pollerType[p->getType()], o->getId(), name, p->getStatus()); 
+   ConsolePrintf((CONSOLE_CTX)arg, _T("%s | %9d | %-30s | %s\n"), pollerType[p->getType()], o->getId(), name, p->getStatus());
 
    return _CONTINUE;
 }
@@ -107,7 +107,7 @@ static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *node = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0, 0, 0);
+	Node *node = new Node(addr, 0, NC_IS_LOCAL_MGMT, 0, 0, 0, 0, 0);
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256));
 
@@ -133,7 +133,7 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 	if ((g_dwMgmtNode != object->getId()) && ((Node *)object)->isLocalManagement())
 	{
 		((Node *)object)->clearLocalMgmtFlag();
-		DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
+		DbgPrintf(2, _T("Incorrectly set flag NC_IS_LOCAL_MGMT cleared from node %s [%d]"),
 					 object->getName(), object->getId());
 	}
 }
@@ -166,10 +166,10 @@ void CheckForMgmtNode()
          if ((node = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
-            if (!(node->getFlags() & NF_IS_LOCAL_MGMT))
+            if (!(node->getFlags() & NC_IS_LOCAL_MGMT))
             {
                node->setLocalMgmtFlag();
-               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
+               DbgPrintf(1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
             }
             g_dwMgmtNode = node->getId();   // Set local management node ID
             break;
@@ -201,7 +201,7 @@ void CheckForMgmtNode()
 
 	if (g_dwMgmtNode != 0)
 	{
-		// Check that other nodes does not have NF_IS_LOCAL_MGMT flag set
+		// Check that other nodes does not have NC_IS_LOCAL_MGMT flag set
 		g_idxNodeById.forEach(CheckMgmtFlagCallback, NULL);
 	}
 	else
@@ -209,7 +209,7 @@ void CheckForMgmtNode()
 		// Management node cannot be found or created. This can happen
 		// if management node currently does not have IP addresses (for example,
 		// it's a Windows machine which is disconnected from the network).
-		// In this case, try to find any node with NF_IS_LOCAL_MGMT flag, or create
+		// In this case, try to find any node with NC_IS_LOCAL_MGMT flag, or create
 		// new one without interfaces
 		NetObj *mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
 		if (mgmtNode != NULL)
@@ -403,7 +403,7 @@ static void DiscoveryPoller(void *arg)
    }
 
    Node *node = (Node *)poller->getObject();
-	if (node->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
+	if (node->getRuntimeFlags() & DCDF_DELETE_IN_PROGRESS)
 	{
       node->setDiscoveryPollTimeStamp();
       delete poller;
@@ -483,7 +483,7 @@ static void CheckRange(const InetAddressListElement& range)
             pSubnet = FindSubnetForNode(0, addr);
             if (pSubnet != NULL)
             {
-               if (!pSubnet->getIpAddress().equals(addr) && 
+               if (!pSubnet->getIpAddress().equals(addr) &&
                    !addr.isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
                {
                   NEW_NODE *pInfo;
@@ -555,47 +555,34 @@ static void QueueForPolling(NetObj *object, void *data)
    WatchdogNotify(*((UINT32 *)data));
    if (IsShutdownInProgress())
       return;
+   if(object->isDataCollectionTarget()) //common check for node, cluster and sensor
+   {
+      DataCollectionTarget *target = (DataCollectionTarget *)object;
+      if (target->isReadyForStatusPoll())
+      {
+         target->lockForStatusPoll();
+         DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for status poll"), (int)target->getId(), target->getName());
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, target));
+      }
+      if (target->isReadyForConfigurationPoll())
+      {
+         target->lockForConfigurationPoll();
+         DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for configuration poll"), (int)target->getId(), target->getName());
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, target));
+      }
+      if (target->isReadyForInstancePoll())
+      {
+         target->lockForInstancePoll();
+         DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for instance discovery poll"), (int)target->getId(), target->getName());
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, target));
+      }
+   }
 
 	switch(object->getObjectClass())
 	{
-	   case OBJECT_SENSOR:
-         {
-            Sensor *sensor = (Sensor *)object;
-            if (sensor->isReadyForStatusPoll())
-            {
-               sensor->lockForStatusPoll();
-               DbgPrintf(6, _T("Sensor %d \"%s\" queued for status poll"), (int)sensor->getId(), sensor->getName());
-               ThreadPoolExecute(g_pollerThreadPool, sensor, &Sensor::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, sensor));
-            }
-            if (sensor->isReadyForConfigurationPoll())
-            {
-               sensor->lockForConfigurationPoll();
-               DbgPrintf(6, _T("Sensor %d \"%s\" queued for configuration poll"), (int)sensor->getId(), sensor->getName());
-               ThreadPoolExecute(g_pollerThreadPool, sensor, &Sensor::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, sensor));
-            }
-            break;
-         }
 		case OBJECT_NODE:
 			{
 				Node *node = (Node *)object;
-				if (node->isReadyForConfigurationPoll())
-				{
-					node->lockForConfigurationPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
-				}
-				if (node->isReadyForInstancePoll())
-				{
-					node->lockForInstancePoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, node));
-				}
-				if (node->isReadyForStatusPoll())
-				{
-					node->lockForStatusPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
-				}
 				if (node->isReadyForRoutePoll())
 				{
 					node->lockForRoutePoll();
@@ -625,23 +612,6 @@ static void QueueForPolling(NetObj *object, void *data)
 					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
                ThreadPoolExecute(g_pollerThreadPool, cond, &ConditionObject::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
 				}
-			}
-			break;
-		case OBJECT_CLUSTER:
-			{
-				Cluster *cluster = (Cluster *)object;
-				if (cluster->isReadyForStatusPoll())
-				{
-					cluster->lockForStatusPoll();
-					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, cluster));
-				}
-            if (cluster->isReadyForConfigurationPoll())
-            {
-               cluster->lockForConfigurationPoll();
-               DbgPrintf(6, _T("Cluster %d \"%s\" queued for configuration poll"), (int)cluster->getId(), cluster->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, cluster));
-            }
 			}
 			break;
 		case OBJECT_BUSINESSSERVICE:
@@ -686,7 +656,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
          CheckForMgmtNode();
       }
 
-      // Walk through objects and queue them for status 
+      // Walk through objects and queue them for status
       // and/or configuration poll
 		g_idxObjectById.forEach(QueueForPolling, &watchdogId);
 	   WatchdogStartSleep(watchdogId);

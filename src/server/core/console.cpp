@@ -341,7 +341,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ExtractWord(pArg, szBuffer);
             UINT32 id = _tcstoul(szBuffer, NULL, 0);
             if (id != 0)
-            {
+            { //TODO: Implement pool for cluster and node + instance?
                Node *node = (Node *)FindObjectById(id, OBJECT_NODE);
                if (node != NULL)
                {
@@ -349,11 +349,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   {
                      case 1:
                         node->lockForConfigurationPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
+                        ThreadPoolExecute(g_pollerThreadPool, node, &DataCollectionTarget::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
                         break;
                      case 2:
                         node->lockForStatusPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
+                        ThreadPoolExecute(g_pollerThreadPool, node, &DataCollectionTarget::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
                         break;
                      case 3:
                         node->lockForTopologyPoll();

@@ -181,7 +181,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       msg.setField(VID_OBJECT_ID, pNode->getId());
 
       // Check if node is a management server itself
-      if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
+      if (!(pNode->getCapabilities() & NC_IS_LOCAL_MGMT))
       {
          // Change deployment status to "Initializing"
          msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);

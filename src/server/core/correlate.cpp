@@ -49,7 +49,7 @@ static bool CheckNodeDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TC
 static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TCHAR *nodeType)
 {
 	Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
-	if ((node != NULL) && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
+	if ((node != NULL) && node->isNativeAgent() && (node->getState() & NSF_AGENT_UNREACHABLE))
 	{
 		pEvent->setRootId(node->getLastEventId(LAST_EVENT_AGENT_DOWN));
 		DbgPrintf(5, _T("C_SysNodeDown: agent on %s %s [%d] for current node %s [%d] is down"),
@@ -243,14 +243,14 @@ void CorrelateEvent(Event *pEvent)
          // there are intentionally no break
       case EVENT_SERVICE_DOWN:
       case EVENT_SNMP_FAIL:
-         if (node->getRuntimeFlags() & NDF_UNREACHABLE)
+         if (node->getState() & NSF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
          }
          break;
       case EVENT_AGENT_FAIL:
          node->setLastEventId(LAST_EVENT_AGENT_DOWN, pEvent->getId());
-         if (node->getRuntimeFlags() & NDF_UNREACHABLE)
+         if (node->getState() & NSF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
          }

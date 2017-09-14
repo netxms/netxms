@@ -31,8 +31,6 @@ Cluster::Cluster() : DataCollectionTarget()
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
-	m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
 	m_zoneUIN = 0;
 }
 
@@ -45,8 +43,6 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : DataCollectionTarget(ps
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
-   m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
 	m_zoneUIN = zoneUIN;
 }
 
@@ -413,6 +409,9 @@ void Cluster::fillMessageInternal(NXCPMessage *pMsg)
  */
 UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
+   if (pRequest->isFieldExist(VID_FLAGS))
+      m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
+
    // Change cluster type
    if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
       m_dwClusterType = pRequest->getFieldAsUInt32(VID_CLUSTER_TYPE);
@@ -516,49 +515,50 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 }
 
 /**
- * Entry point for configuration poller thread
- */
-void Cluster::configurationPoll(PollerInfo *poller)
-{
-   poller->startExecution();
-   ObjectTransactionStart();
-   configurationPoll(NULL, 0, poller);
-   ObjectTransactionEnd();
-   delete poller;
-}
-
-/**
  * Configuration poll
  */
 void Cluster::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
-   if (IsShutdownInProgress())
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   {
+      if (dwRqId == 0)
+         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
       return;
+   }
 
+   poller->setStatus(_T("wait for lock"));
+   pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = pSession;
+   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Applying templates\r\n"), m_name);
    DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Applying templates"), m_name);
    if (ConfigReadInt(_T("ClusterTemplateAutoApply"), 0))
       applyUserTemplates();
 
+   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Updating container bindings\r\n"), m_name);
    DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Updating container bindings"), m_name);
    if (ConfigReadInt(_T("ClusterContainerAutoBind"), 0))
       updateContainerMembership();
 
    lockProperties();
    m_lastConfigurationPoll = time(NULL);
-   m_flags &= ~CLF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
-   DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
-}
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("ConfigurationPoll"));
 
-/**
- * Entry point for status poller thread
- */
-void Cluster::statusPoll(PollerInfo *poller)
-{
-   poller->startExecution();
-   statusPoll(NULL, 0, poller);
-   delete poller;
+   sendPollerMsg(dwRqId, _T("CLUSTER CONFIGURATION POLL [%s]: Finished\r\n"), m_name);
+   DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
+
+   pollerUnlock();
+   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
 }
 
 /**
@@ -566,8 +566,21 @@ void Cluster::statusPoll(PollerInfo *poller)
  */
 void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
-   if (IsShutdownInProgress())
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   {
+      if (dwRqId == 0)
+         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
       return;
+   }
+
+   poller->setStatus(_T("wait for lock"));
+   pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
 
 	int i, pollListSize;
 	InterfaceList *pIfList;
@@ -592,6 +605,8 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
    unlockChildList();
 
 	// Perform status poll on all member nodes
+   m_pollRequestor = pSession;
+   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling member nodes\r\n"), m_name);
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
 	for(i = 0, bAllDown = TRUE; i < pollListSize; i++)
 	{
@@ -602,17 +617,17 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 
 	if (bAllDown)
 	{
-		if (!(m_flags & CLF_DOWN))
+		if (!(m_state & CLSF_DOWN))
 		{
-		   m_flags |= CLF_DOWN;
+		   m_state |= CLSF_DOWN;
 			PostEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
 		}
 	}
 	else
 	{
-		if (m_flags & CLF_DOWN)
+		if (m_state & CLSF_DOWN)
 		{
-		   m_flags &= ~CLF_DOWN;
+		   m_state &= ~CLSF_DOWN;
 			PostEvent(EVENT_CLUSTER_UP, m_id, NULL);
 		}
 	}
@@ -623,6 +638,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 		pbResourceFound = (BYTE *)malloc(m_dwNumResources);
 		memset(pbResourceFound, 0, m_dwNumResources);
 
+	   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling resources\r\n"), m_name);
 		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_name);
 		for(i = 0; i < pollListSize; i++)
 		{
@@ -638,6 +654,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->getId())
 							{
+						      sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed\r\n"), m_name, m_pResourceList[k].szName);
 								DbgPrintf(5, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
 											 m_name, m_pResourceList[k].szName);
 
@@ -673,6 +690,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 			}
 			else
 			{
+		      sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s\r\n"), m_name, ppPollList[i]->getName());
 				DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
 							 m_name, ppPollList[i]->getName());
 			}
@@ -699,6 +717,13 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 		free(pbResourceFound);
 	}
 
+
+   // Execute hook script
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("StatusPoll"));
+
+   calculateCompoundStatus(true);
+   poller->setStatus(_T("cleanup"));
 	// Cleanup
 	for(i = 0; i < pollListSize; i++)
 	{
@@ -710,10 +735,13 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	if (bModified)
 		setModified();
 	m_lastStatusPoll = time(NULL);
-	m_flags &= ~CLF_QUEUED_FOR_STATUS_POLL;
+	m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();
 
+   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Finished\r\n"), m_name);
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_name);
+
+   pollerUnlock();
 }
 
 /**

@@ -34,6 +34,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.PollingTarget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -44,9 +45,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * "Polling" property page for nodes
  */
-public class NodePolling extends PropertyPage
+public class ObjectPolling extends PropertyPage
 {
-	private AbstractNode object;
+	private PollingTarget object;
 	private ObjectSelector pollerNode;
 	private Button radioIfXTableDefault;
 	private Button radioIfXTableEnable;
@@ -65,41 +66,45 @@ public class NodePolling extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		object = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+		object = (PollingTarget)getElement().getAdapter(PollingTarget.class);
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+      GridData gd = new GridData();
       
       /* poller node */
-      Group servicePollGroup = new Group(dialogArea, SWT.NONE);
-      servicePollGroup.setText(Messages.get().NodePolling_GroupNetSrv);
-		layout = new GridLayout();
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.numColumns = 2;
-		servicePollGroup.setLayout(layout);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		servicePollGroup.setLayoutData(gd);
-		
-		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE, true);
-		pollerNode.setLabel(Messages.get().NodePolling_PollerNode);
-		pollerNode.setObjectClass(AbstractNode.class);
-		pollerNode.setEmptySelectionName(Messages.get().NodePolling_EmptySelectionServer);
-		pollerNode.setObjectId(object.getPollerNodeId());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		pollerNode.setLayoutData(gd);
-		
-		Label label = new Label(servicePollGroup, SWT.WRAP);
-		label.setText(Messages.get().NodePolling_PollerNodeDescription);
-		gd = new GridData();
-		gd.widthHint = 250;
-		label.setLayoutData(gd);
+      if(object.containPollerNode())
+      {
+         Group servicePollGroup = new Group(dialogArea, SWT.NONE);
+         servicePollGroup.setText(Messages.get().NodePolling_GroupNetSrv);
+   		layout = new GridLayout();
+   		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+   		layout.numColumns = 2;
+   		servicePollGroup.setLayout(layout);
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		servicePollGroup.setLayoutData(gd);
+   		
+   		pollerNode = new ObjectSelector(servicePollGroup, SWT.NONE, true);
+   		pollerNode.setLabel(Messages.get().NodePolling_PollerNode);
+   		pollerNode.setObjectClass(AbstractNode.class);
+   		pollerNode.setEmptySelectionName(Messages.get().NodePolling_EmptySelectionServer);
+   		pollerNode.setObjectId(object.getPollerNodeId());
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		pollerNode.setLayoutData(gd);
+   		
+   		Label label = new Label(servicePollGroup, SWT.WRAP);
+   		label.setText(Messages.get().NodePolling_PollerNodeDescription);
+   		gd = new GridData();
+   		gd.widthHint = 250;
+   		label.setLayoutData(gd);
+      }
 
 		/* options */
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
@@ -112,65 +117,78 @@ public class NodePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		optionsGroup.setLayoutData(gd);
 		
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, Messages.get().NodePolling_OptDisableAgent);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, Messages.get().NodePolling_OptDisableRTPoll);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, Messages.get().NodePolling_OptDisableTopoPoll);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
-		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
+		if(object.containAgent())   
+		   addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, Messages.get().NodePolling_OptDisableAgent);
+		if(object.containInterfaces())
+		{
+   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
+   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ICMP, Messages.get().NodePolling_OptDisableICMP);
+		}
+		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
+		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
+      if(object.containInterfaces())
+      {
+   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_ROUTE_POLL, Messages.get().NodePolling_OptDisableRTPoll);
+   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, Messages.get().NodePolling_OptDisableTopoPoll);
+   		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
+      }
+		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
 		
 		/* use ifXTable */
-		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
-		ifXTableGroup.setText(Messages.get().NodePolling_GroupIfXTable);
-		layout = new GridLayout();
-		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.numColumns = 3;
-		layout.makeColumnsEqualWidth = true;
-		ifXTableGroup.setLayout(layout);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		ifXTableGroup.setLayoutData(gd);
-		
-		radioIfXTableDefault = new Button(ifXTableGroup, SWT.RADIO);
-		radioIfXTableDefault.setText(Messages.get().NodePolling_Default);
-		radioIfXTableDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
+		if(object.containInterfaces())
+		{
+   		Group ifXTableGroup = new Group(dialogArea, SWT.NONE);
+   		ifXTableGroup.setText(Messages.get().NodePolling_GroupIfXTable);
+   		layout = new GridLayout();
+   		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+   		layout.numColumns = 3;
+   		layout.makeColumnsEqualWidth = true;
+   		ifXTableGroup.setLayout(layout);
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		ifXTableGroup.setLayoutData(gd);
+   		
+   		radioIfXTableDefault = new Button(ifXTableGroup, SWT.RADIO);
+   		radioIfXTableDefault.setText(Messages.get().NodePolling_Default);
+   		radioIfXTableDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
+   
+   		radioIfXTableEnable = new Button(ifXTableGroup, SWT.RADIO);
+   		radioIfXTableEnable.setText(Messages.get().NodePolling_Enable);
+   		radioIfXTableEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
+   
+   		radioIfXTableDisable = new Button(ifXTableGroup, SWT.RADIO);
+   		radioIfXTableDisable.setText(Messages.get().NodePolling_Disable);
+   		radioIfXTableDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
+		}
 
-		radioIfXTableEnable = new Button(ifXTableGroup, SWT.RADIO);
-		radioIfXTableEnable.setText(Messages.get().NodePolling_Enable);
-		radioIfXTableEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
-
-		radioIfXTableDisable = new Button(ifXTableGroup, SWT.RADIO);
-		radioIfXTableDisable.setText(Messages.get().NodePolling_Disable);
-		radioIfXTableDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
-
-      /* agent cache */
-      Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
-      agentCacheGroup.setText(Messages.get().NodePolling_AgentCacheMode);
-      layout = new GridLayout();
-      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-      layout.numColumns = 3;
-      layout.makeColumnsEqualWidth = true;
-      agentCacheGroup.setLayout(layout);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      agentCacheGroup.setLayoutData(gd);
+      /* agent cache */      
+      if(object.containAgent())      
+      {
+         Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
+         agentCacheGroup.setText(Messages.get().NodePolling_AgentCacheMode);
+         layout = new GridLayout();
+         layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+         layout.numColumns = 3;
+         layout.makeColumnsEqualWidth = true;
+         agentCacheGroup.setLayout(layout);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         agentCacheGroup.setLayoutData(gd);
       
-      radioAgentCacheDefault = new Button(agentCacheGroup, SWT.RADIO);
-      radioAgentCacheDefault.setText(Messages.get().NodePolling_Default);
-      radioAgentCacheDefault.setSelection(object.getAgentCacheMode() == AgentCacheMode.DEFAULT);
-
-      radioAgentCacheOn = new Button(agentCacheGroup, SWT.RADIO);
-      radioAgentCacheOn.setText(Messages.get().NodePolling_On);
-      radioAgentCacheOn.setSelection(object.getAgentCacheMode() == AgentCacheMode.ON);
-
-      radioAgentCacheOff = new Button(agentCacheGroup, SWT.RADIO);
-      radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
-      radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
+         radioAgentCacheDefault = new Button(agentCacheGroup, SWT.RADIO);
+         radioAgentCacheDefault.setText(Messages.get().NodePolling_Default);
+         radioAgentCacheDefault.setSelection(object.getAgentCacheMode() == AgentCacheMode.DEFAULT);
+   
+         radioAgentCacheOn = new Button(agentCacheGroup, SWT.RADIO);
+         radioAgentCacheOn.setText(Messages.get().NodePolling_On);
+         radioAgentCacheOn.setSelection(object.getAgentCacheMode() == AgentCacheMode.ON);
+   
+         radioAgentCacheOff = new Button(agentCacheGroup, SWT.RADIO);
+         radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
+         radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
+      }
 
       return dialogArea;
 	}
@@ -263,11 +281,13 @@ public class NodePolling extends PropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		
-		md.setPollerNode(pollerNode.getObjectId());
+		if(object.containPollerNode())
+		   md.setPollerNode(pollerNode.getObjectId());
 		md.setObjectFlags(collectNodeFlags(), collectNodeFlagsMask());
-		md.setIfXTablePolicy(collectIfXTablePolicy());
-		md.setAgentCacheMode(collectAgentCacheMode());
+		if(object.containInterfaces())
+		   md.setIfXTablePolicy(collectIfXTablePolicy());
+		if(object.containAgent())
+		   md.setAgentCacheMode(collectAgentCacheMode());
 		
 		if (isApply)
 			setValid(false);
@@ -295,7 +315,7 @@ public class NodePolling extends PropertyPage
 						@Override
 						public void run()
 						{
-							NodePolling.this.setValid(true);
+							ObjectPolling.this.setValid(true);
 						}
 					});
 				}

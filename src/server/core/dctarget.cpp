@@ -29,6 +29,10 @@ DataCollectionTarget::DataCollectionTarget() : Template()
 {
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+   m_lastConfigurationPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastInstancePoll = 0;
+   m_hPollerMutex = MutexCreate();
 }
 
 /**
@@ -38,6 +42,10 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
 {
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+   m_lastConfigurationPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastInstancePoll = 0;
+   m_hPollerMutex = MutexCreate();
 }
 
 /**
@@ -45,8 +53,12 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
  */
 DataCollectionTarget::~DataCollectionTarget()
 {
+   MutexDestroy(m_hPollerMutex);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+   m_lastConfigurationPoll = 0;
+   m_lastStatusPoll = 0;
+   m_lastInstancePoll = 0;
 }
 
 /**
@@ -1278,4 +1290,266 @@ json_t *DataCollectionTarget::toJson()
    json_object_set_new(root, "pingTime", json_integer(m_pingTime));
    json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
    return root;
+}
+
+
+void DataCollectionTarget::statusPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   statusPoll(NULL, 0, poller);
+
+   delete poller;
+}
+
+void DataCollectionTarget::configurationPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   ObjectTransactionStart();
+   configurationPoll(NULL, 0, poller);
+   ObjectTransactionEnd();
+   delete poller;
+}
+
+void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   ObjectTransactionStart();
+   instanceDiscoveryPoll(NULL, 0, poller);
+   ObjectTransactionEnd();
+   delete poller;
+}
+
+/**
+ * Perform instance discovery poll on DataCollectionTarget
+ */
+void DataCollectionTarget::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, PollerInfo *poller)
+{
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   {
+      if (requestId == 0)
+         m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+      return;
+   }
+
+   if (IsShutdownInProgress())
+      return;
+
+   poller->setStatus(_T("wait for lock"));
+   pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = session;
+   sendPollerMsg(requestId, _T("Starting instance discovery poll for %s %s\r\n"), getObjectClassName(), m_name);
+   DbgPrintf(4, _T("Starting instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+
+   // Check if DataCollectionTarget is marked as unreachable
+   if (!(m_state & NSF_UNREACHABLE))
+   {
+      poller->setStatus(_T("instance discovery"));
+      doInstanceDiscovery(requestId);
+
+      // Execute hook script
+      poller->setStatus(_T("hook"));
+      executeHookScript(_T("InstancePoll"));
+   }
+   else
+   {
+      sendPollerMsg(requestId, POLLER_WARNING _T("%s is marked as unreachable, instance discovery poll aborted\r\n"), getObjectClassName());
+      DbgPrintf(4, _T("%s is marked as unreachable, instance discovery poll aborted"), getObjectClassName());
+   }
+
+   m_lastInstancePoll = time(NULL);
+
+   // Finish instance discovery poll
+   poller->setStatus(_T("cleanup"));
+   if (requestId == 0)
+      m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+   pollerUnlock();
+   DbgPrintf(4, _T("Finished instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+}
+
+/**
+ * Do instance discovery
+ */
+void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
+{
+   sendPollerMsg(requestId, _T("Running DCI instance discovery\r\n"));
+
+   // collect instance discovery DCIs
+   ObjectArray<DCObject> rootObjects;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if (object->getInstanceDiscoveryMethod() != IDM_NONE)
+      {
+         object->setBusyFlag();
+         rootObjects.add(object);
+      }
+   }
+   unlockDciAccess();
+
+   // process instance discovery DCIs
+   // it should be done that way to prevent DCI list lock for long time
+   bool changed = false;
+   for(int i = 0; i < rootObjects.size(); i++)
+   {
+      DCObject *object = rootObjects.get(i);
+      DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCO %s [%d]"),
+                m_name, m_id, object->getName(), object->getId());
+      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName(), object->getId());
+      StringMap *instances = getInstanceList(object);
+      if (instances != NULL)
+      {
+         DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
+         object->filterInstanceList(instances);
+         if (updateInstances(object, instances, requestId))
+            changed = true;
+         delete instances;
+      }
+      else
+      {
+         DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): failed to get instance list for DCO %s [%d]"),
+                   m_name, m_id, object->getName(), object->getId());
+         sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
+      }
+      object->clearBusyFlag();
+   }
+
+   if (changed)
+      onDataCollectionChange();
+}
+
+/**
+ * Callback for finding instance
+ */
+static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const void *value, void *data)
+{
+   return !_tcscmp((const TCHAR *)data, key) ? _STOP : _CONTINUE;
+}
+
+/**
+ * Data for CreateInstanceDCI
+ */
+struct CreateInstanceDCOData
+{
+   DCObject *root;
+   DataCollectionTarget *object;
+   UINT32 requestId;
+};
+
+/**
+ * Callback for creating instance DCIs
+ */
+static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
+{
+   DataCollectionTarget *object = ((CreateInstanceDCOData *)data)->object;
+   DCObject *root = ((CreateInstanceDCOData *)data)->root;
+
+   DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
+             object->getName(), object->getId(), root->getName(), root->getId(), key);
+   object->sendPollerMsg(((CreateInstanceDCOData *)data)->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
+
+   DCObject *dco = root->clone();
+
+   dco->setTemplateId(object->getId(), root->getId());
+   dco->setInstance((const TCHAR *)value);
+   dco->setInstanceDiscoveryMethod(IDM_NONE);
+   dco->setInstanceDiscoveryData(key);
+   dco->setInstanceFilter(NULL);
+   dco->expandInstance();
+   dco->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
+   object->addDCObject(dco, true);
+   return _CONTINUE;
+}
+
+/**
+ * Update instance DCIs created from instance discovery DCI
+ */
+bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances, UINT32 requestId)
+{
+   bool changed = false;
+
+   lockDciAccess(true);
+
+   // Delete DCIs for missing instances and update existing
+   IntegerArray<UINT32> deleteList;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if ((object->getTemplateId() != m_id) || (object->getTemplateItemId() != root->getId()))
+         continue;
+
+      const TCHAR *dcoInstance = object->getInstanceDiscoveryData();
+      if (instances->forEach(FindInstanceCallback, (void *)dcoInstance) == _STOP)
+      {
+         // found, remove value from instances
+         DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
+                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
+         const TCHAR *name = instances->get(dcoInstance);
+         if (_tcscmp(name, object->getInstance()))
+         {
+            object->setInstance(name);
+            object->updateFromTemplate(root);
+            changed = true;
+         }
+         instances->remove(dcoInstance);
+      }
+      else
+      {
+         // not found, delete DCO
+         DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
+                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
+         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
+         deleteList.add(object->getId());
+         changed = true;
+      }
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false);
+
+   // Create new instances
+   if (instances->size() > 0)
+   {
+      CreateInstanceDCOData data;
+      data.root = root;
+      data.object = this;
+      data.requestId = requestId;
+      instances->forEach(CreateInstanceDCI, &data);
+      changed = true;
+   }
+
+   unlockDciAccess();
+   return changed;
+}
+
+/**
+ * Execute hook script
+ *
+ * @param hookName hook name. Will find and excute script named Hook::hookName
+ */
+void DataCollectionTarget::executeHookScript(const TCHAR *hookName)
+{
+   TCHAR scriptName[MAX_PATH] = _T("Hook::");
+   nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName);
+   if (vm == NULL)
+   {
+      DbgPrintf(7, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
+      return;
+   }
+
+   vm->setGlobalVariable(_T("$object"), createNXSLObject());
+   if (!vm->run())
+   {
+      DbgPrintf(4, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
+                m_name, m_id, scriptName, vm->getErrorText());
+   }
+   delete vm;
 }

@@ -119,7 +119,7 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
  */
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
-	if (!(node->getFlags() & NF_IS_STP))
+	if (!(node->getCapabilities() & NC_IS_STP))
 		return;
 
 	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->getName(), node->getId());

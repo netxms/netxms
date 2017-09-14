@@ -33,7 +33,7 @@ import org.netxms.client.constants.NodeType;
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends DataCollectionTarget implements RackElement, ZoneMember
+public abstract class AbstractNode extends DataCollectionTarget implements RackElement, ZoneMember, PollingTarget
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -46,46 +46,44 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int AGENT_AUTH_MD5 = 2;
 	public static final int AGENT_AUTH_SHA1 = 3;
 	
-	// Node flags
-	public static final int NF_IS_SNMP                = 0x00000001;
-	public static final int NF_IS_NATIVE_AGENT        = 0x00000002;
-	public static final int NF_IS_BRIDGE              = 0x00000004;
-	public static final int NF_IS_ROUTER              = 0x00000008;
-	public static final int NF_IS_LOCAL_MGMT          = 0x00000010;
-	public static final int NF_IS_PRINTER             = 0x00000020;
-	public static final int NF_IS_OSPF                = 0x00000040;
-   public static final int NF_REMOTE_AGENT           = 0x00000080;
-	public static final int NF_IS_CPSNMP              = 0x00000100;
-	public static final int NF_IS_CDP                 = 0x00000200;
-	public static final int NF_IS_SONMP               = 0x00000400;
-	public static final int NF_IS_LLDP                = 0x00000800;
-	public static final int NF_IS_VRRP                = 0x00001000;
-	public static final int NF_HAS_VLANS              = 0x00002000;
-	public static final int NF_IS_8021X               = 0x00004000;
-	public static final int NF_IS_STP                 = 0x00008000;
-	public static final int NF_HAS_ENTITY_MIB         = 0x00010000;
-	public static final int NF_HAS_IFXTABLE           = 0x00020000;
-	public static final int NF_HAS_AGENT_IFXCOUNTERS  = 0x00040000;
-	public static final int NF_HAS_WINPDH             = 0x00080000;
-	public static final int NF_IS_WIFI_CONTROLLER     = 0x00100000;
-	public static final int NF_IS_SMCLP               = 0x00200000;
-	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00400000;
-	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00800000;
-	public static final int NF_DISABLE_SNMP           = 0x01000000;
-	public static final int NF_DISABLE_NXCP           = 0x02000000;
-	public static final int NF_DISABLE_ICMP           = 0x04000000;
-	public static final int NF_FORCE_ENCRYPTION       = 0x08000000;
-	public static final int NF_DISABLE_STATUS_POLL    = 0x10000000;
-	public static final int NF_DISABLE_CONF_POLL      = 0x20000000;
-	public static final int NF_DISABLE_ROUTE_POLL     = 0x40000000;
-	public static final int NF_DISABLE_DATA_COLLECT   = 0x80000000;
+	// Node capabilities
+	public static final int NC_IS_SNMP                = 0x00000001;
+	public static final int NC_IS_NATIVE_AGENT        = 0x00000002;
+	public static final int NC_IS_BRIDGE              = 0x00000004;
+	public static final int NC_IS_ROUTER              = 0x00000008;
+	public static final int NC_IS_LOCAL_MGMT          = 0x00000010;
+	public static final int NC_IS_PRINTER             = 0x00000020;
+	public static final int NC_IS_OSPF                = 0x00000040;
+	public static final int NC_IS_CPSNMP              = 0x00000080;
+	public static final int NC_IS_CDP                 = 0x00000100;
+	public static final int NC_IS_NDP                 = 0x00000200;
+	public static final int NC_IS_LLDP                = 0x00000400;
+	public static final int NC_IS_VRRP                = 0x00000800;
+	public static final int NC_HAS_VLANS              = 0x00001000;
+	public static final int NC_IS_8021X               = 0x00002000;
+	public static final int NC_IS_STP                 = 0x00004000;
+	public static final int NC_HAS_ENTITY_MIB         = 0x00008000;
+	public static final int NC_HAS_IFXTABLE           = 0x00010000;
+	public static final int NC_HAS_AGENT_IFXCOUNTERS  = 0x00020000;
+	public static final int NC_HAS_WINPDH             = 0x00040000;
+	public static final int NC_IS_WIFI_CONTROLLER     = 0x00080000;
+	public static final int NC_IS_SMCLP               = 0x00100000;
+
+	//Node flags
+   public static final int NF_REMOTE_AGENT           = 0x00010000;
+	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00020000;
+	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00040000;
+	public static final int NF_DISABLE_SNMP           = 0x00080000;
+	public static final int NF_DISABLE_NXCP           = 0x00100000;
+	public static final int NF_DISABLE_ICMP           = 0x00200000;
+	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
+   public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
 	
 	// Node runtime flags
-	public static final int NDF_UNREACHABLE        = 0x000000004;
-	public static final int NDF_AGENT_UNREACHABLE  = 0x000000008;
-	public static final int NDF_SNMP_UNREACHABLE   = 0x000000010;
-	public static final int NDF_CPSNMP_UNREACHABLE = 0x000000200;
-	public static final int NDF_POLLING_DISABLED   = 0x000000800;
+	public static final int NSF_UNREACHABLE        = 0x000000001;
+	public static final int NSF_AGENT_UNREACHABLE  = 0x000000002;
+	public static final int NSF_SNMP_UNREACHABLE   = 0x000000004;
+	public static final int NSF_CPSNMP_UNREACHABLE = 0x000000008;
 	
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
@@ -94,7 +92,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected InetAddressEx primaryIP;
 	protected String primaryName;
 	protected int flags;
-	protected int runtimeFlags;
+	protected int stateFlags;
+	protected int capabilities;
 	protected NodeType nodeType;
 	protected String nodeSubType;
 	protected int requredPollCount;
@@ -165,7 +164,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		primaryIP = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-		runtimeFlags = msg.getFieldAsInt32(NXCPCodes.VID_RUNTIME_FLAGS);
+		stateFlags = msg.getFieldAsInt32(NXCPCodes.VID_STATE_FLAGS);
+		capabilities = msg.getFieldAsInt32(NXCPCodes.VID_CAPABILITIES);
 		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
 		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
 		requredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
@@ -227,12 +227,20 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		return flags;
 	}
 
+   /**
+    * @return Flags
+    */
+   public int getCapabilities()
+   {
+      return capabilities;
+   }
+
 	/**
 	 * @return Runtime flags
 	 */
-	public int getRuntimeFlags()
+	public int getStateFlags()
 	{
-		return runtimeFlags;
+		return stateFlags;
 	}
 
 	/**
@@ -427,7 +435,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean hasAgent()
 	{
-		return (flags & NF_IS_NATIVE_AGENT) != 0;
+		return (capabilities & NC_IS_NATIVE_AGENT) != 0;
 	}
 
 	/**
@@ -436,7 +444,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean hasSnmpAgent()
 	{
-		return (flags & NF_IS_SNMP) != 0;
+		return (capabilities & NC_IS_SNMP) != 0;
 	}
 
 	/**
@@ -445,7 +453,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isManagementServer()
 	{
-		return (flags & NF_IS_LOCAL_MGMT) != 0;
+		return (flags & NC_IS_LOCAL_MGMT) != 0;
 	}
 
 	/**
@@ -454,7 +462,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isVrrpSupported()
 	{
-		return (flags & NF_IS_VRRP) != 0;
+		return (capabilities & NC_IS_VRRP) != 0;
 	}
 
 	/**
@@ -463,7 +471,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean is8021xSupported()
 	{
-		return (flags & NF_IS_8021X) != 0;
+		return (capabilities & NC_IS_8021X) != 0;
 	}
 
 	/**
@@ -472,7 +480,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isSpanningTreeSupported()
 	{
-		return (flags & NF_IS_STP) != 0;
+		return (capabilities & NC_IS_STP) != 0;
 	}
 
 	/**
@@ -481,7 +489,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isEntityMibSupported()
 	{
-		return (flags & NF_HAS_ENTITY_MIB) != 0;
+		return (capabilities & NC_HAS_ENTITY_MIB) != 0;
 	}
 
 	/**
@@ -490,7 +498,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isIfXTableSupported()
 	{
-		return (flags & NF_HAS_IFXTABLE) != 0;
+		return (capabilities & NC_HAS_IFXTABLE) != 0;
 	}
 
 	/**
@@ -499,7 +507,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isAgentIfXCountersSupported()
 	{
-		return (flags & NF_HAS_AGENT_IFXCOUNTERS) != 0;
+		return (capabilities & NC_HAS_AGENT_IFXCOUNTERS) != 0;
 	}
 
 	/**
@@ -508,7 +516,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isWirelessController()
 	{
-		return (flags & NF_IS_WIFI_CONTROLLER) != 0;
+		return (capabilities & NC_IS_WIFI_CONTROLLER) != 0;
 	}
 
 	/**

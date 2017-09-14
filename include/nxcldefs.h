@@ -178,46 +178,95 @@
 /**
  * Node capabilities
  */
-#define NF_IS_SNMP                0x00000001
-#define NF_IS_NATIVE_AGENT        0x00000002
-#define NF_IS_BRIDGE              0x00000004
-#define NF_IS_ROUTER              0x00000008
-#define NF_IS_LOCAL_MGMT          0x00000010
-#define NF_IS_PRINTER             0x00000020
-#define NF_IS_OSPF                0x00000040
-#define NF_IS_CPSNMP              0x00000100  /* CheckPoint SNMP agent on port 260 */
-#define NF_IS_CDP                 0x00000200
-#define NF_IS_NDP                 0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
-#define NF_IS_SONMP               0x00000400  /* SONMP is an old name for NDP */
-#define NF_IS_LLDP                0x00000800 /* Supports Link Layer Discovery Protocol */
-#define NF_IS_VRRP                0x00001000  /* VRRP support */
-#define NF_HAS_VLANS              0x00002000  /* VLAN information available */
-#define NF_IS_8021X               0x00004000  /* 802.1x support enabled on node */
-#define NF_IS_STP                 0x00008000  /* Spanning Tree (IEEE 802.1d) enabled on node */
-#define NF_HAS_ENTITY_MIB         0x00010000  /* Supports ENTITY-MIB */
-#define NF_HAS_IFXTABLE           0x00020000  /* Supports ifXTable */
-#define NF_HAS_AGENT_IFXCOUNTERS  0x00040000  /* Agent supports 64-bit interface counters */
-#define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
-#define NF_IS_WIFI_CONTROLLER     0x00100000  /* Node is wireless network controller */
-#define NF_IS_SMCLP               0x00200000  /* Node supports SMCLP protocol */
+#define NC_IS_SNMP                0x00000001
+#define NC_IS_NATIVE_AGENT        0x00000002
+#define NC_IS_BRIDGE              0x00000004
+#define NC_IS_ROUTER              0x00000008
+#define NC_IS_LOCAL_MGMT          0x00000010
+#define NC_IS_PRINTER             0x00000020
+#define NC_IS_OSPF                0x00000040
+#define NC_IS_CPSNMP              0x00000080  /* CheckPoint SNMP agent on port 260 */
+#define NC_IS_CDP                 0x00000100
+#define NC_IS_NDP                 0x00000200  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
+#define NC_IS_LLDP                0x00000400 /* Supports Link Layer Discovery Protocol */
+#define NC_IS_VRRP                0x00000800  /* VRRP support */
+#define NC_HAS_VLANS              0x00001000  /* VLAN information available */
+#define NC_IS_8021X               0x00002000  /* 802.1x support enabled on node */
+#define NC_IS_STP                 0x00004000  /* Spanning Tree (IEEE 802.1d) enabled on node */
+#define NC_HAS_ENTITY_MIB         0x00008000  /* Supports ENTITY-MIB */
+#define NC_HAS_IFXTABLE           0x00010000  /* Supports ifXTable */
+#define NC_HAS_AGENT_IFXCOUNTERS  0x00020000  /* Agent supports 64-bit interface counters */
+#define NC_HAS_WINPDH             0x00040000  /* Node supports Windows PDH parameters */
+#define NC_IS_WIFI_CONTROLLER     0x00080000  /* Node is wireless network controller */
+#define NC_IS_SMCLP               0x00100000  /* Node supports SMCLP protocol */
+
+/**
+ * Flag separator
+ */
+#define DCF_COLLECTION_FLAGS 0x0000FFFF
 
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x003FFF7F
-#define NF_USER_FLAGS             0xFFC00080
+#define NF_REMOTE_AGENT           0x00010000
+#define NF_DISABLE_DISCOVERY_POLL 0x00020000
+#define NF_DISABLE_TOPOLOGY_POLL  0x00040000
+#define NF_DISABLE_SNMP           0x00080000
+#define NF_DISABLE_NXCP           0x00100000
+#define NF_DISABLE_ICMP           0x00200000
+#define NF_FORCE_ENCRYPTION       0x00400000
+#define NF_DISABLE_ROUTE_POLL     0x00800000
 
-#define NF_REMOTE_AGENT           0x00000080
-#define NF_DISABLE_DISCOVERY_POLL 0x00400000
-#define NF_DISABLE_TOPOLOGY_POLL  0x00800000
-#define NF_DISABLE_SNMP           0x01000000
-#define NF_DISABLE_NXCP           0x02000000
-#define NF_DISABLE_ICMP           0x04000000
-#define NF_FORCE_ENCRYPTION       0x08000000
-#define NF_DISABLE_STATUS_POLL    0x10000000
-#define NF_DISABLE_CONF_POLL      0x20000000
-#define NF_DISABLE_ROUTE_POLL     0x40000000
-#define NF_DISABLE_DATA_COLLECT   0x80000000
+/**
+ * Data Collection flags first half of int
+ */
+#define DCF_DISABLE_STATUS_POLL    0x00000001
+#define DCF_DISABLE_CONF_POLL      0x00000002
+#define DCF_DISABLE_DATA_COLLECT   0x00000004
+
+
+/**
+ * Data Collection Object runtime (dynamic) flags first half of int
+ */
+#define DCDF_QUEUED_FOR_STATUS_POLL        0x0001
+#define DCDF_QUEUED_FOR_CONFIGURATION_POLL 0x0002
+#define DCDF_QUEUED_FOR_INSTANCE_POLL      0x0004
+#define DCDF_DELETE_IN_PROGRESS            0x0008
+#define DCDF_FORCE_STATUS_POLL             0x0010
+#define DCDF_FORCE_CONFIGURATION_POLL      0x0020
+#define DCDF_CONFIGURATION_POLL_PASSED     0x0040
+
+/**
+ * Node runtime (dynamic) flags
+ */
+#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x00010000
+#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x00020000
+#define NDF_QUEUED_FOR_ROUTE_POLL      0x00040000
+#define NDF_RECHECK_CAPABILITIES       0x00100000
+
+/**
+ * Cluster status flags
+ */
+#define CLSF_DOWN                      0x000001
+
+/**
+ * Node status flags
+ */
+#define NSF_UNREACHABLE                0x000001
+#define NSF_AGENT_UNREACHABLE          0x000002
+#define NSF_SNMP_UNREACHABLE           0x000004
+#define NSF_CPSNMP_UNREACHABLE         0x000020
+#define NSF_NETWORK_PATH_PROBLEM       0x000100
+#define NSF_CACHE_MODE_NOT_SUPPORTED   0x000200
+
+/**
+ * Sensor status flags
+ */
+#define SSF_PROVISIONED                0x000001
+#define SSF_REGISTERED                 0x000002
+#define SSF_ACTIVE                     0x000004
+#define SSF_CONF_UPDATE_PENDING        0x000008
+#define SSF_AGENT_UNREACHABLE          0x000010
 
 /**
  * Template flags

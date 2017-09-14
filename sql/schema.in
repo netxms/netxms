@@ -151,6 +151,8 @@ CREATE TABLE object_properties
   object_id integer not null,
   guid varchar(36) not null,
   name varchar(63) not null,
+  flags integer not null,
+  state integer not null,
   status integer not null,
   is_deleted integer not null,
   is_system integer not null,
@@ -267,7 +269,6 @@ CREATE TABLE chassis
 (
   id integer not null,
   controller_id integer not null,
-  flags integer not null,
   rack_id integer not null,
   rack_image varchar(36) null,
   rack_position integer not null,
@@ -284,8 +285,6 @@ CREATE TABLE nodes
   primary_name varchar(255) null,
   primary_ip varchar(48) not null,
   tunnel_id varchar(36) null,
-  node_flags integer not null,
-  runtime_flags integer not null,
   snmp_version integer not null,
   snmp_port integer not null,
   community varchar(127) null,
@@ -332,6 +331,7 @@ CREATE TABLE nodes
   port_rows integer null,
   port_numbering_scheme integer null,
   agent_comp_mode char(1) not null, // compression mode for agent
+  capabilities integer null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -405,7 +405,6 @@ CREATE TABLE interfaces
   id integer not null,
   node_id integer not null,
   parent_iface integer not null,
-  flags integer not null,
   if_type integer not null,
   if_index integer not null,
   mtu integer not null,
@@ -488,7 +487,6 @@ CREATE TABLE object_containers
 (
   id integer not null,
   object_class integer not null,
-  flags integer not null,
   auto_bind_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -529,7 +527,6 @@ CREATE TABLE templates
 (
   id integer not null,
   version integer not null,
-  flags integer not null,
   apply_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -1363,7 +1360,6 @@ CREATE TABLE network_maps
   bg_latitude varchar(20) null,
   bg_longitude varchar(20) null,
   bg_zoom integer null,
-  flags integer not null,
   bg_color integer not null,
   link_color integer not null,
   link_routing integer not null,
@@ -1734,7 +1730,6 @@ CREATE TABLE sensors
 (
    id integer not null,
    proxy_node integer not null,
-   flags integer not null,
    mac_address varchar(16) null,
    device_class integer not null,
    vendor varchar(128) null,
@@ -1750,6 +1745,5 @@ CREATE TABLE sensors
    signal_strenght integer not null,
    signal_noise integer not null,
    frequency integer not null,
-   runtime_flags integer null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;

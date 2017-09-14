@@ -29,7 +29,6 @@
 Interface::Interface() : NetObj()
 {
    m_parentInterfaceId = 0;
-	m_flags = 0;
 	nx_strncpy(m_description, m_name, MAX_DB_STRING);
    m_alias[0] = 0;
    m_index = 0;
@@ -186,7 +185,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("SELECT if_type,if_index,node_id,")
-		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
+		_T("mac_addr,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
       _T("oper_state,peer_proto,alias,mtu,speed,parent_iface,")
@@ -208,27 +207,26 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_index = DBGetFieldULong(hResult, 0, 1);
       UINT32 nodeId = DBGetFieldULong(hResult, 0, 2);
 		DBGetFieldByteArray2(hResult, 0, 3, m_macAddr, MAC_ADDR_LENGTH, 0);
-		m_flags = DBGetFieldULong(hResult, 0, 4);
-      m_requiredPollCount = DBGetFieldLong(hResult, 0, 5);
-		m_bridgePortNumber = DBGetFieldULong(hResult, 0, 6);
-		m_slotNumber = DBGetFieldULong(hResult, 0, 7);
-		m_portNumber = DBGetFieldULong(hResult, 0, 8);
-		m_peerNodeId = DBGetFieldULong(hResult, 0, 9);
-		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 10);
-		DBGetField(hResult, 0, 11, m_description, MAX_DB_STRING);
-		m_dot1xPaeAuthState = (WORD)DBGetFieldLong(hResult, 0, 12);
-		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 13);
-		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 14);
-		m_operState = (WORD)DBGetFieldLong(hResult, 0, 15);
+      m_requiredPollCount = DBGetFieldLong(hResult, 0, 4);
+		m_bridgePortNumber = DBGetFieldULong(hResult, 0, 5);
+		m_slotNumber = DBGetFieldULong(hResult, 0, 6);
+		m_portNumber = DBGetFieldULong(hResult, 0, 7);
+		m_peerNodeId = DBGetFieldULong(hResult, 0, 8);
+		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 9);
+		DBGetField(hResult, 0, 10, m_description, MAX_DB_STRING);
+		m_dot1xPaeAuthState = (WORD)DBGetFieldLong(hResult, 0, 11);
+		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 12);
+		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 13);
+		m_operState = (WORD)DBGetFieldLong(hResult, 0, 14);
 		m_confirmedOperState = m_operState;
-		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 16);
-		DBGetField(hResult, 0, 17, m_alias, MAX_DB_STRING);
-		m_mtu = DBGetFieldULong(hResult, 0, 18);
-      m_speed = DBGetFieldUInt64(hResult, 0, 19);
-      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 20);
+		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 15);
+		DBGetField(hResult, 0, 16, m_alias, MAX_DB_STRING);
+		m_mtu = DBGetFieldULong(hResult, 0, 17);
+      m_speed = DBGetFieldUInt64(hResult, 0, 18);
+      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 19);
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 21, suffixText, 128);
+      DBGetField(hResult, 0, 20, suffixText, 128);
       StrStrip(suffixText);
       if (suffixText[0] == 0)
       {
@@ -348,7 +346,7 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
    if (IsDatabaseRecordExist(hdb, _T("interfaces"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb,
-			_T("UPDATE interfaces SET node_id=?,if_type=?,if_index=?,mac_addr=?,flags=?,")
+			_T("UPDATE interfaces SET node_id=?,if_type=?,if_index=?,mac_addr=?,")
 			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
 			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
 			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
@@ -359,10 +357,10 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	{
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
-			_T("flags,required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
+			_T("required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
          _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,")
          _T("parent_iface,iftable_suffix,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -374,33 +372,32 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_slotNumber);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_portNumber);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerNodeId);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
-	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
-	DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
-   DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_slotNumber);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_portNumber);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_peerNodeId);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
+	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
+	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_mtu);
+	DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_speed);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
    if (m_ifTableSuffixLen > 0)
    {
       TCHAR buffer[128];
-      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
    }
    else
    {
-	   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+	   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
    }
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -491,8 +488,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    BOOL bNeedPoll = TRUE;
 
    // Poll interface using different methods
-   if ((pNode->getFlags() & NF_IS_NATIVE_AGENT) &&
-       (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
+   if ((pNode->getCapabilities() & NC_IS_NATIVE_AGENT) &&
+       (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getState() & NSF_AGENT_UNREACHABLE)))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
       pNode->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
@@ -508,8 +505,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		}
    }
 
-   if (bNeedPoll && (pNode->getFlags() & NF_IS_SNMP) &&
-       (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getRuntimeFlags() & NDF_SNMP_UNREACHABLE)) &&
+   if (bNeedPoll && (pNode->getCapabilities() & NC_IS_SNMP) &&
+       (!(pNode->getFlags() & NF_DISABLE_SNMP)) && (!(pNode->getState() & NSF_SNMP_UNREACHABLE)) &&
 		 (snmpTransport != NULL))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from SNMP agent\r\n"));
@@ -601,7 +598,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 
 	// Check 802.1x state
-	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort() && (snmpTransport != NULL))
+	if ((pNode->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != NULL))
 	{
 		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->getName(), m_name);
 		paeStatusPoll(rqId, snmpTransport, pNode);
@@ -610,7 +607,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 
 	// Reset status to unknown if node has known network connectivity problems
-	if ((newStatus == STATUS_CRITICAL) && (pNode->getRuntimeFlags() & NDF_NETWORK_PATH_PROBLEM))
+	if ((newStatus == STATUS_CRITICAL) && (pNode->getState() & NSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
 		DbgPrintf(6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->getName(), m_name);
@@ -1022,7 +1019,6 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_IF_SLOT, m_slotNumber);
    pMsg->setField(VID_IF_PORT, m_portNumber);
    pMsg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
-	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->setField(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
@@ -1043,6 +1039,14 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
  */
 UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
+   // Flags
+   if (pRequest->isFieldExist(VID_FLAGS))
+   {
+      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? (pRequest->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
+      m_flags &= ~mask;
+      m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
+   }
+
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
@@ -1051,14 +1055,6 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
 	{
 		setExpectedStateInternal(pRequest->getFieldAsInt16(VID_EXPECTED_STATE));
-	}
-
-	// Flags
-	if (pRequest->isFieldExist(VID_FLAGS))
-	{
-      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? (pRequest->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
-		m_flags &= ~mask;
-		m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
 	}
 
    return NetObj::modifyFromMessageInternal(pRequest);

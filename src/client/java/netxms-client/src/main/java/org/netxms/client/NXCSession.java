@@ -5079,7 +5079,7 @@ public class NXCSession
       
       if (data.isFieldSet(NXCObjectModificationData.MAC_ADDRESS))
       {
-         msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
+         msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress());
       }
       
       if (data.isFieldSet(NXCObjectModificationData.DEVICE_CLASS))

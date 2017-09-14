@@ -207,11 +207,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				switch(object.getObjectClass())
 				{
 					case AbstractObject.OBJECT_NODE:
-						if ((((Node)object).getFlags() & Node.NF_IS_BRIDGE) != 0)
+						if ((((Node)object).getCapabilities() & Node.NC_IS_BRIDGE) != 0)
 							return imgNodeSwitch;
-						if ((((Node)object).getFlags() & Node.NF_IS_ROUTER) != 0)
+						if ((((Node)object).getCapabilities() & Node.NC_IS_ROUTER) != 0)
 							return imgNodeRouter;
-						if ((((Node)object).getFlags() & Node.NF_IS_PRINTER) != 0)
+						if ((((Node)object).getCapabilities() & Node.NC_IS_PRINTER) != 0)
 							return imgNodePrinter;
 						if (((Node)object).getPlatformName().startsWith("windows")) //$NON-NLS-1$
 							return imgNodeWindows;

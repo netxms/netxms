@@ -188,7 +188,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (!loadCommonProperties(hdb))
       return false;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,flags,apply_filter FROM templates WHERE id=%d"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,apply_filter FROM templates WHERE id=%d"), dwId);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;
@@ -203,8 +203,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    bool success = true;
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
-	m_flags = DBGetFieldULong(hResult, 0, 1);
-   m_applyFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
+   m_applyFilterSource = DBGetField(hResult, 0, 1, NULL, 0);
    if (m_applyFilterSource != NULL)
    {
       TCHAR error[256];
@@ -280,11 +279,11 @@ BOOL Template::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE templates SET version=?,flags=?,apply_filter=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE templates SET version=?,apply_filter=? WHERE id=?"));
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO templates (version,flags,apply_filter,id) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO templates (version,apply_filter,id) VALUES (?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -293,9 +292,8 @@ BOOL Template::saveToDatabase(DB_HANDLE hdb)
 	}
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwVersion);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_applyFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_applyFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
@@ -883,7 +881,6 @@ void Template::fillMessageInternal(NXCPMessage *pMsg)
 {
    NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
-	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
 }
 

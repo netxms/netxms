@@ -100,11 +100,11 @@ public class ObjectMenuFilter
    public boolean isApplicableForNode(AbstractNode node)
    {
       if (((flags & REQUIRES_SNMP) != 0) &&
-          ((node.getFlags() & AbstractNode.NF_IS_SNMP) == 0))
+          ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) == 0))
          return false;  // Node does not support SNMP
       
       if (((flags & REQUIRES_AGENT) != 0) &&
-             ((node.getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) == 0))
+             ((node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) == 0))
             return false;  // Node does not have NetXMS agent
       
       if ((flags & REQUIRES_OID_MATCH) != 0)

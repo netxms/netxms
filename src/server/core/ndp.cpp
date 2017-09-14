@@ -113,7 +113,7 @@ static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
  */
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
-	if (!(node->getFlags() & NF_IS_NDP))
+	if (!(node->getCapabilities() & NC_IS_NDP))
 		return;
 
 	DbgPrintf(5, _T("NDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());

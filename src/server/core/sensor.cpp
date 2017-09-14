@@ -44,8 +44,6 @@ Sensor::Sensor() : DataCollectionTarget()
    m_frequency = 0; //*10 from origin number
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
-   m_dwDynamicFlags = 0;
-   m_hPollerMutex = MutexCreate();
    m_status = STATUS_UNKNOWN;
 }
 
@@ -75,8 +73,6 @@ Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceCl
    m_frequency = 0; //*10 from origin number
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
-   m_dwDynamicFlags = 0;
-   m_hPollerMutex = MutexCreate();
    m_status = STATUS_UNKNOWN;
 }
 
@@ -107,7 +103,7 @@ Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
          }
          break;
       case COMM_DLMS:
-         sensor->m_flags = SENSOR_PROVISIONED | SENSOR_REGISTERED | SENSOR_ACTIVE;
+         sensor->m_state = SSF_PROVISIONED | SSF_REGISTERED | SSF_ACTIVE;
          break;
    }
    return sensor;
@@ -134,12 +130,10 @@ AgentConnectionEx *Sensor::getAgentConnection()
  */
 Sensor *Sensor::registerLoraDevice(Sensor *sensor)
 {
-/*
-   NetObj *proxy = FindObjectById(m_proxyNodeId, OBJECT_NODE);
+   NetObj *proxy = FindObjectById(sensor->m_proxyNodeId, OBJECT_NODE);
    if(proxy == NULL)
-      reutn NULL;
-   }
-   */
+      return NULL;
+
    AgentConnectionEx *conn = sensor->getAgentConnection();
    if (conn == NULL)
    {
@@ -185,8 +179,11 @@ Sensor *Sensor::registerLoraDevice(Sensor *sensor)
    if (response != NULL)
    {
       if(response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
+      {
+         sensor->lockProperties();
          sensor->setProvisoned();
-
+         sensor->unlockProperties();
+      }
       delete response;
    }
 
@@ -209,7 +206,6 @@ Sensor::~Sensor()
    free(m_deviceAddress);
    free(m_metaType);
    free(m_description);
-   MutexDestroy(m_hPollerMutex);
 }
 
 /**
@@ -226,31 +222,28 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    }
 
 	TCHAR query[512];
-	_sntprintf(query, 512, _T("SELECT flags,mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,")
-                          _T("meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,xml_reg_config,runtime_flags FROM sensors WHERE id=%d"), m_id);
+	_sntprintf(query, 512, _T("SELECT mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,")
+                          _T("meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,xml_reg_config FROM sensors WHERE id=%d"), m_id);
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == NULL)
 		return false;
 
-   m_flags = DBGetFieldULong(hResult, 0, 0);
-   m_macAddress = DBGetFieldMacAddr(hResult, 0, 1);
-	m_deviceClass = DBGetFieldULong(hResult, 0, 2);
-	m_vendor = DBGetField(hResult, 0, 3, NULL, 0);
-	m_commProtocol = DBGetFieldULong(hResult, 0, 4);
-	m_xmlConfig = DBGetField(hResult, 0, 5, NULL, 0);
-	m_serialNumber = DBGetField(hResult, 0, 6, NULL, 0);
-	m_deviceAddress = DBGetField(hResult, 0, 7, NULL, 0);
-	m_metaType = DBGetField(hResult, 0, 8, NULL, 0);
-	m_description = DBGetField(hResult, 0, 9, NULL, 0);
-   m_lastConnectionTime = DBGetFieldULong(hResult, 0, 10);
-   m_frameCount = DBGetFieldULong(hResult, 0, 11);
-   m_signalStrenght = DBGetFieldLong(hResult, 0, 12);
-   m_signalNoise = DBGetFieldLong(hResult, 0, 13);
-   m_frequency = DBGetFieldLong(hResult, 0, 14);
-   m_proxyNodeId = DBGetFieldLong(hResult, 0, 15);
-   m_xmlRegConfig = DBGetField(hResult, 0, 16, NULL, 0);
-   m_dwDynamicFlags = DBGetFieldULong(hResult, 0, 17);
-   m_dwDynamicFlags &= NDF_PERSISTENT; // Clear out all non-persistent runtime flags
+   m_macAddress = DBGetFieldMacAddr(hResult, 0, 0);
+	m_deviceClass = DBGetFieldULong(hResult, 0, 1);
+	m_vendor = DBGetField(hResult, 0, 2, NULL, 0);
+	m_commProtocol = DBGetFieldULong(hResult, 0, 3);
+	m_xmlConfig = DBGetField(hResult, 0, 4, NULL, 0);
+	m_serialNumber = DBGetField(hResult, 0, 5, NULL, 0);
+	m_deviceAddress = DBGetField(hResult, 0, 6, NULL, 0);
+	m_metaType = DBGetField(hResult, 0, 7, NULL, 0);
+	m_description = DBGetField(hResult, 0, 8, NULL, 0);
+   m_lastConnectionTime = DBGetFieldULong(hResult, 0, 9);
+   m_frameCount = DBGetFieldULong(hResult, 0, 10);
+   m_signalStrenght = DBGetFieldLong(hResult, 0, 11);
+   m_signalNoise = DBGetFieldLong(hResult, 0, 12);
+   m_frequency = DBGetFieldLong(hResult, 0, 13);
+   m_proxyNodeId = DBGetFieldLong(hResult, 0, 14);
+   m_xmlRegConfig = DBGetField(hResult, 0, 15, NULL, 0);
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -277,31 +270,29 @@ BOOL Sensor::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       bool isNew = !(IsDatabaseRecordExist(hdb, _T("sensors"), _T("id"), m_id));
       if (isNew)
-         hStmt = DBPrepare(hdb, _T("INSERT INTO sensors (flags,mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,runtime_flags,id,xml_reg_config) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO sensors (mac_address,device_class,vendor,communication_protocol,xml_config,serial_number,device_address,meta_type,description,last_connection_time,frame_count,signal_strenght,signal_noise,frequency,proxy_node,id,xml_reg_config) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       else
-         hStmt = DBPrepare(hdb, _T("UPDATE sensors SET flags=?,mac_address=?,device_class=?,vendor=?,communication_protocol=?,xml_config=?,serial_number=?,device_address=?,meta_type=?,description=?,last_connection_time=?,frame_count=?,signal_strenght=?,signal_noise=?,frequency=?,proxy_node=?,runtime_flags=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE sensors SET mac_address=?,device_class=?,vendor=?,communication_protocol=?,xml_config=?,serial_number=?,device_address=?,meta_type=?,description=?,last_connection_time=?,frame_count=?,signal_strenght=?,signal_noise=?,frequency=?,proxy_node=? WHERE id=?"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_flags);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_macAddress);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_deviceClass);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_commProtocol);
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_xmlConfig, DB_BIND_STATIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_deviceAddress, DB_BIND_STATIC);
-         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_metaType, DB_BIND_STATIC);
-         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (UINT32)m_lastConnectionTime);
-         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_frameCount);
-         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_signalStrenght);
-         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_signalNoise);
-         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_frequency);
-         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_proxyNodeId);
-         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddress);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_deviceClass);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_commProtocol);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_xmlConfig, DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_deviceAddress, DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_metaType, DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (UINT32)m_lastConnectionTime);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_frameCount);
+         DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_signalStrenght);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_signalNoise);
+         DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_frequency);
+         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_proxyNodeId);
+         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_id);
          if(isNew)
-            DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_xmlRegConfig, DB_BIND_STATIC);
+            DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmlRegConfig, DB_BIND_STATIC);
 
          success = DBExecute(hStmt);
 
@@ -397,6 +388,9 @@ void Sensor::fillMessageInternal(NXCPMessage *msg)
 
 UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
 {
+   if (request->isFieldExist(VID_FLAGS))
+      m_flags = request->getFieldAsUInt32(VID_FLAGS);
+
    if (request->isFieldExist(VID_MAC_ADDR))
       m_macAddress = request->getFieldAsMacAddress(VID_MAC_ADDR);
    if (request->isFieldExist(VID_VENDOR))
@@ -440,37 +434,106 @@ UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
 /**
  * Calculate sensor status
  */
-void Sensor::calculateStatus()
+void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   if (m_flags == 0 || m_flags == SENSOR_PROVISIONED)
+   UINT32 oldStatus = m_status;
+   calculateStatus(bForcedRecalc);
+   lockProperties();
+   if (oldStatus != m_status)
+      setModified(true);
+   unlockProperties();
+}
+
+void Sensor::calculateStatus(BOOL bForcedRecalc)
+{
+   AgentConnectionEx *conn = getAgentConnection();
+   if (conn == NULL)
+   {
       m_status = STATUS_UNKNOWN;
-   else if (m_flags & SENSOR_ACTIVE)
-      m_status = STATUS_NORMAL;
-   else if (m_flags & ~SENSOR_ACTIVE)
-      m_status = STATUS_CRITICAL;
+      return;
+   }
+   DataCollectionTarget::calculateCompoundStatus(bForcedRecalc);
+   lockProperties();
+   int status = 0;
+   if (m_state == 0 || m_state == SSF_PROVISIONED)
+      status = STATUS_UNKNOWN;
+   else if (m_state & SSF_ACTIVE)
+      status = STATUS_NORMAL;
+   else
+      status = STATUS_CRITICAL;
+
+   m_status = m_status != STATUS_UNKNOWN ? max(m_status, status) : status;
+   unlockProperties();
 }
 
 /**
- * Entry point for configuration poller
+ * Get instances for instance discovery DCO
  */
-void Sensor::configurationPoll(PollerInfo *poller)
+StringMap *Sensor::getInstanceList(DCObject *dco)
 {
-   poller->startExecution();
-   ObjectTransactionStart();
-   configurationPoll(NULL, 0, poller, 0);
-   ObjectTransactionEnd();
-   delete poller;
+   if (dco->getInstanceDiscoveryData() == NULL)
+      return NULL;
+
+   DataCollectionTarget *obj;
+   if (dco->getSourceNode() != 0)
+   {
+      obj = (DataCollectionTarget *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
+      if (obj == NULL)
+      {
+         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName(), dco->getId(), dco->getSourceNode());
+         return NULL;
+      }
+      if (!obj->isTrustedNode(m_id))
+      {
+         DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
+                  dco->getName(), dco->getId(), m_name, m_id, obj->getName(), obj->getId());
+         return NULL;
+      }
+   }
+   else
+   {
+      obj = this;
+   }
+
+   StringList *instances = NULL;
+   StringMap *instanceMap = NULL;
+   switch(dco->getInstanceDiscoveryMethod())
+   {
+      case IDM_AGENT_LIST:
+         if (obj->getObjectClass() == OBJECT_NODE)
+            ((Node *)obj)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         else if (obj->getObjectClass() == OBJECT_SENSOR)
+            ((Sensor *)obj)->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         break;
+      case IDM_SCRIPT:
+         obj->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         break;
+      default:
+         instances = NULL;
+         break;
+   }
+   if ((instances == NULL) && (instanceMap == NULL))
+      return NULL;
+
+   if (instanceMap == NULL)
+   {
+      instanceMap = new StringMap;
+      for(int i = 0; i < instances->size(); i++)
+         instanceMap->set(instances->get(i), instances->get(i));
+   }
+   delete instances;
+   return instanceMap;
 }
 
 /**
  * Perform configuration poll on node
  */
-void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller, int maskBits)
+void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
       if (dwRqId == 0)
-         m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+         m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
       return;
    }
 
@@ -483,21 +546,22 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
       return;
    }
 
+   m_pollRequestor = pSession;
    nxlog_debug(5, _T("Starting configuration poll for sensor %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    bool hasChanges = false;
 
    if(m_commProtocol == COMM_LORAWAN)
    {
-      if (!(m_flags & SENSOR_PROVISIONED))
+      if (!(m_state & SSF_PROVISIONED))
       {
-         if ((registerLoraDevice(this) != NULL) && (m_flags & SENSOR_PROVISIONED))
+         if ((registerLoraDevice(this) != NULL) && (m_state & SSF_PROVISIONED))
          {
             nxlog_debug(6, _T("ConfPoll(%s [%d}): sensor successfully registered"), m_name, m_id);
             hasChanges = true;
          }
       }
-      if ((m_flags & SENSOR_PROVISIONED) && (m_deviceAddress == NULL))
+      if ((m_state & SSF_PROVISIONED) && (m_deviceAddress == NULL))
       {
          getItemFromAgent(_T("LoraWAN.DevAddr(*)"), 0, m_deviceAddress);
          if (m_deviceAddress != NULL)
@@ -508,10 +572,18 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
       }
    }
 
-   poller->setStatus(_T("cleanup"));
+   applyUserTemplates();
+   updateContainerMembership();
+
+   // Execute hook script
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("ConfigurationPoll"));
+
+   sendPollerMsg(dwRqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(dwRqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
+
    if (dwRqId == 0)
-      m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
-   m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
+      m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    m_lastConfigurationPoll = time(NULL);
 
    nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
@@ -523,17 +595,8 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
       setModified();
       unlockProperties();
    }
-}
 
-/**
- * Status poller entry point
- */
-void Sensor::statusPoll(PollerInfo *poller)
-{
-   poller->startExecution();
-   statusPoll(NULL, 0, poller);
-
-   delete poller;
+   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
 }
 
 void Sensor::checkDlmsConverterAccessability()
@@ -546,10 +609,10 @@ void Sensor::checkDlmsConverterAccessability()
  */
 void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
       if (dwRqId == 0)
-         m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
       return;
    }
 
@@ -565,6 +628,7 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       return;
    }
 
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for sensor %s\r\n"), m_name);
    nxlog_debug(5, _T("Starting status poll for sensor %s (ID: %d)"), m_name, m_id);
 
@@ -573,12 +637,13 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
    AgentConnectionEx *conn = getAgentConnection();
+   lockProperties();
    if (conn != NULL)
    {
       nxlog_debug(6, _T("StatusPoll(%s): connected to agent"), m_name);
-      if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
+      if (m_state & SSF_AGENT_UNREACHABLE)
       {
-         m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
+         m_state &= ~SSF_AGENT_UNREACHABLE;
          sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
       }
    }
@@ -586,16 +651,18 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    {
       nxlog_debug(6, _T("StatusPoll(%s): agent unreachable"), m_name);
       sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
-      if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
-         m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
+      if (!(m_state & SSF_AGENT_UNREACHABLE))
+         m_state |= SSF_AGENT_UNREACHABLE;
    }
+   unlockProperties();
    nxlog_debug(6, _T("StatusPoll(%s): agent check finished"), m_name);
 
    switch(m_commProtocol)
    {
       case COMM_LORAWAN:
-         if (m_flags & SENSOR_PROVISIONED)
+         if (m_runtimeFlags & SSF_PROVISIONED)
          {
+            lockProperties();
             TCHAR lastValue[MAX_DCI_STRING_VALUE] = { 0 };
             time_t now;
             getItemFromAgent(_T("LoraWAN.LastContact(*)"), MAX_DCI_STRING_VALUE, lastValue);
@@ -608,24 +675,24 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
 
             now = time(NULL);
 
-            if (!(m_flags & SENSOR_REGISTERED))
+            if (!(m_state & SSF_REGISTERED))
             {
                if (m_lastConnectionTime > 0)
                {
-                  m_flags |= SENSOR_REGISTERED;
+                  m_state |= SSF_REGISTERED;
                   nxlog_debug(6, _T("StatusPoll(%s [%d}): Status set to REGISTERED"), m_name, m_id);
                }
             }
-            if (m_flags & SENSOR_REGISTERED)
+            if (m_state & SSF_REGISTERED)
             {
                if (now - m_lastConnectionTime > 3600) // Last contact > 1h
                {
-                  m_flags &= ~SENSOR_ACTIVE;
+                  m_state &= ~SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d}): Inactive for over 1h, status set to INACTIVE"), m_name, m_id);
                }
                else
                {
-                  m_flags |= SENSOR_ACTIVE;
+                  m_state |= SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d}): Status set to ACTIVE"), m_name, m_id);
                   getItemFromAgent(_T("LoraWAN.RSSI(*)"), MAX_DCI_STRING_VALUE, lastValue);
                   m_signalStrenght = _tcstod(lastValue, NULL);
@@ -636,8 +703,6 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
                }
             }
 
-            lockProperties();
-            calculateStatus();
             setModified();
             unlockProperties();
          }
@@ -645,14 +710,13 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       case COMM_DLMS:
          checkDlmsConverterAccessability();
          lockProperties();
-         calculateStatus();
          setModified();
          unlockProperties();
          break;
       default:
          break;
    }
-
+   calculateStatus(TRUE);
 
    // Send delayed events and destroy delayed event queue
    if (pQueue != NULL)
@@ -660,13 +724,34 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       ResendEvents(pQueue);
       delete pQueue;
    }
+   poller->setStatus(_T("hook"));
+   executeHookScript(_T("StatusPoll"));
 
    if (dwRqId == 0)
-      m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
+      m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+
+   sendPollerMsg(dwRqId, _T("Finished status poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(dwRqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    pollerUnlock();
    m_lastStatusPoll = time(NULL);
    nxlog_debug(5, _T("Finished status poll for sensor %s (ID: %d)"), m_name, m_id);
+}
+
+void Sensor::prepareLoraDciParameters(String &parameter)
+{
+   int place = parameter.find(_T(")"));
+   if(place > 0)
+   {
+      parameter.replace(_T(")"), m_guid.toString());
+      parameter.append(_T(")"));
+   }
+   else
+   {
+      parameter.append(_T("("));
+      parameter.append(m_guid.toString());
+      parameter.append(_T(")"));
+   }
 }
 
 /**
@@ -685,8 +770,16 @@ void Sensor::prepareDlmsDciParameters(String &parameter)
    ConfigEntry *configRoot = config.getEntry(_T("/connections"));
 	if (configRoot != NULL)
 	{
-		ObjectArray<ConfigEntry> *credentials = configRoot->getSubEntries(_T("/cred"));
-      parameter.replace(_T(")"), _T(""));
+	   int place = parameter.find(_T(")"));
+	   if(place > 0)
+	   {
+	      parameter.replace(_T(")"), _T(""));
+	   }
+	   else
+	   {
+	      parameter.append(_T("("));
+	   }
+      ObjectArray<ConfigEntry> *credentials = configRoot->getSubEntries(_T("/cred"));
 		for(int i = 0; i < credentials->size(); i++)
 		{
 			ConfigEntry *cred = credentials->get(i);
@@ -734,7 +827,7 @@ void Sensor::prepareDlmsDciParameters(String &parameter)
  */
 UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
-   if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
+   if (m_state & SSF_AGENT_UNREACHABLE)
       return DCE_COMM_ERROR;
 
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
@@ -752,7 +845,7 @@ UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *s
    switch(m_commProtocol)
    {
       case COMM_LORAWAN:
-         parameter.replace(_T("*"), m_guid.toString());
+         prepareLoraDciParameters(parameter);
          break;
       case COMM_DLMS:
          if(parameter.find(_T("Sensor")) != -1)
@@ -797,13 +890,84 @@ UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *s
 }
 
 /**
+ * Get list from agent
+ */
+UINT32 Sensor::getListFromAgent(const TCHAR *name, StringList **list)
+{
+   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 i, dwTries = 3;
+
+   *list = NULL;
+
+   if (m_state & SSF_AGENT_UNREACHABLE) //removed disable agent usage for all polls
+      return DCE_COMM_ERROR;
+
+   nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, name);
+   AgentConnectionEx *conn = getAgentConnection();
+   if (conn == NULL)
+   {
+      return dwResult;
+   }
+
+   String parameter(name);
+   switch(m_commProtocol)
+   {
+      case COMM_LORAWAN:
+         prepareLoraDciParameters(parameter);
+         break;
+      case COMM_DLMS:
+         if(parameter.find(_T("Sensor")) != -1)
+            prepareDlmsDciParameters(parameter);
+         break;
+   }
+   nxlog_debug(3, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, parameter.getBuffer());
+
+   // Get parameter from agent
+   while(dwTries-- > 0)
+   {
+      dwError = conn->getList(parameter);
+      switch(dwError)
+      {
+         case ERR_SUCCESS:
+            dwResult = DCE_SUCCESS;
+            *list = new StringList;
+            for(i = 0; i < conn->getNumDataLines(); i++)
+               (*list)->add(conn->getDataLine(i));
+            break;
+         case ERR_UNKNOWN_PARAMETER:
+            dwResult = DCE_NOT_SUPPORTED;
+            break;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
+            break;
+         case ERR_NOT_CONNECTED:
+         case ERR_CONNECTION_BROKEN:
+         case ERR_REQUEST_TIMEOUT:
+            // Reset connection to agent after timeout
+            DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
+            if (getAgentConnection() == NULL)
+               break;
+            break;
+            DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
+            break;
+         case ERR_INTERNAL_ERROR:
+            dwResult = DCE_COLLECTION_ERROR;
+            break;
+      }
+   }
+
+   DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
+   return dwResult;
+}
+
+/**
  * Prepare sensor object for deletion
  */
 void Sensor::prepareForDeletion()
 {
    // Prevent sensor from being queued for polling
    lockProperties();
-   m_dwDynamicFlags |= NDF_POLLING_DISABLED | NDF_DELETE_IN_PROGRESS;
+   m_runtimeFlags |= DCDF_DELETE_IN_PROGRESS;
    unlockProperties();
 
    // Wait for all pending polls
@@ -811,8 +975,8 @@ void Sensor::prepareForDeletion()
    while(1)
    {
       lockProperties();
-      if ((m_dwDynamicFlags &
-            (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL)) == 0)
+      if ((m_runtimeFlags &
+            (DCDF_QUEUED_FOR_STATUS_POLL | DCDF_QUEUED_FOR_CONFIGURATION_POLL)) == 0)
       {
          unlockProperties();
          break;

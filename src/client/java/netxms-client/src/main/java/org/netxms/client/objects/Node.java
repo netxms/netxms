@@ -74,4 +74,22 @@ public class Node extends AbstractNode
    {
       return true;
    }
+
+   @Override
+   public boolean containAgent()
+   {
+      return true;
+   }
+
+   @Override
+   public boolean containInterfaces()
+   {
+      return true;
+   }
+
+   @Override
+   public boolean containPollerNode()
+   {
+      return true;
+   }
 }

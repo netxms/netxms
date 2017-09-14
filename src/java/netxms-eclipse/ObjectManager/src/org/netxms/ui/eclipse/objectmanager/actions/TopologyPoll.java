@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.netxms.client.constants.NodePollType;
 
 /**
- * Start status poll
+ * Start topology poll
  *
  */
 public class TopologyPoll extends AbstractNodePoll

@@ -24,16 +24,18 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 
 /**
  * Cluster object
  */
-public class Cluster extends DataCollectionTarget implements ZoneMember
+public class Cluster extends DataCollectionTarget implements ZoneMember, PollingTarget
 {
 	private int clusterType;
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
 	private long zoneId;
+	private int flags;
 	
 	/**
 	 * @param msg
@@ -43,6 +45,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember
 	{
 		super(msg, session);
 		
+      flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		clusterType = msg.getFieldAsInt32(NXCPCodes.VID_CLUSTER_TYPE);
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		
@@ -129,5 +132,47 @@ public class Cluster extends DataCollectionTarget implements ZoneMember
    {
       Zone zone = session.findZone(zoneId);
       return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
+   }
+
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   @Override
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   @Override
+   public boolean containAgent()
+   {
+      return false;
+   }
+
+   @Override
+   public boolean containInterfaces()
+   {
+      return false;
+   }
+
+   @Override
+   public boolean containPollerNode()
+   {
+      return false;
    }
 }

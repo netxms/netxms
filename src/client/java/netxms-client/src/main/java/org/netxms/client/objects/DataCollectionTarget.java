@@ -29,7 +29,11 @@ import org.netxms.client.datacollection.DciValue;
  * Base class for all data collection targets
  */
 public class DataCollectionTarget extends GenericObject
-{
+{   
+   public static final int DCF_DISABLE_STATUS_POLL    = 0x00000001;
+   public static final int DCF_DISABLE_CONF_POLL      = 0x00000002;
+   public static final int DCF_DISABLE_DATA_COLLECT   = 0x00000004;
+   
    protected List<DciValue> overviewDciData;
    protected List<DciValue> tooltipDciData;
 

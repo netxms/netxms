@@ -356,7 +356,7 @@ NXSL_METHOD_DEFINITION(Node, enableAgent)
  */
 NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_CONF_POLL);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL);
 }
 
 /**
@@ -396,7 +396,7 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
  */
 NXSL_METHOD_DEFINITION(Node, enableStatusPolling)
 {
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_STATUS_POLL);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL);
 }
 
 /**
@@ -461,15 +461,15 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("isAgent")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_NATIVE_AGENT) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isBridge")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_BRIDGE) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isCDP")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_CDP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_CDP) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isInMaintenanceMode")))
    {
@@ -477,7 +477,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("isLLDP")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_LLDP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_LLDP) ? 1 : 0));
    }
 	else if (!_tcscmp(attr, _T("isLocalMgmt")) || !_tcscmp(attr, _T("isLocalManagement")))
 	{
@@ -485,27 +485,27 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 	}
    else if (!_tcscmp(attr, _T("isPAE")) || !_tcscmp(attr, _T("is802_1x")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_8021X) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_8021X) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isPrinter")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_PRINTER) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_PRINTER) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isRouter")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_ROUTER) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_ROUTER) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isSMCLP")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SMCLP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_SMCLP) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isSNMP")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SNMP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_SNMP) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("isSONMP")))
    {
-      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SONMP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getCapabilities() & NC_IS_NDP) ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("lastAgentCommTime")))
    {

@@ -91,7 +91,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
  */
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
-	if (!(node->getFlags() & NF_IS_CDP))
+	if (!(node->getCapabilities() & NC_IS_CDP))
 		return;
 
 	DbgPrintf(5, _T("CDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());

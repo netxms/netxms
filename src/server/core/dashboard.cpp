@@ -187,7 +187,6 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg)
 	Container::fillMessageInternal(msg);
 
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
-	msg->setField(VID_FLAGS, m_options);
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
@@ -210,7 +209,7 @@ UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_options = (int)request->getFieldAsUInt32(VID_FLAGS);
+	   m_options = (int)request->getFieldAsUInt32(VID_FLAGS);
 
 	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{

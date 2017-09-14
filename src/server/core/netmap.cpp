@@ -245,11 +245,11 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		goto fail;
@@ -261,13 +261,12 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
 	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
-	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
 
 	if (!DBExecute(hStmt))
 	{
@@ -386,7 +385,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	   loadACLFromDB(hdb);
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == NULL)
 			return false;
@@ -518,7 +517,6 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg)
 
 	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->setField(VID_LAYOUT, (WORD)m_layout);
-	msg->setField(VID_FLAGS, m_flags);
 	msg->setFieldFromInt32Array(VID_SEED_OBJECTS, m_seedObjects);
 	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
 	msg->setField(VID_BACKGROUND, m_background);

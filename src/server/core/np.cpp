@@ -165,7 +165,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
       dwFlags |= NF_DISABLE_SNMP;
    if (creationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(ipAddr, dwFlags, agentProxyId, snmpProxyId, icmpProxyId, sshProxyId, zoneUIN);
+   pNode = new Node(ipAddr, dwFlags, 0, agentProxyId, snmpProxyId, icmpProxyId, sshProxyId, zoneUIN);
 	if (agentPort != 0)
 		pNode->setAgentPort(agentPort);
 	if (snmpPort != 0)
