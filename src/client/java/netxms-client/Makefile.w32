@@ -1,0 +1,6 @@
+TARGET = netxms-client.jar
+TYPE = jar
+
+MVNFLAGS = -Dmaven.test.skip=true -Ppkg-build
+
+include ..\..\..\..\Makefile.inc.w32
