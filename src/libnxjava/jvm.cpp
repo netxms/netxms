@@ -46,7 +46,7 @@ typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
  * @param env points where JNI environment for current thread will be stored
  * @return true if VM created successfully
  */
-JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TCHAR *jar, const TCHAR *usercp, StringList *vmOptions, JNIEnv **env)
+JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TCHAR *jar, const TCHAR **syslibs, const TCHAR *usercp, StringList *vmOptions, JNIEnv **env)
 {
    TCHAR errorText[256];
    s_jvmModule = DLOpen(jvmPath, errorText);
@@ -69,6 +69,16 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       classpath.append(libdir);
       classpath.append(FS_PATH_SEPARATOR_CHAR);
       classpath.append(jar);
+   }
+   if (syslibs != NULL)
+   {
+      for(int i = 0; syslibs[i] != NULL; i++)
+      {
+         classpath.append(JAVA_CLASSPATH_SEPARATOR);
+         classpath.append(libdir);
+         classpath.append(FS_PATH_SEPARATOR_CHAR);
+         classpath.append(syslibs[i]);
+      }
    }
    if (usercp != NULL)
    {

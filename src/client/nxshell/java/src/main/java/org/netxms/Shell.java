@@ -20,7 +20,6 @@ public class Shell
 {
    private static final String DEFAULT_SERVER = "127.0.0.1";
    private static final String DEFAULT_LOGIN = "admin";
-   private static final String DEFAULT_PASSWORD = "netxms";
    
    private String optServer;
    private String optPort;
@@ -101,10 +100,10 @@ public class Shell
          }
          if (optPassword == null)
          {
-            final char[] passwordChars = console.readPassword("Password [netxms]: ");
-            if (passwordChars == null || passwordChars.length == 0)
+            final char[] passwordChars = console.readPassword("Password: ");
+            if (passwordChars == null)
             {
-               optPassword = DEFAULT_PASSWORD;
+               optPassword = "";
             }
             else
             {
@@ -122,7 +121,7 @@ public class Shell
       }
       if (optPassword == null)
       {
-         optPassword = DEFAULT_PASSWORD;
+         optPassword = "";
       }
    }
 

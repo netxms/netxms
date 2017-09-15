@@ -118,12 +118,13 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size);
  *
  * @param jvmPath path to JVM library
  * @param jar application JAR - path should be relative to NetXMS library directory (can be NULL)
+ * @param syslibs list of system jar files (should be terminated with NULL pointer, can be NULL)
  * @param usercp user defined class path (can be NULL)
  * @param vmOptions additional VM options
  * @param env points where JNI environment for current thread will be stored
  * @return NXJAVA_SUCCESS if VM created successfully or appropriate error code
  */
-JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TCHAR *jar, const TCHAR *usercp, StringList *vmOptions, JNIEnv **env);
+JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TCHAR *jar, const TCHAR **syslibs, const TCHAR *usercp, StringList *vmOptions, JNIEnv **env);
 
 /**
  * Destroy Java virtual machine
