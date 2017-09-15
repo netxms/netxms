@@ -281,7 +281,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
 
    JNIEnv *env;
-   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent.jar"), s_userClasspath, NULL, &env);
+   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent.jar"), NULL, s_userClasspath, NULL, &env);
    if (err != NXJAVA_SUCCESS)
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
