@@ -704,7 +704,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music templates"
-	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxshell nxsms"
+	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxsms"
 	SERVER_TOOLS="nxconfig"
 )
 
@@ -921,7 +921,7 @@ if test $? = 0; then
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
-		CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxshell"
+		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
 	fi
 fi
 
@@ -3642,6 +3642,10 @@ AC_CONFIG_FILES([
 	src/appagent/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
+	src/client/java/Makefile
+	src/client/java/lib/Makefile
+	src/client/java/netxms-base/Makefile
+	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile

@@ -43,6 +43,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.finalName>${project.artifactId}-${project.version}</build.finalName>
+        <lib.scope>compile</lib.scope>
     </properties>
 
     <dependencies>
@@ -61,6 +62,7 @@
             <groupId>org.netxms</groupId>
             <artifactId>netxms-client</artifactId>
             <version>${project.version}</version>
+            <scope>${lib.scope}</scope>
         </dependency>
     </dependencies>
 
@@ -69,6 +71,7 @@
             <id>nxshell-launcher</id>
             <properties>
                 <build.finalName>${project.artifactId}</build.finalName>
+                <lib.scope>provided</lib.scope>
             </properties>
         </profile>
     </profiles>
