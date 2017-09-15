@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.8.2,4.0.0)",
  org.eclipse.jface.text;bundle-version="3.8.2",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.1.6",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.8.0",
- org.eclipse.core.expressions;bundle-version="3.4.400"
+ org.eclipse.core.expressions;bundle-version="3.4.400",
+ org.netxms.ui.base;bundle-version="2.1.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

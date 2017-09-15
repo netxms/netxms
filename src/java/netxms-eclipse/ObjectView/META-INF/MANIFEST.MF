@@ -13,7 +13,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.objecttools;bundle-version="2.1.0",
  org.netxms.ui.eclipse.imagelibrary;bundle-version="2.0.0",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.1.1",
- org.eclipse.ui.forms;bundle-version="3.5.200"
+ org.eclipse.ui.forms;bundle-version="3.5.200",
+ org.netxms.ui.base;bundle-version="2.1.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,
