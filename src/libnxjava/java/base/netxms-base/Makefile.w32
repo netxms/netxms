@@ -3,4 +3,4 @@ TYPE = jar
 
 MVNFLAGS = -Dmaven.test.skip=true -Ppkg-build
 
-include ..\..\..\..\Makefile.inc.w32
+include ..\..\..\..\..\Makefile.inc.w32
