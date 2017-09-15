@@ -5,8 +5,8 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.clientlibrary;singleton:=true
 Bundle-Version: 2.1.6
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Bundle-ClassPath: lib/simple-xml-2.6.4.jar,
- .
+Bundle-ClassPath: .,
+ lib/simple-xml-2.7.1.jar
 Export-Package: org.netxms.base,
  org.netxms.certificate.loader,
  org.netxms.certificate.loader.exception,
