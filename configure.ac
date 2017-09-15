@@ -3635,8 +3635,6 @@ AC_CONFIG_FILES([
 	src/client/Makefile
 	src/client/install/Makefile
 	src/client/java/Makefile
-	src/client/java/lib/Makefile
-	src/client/java/netxms-base/Makefile
 	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
@@ -3666,6 +3664,10 @@ AC_CONFIG_FILES([
 	src/libnxcc/Makefile
 	src/libnxjava/Makefile
 	src/libnxjava/java/Makefile
+	src/libnxjava/java/base/Makefile
+	src/libnxjava/java/base/lib/Makefile
+	src/libnxjava/java/base/netxms-base/Makefile
+	src/libnxjava/java/bridge/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
 	src/libnxsl/Makefile
