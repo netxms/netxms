@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/simple-xml-2.7.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="netxms-base/src/main/java"/>
 	<classpathentry kind="src" path="plugin/src"/>
 	<classpathentry kind="src" path="netxms-client/src/main/resources"/>
 	<classpathentry kind="src" path="netxms-client/src/main/java"/>

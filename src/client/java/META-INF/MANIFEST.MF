@@ -2,19 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Client Library API plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.clientlibrary;singleton:=true
-Bundle-Version: 2.1.5
+Bundle-Version: 2.1.6
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Bundle-ClassPath: .,
- lib/simple-xml-2.7.1.jar
-Export-Package: org.netxms.base,
- org.netxms.certificate.loader,
- org.netxms.certificate.loader.exception,
- org.netxms.certificate.manager,
- org.netxms.certificate.manager.exception,
- org.netxms.certificate.request,
- org.netxms.certificate.subject,
- org.netxms.client,
+Bundle-ClassPath: .
+Export-Package: org.netxms.client,
  org.netxms.client.agent.config,
  org.netxms.client.constants,
  org.netxms.client.dashboards,
@@ -37,16 +29,9 @@ Export-Package: org.netxms.base,
  org.netxms.client.snmp,
  org.netxms.client.topology,
  org.netxms.client.users,
- org.netxms.client.xml,
- org.simpleframework.xml,
- org.simpleframework.xml.convert,
- org.simpleframework.xml.core,
- org.simpleframework.xml.filter,
- org.simpleframework.xml.strategy,
- org.simpleframework.xml.stream,
- org.simpleframework.xml.transform,
- org.simpleframework.xml.util
-Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0"
+ org.netxms.client.xml
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.netxms.ui.base;bundle-version="2.1.2"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.netxms.client.plugin.Activator
 Import-Package: org.netxms.client.events
