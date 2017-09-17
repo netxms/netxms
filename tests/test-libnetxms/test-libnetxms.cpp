@@ -973,10 +973,35 @@ static void TestRingBuffer()
    EndTest();
 }
 
-static void TestDebugTags()
+/**
+ * Test get/set debug level
+ */
+static void TestDebugLevel()
 {
    StartTest(_T("Default debug level"));
    AssertEquals(nxlog_get_debug_level(), 0);
+   EndTest();
+
+   StartTest(_T("Set debug level"));
+   nxlog_set_debug_level(7);
+   AssertEquals(nxlog_get_debug_level(), 7);
+   nxlog_set_debug_level(0);
+   AssertEquals(nxlog_get_debug_level(), 0);
+   EndTest();
+
+   StartTest(_T("nxlog_get_debug_level() performance"));
+   UINT64 startTime = GetCurrentTimeMs();
+   for(int i = 0; i < 1000000; i++)
+      nxlog_get_debug_level();
+   EndTest(GetCurrentTimeMs() - startTime);
+}
+
+/**
+ * Test debug tags
+ */
+static void TestDebugTags()
+{
+   StartTest(_T("Default debug level for tags"));
    AssertEquals(nxlog_get_debug_level_tag(_T("server.db")), 0);
    EndTest();
 
@@ -1112,7 +1137,20 @@ static void TestDebugTags()
    AssertFalse(nxlog_get_debug_level_tag(_T("db.local.sql.server")) == 3);
    AssertFalse(nxlog_get_debug_level_tag(_T("db.local.sql.server.status")) == 3);
    EndTest();
+
+   StartTest(_T("nxlog_get_debug_level performance with multiple tags"));
+   TCHAR tag[64];
+   for(int i = 0; i < 1000; i++)
+   {
+      _sntprintf(tag, 64, _T("test.tag%d.subtag%d"), i % 10, i);
+      nxlog_set_debug_level_tag(tag, 7);
+   }
+   UINT64 startTime = GetCurrentTimeMs();
+   for(int i = 0; i < 1000000; i++)
+      nxlog_get_debug_level();
+   EndTest(GetCurrentTimeMs() - startTime);
 }
+
 /**
  * main()
  */
@@ -1142,6 +1180,7 @@ int main(int argc, char *argv[])
    TestByteSwap();
    TestDiff();
    TestRingBuffer();
+   TestDebugLevel();
    TestDebugTags();
 
    MsgWaitQueue::shutdown();
