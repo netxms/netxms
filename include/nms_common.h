@@ -490,14 +490,6 @@ using std::wcsncasecmp;
 #include <pthread.h>
 #endif
 
-#ifdef __sun
-#include <sys/atomic.h>
-#endif
-
-#if defined(__HP_aCC) && HAVE_ATOMIC_H
-#include <atomic.h>
-#endif
-
 #ifdef __IBMCPP__
 #include <builtins.h>
 #endif
