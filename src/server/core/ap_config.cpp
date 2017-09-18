@@ -166,7 +166,7 @@ bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 		return false;  // Policy cannot be deployed
 
 #ifdef UNICODE
-	char *fd = MBStringFromWideString(m_fileContent);
+	char *fd = MBStringFromWideStringSysLocale(m_fileContent);
 	msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
 	free(fd);
 #else
