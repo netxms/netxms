@@ -34,6 +34,7 @@
 #endif
 
 #include <nms_common.h>
+#include <nxatomic.h>
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>

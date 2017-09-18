@@ -61,4 +61,21 @@ volatile uint32_t solaris9_atomic_dec32(volatile uint32_t *v)
 
 #endif
 
+#if !HAVE_ATOMIC_SWAP_PTR
+
+void *solaris9_atomic_swap_ptr(volatile *void *target, void *value)
+{
+   volatile void *t;
+   asm(
+      "       ld       [%2], %0;"
+      "1:     cas      [%2], %0, %1;"
+      "       cmp      %0, %1;"
+      "       bne,a,pn %icc,1b;"
+      "       mov      %1, %0;"
+         : "=&r" (value), "=&r" (t) : "r" (target) : "memory");
+   return t;
+}
+
+#endif
+
 #endif /* __sun */

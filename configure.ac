@@ -2338,7 +2338,7 @@ fi
 
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
-	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64, __sync_add_and_fetch, __sync_sub_and_fetch],,,[
+	AC_CHECK_DECLS([getkerninfo, getprocs, getprocs64, __sync_add_and_fetch, __sync_sub_and_fetch, __sync_lock_test_and_set],,,[
 #if HAVE_PROCINFO_H
 #include <procinfo.h>
 #endif
@@ -2356,7 +2356,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xSunOS"; then
-	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv],,,[
+	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv atomic_swap_ptr],,,[
 #include <sys/atomic.h>
 	])
 fi
