@@ -127,6 +127,8 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
       *uid = (unsigned int)peer.uid;
       return true;
    }
+#elif defined(_HPUX)
+   // implementation for HP-UX is not possible
 #else
 #error no valid method to get socket peer UID
 #endif
