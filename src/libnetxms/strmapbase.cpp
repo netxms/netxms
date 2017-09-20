@@ -71,13 +71,12 @@ void StringMapBase::clear()
 /**
  * Find entry index by key
  */
-StringMapEntry *StringMapBase::find(const TCHAR *key) const
+StringMapEntry *StringMapBase::find(const TCHAR *key, int keyLen) const
 {
 	if (key == NULL)
 		return NULL;
 
    StringMapEntry *entry;
-   int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
    if (m_ignoreCase)
    {
 #if HAVE_ALLOCA
@@ -107,7 +106,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
    if (key == NULL)
       return;
 
-	StringMapEntry *entry = find(key);
+	StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
 	if (entry != NULL)
 	{
 		if (keyPreAllocated)
@@ -155,7 +154,20 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
  */
 void *StringMapBase::getObject(const TCHAR *key) const
 {
-	StringMapEntry *entry = find(key);
+   if (key == NULL)
+      return NULL;
+	StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
+   return (entry != NULL) ? entry->value : NULL;
+}
+
+/**
+ * Get value by key
+ */
+void *StringMapBase::getObject(const TCHAR *key, size_t len) const
+{
+   if (key == NULL)
+      return NULL;
+   StringMapEntry *entry = find(key, (int)len * sizeof(TCHAR));
    return (entry != NULL) ? entry->value : NULL;
 }
 
@@ -164,12 +176,12 @@ void *StringMapBase::getObject(const TCHAR *key) const
  */
 void StringMapBase::remove(const TCHAR *key)
 {
-   StringMapEntry *entry = find(key);
+   StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
       free(entry->key);
-      safe_free(entry->originalKey);
+      free(entry->originalKey);
 		if (m_objectOwner)
          destroyObject(entry->value);
       free(entry);

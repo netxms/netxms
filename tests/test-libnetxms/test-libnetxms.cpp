@@ -120,6 +120,7 @@ static void TestStringMap()
       _sntprintf(key, 64, _T("key-%d"), i);
       m->set(key, _T("consectetur adipiscing elit"));
    }
+   _tprintf(_T("size: %d"), m->size());
    AssertEquals(m->size(), 10000);
    v = m->get(_T("key-42"));
    AssertNotNull(v);

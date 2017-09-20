@@ -228,7 +228,7 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 /**
  * Atomically set pointer
  */
-inline void *InterlockedExchangePointer(void *volatile *target, void *value)
+inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 {
 #if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
    void *oldval;
@@ -247,5 +247,17 @@ inline void *InterlockedExchangePointer(void *volatile *target, void *value)
 #endif   /* __sun */
 
 #endif   /* _WIN32 */
+
+#ifdef __cplusplus
+
+/**
+ * Atomically set pointer
+ */
+template<typename T> T *InterlockedExchangePointer(T* volatile *target, T *value)
+{
+   return static_cast<T*>(InterlockedExchangePointer(reinterpret_cast<void* volatile *>(target), value));
+}
+
+#endif   /* __cplusplus */
 
 #endif

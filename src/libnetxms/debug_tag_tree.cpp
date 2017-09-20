@@ -23,11 +23,26 @@
 #include "debug_tag_tree.h"
 
 /**
+ * Create empty tree node
+ */
+DebugTagTreeNode::DebugTagTreeNode()
+{
+   m_value = NULL;
+   m_direct = false;
+   m_directLvL = 0;
+   m_asterisk = false;
+   m_asteriskLvL = 0;
+   m_children = new StringObjectMap<DebugTagTreeNode>(true);
+}
+
+/**
  * Create new tree node
  */
-DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value)
+DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value, size_t len)
 {
-   m_value = new String(value);
+   m_value = (TCHAR *)malloc(sizeof(TCHAR) * ((int)len + 1));
+   memcpy(m_value, value, sizeof(TCHAR) * (int)len);
+   m_value[len] = 0;
    m_direct = false;
    m_directLvL = 0;
    m_asterisk = false;
@@ -38,17 +53,26 @@ DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value)
 /**
  * Get debug LvL from tree node, returns longest match (recursive)
  */
-int DebugTagTreeNode::getDebugLvl(const StringList *tags, UINT32 pos)
+int DebugTagTreeNode::getDebugLvl(const TCHAR *tags)
 {
-   if ((tags->size() == pos) && m_direct)
-      return m_directLvL;
+   if (tags == NULL)
+   {
+      if (m_direct)
+         return m_directLvL;
+      if (m_asterisk)
+         return m_asteriskLvL;
+      return -1;
+   }
 
    int result = -1;
-   DebugTagTreeNode *child = m_children->get(tags->get(pos));
-   if (child != NULL)
-      result = child->getDebugLvl(tags, pos+1);
+   const TCHAR *ptr = _tcschr(tags, _T('.'));
+   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
 
-   if (result == -1 && tags->size() > pos && m_asterisk)
+   DebugTagTreeNode *child = m_children->get(tags, len);
+   if (child != NULL)
+      result = child->getDebugLvl((ptr != NULL) ? ptr + 1 : NULL);
+
+   if (result == -1 && m_asterisk)
       return m_asteriskLvL;
 
    return result;
@@ -57,55 +81,65 @@ int DebugTagTreeNode::getDebugLvl(const StringList *tags, UINT32 pos)
 /**
  * Add new tree node to its children and grand children etc... (recursive)
  */
-void DebugTagTreeNode::add(const StringList *tags, UINT32 pos, UINT32 lvl)
+void DebugTagTreeNode::add(const TCHAR *tags, UINT32 lvl)
 {
-   if (tags->size() == pos)
+   if (tags != NULL && !_tcscmp(tags, _T("*")))
+   {
+      if (!m_asterisk)
+         m_asterisk = true;
+      m_asteriskLvL = lvl;
+      return;
+   }
+
+   const TCHAR *ptr = (tags == NULL) ? NULL : _tcschr(tags, _T('.'));
+
+   if (tags == NULL)
    {
       if (!m_direct)
          m_direct = true;
       m_directLvL = lvl;
-
       return;
    }
 
-   DebugTagTreeNode *child = m_children->get(tags->get(pos));
+   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+
+   DebugTagTreeNode *child = m_children->get(tags, len);
    if (child != NULL)
-      child->add(tags, pos+1, lvl);
+      child->add((ptr != NULL) ? ptr + 1 : NULL, lvl);
    else
    {
-      if (tags->size() > pos && !_tcscmp(tags->get(pos), _T("*")))
-      {
-         if (!m_asterisk)
-            m_asterisk = true;
-         m_asteriskLvL = lvl;
-      }
-      else
-      {
-         child = new DebugTagTreeNode(tags->get(pos));
-         m_children->set(tags->get(pos), child);
-         child->add(tags, pos+1, lvl);
-      }
+      child = new DebugTagTreeNode(tags, len);
+      m_children->set(child->getValue(), child);
+      child->add((ptr != NULL) ? ptr + 1 : NULL, lvl);
    }
 }
 
 /**
  * Remove entry from child list (recursive)
  */
-bool DebugTagTreeNode::remove(const StringList *tags, UINT32 pos)
+bool DebugTagTreeNode::remove(const TCHAR *tags)
 {
-   DebugTagTreeNode *child = m_children->get(tags->get(pos));
-   if (child != NULL && child->remove(tags, pos+1))
-      m_children->remove(tags->get(pos));
+   const TCHAR *ptr = NULL;
 
-   if ((tags->size() == pos+1) && (!_tcscmp(tags->get(pos), _T("*"))))
+   if (tags != NULL)
+   {
+      ptr = _tcschr(tags, _T('.'));
+      int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+
+      DebugTagTreeNode *child = m_children->get(tags, len);
+      if (child != NULL && child->remove((ptr != NULL) ? ptr + 1 : NULL))
+         m_children->remove(child->getValue());
+   }
+
+   if (tags != NULL && !_tcscmp(tags, _T("*")))
    {
       m_asterisk = false;
-      m_asteriskLvL = -1;
+      m_asteriskLvL = 0;
    }
-   else if ((tags->size() == pos) && m_direct)
+   else if (tags == NULL)
    {
       m_direct = false;
-      m_directLvL = -1;
+      m_directLvL = 0;
    }
 
    if ((m_children->size() == 0) && !m_asterisk)
@@ -117,19 +151,41 @@ bool DebugTagTreeNode::remove(const StringList *tags, UINT32 pos)
 /**
  * Get debug LvL from tree, returns longest match (recursive)
  */
-int DebugTagTree::getDebugLvl(const TCHAR *tags)
+UINT32 DebugTagTree::getDebugLvl(const TCHAR *tags)
 {
-   String s(tags);
-   StringList *tagList = s.split(_T("."));
-   if (tagList->size() == 0)
-      tagList->add(_T("*"));
-
-   int result = m_root->getDebugLvl(tagList, 0);
-
-   delete(tagList);
-   if (result == -1)
-      return 0;
+   InterlockedIncrement(&m_readerCount);
+   int result;
+   if (tags == NULL)
+       result = getRootDebugLvl();
+    else
+    {
+       result = m_root->getDebugLvl(tags);
+       if (result == -1)
+          result = 0;
+    }
+   InterlockedDecrement(&m_readerCount);
    return result;
+}
+
+/**
+ * Get main debug level
+ */
+UINT32 DebugTagTree::getRootDebugLvl()
+{
+   InterlockedIncrement(&m_readerCount);
+   UINT32 level = m_root->m_asteriskLvL;
+   InterlockedDecrement(&m_readerCount);
+   return level;
+}
+
+/**
+ * Set debug lvl for root node
+ */
+void DebugTagTree::setRootDebugLvl(UINT32 lvl)
+{
+   m_root->m_asteriskLvL = lvl;
+   if (!m_root->m_asterisk)
+      m_root->m_asterisk = true;
 }
 
 /**
@@ -137,14 +193,10 @@ int DebugTagTree::getDebugLvl(const TCHAR *tags)
  */
 void DebugTagTree::add(const TCHAR *tags, UINT32 lvl)
 {
-   String s(tags);
-   StringList *tagList = s.split(_T("."));
-   if (tagList->size() == 0)
-      tagList->add(_T("*"));
-
-   m_root->add(tagList, 0, lvl);
-
-   delete(tagList);
+   if (tags == NULL)
+      setRootDebugLvl(lvl);
+   else
+      m_root->add(tags, lvl);
 }
 
 /**
@@ -152,10 +204,8 @@ void DebugTagTree::add(const TCHAR *tags, UINT32 lvl)
  */
 void DebugTagTree::remove(const TCHAR *tags)
 {
-   String s(tags);
-   StringList *tagList = s.split(_T("."));
-   if (tagList->size() == 0)
-      tagList->add(_T("*"));
-
-   m_root->remove(tagList, 0);
+   if (tags == NULL)
+       setRootDebugLvl(0);
+    else
+       m_root->remove(tags);
 }
