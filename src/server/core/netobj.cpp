@@ -1778,7 +1778,7 @@ NXSL_Array *NetObj::getParentsForNXSL()
 			 (obj->getObjectClass() == OBJECT_SERVICEROOT) ||
 			 (obj->getObjectClass() == OBJECT_NETWORK))
 		{
-			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, obj)));
+			parents->set(index++, obj->createNXSLObject());
 		}
 	}
 	unlockParentList();
