@@ -28,33 +28,41 @@ class DebugTagTreeNode
    friend class DebugTagTree;
 
 private:
-   String *m_value;
+   TCHAR *m_value;
    StringObjectMap<DebugTagTreeNode> *m_children;
    bool m_direct;
    bool m_asterisk;
-   int m_directLvL;
-   int m_asteriskLvL;
+   UINT32 m_directLvL;
+   UINT32 m_asteriskLvL;
 
-   DebugTagTreeNode(const TCHAR *value);
+   DebugTagTreeNode();
+   DebugTagTreeNode(const TCHAR *value, size_t len);
 
-   int getDebugLvl(const StringList *tags, UINT32 pos);
-   void add(const StringList *tags, UINT32 pos, UINT32 lvl);
-   bool remove(const StringList *tags, UINT32 pos);
+   int getDebugLvl(const TCHAR *tags);
+   const TCHAR *getValue() const { return m_value; }
+   void add(const TCHAR *tags, UINT32 lvl);
+   bool remove(const TCHAR *tags);
 
 public:
-   ~DebugTagTreeNode() { delete(m_value); delete(m_children); }
+   ~DebugTagTreeNode() { free(m_value); delete(m_children); }
 };
 
 class DebugTagTree
 {
 private:
    DebugTagTreeNode *m_root;
+   VolatileCounter m_readerCount;
 
 public:
-   DebugTagTree() { m_root = new DebugTagTreeNode(_T("")); }
+   DebugTagTree() { m_root = new DebugTagTreeNode(); m_readerCount = 0; }
    ~DebugTagTree() { delete(m_root); }
 
    void add(const TCHAR *tags, UINT32 lvl);
    void remove(const TCHAR *tags);
-   int getDebugLvl(const TCHAR *tags);
+   UINT32 getDebugLvl(const TCHAR *tags);
+
+   void setRootDebugLvl(UINT32 lvl);
+   UINT32 getRootDebugLvl();
+
+   INT32 getReaderCount() { return (INT32)m_readerCount; }
 };

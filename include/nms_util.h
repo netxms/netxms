@@ -867,9 +867,10 @@ protected:
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	StringMapEntry *find(const TCHAR *key) const;
+	StringMapEntry *find(const TCHAR *key, int keyLen) const;
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key) const;
+   void *getObject(const TCHAR *key, size_t len) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 public:
@@ -884,7 +885,8 @@ public:
    void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
 	int size() const;
-   bool contains(const TCHAR *key) const { return find(key) != NULL; }
+   bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, (int)_tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
+   bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, (int)len * sizeof(TCHAR)) != NULL) : false; }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
@@ -917,6 +919,7 @@ public:
    void addAll(const StringMap *src);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
+   const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }
    INT32 getInt32(const TCHAR *key, INT32 defaultValue) const;
 	UINT32 getUInt32(const TCHAR *key, UINT32 defaultValue) const;
    INT64 getInt64(const TCHAR *key, INT64 defaultValue) const;
@@ -944,6 +947,7 @@ public:
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
 	T *get(const TCHAR *key) const { return (T*)getObject(key); }
+   T *get(const TCHAR *key, size_t len) const { return (T*)getObject(key, len); }
 };
 
 /**

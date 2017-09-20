@@ -172,7 +172,7 @@ static void DBReconnect(DB_HANDLE hConn)
    int nCount;
 	WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
-   nxlog_debug_tag(_T("db.connection"), 4, _T("DB reconnect: handle=%p"), hConn);
+   nxlog_debug_tag(_T("db.connect"), 4, _T("DB reconnect: handle=%p"), hConn);
 
    InvalidatePreparedStatements(hConn);
 	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);

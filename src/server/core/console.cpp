@@ -129,13 +129,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (list->size() == 2)
          level = (int)_tcstol(list->get(1), &eptr, 0);
 
-      if ((*eptr == 0) && (level >= 0) && (level <= 9))
+      if ((*eptr == 0) && (level >= -1) && (level <= 9))
       {
          if (list->size() == 1)
+         {
             nxlog_set_debug_level(level);
+            ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+         }
          else if (list->size() == 2)
-            nxlog_set_debug_level_tag(list->get(1), level);
-         ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+         {
+            nxlog_set_debug_level_tag(list->get(0), level);
+            if (level == -1)
+               ConsolePrintf(pCtx,  _T("Debug tag <%s> removed\n"), list->get(0));
+            else
+               ConsolePrintf(pCtx,  _T("Debug level for tag <%s> set to %d\n"), list->get(0), level);
+         }
       }
       else if (IsCommand(_T("OFF"), szBuffer, 2))
       {
