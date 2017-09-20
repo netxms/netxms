@@ -25,6 +25,8 @@
 
 #include <nms_common.h>
 
+#ifdef __cplusplus
+
 #ifdef __sun
 #include <sys/atomic.h>
 #endif
@@ -248,10 +250,8 @@ inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 
 #endif   /* _WIN32 */
 
-#ifdef __cplusplus
-
 /**
- * Atomically set pointer
+ * Atomically set pointer - helper template
  */
 template<typename T> T *InterlockedExchangePointer(T* volatile *target, T *value)
 {
