@@ -20,9 +20,7 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -46,8 +44,8 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -59,15 +57,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class EmbeddedDashboard extends PropertyPage
 {
-	private static final Set<Integer> objectSelectionFilter;
-	
-	static
-	{
-		objectSelectionFilter = new HashSet<Integer>(2);
-		objectSelectionFilter.add(AbstractObject.OBJECT_DASHBOARD);
-		objectSelectionFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
-	}
-	
 	private EmbeddedDashboardConfig config;
 	private List<AbstractObject> dashboardObjects;
 	private TableViewer viewer;
@@ -348,7 +337,7 @@ public class EmbeddedDashboard extends PropertyPage
 	 */
 	protected void addDashboard()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, objectSelectionFilter);
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createDashboardSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			dashboardObjects.addAll(Arrays.asList(dlg.getSelectedObjects(Dashboard.class)));
