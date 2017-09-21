@@ -98,4 +98,10 @@ Language=English
 %1
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_TAG
+Language=English
+<%1> %2
+.
+
 ;#endif

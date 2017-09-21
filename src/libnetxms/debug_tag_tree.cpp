@@ -66,7 +66,7 @@ int DebugTagTreeNode::getDebugLvl(const TCHAR *tags)
 
    int result = -1;
    const TCHAR *ptr = _tcschr(tags, _T('.'));
-   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+   size_t len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
 
    DebugTagTreeNode *child = m_children->get(tags, len);
    if (child != NULL)
@@ -101,8 +101,7 @@ void DebugTagTreeNode::add(const TCHAR *tags, UINT32 lvl)
       return;
    }
 
-   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
-
+   size_t len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
    DebugTagTreeNode *child = m_children->get(tags, len);
    if (child != NULL)
       child->add((ptr != NULL) ? ptr + 1 : NULL, lvl);
@@ -124,7 +123,7 @@ bool DebugTagTreeNode::remove(const TCHAR *tags)
    if (tags != NULL)
    {
       ptr = _tcschr(tags, _T('.'));
-      int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+      size_t len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
 
       DebugTagTreeNode *child = m_children->get(tags, len);
       if (child != NULL && child->remove((ptr != NULL) ? ptr + 1 : NULL))

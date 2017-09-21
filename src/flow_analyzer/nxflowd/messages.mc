@@ -80,4 +80,10 @@ Language=English
 SQL query failed (Query = "%1"): %2
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_TAG
+Language=English
+<%1> %2
+.
+
 ;#endif

@@ -394,6 +394,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\debug_tag_tree.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\diff.cpp"
 				>
 			</File>
@@ -617,6 +621,10 @@
 			>
 			<File
 				RelativePath="..\..\include\base64.h"
+				>
+			</File>
+			<File
+				RelativePath=".\debug_tag_tree.h"
 				>
 			</File>
 			<File

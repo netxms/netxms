@@ -693,13 +693,13 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
                else
                {
                   m_state |= SSF_ACTIVE;
-                  nxlog_debug(6, _T("StatusPoll(%s [%d}): Status set to ACTIVE"), m_name, m_id);
+                  nxlog_debug(6, _T("StatusPoll(%s [%d]): Status set to ACTIVE"), m_name, m_id);
                   getItemFromAgent(_T("LoraWAN.RSSI(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_signalStrenght = _tcstod(lastValue, NULL);
+                  m_signalStrenght = _tcstol(lastValue, NULL, 10);
                   getItemFromAgent(_T("LoraWAN.SNR(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_signalNoise = (_tcstod(lastValue, NULL)*10);
+                  m_signalNoise = static_cast<INT32>(_tcstod(lastValue, NULL) * 10);
                   getItemFromAgent(_T("LoraWAN.Frequency(*)"), MAX_DCI_STRING_VALUE, lastValue);
-                  m_frequency = (_tcstod(lastValue, NULL)*10);
+                  m_frequency = static_cast<UINT32>(_tcstod(lastValue, NULL) * 10);
                }
             }
 

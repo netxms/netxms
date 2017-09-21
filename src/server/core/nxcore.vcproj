@@ -829,6 +829,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sensor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\session.cpp"
 				>
 			</File>
