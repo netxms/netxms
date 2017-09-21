@@ -5574,7 +5574,7 @@ ROUTING_TABLE *Node::getRoutingTable()
       }
       agentUnlock();
    }
-   if ((pRT == NULL) && (m_flags & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
+   if ((pRT == NULL) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
    {
       SNMP_Transport *pTransport;
 

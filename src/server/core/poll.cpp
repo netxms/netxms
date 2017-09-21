@@ -166,7 +166,7 @@ void CheckForMgmtNode()
          if ((node = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
-            if (!(node->getFlags() & NC_IS_LOCAL_MGMT))
+            if (!(node->getCapabilities() & NC_IS_LOCAL_MGMT))
             {
                node->setLocalMgmtFlag();
                DbgPrintf(1, _T("Local management node %s [%d] was not have NC_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
