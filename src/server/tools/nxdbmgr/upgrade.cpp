@@ -711,9 +711,9 @@ static void moveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
 }
 
 /**
- * Upgrade from V501 to V502
+ * Upgrade from V502 to V503
  */
-static BOOL H_UpgradeFromV501(int currVersion, int newVersion)
+static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
 {
    //create required columns in netobj table
    static const TCHAR *batch =
@@ -854,7 +854,7 @@ static BOOL H_UpgradeFromV501(int currVersion, int newVersion)
    CHK_EXEC(DBDropColumn(g_hCoreDB, _T("sensors"), _T("runtime_flags")));
    CHK_EXEC(DBDropColumn(g_hCoreDB, _T("sensors"), _T("flags")));
 
-   CHK_EXEC(SetSchemaVersion(502));
+   CHK_EXEC(SetSchemaVersion(503));
    return TRUE;
 }
 
@@ -12246,6 +12246,7 @@ static struct
    { 459, 500, H_UpgradeFromV459 },
    { 500, 501, H_UpgradeFromV500 },
    { 501, 502, H_UpgradeFromV501 },
+   { 502, 503, H_UpgradeFromV502 },
    { 0, 0, NULL }
 };
 
