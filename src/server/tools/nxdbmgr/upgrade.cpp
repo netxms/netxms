@@ -644,70 +644,83 @@ BOOL moveFlagsFromOldTables(const TCHAR *tableName)
    return TRUE;
 }
 
-//#define FLAG_MOVE(oldVar, newVar, oldFlag, newFlag)  *newVar |= (oldVar & oldFlag > 0) ? newFlag : 0
-
-inline void FLAG_MOVE(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFlag)
+/**
+ * Move single flag
+ */
+inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFlag)
 {
    *newVar |= (oldVar & oldFlag > 0) ? newFlag : 0;
 }
 
-static void moveNodeFlags(UINT32 oldFlag, UINT32 *flags)
+/**
+ * Move node flags
+ */
+static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags)
 {
-   FLAG_MOVE(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
-   FLAG_MOVE(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
-   FLAG_MOVE(oldFlag, flags, 0x80000000, DCF_DISABLE_DATA_COLLECT);
-   FLAG_MOVE(oldFlag, flags, 0x00000080, NF_REMOTE_AGENT);
-   FLAG_MOVE(oldFlag, flags, 0x00400000, NF_DISABLE_DISCOVERY_POLL);
-   FLAG_MOVE(oldFlag, flags, 0x00800000, NF_DISABLE_TOPOLOGY_POLL);
-   FLAG_MOVE(oldFlag, flags, 0x01000000, NF_DISABLE_SNMP);
-   FLAG_MOVE(oldFlag, flags, 0x02000000, NF_DISABLE_NXCP);
-   FLAG_MOVE(oldFlag, flags, 0x04000000, NF_DISABLE_ICMP);
-   FLAG_MOVE(oldFlag, flags, 0x08000000, NF_FORCE_ENCRYPTION);
-   FLAG_MOVE(oldFlag, flags, 0x40000000, NF_DISABLE_ROUTE_POLL);
+   MoveFlag(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
+   MoveFlag(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
+   MoveFlag(oldFlag, flags, 0x80000000, DCF_DISABLE_DATA_COLLECT);
+   MoveFlag(oldFlag, flags, 0x00000080, NF_REMOTE_AGENT);
+   MoveFlag(oldFlag, flags, 0x00400000, NF_DISABLE_DISCOVERY_POLL);
+   MoveFlag(oldFlag, flags, 0x00800000, NF_DISABLE_TOPOLOGY_POLL);
+   MoveFlag(oldFlag, flags, 0x01000000, NF_DISABLE_SNMP);
+   MoveFlag(oldFlag, flags, 0x02000000, NF_DISABLE_NXCP);
+   MoveFlag(oldFlag, flags, 0x04000000, NF_DISABLE_ICMP);
+   MoveFlag(oldFlag, flags, 0x08000000, NF_FORCE_ENCRYPTION);
+   MoveFlag(oldFlag, flags, 0x40000000, NF_DISABLE_ROUTE_POLL);
 }
 
-static void moveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities)
+/**
+ * Move node capabilities flags
+ */
+static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities)
 {
-   FLAG_MOVE(oldFlag, capabilities, 0x00000001, NC_IS_SNMP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000002, NC_IS_NATIVE_AGENT);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000004, NC_IS_BRIDGE);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000008, NC_IS_ROUTER);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000010, NC_IS_LOCAL_MGMT);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000020, NC_IS_PRINTER);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000040, NC_IS_OSPF);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000100, NC_IS_CPSNMP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000200, NC_IS_CDP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000400, NC_IS_NDP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00000800, NC_IS_LLDP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00001000, NC_IS_VRRP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00002000, NC_HAS_VLANS);
-   FLAG_MOVE(oldFlag, capabilities, 0x00004000, NC_IS_8021X);
-   FLAG_MOVE(oldFlag, capabilities, 0x00008000, NC_IS_STP);
-   FLAG_MOVE(oldFlag, capabilities, 0x00010000, NC_HAS_ENTITY_MIB);
-   FLAG_MOVE(oldFlag, capabilities, 0x00020000, NC_HAS_IFXTABLE);
-   FLAG_MOVE(oldFlag, capabilities, 0x00040000, NC_HAS_AGENT_IFXCOUNTERS);
-   FLAG_MOVE(oldFlag, capabilities, 0x00080000, NC_HAS_WINPDH);
-   FLAG_MOVE(oldFlag, capabilities, 0x00100000, NC_IS_WIFI_CONTROLLER);
-   FLAG_MOVE(oldFlag, capabilities, 0x00200000, NC_IS_SMCLP);
+   MoveFlag(oldFlag, capabilities, 0x00000001, NC_IS_SNMP);
+   MoveFlag(oldFlag, capabilities, 0x00000002, NC_IS_NATIVE_AGENT);
+   MoveFlag(oldFlag, capabilities, 0x00000004, NC_IS_BRIDGE);
+   MoveFlag(oldFlag, capabilities, 0x00000008, NC_IS_ROUTER);
+   MoveFlag(oldFlag, capabilities, 0x00000010, NC_IS_LOCAL_MGMT);
+   MoveFlag(oldFlag, capabilities, 0x00000020, NC_IS_PRINTER);
+   MoveFlag(oldFlag, capabilities, 0x00000040, NC_IS_OSPF);
+   MoveFlag(oldFlag, capabilities, 0x00000100, NC_IS_CPSNMP);
+   MoveFlag(oldFlag, capabilities, 0x00000200, NC_IS_CDP);
+   MoveFlag(oldFlag, capabilities, 0x00000400, NC_IS_NDP);
+   MoveFlag(oldFlag, capabilities, 0x00000800, NC_IS_LLDP);
+   MoveFlag(oldFlag, capabilities, 0x00001000, NC_IS_VRRP);
+   MoveFlag(oldFlag, capabilities, 0x00002000, NC_HAS_VLANS);
+   MoveFlag(oldFlag, capabilities, 0x00004000, NC_IS_8021X);
+   MoveFlag(oldFlag, capabilities, 0x00008000, NC_IS_STP);
+   MoveFlag(oldFlag, capabilities, 0x00010000, NC_HAS_ENTITY_MIB);
+   MoveFlag(oldFlag, capabilities, 0x00020000, NC_HAS_IFXTABLE);
+   MoveFlag(oldFlag, capabilities, 0x00040000, NC_HAS_AGENT_IFXCOUNTERS);
+   MoveFlag(oldFlag, capabilities, 0x00080000, NC_HAS_WINPDH);
+   MoveFlag(oldFlag, capabilities, 0x00100000, NC_IS_WIFI_CONTROLLER);
+   MoveFlag(oldFlag, capabilities, 0x00200000, NC_IS_SMCLP);
 }
 
-static void moveNodeState(UINT32 oldRuntime, UINT32 *state)
+/**
+ * Move node state flags
+ */
+static void MoveNodeState(UINT32 oldRuntime, UINT32 *state)
 {
-   FLAG_MOVE(oldRuntime, state, 0x000004, NSF_UNREACHABLE);
-   FLAG_MOVE(oldRuntime, state, 0x000008, NSF_AGENT_UNREACHABLE);
-   FLAG_MOVE(oldRuntime, state, 0x000010, NSF_SNMP_UNREACHABLE);
-   FLAG_MOVE(oldRuntime, state, 0x000200, NSF_CPSNMP_UNREACHABLE);
-   FLAG_MOVE(oldRuntime, state, 0x008000, NSF_NETWORK_PATH_PROBLEM);
-   FLAG_MOVE(oldRuntime, state, 0x020000, NSF_CACHE_MODE_NOT_SUPPORTED);
+   MoveFlag(oldRuntime, state, 0x000004, NSF_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x000008, NSF_AGENT_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x000010, NSF_SNMP_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x000200, NSF_CPSNMP_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x008000, NSF_NETWORK_PATH_PROBLEM);
+   MoveFlag(oldRuntime, state, 0x020000, NSF_CACHE_MODE_NOT_SUPPORTED);
 }
 
-static void moveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
+/**
+ * Move sensor state flags
+ */
+static void MoveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
 {
-   FLAG_MOVE(oldFlag, status, 0x00000001, SSF_PROVISIONED);
-   FLAG_MOVE(oldFlag, status, 0x00000002, SSF_REGISTERED);
-   FLAG_MOVE(oldFlag, status, 0x00000004, SSF_ACTIVE);
-   FLAG_MOVE(oldFlag, status, 0x00000008, SSF_CONF_UPDATE_PENDING);
-   FLAG_MOVE(oldRuntime, status, 0x000004, SSF_AGENT_UNREACHABLE);
+   MoveFlag(oldFlag, status, 0x00000001, SSF_PROVISIONED);
+   MoveFlag(oldFlag, status, 0x00000002, SSF_REGISTERED);
+   MoveFlag(oldFlag, status, 0x00000004, SSF_ACTIVE);
+   MoveFlag(oldFlag, status, 0x00000008, SSF_CONF_UPDATE_PENDING);
+   MoveFlag(oldRuntime, status, 0x000004, SSF_AGENT_UNREACHABLE);
 }
 
 /**
@@ -715,7 +728,6 @@ static void moveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
  */
 static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
 {
-   //create required columns in netobj table
    static const TCHAR *batch =
             _T("ALTER TABLE object_properties ADD flags integer null\n")
             _T("ALTER TABLE object_properties ADD state integer null\n")
@@ -723,13 +735,14 @@ static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
             _T("UPDATE object_properties set flags=0,state=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
    //move flags from old tables to the new one
    CHK_EXEC(moveFlagsFromOldTables(_T("interfaces")));
    CHK_EXEC(moveFlagsFromOldTables(_T("templates")));
    CHK_EXEC(moveFlagsFromOldTables(_T("chassis")));
    CHK_EXEC(moveFlagsFromOldTables(_T("object_containers")));
    CHK_EXEC(moveFlagsFromOldTables(_T("network_maps")));
-   //create special befaviour for node and sensor, cluster
+   //create special behavior for node and sensor, cluster
    //node
    DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id,runtime_flags FROM nodes"));
    DB_STATEMENT stmtNetObj = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
@@ -764,9 +777,9 @@ static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
                   return FALSE;
                }
             }
-            moveNodeFlags(oldFlags, &flags);
-            moveNodeCapabilities(oldFlags, &capabilities);
-            moveNodeState(oldRuntime, &state);
+            MoveNodeFlags(oldFlags, &flags);
+            MoveNodeCapabilities(oldFlags, &capabilities);
+            MoveNodeState(oldRuntime, &state);
 
             DBBind(stmtNetObj, 1, DB_SQLTYPE_INTEGER, flags);
             DBBind(stmtNetObj, 2, DB_SQLTYPE_INTEGER, state);
@@ -828,7 +841,7 @@ static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
          for(int i = 0; i < nRows; i++)
          {
             UINT32 status = 0;
-            moveSensorState(DBGetFieldULong(hResult, i, 2), DBGetFieldULong(hResult, i, 1), &status);
+            MoveSensorState(DBGetFieldULong(hResult, i, 2), DBGetFieldULong(hResult, i, 1), &status);
 
             DBBind(stmt, 1, DB_SQLTYPE_INTEGER, status);
             DBBind(stmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
