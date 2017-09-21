@@ -300,7 +300,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
-      _T("tunnel_id,lldp_id FROM nodes WHERE id=?"));
+      _T("tunnel_id,lldp_id,capabilities FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -403,6 +403,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_agentCompressionMode = (INT16)DBGetFieldLong(hResult, 0, 45);
    m_tunnelId = DBGetFieldGUID(hResult, 0, 46);
    m_lldpNodeId = DBGetField(hResult, 0, 47, NULL, 0);
+   m_capabilities = DBGetFieldULong(hResult, 0, 48);
    if ((m_lldpNodeId != NULL) && (*m_lldpNodeId == 0))
       safe_free_and_null(m_lldpNodeId);
 
