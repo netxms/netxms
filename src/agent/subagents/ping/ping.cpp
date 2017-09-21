@@ -367,8 +367,6 @@ static BOOL SubagentInit(Config *config)
 	success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
 	if (success)
 	{
-		TCHAR *pItem, *pEnd;
-
 		if (m_dwPollsPerMinute == 0)
 			m_dwPollsPerMinute = 1;
 		if (m_dwPollsPerMinute > MAX_POLLS_PER_MINUTE)
@@ -377,16 +375,18 @@ static BOOL SubagentInit(Config *config)
 		// Parse target list
 		if (m_pszTargetList != NULL)
 		{
-			for(pItem = m_pszTargetList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+		   TCHAR *pItem = m_pszTargetList;
+		   TCHAR *pEnd = _tcschr(pItem, _T('\n'));
+			while(pEnd != NULL)
 			{
-				pEnd = _tcschr(pItem, _T('\n'));
-				if (pEnd != NULL)
-					*pEnd = 0;
+				*pEnd = 0;
 				StrStrip(pItem);
 				if (!AddTargetFromConfig(pItem))
 					AgentWriteLog(NXLOG_WARNING,
 							_T("Unable to add ICMP ping target from configuration file. ")
 							_T("Original configuration record: %s"), pItem);
+            pItem = pEnd +1;
+				pEnd = _tcschr(pItem, _T('\n'));
 			}
 			free(m_pszTargetList);
 		}
