@@ -845,7 +845,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   *curr = cfgTemplate[i].separator;
                   curr++;
                }
-               *--curr = 0;
+               *curr = 0;
                break;
             case CT_SIZE_BYTES:
                if ((cfgTemplate[i].overrideIndicator != NULL) &&
