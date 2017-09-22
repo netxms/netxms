@@ -350,7 +350,7 @@ public class NetworkMapWidget extends Composite
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	private void setLayoutAlgorithm(MapLayoutAlgorithm alg)
+	public void setLayoutAlgorithm(MapLayoutAlgorithm alg)
 	{
 		LayoutAlgorithm algorithm;
 		
@@ -413,6 +413,14 @@ public class NetworkMapWidget extends Composite
 	public void zoomTo(double zoomLevel)
 	{
 		viewer.zoomTo(zoomLevel);
+	}
+	
+	/**
+	 * Refresh control
+	 */
+	public void refresh()
+	{
+	   viewer.refresh();
 	}
 
    /**

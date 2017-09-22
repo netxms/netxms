@@ -25,5 +25,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
  org.netxms.ui.eclipse.networkmaps.api,
+ org.netxms.ui.eclipse.networkmaps.views,
+ org.netxms.ui.eclipse.networkmaps.views.helpers,
  org.netxms.ui.eclipse.networkmaps.widgets
 Import-Package: org.netxms.ui.eclipse.perfview.views

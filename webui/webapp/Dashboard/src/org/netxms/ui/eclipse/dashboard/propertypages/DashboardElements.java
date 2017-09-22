@@ -397,6 +397,7 @@ public class DashboardElements extends PropertyPage
 					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
 					break;
 				case DashboardElement.NETWORK_MAP:
+            case DashboardElement.SERVICE_COMPONENTS:
 					config = DashboardControl.DEFAULT_NETWORK_MAP_CONFIG;
 					break;
 				case DashboardElement.GEO_MAP:

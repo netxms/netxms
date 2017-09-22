@@ -80,6 +80,7 @@ public class AddDashboardElementDlg extends Dialog
       elementTypeSelector.add("Syslog monitor");
       elementTypeSelector.add("SNMP trap monitor");
       elementTypeSelector.add("Event monitor");
+      elementTypeSelector.add("Service components map");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

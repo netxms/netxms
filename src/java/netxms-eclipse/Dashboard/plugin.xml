@@ -361,6 +361,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.ServiceComponents"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ServiceComponents#0"
+            name="Service Components Map">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

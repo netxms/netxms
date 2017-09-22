@@ -36,8 +36,11 @@ public class AlarmViewerElement extends ElementWidget
 	private AlarmViewerConfig config;
 	
 	/**
-	 * @param parent
-	 * @param data
+	 * Create new alarm viewer element
+	 * 
+	 * @param parent Dashboard control
+	 * @param element Dashboard element
+	 * @param viewPart viewPart
 	 */
 	public AlarmViewerElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{

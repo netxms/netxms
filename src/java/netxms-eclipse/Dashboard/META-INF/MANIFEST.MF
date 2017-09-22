@@ -26,4 +26,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api,
  org.netxms.ui.eclipse.dashboard.widgets
-Import-Package: org.netxms.ui.eclipse.snmp.widgets
+Import-Package: org.eclipse.gef4.zest.layouts.algorithms,
+ org.netxms.ui.eclipse.snmp.widgets

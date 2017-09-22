@@ -213,6 +213,9 @@ public class DashboardControl extends Composite
 			case DashboardElement.WEB_PAGE:
 				w = new WebPageElement(this, e, viewPart);
 				break;
+        case DashboardElement.SERVICE_COMPONENTS:
+            w = new ServiceComponentsElement(this, e, viewPart);
+            break;
 			default:
 				w = new ElementWidget(this, e, viewPart);
 				break;

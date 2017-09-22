@@ -56,7 +56,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		Messages.get().DashboardElementsLabelProvider_DciSummaryTable,
 		"Syslog monitor",
 		"SNMP trap monitor",
-		"Event monitor"
+		"Event monitor",
+      "Service component map"
 	};
 	
 	/* (non-Javadoc)
