@@ -257,10 +257,10 @@ void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, con
  */
 static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port2)
 {
-	_tcscat_s(link->port1, MAX_CONNECTOR_NAME, _T(", "));
-	_tcscat_s(link->port1, MAX_CONNECTOR_NAME, port1);
-	_tcscat_s(link->port2, MAX_CONNECTOR_NAME, _T(", "));
-	_tcscat_s(link->port2, MAX_CONNECTOR_NAME, port2);
+	_tcslcat(link->port1, _T(", "), MAX_CONNECTOR_NAME);
+	_tcslcat(link->port1, port1, MAX_CONNECTOR_NAME);
+	_tcslcat(link->port2, _T(", "), MAX_CONNECTOR_NAME);
+	_tcslcat(link->port2, port2, MAX_CONNECTOR_NAME);
 }
 
 /**

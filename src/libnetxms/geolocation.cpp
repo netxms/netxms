@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -85,8 +85,8 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 	m_type = src.m_type;
 	m_lat = src.m_lat;
 	m_lon = src.m_lon;
-	nx_strncpy(m_latStr, src.m_latStr, 20);
-	nx_strncpy(m_lonStr, src.m_lonStr, 20);
+	_tcslcpy(m_latStr, src.m_latStr, 20);
+	_tcslcpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
    m_accuracy = src.m_accuracy;
 	m_timestamp = src.m_timestamp;
@@ -156,8 +156,8 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 	m_type = src.m_type;
 	m_lat = src.m_lat;
 	m_lon = src.m_lon;
-	nx_strncpy(m_latStr, src.m_latStr, 20);
-	nx_strncpy(m_lonStr, src.m_lonStr, 20);
+	_tcslcpy(m_latStr, src.m_latStr, 20);
+	_tcslcpy(m_lonStr, src.m_lonStr, 20);
 	m_isValid = src.m_isValid;
 	m_accuracy = src.m_accuracy;
 	m_timestamp = src.m_timestamp;
@@ -400,7 +400,7 @@ GeoLocation GeoLocation::parseAgentData(const TCHAR *data)
    time_t timestamp;
 
    TCHAR buffer[256];
-   nx_strncpy(buffer, data, 256);
+   _tcslcpy(buffer, data, 256);
 
    int pos = 0;
    TCHAR *curr = buffer;

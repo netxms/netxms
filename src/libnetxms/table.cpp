@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -869,7 +869,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
             instance += value;
       }
    }
-   nx_strncpy(buffer, (const TCHAR *)instance, bufLen);
+   _tcslcpy(buffer, (const TCHAR *)instance, bufLen);
 }
 
 /**

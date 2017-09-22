@@ -49,15 +49,16 @@ TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buff
       }
    }
 
-   if (value == NULL)
+   if ((value == NULL) && (defaultValue != NULL))
    {
       if (buffer == NULL)
       {
-         value = _tcsdup_ex(defaultValue);
+         value = _tcsdup(defaultValue);
       }
       else
       {
-         value = (defaultValue != NULL) ? nx_strncpy(buffer, defaultValue, bufSize) : NULL;
+         _tcslcpy(buffer, defaultValue, bufSize);
+         value = buffer;
       }
    }
    return value;

@@ -164,7 +164,7 @@ void NamedPipeListener::serverThread()
 #ifdef UNICODE
                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pw->pw_name, -1, user, 64);
 #else
-               nx_strncpy(user, pw->pw_name, 64);
+               strlcpy(user, pw->pw_name, 64);
 #endif
             }
             else

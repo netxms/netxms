@@ -756,13 +756,13 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
    ConfigEntry *entry;
 
    name[0] = _T('/');
-   nx_strncpy(&name[1], section, MAX_PATH - 2);
+   _tcslcpy(&name[1], section, MAX_PATH - 2);
    _tcscat(name, _T("/"));
    pos = (int)_tcslen(name);
 
    for(i = 0; cfgTemplate[i].type != CT_END_OF_LIST; i++)
    {
-      nx_strncpy(&name[pos], cfgTemplate[i].token, MAX_PATH - pos);
+      _tcslcpy(&name[pos], cfgTemplate[i].token, MAX_PATH - pos);
       entry = getEntry(name);
       if (entry != NULL)
       {
@@ -821,7 +821,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
+               _tcslcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
                break;
             case CT_MB_STRING:
                if ((cfgTemplate[i].overrideIndicator != NULL) &&
@@ -833,7 +833,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                memset(cfgTemplate[i].buffer, 0, (size_t)cfgTemplate[i].bufferSize);
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
+               strlcpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
                break;
             case CT_STRING_LIST:
@@ -1352,7 +1352,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          if (id != 0)
             snprintf(entryName, MAX_PATH, "%s#%u", name, (unsigned int) id);
          else
-            nx_strncpy(entryName, name, MAX_PATH);
+            strlcpy(entryName, name, MAX_PATH);
 #endif
          bool merge = XMLGetAttrBoolean(attrs, "merge", ps->merge);
          ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;

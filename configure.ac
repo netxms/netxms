@@ -2124,9 +2124,10 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
-AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull setlocale])
-AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap strerror_r scandir uname poll])
+AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup])
+AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull])
+AC_CHECK_FUNCS([strlcpy strlcat setlocale strerror strerror_r])
+AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([itoa _itoa isatty malloc_info malloc_trim utime])
@@ -2496,6 +2497,7 @@ AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok wutime])
 AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
+AC_CHECK_FUNCS([wcslcpy wcslcat])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H

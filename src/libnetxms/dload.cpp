@@ -1,7 +1,7 @@
 /** 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -86,7 +86,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
    TCHAR szBuffer[MAX_PATH + 4];
    int nError;
 
-   nx_strncpy(&szBuffer[4], pszLibName, MAX_PATH);
+   _tcslcpy(&szBuffer[4], pszLibName, MAX_PATH);
    nError = LoadModule(getnetwarelogger(), &szBuffer[4], LO_RETURN_HANDLE);
    if (nError == 0)
    {
@@ -98,7 +98,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
    {
       hModule = NULL;
 		if (pszErrorText != NULL)
-      	nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
+      	_tcslcpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
    }
 #else    /* not _WIN32 and not _NETWARE */
 #ifdef UNICODE
@@ -107,14 +107,14 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
    if ((hModule == NULL) && (pszErrorText != NULL))
    {
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());
-      nx_strncpy(pszErrorText, wbuffer, 255);
+      _tcslcpy(pszErrorText, wbuffer, 255);
       free(wbuffer);
    }
    free(mbbuffer);
 #else
    hModule = dlopen(pszLibName, RTLD_NOW | RTLD_LOCAL);
    if ((hModule == NULL) && (pszErrorText != NULL))
-      nx_strncpy(pszErrorText, dlerror(), 255);
+      _tcslcpy(pszErrorText, dlerror(), 255);
 #endif
 #endif
    return hModule;
@@ -162,10 +162,10 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbo
 	{
 #ifdef UNICODE
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());
-      nx_strncpy(pszErrorText, wbuffer, 255);
+      _tcslcpy(pszErrorText, wbuffer, 255);
       free(wbuffer);
 #else
-      nx_strncpy(pszErrorText, dlerror(), 255);
+      _tcslcpy(pszErrorText, dlerror(), 255);
 #endif
 	}
 #endif

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -405,7 +405,7 @@ TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, buffer, (int)buflen);
 	buffer[buflen - 1] = 0;
 #else
-   nx_strncpy(buffer, hs->h_name, buflen);
+   strlcpy(buffer, hs->h_name, buflen);
 #endif
 
    return buffer;

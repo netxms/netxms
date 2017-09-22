@@ -92,11 +92,11 @@ static bool ParseDrbdStatus()
 				memset(&device, 0, sizeof(DRBD_DEVICE));
 				device.id = strtol(&line[pmatch[1].rm_so], NULL, 10);
 				device.protocol = line[pmatch[8].rm_so];
-				nx_strncpy_mb(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.localDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.remoteDeviceState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.localDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
-				nx_strncpy_mb(device.remoteDataState, &line[pmatch[7].rm_so], STATUS_FIELD_LEN);
+				strlcpy(device.connState, &line[pmatch[2].rm_so], STATUS_FIELD_LEN);
+				strlcpy(device.localDeviceState, &line[pmatch[4].rm_so], STATUS_FIELD_LEN);
+				strlcpy(device.remoteDeviceState, &line[pmatch[5].rm_so], STATUS_FIELD_LEN);
+				strlcpy(device.localDataState, &line[pmatch[6].rm_so], STATUS_FIELD_LEN);
+				strlcpy(device.remoteDataState, &line[pmatch[7].rm_so], STATUS_FIELD_LEN);
 
 				if ((device.id >= 0) && (device.id < MAX_DEVICE_COUNT))
 				{
@@ -109,9 +109,9 @@ static bool ParseDrbdStatus()
 					line[pmatch[i].rm_eo] = 0;
 
 				MutexLock(s_versionAccess);
-				nx_strncpy_mb(s_drbdVersion, &line[pmatch[1].rm_so], 32);
+				strlcpy(s_drbdVersion, &line[pmatch[1].rm_so], 32);
 				s_apiVersion = strtol(&line[pmatch[2].rm_so], NULL, 10);
-				nx_strncpy_mb(s_protocolVersion, &line[pmatch[3].rm_so], 32);
+				strlcpy(s_protocolVersion, &line[pmatch[3].rm_so], 32);
 				MutexUnlock(s_versionAccess);
 			}
 		}

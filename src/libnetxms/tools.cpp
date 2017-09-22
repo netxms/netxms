@@ -801,7 +801,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
                      (LPTSTR)&msgBuf, 0, NULL) > 0)
    {
       msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
-      nx_strncpy(pszBuffer, msgBuf, iBufSize);
+      _tcslcpy(pszBuffer, msgBuf, iBufSize);
       LocalFree(msgBuf);
    }
    else
@@ -821,7 +821,8 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
 #ifdef _WIN32
    return GetSystemErrorText(WSAGetLastError(), buffer, size);
 #else
-   return nx_strncpy(buffer, _tcserror(errno), size);
+   _tcslcpy(buffer, _tcserror(errno), size);
+   return buffer;
 #endif
 }
 
@@ -2284,32 +2285,6 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 
 #endif
 
-#ifndef _WIN32
-
-/**
- * strcat_s implementation
- */
-int LIBNETXMS_EXPORTABLE strcat_s(char *dst, size_t dstSize, const char *src)
-{
-	if (strlen(dst) + strlen(src) + 1 >= dstSize)
-		return EINVAL;
-	strcat(dst, src);
-	return 0;
-}
-
-/**
- * wcscat_s implementation
- */
-int LIBNETXMS_EXPORTABLE wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src)
-{
-	if (wcslen(dst) + wcslen(src) + 1 >= dstSize)
-		return EINVAL;
-	wcscat(dst, src);
-	return 0;
-}
-
-#endif
-
 /**
  * Destructor for RefCountObject
  */
@@ -2594,7 +2569,7 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
             _sntprintf(dir, MAX_PATH, _T("%s\\share"), homeDir);
             break;
          default:
-            nx_strncpy(dir, homeDir, MAX_PATH);
+            _tcslcpy(dir, homeDir, MAX_PATH);
             break;
       }
 #else
@@ -2616,7 +2591,7 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
             _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
             break;
          default:
-            nx_strncpy(dir, homeDir, MAX_PATH);
+            _tcslcpy(dir, homeDir, MAX_PATH);
             break;
       }
 #endif
@@ -2682,7 +2657,7 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
          _sntprintf(dir, MAX_PATH, _T("%s\\share"), installPath);
          break;
       default:
-         nx_strncpy(dir, installPath, MAX_PATH);
+         _tcslcpy(dir, installPath, MAX_PATH);
          break;
    }
 #else

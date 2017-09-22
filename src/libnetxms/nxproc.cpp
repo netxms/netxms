@@ -29,13 +29,13 @@
  */
 NamedPipeListener::NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user)
 {
-   nx_strncpy(m_name, name, MAX_PIPE_NAME_LEN);
+   _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
    m_handle = handle;
    m_reqHandler = reqHandler;
    m_userArg = userArg;
    m_serverThread = INVALID_THREAD_HANDLE;
    m_stop = false;
-   nx_strncpy(m_user, CHECK_NULL_EX(user), 64);
+   _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
 }
 
 /**
@@ -74,8 +74,8 @@ THREAD_RESULT THREAD_CALL NamedPipeListener::serverThreadStarter(void *arg)
  */
 NamedPipe::NamedPipe(const TCHAR *name, HPIPE handle, const TCHAR *user)
 {
-   nx_strncpy(m_name, name, MAX_PIPE_NAME_LEN);
+   _tcslcpy(m_name, name, MAX_PIPE_NAME_LEN);
    m_handle = handle;
    m_writeLock = MutexCreate();
-   nx_strncpy(m_user, CHECK_NULL_EX(user), 64);
+   _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
 }
