@@ -550,6 +550,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\strlcat.c"
+				>
+			</File>
+			<File
+				RelativePath=".\strlcpy.c"
+				>
+			</File>
+			<File
 				RelativePath=".\strmap.cpp"
 				>
 			</File>
@@ -599,6 +607,14 @@
 			</File>
 			<File
 				RelativePath=".\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wcslcat.c"
+				>
+			</File>
+			<File
+				RelativePath=".\wcslcpy.c"
 				>
 			</File>
 			<File
