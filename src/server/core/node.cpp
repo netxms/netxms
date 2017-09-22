@@ -94,9 +94,11 @@ Node::Node() : DataCollectionTarget()
    m_vrrpInfo = NULL;
    m_topology = NULL;
    m_topologyRebuildTimestamp = 0;
-   m_iPendingStatus = -1;
-   m_iPollCount = 0;
-   m_iRequiredPollCount = 0;  // Use system default
+   m_pendingState = -1;
+   m_pollCountAgent = 0;
+   m_pollCountSNMP = 0;
+   m_pollCountAllDown = 0;
+   m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_jobQueue = new ServerJobQueue();
    m_fdb = NULL;
@@ -194,9 +196,11 @@ Node::Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 ag
    m_vrrpInfo = NULL;
    m_topology = NULL;
    m_topologyRebuildTimestamp = 0;
-   m_iPendingStatus = -1;
-   m_iPollCount = 0;
-   m_iRequiredPollCount = 0;  // Use system default
+   m_pendingState = -1;
+   m_pollCountAgent = 0;
+   m_pollCountSNMP = 0;
+   m_pollCountAllDown = 0;
+   m_requiredPollCount = 0; // Use system default
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_jobQueue = new ServerJobQueue();
    m_fdb = NULL;
@@ -334,7 +338,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_zoneUIN = DBGetFieldULong(hResult, 0, 11);
    m_agentProxy = DBGetFieldULong(hResult, 0, 12);
    m_snmpProxy = DBGetFieldULong(hResult, 0, 13);
-   m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 14);
+   m_requiredPollCount = DBGetFieldLong(hResult, 0, 14);
    m_sysDescription = DBGetField(hResult, 0, 15, NULL, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 16);
    m_snmpPort = (WORD)DBGetFieldLong(hResult, 0, 17);
@@ -551,7 +555,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
    DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
-   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
    DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
 #ifdef UNICODE
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
@@ -1363,6 +1367,8 @@ restart_agent_check:
       updatePrimaryIpAddr();
    }
 
+   int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
+
    // Check SNMP agent connectivity
    if ((m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)) && m_ipAddress.isValidUnicast())
    {
@@ -1385,10 +1391,18 @@ restart_agent_check:
          {
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
-               m_state &= ~NSF_SNMP_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
-               sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+               m_pollCountSNMP++;
+               if (m_pollCountSNMP >= requiredPolls)
+               {
+                  m_state &= ~NSF_SNMP_UNREACHABLE;
+                  PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
+                  sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+                  m_pollCountSNMP = 0;
+               }
+
             }
+            else
+               m_pollCountSNMP = 0;
 
             // Update authoritative engine data for SNMPv3
             if ((pTransport->getSnmpVersion() == SNMP_VERSION_3) && (pTransport->getAuthoritativeEngine() != NULL))
@@ -1412,7 +1426,7 @@ restart_agent_check:
          {
             if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
             {
-               nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
+
                AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
                if (pconn != NULL)
                {
@@ -1426,7 +1440,8 @@ restart_agent_check:
                }
             }
 
-            sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
+            nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
+            sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
                if ((tNow > m_failTimeSNMP + tExpire) && (!(m_state & DCSF_UNREACHABLE)))
@@ -1439,9 +1454,14 @@ restart_agent_check:
             }
             else
             {
-               m_state |= NSF_SNMP_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_SNMP_FAIL, m_id, NULL);
-               m_failTimeSNMP = tNow;
+               m_pollCountSNMP++;
+               if (m_pollCountSNMP >= requiredPolls)
+               {
+                  m_state |= NSF_SNMP_UNREACHABLE;
+                  PostEventEx(pQueue, EVENT_SNMP_FAIL, m_id, NULL);
+                  m_failTimeSNMP = tNow;
+                  m_pollCountSNMP = 0;
+               }
             }
          }
          delete pTransport;
@@ -1468,16 +1488,23 @@ restart_agent_check:
          nxlog_debug(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
-            m_state &= ~NSF_AGENT_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
-            sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+            m_pollCountAgent++;
+            if (m_pollCountAgent >= requiredPolls)
+            {
+               m_state &= ~NSF_AGENT_UNREACHABLE;
+               PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
+               sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+               m_pollCountAgent = 0;
+            }
          }
+         else
+            m_pollCountAgent = 0;
          agentConnected = true;
       }
       else
       {
-         nxlog_debug(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_name, (int)error, (int)socketError);
-         sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
+         nxlog_debug(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
+         sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_failTimeAgent + tExpire) && !(m_state & DCSF_UNREACHABLE))
@@ -1491,11 +1518,16 @@ restart_agent_check:
          }
          else
          {
-            m_state |= NSF_AGENT_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
-            m_failTimeAgent = tNow;
-            //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconnectedNode(m_id);
+            m_pollCountAgent++;
+            if (m_pollCountAgent >= requiredPolls)
+            {
+               m_state |= NSF_AGENT_UNREACHABLE;
+               PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
+               m_failTimeAgent = tNow;
+               //cancel file monitoring locally(on agent it is canceled if agent have fallen)
+               g_monitoringList.removeDisconnectedNode(m_id);
+               m_pollCountAgent = 0;
+            }
          }
       }
       agentUnlock();
@@ -1623,7 +1655,7 @@ restart_agent_check:
          if (!(m_state & NSF_SNMP_UNREACHABLE))
             allDown = false;
 
-      DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
+      DbgPrintf(2, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
       {
          if (!(m_state & DCSF_UNREACHABLE))
@@ -4739,7 +4771,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
    pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
-   pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
+   pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
    pMsg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
    pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
    pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
@@ -4991,7 +5023,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_iRequiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
+      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
    // Enable/disable usage of ifXTable
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
@@ -7931,9 +7963,11 @@ json_t *Node::toJson()
    json_object_set_new(root, "stateFlags", json_integer(m_state));
    json_object_set_new(root, "type", json_integer(m_type));
    json_object_set_new(root, "subType", json_string_t(m_subType));
-   json_object_set_new(root, "iPendingStatus", json_integer(m_iPendingStatus));
-   json_object_set_new(root, "iPollCount", json_integer(m_iPollCount));
-   json_object_set_new(root, "iRequiredPollCount", json_integer(m_iRequiredPollCount));
+   json_object_set_new(root, "pendingState", json_integer(m_pendingState));
+   json_object_set_new(root, "pollCountSNMP", json_integer(m_pollCountSNMP));
+   json_object_set_new(root, "pollCountAgent", json_integer(m_pollCountAgent));
+   json_object_set_new(root, "pollCountAllDown", json_integer(m_pollCountAllDown));
+   json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "agentPort", json_integer(m_agentPort));
    json_object_set_new(root, "agentAuthMethod", json_integer(m_agentAuthMethod));

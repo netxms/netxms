@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -49,6 +50,7 @@ public class ObjectPolling extends PropertyPage
 {
 	private PollingTarget object;
 	private ObjectSelector pollerNode;
+   private Spinner pollCount;
 	private Button radioIfXTableDefault;
 	private Button radioIfXTableEnable;
 	private Button radioIfXTableDisable;
@@ -189,6 +191,15 @@ public class ObjectPolling extends PropertyPage
          radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
          radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
       }
+      
+      /* poll count */
+      if (object instanceof AbstractNode)
+      {
+         gd = new GridData();
+         gd.verticalSpan = 1;
+         pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, gd);
+         pollCount.setSelection(((AbstractNode)object).getRequredPollCount());
+      }
 
       return dialogArea;
 	}
@@ -288,6 +299,8 @@ public class ObjectPolling extends PropertyPage
 		   md.setIfXTablePolicy(collectIfXTablePolicy());
 		if(object.containAgent())
 		   md.setAgentCacheMode(collectAgentCacheMode());
+      if (object instanceof AbstractNode)
+         md.setRequiredPolls(pollCount.getSelection());
 		
 		if (isApply)
 			setValid(false);
