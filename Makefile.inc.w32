@@ -201,7 +201,7 @@ messages.h: messages.mc
 .PHONY: clean
 
 clean:
-   rm -rf $(OBJ) $(TARGET) $(OBJDIR) $(GENERATED) $(EXTRA_CLEAN)
+   rm -rf $(OBJ) $(TARGET) $(BINFILE) $(OBJDIR) $(GENERATED) $(EXTRA_CLEAN)
 	@for %%s in ($(SUBDIRS)) do @( \
 		echo === Entering %%s === && \
 		cd %%s && \
