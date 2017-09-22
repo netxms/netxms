@@ -1,0 +1,3 @@
+SUBDIRS = base bridge
+	  
+include ..\..\..\Makefile.inc.w32
