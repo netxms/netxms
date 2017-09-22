@@ -209,6 +209,84 @@ static void TestStringSet()
 }
 
 /**
+ * Test string functions
+ */
+static void TestStringFunctionsA()
+{
+   char buffer[36];
+   buffer[32] = '$';
+
+   StartTest(_T("strlcpy"));
+
+   strlcpy(buffer, "short text", 32);
+   AssertEquals(buffer[32], '$');
+   AssertTrue(!strcmp(buffer, "short text"));
+
+   strlcpy(buffer, "long text: 1234567890 1234567890 1234567890 1234567890", 32);
+   AssertEquals(buffer[32], '$');
+   AssertTrue(!strcmp(buffer, "long text: 1234567890 123456789"));
+
+   EndTest();
+
+   StartTest(_T("strlcat"));
+
+   memset(buffer, 0, sizeof(buffer));
+   buffer[32] = '$';
+   strlcat(buffer, "part1", 32);
+   AssertEquals(buffer[32], '$');
+   AssertTrue(!strcmp(buffer, "part1"));
+
+   strlcat(buffer, "part2", 32);
+   AssertEquals(buffer[32], '$');
+   AssertTrue(!strcmp(buffer, "part1part2"));
+
+   strlcat(buffer, "long text: 1234567890 1234567890 1234567890 1234567890", 32);
+   AssertEquals(buffer[32], '$');
+   AssertTrue(!strcmp(buffer, "part1part2long text: 1234567890"));
+
+   EndTest();
+}
+
+/**
+ * Test string functions (UNICODE)
+ */
+static void TestStringFunctionsW()
+{
+   WCHAR buffer[36];
+   buffer[32] = L'$';
+
+   StartTest(_T("wcslcpy"));
+
+   wcslcpy(buffer, _T("short text"), 32);
+   AssertEquals(buffer[32], L'$');
+   AssertTrue(!wcscmp(buffer, _T("short text")));
+
+   wcslcpy(buffer, _T("long text: 1234567890 1234567890 1234567890 1234567890"), 32);
+   AssertEquals(buffer[32], L'$');
+   AssertTrue(!wcscmp(buffer, _T("long text: 1234567890 123456789")));
+
+   EndTest();
+
+   StartTest(_T("wcslcat"));
+
+   memset(buffer, 0, sizeof(buffer));
+   buffer[32] = L'$';
+   wcslcat(buffer, _T("part1"), 32);
+   AssertEquals(buffer[32], L'$');
+   AssertTrue(!wcscmp(buffer, _T("part1")));
+
+   wcslcat(buffer, _T("part2"), 32);
+   AssertEquals(buffer[32], L'$');
+   AssertTrue(!wcscmp(buffer, _T("part1part2")));
+
+   wcslcat(buffer, _T("long text: 1234567890 1234567890 1234567890 1234567890"), 32);
+   AssertEquals(buffer[32], L'$');
+   AssertTrue(!wcscmp(buffer, _T("part1part2long text: 1234567890")));
+
+   EndTest();
+}
+
+/**
  * Test string class
  */
 static void TestString()
@@ -891,6 +969,8 @@ int main(int argc, char *argv[])
    TestStringConversion();
    TestStringMap();
    TestStringSet();
+   TestStringFunctionsA();
+   TestStringFunctionsW();
    TestMessageClass();
    TestMsgWaitQueue();
    TestInetAddress();
