@@ -32,13 +32,16 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
  */
 public class AlarmViewerElement extends ElementWidget
 {
-   private AlarmList viewer;
-   private AlarmViewerConfig config;
-
-   /**
-    * @param parent
-    * @param data
-    */
+	private AlarmList viewer;
+	private AlarmViewerConfig config;
+	
+	/**
+	 * Create new alarm viewer element
+	 * 
+	 * @param parent Dashboard control
+	 * @param element Dashboard element
+	 * @param viewPart viewPart
+	 */
    public AlarmViewerElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
