@@ -1491,9 +1491,11 @@ protected:
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
-	int m_iPendingStatus;
-	int m_iPollCount;
-	int m_iRequiredPollCount;
+	int m_pendingState;
+	UINT32 m_pollCountAgent;
+	UINT32 m_pollCountSNMP;
+   UINT32 m_pollCountAllDown;
+	UINT32 m_requiredPollCount;
    UINT32 m_zoneUIN;
    UINT16 m_agentPort;
    INT16 m_agentAuthMethod;
@@ -1871,6 +1873,8 @@ public:
 	void incSnmpTrapCount();
 
 	static const TCHAR *typeName(NodeType type);
+
+	UINT32 getRequiredPolls() const { return m_requiredPollCount; }
 };
 
 /**

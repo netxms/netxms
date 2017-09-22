@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -54,6 +55,7 @@ public class NodePolling extends PropertyPage
 	private Button radioAgentCacheDefault;
    private Button radioAgentCacheOn;
    private Button radioAgentCacheOff;
+   private Spinner pollCount;
 	private List<Button> flagButtons = new ArrayList<Button>();
 	private List<Integer> flagValues = new ArrayList<Integer>();
 	
@@ -171,9 +173,18 @@ public class NodePolling extends PropertyPage
       radioAgentCacheOff = new Button(agentCacheGroup, SWT.RADIO);
       radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
       radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
+      
+      /* poll count */
+      if (object instanceof AbstractNode)
+      {
+         gd = new GridData();
+         gd.verticalSpan = 1;
+         pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, gd);
+         pollCount.setSelection(((AbstractNode)object).getRequredPollCount());
+      }
 
       return dialogArea;
-	}
+   }
 
 	/**
 	 * Add checkbox for flag
@@ -268,6 +279,8 @@ public class NodePolling extends PropertyPage
 		md.setObjectFlags(collectNodeFlags(), collectNodeFlagsMask());
 		md.setIfXTablePolicy(collectIfXTablePolicy());
 		md.setAgentCacheMode(collectAgentCacheMode());
+      if (object instanceof AbstractNode)
+         md.setRequiredPolls(pollCount.getSelection());
 		
 		if (isApply)
 			setValid(false);
