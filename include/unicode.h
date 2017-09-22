@@ -58,6 +58,8 @@
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
 #define _tcstok_r wcstok_s
+#define _tcslcpy  wcslcpy
+#define _tcslcat  wcslcat
 
 #define _ERR_error_tstring		ERR_error_string_W
 
@@ -66,13 +68,15 @@
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
 #define _tcstok_r strtok_s
+#define _tcslcpy  strlcpy
+#define _tcslcat  strlcat
 
 #define _ERR_error_tstring		ERR_error_string
 
 #endif	/* UNICODE */
 
-#define UCS2CHAR	WCHAR
-#define UCS4CHAR  unsigned int
+#define UCS2CHAR WCHAR
+#define UCS4CHAR unsigned int
 
 #else    /* not _WIN32 */
 
@@ -119,6 +123,7 @@
 
 #define _tcscpy   wcscpy
 #define _tcsncpy  wcsncpy
+#define _tcslcpy  wcslcpy
 #define _tcslen   wcslen
 #define _tcsnlen  wcsnlen
 #define _tcschr   wcschr
@@ -164,6 +169,7 @@
 #define _tcscat   wcscat
 #define _tcscat_s wcscat_s
 #define _tcsncat  wcsncat
+#define _tcslcat  wcslcat
 #define _tcspbrk  wcspbrk
 #define _tcstok_r wcstok
 #define _topen    wopen
@@ -212,6 +218,7 @@
 
 #define _tcscpy   strcpy
 #define _tcsncpy  strncpy
+#define _tcslcpy  strlcpy
 #define _tcslen   strlen
 #define _tcsnlen  strnlen
 #define _tcschr   strchr
@@ -254,6 +261,7 @@
 #define _tcscat   strcat
 #define _tcscat_s strcat_s
 #define _tcsncat  strncat
+#define _tcslcat  strlcat
 #define _tcspbrk  strpbrk
 #define _tcstok_r strtok_r
 #define _topen    _open

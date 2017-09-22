@@ -1947,37 +1947,18 @@ typedef struct _dir_struc_w
 #endif   /* _WIN32 */
 
 
+/***** For compatibility *****/
+#ifdef UNICODE
+#define nx_strncpy      wcslcpy
+#else
+#define nx_strncpy      strlcpy
+#endif
+
 //
 // Functions
 //
 
 #ifdef __cplusplus
-
-inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
-{
-#if defined(_WIN32) && (_MSC_VER >= 1400) && !defined(__clang__)
-	_tcsncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
-#else
-   _tcsncpy(pszDest, pszSrc, nLen - 1);
-   pszDest[nLen - 1] = 0;
-#endif
-   return pszDest;
-}
-
-#ifdef UNICODE
-inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
-{
-#if defined(_WIN32) && (_MSC_VER >= 1400) && !defined(__clang__)
-	strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
-#else
-   strncpy(pszDest, pszSrc, nLen - 1);
-   pszDest[nLen - 1] = 0;
-#endif
-   return pszDest;
-}
-#else
-#define nx_strncpy_mb nx_strncpy
-#endif
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
@@ -2334,6 +2315,22 @@ char LIBNETXMS_EXPORTABLE *strlwr(char *str);
 WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
 #endif
 
+#if !HAVE_STRLCPY
+size_t LIBNETXMS_EXPORTABLE strlcpy(char *dst, const char *src, size_t size);
+#endif
+
+#if !HAVE_WCSLCPY
+size_t LIBNETXMS_EXPORTABLE wcslcpy(WCHAR *dst, const WCHAR *src, size_t size);
+#endif
+
+#if !HAVE_STRLCAT
+size_t LIBNETXMS_EXPORTABLE strlcat(char *dst, const char *src, size_t size);
+#endif
+
+#if !HAVE_WCSLCAT
+size_t LIBNETXMS_EXPORTABLE wcslcat(WCHAR *dst, const WCHAR *src, size_t size);
+#endif
+
 #if !HAVE_WCSCASECMP && !defined(_WIN32)
 int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 #endif
@@ -2442,11 +2439,6 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl);
 #else
 #define _tmkstemp mkstemp
 #endif
-#endif
-
-#ifndef _WIN32
-int strcat_s(char *dst, size_t dstSize, const char *src);
-int wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src);
 #endif
 
 #if !HAVE_STRPTIME

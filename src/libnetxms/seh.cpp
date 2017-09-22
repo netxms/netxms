@@ -97,9 +97,9 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 	m_pfExceptionHandler = pfHandler;
 	m_pfWriter = pfWriter;
 	if (pszBaseProcessName != NULL)
-		nx_strncpy(m_szBaseProcessName, pszBaseProcessName, 64);
+		_tcslcpy(m_szBaseProcessName, pszBaseProcessName, 64);
 	if (pszDumpDir != NULL)
-		nx_strncpy(m_szDumpDir, pszDumpDir, MAX_PATH);
+		_tcslcpy(m_szDumpDir, pszDumpDir, MAX_PATH);
 	m_dwLogMessageCode = dwLogMsgCode;
 	m_writeFullDump = writeFullDump;
 	m_printToScreen = printToScreen;
