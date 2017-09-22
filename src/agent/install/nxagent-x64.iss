@@ -65,7 +65,6 @@ Source: "..\..\..\x64\release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignore
 Source: "..\..\..\x64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\..\x64\release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 ;#include "custom.iss"
