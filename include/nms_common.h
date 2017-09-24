@@ -189,11 +189,18 @@ typedef int bool;
 
 #define WEXITSTATUS(x)          (x)
 
-#if _MSC_VER > 1300
+#if _MSC_VER >= 1310
 #define HAVE_SCPRINTF           1
 #define HAVE_VSCPRINTF          1
 #define HAVE_SCWPRINTF          1
 #define HAVE_VSCWPRINTF         1
+#endif
+
+#if _MSC_VER >= 1800
+#define HAVE_STRTOLL            1
+#define HAVE_STRTOULL           1
+#define HAVE_WCSTOLL            1
+#define HAVE_WCSTOULL           1
 #endif
 
 #define HAVE_SNPRINTF           1
@@ -210,11 +217,6 @@ typedef int bool;
 #define HAVE_WCSDUP             1
 #define HAVE_WUTIME             1
 
-#ifndef va_copy
-#define va_copy(x,y)            (x = y)
-#endif
-#define HAVE_DECL_VA_COPY       1
-
 #define HAVE_LIBCURL            1
 
 #define HAVE_DIRENT_D_TYPE      1
@@ -224,6 +226,12 @@ typedef int bool;
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <malloc.h>
+
+#include <stdarg.h>
+#ifndef va_copy
+#define va_copy(x,y)            (x = y)
+#endif
+#define HAVE_DECL_VA_COPY       1
 
 #ifndef UNDER_CE
 #include <sys/stat.h>
