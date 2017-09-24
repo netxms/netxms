@@ -95,6 +95,8 @@ static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
    NULL
 #endif
 };
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 static MUTEX *s_cryptoMutexList = NULL;
 
 /**
@@ -110,6 +112,8 @@ static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int
    else
       MutexUnlock(s_cryptoMutexList[nLock]);
 }
+
+#endif   /* OPENSSL_VERSION_NUMBER < 0x10100000L */
 
 /**
  * ID callback for CRYPTO library
@@ -188,14 +192,19 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
    CRYPTO_malloc_init();
-#endif
-   ERR_load_CRYPTO_strings();
    OpenSSL_add_all_algorithms();
+#endif
+
+   ERR_load_CRYPTO_strings();
    RAND_seed(random, 8192);
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
    s_cryptoMutexList = (MUTEX *)malloc(sizeof(MUTEX) * CRYPTO_num_locks());
    for(i = 0; i < CRYPTO_num_locks(); i++)
       s_cryptoMutexList[i] = MutexCreate();
    CRYPTO_set_locking_callback(CryptoLockingCallback);
+#endif
+
 #ifndef _WIN32
    CRYPTO_set_id_callback(CryptoIdCallback);
 #endif   /* _WIN32 */
