@@ -253,7 +253,7 @@ inline void *InterlockedExchangePointer(void* volatile *target, void *value)
 /**
  * Atomically set pointer - helper template
  */
-template<typename T> T *InterlockedExchangePointer(T* volatile *target, T *value)
+template<typename T> T *InterlockedExchangeObjectPointer(T* volatile *target, T *value)
 {
    return static_cast<T*>(InterlockedExchangePointer(reinterpret_cast<void* volatile *>(target), value));
 }

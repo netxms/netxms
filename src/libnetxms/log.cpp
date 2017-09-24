@@ -68,7 +68,7 @@ static MUTEX m_mutexDebugTagTreeWrite = INVALID_MUTEX_HANDLE;
  */
 static inline void swapAndWait()
 {
-   tagTreeSecondary = InterlockedExchangePointer(&tagTreeActive, tagTreeSecondary);
+   tagTreeSecondary = InterlockedExchangeObjectPointer(&tagTreeActive, tagTreeSecondary);
    ThreadSleepMs(10);
 
    // Wait for tree reader count to drop to 0
