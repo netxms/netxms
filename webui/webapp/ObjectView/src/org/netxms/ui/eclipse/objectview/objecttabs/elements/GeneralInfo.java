@@ -151,7 +151,7 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysLocation, node.getSnmpSysLocation(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysContact, node.getSnmpSysContact(), false);
-				if ((node.getFlags() & AbstractNode.NC_IS_BRIDGE) != 0)
+				if ((node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);

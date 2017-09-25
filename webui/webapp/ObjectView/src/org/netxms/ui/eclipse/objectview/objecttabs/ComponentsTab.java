@@ -241,7 +241,7 @@ public class ComponentsTab extends ObjectTab
 	{
 		if (object instanceof Node)
 		{
-			return (((Node)object).getFlags() & Node.NC_HAS_ENTITY_MIB) != 0;
+			return (((Node)object).getCapabilities() & Node.NC_HAS_ENTITY_MIB) != 0;
 		}
 		return false;
 	}

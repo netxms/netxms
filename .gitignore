@@ -246,6 +246,9 @@ target
 /tools/fixprop
 /webui/eclipse
 /x64
+src/libnxjava/java/base/netxms-base/.classpath
+src/libnxjava/java/base/netxms-base/.project
+src/libnxjava/java/base/netxms-base/.settings/
 
 # Eclipse CDT
 .metadata

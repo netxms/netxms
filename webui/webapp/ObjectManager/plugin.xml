@@ -226,7 +226,7 @@
               name="%page.name.Polling">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.objects.Node">
+                    value="org.netxms.client.objects.PollingTarget">
               </instanceof>
            </enabledWhen>
         </page>
@@ -719,6 +719,27 @@
                label="%action.label.BindTo"
                menubarPath="objectbinding">
          </action>
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="%menu.label.Poll"
+               path="objectmgmt">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
+               label="%action.label.StatusPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.NormalConfigurationPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
+               label="%action.label.ConfPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"
@@ -764,6 +785,35 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Sensor"
                label="%action.label.BindTo"
                menubarPath="objectbinding">
+         </action>
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="%menu.label.Poll"
+               path="objectmgmt">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.InstanceDiscoveryPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.InstanceDiscoveryPoll"
+               label="%action.label.InstanceDiscoveryPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.StatusPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.StatusPoll"
+               label="%action.label.StatusPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.NormalConfigurationPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
+               label="%action.label.ConfPoll"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
          </action>
       </objectContribution>
       <objectContribution

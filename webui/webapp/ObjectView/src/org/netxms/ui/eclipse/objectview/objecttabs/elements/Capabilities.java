@@ -57,26 +57,26 @@ public class Capabilities extends TableElement
 		if (!(getObject() instanceof AbstractNode))
 			return;
 		
-      AbstractNode node = (AbstractNode)getObject();
-      addFlag(Messages.get().Capabilities_FlagIsAgent, (node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsBridge, (node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsCDP, (node.getCapabilities() & AbstractNode.NC_IS_CDP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsDot1x, (node.getCapabilities() & AbstractNode.NC_IS_8021X) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsLLDP, (node.getCapabilities() & AbstractNode.NC_IS_LLDP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsNDP, (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsPrinter, (node.getCapabilities() & AbstractNode.NC_IS_PRINTER) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsRouter, (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsSMCLP, (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsSNMP, (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsSTP, (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
-      addFlag(Messages.get().Capabilities_FlagIsVRRP, (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
-      addFlag(Messages.get().Capabilities_FlagHasEntityMIB, (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
-      addFlag(Messages.get().Capabilities_FlagHasIfXTable, (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);
-      if ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0)
-      {
-         addPair(Messages.get().Capabilities_SNMPPort, Integer.toString(node.getSnmpPort()));
-         addPair(Messages.get().Capabilities_SNMPVersion, getSnmpVersionName(node.getSnmpVersion()));
-      }
+		AbstractNode node = (AbstractNode)getObject();
+		addFlag(Messages.get().Capabilities_FlagIsAgent, (node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsBridge, (node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsCDP, (node.getCapabilities() & AbstractNode.NC_IS_CDP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsDot1x, (node.getCapabilities() & AbstractNode.NC_IS_8021X) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsLLDP, (node.getCapabilities() & AbstractNode.NC_IS_LLDP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsNDP, (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsPrinter, (node.getCapabilities() & AbstractNode.NC_IS_PRINTER) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsRouter, (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSMCLP, (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSNMP, (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsSTP, (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
+		addFlag(Messages.get().Capabilities_FlagIsVRRP, (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
+		addFlag(Messages.get().Capabilities_FlagHasEntityMIB, (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
+		addFlag(Messages.get().Capabilities_FlagHasIfXTable, (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);
+		if ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0)
+		{
+			addPair(Messages.get().Capabilities_SNMPPort, Integer.toString(node.getSnmpPort()));
+			addPair(Messages.get().Capabilities_SNMPVersion, getSnmpVersionName(node.getSnmpVersion()));
+		}
 	}
 	
 	/**

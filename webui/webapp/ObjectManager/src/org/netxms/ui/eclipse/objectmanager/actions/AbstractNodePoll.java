@@ -27,7 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.constants.NodePollType;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.PollingTarget;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public abstract class AbstractNodePoll implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private AbstractNode node = null;
+	private PollingTarget traget = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
@@ -46,7 +46,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (node == null)
+		if (traget == null)
 		   return;
 
 		String msg = getConfirmation();
@@ -58,7 +58,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		
 		try
 		{
-			NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + getPollType(), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+			NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(traget.getObjectId()) + "&" + getPollType(), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 			view.startPoll();
 		}
 		catch(PartInitException e)
@@ -76,15 +76,15 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		Object obj;
 		if ((selection instanceof IStructuredSelection) &&
 		    (((IStructuredSelection)selection).size() == 1) &&
-			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof AbstractNode))
+			 ((obj = ((IStructuredSelection)selection).getFirstElement()) instanceof PollingTarget))
 		{
-			node = (AbstractNode)obj;
+		   traget = (PollingTarget)obj;
 		}
 		else
 		{
-			node = null;
+		   traget = null;
 		}
-		action.setEnabled(node != null);
+		action.setEnabled(traget != null);
 	}
 
 	/* (non-Javadoc)
