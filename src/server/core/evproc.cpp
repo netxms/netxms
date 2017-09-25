@@ -52,6 +52,8 @@ static void BroadcastEvent(ClientSession *pSession, void *pArg)
  */
 static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 {
+   ThreadSetName("EvtStormDetect");
+
 	INT64 numEvents, prevEvents, eventsPerSecond;
 	int duration, actualDuration = 0;
 	
@@ -98,6 +100,8 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
  */
 static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 {
+   ThreadSetName("EventLogger");
+
    while(!IsShutdownInProgress())
    {
       Event *pEvent = (Event *)s_loggerQueue->getOrBlock();
@@ -163,7 +167,9 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
  */
 THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
-	s_loggerQueue = new Queue;
+   ThreadSetName("EventProcessor");
+
+   s_loggerQueue = new Queue;
 	s_threadLogger = ThreadCreateEx(EventLogger, 0, NULL);
 	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(!IsShutdownInProgress())

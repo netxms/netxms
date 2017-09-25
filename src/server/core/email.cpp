@@ -406,6 +406,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       _T("SMTP conversation failure")
    };
 
+   ThreadSetName("Mailer");
 	DbgPrintf(1, _T("SMTP mailer thread started"));
    while(1)
    {

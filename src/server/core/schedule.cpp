@@ -727,6 +727,7 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
  */
 static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 {
+   ThreadSetName("Scheduler/A");
    UINT32 sleepTime = 1;
    UINT32 watchdogId = WatchdogAddThread(_T("Ad hoc scheduler"), 5);
    nxlog_debug(3, _T("Ad hoc scheduler started"));
@@ -795,6 +796,7 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
  */
 static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
 {
+   ThreadSetName("Scheduler/R");
    UINT32 watchdogId = WatchdogAddThread(_T("Recurrent scheduler"), 5);
    nxlog_debug(3, _T("Recurrent scheduler started"));
    do

@@ -175,6 +175,7 @@ static void CleanupJobQueue(NetObj *object, void *data)
  */
 THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 {
+   ThreadSetName("JobManager");
 	DbgPrintf(2, _T("Job Manager worker thread started"));
 
 	while(!SleepAndCheckForShutdown(10))

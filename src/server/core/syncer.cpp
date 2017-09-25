@@ -114,6 +114,8 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId)
  */
 THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
+   ThreadSetName("Syncer");
+
    int syncInterval = ConfigReadInt(_T("SyncInterval"), 60);
    UINT32 watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
 

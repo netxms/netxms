@@ -520,6 +520,7 @@ static void CheckRange(const InetAddressListElement& range)
  */
 static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 {
+   ThreadSetName("ActiveDiscovery");
    int nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
 
    // Main loop
@@ -648,6 +649,7 @@ static void QueueForPolling(NetObj *object, void *data)
  */
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
+   ThreadSetName("PollManager");
    g_pollerThreadPool = ThreadPoolCreate(ConfigReadInt(_T("PollerThreadPoolBaseSize"), 10), ConfigReadInt(_T("PollerThreadPoolMaxSize"), 250), _T("POLLERS"));
 
    // Start active discovery poller

@@ -30,6 +30,7 @@ THREAD_RESULT THREAD_CALL UptimeCalculator(void *arg)
 {
 	const int calcInterval = 60; 
 
+   ThreadSetName("UptimeCalc");
 	DbgPrintf(1, _T("UptimeCalculator thread started"));
 
 	while(TRUE)

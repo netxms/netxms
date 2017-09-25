@@ -1374,6 +1374,8 @@ void GetAlarmStats(NXCPMessage *pMsg)
  */
 static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
+   ThreadSetName("AlarmWatchdog");
+
 	while(true)
 	{
 		if (m_condShutdown.wait(1000))

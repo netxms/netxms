@@ -668,6 +668,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
    NEW_NODE *pInfo;
 	TCHAR szIpAddr[64];
 
+   ThreadSetName("NodePoller");
    nxlog_debug(1, _T("Node poller started"));
 
    while(!IsShutdownInProgress())

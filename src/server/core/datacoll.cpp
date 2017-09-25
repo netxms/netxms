@@ -223,6 +223,8 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
  */
 static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 {
+   ThreadSetName("DataCollector");
+
    UINT32 dwError;
 
    TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
@@ -384,6 +386,8 @@ static void QueueItems(NetObj *object, void *data)
  */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
+   ThreadSetName("ItemPoller");
+
    UINT32 dwSum, currPos = 0;
    UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
@@ -425,6 +429,8 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
  */
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
+   ThreadSetName("StatCollector");
+
    UINT32 i, currPos = 0;
    UINT32 pollerQS[12], dbWriterQS[12];
    UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
@@ -489,6 +495,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
  */
 THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 {
+   ThreadSetName("CacheLoader");
    DbgPrintf(2, _T("DCI cache loader thread started"));
    while(true)
    {

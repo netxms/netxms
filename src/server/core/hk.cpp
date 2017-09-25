@@ -159,6 +159,8 @@ static bool s_shutdown = false;
  */
 static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
+   ThreadSetName("Housekeeper");
+
    // Read housekeeping configuration
    int hour;
    int minute;

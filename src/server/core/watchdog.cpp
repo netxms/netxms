@@ -155,6 +155,7 @@ void WatchdogGetThreads(StringList *out)
  */
 THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
+   ThreadSetName("Watchdog");
    nxlog_debug(1, _T("Watchdog thread started"));
    while(!SleepAndCheckForShutdown(20))
    {
