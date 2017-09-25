@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.netxms.client.MacAddress;
-import org.netxms.client.MacAddressFormatException;
+import org.netxms.base.MacAddress;
+import org.netxms.base.MacAddressFormatException;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;

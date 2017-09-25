@@ -192,7 +192,7 @@ public class NodeBrowser extends AbstractClientActivity
 				while (tl.hasNext())
 				{
 					tool = tl.next();
-					switch (tool.getType())
+					switch (tool.getToolType())
 					{
 						case ObjectTool.TYPE_INTERNAL:
 						case ObjectTool.TYPE_ACTION:

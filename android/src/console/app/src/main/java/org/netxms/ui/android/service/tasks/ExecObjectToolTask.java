@@ -41,22 +41,25 @@ public class ExecObjectToolTask extends AsyncTask<Object, Void, Exception>
         service = (ClientConnectorService)params[3];
         try
         {
-            switch(((ObjectTool)params[2]).getType())
+            ObjectTool objectTool = (ObjectTool) params[2];
+            NXCSession session = (NXCSession) params[0];
+            Long objectId = (Long) params[1];
+            switch(objectTool.getToolType())
             {
                 case ObjectTool.TYPE_INTERNAL:
-                    if (((ObjectTool)params[2]).getData().equals("wakeup"))
+                    if (objectTool.getData().equals("wakeup"))
                     {
-                        ((NXCSession)params[0]).wakeupNode((Long)params[1]);
+                        session.wakeupNode(objectId);
                         break;
                     }
                 case ObjectTool.TYPE_ACTION:
-                    ((NXCSession)params[0]).executeAction((Long)params[1], ((ObjectTool)params[2]).getData(), null);
+                    session.executeAction(objectId, objectTool.getData(), null);
                     break;
                 case ObjectTool.TYPE_SERVER_COMMAND:
-                    ((NXCSession)params[0]).executeServerCommand((Long)params[1], ((ObjectTool)params[2]).getData(), null);
+                    session.executeServerCommand(objectId, objectTool.getData(), null);
                     break;
                 case ObjectTool.TYPE_SERVER_SCRIPT:
-                    ((NXCSession)params[0]).executeLibraryScript((Long)params[1], ((ObjectTool)params[2]).getData(), null, null);
+                    session.executeLibraryScript(objectId, objectTool.getData(), null, null);
                     break;
             }
         }
