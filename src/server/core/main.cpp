@@ -113,7 +113,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
-THREAD_RESULT THREAD_CALL TunnelListener(void *arg);
+THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg);
 
 /**
  * Global variables
@@ -996,7 +996,7 @@ retry_db_lock:
 	ThreadCreate(MobileDeviceListenerThread, 0, NULL);
 
 	// Agent tunnels
-   s_tunnelListenerThread = ThreadCreateEx(TunnelListener, 0, NULL);
+   s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);
 
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
