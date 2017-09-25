@@ -600,6 +600,20 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V459 to V460
+ */
+static BOOL H_UpgradeFromV459(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE node ADD fail_time_snmp integer\n")
+            _T("ALTER TABLE node ADD fail_time_agent integer\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetSchemaVersion(460));
+   return TRUE;
+}
+
+/**
  * Upgrade from V458 to V459
  */
 static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
@@ -11912,6 +11926,7 @@ static struct
    { 456, 457, H_UpgradeFromV456 },
    { 457, 458, H_UpgradeFromV457 },
    { 458, 459, H_UpgradeFromV458 },
+   { 459, 460, H_UpgradeFromV459 },
    { 0, 0, NULL }
 };
 

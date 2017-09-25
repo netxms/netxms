@@ -304,7 +304,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
-      _T("tunnel_id,lldp_id FROM nodes WHERE id=?"));
+      _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -413,6 +413,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_lldpNodeId = DBGetField(hResult, 0, 49, NULL, 0);
    if ((m_lldpNodeId != NULL) && (*m_lldpNodeId == 0))
       safe_free_and_null(m_lldpNodeId);
+   m_failTimeSNMP = DBGetFieldLong(hResult, 0, 50);
+   m_failTimeAgent = DBGetFieldLong(hResult, 0, 51);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -511,7 +513,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
          _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
          _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
-         _T("lldp_id=? WHERE id=?"));
+         _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=? WHERE id=?"));
    }
    else
    {
@@ -522,8 +524,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
         _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
         _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
-        _T("tunnel_id,lldp_id,id) ")
-        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,id) ")
+        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
    {
@@ -593,7 +595,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
    DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_tunnelId);
    DBBind(hStmt, 51, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
-   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
+   DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
+   DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_id);
 
    BOOL bResult = DBExecute(hStmt);
    DBFreeStatement(hStmt);
