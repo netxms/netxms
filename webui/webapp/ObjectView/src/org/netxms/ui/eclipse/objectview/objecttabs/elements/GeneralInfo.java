@@ -151,14 +151,14 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysLocation, node.getSnmpSysLocation(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysContact, node.getSnmpSysContact(), false);
-				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
+				if ((node.getFlags() & AbstractNode.NC_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())
-               addPair(Messages.get().GeneralInfo_AgentStatus, (node.getRuntimeFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
+               addPair(Messages.get().GeneralInfo_AgentStatus, (node.getStateFlags() & Node.NSF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
             if (node.getLastAgentCommTime() != null)
                addPair(Messages.get().GeneralInfo_LastAgentContact, RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
             if (node.getRackId() != 0)

@@ -149,7 +149,7 @@ public class VlanMap extends AbstractNetworkMapView
 		if (iface != null)
 		{
 			Node peerNode = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
-			if ((peerNode != null) && ((peerNode.getFlags() & Node.NF_IS_BRIDGE) != 0))
+			if ((peerNode != null) && ((peerNode.getFlags() & Node.NC_IS_BRIDGE) != 0))
 			{
 				try
 				{

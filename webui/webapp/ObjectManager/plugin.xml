@@ -221,7 +221,7 @@
            </enabledWhen>
         </page>
         <page
-              class="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.ObjectPolling"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling#20"
               name="%page.name.Polling">
            <enabledWhen>

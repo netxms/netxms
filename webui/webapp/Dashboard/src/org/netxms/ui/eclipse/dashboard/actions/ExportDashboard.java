@@ -132,7 +132,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					nodeList[pos] = dci.getValue();
 					pos++;
 				}
-				String[] names = session.resolveDciNames(nodeList, dciList);
+				String[] names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.length; i++)
 				{
 					xml.append("\t\t<dci id=\""); //$NON-NLS-1$

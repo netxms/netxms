@@ -8,6 +8,7 @@ Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.9.0",
  org.netxms.ui.eclipse.objectview;bundle-version="2.0.1",
  org.eclipse.rap.ui;bundle-version="2.3.0",
+ org.netxms.ui.base;bundle-version="2.1.2",
  org.netxms.webui.core;bundle-version="2.0.1",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.1"
