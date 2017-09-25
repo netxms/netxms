@@ -645,6 +645,20 @@ BOOL moveFlagsFromOldTables(const TCHAR *tableName)
 }
 
 /**
+ * Upgrade from V503 to V504
+ */
+static BOOL H_UpgradeFromV503(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE nodes ADD fail_time_snmp integer\n")
+            _T("ALTER TABLE nodes ADD fail_time_agent integer\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetSchemaVersion(504));
+   return TRUE;
+}
+
+/**
  * Move single flag
  */
 inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFlag)
@@ -12260,6 +12274,7 @@ static struct
    { 500, 501, H_UpgradeFromV500 },
    { 501, 502, H_UpgradeFromV501 },
    { 502, 503, H_UpgradeFromV502 },
+   { 503, 504, H_UpgradeFromV503 },
    { 0, 0, NULL }
 };
 

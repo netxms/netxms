@@ -332,6 +332,8 @@ CREATE TABLE nodes
   port_numbering_scheme integer null,
   agent_comp_mode char(1) not null, // compression mode for agent
   capabilities integer null,
+  fail_time_snmp integer not null,
+  fail_time_agent integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
