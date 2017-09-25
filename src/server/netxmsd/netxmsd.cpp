@@ -131,7 +131,7 @@ static void CreateMiniDump(DWORD pid)
 								 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
-			MiniDumpWriteDump(hProcess, pid, hFile, MiniDumpNormal, NULL, NULL, NULL);
+			MiniDumpWriteDump(hProcess, pid, hFile, MiniDumpWithDataSegs, NULL, NULL, NULL);
 			CloseHandle(hFile);
 			_tprintf(_T("INFO: Minidump created successfully\n"));
 		}
