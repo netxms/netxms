@@ -231,7 +231,6 @@ void DataCollector(void *arg)
 {
    DCObject *pItem = static_cast<DCObject*>(arg);
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(pItem->getOwner());
-
    if (pItem->isScheduledForDeletion())
    {
       nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
