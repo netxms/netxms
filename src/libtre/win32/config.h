@@ -180,3 +180,7 @@
 
 /* Avoid silly warnings about "insecure" functions. */
 #define _CRT_SECURE_NO_DEPRECATE 1
+
+#if MSC_VER <= 1400
+#define snprintf sprintf_s
+#endif

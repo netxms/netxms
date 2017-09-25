@@ -522,6 +522,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\socket_listener.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\spoll.cpp"
 				>
 			</File>
@@ -717,6 +721,10 @@
 			</File>
 			<File
 				RelativePath=".\sha2.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\socket_listener.h"
 				>
 			</File>
 			<File
