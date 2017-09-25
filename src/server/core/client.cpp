@@ -21,12 +21,13 @@
 **/
 
 #include "nxcore.h"
+#include <socket_listener.h>
 
 /**
  * Static data
  */
-static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
-static RWLOCK m_rwlockSessionListAccess;
+static ClientSession *s_sessionList[MAX_CLIENT_SESSIONS];
+static RWLOCK s_sessionListLock;
 
 /**
  * Register new session in list
@@ -35,17 +36,17 @@ static BOOL RegisterClientSession(ClientSession *pSession)
 {
    UINT32 i;
 
-   RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockWriteLock(s_sessionListLock, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] == NULL)
+      if (s_sessionList[i] == NULL)
       {
-         m_pSessionList[i] = pSession;
+         s_sessionList[i] = pSession;
          pSession->setId(i);
-         RWLockUnlock(m_rwlockSessionListAccess);
+         RWLockUnlock(s_sessionListLock);
          return TRUE;
       }
 
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
    nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
@@ -55,9 +56,9 @@ static BOOL RegisterClientSession(ClientSession *pSession)
  */
 void UnregisterClientSession(int id)
 {
-   RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
-   m_pSessionList[id] = NULL;
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockWriteLock(s_sessionListLock, INFINITE);
+   s_sessionList[id] = NULL;
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -81,12 +82,12 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
          break;
 
       msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
-      RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+      RWLockReadLock(s_sessionListLock, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
-         if (m_pSessionList[i] != NULL)
-            if (m_pSessionList[i]->isAuthenticated())
-               m_pSessionList[i]->postMessage(&msg);
-      RWLockUnlock(m_rwlockSessionListAccess);
+         if (s_sessionList[i] != NULL)
+            if (s_sessionList[i]->isAuthenticated())
+               s_sessionList[i]->postMessage(&msg);
+      RWLockUnlock(s_sessionListLock);
    }
 
    DbgPrintf(1, _T("Client keep-alive thread terminated"));
@@ -98,205 +99,69 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
  */
 void InitClientListeners()
 {
+   memset(s_sessionList, 0, sizeof(s_sessionList));
+
    // Create session list access rwlock
-   m_rwlockSessionListAccess = RWLockCreate();
+   s_sessionListLock = RWLockCreate();
 
    // Start client keep-alive thread
    ThreadCreate(ClientKeepAliveThread, 0, NULL);
 }
 
 /**
- * Listener thread
+ * Client listener class
  */
-THREAD_RESULT THREAD_CALL ClientListener(void *arg)
+class ClientListener : public SocketListener
 {
-   SOCKET sock, sockClient;
-   struct sockaddr_in servAddr;
-   int errorCount = 0;
-   socklen_t iSize;
-   WORD wListenPort;
-   ClientSession *pSession;
+protected:
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
+   virtual bool isStopConditionReached();
 
-   // Read configuration
-   wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
-
-   // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-   {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
-      return THREAD_OK;
-   }
-
-	SetSocketExclusiveAddrUse(sock);
-	SetSocketReuseFlag(sock);
-#ifndef _WIN32
-   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
-#endif
-
-   // Fill in local address structure
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : htonl(InetAddress::resolveHostName(g_szListenAddress, AF_INET).getAddressV4());
-   servAddr.sin_port = htons(wListenPort);
-
-   // Bind socket
-   if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListener"), WSAGetLastError());
-      closesocket(sock);
-      /* TODO: we should initiate shutdown procedure here */
-      return THREAD_OK;
-   }
-
-   // Set up queue
-   listen(sock, SOMAXCONN);
-	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
-
-   // Wait for connection requests
-   while(!IsShutdownInProgress())
-   {
-      iSize = sizeof(struct sockaddr_in);
-      if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
-      {
-         int error;
-
-#ifdef _WIN32
-         error = WSAGetLastError();
-         if (error != WSAEINTR)
-#else
-         error = errno;
-         if (error != EINTR)
-#endif
-            nxlog_write(MSG_ACCEPT_ERROR, NXLOG_ERROR, "e", error);
-         errorCount++;
-         if (errorCount > 1000)
-         {
-            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, NXLOG_WARNING, NULL);
-            errorCount = 0;
-         }
-         ThreadSleepMs(500);
-			continue;
-      }
-
-      errorCount = 0;     // Reset consecutive errors counter
-		SetSocketNonBlocking(sockClient);
-
-      // Create new session structure and threads
-      pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);
-      if (!RegisterClientSession(pSession))
-      {
-         delete pSession;
-      }
-      else
-      {
-         pSession->run();
-      }
-   }
-
-   closesocket(sock);
-   return THREAD_OK;
-}
-
-#ifdef WITH_IPV6
+public:
+   ClientListener(UINT16 port) : SocketListener(port) { setName(_T("Clients")); }
+};
 
 /**
- * Listener thread - IPv6
+ * Listener stop condition
  */
-THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
+bool ClientListener::isStopConditionReached()
 {
-   SOCKET sock, sockClient;
-   struct sockaddr_in6 servAddr;
-   int errorCount = 0;
-   socklen_t iSize;
-   WORD wListenPort;
-   ClientSession *pSession;
-
-   // Read configuration
-   wListenPort = (WORD)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
-
-   // Create socket
-   if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
-   {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListenerIPv6"));
-      return THREAD_OK;
-   }
-
-	SetSocketExclusiveAddrUse(sock);
-	SetSocketReuseFlag(sock);
-#ifdef IPV6_V6ONLY
-   int on = 1;
-   setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
-#endif
-#ifndef _WIN32
-   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
-#endif
-
-   // Fill in local address structure
-   memset(&servAddr, 0, sizeof(struct sockaddr_in6));
-   servAddr.sin6_family = AF_INET6;
-   if (_tcscmp(g_szListenAddress, _T("*")))
-      memcpy(servAddr.sin6_addr.s6_addr, InetAddress::resolveHostName(g_szListenAddress, AF_INET6).getAddressV6(), 16);
-   servAddr.sin6_port = htons(wListenPort);
-
-   // Bind socket
-   if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in6)) != 0)
-   {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListenerIPv6"), WSAGetLastError());
-      closesocket(sock);
-      /* TODO: we should initiate shutdown procedure here */
-      return THREAD_OK;
-   }
-
-   // Set up queue
-   listen(sock, SOMAXCONN);
-	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr.sin6_addr.s6_addr, wListenPort);
-
-   // Wait for connection requests
-   while(!IsShutdownInProgress())
-   {
-      iSize = sizeof(struct sockaddr_in6);
-      if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
-      {
-         int error;
-
-#ifdef _WIN32
-         error = WSAGetLastError();
-         if (error != WSAEINTR)
-#else
-         error = errno;
-         if (error != EINTR)
-#endif
-            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
-         errorCount++;
-         if (errorCount > 1000)
-         {
-            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
-            errorCount = 0;
-         }
-         ThreadSleepMs(500);
-			continue;
-      }
-
-      errorCount = 0;     // Reset consecutive errors counter
-		SetSocketNonBlocking(sockClient);
-
-      // Create new session structure and threads
-      pSession = new ClientSession(sockClient, (struct sockaddr *)&servAddr);
-      if (!RegisterClientSession(pSession))
-      {
-         delete pSession;
-      }
-      else
-      {
-         pSession->run();
-      }
-   }
-
-   closesocket(sock);
-   return THREAD_OK;
+   return IsShutdownInProgress();
 }
 
-#endif
+/**
+ * Process incoming connection
+ */
+ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const InetAddress& peer)
+{
+   SetSocketNonBlocking(s);
+   ClientSession *session = new ClientSession(s, peer);
+   if (RegisterClientSession(session))
+   {
+      session->run();
+   }
+   else
+   {
+      delete session;
+   }
+   return CPR_BACKGROUND;
+}
+
+/**
+ * Listener thread
+ */
+THREAD_RESULT THREAD_CALL ClientListenerThread(void *arg)
+{
+   UINT16 listenPort = (UINT16)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
+   ClientListener listener(listenPort);
+   listener.setListenAddress(g_szListenAddress);
+   if (!listener.initialize())
+      return THREAD_OK;
+
+   listener.mainLoop();
+   listener.shutdown();
+   return THREAD_OK;
+}
 
 /**
  * Dump client sessions to screen
@@ -310,26 +175,26 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
    ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   CLTYPE  USER [CLIENT]\n"));
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL)
+      if (s_sessionList[i] != NULL)
       {
          TCHAR webServer[256] = _T("");
-         if (m_pSessionList[i]->getClientType() == CLIENT_TYPE_WEB)
+         if (s_sessionList[i]->getClientType() == CLIENT_TYPE_WEB)
          {
-            _sntprintf(webServer, 256, _T(" (%s)"), m_pSessionList[i]->getWebServerAddress());
+            _sntprintf(webServer, 256, _T(" (%s)"), s_sessionList[i]->getWebServerAddress());
          }
          ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s%s [%s]\n"), i,
-                       (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
-                         pszStateName[m_pSessionList[i]->getState()] :
-                         NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
-					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
-							  pszClientType[m_pSessionList[i]->getClientType()],
-                       m_pSessionList[i]->getSessionName(), webServer,
-                       m_pSessionList[i]->getClientInfo());
+                       (s_sessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
+                         pszStateName[s_sessionList[i]->getState()] :
+                         NXCPMessageCodeName(s_sessionList[i]->getCurrentCmd(), szBuffer),
+					        pszCipherName[s_sessionList[i]->getCipher() + 1],
+							  pszClientType[s_sessionList[i]->getClientType()],
+                       s_sessionList[i]->getSessionName(), webServer,
+                       s_sessionList[i]->getClientInfo());
          iCount++;
       }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
    ConsolePrintf(pCtx, _T("\n%d active session%s\n\n"), iCount, iCount == 1 ? _T("") : _T("s"));
 }
 
@@ -339,17 +204,17 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 bool NXCORE_EXPORTABLE KillClientSession(int id)
 {
    bool success = false;
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == id))
+      if ((s_sessionList[i] != NULL) && (s_sessionList[i]->getId() == id))
       {
-         m_pSessionList[i]->kill();
+         s_sessionList[i]->kill();
          success = true;
          break;
       }
    }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
    return success;
 }
 
@@ -358,15 +223,15 @@ bool NXCORE_EXPORTABLE KillClientSession(int id)
  */
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
 {
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((m_pSessionList[i] != NULL) && !m_pSessionList[i]->isTerminated())
+      if ((s_sessionList[i] != NULL) && !s_sessionList[i]->isTerminated())
       {
-         pHandler(m_pSessionList[i], pArg);
+         pHandler(s_sessionList[i], pArg);
       }
    }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -389,14 +254,14 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
          break;
    }
 
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((m_pSessionList[i] != NULL) &&
-          m_pSessionList[i]->isAuthenticated() &&
-          !m_pSessionList[i]->isTerminated() &&
-          m_pSessionList[i]->isSubscribedTo(NXC_CHANNEL_USERDB))
-         m_pSessionList[i]->postMessage(&msg);
-   RWLockUnlock(m_rwlockSessionListAccess);
+      if ((s_sessionList[i] != NULL) &&
+          s_sessionList[i]->isAuthenticated() &&
+          !s_sessionList[i]->isTerminated() &&
+          s_sessionList[i]->isSubscribedTo(NXC_CHANNEL_USERDB))
+         s_sessionList[i]->postMessage(&msg);
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -404,14 +269,14 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
  */
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId)
 {
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((m_pSessionList[i] != NULL) &&
-          m_pSessionList[i]->isAuthenticated() &&
-          !m_pSessionList[i]->isTerminated() &&
-          (GetGraphAccessCheckResult(graphId, m_pSessionList[i]->getUserId()) == RCC_SUCCESS))
-         m_pSessionList[i]->postMessage(update);
-   RWLockUnlock(m_rwlockSessionListAccess);
+      if ((s_sessionList[i] != NULL) &&
+          s_sessionList[i]->isAuthenticated() &&
+          !s_sessionList[i]->isTerminated() &&
+          (GetGraphAccessCheckResult(graphId, s_sessionList[i]->getUserId()) == RCC_SUCCESS))
+         s_sessionList[i]->postMessage(update);
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -419,17 +284,17 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 {
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((m_pSessionList[i] != NULL) &&
-          m_pSessionList[i]->isAuthenticated() &&
-          !m_pSessionList[i]->isTerminated())
+      if ((s_sessionList[i] != NULL) &&
+          s_sessionList[i]->isAuthenticated() &&
+          !s_sessionList[i]->isTerminated())
       {
-         m_pSessionList[i]->notify(dwCode, dwData);
+         s_sessionList[i]->notify(dwCode, dwData);
       }
    }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -437,11 +302,11 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
  */
 void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData)
 {
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == sessionId))
-         m_pSessionList[i]->notify(dwCode, dwData);
-   RWLockUnlock(m_rwlockSessionListAccess);
+      if ((s_sessionList[i] != NULL) && (s_sessionList[i]->getId() == sessionId))
+         s_sessionList[i]->notify(dwCode, dwData);
+   RWLockUnlock(s_sessionListLock);
 }
 
 /**
@@ -451,16 +316,16 @@ int GetSessionCount(bool includeSystemAccount)
 {
    int i, nCount;
 
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((m_pSessionList[i] != NULL) &&
-          (includeSystemAccount || (m_pSessionList[i]->getUserId() != 0)))
+      if ((s_sessionList[i] != NULL) &&
+          (includeSystemAccount || (s_sessionList[i]->getUserId() != 0)))
       {
          nCount++;
       }
    }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
    return nCount;
 }
 
@@ -470,14 +335,14 @@ int GetSessionCount(bool includeSystemAccount)
 bool IsLoggedIn(UINT32 dwUserId)
 {
    bool result = false;
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL && m_pSessionList[i]->getUserId() == dwUserId)
+      if (s_sessionList[i] != NULL && s_sessionList[i]->getUserId() == dwUserId)
       {
          result = true;
          break;
       }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
    return result;
 }
 
@@ -486,16 +351,16 @@ bool IsLoggedIn(UINT32 dwUserId)
  */
 void CloseOtherSessions(UINT32 userId, UINT32 thisSession)
 {
-   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((m_pSessionList[i] != NULL) &&
-          (m_pSessionList[i]->getUserId() == userId) &&
-          (m_pSessionList[i]->getId() != thisSession))
+      if ((s_sessionList[i] != NULL) &&
+          (s_sessionList[i]->getUserId() == userId) &&
+          (s_sessionList[i]->getId() != thisSession))
       {
-         nxlog_debug(4, _T("CloseOtherSessions(%d,%d): disconnecting session %d"), userId, thisSession, m_pSessionList[i]->getId());
-         m_pSessionList[i]->kill();
+         nxlog_debug(4, _T("CloseOtherSessions(%d,%d): disconnecting session %d"), userId, thisSession, s_sessionList[i]->getId());
+         s_sessionList[i]->kill();
       }
    }
-   RWLockUnlock(m_rwlockSessionListAccess);
+   RWLockUnlock(s_sessionListLock);
 }
