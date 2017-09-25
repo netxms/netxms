@@ -150,6 +150,7 @@ static UINT64 GetEffectiveSystemRights(User *user)
  */
 static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 {
+   ThreadSetName("AccountUpdate");
 	DbgPrintf(2, _T("User account status update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{

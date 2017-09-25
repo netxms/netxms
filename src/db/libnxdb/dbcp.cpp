@@ -191,7 +191,8 @@ static void ResetExpiredConnections()
  */
 static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 {
-	nxlog_debug_tag(_T("db.connection.poll"), 1, _T("Database Connection Pool maintenance thread started"));
+   ThreadSetName("DBPoolMaint");
+   nxlog_debug_tag(_T("db.connection.poll"), 1, _T("Database Connection Pool maintenance thread started"));
 
    while(!ConditionWait(m_condShutdown, (m_connectionTTL > 0) ? m_connectionTTL * 750 : 300000))
    {

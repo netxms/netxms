@@ -112,6 +112,7 @@ ConnectionProcessingResult MobileDeviceListener::processConnection(SOCKET s, con
  */
 THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *arg)
 {
+   ThreadSetName("MDevListener");
    UINT16 listenPort = (UINT16)ConfigReadInt(_T("MobileDeviceListenerPort"), SERVER_LISTEN_PORT_FOR_MOBILES);
    MobileDeviceListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);

@@ -183,6 +183,7 @@ DEFINE_THREAD_STARTER(deleteRepository)
  */
 THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
 {
+   ThreadSetName("SessionReader");
    ((ClientSession *)pArg)->readThread();
 
    // When ClientSession::ReadThread exits, all other session
@@ -198,6 +199,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
  */
 THREAD_RESULT THREAD_CALL ClientSession::writeThreadStarter(void *pArg)
 {
+   ThreadSetName("SessionWriter");
    ((ClientSession *)pArg)->writeThread();
    return THREAD_OK;
 }
@@ -207,6 +209,7 @@ THREAD_RESULT THREAD_CALL ClientSession::writeThreadStarter(void *pArg)
  */
 THREAD_RESULT THREAD_CALL ClientSession::processingThreadStarter(void *pArg)
 {
+   ThreadSetName("SessionProc");
    ((ClientSession *)pArg)->processingThread();
    return THREAD_OK;
 }

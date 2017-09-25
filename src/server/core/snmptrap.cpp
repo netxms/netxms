@@ -667,6 +667,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
    SNMP_Engine localEngine(engineId, 12);
 
+   ThreadSetName("SNMPTrapRecv");
+
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
    SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);

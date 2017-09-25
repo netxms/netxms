@@ -111,6 +111,8 @@ close_session:
  */
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 {
+   ThreadSetName("DebugConsole");
+
    SOCKET sock, sockClient;
    struct sockaddr_in servAddr;
    int errorCount = 0;

@@ -70,6 +70,7 @@ static int m_iStatusThresholds[4];
  */
 static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 {
+   ThreadSetName("ApplyTemplates");
 	DbgPrintf(1, _T("Apply template thread started"));
    while(1)
    {
@@ -155,6 +156,7 @@ static void UpdateDataCollectionCache(ObjectIndex *idx)
  */
 static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 {
+   ThreadSetName("CacheLoader");
    DbgPrintf(1, _T("Started caching of DCI values"));
 
 	UpdateDataCollectionCache(&g_idxNodeById);
@@ -182,6 +184,7 @@ static void UpdateMapCallback(NetObj *object, void *data)
  */
 static THREAD_RESULT THREAD_CALL MapUpdateThread(void *pArg)
 {
+   ThreadSetName("MapUpdate");
 	DbgPrintf(2, _T("Map update thread started"));
 	while(!SleepAndCheckForShutdown(60))
 	{

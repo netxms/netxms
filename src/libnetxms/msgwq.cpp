@@ -381,6 +381,7 @@ EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const void *key, con
  */
 THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
 {
+   ThreadSetName("MsgWaitQueue");
    while(!m_shutdownCondition.wait(TTL_CHECK_INTERVAL))
    {
       m_housekeeperLock.lock();

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,24 +66,24 @@ void UnregisterClientSession(int id)
  */
 static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
 {
-   int i, iSleepTime;
-   NXCPMessage msg;
+   ThreadSetName("ClientKeepAlive");
 
    // Read configuration
-   iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
+   int iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
 
    // Prepare keepalive message
+   NXCPMessage msg;
    msg.setCode(CMD_KEEPALIVE);
    msg.setId(0);
 
-   while(1)
+   while(true)
    {
       if (SleepAndCheckForShutdown(iSleepTime))
          break;
 
       msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
       RWLockReadLock(s_sessionListLock, INFINITE);
-      for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (s_sessionList[i] != NULL)
             if (s_sessionList[i]->isAuthenticated())
                s_sessionList[i]->postMessage(&msg);
@@ -152,6 +152,7 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
  */
 THREAD_RESULT THREAD_CALL ClientListenerThread(void *arg)
 {
+   ThreadSetName("ClientListener");
    UINT16 listenPort = (UINT16)ConfigReadInt(_T("ClientListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS);
    ClientListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);

@@ -68,6 +68,7 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
  */
 THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 {
+   ThreadSetName("AgentReceiver");
    ((AgentConnection *)pArg)->receiverThread();
    ((AgentConnection *)pArg)->decInternalRefCount();
    return THREAD_OK;

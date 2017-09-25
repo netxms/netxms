@@ -100,6 +100,18 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
 {
    ThreadPool *p = ((WorkerThreadInfo *)arg)->pool;
    Queue *q = p->queue;
+
+
+   char threadName[16];
+   threadName[0] = '$';
+#ifdef UNICODE
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, p->name, -1, &threadName[1], 11, NULL, NULL);
+#else
+   strlcpy(&threadName[1], p->name, 11);
+#endif
+   strlcat(threadName, "/WRK", 16);
+   ThreadSetName(threadName);
+
    while(true)
    {
       WorkRequest *rq = (WorkRequest *)q->getOrBlock();
@@ -137,6 +149,17 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
 static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 {
    ThreadPool *p = (ThreadPool *)arg;
+
+   char threadName[16];
+   threadName[0] = '$';
+#ifdef UNICODE
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, p->name, -1, &threadName[1], 11, NULL, NULL);
+#else
+   strlcpy(&threadName[1], p->name, 11);
+#endif
+   strlcat(threadName, "/MNT", 16);
+   ThreadSetName(threadName);
+
    int count = 0;
    while(!ConditionWait(p->maintThreadStop, 5000))
    {

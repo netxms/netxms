@@ -994,6 +994,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  */
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg)
 {
+   ThreadSetName("LDAPSync");
    UINT32 syncInterval = ConfigReadInt(_T("LdapSyncInterval"), 0);
    if (syncInterval == 0)
    {

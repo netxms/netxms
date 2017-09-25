@@ -346,6 +346,7 @@ void AgentTunnel::recvThread()
  */
 THREAD_RESULT THREAD_CALL AgentTunnel::recvThreadStarter(void *arg)
 {
+   ThreadSetName("TunnelReceiver");
    ((AgentTunnel *)arg)->recvThread();
    ((AgentTunnel *)arg)->decRefCount();
    return THREAD_OK;
@@ -1106,6 +1107,7 @@ ConnectionProcessingResult TunnelListener::processConnection(SOCKET s, const Ine
  */
 THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
 {
+   ThreadSetName("TunnelListener");
    s_tunnelListenerLock.lock();
    UINT16 listenPort = (UINT16)ConfigReadULong(_T("AgentTunnelListenPort"), 4703);
    TunnelListener listener(listenPort);

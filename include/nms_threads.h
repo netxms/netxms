@@ -153,6 +153,49 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 	return thread;
 }
 
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO
+{
+   DWORD dwType; // Must be 0x1000.
+   LPCSTR szName; // Pointer to name (in user addr space).
+   DWORD dwThreadID; // Thread ID (-1=caller thread).
+   DWORD dwFlags; // Reserved for future use, must be zero.
+ } THREADNAME_INFO;
+#pragma pack(pop)
+
+/**
+ * Set thread name. Thread can be set to INVALID_THREAD_HANDLE to change name of current thread.
+ */
+inline void ThreadSetName(THREAD thread, const char *name)
+{
+   THREADNAME_INFO info;
+   info.dwType = 0x1000;
+   info.szName = name;
+   info.dwThreadID = (thread != INVALID_THREAD_HANDLE) ? thread->id : (DWORD)-1;
+   info.dwFlags = 0;
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
+   __try
+   {
+      RaiseException(0x406D1388, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+   }
+   __except(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+#pragma warning(pop)
+}
+
+/**
+ * Set name for current thread
+ */
+inline void ThreadSetName(const char *name)
+{
+   ThreadSetName(INVALID_THREAD_HANDLE, name);
+}
+
+/**
+ * Exit thread
+ */
 inline void ThreadExit()
 {
 #ifdef UNDER_CE
@@ -345,6 +388,24 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 	}
 }
 
+/**
+ * Set thread name
+ */
+inline void ThreadSetName(THREAD thread, const char *name)
+{
+}
+
+/**
+ * Set name for current thread
+ */
+inline void ThreadSetName(const char *name)
+{
+   ThreadSetName(INVALID_THREAD_HANDLE, name);
+}
+
+/**
+ * Exit thread
+ */
 inline void ThreadExit(void)
 {
    pth_exit(NULL);
@@ -674,6 +735,27 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
 	return FALSE;
 }
 
+/**
+ * Set thread name
+ */
+inline void ThreadSetName(THREAD thread, const char *name)
+{
+#if HAVE_PTHREAD_SETNAME_NP
+   pthread_setname_np((thread != INVALID_THREAD_HANDLE) ? thread : pthread_self(), name);
+#endif
+}
+
+/**
+ * Set name for current thread
+ */
+inline void ThreadSetName(const char *name)
+{
+   ThreadSetName(INVALID_THREAD_HANDLE, name);
+}
+
+/**
+ * Exit thread
+ */
 inline void ThreadExit()
 {
    pthread_exit(NULL);

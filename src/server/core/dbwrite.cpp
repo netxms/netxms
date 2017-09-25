@@ -137,7 +137,8 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
  */
 static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
-   while(1)
+   ThreadSetName("DBWriter");
+   while(true)
    {
       DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_dbWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -175,7 +176,8 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
  */
 static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
-   while(1)
+   ThreadSetName("DBWriter/IData");
+   while(true)
    {
 		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -246,7 +248,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
  */
 static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 {
-   while(1)
+   ThreadSetName("DBWriter/RData");
+   while(true)
    {
 		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
