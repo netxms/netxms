@@ -15,7 +15,8 @@ sql_DATA = dbinit_mysql.sql \
            dbschema_mssql.sql \
            dbschema_oracle.sql \
            dbschema_sqlite.sql \
-           dbschema_db2.sql
+           dbschema_db2.sql \
+           devdb.in
 
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in images.in traps.in country_codes.in currency_codes.in
