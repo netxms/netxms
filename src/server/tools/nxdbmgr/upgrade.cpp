@@ -605,8 +605,8 @@ static bool SetSchemaVersion(int version)
 static BOOL H_UpgradeFromV459(int currVersion, int newVersion)
 {
    static const TCHAR *batch =
-            _T("ALTER TABLE node ADD fail_time_snmp integer\n")
-            _T("ALTER TABLE node ADD fail_time_agent integer\n")
+            _T("ALTER TABLE nodes ADD fail_time_snmp integer\n")
+            _T("ALTER TABLE nodes ADD fail_time_agent integer\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetSchemaVersion(460));
