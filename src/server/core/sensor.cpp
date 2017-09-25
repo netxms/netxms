@@ -641,9 +641,9 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    if (conn != NULL)
    {
       nxlog_debug(6, _T("StatusPoll(%s): connected to agent"), m_name);
-      if (m_state & SSF_AGENT_UNREACHABLE)
+      if (m_state & DCSF_UNREACHABLE)
       {
-         m_state &= ~SSF_AGENT_UNREACHABLE;
+         m_state &= ~DCSF_UNREACHABLE;
          sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
       }
    }
@@ -651,8 +651,8 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    {
       nxlog_debug(6, _T("StatusPoll(%s): agent unreachable"), m_name);
       sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
-      if (!(m_state & SSF_AGENT_UNREACHABLE))
-         m_state |= SSF_AGENT_UNREACHABLE;
+      if (!(m_state & DCSF_UNREACHABLE))
+         m_state |= DCSF_UNREACHABLE;
    }
    unlockProperties();
    nxlog_debug(6, _T("StatusPoll(%s): agent check finished"), m_name);
@@ -827,7 +827,7 @@ void Sensor::prepareDlmsDciParameters(String &parameter)
  */
 UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
-   if (m_state & SSF_AGENT_UNREACHABLE)
+   if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
 
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
@@ -899,7 +899,7 @@ UINT32 Sensor::getListFromAgent(const TCHAR *name, StringList **list)
 
    *list = NULL;
 
-   if (m_state & SSF_AGENT_UNREACHABLE) //removed disable agent usage for all polls
+   if (m_state & DCSF_UNREACHABLE) //removed disable agent usage for all polls
       return DCE_COMM_ERROR;
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, name);

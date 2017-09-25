@@ -79,11 +79,10 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
    public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
 	
-	// Node runtime flags
-	public static final int NSF_UNREACHABLE        = 0x000000001;
-	public static final int NSF_AGENT_UNREACHABLE  = 0x000000002;
-	public static final int NSF_SNMP_UNREACHABLE   = 0x000000004;
-	public static final int NSF_CPSNMP_UNREACHABLE = 0x000000008;
+	// Node status flags
+	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
+	public static final int NSF_SNMP_UNREACHABLE   = 0x00020000;
+	public static final int NSF_CPSNMP_UNREACHABLE = 0x00040000;
 	
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;

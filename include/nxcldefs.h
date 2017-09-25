@@ -242,31 +242,34 @@
 #define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x00010000
 #define NDF_QUEUED_FOR_DISCOVERY_POLL  0x00020000
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x00040000
-#define NDF_RECHECK_CAPABILITIES       0x00100000
+#define NDF_RECHECK_CAPABILITIES       0x00080000
+
+/**
+ *
+ */
+#define DCSF_UNREACHABLE               0x00000001
+#define DCSF_NETWORK_PATH_PROBLEM      0x00000002
 
 /**
  * Cluster status flags
  */
-#define CLSF_DOWN                      0x000001
+#define CLSF_DOWN                      0x00010000
 
 /**
- * Node status flags
+ * Node state flags
  */
-#define NSF_UNREACHABLE                0x000001
-#define NSF_AGENT_UNREACHABLE          0x000002
-#define NSF_SNMP_UNREACHABLE           0x000004
-#define NSF_CPSNMP_UNREACHABLE         0x000020
-#define NSF_NETWORK_PATH_PROBLEM       0x000100
-#define NSF_CACHE_MODE_NOT_SUPPORTED   0x000200
+#define NSF_AGENT_UNREACHABLE          0x00010000
+#define NSF_SNMP_UNREACHABLE           0x00020000
+#define NSF_CPSNMP_UNREACHABLE         0x00040000
+#define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 
 /**
  * Sensor status flags
  */
-#define SSF_PROVISIONED                0x000001
-#define SSF_REGISTERED                 0x000002
-#define SSF_ACTIVE                     0x000004
-#define SSF_CONF_UPDATE_PENDING        0x000008
-#define SSF_AGENT_UNREACHABLE          0x000010
+#define SSF_PROVISIONED                0x00010000
+#define SSF_REGISTERED                 0x00020000
+#define SSF_ACTIVE                     0x00040000
+#define SSF_CONF_UPDATE_PENDING        0x00080000
 
 /**
  * Template flags

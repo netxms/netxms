@@ -1967,6 +1967,8 @@ static void DumpObjectCallback(NetObj *object, void *data)
 #endif
 	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(pCtx, _T("   Last change: %s\n"), dd->buffer);
+   if (object->isDataCollectionTarget())
+      ConsolePrintf(pCtx, _T("   State flags: 0x%08x\n"), ((DataCollectionTarget *)object)->getState());
    switch(object->getObjectClass())
    {
       case OBJECT_NODE:

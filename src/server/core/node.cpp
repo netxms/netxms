@@ -403,9 +403,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_agentCompressionMode = (INT16)DBGetFieldLong(hResult, 0, 45);
    m_tunnelId = DBGetFieldGUID(hResult, 0, 46);
    m_lldpNodeId = DBGetField(hResult, 0, 47, NULL, 0);
-   m_capabilities = DBGetFieldULong(hResult, 0, 48);
    if ((m_lldpNodeId != NULL) && (*m_lldpNodeId == 0))
       safe_free_and_null(m_lldpNodeId);
+   m_capabilities = DBGetFieldULong(hResult, 0, 48);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -1315,7 +1315,8 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
    if (IsShutdownInProgress())
       return;
 
-   UINT32 dwOldFlags = m_capabilities;
+   UINT32 oldCapabilities = m_capabilities;
+   UINT32 oldState = m_state;
    NetObj *pPollerNode = NULL, **ppPollList;
    SNMP_Transport *pTransport;
    Cluster *pCluster;
@@ -1416,7 +1417,7 @@ restart_agent_check:
             sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
-               if ((tNow > m_failTimeSNMP + tExpire) && (!(m_state & NSF_UNREACHABLE)))
+               if ((tNow > m_failTimeSNMP + tExpire) && (!(m_state & DCSF_UNREACHABLE)))
                {
                   m_capabilities &= ~NC_IS_SNMP;
                   m_state &= ~NSF_SNMP_UNREACHABLE;
@@ -1467,7 +1468,7 @@ restart_agent_check:
          sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
-            if ((tNow > m_failTimeAgent + tExpire) && !(m_state & NSF_UNREACHABLE))
+            if ((tNow > m_failTimeAgent + tExpire) && !(m_state & DCSF_UNREACHABLE))
             {
                m_capabilities &= ~NC_IS_NATIVE_AGENT;
                m_state &= ~NSF_AGENT_UNREACHABLE;
@@ -1613,14 +1614,14 @@ restart_agent_check:
       DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
       {
-         if (!(m_state & NSF_UNREACHABLE))
+         if (!(m_state & DCSF_UNREACHABLE))
          {
-            m_state |= NSF_UNREACHABLE;
+            m_state |= DCSF_UNREACHABLE;
             m_downSince = time(NULL);
             poller->setStatus(_T("check network path"));
             if (checkNetworkPath(dwRqId))
             {
-               m_state |= NSF_NETWORK_PATH_PROBLEM;
+               m_state |= DCSF_NETWORK_PATH_PROBLEM;
 
                // Set interfaces and network services to UNKNOWN state
                lockChildList(false);
@@ -1661,10 +1662,10 @@ restart_agent_check:
       else
       {
          m_downSince = 0;
-         if (m_state & NSF_UNREACHABLE)
+         if (m_state & DCSF_UNREACHABLE)
          {
-            int reason = (m_state & NSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
-            m_state &= ~(NSF_UNREACHABLE | NSF_SNMP_UNREACHABLE | NSF_AGENT_UNREACHABLE | NSF_NETWORK_PATH_PROBLEM);
+            int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
+            m_state &= ~(DCSF_UNREACHABLE | NSF_SNMP_UNREACHABLE | NSF_AGENT_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
             PostEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             goto restart_agent_check;
@@ -1677,7 +1678,7 @@ restart_agent_check:
    }
 
    // Get uptime and update boot time
-   if (!(m_state & NSF_UNREACHABLE))
+   if (!(m_state & DCSF_UNREACHABLE))
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1701,7 +1702,7 @@ restart_agent_check:
    }
 
    // Get agent uptime to check if it was restared
-   if (!(m_state & NSF_UNREACHABLE) && isNativeAgent())
+   if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("Agent.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1727,7 +1728,7 @@ restart_agent_check:
    }
 
    // Get geolocation
-   if (!(m_state & NSF_UNREACHABLE) && isNativeAgent())
+   if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1749,7 +1750,7 @@ restart_agent_check:
    }
 
    // Get agent log and agent local database status
-   if (!(m_state & NSF_UNREACHABLE) && isNativeAgent())
+   if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
       if (getItemFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1805,9 +1806,11 @@ restart_agent_check:
    if (pPollerNode != NULL)
       pPollerNode->decRefCount();
 
-   if (dwOldFlags != m_capabilities) //currectly not flags but capabilities
+   if (oldCapabilities != m_capabilities) //currectly not flags but capabilities
+      PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+
+   if (oldState != m_state || oldCapabilities != m_capabilities)
    {
-      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_capabilities);
       lockProperties();
       setModified();
       unlockProperties();
@@ -2294,7 +2297,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
  */
 void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller, int maskBits)
 {
-   if (m_state & DCDF_DELETE_IN_PROGRESS)
+   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
       if (dwRqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
@@ -2338,7 +2341,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
    }
 
    // Check if node is marked as unreachable
-   if ((m_state & NSF_UNREACHABLE) && !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   if ((m_state & DCSF_UNREACHABLE) && !(m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
       sendPollerMsg(dwRqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       DbgPrintf(4, _T("Node is marked as unreachable, configuration poll aborted"));
@@ -2380,7 +2383,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       // Generate event if node flags has been changed
       if (dwOldFlags != m_capabilities)
       {
-         PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_capabilities);
+         PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", dwOldFlags, m_capabilities);
          hasChanges = true;
       }
 
@@ -3777,7 +3780,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHA
    UINT32 dwResult;
 
    if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
-       (m_state & NSF_UNREACHABLE) ||
+       (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_SNMP))
    {
       dwResult = SNMP_ERR_COMM;
@@ -4043,7 +4046,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
    UINT32 dwResult;
 
    if ((m_state & NSF_CPSNMP_UNREACHABLE) ||
-       (m_state & NSF_UNREACHABLE))
+       (m_state & DCSF_UNREACHABLE))
    {
       dwResult = SNMP_ERR_COMM;
    }
@@ -4066,7 +4069,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
 UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & NSF_UNREACHABLE) ||
+       (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_NXCP) ||
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
@@ -4136,7 +4139,7 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
    *table = NULL;
 
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & NSF_UNREACHABLE) ||
+       (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_NXCP) ||
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
@@ -4203,7 +4206,7 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
    *list = NULL;
 
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & NSF_UNREACHABLE) ||
+       (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_NXCP) ||
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
@@ -4270,7 +4273,7 @@ UINT32 Node::getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
    UINT32 result = DCE_COMM_ERROR;
    int tries = 3;
 
-   if (m_state & NSF_UNREACHABLE)
+   if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
 
    smclpLock();
@@ -5257,7 +5260,7 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) &&
        (!(m_state & NSF_AGENT_UNREACHABLE)) &&
-       (!(m_state & NSF_UNREACHABLE)))
+       (!(m_state & DCSF_UNREACHABLE)))
    {
       AgentConnection *conn = createAgentConnection();
       if (conn != NULL)
@@ -5316,7 +5319,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    if ((!(m_capabilities & NC_IS_NATIVE_AGENT)) ||
        (m_flags & NF_DISABLE_NXCP) ||
        (m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & NSF_UNREACHABLE))
+       (m_state & DCSF_UNREACHABLE))
       return NULL;
 
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
@@ -5775,7 +5778,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
 {
    if ((m_capabilities & NC_IS_SNMP) &&
        (!(m_state & NSF_SNMP_UNREACHABLE)) &&
-       (!(m_state & NSF_UNREACHABLE)))
+       (!(m_state & DCSF_UNREACHABLE)))
    {
       SNMP_Transport *pTransport;
       UINT32 dwResult;

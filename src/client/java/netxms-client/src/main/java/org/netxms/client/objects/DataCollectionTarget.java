@@ -34,6 +34,11 @@ public class DataCollectionTarget extends GenericObject
    public static final int DCF_DISABLE_CONF_POLL      = 0x00000002;
    public static final int DCF_DISABLE_DATA_COLLECT   = 0x00000004;
    
+
+   public static final int DCSF_UNREACHABLE          = 0x000000001;
+   public static final int DCSF_NETWORK_PATH_PROBLEM = 0x000000002;
+   
+   
    protected List<DciValue> overviewDciData;
    protected List<DciValue> tooltipDciData;
 

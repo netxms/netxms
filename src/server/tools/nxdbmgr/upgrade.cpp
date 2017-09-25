@@ -703,11 +703,11 @@ static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities)
  */
 static void MoveNodeState(UINT32 oldRuntime, UINT32 *state)
 {
-   MoveFlag(oldRuntime, state, 0x000004, NSF_UNREACHABLE);
+   MoveFlag(oldRuntime, state, 0x000004, DCSF_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000008, NSF_AGENT_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000010, NSF_SNMP_UNREACHABLE);
    MoveFlag(oldRuntime, state, 0x000200, NSF_CPSNMP_UNREACHABLE);
-   MoveFlag(oldRuntime, state, 0x008000, NSF_NETWORK_PATH_PROBLEM);
+   MoveFlag(oldRuntime, state, 0x008000, DCSF_NETWORK_PATH_PROBLEM);
    MoveFlag(oldRuntime, state, 0x020000, NSF_CACHE_MODE_NOT_SUPPORTED);
 }
 
@@ -720,7 +720,7 @@ static void MoveSensorState(UINT32 oldFlag, UINT32 oldRuntime, UINT32 *status)
    MoveFlag(oldFlag, status, 0x00000002, SSF_REGISTERED);
    MoveFlag(oldFlag, status, 0x00000004, SSF_ACTIVE);
    MoveFlag(oldFlag, status, 0x00000008, SSF_CONF_UPDATE_PENDING);
-   MoveFlag(oldRuntime, status, 0x000004, SSF_AGENT_UNREACHABLE);
+   MoveFlag(oldRuntime, status, 0x000004, DCSF_UNREACHABLE);
 }
 
 /**
@@ -3284,7 +3284,7 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
       { EVENT_NODE_CRITICAL, _T("8f2e98f8-1cd4-4e12-b41f-48b5c60ebe8e") },
       { EVENT_NODE_UNKNOWN, _T("6933cce0-fe1f-4123-817f-af1fb9f0eab4") },
       { EVENT_NODE_UNMANAGED, _T("a8356ba7-51b7-4487-b74e-d12132db233c") },
-      { EVENT_NODE_FLAGS_CHANGED, _T("b04e39f5-d3a7-4d9a-b594-37132f5eaf34") },
+      { EVENT_NODE_CAPABILITIES_CHANGED, _T("b04e39f5-d3a7-4d9a-b594-37132f5eaf34") },
       { EVENT_SNMP_FAIL, _T("d2fc3b0c-1215-4a92-b8f3-47df5d753602") },
       { EVENT_AGENT_FAIL, _T("ba484457-3594-418e-a72a-65336055d025") },
       { EVENT_INTERFACE_DELETED, _T("ad7e9856-e361-4095-9361-ccc462d93624") },

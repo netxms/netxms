@@ -243,14 +243,14 @@ void CorrelateEvent(Event *pEvent)
          // there are intentionally no break
       case EVENT_SERVICE_DOWN:
       case EVENT_SNMP_FAIL:
-         if (node->getState() & NSF_UNREACHABLE)
+         if (node->getState() & DCSF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
          }
          break;
       case EVENT_AGENT_FAIL:
          node->setLastEventId(LAST_EVENT_AGENT_DOWN, pEvent->getId());
-         if (node->getState() & NSF_UNREACHABLE)
+         if (node->getState() & DCSF_UNREACHABLE)
          {
             pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
          }

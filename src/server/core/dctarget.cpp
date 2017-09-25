@@ -1348,7 +1348,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(ClientSession *session, UINT32 
    DbgPrintf(4, _T("Starting instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 
    // Check if DataCollectionTarget is marked as unreachable
-   if (!(m_state & NSF_UNREACHABLE))
+   if (!(m_state & DCSF_UNREACHABLE))
    {
       poller->setStatus(_T("instance discovery"));
       doInstanceDiscovery(requestId);

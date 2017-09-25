@@ -1841,7 +1841,7 @@ public:
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
 
-   bool isDown() { return (m_state & NSF_UNREACHABLE) ? true : false; }
+   bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }

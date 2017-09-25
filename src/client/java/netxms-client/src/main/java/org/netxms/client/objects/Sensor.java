@@ -40,10 +40,10 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    /**
     * Sensor flags
     */
-   public final static int SENSOR_PROVISIONED         = 0x00000001;
-   public final static int SENSOR_REGISTERED          = 0x00000002;
-   public final static int SENSOR_ACTIVE              = 0x00000004;
-   public final static int SENSOR_CONF_UPDATE_PENDING = 0x00000008;
+   public final static int SENSOR_PROVISIONED         = 0x00010000;
+   public final static int SENSOR_REGISTERED          = 0x00020000;
+   public final static int SENSOR_ACTIVE              = 0x00040000;
+   public final static int SENSOR_CONF_UPDATE_PENDING = 0x00080000;
    
    /**
     * Sensor communication protocol type

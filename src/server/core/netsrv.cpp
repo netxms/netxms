@@ -380,7 +380,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
    }
 
 	// Reset status to unknown if node has known network connectivity problems
-	if ((newStatus == STATUS_CRITICAL) && (pNode->getState() & NSF_NETWORK_PATH_PROBLEM))
+	if ((newStatus == STATUS_CRITICAL) && (pNode->getState() & DCSF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
 		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->getName(), m_name);
