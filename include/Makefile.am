@@ -52,6 +52,7 @@ include_HEADERS = \
 	nxtools.h \
 	nxtux.h \
 	rwlock.h \
+	socket_listener.h \
 	strophe.h \
 	unicode.h \
 	uthash.h \

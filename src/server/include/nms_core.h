@@ -332,7 +332,7 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
 	MUTEX m_mutexSocketWrite;
-	struct sockaddr *m_clientAddr;
+	InetAddress m_clientAddr;
 	TCHAR m_szHostName[256]; // IP address of name of conneced host in textual form
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
@@ -360,7 +360,7 @@ private:
    void pushData(NXCPMessage *request);
 
 public:
-   MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);
+   MobileDeviceSession(SOCKET hSocket, const InetAddress& addr);
    ~MobileDeviceSession();
 
    void run();
@@ -432,7 +432,7 @@ private:
    MUTEX m_mutexSendActions;
 	MUTEX m_mutexSendAuditLog;
    MUTEX m_mutexPollerInit;
-	struct sockaddr *m_clientAddr;
+	InetAddress m_clientAddr;
 	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
    TCHAR m_loginName[MAX_USER_NAME];
@@ -750,7 +750,7 @@ private:
    void sendObjectUpdate(NetObj *object);
 
 public:
-   ClientSession(SOCKET hSocket, struct sockaddr *addr);
+   ClientSession(SOCKET hSocket, const InetAddress& addr);
    ~ClientSession();
 
    void incRefCount() { InterlockedIncrement(&m_refCount); }

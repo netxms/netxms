@@ -82,7 +82,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::processingThreadStarter(void *pAr
 /**
  * Mobile device session class constructor
  */
-MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr)
+MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -94,13 +94,8 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr)
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
 	m_mutexSocketWrite = MutexCreate();
-	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
-	if (addr->sa_family == AF_INET)
-		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_szHostName);
-#ifdef WITH_IPV6
-	else
-		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_szHostName);
-#endif
+	m_clientAddr = addr;
+	m_clientAddr.toString(m_szHostName);
    _tcscpy(m_szUserName, _T("<not logged in>"));
 	_tcscpy(m_szClientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
@@ -122,8 +117,7 @@ MobileDeviceSession::~MobileDeviceSession()
       closesocket(m_hSocket);
    delete m_pSendQueue;
    delete m_pMessageQueue;
-   safe_free(m_pMsgBuffer);
-	safe_free(m_clientAddr);
+   free(m_pMsgBuffer);
 	MutexDestroy(m_mutexSocketWrite);
 	if (m_pCtx != NULL)
 		m_pCtx->decRefCount();

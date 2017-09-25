@@ -214,7 +214,7 @@ THREAD_RESULT THREAD_CALL ClientSession::processingThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
    m_sendQueue = new Queue;
    m_requestQueue = new Queue;
@@ -234,13 +234,8 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_subscriptions = new StringObjectMap<UINT32>(true);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
-	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
-	if (addr->sa_family == AF_INET)
-		IpToStr(ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr), m_workstation);
-#ifdef WITH_IPV6
-	else
-		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_workstation);
-#endif
+	m_clientAddr = addr;
+	m_clientAddr.toString(m_workstation);
    m_webServerAddress[0] = 0;
    m_loginName[0] = 0;
    _tcscpy(m_sessionName, _T("<not logged in>"));
@@ -274,7 +269,6 @@ ClientSession::~ClientSession()
       closesocket(m_hSocket);
    delete m_sendQueue;
    delete m_requestQueue;
-	free(m_clientAddr);
 	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
@@ -6324,14 +6318,13 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 	}
    else   // Client is the source
 	{
-      InetAddress addr = InetAddress::createFromSockaddr(m_clientAddr);
-      if (addr.isLoopback())
+      if (m_clientAddr.isLoopback())
       {
 			object = FindObjectById(g_dwMgmtNode);
       }
       else
       {
-			object = FindNodeByIP(0, addr);
+			object = FindNodeByIP(0, m_clientAddr);
       }
 	}
    if (object != NULL)
@@ -8950,7 +8943,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
    wMinor = pRequest->getFieldAsUInt16(VID_VERSION_MINOR);
    wRelease = pRequest->getFieldAsUInt16(VID_VERSION_RELEASE);
    DbgPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
-             SockaddrToStr(m_clientAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
+             m_clientAddr.toString(szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
@@ -8976,7 +8969,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             // $4 - minor version number
             // $5 - release number
             NXSL_Value *ppArgList[5];
-            ppArgList[0] = new NXSL_Value(SockaddrToStr(m_clientAddr, szBuffer));
+            ppArgList[0] = new NXSL_Value(m_clientAddr.toString(szBuffer));
             ppArgList[1] = new NXSL_Value(szPlatform);
             ppArgList[2] = new NXSL_Value((LONG)wMajor);
             ppArgList[3] = new NXSL_Value((LONG)wMinor);
@@ -8990,7 +8983,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
                if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
-                            dwCfgId, SockaddrToStr(m_clientAddr, szBuffer));
+                            dwCfgId, m_clientAddr.toString(szBuffer));
                   msg.setField(VID_RCC, (WORD)0);
                   pszText = DBGetField(hResult, i, 1, NULL, 0);
                   DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszText);
@@ -9002,7 +8995,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
                else
                {
                   DbgPrintf(3, _T("Configuration script %d not matched for agent %s"),
-                            dwCfgId, SockaddrToStr(m_clientAddr, szBuffer));
+                            dwCfgId, m_clientAddr.toString(szBuffer));
                }
             }
             else
@@ -10336,31 +10329,22 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 
 	if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
 	{
-		if (m_clientAddr->sa_family == AF_INET)
-		{
-			node = FindNodeByIP(0, ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr));
-			if (node != NULL)
-			{
-				// Node already exist, force configuration poll
-				node->setRecheckCapsFlag();
-				node->forceConfigurationPoll();
-			}
-			else
-			{
-				NEW_NODE *info;
-
-				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            info->ipAddr = InetAddress::createFromSockaddr(m_clientAddr);
-				info->zoneUIN = 0;	// Add to default zone
-				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-				g_nodePollerQueue.put(info);
-			}
-			msg.setField(VID_RCC, RCC_SUCCESS);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
-		}
+      node = FindNodeByIP(0, m_clientAddr);
+      if (node != NULL)
+      {
+         // Node already exist, force configuration poll
+         node->setRecheckCapsFlag();
+         node->forceConfigurationPoll();
+      }
+      else
+      {
+         NEW_NODE *info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+         info->ipAddr = m_clientAddr;
+         info->zoneUIN = 0;	// Add to default zone
+         info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+         g_nodePollerQueue.put(info);
+      }
+      msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{

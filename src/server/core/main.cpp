@@ -104,10 +104,8 @@ THREAD_RESULT THREAD_CALL NodePoller(void *);
 THREAD_RESULT THREAD_CALL PollManager(void *);
 THREAD_RESULT THREAD_CALL EventProcessor(void *);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *);
-THREAD_RESULT THREAD_CALL ClientListener(void *);
-THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *);
-THREAD_RESULT THREAD_CALL MobileDeviceListener(void *);
-THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *);
+THREAD_RESULT THREAD_CALL ClientListenerThread(void *);
+THREAD_RESULT THREAD_CALL MobileDeviceListenerThread(void *);
 THREAD_RESULT THREAD_CALL ISCListener(void *);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
@@ -991,17 +989,11 @@ retry_db_lock:
       RemoveScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
 	// Allow clients to connect
-	ThreadCreate(ClientListener, 0, NULL);
-#ifdef WITH_IPV6
-	ThreadCreate(ClientListenerIPv6, 0, NULL);
-#endif
+	ThreadCreate(ClientListenerThread, 0, NULL);
 
 	// Allow mobile devices to connect
 	InitMobileDeviceListeners();
-	ThreadCreate(MobileDeviceListener, 0, NULL);
-#ifdef WITH_IPV6
-	ThreadCreate(MobileDeviceListenerIPv6, 0, NULL);
-#endif
+	ThreadCreate(MobileDeviceListenerThread, 0, NULL);
 
 	// Agent tunnels
    s_tunnelListenerThread = ThreadCreateEx(TunnelListener, 0, NULL);
