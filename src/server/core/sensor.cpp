@@ -259,11 +259,11 @@ bool Sensor::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save to database Sensor class
  */
-BOOL Sensor::saveToDatabase(DB_HANDLE hdb)
+bool Sensor::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
-   BOOL success = saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
    if(success)
    {
@@ -300,7 +300,7 @@ BOOL Sensor::saveToDatabase(DB_HANDLE hdb)
       }
       else
       {
-         success = FALSE;
+         success = false;
       }
 	}
 
@@ -314,7 +314,7 @@ BOOL Sensor::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save access list
-   if(success)
+   if (success)
       saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object

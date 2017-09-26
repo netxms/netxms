@@ -43,7 +43,7 @@ BusinessServiceRoot::~BusinessServiceRoot()
 /**
  * Save object to database
  */
-BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
+bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
 
@@ -68,7 +68,7 @@ BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
    // Unlock object and clear modification flag
    unlockProperties();
    m_isModified = false;
-   return TRUE;
+   return true;
 }
 
 /**

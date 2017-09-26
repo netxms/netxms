@@ -209,7 +209,7 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save service check to database
  */
-BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
+bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
 {
 	bool ret = false;
 

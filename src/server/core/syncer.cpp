@@ -53,7 +53,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
 /**
  * Save objects to database
  */
-void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId)
+void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 {
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
@@ -101,6 +101,10 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId)
 				DBRollback(hdb);
 			}
 		}
+		else if (saveRuntimeData)
+		{
+         object->saveRuntimeData(hdb);
+		}
    }
 
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
@@ -129,7 +133,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         SaveObjects(hdb, watchdogId);
+         SaveObjects(hdb, watchdogId, false);
          SaveUsers(hdb, watchdogId);
          UpdatePStorageDatabase(hdb, watchdogId);
          DBConnectionPoolReleaseConnection(hdb);

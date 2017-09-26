@@ -95,13 +95,13 @@ bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save service to database
  */
-BOOL BusinessService::saveToDatabase(DB_HANDLE hdb)
+bool BusinessService::saveToDatabase(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
 	lockProperties();
 
@@ -119,7 +119,7 @@ BOOL BusinessService::saveToDatabase(DB_HANDLE hdb)
 	if (hStmt == NULL)
 	{
 		unlockProperties();
-		return FALSE;
+		return false;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	unlockProperties();
@@ -127,7 +127,7 @@ BOOL BusinessService::saveToDatabase(DB_HANDLE hdb)
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
-		return FALSE;
+		return false;
 	}
 
 	DBFreeStatement(hStmt);

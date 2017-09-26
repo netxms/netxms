@@ -233,7 +233,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Save to database
  */
-BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
+bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[1024];
 
@@ -342,11 +342,11 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
    }
 
 	unlockProperties();
-	return TRUE;
+	return true;
 
 fail:
 	unlockProperties();
-	return FALSE;
+	return false;
 }
 
 /**

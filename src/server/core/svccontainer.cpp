@@ -75,7 +75,7 @@ bool ServiceContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save object to database
  */
-BOOL ServiceContainer::saveToDatabase(DB_HANDLE hdb)
+bool ServiceContainer::saveToDatabase(DB_HANDLE hdb)
 {
 	return Container::saveToDatabase(hdb);
 }

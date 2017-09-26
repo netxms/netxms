@@ -41,7 +41,7 @@ Network::~Network()
 /**
  * Save object to database
  */
-BOOL Network::saveToDatabase(DB_HANDLE hdb)
+bool Network::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
@@ -51,7 +51,7 @@ BOOL Network::saveToDatabase(DB_HANDLE hdb)
    // Unlock object and clear modification flag
    m_isModified = false;
    unlockProperties();
-   return TRUE;
+   return true;
 }
 
 /**

@@ -110,7 +110,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Zone::saveToDatabase(DB_HANDLE hdb)
+bool Zone::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 

@@ -266,7 +266,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Template::saveToDatabase(DB_HANDLE hdb)
+bool Template::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 

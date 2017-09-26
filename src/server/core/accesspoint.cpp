@@ -132,14 +132,14 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL AccessPoint::saveToDatabase(DB_HANDLE hdb)
+bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
 
    saveCommonProperties(hdb);
 
-   BOOL bResult;
+   bool bResult;
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_id))
 		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=?,ap_index=? WHERE id=?"));
@@ -163,7 +163,7 @@ BOOL AccessPoint::saveToDatabase(DB_HANDLE hdb)
 	}
 	else
 	{
-		bResult = FALSE;
+		bResult = false;
 	}
 
    // Save data collection items

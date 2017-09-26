@@ -89,7 +89,7 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save subnet object to database
  */
-BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
+bool Subnet::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[64];
 
@@ -127,7 +127,7 @@ BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
    m_isModified = false;
    unlockProperties();
 
-   return TRUE;
+   return true;
 }
 
 /**

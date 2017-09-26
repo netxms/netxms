@@ -321,7 +321,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save interface object to database
  */
-BOOL Interface::saveToDatabase(DB_HANDLE hdb)
+bool Interface::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szMacStr[16];
    UINT32 dwNodeId;
@@ -331,7 +331,7 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
    if (!saveCommonProperties(hdb))
 	{
 		unlockProperties();
-		return FALSE;
+		return false;
 	}
 
    // Determine owning node's ID
@@ -399,13 +399,13 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
    }
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
-	BOOL success = DBExecute(hStmt);
+	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
    // Save IP addresses
    if (success)
    {
-      success = FALSE;
+      success = false;
 
 		hStmt = DBPrepare(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
       if (hStmt != NULL)
@@ -435,7 +435,7 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
       }
       else
       {
-         success = FALSE;
+         success = false;
       }
    }
 
