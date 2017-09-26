@@ -184,6 +184,7 @@ UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 15000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
 UINT32 g_zoneUIN = 0;
+UINT32 g_tunnelKeepaliveInterval = 30;
 UINT16 g_syslogListenPort = 514;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
@@ -308,6 +309,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, NULL },
    { _T("SystemName"), CT_STRING, 0, 0, MAX_OBJECT_NAME, 0, g_systemName, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
+   { _T("TunnelKeepaliveInterval"), CT_LONG, 0, 0, 0, 0, &g_tunnelKeepaliveInterval, NULL },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, NULL },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, NULL }, // for backward compatibility
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, NULL },
