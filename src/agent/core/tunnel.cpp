@@ -1264,6 +1264,7 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
       return THREAD_OK;
    }
 
+   g_tunnelKeepaliveInterval *= 1000;  // convert to milliseconds
    nxlog_debug(3, _T("Tunnel manager started"));
    do
    {
@@ -1273,7 +1274,7 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
          t->checkConnection();
       }
    }
-   while(!AgentSleepAndCheckForShutdown(30000));
+   while(!AgentSleepAndCheckForShutdown(g_tunnelKeepaliveInterval));
    nxlog_debug(3, _T("Tunnel manager stopped"));
    return THREAD_OK;
 }
