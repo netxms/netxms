@@ -1607,7 +1607,7 @@ else
 	AC_CHECK_HEADERS([pthread_np.h],,,[
 #include <pthread.h>
 	])
-	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
+	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np])
 
 	# Check for recursive mutexes
 	AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
