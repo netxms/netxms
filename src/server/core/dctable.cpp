@@ -271,24 +271,6 @@ DCTable::~DCTable()
 }
 
 /**
- * Clean expired data
- */
-void DCTable::deleteExpiredData()
-{
-   TCHAR query[256];
-   time_t now;
-
-   now = time(NULL);
-
-   lock();
-   _sntprintf(query, 256, _T("DELETE FROM tdata_%d WHERE (item_id=%d) AND (tdata_timestamp<%ld)"),
-              (int)m_owner->getId(), (int)m_id, (long)(now - (time_t)m_iRetentionTime * 86400));
-   unlock();
-
-   QueueSQLRequest(query);
-}
-
-/**
  * Delete all collected data
  */
 bool DCTable::deleteAllData()

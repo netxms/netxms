@@ -386,13 +386,6 @@ bool DCObject::deleteAllData()
 }
 
 /**
- * Clean expired data
- */
-void DCObject::deleteExpiredData()
-{
-}
-
-/**
  * Add schedule
  */
 void DCObject::addSchedule(const TCHAR *pszSchedule)

@@ -371,13 +371,13 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 {
 	lockProperties();
 
-	safe_free(m_vendor);
+	free(m_vendor);
 	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
 
-	safe_free(m_model);
+	free(m_model);
 	m_model = (model != NULL) ? _tcsdup(model) : NULL;
 
-	safe_free(m_serialNumber);
+	free(m_serialNumber);
 	m_serialNumber = (serialNumber != NULL) ? _tcsdup(serialNumber) : NULL;
 
 	setModified();
