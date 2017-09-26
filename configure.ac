@@ -444,19 +444,19 @@ AC_ARG_WITH(mariadb,
 [AS_HELP_STRING(--with-mariadb,build MariaDB database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib"; then
+		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib" "${withval}/lib/mysql"; then
 			MARIADB_LD_RUN_PATH="$__dir$"    
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include"; then
+		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include" "${withval}/include/mysql"; then
 			MARIADB_CPPFLAGS="-I$__dir"
 		fi
 	else
-		if find_existing_dir "/usr/local/mariadb/lib"; then
+		if find_existing_dir "/usr/local/mariadb/lib" "/usr/local/lib/mysql"; then
 			MARIADB_LD_RUN_PATH="$__dir$"    
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb"; then
+		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb" "/usr/local/include/mysql"; then
 			MARIADB_CPPFLAGS="-I$__dir"
 		fi
 	fi
