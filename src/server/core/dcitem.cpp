@@ -538,7 +538,7 @@ void DCItem::deleteFromDatabase()
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
-   if(m_owner->getObjectClass() != OBJECT_TEMPLATE)
+   if (m_owner->isDataCollectionTarget())
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_owner->getId(), m_id);
       QueueSQLRequest(szQuery);
@@ -1371,22 +1371,6 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 
 	DBConnectionPoolReleaseConnection(hdb);
    return result;
-}
-
-/**
- * Clean expired data
- */
-void DCItem::deleteExpiredData()
-{
-   TCHAR szQuery[256];
-   time_t now;
-
-   now = time(NULL);
-   lock();
-   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE (item_id=%d) AND (idata_timestamp<%ld)"),
-              (int)m_owner->getId(), (int)m_id, (long)(now - (time_t)m_iRetentionTime * 86400));
-   unlock();
-   QueueSQLRequest(szQuery);
 }
 
 /**

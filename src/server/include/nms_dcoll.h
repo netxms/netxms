@@ -300,7 +300,6 @@ public:
 
    virtual void changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExpansion);
 
-	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
    virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
@@ -416,7 +415,6 @@ public:
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
-   virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
@@ -629,7 +627,6 @@ public:
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
-	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
