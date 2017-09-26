@@ -698,8 +698,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 			   ((char *)b.buffer)[l] = 0;
             if (utf8)
             {
-			      strncpy((char *)pBuffer, (char *)b.buffer, nBufSize);
-   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+			      strlcpy((char *)pBuffer, (char *)b.buffer, nBufSize);
             }
             else
             {
@@ -731,8 +730,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 			{
             if (utf8)
             {
-   				strncpy((char *)pBuffer, row[iColumn], nBufSize);
-   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+   				strlcpy((char *)pBuffer, row[iColumn], nBufSize);
             }
             else
             {
@@ -1064,8 +1062,7 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
             ((char *)b.buffer)[l] = 0;
             if (utf8)
             {
-               strncpy((char *)pBuffer, (char *)b.buffer, iBufSize);
-               ((char *)pBuffer)[iBufSize - 1] = 0;
+               strlcpy((char *)pBuffer, (char *)b.buffer, iBufSize);
             }
             else
             {

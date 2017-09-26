@@ -60,11 +60,6 @@ DataCollectionTarget::~DataCollectionTarget()
    delete m_deletedItems;
    delete m_deletedTables;
    MutexDestroy(m_hPollerMutex);
-   m_pingLastTimeStamp = 0;
-   m_pingTime = PING_TIME_TIMEOUT;
-   m_lastConfigurationPoll = 0;
-   m_lastStatusPoll = 0;
-   m_lastInstancePoll = 0;
 }
 
 /**
