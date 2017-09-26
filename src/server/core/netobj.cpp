@@ -152,16 +152,6 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Save runtime data to database. Called only on server shutdown to save
- * less important but frequently changing runtime data when it is not feasible
- * to mark object as modified on each change of such data.
- */
-bool NetObj::saveRuntimeData(DB_HANDLE hdb)
-{
-   return true;   // Report success by default
-}
-
-/**
  * Parameters for DeleteModuleDataCallback and SaveModuleDataCallback
  */
 struct ModuleDataDatabaseCallbackParams
@@ -169,6 +159,35 @@ struct ModuleDataDatabaseCallbackParams
    UINT32 id;
    DB_HANDLE hdb;
 };
+
+/**
+ * Callback for deleting module data from database
+ */
+static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key, const void *value, void *data)
+{
+   return ((ModuleData *)value)->saveRuntimeData(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
+}
+
+/**
+ * Save runtime data to database. Called only on server shutdown to save
+ * less important but frequently changing runtime data when it is not feasible
+ * to mark object as modified on each change of such data.
+ */
+bool NetObj::saveRuntimeData(DB_HANDLE hdb)
+{
+   bool success = true;
+
+   // Delete module data
+   if (m_moduleData != NULL)
+   {
+      ModuleDataDatabaseCallbackParams data;
+      data.id = m_id;
+      data.hdb = hdb;
+      success = (m_moduleData->forEach(SaveModuleRuntimeDataCallback, &data) == _CONTINUE);
+   }
+
+   return success;
+}
 
 /**
  * Callback for deleting module data from database

@@ -58,6 +58,7 @@ public:
 
    virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
    virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
+   virtual bool saveRuntimeData(DB_HANDLE hdb, UINT32 objectId);
    virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
 };
 

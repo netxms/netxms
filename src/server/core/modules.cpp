@@ -191,6 +191,14 @@ bool ModuleData::saveToDatabase(DB_HANDLE hdb, UINT32 objectId)
 }
 
 /**
+ * Save runtime data to database (called only on server shutdown).
+ */
+bool ModuleData::saveRuntimeData(DB_HANDLE hdb, UINT32 objectId)
+{
+   return true;
+}
+
+/**
  * Delete module data from database.
  */
 bool ModuleData::deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId)
