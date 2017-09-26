@@ -1067,6 +1067,8 @@ struct ProxyInfo
 class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 {
 protected:
+   IntegerArray<UINT32> *m_deletedItems;
+   IntegerArray<UINT32> *m_deletedTables;
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
 
@@ -1126,6 +1128,8 @@ public:
    void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling(Queue *pollerQueue);
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
+	void scheduleItemDataCleanup(UINT32 dciId);
+   void scheduleTableDataCleanup(UINT32 dciId);
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);

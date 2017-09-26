@@ -651,16 +651,9 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
  */
 void DCTable::deleteFromDatabase()
 {
-   TCHAR szQuery[256];
-
 	DCObject::deleteFromDatabase();
 
-   if(m_owner->getObjectClass() != OBJECT_TEMPLATE)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_owner->getId(), (int)m_id);
-      QueueSQLRequest(szQuery);
-   }
-
+   TCHAR szQuery[256];
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_id);
@@ -674,6 +667,9 @@ void DCTable::deleteFromDatabase()
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
+
+   if (m_owner->isDataCollectionTarget())
+      static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
 }
 
 /**

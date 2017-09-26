@@ -538,13 +538,11 @@ void DCItem::deleteFromDatabase()
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
-   if (m_owner->isDataCollectionTarget())
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_owner->getId(), m_id);
-      QueueSQLRequest(szQuery);
-   }
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
+
+   if (m_owner->isDataCollectionTarget())
+      static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
 }
 
 /**
