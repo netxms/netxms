@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
  */
 DataCollectionTarget::DataCollectionTarget() : Template()
 {
+   m_deletedItems = new IntegerArray<UINT32>(32, 32);
+   m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
@@ -40,6 +42,8 @@ DataCollectionTarget::DataCollectionTarget() : Template()
  */
 DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
 {
+   m_deletedItems = new IntegerArray<UINT32>(32, 32);
+   m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
@@ -53,6 +57,8 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
  */
 DataCollectionTarget::~DataCollectionTarget()
 {
+   delete m_deletedItems;
+   delete m_deletedTables;
    MutexDestroy(m_hPollerMutex);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
@@ -196,17 +202,59 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
    }
    unlockDciAccess();
 
+   lockProperties();
+   for(int i = 0; i < m_deletedItems->size(); i++)
+   {
+      if (itemCount > 0)
+         queryItems.append(_T(" OR "));
+      queryItems.append(_T("item_id="));
+      queryItems.append(m_deletedItems->get(i));
+      itemCount++;
+   }
+   m_deletedItems->clear();
+
+   for(int i = 0; i < m_deletedTables->size(); i++)
+   {
+      if (tableCount > 0)
+         queryTables.append(_T(" OR "));
+      queryTables.append(_T("item_id="));
+      queryTables.append(m_deletedItems->get(i));
+      tableCount++;
+   }
+   m_deletedTables->clear();
+   unlockProperties();
+
    if (itemCount > 0)
    {
-      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
+      nxlog_debug(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
       DBQuery(hdb, queryItems);
    }
 
    if (tableCount > 0)
    {
-      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
+      nxlog_debug(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
       DBQuery(hdb, queryTables);
    }
+}
+
+/**
+ * Schedule cleanup of DCI data after DCI deletion
+ */
+void DataCollectionTarget::scheduleItemDataCleanup(UINT32 dciId)
+{
+   lockProperties();
+   m_deletedItems->add(dciId);
+   unlockProperties();
+}
+
+/**
+ * Schedule cleanup of table DCI data after DCI deletion
+ */
+void DataCollectionTarget::scheduleTableDataCleanup(UINT32 dciId)
+{
+   lockProperties();
+   m_deletedTables->add(dciId);
+   unlockProperties();
 }
 
 /**
@@ -243,7 +291,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
    lockDciAccess(true);	// write lock
 
-   DbgPrintf(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_name);
+   nxlog_debug(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_name);
 
    // Check if that template item exists
 	int i;
