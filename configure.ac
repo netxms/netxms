@@ -432,7 +432,7 @@ AC_ARG_WITH(mysql,
 			MYSQL_LD_RUN_PATH="$__dir$"    
 			MYSQL_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql" "/usr/include/mariadb"; then
+		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql"; then
 			MYSQL_CPPFLAGS="-I$__dir"
 		fi
 	fi
