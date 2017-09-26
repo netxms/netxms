@@ -1077,7 +1077,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	}
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	SaveObjects(hdb, INVALID_INDEX);
+	SaveObjects(hdb, INVALID_INDEX, true);
 	nxlog_debug(2, _T("All objects saved to database"));
 	SaveUsers(hdb, INVALID_INDEX);
 	nxlog_debug(2, _T("All users saved to database"));
@@ -1136,7 +1136,7 @@ void NXCORE_EXPORTABLE FastShutdown()
 	ConditionSet(m_condShutdown);
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	SaveObjects(hdb, INVALID_INDEX);
+	SaveObjects(hdb, INVALID_INDEX, true);
 	DbgPrintf(2, _T("All objects saved to database"));
 	SaveUsers(hdb, INVALID_INDEX);
 	DbgPrintf(2, _T("All users saved to database"));

@@ -51,15 +51,14 @@ AgentPolicyConfig::~AgentPolicyConfig()
 	safe_free(m_fileContent);
 }
 
-
 /**
  * Save to database
  */
-BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
+bool AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
 
-	BOOL success = savePolicyCommonProperties(hdb);
+	bool success = savePolicyCommonProperties(hdb);
 	if (success)
 	{
 		String data = DBPrepareString(hdb, m_fileContent);
@@ -70,7 +69,7 @@ BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
-			BOOL isNew = (DBGetNumRows(hResult) == 0);
+			bool isNew = (DBGetNumRows(hResult) == 0);
 			DBFreeResult(hResult);
 
 			if (isNew)

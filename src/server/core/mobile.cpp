@@ -109,14 +109,14 @@ bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL MobileDevice::saveToDatabase(DB_HANDLE hdb)
+bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
 
    saveCommonProperties(hdb);
 
-   BOOL bResult;
+   bool bResult;
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
 		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
@@ -140,7 +140,7 @@ BOOL MobileDevice::saveToDatabase(DB_HANDLE hdb)
 	}
 	else
 	{
-		bResult = FALSE;
+		bResult = false;
 	}
 
    // Save data collection items

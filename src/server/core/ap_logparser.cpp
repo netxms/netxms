@@ -54,11 +54,11 @@ AgentPolicyLogParser::~AgentPolicyLogParser()
 /**
  * Save to database
  */
-BOOL AgentPolicyLogParser::saveToDatabase(DB_HANDLE hdb)
+bool AgentPolicyLogParser::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
 
-	BOOL success = savePolicyCommonProperties(hdb);
+	bool success = savePolicyCommonProperties(hdb);
 	if (success)
 	{
 		String data = DBPrepareString(hdb, m_fileContent);
@@ -69,7 +69,7 @@ BOOL AgentPolicyLogParser::saveToDatabase(DB_HANDLE hdb)
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
-			BOOL isNew = (DBGetNumRows(hResult) == 0);
+			bool isNew = (DBGetNumRows(hResult) == 0);
 			DBFreeResult(hResult);
 
 			if (isNew)

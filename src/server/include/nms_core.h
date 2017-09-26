@@ -1026,7 +1026,7 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 void ConsoleWrite(CONSOLE_CTX pCtx, const TCHAR *text);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
-void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId);
+void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);
 void NXCORE_EXPORTABLE ObjectTransactionStart();
 void NXCORE_EXPORTABLE ObjectTransactionEnd();
 

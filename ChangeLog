@@ -6,6 +6,7 @@
 - Multi-valued columns in summary tables
 - Threshold violation events have current DCI value as parameter 8 (named as "dciValue")
 - New agent configuration parameter TunnelKeepaliveInterval
+- Optimizations in database access layer
 - Fixed issues: NX-1265, NX-1282, NX-1296, NX-1300, NX-1309, NX-1314, NX-1315
 
 

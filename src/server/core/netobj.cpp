@@ -143,9 +143,19 @@ void NetObj::linkObjects()
 /**
  * Save object to database
  */
-BOOL NetObj::saveToDatabase(DB_HANDLE hdb)
+bool NetObj::saveToDatabase(DB_HANDLE hdb)
 {
-   return FALSE;     // Abstract objects cannot be saved to database
+   return false;     // Abstract objects cannot be saved to database
+}
+
+/**
+ * Save runtime data to database. Called only on server shutdown to save
+ * less important but frequently changing runtime data when it is not feasible
+ * to mark object as modified on each change of such data.
+ */
+bool NetObj::saveRuntimeData(DB_HANDLE hdb)
+{
+   return true;   // Report success by default
 }
 
 /**

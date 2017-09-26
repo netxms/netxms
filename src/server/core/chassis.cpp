@@ -189,7 +189,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
 /**
  * Save to database
  */
-BOOL Chassis::saveToDatabase(DB_HANDLE hdb)
+bool Chassis::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
    bool success = saveCommonProperties(hdb);

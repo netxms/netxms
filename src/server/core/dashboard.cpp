@@ -107,7 +107,7 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Dashboard::saveToDatabase(DB_HANDLE hdb)
+bool Dashboard::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
 
@@ -163,7 +163,7 @@ fail:
    if (hStmt != NULL)
       DBFreeStatement(hStmt);
 	unlockProperties();
-	return FALSE;
+	return false;
 }
 
 /**

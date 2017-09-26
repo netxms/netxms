@@ -155,7 +155,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL ConditionObject::saveToDatabase(DB_HANDLE hdb)
+bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR *pszEscScript, *pszQuery;
    DB_RESULT hResult;
@@ -221,7 +221,7 @@ BOOL ConditionObject::saveToDatabase(DB_HANDLE hdb)
    // Unlock object and clear modification flag
    m_isModified = false;
    unlockProperties();
-   return TRUE;
+   return true;
 }
 
 /**

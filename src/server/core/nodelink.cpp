@@ -99,7 +99,7 @@ bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save nodelink to database
  */
-BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
+bool NodeLink::saveToDatabase(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
@@ -107,7 +107,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from node_links"));
-		return FALSE;
+		return false;
 	}
 
 	lockProperties();
@@ -126,7 +126,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 	if (hStmt == NULL)
 	{
 		unlockProperties();
-		return FALSE;
+		return false;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
@@ -134,7 +134,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
-		return FALSE;
+		return false;
 	}
 	DBFreeStatement(hStmt);
 

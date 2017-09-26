@@ -198,7 +198,7 @@ bool Cluster::showThresholdSummary()
 /**
  * Save object to database
  */
-BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
+bool Cluster::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
    bool success = saveCommonProperties(hdb);

@@ -75,7 +75,7 @@ NetworkService::~NetworkService()
 /**
  * Save object to database
  */
-BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
+bool NetworkService::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
@@ -124,7 +124,7 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
    // Unlock object and clear modification flag
    m_isModified = false;
    unlockProperties();
-   return TRUE;
+   return true;
 }
 
 /**

@@ -131,7 +131,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  *
  * @param hdb database connection handle
  */
-BOOL Container::saveToDatabase(DB_HANDLE hdb)
+bool Container::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
@@ -157,7 +157,7 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
-	BOOL success = DBExecute(hStmt);
+	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
 	if (success)

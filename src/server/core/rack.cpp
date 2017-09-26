@@ -80,10 +80,10 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 /**
  * Save object to database
  */
-BOOL Rack::saveToDatabase(DB_HANDLE hdb)
+bool Rack::saveToDatabase(DB_HANDLE hdb)
 {
 	if (!Container::saveToDatabase(hdb))
-		return FALSE;
+		return false;
 
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
@@ -95,7 +95,7 @@ BOOL Rack::saveToDatabase(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,id) VALUES (?,?,?)"));
 	}
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);

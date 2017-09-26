@@ -113,11 +113,11 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 /**
  * Save to database
  */
-BOOL AgentPolicy::saveToDatabase(DB_HANDLE hdb)
+bool AgentPolicy::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
 
-	BOOL success = savePolicyCommonProperties(hdb);
+	bool success = savePolicyCommonProperties(hdb);
 
 	// Clear modifications flag and unlock object
 	if (success)

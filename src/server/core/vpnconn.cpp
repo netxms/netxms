@@ -128,7 +128,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save VPN connector object to database
  */
-BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
+bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
@@ -179,7 +179,7 @@ BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
    m_isModified = false;
    unlockProperties();
 
-   return TRUE;
+   return true;
 }
 
 /**

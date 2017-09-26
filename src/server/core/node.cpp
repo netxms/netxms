@@ -488,7 +488,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Node::saveToDatabase(DB_HANDLE hdb)
+bool Node::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
@@ -496,7 +496,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    if (!saveCommonProperties(hdb))
    {
       unlockProperties();
-      return FALSE;
+      return false;
    }
 
    // Form and execute INSERT or UPDATE query
@@ -530,7 +530,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    if (hStmt == NULL)
    {
       unlockProperties();
-      return FALSE;
+      return false;
    }
 
    TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16];
@@ -599,7 +599,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
    DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL bResult = DBExecute(hStmt);
+   bool bResult = DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
    // Save access list
@@ -622,6 +622,32 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    unlockProperties();
 
    return bResult;
+}
+
+/**
+ * Save runtime data to database. Called only on server shutdown to save
+ * less important but frequently changing runtime data when it is not feasible
+ * to mark object as modified on each change of such data.
+ */
+bool Node::saveRuntimeData(DB_HANDLE hdb)
+{
+   if (!DataCollectionTarget::saveRuntimeData(hdb))
+      return false;
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   lockProperties();
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_lastAgentCommTime);
+   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
+   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+   unlockProperties();
+
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+   return success;
 }
 
 /**
@@ -8016,7 +8042,6 @@ void Node::incSyslogMessageCount()
 {
    lockProperties();
    m_syslogMessageCount++;
-   setModified(false);
    unlockProperties();
 }
 
@@ -8027,7 +8052,6 @@ void Node::incSnmpTrapCount()
 {
    lockProperties();
    m_snmpTrapCount++;
-   setModified(false);
    unlockProperties();
 }
 

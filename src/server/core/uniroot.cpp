@@ -72,7 +72,7 @@ void UniversalRoot::linkObjects()
 /**
  * Save object to database
  */
-BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
+bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
 
@@ -97,7 +97,7 @@ BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
    // Unlock object and clear modification flag
    unlockProperties();
    m_isModified = false;
-   return TRUE;
+   return true;
 }
 
 /**
