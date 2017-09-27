@@ -241,7 +241,7 @@ static void CheckZones()
    DWORD i, dwNumObjects, dwId;
    TCHAR szQuery[1024];
 
-   StartStage(_T("Checking zone objects..."));
+   StartStage(_T("Checking zone objects"));
    hResult = SQLSelect(_T("SELECT id FROM zones"));
    if (hResult != NULL)
    {
@@ -296,7 +296,7 @@ static void CheckNodes()
    TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
    BOOL bResult, bIsDeleted = FALSE;
 
-   StartStage(_T("Checking node objects..."));
+   StartStage(_T("Checking node objects"));
    hResult = SQLSelect(_T("SELECT id,primary_ip FROM nodes"));
    if (hResult != NULL)
    {
@@ -385,7 +385,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    DWORD i, dwNumObjects, dwId;
    TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
 
-   _sntprintf(szQuery, 1024, _T("Checking %s objects..."), pszDisplayName);
+   _sntprintf(szQuery, 1024, _T("Checking %s objects"), pszDisplayName);
    StartStage(szQuery);
 
    _sntprintf(szQuery, 1024, _T("SELECT id,node_id FROM %s"), pszTable);
@@ -475,7 +475,7 @@ static void CheckObjectProperties()
    TCHAR szQuery[1024];
    DWORD i, dwNumRows, dwObjectId;
 
-   StartStage(_T("Checking object properties..."));
+   StartStage(_T("Checking object properties"));
    hResult = SQLSelect(_T("SELECT object_id,name,last_modified FROM object_properties"));
    if (hResult != NULL)
    {
@@ -505,7 +505,7 @@ static void CheckObjectProperties()
 
 static void CheckContainerMembership()
 {
-   StartStage(_T("Checking container membership..."));
+   StartStage(_T("Checking container membership"));
    DB_RESULT containerList = SQLSelect(_T("SELECT object_id,container_id FROM container_members"));
    DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
    if (containerList != NULL && objectList != NULL)
@@ -554,7 +554,7 @@ static void CheckClusters()
    TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
    DWORD i, dwNumRows, dwObjectId, dwId;
 
-   StartStage(_T("Checking cluster objects..."));
+   StartStage(_T("Checking cluster objects"));
    hResult = SQLSelect(_T("SELECT cluster_id,node_id FROM cluster_members"));
    if (hResult != NULL)
    {
@@ -609,7 +609,7 @@ static void CheckEPP()
    int i, iNumRows;
    DWORD dwId;
 
-   StartStage(_T("Checking event processing policy..."));
+   StartStage(_T("Checking event processing policy"));
 
    // Check source object ID's
    hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
@@ -835,7 +835,7 @@ static bool IsDciExists(UINT32 dciId, UINT32 nodeId, bool isTable)
  */
 static void CheckCollectedData(bool isTable)
 {
-   StartStage(isTable ? _T("Checking table DCI history records...") : _T("Checking DCI history records..."));
+   StartStage(isTable ? _T("Checking table DCI history records") : _T("Checking DCI history records"));
 
 	time_t now = time(NULL);
 	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
@@ -897,7 +897,7 @@ static void CheckCollectedData(bool isTable)
  */
 static void CheckRawDciValues()
 {
-   StartStage(_T("Checking raw DCI values table..."));
+   StartStage(_T("Checking raw DCI values table"));
 
    time_t now = time(NULL);
 
@@ -943,6 +943,84 @@ static void CheckRawDciValues()
       DBFreeResult(hResult);
    }
    UpdateStageProgress(1);
+
+   EndStage();
+}
+
+/**
+ * Check thresholds
+ */
+static void CheckThresholds()
+{
+   StartStage(_T("Checking DCI thresholds"));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT threshold_id,item_id FROM thresholds"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 dciId = DBGetFieldULong(hResult, i, 1);
+         if (!IsDciExists(dciId, 0, false))
+         {
+            m_iNumErrors++;
+            if (GetYesNo(_T("Found threshold configuration for non-existing DCI [%d]. Delete?"), dciId))
+            {
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("DELETE FROM thresholds WHERE threshold_id=%d AND item_id=%d"), DBGetFieldLong(hResult, i, 0), dciId);
+               if (SQLQuery(query))
+                  m_iNumFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
+ * Check thresholds
+ */
+static void CheckTableThresholds()
+{
+   StartStage(_T("Checking table DCI thresholds"));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,table_id FROM dct_thresholds"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 dciId = DBGetFieldULong(hResult, i, 1);
+         if (!IsDciExists(dciId, 0, true))
+         {
+            m_iNumErrors++;
+            if (GetYesNo(_T("Found threshold configuration for non-existing table DCI [%d]. Delete?"), dciId))
+            {
+               UINT32 id = DBGetFieldLong(hResult, i, 0);
+
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=%d"), id);
+               if (SQLQuery(query))
+               {
+                  _sntprintf(query, 256, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=%d"), id);
+                  if (SQLQuery(query))
+                  {
+                     _sntprintf(query, 256, _T("DELETE FROM dct_thresholds WHERE id=%d"), id);
+                     if (SQLQuery(query))
+                        m_iNumFixes++;
+                  }
+               }
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
 
    EndStage();
 }
@@ -1008,7 +1086,7 @@ static void CheckDataTablesForClass(const TCHAR *className, const TCHAR *classDe
  */
 static void CheckDataTables()
 {
-   StartStage(_T("Checking data tables..."));
+   StartStage(_T("Checking data tables"));
 
    CheckDataTablesForClass(_T("nodes"), _T("node"));
    CheckDataTablesForClass(_T("clusters"), _T("cluster"));
@@ -1029,7 +1107,7 @@ static void CheckTemplateNodeMapping()
    TCHAR name[256], query[256];
    DWORD i, dwNumRows, dwTemplateId, dwNodeId;
 
-   StartStage(_T("Checking template to node mapping..."));
+   StartStage(_T("Checking template to node mapping"));
    hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
    if (hResult != NULL)
    {
@@ -1067,7 +1145,7 @@ static void CheckTemplateNodeMapping()
  */
 static void CheckMapLinks()
 {
-   StartStage(_T("Checking network map links..."));
+   StartStage(_T("Checking network map links"));
 
    for(int pass = 1; pass <= 2; pass++)
    {
@@ -1197,6 +1275,8 @@ void CheckDatabase()
                CheckMapLinks();
                CheckDataTables();
                CheckRawDciValues();
+               CheckThresholds();
+               CheckTableThresholds();
 				   if (g_checkData)
 				   {
 					   CheckCollectedData(false);
