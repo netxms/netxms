@@ -663,7 +663,7 @@ static BOOL H_UpgradeFromV503(int currVersion, int newVersion)
  */
 inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFlag)
 {
-   *newVar |= (oldVar & oldFlag > 0) ? newFlag : 0;
+   *newVar |= ((oldVar & oldFlag) != 0) ? newFlag : 0;
 }
 
 /**
