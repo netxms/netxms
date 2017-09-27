@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2017 Raden Solutions
  *
  * This program is free software; you c1n redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,108 +18,112 @@
  */
 package org.netxms.ui.eclipse.tools;
 
-/**
- * Compares the natural order of strings
- *
- */
 public class NaturalOrderComparator
 {
    /**
-    * @param s1
-    * @param s2
-    * @return
+    * Return char at specific position
+    * 
+    * @param s String
+    * @param i position
+    * @return char at position
     */
-   static private int compareRight(String s1, String s2)
+   private static char charAt(String s, int i)
    {
-       int bias = 0;
-
-       for (int i = 0, n = 0;; i++, n++)
-       {
-           char c1 = charAt(s1, i);
-           char c2 = charAt(s2, n);
-
-           if (!Character.isDigit(c1) && !Character.isDigit(c2))
-               return bias;
-           else if (!Character.isDigit(c1))
-               return -1;
-           else if (!Character.isDigit(c2))
-               return +1;
-           else if (c1 < c2)
-               if (bias == 0)
-                   bias = -1;
-           else if (c1 > c2)
-               if (bias == 0)
-                   bias = +1;
-           else if (c1 == 0 && c2 == 0)
-               return bias;
-       }
+      return i >= s.length() ? 0 : s.charAt(i);
    }
 
    /**
-    * @param s1
-    * @param s2
-    * @return
+    * Check if char is digit or not
+    * 
+    * @param a String a
+    * @param b String b
+    * @return result
     */
-   public static int compare(String s1, String s2)
+   private static int compareRight(String a, String b)
    {
-       int i = 0, n = 0;
-       int nz1 = 0, nz2 = 0;
-       char c1, c2;
-       int result;
+      int bias = 0, i = 0, n = 0;
 
-       while (true)
-       {
-           nz1 = nz2 = 0;
+      while(true)
+      {
+         char ca = charAt(a, i);
+         char cb = charAt(b, n);
 
-           c1 = charAt(s1, i);
-           c2 = charAt(s2, n);
+         if (!Character.isDigit(ca) && !Character.isDigit(cb))
+            return bias;
+         if (!Character.isDigit(ca))
+            return -1;
+         if (!Character.isDigit(cb))
+            return +1;
+         if (ca == 0 && cb == 0)
+            return bias;
 
-           while (Character.isSpaceChar(c1) || c1 == '0')
-           {
-               if (c1 == '0')
-                   nz1++;
-               else
-                   nz1 = 0;
-
-               c1 = charAt(s1, ++i);
-           }
-
-           while (Character.isSpaceChar(c2) || c2 == '0')
-           {
-               if (c2 == '0')
-                   nz2++;
-               else
-                   nz2 = 0;
-
-               c2 = charAt(s2, ++n);
-           }
-
-           if (Character.isDigit(c1) && Character.isDigit(c2))
-               if ((result = compareRight(s1.substring(i), s2.substring(n))) != 0)
-                   return result;
-
-           if (c1 == 0 && c2 == 0)
-               return nz1 - nz2;
-           if (c1 < c2)
-               return -1;
-           else if (c1 > c2)
-               return +1;
-
-           ++i;
-           ++n;
-       }
+         if (bias == 0)
+         {
+            if (ca < cb)
+               bias = -1;
+            else if (ca > cb)
+               bias = +1;
+         }
+         i++;
+         n++;
+      }
    }
 
    /**
-    * @param s
-    * @param i
-    * @return
+    * Compare two strings
+    * @param a String a
+    * @param b String b
+    * @return result
     */
-   static private char charAt(String s, int i)
+   public static int compare(String a, String b)
    {
-       if (i >= s.length())
-           return 0;
-       else
-           return s.charAt(i);
+      int i = 0, n = 0;
+      int j = 0, c = 0;
+      char ca, cb;
+
+      while(true)
+      {
+         j = c = 0;
+
+         ca = charAt(a, i);
+         cb = charAt(b, n);
+
+         while(Character.isSpaceChar(ca) || ca == '0')
+         {
+            if (ca == '0')
+               j++;
+            else
+               j = 0;
+
+            ca = charAt(a, ++i);
+         }
+
+         while(Character.isSpaceChar(cb) || cb == '0')
+         {
+            if (cb == '0')
+               c++;
+            else
+               c = 0;
+
+            cb = charAt(b, ++n);
+         }
+
+         if (Character.isDigit(ca) && Character.isDigit(cb))
+         {
+            int bias = compareRight(a.substring(i), b.substring(n));
+            if (bias != 0)
+               return bias;
+         }
+
+         if (ca == 0 && cb == 0)
+            return j - c;
+         if (ca < cb)
+            return -1;
+         if (ca > cb)
+            return +1;
+
+         ++i;
+         ++n;
+      }
    }
 }
