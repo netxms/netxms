@@ -826,7 +826,7 @@ static bool IsDciExists(UINT32 dciId, UINT32 nodeId, bool isTable)
 
    int count = DBGetFieldLong(hResult, 0, 0);
    DBFreeResult(hResult);
-   return count;
+   return count != 0;
 }
 
 /**
