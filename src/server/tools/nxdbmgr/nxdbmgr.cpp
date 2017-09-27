@@ -78,6 +78,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 };
 static BOOL m_bForce = FALSE;
 static DB_DRIVER s_driver = NULL;
+static bool m_operationInProgress = false;
 
 /**
  * Show query if trace mode is ON
@@ -85,6 +86,14 @@ static DB_DRIVER s_driver = NULL;
 void ShowQuery(const TCHAR *pszQuery)
 {
 	WriteToTerminalEx(_T("\x1b[1m>>> \x1b[32;1m%s\x1b[0m\n"), pszQuery);
+}
+
+/**
+ * Set "operation in progress" flag
+ */
+void SetOperationInProgress(bool inProgress)
+{
+   m_operationInProgress = inProgress;
 }
 
 /**
@@ -112,6 +121,8 @@ bool GetYesNo(const TCHAR *format, ...)
 	}
 	else
 	{
+	   if (m_operationInProgress)
+	      _tprintf(_T("\n"));
 		va_start(args, format);
 		_vtprintf(format, args);
 		va_end(args);
