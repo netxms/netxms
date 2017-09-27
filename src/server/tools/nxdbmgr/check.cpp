@@ -51,7 +51,7 @@ static void StartStage(const TCHAR *pszMsg, int workTotal = 1)
       s_stageWorkTotal = workTotal;
       s_stageWorkDone = 0;
    }
-   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s  \x1b[37;1m[\x1b[0m   0% \x1b[37;1m]\x1b[0m\b\b\b"), m_pszStageMsg);
+   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s  \x1b[37;1m[\x1b[0m   0%% \x1b[37;1m]\x1b[0m\b\b\b"), m_pszStageMsg);
 #ifndef _WIN32
    fflush(stdout);
 #endif
