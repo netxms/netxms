@@ -716,7 +716,6 @@ static IntegerArray<UINT32> *GetDataCollectionTargets()
    CollectObjectIdentifiers(_T("mobile_devices"), list);
    CollectObjectIdentifiers(_T("access_points"), list);
    CollectObjectIdentifiers(_T("chassis"), list);
-   CollectObjectIdentifiers(_T("sensors"), list);
    return list;
 }
 
@@ -1015,7 +1014,6 @@ static void CheckDataTables()
    CheckDataTablesForClass(_T("mobile_devices"), _T("mobile device"));
    CheckDataTablesForClass(_T("access_points"), _T("access point"));
    CheckDataTablesForClass(_T("chassis"), _T("chassis"));
-   CheckDataTablesForClass(_T("sensors"), _T("sensor"));
 
 	EndStage();
 }
