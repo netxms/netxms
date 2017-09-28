@@ -2838,7 +2838,7 @@ extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
 extern BOOL g_bModificationsLocked;
-extern Queue *g_pTemplateUpdateQueue;
+extern Queue g_templateUpdateQueue;
 
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;

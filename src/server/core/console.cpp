@@ -727,6 +727,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
          ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
+         ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updates"));
          ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
          ShowQueueStats(pCtx, g_dciDataWriterQueue, _T("Database writer (IData)"));
          ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));

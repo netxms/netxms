@@ -231,6 +231,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!IsShutdownInProgress())
    {
       DCObject *pItem = (DCObject *)g_dataCollectionQueue.getOrBlock();
+      if (pItem == INVALID_POINTER_VALUE)
+         break;
+
 		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getOwner();
 
 		if (pItem->isScheduledForDeletion())
@@ -524,22 +527,44 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 }
 
 /**
+ * Threads
+ */
+static THREAD s_itemPollerThread = INVALID_THREAD_HANDLE;
+static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
+static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
+static THREAD *s_collectorThreads = NULL;
+static int s_collectorCount = 0;
+
+/**
  * Initialize data collection subsystem
  */
-BOOL InitDataCollector()
+void InitDataCollector()
 {
-   int i, iNumCollectors;
-
    // Start data collection threads
-   iNumCollectors = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
-   for(i = 0; i < iNumCollectors; i++)
-      ThreadCreate(DataCollector, 0, NULL);
+   s_collectorCount = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
+   s_collectorThreads = (THREAD *)malloc(sizeof(THREAD) * iNumCollectors);
+   for(int i = 0; i < s_collectorCount; i++)
+      s_collectorThreads[i] = ThreadCreateEx(DataCollector, 0, NULL);
 
-   ThreadCreate(ItemPoller, 0, NULL);
-   ThreadCreate(StatCollector, 0, NULL);
-   ThreadCreate(CacheLoader, 0, NULL);
+   s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
+   s_statCollectorThread = ThreadCreateEx(StatCollector, 0, NULL);
+   s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, NULL);
+}
 
-   return TRUE;
+/**
+ * Stop data collection
+ */
+void StopDataCollection()
+{
+   ThreadJoin(s_itemPollerThread);
+   ThreadJoin(s_statCollectorThread);
+   ThreadJoin(s_cacheLoaderThread);
+
+   for(int i = 0; i < s_collectorCount; i++)
+      g_dataCollectionQueue.put(INVALID_POINTER_VALUE);
+   for(int i = 0; i < s_collectorCount; i++)
+      ThreadJoin(s_collectorThreads[i]);
+   free(s_collectorThreads);
 }
 
 /**

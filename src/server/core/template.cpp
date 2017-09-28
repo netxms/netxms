@@ -1000,7 +1000,7 @@ void Template::queueUpdate()
          pInfo->pTemplate = this;
          pInfo->targetId = object->getId();
          pInfo->removeDCI = false;
-         g_pTemplateUpdateQueue->put(pInfo);
+         g_templateUpdateQueue.put(pInfo);
       }
    }
    unlockChildList();
@@ -1018,7 +1018,7 @@ void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
    pInfo->pTemplate = this;
    pInfo->targetId = targetId;
    pInfo->removeDCI = removeDCI;
-   g_pTemplateUpdateQueue->put(pInfo);
+   g_templateUpdateQueue.put(pInfo);
    unlockProperties();
 }
 

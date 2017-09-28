@@ -37,7 +37,7 @@ BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
 
 UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 
-Queue *g_pTemplateUpdateQueue = NULL;
+Queue g_templateUpdateQueue;
 
 ObjectIndex g_idxObjectById;
 InetAddressIndex g_idxSubnetByAddr;
@@ -63,6 +63,8 @@ static int m_iStatusShift;        // Shift value for "shifted" status propagatio
 static int m_iStatusTranslation[4];
 static int m_iStatusSingleThreshold;
 static int m_iStatusThresholds[4];
+static THREAD s_mapUpdateThread = INVALID_THREAD_HANDLE;
+static THREAD s_applyTemplateThread = INVALID_THREAD_HANDLE;
 
 /**
  * Thread which apply template updates
@@ -71,9 +73,9 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 {
    ThreadSetName("ApplyTemplates");
 	DbgPrintf(1, _T("Apply template thread started"));
-   while(1)
+   while(!IsShutdownInProgress())
    {
-      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->getOrBlock();
+      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_templateUpdateQueue.getOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
@@ -126,7 +128,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       else
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
-         g_pTemplateUpdateQueue->put(pInfo);    // Requeue
+         g_templateUpdateQueue.put(pInfo);    // Requeue
          ThreadSleepMs(500);
       }
    }
@@ -207,8 +209,6 @@ void ObjectsInit()
    ConfigReadByteArray(_T("StatusTranslation"), m_iStatusTranslation, 4, STATUS_WARNING);
    m_iStatusSingleThreshold = ConfigReadInt(_T("StatusSingleThreshold"), 75);
    ConfigReadByteArray(_T("StatusThresholds"), m_iStatusThresholds, 4, 50);
-
-   g_pTemplateUpdateQueue = new Queue;
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
@@ -1873,12 +1873,22 @@ BOOL LoadObjects()
    }
 
    // Start map update thread
-   ThreadCreate(MapUpdateThread, 0, NULL);
+   s_mapUpdateThread = ThreadCreateEx(MapUpdateThread, 0, NULL);
 
    // Start template update applying thread
-   ThreadCreate(ApplyTemplateThread, 0, NULL);
+   s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread, 0, NULL);
 
    return TRUE;
+}
+
+/**
+ * Stop object maintenance threads
+ */
+void StopObjectMaintenanceThreads()
+{
+   g_templateUpdateQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_applyTemplateThread);
+   ThreadJoin(s_mapUpdateThread);
 }
 
 /**
