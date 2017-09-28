@@ -535,8 +535,6 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 static THREAD s_itemPollerThread = INVALID_THREAD_HANDLE;
 static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
 static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
-static THREAD *s_collectorThreads = NULL;
-static int s_collectorCount = 0;
 
 /**
  * Initialize data collection subsystem
@@ -550,9 +548,20 @@ void InitDataCollector()
             ConfigReadInt(_T("DataCollector.ThreadPool.MaxSize"), 250),
             _T("DATACOLL"));
 
-   ThreadCreate(ItemPoller, 0, NULL);
-   ThreadCreate(StatCollector, 0, NULL);
-   ThreadCreate(CacheLoader, 0, NULL);
+   s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
+   s_statCollectorThread = ThreadCreateEx(StatCollector, 0, NULL);
+   s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, NULL);
+}
+
+/**
+ * Stop data collection
+ */
+void StopDataCollection()
+{
+   ThreadJoin(s_itemPollerThread);
+   ThreadJoin(s_statCollectorThread);
+   ThreadJoin(s_cacheLoaderThread);
+   ThreadPoolDestroy(g_dataCollectorThreadPool);
 }
 
 /**
