@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -177,6 +177,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
    ThreadSetName("DBWriter/IData");
+   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
 		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->getOrBlock();
@@ -222,7 +223,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				free(rq);
 
 				count++;
-				if (!success || (count > 1000))
+				if (!success || (count > maxRecords))
 					break;
 
 				rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->get();
@@ -249,6 +250,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 {
    ThreadSetName("DBWriter/RData");
+   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
 		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock();
@@ -262,7 +264,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
          if (hStmt != NULL)
          {
             int count = 0;
-            while(1)
+            while(true)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
@@ -273,7 +275,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
                free(rq);
 
                count++;
-               if (!success || (count > 1000))
+               if (!success || (maxRecords > 1000))
                   break;
 
                rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->get();
