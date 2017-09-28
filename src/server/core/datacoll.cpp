@@ -239,6 +239,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			            pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
 			pItem->deleteFromDatabase();
 			delete pItem;
+         target->decRefCount();
 			continue;
 		}
 
