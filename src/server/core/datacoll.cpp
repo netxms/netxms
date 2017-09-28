@@ -545,7 +545,10 @@ void InitDataCollector()
 {
    int i, iNumCollectors;
 
-   g_dataCollectorThreadPool = ThreadPoolCreate(ConfigReadInt(_T("DataCollectorThreadPoolBaseSize"), 10), ConfigReadInt(_T("DataCollectorThreadPoolMaxSize"), 250), _T("DATACOLL"));
+   g_dataCollectorThreadPool = ThreadPoolCreate(
+            ConfigReadInt(_T("DataCollector.ThreadPool.BaseSize"), 10),
+            ConfigReadInt(_T("DataCollector.ThreadPool.MaxSize"), 250),
+            _T("DATACOLL"));
 
    ThreadCreate(ItemPoller, 0, NULL);
    ThreadCreate(StatCollector, 0, NULL);
