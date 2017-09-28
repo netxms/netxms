@@ -58,8 +58,8 @@
  * Externals
  */
 extern Queue g_nodePollerQueue;
-extern Queue g_dataCollectionQueue;
 extern Queue g_dciCacheLoaderQueue;
+extern ThreadPool *g_dataCollectorThreadPool;
 
 void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
@@ -8192,7 +8192,10 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 #endif
 
 	// Queues
-	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.size());
+   ThreadPoolInfo poolInfo;
+   ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
+	msg.setField(VID_QSIZE_DCI_POLLER, (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0);
+
 	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.size());
 	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->size());
 	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->size());

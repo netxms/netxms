@@ -23,6 +23,16 @@
 #include "nxcore.h"
 
 /**
+ * Data collector thread pool
+ */
+extern ThreadPool *g_dataCollectorThreadPool;
+
+/**
+ * Data collector worker
+ */
+void DataCollector(void *arg);
+
+/**
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget() : Template()
@@ -521,7 +531,7 @@ bool DataCollectionTarget::isDataCollectionDisabled()
 /**
  * Put items which requires polling into the queue
  */
-void DataCollectionTarget::queueItemsForPolling(Queue *pollerQueue)
+void DataCollectionTarget::queueItemsForPolling()
 {
    if ((m_status == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
       return;  // Do not collect data for unmanaged objects or if data collection is disabled
@@ -536,7 +546,22 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pollerQueue)
       {
          object->setBusyFlag();
          incRefCount();   // Increment reference count for each queued DCI
-         pollerQueue->put(object);
+
+         if ((object->getDataSource() == DS_NATIVE_AGENT) ||
+             (object->getDataSource() == DS_WINPERF) ||
+             (object->getDataSource() == DS_SSH) ||
+             (object->getDataSource() == DS_SMCLP))
+         {
+            TCHAR key[32];
+            _sntprintf(key, 32, _T("%08X/%s"),
+                     m_id, (object->getDataSource() == DS_SSH) ? _T("ssh") :
+                              (object->getDataSource() == DS_SMCLP) ? _T("smclp") : _T("agent"));
+            ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, object);
+         }
+         else
+         {
+            ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, object);
+         }
 			nxlog_debug(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }

@@ -26,12 +26,12 @@
  * Externals
  */
 extern Queue g_nodePollerQueue;
-extern Queue g_dataCollectionQueue;
 extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
+extern ThreadPool *g_dataCollectorThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
@@ -725,16 +725,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("QUEUES"), szBuffer, 1))
       {
-         ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
+         ShowThreadPoolPendingQueue(pCtx, g_dataCollectorThreadPool, _T("Data collector"));
          ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
          ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updates"));
          ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
          ShowQueueStats(pCtx, g_dciDataWriterQueue, _T("Database writer (IData)"));
          ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));
          ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
-         ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node poller"));
+         ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
+         ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node discovery poller"));
          ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processing"));
          ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
+         ShowThreadPoolPendingQueue(pCtx, g_schedulerThreadPool, _T("Scheduler"));
          ConsolePrintf(pCtx, _T("\n"));
       }
       else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
@@ -804,6 +806,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowThreadPool(pCtx, g_mainThreadPool);
          ShowThreadPool(pCtx, g_pollerThreadPool);
+         ShowThreadPool(pCtx, g_dataCollectorThreadPool);
          ShowThreadPool(pCtx, g_schedulerThreadPool);
          ShowThreadPool(pCtx, g_agentConnectionThreadPool);
       }

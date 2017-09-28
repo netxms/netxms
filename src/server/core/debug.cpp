@@ -184,6 +184,17 @@ void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName)
 }
 
 /**
+ * Show queue stats
+ */
+void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *pszName)
+{
+   ThreadPoolInfo info;
+   ThreadPoolGetInfo(p, &info);
+   int size = (info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0;
+   ConsolePrintf(console, _T("%-32s : %d\n"), pszName, size);
+}
+
+/**
  * Show thread pool stats
  */
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)

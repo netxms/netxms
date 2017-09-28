@@ -1130,7 +1130,7 @@ public:
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
    void cleanDCIData(DB_HANDLE hdb);
-   void queueItemsForPolling(Queue *pollerQueue);
+   void queueItemsForPolling();
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
 	void scheduleItemDataCleanup(UINT32 dciId);
    void scheduleTableDataCleanup(UINT32 dciId);

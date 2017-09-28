@@ -704,6 +704,7 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
 /**
  * Global variables
  */
+extern double g_dAvgDataCollectorQueueSize;
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
