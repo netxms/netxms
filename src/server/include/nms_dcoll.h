@@ -689,7 +689,7 @@ public:
 /**
  * Functions
  */
-BOOL InitDataCollector();
+void InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
 void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
@@ -704,6 +704,7 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
 /**
  * Global variables
  */
+extern double g_dAvgDataCollectorQueueSize;
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;

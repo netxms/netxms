@@ -564,8 +564,8 @@
 			<dataCollection>
 				<dci id="21">
 					<guid>2588c71e-271c-4b74-86ea-c0043671d9c0</guid>
-					<name>Server.AverageDCPollerQueueSize</name>
-					<description>NetXMS server: data collection poller&apos;s request queue</description>
+					<name>Server.AverageDataCollectorQueueSize</name>
+					<description>NetXMS server: data collector&apos;s request queue</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>

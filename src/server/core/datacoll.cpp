@@ -32,10 +32,17 @@
  */
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
+extern ThreadPool *g_pollerThreadPool;
+
+/**
+ * Thread pool for data collectors
+ */
+ThreadPool *g_dataCollectorThreadPool = NULL;
 
 /**
  * Global data
  */
+double g_dAvgDataCollectorQueueSize = 0;
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgIDataWriterQueueSize = 0;
@@ -44,7 +51,6 @@ double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgSyslogProcessingQueueSize = 0;
 double g_dAvgSyslogWriterQueueSize = 0;
 UINT32 g_dwAvgDCIQueuingTime = 0;
-Queue g_dataCollectionQueue(4096, 256);
 Queue g_dciCacheLoaderQueue;
 
 /**
@@ -223,117 +229,112 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 /**
  * Data collector
  */
-static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
+void DataCollector(void *arg)
 {
-   ThreadSetName("DataCollector");
+   DCObject *pItem = static_cast<DCObject*>(arg);
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(pItem->getOwner());
 
-   UINT32 dwError;
-
-   TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
-   while(!IsShutdownInProgress())
+   if (pItem->isScheduledForDeletion())
    {
-      DCObject *pItem = (DCObject *)g_dataCollectionQueue.getOrBlock();
-		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getOwner();
+      nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
+                  pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
+      pItem->deleteFromDatabase();
+      delete pItem;
+      target->decRefCount();
+      return;
+   }
 
-		if (pItem->isScheduledForDeletion())
-		{
-	      nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-			            pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
-			pItem->deleteFromDatabase();
-			delete pItem;
-			continue;
-		}
+   if (target == NULL)
+   {
+      nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
+                  pItem->getId(), pItem->getName());
 
-		if (target == NULL)
-		{
-         nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
-                     pItem->getId(), pItem->getName());
+      // Update item's last poll time and clear busy flag so item can be polled again
+      pItem->setLastPollTime(time(NULL));
+      pItem->clearBusyFlag();
+      return;
+   }
 
-         // Update item's last poll time and clear busy flag so item can be polled again
-         pItem->setLastPollTime(time(NULL));
-         pItem->clearBusyFlag();
-		   continue;
-		}
-
-      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
-      UINT32 sourceNodeId = target->getEffectiveSourceNode(pItem);
-		if (sourceNodeId != 0)
-		{
-			Node *sourceNode = (Node *)FindObjectById(sourceNodeId, OBJECT_NODE);
-			if (sourceNode != NULL)
-			{
-				if (((target->getObjectClass() == OBJECT_CHASSIS) && (((Chassis *)target)->getControllerId() == sourceNodeId)) ||
-				    sourceNode->isTrustedNode(target->getId()))
-				{
-					target = sourceNode;
-					target->incRefCount();
-				}
-				else
-				{
-               // Change item's status to "not supported"
-               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
-               target->decRefCount();
-               target = NULL;
-				}
-			}
-			else
-			{
+   DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
+             pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
+   UINT32 sourceNodeId = target->getEffectiveSourceNode(pItem);
+   if (sourceNodeId != 0)
+   {
+      Node *sourceNode = (Node *)FindObjectById(sourceNodeId, OBJECT_NODE);
+      if (sourceNode != NULL)
+      {
+         if (((target->getObjectClass() == OBJECT_CHASSIS) && (((Chassis *)target)->getControllerId() == sourceNodeId)) ||
+             sourceNode->isTrustedNode(target->getId()))
+         {
+            target = sourceNode;
+            target->incRefCount();
+         }
+         else
+         {
+            // Change item's status to "not supported"
+            pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
             target->decRefCount();
             target = NULL;
-			}
-		}
-
-      time_t currTime = time(NULL);
-      if (target != NULL)
+         }
+      }
+      else
       {
-         if (!IsShutdownInProgress())
-         {
-            void *data;
-            switch(pItem->getType())
-            {
-               case DCO_TYPE_ITEM:
-                  data = GetItemData(target, (DCItem *)pItem, pBuffer, &dwError);
-                  break;
-               case DCO_TYPE_TABLE:
-                  data = GetTableData(target, (DCTable *)pItem, &dwError);
-                  break;
-               default:
-                  data = NULL;
-                  dwError = DCE_NOT_SUPPORTED;
-                  break;
-            }
+         target->decRefCount();
+         target = NULL;
+      }
+   }
 
-            // Transform and store received value into database or handle error
-            switch(dwError)
-            {
-               case DCE_SUCCESS:
-                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-                  if (!((DataCollectionTarget *)pItem->getOwner())->processNewDCValue(pItem, currTime, data))
-                  {
-                     // value processing failed, convert to data collection error
-                     pItem->processNewError(false);
-                  }
-                  break;
-               case DCE_COLLECTION_ERROR:
-                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
+   time_t currTime = time(NULL);
+   if (target != NULL)
+   {
+      if (!IsShutdownInProgress())
+      {
+         void *data;
+         TCHAR buffer[MAX_LINE_SIZE];
+         UINT32 error;
+         switch(pItem->getType())
+         {
+            case DCO_TYPE_ITEM:
+               data = GetItemData(target, (DCItem *)pItem, buffer, &error);
+               break;
+            case DCO_TYPE_TABLE:
+               data = GetTableData(target, (DCTable *)pItem, &error);
+               break;
+            default:
+               data = NULL;
+               error = DCE_NOT_SUPPORTED;
+               break;
+         }
+
+         // Transform and store received value into database or handle error
+         switch(error)
+         {
+            case DCE_SUCCESS:
+               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
+               if (!((DataCollectionTarget *)pItem->getOwner())->processNewDCValue(pItem, currTime, data))
+               {
+                  // value processing failed, convert to data collection error
                   pItem->processNewError(false);
-                  break;
-               case DCE_NO_SUCH_INSTANCE:
-                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-                  pItem->processNewError(true);
-                  break;
-               case DCE_COMM_ERROR:
-                  pItem->processNewError(false);
-                  break;
-               case DCE_NOT_SUPPORTED:
-                  // Change item's status
-                  pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
-                  break;
-            }
+               }
+               break;
+            case DCE_COLLECTION_ERROR:
+               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
+               pItem->processNewError(false);
+               break;
+            case DCE_NO_SUCH_INSTANCE:
+               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
+               pItem->processNewError(true);
+               break;
+            case DCE_COMM_ERROR:
+               pItem->processNewError(false);
+               break;
+            case DCE_NOT_SUPPORTED:
+               // Change item's status
+               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
+               break;
          }
 
          // Send session notification when force poll is performed
@@ -343,29 +344,25 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             session->notify(NX_NOTIFY_FORCE_DCI_POLL, pItem->getOwnerId());
             session->decRefCount();
          }
-
-         // Decrement node's usage counter
-         target->decRefCount();
-			if ((pItem->getSourceNode() != 0) && (pItem->getOwner() != NULL))
-			{
-				pItem->getOwner()->decRefCount();
-			}
       }
-      else     /* target == NULL */
+
+      // Decrement node's usage counter
+      target->decRefCount();
+      if ((pItem->getSourceNode() != 0) && (pItem->getOwner() != NULL))
       {
-			Template *n = pItem->getOwner();
-         nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
-			            pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
+         pItem->getOwner()->decRefCount();
       }
-
-		// Update item's last poll time and clear busy flag so item can be polled again
-      pItem->setLastPollTime(currTime);
-      pItem->clearBusyFlag();
+   }
+   else     /* target == NULL */
+   {
+      Template *n = pItem->getOwner();
+      nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
+                  pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
    }
 
-   free(pBuffer);
-   DbgPrintf(1, _T("Data collector thread terminated"));
-   return THREAD_OK;
+   // Update item's last poll time and clear busy flag so item can be polled again
+   pItem->setLastPollTime(currTime);
+   pItem->clearBusyFlag();
 }
 
 /**
@@ -379,7 +376,7 @@ static void QueueItems(NetObj *object, void *data)
    WatchdogNotify(*((UINT32 *)data));
 	nxlog_debug(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				   object->getName(), object->getId());
-	((DataCollectionTarget *)object)->queueItemsForPolling(&g_dataCollectionQueue);
+	((DataCollectionTarget *)object)->queueItemsForPolling();
 }
 
 /**
@@ -435,32 +432,40 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    ThreadSetName("StatCollector");
 
    UINT32 i, currPos = 0;
-   UINT32 pollerQS[12], dbWriterQS[12];
+   UINT32 pollerQS[12], dataCollectorQS[12], dbWriterQS[12];
    UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
    UINT32 syslogProcessingQS[12], syslogWriterQS[12];
-   double sum1, sum2, sum3, sum4, sum5, sum8, sum9;
+   double sum1, sum2, sum3, sum4, sum5, sum8, sum9, sum10;
 
    memset(pollerQS, 0, sizeof(UINT32) * 12);
+   memset(dataCollectorQS, 0, sizeof(UINT32) * 12);
    memset(dbWriterQS, 0, sizeof(UINT32) * 12);
    memset(iDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(rawDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(dbAndIDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(syslogProcessingQS, 0, sizeof(UINT32) * 12);
    memset(syslogWriterQS, 0, sizeof(UINT32) * 12);
-   g_dAvgPollerQueueSize = 0;
+   g_dAvgDataCollectorQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
    g_dAvgIDataWriterQueueSize = 0;
    g_dAvgRawDataWriterQueueSize = 0;
    g_dAvgDBAndIDataWriterQueueSize = 0;
    g_dAvgSyslogProcessingQueueSize = 0;
    g_dAvgSyslogWriterQueueSize = 0;
+   g_dAvgPollerQueueSize = 0;
    while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
 
       // Get current values
-      pollerQS[currPos] = g_dataCollectionQueue.size();
+      ThreadPoolInfo poolInfo;
+      ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
+      dataCollectorQS[currPos] = (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
+
+      ThreadPoolGetInfo(g_pollerThreadPool, &poolInfo);
+      pollerQS[currPos] = (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
+
       dbWriterQS[currPos] = g_dbWriterQueue->size();
       iDataWriterQS[currPos] = g_dciDataWriterQueue->size();
       rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->size();
@@ -472,23 +477,25 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          currPos = 0;
 
       // Calculate new averages
-      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0; i < 12; i++)
+      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0, sum10 = 0; i < 12; i++)
       {
-         sum1 += pollerQS[i];
+         sum1 += dataCollectorQS[i];
          sum2 += dbWriterQS[i];
          sum3 += iDataWriterQS[i];
          sum4 += rawDataWriterQS[i];
          sum5 += dbAndIDataWriterQS[i];
          sum8 += syslogProcessingQS[i];
          sum9 += syslogWriterQS[i];
+         sum10 += pollerQS[i];
       }
-      g_dAvgPollerQueueSize = sum1 / 12;
+      g_dAvgDataCollectorQueueSize = sum1 / 12;
       g_dAvgDBWriterQueueSize = sum2 / 12;
       g_dAvgIDataWriterQueueSize = sum3 / 12;
       g_dAvgRawDataWriterQueueSize = sum4 / 12;
       g_dAvgDBAndIDataWriterQueueSize = sum5 / 12;
       g_dAvgSyslogProcessingQueueSize = sum8 / 12;
       g_dAvgSyslogWriterQueueSize = sum9 / 12;
+      g_dAvgPollerQueueSize = sum10 / 12;
    }
    return THREAD_OK;
 }
@@ -528,20 +535,15 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 /**
  * Initialize data collection subsystem
  */
-BOOL InitDataCollector()
+void InitDataCollector()
 {
    int i, iNumCollectors;
 
-   // Start data collection threads
-   iNumCollectors = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
-   for(i = 0; i < iNumCollectors; i++)
-      ThreadCreate(DataCollector, 0, NULL);
+   g_dataCollectorThreadPool = ThreadPoolCreate(ConfigReadInt(_T("DataCollectorThreadPoolBaseSize"), 10), ConfigReadInt(_T("DataCollectorThreadPoolMaxSize"), 250), _T("DATACOLL"));
 
    ThreadCreate(ItemPoller, 0, NULL);
    ThreadCreate(StatCollector, 0, NULL);
    ThreadCreate(CacheLoader, 0, NULL);
-
-   return TRUE;
 }
 
 /**
