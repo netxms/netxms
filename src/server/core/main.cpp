@@ -919,8 +919,7 @@ retry_db_lock:
 
 	// Initialize data collection subsystem
    LoadPerfDataStorageDrivers();
-	if (!InitDataCollector())
-		return FALSE;
+   InitDataCollector();
 
 	InitLogAccess();
 	FileUploadJob::init();

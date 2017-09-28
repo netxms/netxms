@@ -689,7 +689,7 @@ public:
 /**
  * Functions
  */
-BOOL InitDataCollector();
+void InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
 void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);

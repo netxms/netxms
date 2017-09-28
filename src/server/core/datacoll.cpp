@@ -542,7 +542,7 @@ void InitDataCollector()
 {
    // Start data collection threads
    s_collectorCount = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
-   s_collectorThreads = (THREAD *)malloc(sizeof(THREAD) * iNumCollectors);
+   s_collectorThreads = (THREAD *)malloc(sizeof(THREAD) * s_collectorCount);
    for(int i = 0; i < s_collectorCount; i++)
       s_collectorThreads[i] = ThreadCreateEx(DataCollector, 0, NULL);
 
