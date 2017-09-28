@@ -75,6 +75,8 @@ void ImportLocalConfiguration();
 void RegisterPredictionEngines();
 void ExecuteStartupScripts();
 void CloseAgentTunnels();
+void StopDataCollection();
+void StopObjectMaintenanceThreads();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -1074,6 +1076,9 @@ void NXCORE_EXPORTABLE Shutdown()
 		if (g_pModuleList[i].pfShutdown != NULL)
 			g_pModuleList[i].pfShutdown();
 	}
+
+   StopDataCollection();
+   StopObjectMaintenanceThreads();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);
