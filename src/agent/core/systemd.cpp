@@ -27,7 +27,6 @@ extern "C"
 {
 #include <systemd/sd-bus.h>
 }
-#endif
 
 /**
  * Find the name of the systemd service given pid (if run as service)
@@ -119,3 +118,4 @@ bool RestartService(UINT32 pid)
 
    return result;
 }
+#endif
