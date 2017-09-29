@@ -344,7 +344,7 @@ LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 		int flags;
 
 		memset(&ifr, 0, sizeof(ifr));
-		nx_strncpy_mb(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+		strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
 		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 		{
 			if ((ifr.ifr_flags & requestedFlag) == requestedFlag)

@@ -92,11 +92,11 @@ public:
       long rc = CAST_FROM_POINTER(odm_get_first(CuAt_CLASS, query, &object), long);
       if ((rc != 0) && (rc != -1))
       {
-         strncpy(m_name, object.name, 64);
+         strlcpy(m_name, object.name, 64);
          m_name[63] = 0;
       }
       else
-      {
+         {
          UniqueIdToText(id, m_name);
       }
       
@@ -212,7 +212,7 @@ private:
 
    VolumeGroup(const char *name, struct unique_id *id)
    {
-      strncpy(m_name, name, LVM_NAMESIZ);
+      strlcpy(m_name, name, LVM_NAMESIZ);
       m_name[LVM_NAMESIZ - 1] = 0;
       memcpy(&m_id, id, sizeof(struct unique_id));
       m_logicalVolumes = new ObjectArray<LogicalVolume>(16, 16, true);
