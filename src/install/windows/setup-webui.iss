@@ -14,3 +14,4 @@ Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
 CloseApplications=no
+SignTool=signtool

@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 2.1.1-77
-AppVersion=2.1.1-77
+AppVerName=NetXMS 2.1.1-88
+AppVersion=2.1.1-88
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org
@@ -14,3 +14,4 @@ Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
 CloseApplications=no
+SignTool=signtool
