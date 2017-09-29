@@ -1328,7 +1328,13 @@ static void DoRestartActions(UINT32 dwOldPID)
          CloseHandle(hProcess);
       }
    }
+#elif WITH_SYSTEMD
+   if (RestartService(dwOldPID))
+      dwOldPID = 0; // Success
 #else
+   if (dwOldPID == 0) // Already killed
+      return;
+
    int i;
 
    kill(dwOldPID, SIGTERM);
@@ -1925,7 +1931,7 @@ int main(int argc, char *argv[])
 						s_pid = getpid();
 						if (Initialize())
 						{
-							FILE *fp;
+						   FILE *fp;
 
 							// Write PID file
 							fp = _tfopen(g_szPidFile, _T("w"));
