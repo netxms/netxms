@@ -627,6 +627,12 @@ bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSessio
 AbstractCommSession *FindServerSession(UINT64 serverId);
 AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
+#ifdef WITH_SYSTEMD
+bool RestartService(UINT32 pid);
+#endif
+
+void KillProcess(UINT32 pid);
+
 #ifdef _WIN32
 
 void InitService();
