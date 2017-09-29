@@ -37,41 +37,46 @@
 #include <netxms-regex.h>
 #include <nms_util.h>
 
+/**
+ * Parser status
+ */
+enum LogParserStatus
+{
+   LPS_INIT                = 0,
+   LPS_RUNNING             = 1,
+   LPS_NO_FILE             = 2,
+   LPS_OPEN_ERROR          = 3,
+   LPS_SUSPENDED           = 4,
+   LPS_EVT_SUBSCRIBE_ERROR = 5,
+   LPS_EVT_READ_ERROR      = 6,
+   LPS_EVT_OPEN_ERROR      = 7
+};
 
-//
-// Parser status
-//
+/**
+ * Context actions
+ */
+enum LogParserContextAction
+{
+   CONTEXT_SET_MANUAL    = 0,
+   CONTEXT_SET_AUTOMATIC = 1,
+   CONTEXT_CLEAR         = 2
+};
 
-#define MAX_PARSER_STATUS_LEN	64
-
-#define LPS_INIT              _T("INIT")
-#define LPS_RUNNING           _T("RUNNING")
-#define LPS_NO_FILE           _T("FILE MISSING")
-#define LPS_OPEN_ERROR        _T("FILE OPEN ERROR")
-
-
-//
-// Context actions
-//
-
-#define CONTEXT_SET_MANUAL    0
-#define CONTEXT_SET_AUTOMATIC 1
-#define CONTEXT_CLEAR         2
-
-
-//
-// File encoding
-//
-
-#define LP_FCP_AUTO    -1
-#define LP_FCP_ACP      0
-#define LP_FCP_UTF8     1
-#define LP_FCP_UCS2     2
-#define LP_FCP_UCS2_LE  3
-#define LP_FCP_UCS2_BE  4
-#define LP_FCP_UCS4     5
-#define LP_FCP_UCS4_LE  6
-#define LP_FCP_UCS4_BE  7
+/**
+ * File encoding
+ */
+enum LogParserFileEncoding
+{
+   LP_FCP_AUTO    = -1,
+   LP_FCP_ACP     = 0,
+   LP_FCP_UTF8    = 1,
+   LP_FCP_UCS2    = 2,
+   LP_FCP_UCS2_LE = 3,
+   LP_FCP_UCS2_BE = 4,
+   LP_FCP_UCS4    = 5,
+   LP_FCP_UCS4_LE = 6,
+   LP_FCP_UCS4_BE = 7
+};
 
 /**
  * Log parser callback
@@ -222,7 +227,7 @@ private:
    bool m_suspended;
 	int m_traceLevel;
 	void (*m_traceCallback)(int, const TCHAR *, va_list);
-	TCHAR m_status[MAX_PARSER_STATUS_LEN];
+	LogParserStatus m_status;
 #ifdef _WIN32
    TCHAR *m_marker;
 #endif
@@ -237,7 +242,7 @@ private:
 
    int getCharSize() const;
 
-   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, MAX_PARSER_STATUS_LEN); }
+   void setStatus(LogParserStatus status) { m_status = status; }
 
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
@@ -259,7 +264,8 @@ public:
    const TCHAR *getName() const { return m_name; }
 	const TCHAR *getFileName() const { return m_fileName; }
 	int getFileEncoding() const { return m_fileEncoding; }
-   const TCHAR *getStatus() const { return m_status; }
+   LogParserStatus getStatus() const { return m_status; }
+   const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
 
 	void setName(const TCHAR *name);

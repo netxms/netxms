@@ -272,7 +272,7 @@ bool LogParser::monitorEventLogV6(CONDITION stopCondition)
 		TCHAR buffer[1024];
 		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
 		               &m_fileName[1], GetSystemErrorText(GetLastError(), buffer, 1024));
-		setStatus(_T("EVENT LOG SUBSCRIBE FAILED"));
+		setStatus(LPS_EVT_SUBSCRIBE_ERROR);
       success = false;
 	}
    return success;

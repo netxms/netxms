@@ -453,6 +453,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	      {
 	         exclusionPeriod = true;
             LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+            setStatus(LPS_SUSPENDED);
 	      }
          if (ConditionWait(stopCondition, 30000))
             break;
@@ -514,21 +515,12 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 						break;
 					}
 
-#ifdef _NETWARE
-					if (fgetstat(fh, &st, ST_SIZE_BIT | ST_NAME_BIT) < 0)
-					{
-						LogParserTrace(1, _T("LogParser: fgetstat(%d) failed, errno=%d"), fh, errno);
-						readFromStart = true;
-						break;
-					}
-#else
 					if (NX_FSTAT(fh, &st) < 0)
 					{
 						LogParserTrace(1, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
 						readFromStart = true;
 						break;
 					}
-#endif
 
 					if (CALL_STAT(fname, &stn) < 0)
 					{
@@ -600,6 +592,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 					{
                   LogParserTrace(6, _T("LogParser: closing file \"%s\" because of exclusion period"), fname);
                   exclusionPeriod = true;
+                  setStatus(LPS_SUSPENDED);
 					   break;
 					}
 				}

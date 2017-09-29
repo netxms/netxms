@@ -89,7 +89,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 	switch(*arg)
 	{
 		case 'S':	// Status
-			ret_string(value, parser->getStatus());
+			ret_string(value, parser->getStatusText());
 			break;
 		case 'M':	// Matched records
 			ret_int(value, parser->getMatchedRecordsCount());
