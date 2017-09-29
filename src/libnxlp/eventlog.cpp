@@ -356,7 +356,7 @@ retry_read:
 				{
 					LogParserTrace(0, _T("LogWatch: Unable to read event log \"%s\": %s"),
 										&m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
-					setStatus(_T("EVENT LOG READ ERROR"));
+					setStatus(LPS_EVT_READ_ERROR);
 				}
          }
 
@@ -387,7 +387,7 @@ retry_read:
    {
 		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\": %s"),
 		               &m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
-		setStatus(_T("EVENT LOG OPEN ERROR"));
+		setStatus(LPS_EVT_OPEN_ERROR);
       result = false;
    }
 

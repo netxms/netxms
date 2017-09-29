@@ -121,7 +121,7 @@ LogParser::LogParser()
    m_suspended = false;
 	m_traceLevel = 0;
 	m_traceCallback = NULL;
-	_tcscpy(m_status, LPS_INIT);
+	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = NULL;
 #endif
@@ -167,7 +167,7 @@ LogParser::LogParser(const LogParser *src)
    m_suspended = src->m_suspended;
 	m_traceLevel = src->m_traceLevel;
 	m_traceCallback = src->m_traceCallback;
-	_tcscpy(m_status, LPS_INIT);
+	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = _tcsdup_ex(src->m_marker);
 #endif
@@ -934,4 +934,22 @@ void LogParser::suspend()
 void LogParser::resume()
 {
    m_suspended = false;
+}
+
+/**
+ * Get status text
+ */
+const TCHAR *LogParser::getStatusText() const
+{
+   static const TCHAR *texts[] = {
+      _T("INIT"),
+      _T("RUNNING"),
+      _T("FILE MISSING"),
+      _T("FILE OPEN ERROR"),
+      _T("SUSPENDED"),
+      _T("EVENT LOG SUBSCRIBE FAILED"),
+      _T("EVENT LOG READ ERROR"),
+      _T("EVENT LOG OPEN ERROR")
+   };
+   return texts[m_status];
 }
