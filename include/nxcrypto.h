@@ -10,6 +10,7 @@
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/bn.h>
 #include <openssl/opensslv.h>
 #include <openssl/err.h>
 
