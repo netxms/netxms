@@ -6,6 +6,7 @@
 CC = cl
 CXX = cl
 LD = link
+SIGNTOOL = signtool
 PERL = perl
 LEX = flex
 YACC = bison
@@ -87,15 +88,22 @@ CPPFLAGS = $(CPPFLAGS) /MD /O2 /Gd /EHs- /GR- \
 	/I "$(CURL_BASE)\$(ARCH)\include" \
 	/I "$(OPENSSL_BASE)\$(ARCH)\include" \
 	/I "$(LIBMOSQUITTO_BASE)\include" \
-	/D_MT /DUNICODE
+	/D_MT /DUNICODE /D_USING_V110_SDK71_
 
 # Common linker flags
 MANIFEST = $(TARGET).intermediate.manifest
-LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
+LDFLAGS = $(LDFLAGS) /MACHINE:$(ARCH) /MANIFESTFILE:$(MANIFEST) \
 	/LIBPATH:"$(NETXMS_LIBDIR)" \
 	/LIBPATH:"$(CURL_BASE)\$(ARCH)\lib" \
 	/LIBPATH:"$(OPENSSL_BASE)\$(ARCH)\lib" \
 	/LIBPATH:"$(LIBMOSQUITTO_BASE)\$(ARCH)\lib"
+
+# Target system for linker
+!if "$(ARCH)" == "x64"
+LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE,5.02
+!else
+LDFLAGS = $(LDFLAGS) /SUBSYSTEM:CONSOLE,5.01
+!endif
 	
 # Common headers
 HEADERS = $(HEADERS) \
@@ -159,9 +167,11 @@ $(BINFILE): pom.xml
 
 $(BINFILE): objdir $(OBJ) $(RESOBJ)
    @if not exist $(BINDIR) mkdir $(BINDIR)
-   @echo "    LD " $(TARGET)
+   @echo "    LD  " $(TARGET)
    @$(LD) /NOLOGO $(LDFLAGS) /out:$(BINFILE) $(OBJ) $(RESOBJ) $(LIBS)
-	@rm -f $(MANIFEST)
+   @rm -f $(MANIFEST)
+   @echo "    SIGN" $(TARGET)
+   @$(SIGNTOOL) sign /n "Raden Solutions" /t http://timestamp.digicert.com $(BINFILE)
 
 $(OBJ): $(NETXMS_BASE)\build\netxms-build-tag.h $(HEADERS)
 
@@ -172,25 +182,25 @@ objdir:
    @cd $(OBJDIR)
 
 {$(SRCDIR)}.c.obj:
-   @echo "    CC " $(<F)
+   @echo "    CC  " $(<F)
    @$(CC) /nologo $(CPPFLAGS) $(CFLAGS) /c $< /Fo$@ | tail -n +2
 
 {$(SRCDIR)}.cpp.obj:
-   @echo "    CXX" $(<F)
+   @echo "    CXX " $(<F)
    @$(CXX) /nologo $(CPPFLAGS) $(CXXFLAGS) /c $< /Fo$@ | tail -n +2
 
 {$(SRCDIR)}.rc.res:
-   @echo "    RC " $(<F)
+   @echo "    RC  " $(<F)
    @$(RC) /nologo /r $<
 	@mv $(SRCDIR)\$@ .
 
 MSG00001.bin: messages.mc
-   @echo "    MC  messages.mc"
+   @echo "    MC   messages.mc"
    @$(MC) messages.mc
    @rm -f messages.rc
 
 messages.h: messages.mc
-   @echo "    MC  messages.mc"
+   @echo "    MC   messages.mc"
    @$(MC) messages.mc
    @rm -f messages.rc
 

@@ -11,7 +11,7 @@ SOURCES = \
 RESOURCES = nxagentd.rc
 GENERATED = messages.h MSG00001.bin
 
-LIBS = libnxagent.lib appagent.lib libnxsnmp.lib libnxdb.lib libnetxms.lib ws2_32.lib
+LIBS = libnxagent.lib appagent.lib libnxsnmp.lib libnxdb.lib libnetxms.lib libcrypto.lib ws2_32.lib
 	  
 include ..\..\..\Makefile.inc.w32
 

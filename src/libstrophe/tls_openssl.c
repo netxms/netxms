@@ -42,8 +42,12 @@ static void _tls_log_error(xmpp_ctx_t *ctx);
 
 void tls_initialize(void)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+    OPENSSL_init_ssl(0, NULL);
+#else
     SSL_library_init();
     SSL_load_error_strings();
+#endif
 }
 
 void tls_shutdown(void)

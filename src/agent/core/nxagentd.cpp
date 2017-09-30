@@ -847,8 +847,12 @@ BOOL Initialize()
    // but may be needed by some subagents. Allowing first load of libssl by
    // subagent via dlopen() may lead to undesired side effects
 #ifdef _WITH_ENCRYPTION
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   OPENSSL_init_ssl(0, NULL);
+#else
    SSL_library_init();
    SSL_load_error_strings();
+#endif
 #endif
 
 	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
