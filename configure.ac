@@ -65,6 +65,7 @@ STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
+AGENT_LIBS=""
 AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
@@ -718,7 +719,7 @@ AC_ARG_WITH(tests,
 AC_ARG_ENABLE(systemd,
 [AS_HELP_STRING(--disable-systemd,disable Systemd support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		SYSTEMD_SUPPORT="no"
 	fi
 ])
@@ -905,6 +906,8 @@ if test $? = 0; then
 			# unknown
 			;;
 	esac
+else
+	SYSTEMD_SUPPORT="no"
 fi
 
 check_substr "$COMPONENTS" "server"
@@ -2045,6 +2048,11 @@ else
 	HAVE_LIBSSH=no
 fi
 
+
+#--------------------------------------------------------------------
+# Checks for LDAP libraries
+#--------------------------------------------------------------------
+
 if test "x$LDAP_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
@@ -2086,14 +2094,23 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
 
+
+#--------------------------------------------------------------------
+# Checks for systemd libraries
+#--------------------------------------------------------------------
+
 if test "x$SYSTEMD_SUPPORT" = "xyes"; then
-	AC_CHECK_HEADER(systemd/sd-bus.h,HAVE_SYSTEMD=yes,HAVE_SYSTEMD=no)
+	AC_CHECK_HEADER(systemd/sd-bus.h, [ HAVE_SYSTEMD=yes ], [ HAVE_SYSTEMD=no ])
+	if test "x$HAVE_SYSTEMD" = "xyes"; then
+		AC_CHECK_LIB(systemd, sd_bus_open_system, [ HAVE_SYSTEMD=yes ], [ HAVE_SYSTEMD=no ])
+	fi
 	if test "x$HAVE_SYSTEMD" = "xyes"; then
 		AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 if you have Systemd libraries and headers)
-		SUBAGENT_LIBS="-lsystemd $SUBAGENT_LIBS"
+		AGENT_LIBS="$AGENT_LIBS -lsystemd"
 	fi
 	SYSTEMD_SUPPORT="$HAVE_SYSTEMD"
 fi
+
 
 #--------------------------------------------------------------------
 # Checks for data types
@@ -3474,6 +3491,7 @@ AS_IF([test "x$with_dist" = "xyes"],
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(AGENT_DIRS)
+AC_SUBST(AGENT_LIBS)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
@@ -3869,6 +3887,7 @@ else
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
+	echo "Agent libs              :${AGENT_LIBS}"
 	echo "Agent extra components  :${AGENT_DIRS}"
 	echo "Subagents list          :${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then

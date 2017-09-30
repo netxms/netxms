@@ -1304,16 +1304,16 @@ static void DoRestartActions(UINT32 dwOldPID)
          CloseHandle(hProcess);
       }
    }
-#elif WITH_SYSTEMD
-   if (RestartService(dwOldPID))
-      dwOldPID = 0; // Success
 #else
-   if (dwOldPID == 0) // Already killed
-      return;
-
-   int i;
-
+#if WITH_SYSTEMD
+   if (RestartService(dwOldPID))
+   {
+      // successfully restarted agent service using systemd, exit this instance
+      exit(0);
+   }
+#endif
    kill(dwOldPID, SIGTERM);
+   int i;
    for(i = 0; i < 30; i++)
    {
       sleep(2);
