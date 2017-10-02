@@ -319,6 +319,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             pollType = 1;
          }
+         else if (IsCommand(_T("INSTANCE"), szBuffer, 1))
+         {
+            pollType = 5;
+         }
          else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
          {
             pollType = 4;
@@ -341,48 +345,76 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ExtractWord(pArg, szBuffer);
             UINT32 id = _tcstoul(szBuffer, NULL, 0);
             if (id != 0)
-            { //TODO: Implement pool for cluster and node + instance?
-               Node *node = (Node *)FindObjectById(id, OBJECT_NODE);
-               if (node != NULL)
+            {
+               NetObj *object = FindObjectById(id);
+               if ((object != NULL) && object->isDataCollectionTarget())
                {
                   switch(pollType)
                   {
                      case 1:
-                        node->lockForConfigurationPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &DataCollectionTarget::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
+                        static_cast<DataCollectionTarget*>(object)->lockForConfigurationPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                                 &DataCollectionTarget::configurationPollWorkerEntry,
+                                 RegisterPoller(POLLER_TYPE_CONFIGURATION, static_cast<DataCollectionTarget*>(object)));
                         break;
                      case 2:
-                        node->lockForStatusPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &DataCollectionTarget::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
+                        static_cast<DataCollectionTarget*>(object)->lockForStatusPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                                 &DataCollectionTarget::statusPollWorkerEntry,
+                                 RegisterPoller(POLLER_TYPE_STATUS, static_cast<DataCollectionTarget*>(object)));
                         break;
                      case 3:
-                        node->lockForTopologyPoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
+                        if (object->getObjectClass() == OBJECT_NODE)
+                        {
+                           static_cast<Node*>(object)->lockForTopologyPoll();
+                           ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
+                                    &Node::topologyPollWorkerEntry,
+                                    RegisterPoller(POLLER_TYPE_TOPOLOGY, static_cast<Node*>(object)));
+                        }
+                        else
+                        {
+                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        }
                         break;
                      case 4:
-                        node->lockForRoutePoll();
-                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
+                        if (object->getObjectClass() == OBJECT_NODE)
+                        {
+                           static_cast<Node*>(object)->lockForRoutePoll();
+                           ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
+                                    &Node::routingTablePollWorkerEntry,
+                                    RegisterPoller(POLLER_TYPE_ROUTING_TABLE, static_cast<Node*>(object)));
+                        }
+                        else
+                        {
+                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        }
+                        break;
+                     case 5:
+                        static_cast<DataCollectionTarget*>(object)->lockForInstancePoll();
+                        ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
+                                 &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
+                                 RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, static_cast<DataCollectionTarget*>(object)));
                         break;
                   }
                }
                else
                {
-                  ConsolePrintf(pCtx, _T("ERROR: Node with ID %d does not exist\n\n"), id);
+                  ConsolePrintf(pCtx, _T("ERROR: data collection target with ID %d does not exist\n\n"), id);
                }
             }
             else
             {
-               ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+               ConsoleWrite(pCtx, _T("ERROR: Invalid or missing object ID\n\n"));
             }
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+            ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
       }
    }
    else if (IsCommand(_T("SET"), szBuffer, 3))

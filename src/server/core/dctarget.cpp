@@ -1360,37 +1360,91 @@ json_t *DataCollectionTarget::toJson()
    return root;
 }
 
+/**
+ * Entry point for status poll worker thread
+ */
+void DataCollectionTarget::statusPollWorkerEntry(PollerInfo *poller)
+{
+   statusPollWorkerEntry(poller, NULL, 0);
+}
 
-void DataCollectionTarget::statusPoll(PollerInfo *poller)
+/**
+ * Entry point for status poll worker thread
+ */
+void DataCollectionTarget::statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    poller->startExecution();
-   statusPoll(NULL, 0, poller);
-
+   statusPoll(poller, session, rqId);
    delete poller;
 }
 
-void DataCollectionTarget::configurationPoll(PollerInfo *poller)
+/**
+ * Entry point for second level status poll (called by parent object)
+ */
+void DataCollectionTarget::statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
-   poller->startExecution();
-   ObjectTransactionStart();
-   configurationPoll(NULL, 0, poller);
-   ObjectTransactionEnd();
-   delete poller;
+   poller->setStatus(_T("child poll"));
+   statusPoll(poller, session, rqId);
 }
 
-void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller)
+/**
+ * Perform status poll on this data collection target. Default implementation do nothing.
+ */
+void DataCollectionTarget::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+{
+}
+
+/**
+ * Entry point for configuration poll worker thread
+ */
+void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller)
+{
+   configurationPollWorkerEntry(poller, NULL, 0);
+}
+
+/**
+ * Entry point for configuration poll worker thread
+ */
+void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    poller->startExecution();
    ObjectTransactionStart();
-   instanceDiscoveryPoll(NULL, 0, poller);
+   configurationPoll(poller, session, rqId);
    ObjectTransactionEnd();
    delete poller;
 }
 
 /**
- * Perform instance discovery poll on DataCollectionTarget
+ * Perform configuration poll on this data collection target. Default implementation do nothing.
  */
-void DataCollectionTarget::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, PollerInfo *poller)
+void DataCollectionTarget::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
+{
+}
+
+/**
+ * Entry point for instance discovery poll worker thread
+ */
+void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller)
+{
+   instanceDiscoveryPollWorkerEntry(poller, NULL, 0);
+}
+
+/**
+ * Entry point for instance discovery poll worker thread
+ */
+void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 requestId)
+{
+   poller->startExecution();
+   ObjectTransactionStart();
+   instanceDiscoveryPoll(poller, session, requestId);
+   ObjectTransactionEnd();
+   delete poller;
+}
+
+/**
+ * Perform instance discovery poll on data collection target
+ */
+void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 requestId)
 {
    if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
@@ -1439,6 +1493,14 @@ void DataCollectionTarget::instanceDiscoveryPoll(ClientSession *session, UINT32 
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
    pollerUnlock();
    DbgPrintf(4, _T("Finished instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
+}
+
+/**
+ * Get list of instances for given data collection object. Default implementation always returns NULL.
+ */
+StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)
+{
+   return NULL;
 }
 
 /**

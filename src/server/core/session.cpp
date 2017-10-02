@@ -6127,46 +6127,38 @@ void ClientSession::pollerThread(DataCollectionTarget *pTarget, int iPollType, U
    MutexLock(m_mutexPollerInit);
    MutexUnlock(m_mutexPollerInit);
 
-   PollerInfo *poller = NULL;
    switch(iPollType)
    {
       case POLL_STATUS:
-         poller = RegisterPoller(POLLER_TYPE_STATUS, pTarget);
-         poller->startExecution();
-         pTarget->statusPoll(this, dwRqId, poller);
+         pTarget->statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, pTarget), this, dwRqId);
          break;
       case POLL_CONFIGURATION_FULL:
          if(pTarget->getObjectClass() == OBJECT_NODE)
             ((Node *)pTarget)->setRecheckCapsFlag();
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
-         poller = RegisterPoller(POLLER_TYPE_CONFIGURATION, pTarget);
-         poller->startExecution();
-         pTarget->configurationPoll(this, dwRqId, poller);
+         pTarget->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, pTarget), this, dwRqId);
          break;
       case POLL_INSTANCE_DISCOVERY:
-         poller = RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, pTarget);
-         poller->startExecution();
-         pTarget->instanceDiscoveryPoll(this, dwRqId, poller);
+         pTarget->instanceDiscoveryPollWorkerEntry(RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, pTarget), this, dwRqId);
          break;
       case POLL_TOPOLOGY:
          if(pTarget->getObjectClass() == OBJECT_NODE)
          {
-            poller = RegisterPoller(POLLER_TYPE_TOPOLOGY, pTarget);
-            poller->startExecution();
-            ((Node *)pTarget)->topologyPoll(this, dwRqId, poller);
+            static_cast<Node*>(pTarget)->topologyPollWorkerEntry(RegisterPoller(POLLER_TYPE_TOPOLOGY, pTarget), this, dwRqId);
          }
          break;
       case POLL_INTERFACE_NAMES:
          if(pTarget->getObjectClass() == OBJECT_NODE)
-            ((Node *)pTarget)->updateInterfaceNames(this, dwRqId);
+         {
+            static_cast<Node*>(pTarget)->updateInterfaceNames(this, dwRqId);
+         }
          break;
       default:
          sendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
          break;
    }
    pTarget->decRefCount();
-   delete poller;
 
    msg.setCode(CMD_POLLING_INFO);
    msg.setId(dwRqId);

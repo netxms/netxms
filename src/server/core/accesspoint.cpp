@@ -430,7 +430,7 @@ void AccessPoint::updateState(AccessPointState state)
 /**
  * Do status poll
  */
-void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport)
+void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport)
 {
    m_pollRequestor = session;
 

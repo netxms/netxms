@@ -111,10 +111,7 @@ static void CreateManagementNode(const InetAddress& addr)
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256));
 
-   PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, node);
-   p->startExecution();
-   node->configurationPoll(NULL, 0, p, addr.getMaskBits());
-   delete p;
+	node->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
 
    node->unhide();
    g_dwMgmtNode = node->getId();   // Set local management node ID
@@ -556,26 +553,26 @@ static void QueueForPolling(NetObj *object, void *data)
    WatchdogNotify(*((UINT32 *)data));
    if (IsShutdownInProgress())
       return;
-   if(object->isDataCollectionTarget()) //common check for node, cluster and sensor
+   if (object->isDataCollectionTarget())
    {
       DataCollectionTarget *target = (DataCollectionTarget *)object;
       if (target->isReadyForStatusPoll())
       {
          target->lockForStatusPoll();
          DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for status poll"), (int)target->getId(), target->getName());
-         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, target));
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(POLLER_TYPE_STATUS, target));
       }
       if (target->isReadyForConfigurationPoll())
       {
          target->lockForConfigurationPoll();
          DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for configuration poll"), (int)target->getId(), target->getName());
-         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, target));
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::configurationPollWorkerEntry, RegisterPoller(POLLER_TYPE_CONFIGURATION, target));
       }
       if (target->isReadyForInstancePoll())
       {
          target->lockForInstancePoll();
          DbgPrintf(6, _T("Data Collection Target %d \"%s\" queued for instance discovery poll"), (int)target->getId(), target->getName());
-         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, target));
+         ThreadPoolExecute(g_pollerThreadPool, target, &DataCollectionTarget::instanceDiscoveryPollWorkerEntry, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, target));
       }
    }
 
@@ -588,7 +585,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					node->lockForRoutePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePollWorkerEntry, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
@@ -600,7 +597,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					node->lockForTopologyPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPollWorkerEntry, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
 				}
 			}
 			break;

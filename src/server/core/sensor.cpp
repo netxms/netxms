@@ -528,11 +528,11 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
 /**
  * Perform configuration poll on node
  */
-void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
+void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
-      if (dwRqId == 0)
+      if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
       return;
    }
@@ -546,7 +546,7 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
       return;
    }
 
-   m_pollRequestor = pSession;
+   m_pollRequestor = session;
    nxlog_debug(5, _T("Starting configuration poll for sensor %s (ID: %d), m_flags: %d"), m_name, m_id, m_flags);
 
    bool hasChanges = false;
@@ -579,10 +579,10 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"));
 
-   sendPollerMsg(dwRqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
-   sendPollerMsg(dwRqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
+   sendPollerMsg(rqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(rqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
-   if (dwRqId == 0)
+   if (rqId == 0)
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    m_lastConfigurationPoll = time(NULL);
 
@@ -599,7 +599,10 @@ void Sensor::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInf
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
 }
 
-void Sensor::checkDlmsConverterAccessability()
+/**
+ * Check if DLMS converter used for sensor access is accessible
+ */
+void Sensor::checkDlmsConverterAccessibility()
 {
    //Create conectivity test DCI and try to get it's result
 }
@@ -607,11 +610,11 @@ void Sensor::checkDlmsConverterAccessability()
 /**
  * Perform status poll on sensor
  */
-void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
+void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
    {
-      if (dwRqId == 0)
+      if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
       return;
    }
@@ -628,13 +631,13 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       return;
    }
 
-   m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("Starting status poll for sensor %s\r\n"), m_name);
+   m_pollRequestor = session;
+   sendPollerMsg(rqId, _T("Starting status poll for sensor %s\r\n"), m_name);
    nxlog_debug(5, _T("Starting status poll for sensor %s (ID: %d)"), m_name, m_id);
 
    nxlog_debug(6, _T("StatusPoll(%s): checking agent"), m_name);
    poller->setStatus(_T("check agent"));
-   sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
+   sendPollerMsg(rqId, _T("Checking NetXMS agent connectivity\r\n"));
 
    AgentConnectionEx *conn = getAgentConnection();
    lockProperties();
@@ -644,13 +647,13 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       if (m_state & DCSF_UNREACHABLE)
       {
          m_state &= ~DCSF_UNREACHABLE;
-         sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+         sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
       }
    }
    else
    {
       nxlog_debug(6, _T("StatusPoll(%s): agent unreachable"), m_name);
-      sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
+      sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
       if (!(m_state & DCSF_UNREACHABLE))
          m_state |= DCSF_UNREACHABLE;
    }
@@ -708,7 +711,7 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
          }
          break;
       case COMM_DLMS:
-         checkDlmsConverterAccessability();
+         checkDlmsConverterAccessibility();
          lockProperties();
          setModified();
          unlockProperties();
@@ -727,11 +730,11 @@ void Sensor::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    poller->setStatus(_T("hook"));
    executeHookScript(_T("StatusPoll"));
 
-   if (dwRqId == 0)
+   if (rqId == 0)
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
 
-   sendPollerMsg(dwRqId, _T("Finished status poll for sensor %s\r\n"), m_name);
-   sendPollerMsg(dwRqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+   sendPollerMsg(rqId, _T("Finished status poll for sensor %s\r\n"), m_name);
+   sendPollerMsg(rqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    pollerUnlock();
    m_lastStatusPoll = time(NULL);

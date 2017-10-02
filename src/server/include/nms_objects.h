@@ -1057,6 +1057,14 @@ protected:
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
+   virtual StringMap *getInstanceList(DCObject *dco);
+   void doInstanceDiscovery(UINT32 requestId);
+   bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
+
    NetObj *objectFromParameter(const TCHAR *param);
 
    NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject);
@@ -1119,23 +1127,21 @@ public:
 
    UINT32 getPingTime();
 
-   virtual void statusPoll(PollerInfo *poller);
-   virtual void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller) { /* do nothing */ }
+   void statusPollWorkerEntry(PollerInfo *poller);
+   void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool isReadyForStatusPoll();
    void lockForStatusPoll();
    void unlockForStatusPoll();
 
-   void configurationPoll(PollerInfo *poller);
-   virtual void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)  { /* do nothing */ }
+   void configurationPollWorkerEntry(PollerInfo *poller);
+   void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool isReadyForConfigurationPoll();
    void lockForConfigurationPoll();
    void unlockForConfigurationPoll();
 
-   void instanceDiscoveryPoll(PollerInfo *poller);
-   void instanceDiscoveryPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void doInstanceDiscovery(UINT32 requestId);
-   virtual StringMap *getInstanceList(DCObject *dco)  { return NULL; }
-   bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
+   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller);
+   void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool isReadyForInstancePoll();
    void lockForInstancePoll();
    void unlockForInstancePoll();
@@ -1321,7 +1327,7 @@ public:
 
    virtual json_t *toJson();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
    UINT32 getIndex() { return m_index; }
 	const BYTE *getMacAddr() { return m_macAddr; }
@@ -1360,6 +1366,9 @@ protected:
 
    virtual void onDataCollectionChange();
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
    UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
 
 public:
@@ -1373,6 +1382,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual bool showThresholdSummary();
 
+   virtual bool isReadyForInstancePoll() { return false; }
+
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
    virtual NXSL_Value *createNXSLObject();
@@ -1385,10 +1396,6 @@ public:
 	UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, NULL); }
    UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
-
-   void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   bool isReadyForInstancePoll() { return false; }
 
    UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
    UINT32 collectAggregatedData(DCTable *table, Table **result);
@@ -1430,6 +1437,10 @@ public:
    virtual bool showThresholdSummary();
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
+   virtual bool isReadyForStatusPoll()  { return false; }
+   virtual bool isReadyForConfigurationPoll()  { return false; }
+   virtual bool isReadyForInstancePoll() { return false; }
+
    virtual NXSL_Value *createNXSLObject();
 
    virtual json_t *toJson();
@@ -1441,10 +1452,6 @@ public:
    bool bindUnderController() { return (m_flags & CHF_BIND_UNDER_CONTROLLER) ? true : false; }
 
    void setBindUnderController(bool doBind);
-
-   virtual bool isReadyForStatusPoll()  { return false; }
-   virtual bool isReadyForConfigurationPoll()  { return false; }
-   virtual bool isReadyForInstancePoll() { return false; }
 };
 
 /**
@@ -1487,6 +1494,10 @@ protected:
 
 	virtual void fillMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
    Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceClass, TCHAR *vendor,
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
                TCHAR *metaType, TCHAR *description, UINT32 proxyNode);
@@ -1515,9 +1526,6 @@ public:
 
    StringMap *getInstanceList(DCObject *dco);
 
-   void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-
    UINT32 getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    UINT32 getListFromAgent(const TCHAR *name, StringList **list);
 
@@ -1535,7 +1543,7 @@ public:
 
    AgentConnectionEx *getAgentConnection();
 
-   void checkDlmsConverterAccessability();
+   void checkDlmsConverterAccessibility();
    void prepareDlmsDciParameters(String &parameter);
    void prepareLoraDciParameters(String &parameter);
 
@@ -1713,6 +1721,26 @@ protected:
 	UINT32 m_portNumberingScheme;
 	UINT32 m_portRowCount;
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
+   virtual bool isDataCollectionDisabled();
+   virtual void collectProxyInfo(ProxyInfo *info);
+
+   virtual void prepareForDeletion();
+   virtual void onObjectDelete(UINT32 dwObjectId);
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
+   virtual void updatePingData();
+
+   virtual void onDataCollectionChange();
+
+   virtual StringMap *getInstanceList(DCObject *dco);
+
    void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
 
@@ -1750,9 +1778,6 @@ protected:
    bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
 
-	void doInstanceDiscovery(UINT32 requestId);
-	StringMap *getInstanceList(DCObject *dco);
-	bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
@@ -1763,19 +1788,6 @@ protected:
    void setLastAgentCommTime() { m_lastAgentCommTime = time(NULL); }
 
 	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
-
-	virtual bool isDataCollectionDisabled();
-   virtual void collectProxyInfo(ProxyInfo *info);
-
-   virtual void prepareForDeletion();
-   virtual void onObjectDelete(UINT32 dwObjectId);
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
-
-   virtual void updatePingData();
-
-   virtual void onDataCollectionChange();
 
 public:
    Node();
@@ -1788,6 +1800,11 @@ public:
    virtual bool saveRuntimeData(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual bool isReadyForStatusPoll();
+   virtual bool isReadyForDiscoveryPoll();
+   virtual bool isReadyForRoutePoll();
+   virtual bool isReadyForTopologyPoll();
 
    virtual NXSL_Value *createNXSLObject();
 
@@ -1894,25 +1911,15 @@ public:
 
 	void setRecheckCapsFlag() { m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
-   void statusPoll(PollerInfo *poller);
-   void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller, int maskBits);
-	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, PollerInfo *poller);
-	void topologyPoll(PollerInfo *poller);
-	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
+	void topologyPollWorkerEntry(PollerInfo *poller);
+	void topologyPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
-	void routingTablePoll(PollerInfo *poller);
-   void updateRoutingTable();
+	void routingTablePollWorkerEntry(PollerInfo *poller);
+   void routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
    void setChassis(UINT32 chassisId);
-
-   bool isReadyForStatusPoll();
-   bool isReadyForDiscoveryPoll();
-   bool isReadyForRoutePoll();
-   bool isReadyForTopologyPoll();
 
    void lockForDiscoveryPoll();
    void lockForRoutePoll();

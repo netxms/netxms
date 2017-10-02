@@ -204,10 +204,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
 
 	if (doConfPoll)
    {
-      PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
-      p->startExecution();
-		pNode->configurationPoll(NULL, 0, p, ipAddr.getMaskBits());
-      delete p;
+	   pNode->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode));
    }
 
    pNode->unhide();
