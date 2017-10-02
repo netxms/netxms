@@ -850,12 +850,48 @@ bool EPRule::isActionInUse(UINT32 dwActionId)
 }
 
 /**
+ * Serialize rule to JSON
+ */
+json_t *EPRule::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "flags", json_integer(m_dwFlags));
+
+   json_t *sources = json_array();
+   for(UINT32 i = 0; i < m_dwNumSources; i++)
+      json_array_append_new(sources, json_integer(m_pdwSourceList[i]));
+   json_object_set_new(root, "sources", sources);
+
+   json_t *events = json_array();
+   for(UINT32 i = 0; i < m_dwNumEvents; i++)
+      json_array_append_new(events, json_integer(m_pdwEventList[i]));
+   json_object_set_new(root, "events", events);
+
+   json_t *actions = json_array();
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+      json_array_append_new(actions, json_integer(m_pdwActionList[i]));
+   json_object_set_new(root, "actions", actions);
+
+   json_object_set_new(root, "comments", json_string_t(m_pszComment));
+   json_object_set_new(root, "script", json_string_t(m_pszScript));
+   json_object_set_new(root, "alarmMessage", json_string_t(m_szAlarmMessage));
+   json_object_set_new(root, "alarmSeverity", json_integer(m_iAlarmSeverity));
+   json_object_set_new(root, "alarmKey", json_string_t(m_szAlarmKey));
+   json_object_set_new(root, "alarmTimeout", json_integer(m_dwAlarmTimeout));
+   json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_dwAlarmTimeoutEvent));
+   json_object_set_new(root, "categories", m_alarmCategoryList->toJson());
+   json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
+   json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
+
+   return root;
+}
+
+/**
  * Event processing policy constructor
  */
-EventPolicy::EventPolicy()
+EventPolicy::EventPolicy() : m_rules(128, 128, true)
 {
-   m_dwNumRules = 0;
-   m_ppRuleList = NULL;
    m_rwlock = RWLockCreate();
 }
 
@@ -864,21 +900,7 @@ EventPolicy::EventPolicy()
  */
 EventPolicy::~EventPolicy()
 {
-   clear();
    RWLockDestroy(m_rwlock);
-}
-
-/**
- * Clear existing policy
- */
-void EventPolicy::clear()
-{
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumRules; i++)
-      delete m_ppRuleList[i];
-   safe_free(m_ppRuleList);
-   m_ppRuleList = NULL;
 }
 
 /**
@@ -887,7 +909,7 @@ void EventPolicy::clear()
 bool EventPolicy::loadFromDB()
 {
    DB_RESULT hResult;
-   bool bSuccess = false;
+   bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
@@ -895,27 +917,28 @@ bool EventPolicy::loadFromDB()
                            _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
-      UINT32 i;
-
-      bSuccess = true;
-      m_dwNumRules = DBGetNumRows(hResult);
-      m_ppRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRules);
-      for(i = 0; i < m_dwNumRules; i++)
+      success = true;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; (i < count) && success; i++)
       {
-         m_ppRuleList[i] = new EPRule(hResult, i);
-         bSuccess = bSuccess && m_ppRuleList[i]->loadFromDB(hdb);
+         EPRule *rule = new EPRule(hResult, i);
+         success = rule->loadFromDB(hdb);
+         if (success)
+            m_rules.add(rule);
+         else
+            delete rule;
       }
       DBFreeResult(hResult);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return bSuccess;
+   return success;
 }
 
 /**
  * Save event processing policy to database
  */
-bool EventPolicy::saveToDB()
+bool EventPolicy::saveToDB() const
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = DBBegin(hdb);
@@ -931,8 +954,8 @@ bool EventPolicy::saveToDB()
       if (success)
       {
          readLock();
-         for(UINT32 i = 0; (i < m_dwNumRules) && success; i++)
-            success = m_ppRuleList[i]->saveToDB(hdb);
+         for(int i = 0; (i < m_rules.size()) && success; i++)
+            success = m_rules.get(i)->saveToDB(hdb);
          unlock();
       }
 
@@ -950,12 +973,10 @@ bool EventPolicy::saveToDB()
  */
 void EventPolicy::processEvent(Event *pEvent)
 {
-   UINT32 i;
-
 	DbgPrintf(7, _T("EPP: processing event ") UINT64_FMT, pEvent->getId());
    readLock();
-   for(i = 0; i < m_dwNumRules; i++)
-      if (m_ppRuleList[i]->processEvent(pEvent))
+   for(int i = 0; i < m_rules.size(); i++)
+      if (m_rules.get(i)->processEvent(pEvent))
 		{
 			DbgPrintf(7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), i + 1);
          break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
@@ -966,17 +987,16 @@ void EventPolicy::processEvent(Event *pEvent)
 /**
  * Send event policy to client
  */
-void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId)
+void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId) const
 {
-   UINT32 i;
    NXCPMessage msg;
 
    readLock();
    msg.setCode(CMD_EPP_RECORD);
    msg.setId(dwRqId);
-   for(i = 0; i < m_dwNumRules; i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      m_ppRuleList[i]->createMessage(&msg);
+      m_rules.get(i)->createMessage(&msg);
       pSession->sendMessage(&msg);
       msg.deleteAllFields();
    }
@@ -988,33 +1008,31 @@ void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId)
  */
 void EventPolicy::replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList)
 {
-   UINT32 i;
-
    writeLock();
-
-   // Replace rule list
-   clear();
-   m_dwNumRules = dwNumRules;
-   m_ppRuleList = ppRuleList;
-
-   // Replace id's in rules
-   for(i = 0; i < m_dwNumRules; i++)
-      m_ppRuleList[i]->setId(i);
-
+   m_rules.clear();
+   if (ppRuleList != NULL)
+   {
+      for(int i = 0; i < (int)dwNumRules; i++)
+      {
+         EPRule *r = ppRuleList[i];
+         r->setId(i);
+         m_rules.add(r);
+      }
+   }
    unlock();
 }
 
 /**
  * Check if given action is used in policy
  */
-bool EventPolicy::isActionInUse(UINT32 dwActionId)
+bool EventPolicy::isActionInUse(UINT32 actionId) const
 {
    bool bResult = false;
 
    readLock();
 
-   for(UINT32 i = 0; i < m_dwNumRules; i++)
-      if (m_ppRuleList[i]->isActionInUse(dwActionId))
+   for(int i = 0; i < m_rules.size(); i++)
+      if (m_rules.get(i)->isActionInUse(actionId))
       {
          bResult = true;
          break;
@@ -1027,14 +1045,14 @@ bool EventPolicy::isActionInUse(UINT32 dwActionId)
 /**
  * Check if given category is used in policy
  */
-bool EventPolicy::isCategoryInUse(UINT32 dwCategoryId)
+bool EventPolicy::isCategoryInUse(UINT32 categoryId) const
 {
    bool bResult = false;
 
    readLock();
 
-   for(UINT32 i = 0; i < m_dwNumRules; i++)
-      if (m_ppRuleList[i]->isCategoryInUse(dwCategoryId))
+   for(int i = 0; i < m_rules.size(); i++)
+      if (m_rules.get(i)->isCategoryInUse(categoryId))
       {
          bResult = true;
          break;
@@ -1047,14 +1065,14 @@ bool EventPolicy::isCategoryInUse(UINT32 dwCategoryId)
 /**
  * Export rule
  */
-void EventPolicy::exportRule(String& str, const uuid& guid)
+void EventPolicy::exportRule(String& str, const uuid& guid) const
 {
    readLock();
-   for(UINT32 i = 0; i < m_dwNumRules; i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      if (guid.equals(m_ppRuleList[i]->getGuid()))
+      if (guid.equals(m_rules.get(i)->getGuid()))
       {
-         m_ppRuleList[i]->createNXMPRecord(str);
+         m_rules.get(i)->createNXMPRecord(str);
          break;
       }
    }
@@ -1070,13 +1088,12 @@ void EventPolicy::importRule(EPRule *rule)
 
    // Find rule with same GUID and replace it if found
    bool newRule = true;
-   for(UINT32 i = 0; i < m_dwNumRules; i++)
+   for(int i = 0; i < m_rules.size(); i++)
    {
-      if (rule->getGuid().equals(m_ppRuleList[i]->getGuid()))
+      if (rule->getGuid().equals(m_rules.get(i)->getGuid()))
       {
-         delete m_ppRuleList[i];
-         m_ppRuleList[i] = rule;
          rule->setId(i);
+         m_rules.set(i, rule);
          newRule = false;
          break;
       }
@@ -1085,11 +1102,26 @@ void EventPolicy::importRule(EPRule *rule)
    // Add new rule at the end
    if (newRule)
    {
-      rule->setId(m_dwNumRules);
-      m_dwNumRules++;
-      m_ppRuleList = (EPRule **)realloc(m_ppRuleList, sizeof(EPRule *) * m_dwNumRules);
-      m_ppRuleList[m_dwNumRules - 1] = rule;
+      rule->setId(m_rules.size());
+      m_rules.add(rule);
    }
 
    unlock();
+}
+
+/**
+ * Create JSON representation
+ */
+json_t *EventPolicy::toJson() const
+{
+   json_t *root = json_object();
+   json_t *rules = json_array();
+   readLock();
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      json_array_append_new(rules, m_rules.get(i)->toJson());
+   }
+   unlock();
+   json_object_set_new(root, "rules", rules);
+   return root;
 }

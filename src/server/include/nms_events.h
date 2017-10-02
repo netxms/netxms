@@ -192,6 +192,7 @@ public:
    bool processEvent(Event *pEvent);
    void createMessage(NXCPMessage *pMsg);
    void createNXMPRecord(String &str);
+   json_t *toJson() const;
 
    bool isActionInUse(UINT32 dwActionId);
    bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList->contains(categoryId); }
@@ -203,31 +204,30 @@ public:
 class EventPolicy
 {
 private:
-   UINT32 m_dwNumRules;
-   EPRule **m_ppRuleList;
+   ObjectArray<EPRule> m_rules;
    RWLOCK m_rwlock;
 
-   void readLock() { RWLockReadLock(m_rwlock, INFINITE); }
+   void readLock() const { RWLockReadLock(m_rwlock, INFINITE); }
    void writeLock() { RWLockWriteLock(m_rwlock, INFINITE); }
-   void unlock() { RWLockUnlock(m_rwlock); }
-   void clear();
+   void unlock() const { RWLockUnlock(m_rwlock); }
 
 public:
    EventPolicy();
    ~EventPolicy();
 
-   UINT32 getNumRules() { return m_dwNumRules; }
+   UINT32 getNumRules() const { return m_rules.size(); }
    bool loadFromDB();
-   bool saveToDB();
+   bool saveToDB() const;
    void processEvent(Event *pEvent);
-   void sendToClient(ClientSession *pSession, UINT32 dwRqId);
+   void sendToClient(ClientSession *pSession, UINT32 dwRqId) const;
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
-   void exportRule(String& str, const uuid& guid);
+   void exportRule(String& str, const uuid& guid) const;
    void importRule(EPRule *rule);
    void removeRuleCategory (UINT32 categoryId);
+   json_t *toJson() const;
 
-   bool isActionInUse(UINT32 dwActionId);
-   bool isCategoryInUse(UINT32 dwCategoryId);
+   bool isActionInUse(UINT32 actionId) const;
+   bool isCategoryInUse(UINT32 categoryId) const;
 };
 
 /**

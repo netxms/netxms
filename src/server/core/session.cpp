@@ -4643,12 +4643,14 @@ void ClientSession::openEPP(NXCPMessage *request)
          msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setField(VID_NUM_RULES, g_pEventPolicy->getNumRules());
          success = true;
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
       }
    }
    else
    {
       // Current user has no rights for event policy management
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on opening event processing policy"));
    }
 
    // Send response
@@ -4711,7 +4713,11 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
          if (m_dwNumRecordsToUpload == 0)
          {
             g_pEventPolicy->replacePolicy(0, NULL);
-            if(!g_pEventPolicy->saveToDB())
+            if (g_pEventPolicy->saveToDB())
+            {
+               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event processing policy cleared"));
+            }
+            else
             {
                msg.setField(VID_RCC, RCC_DB_FAILURE);
             }
@@ -4733,6 +4739,7 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
    {
       // Current user has no rights for event policy management
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
    }
 
    // Send response
@@ -4762,22 +4769,26 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
          m_dwRecordsUploaded++;
          if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
          {
-            NXCPMessage msg;
-
             // All records received, replace event policy...
             debugPrintf(5, _T("Replacing event processing policy with a new one at %p (%d rules)"),
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
+            json_t *oldVersion = g_pEventPolicy->toJson();
             g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             bool success = g_pEventPolicy->saveToDB();
+            free(m_ppEPPRuleList);
             m_ppEPPRuleList = NULL;
+            json_t *newVersion = g_pEventPolicy->toJson();
 
             // ... and send final confirmation
-            msg.setCode(CMD_REQUEST_COMPLETED);
-            msg.setId(pRequest->getId());
+            NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
             msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
             sendMessage(&msg);
 
             m_dwFlags &= ~CSF_EPP_UPLOAD;
+
+            writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersion, _T("Event processing policy updated"));
+            json_decref(oldVersion);
+            json_decref(newVersion);
          }
       }
    }
