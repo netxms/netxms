@@ -501,7 +501,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 		}
 	}
 
-   ThresholdCheckResult result = (bMatch & !m_isReached) ? ACTIVATED : ((!bMatch & m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   ThresholdCheckResult result = (bMatch && !m_isReached) ? ACTIVATED : ((!bMatch && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
    m_isReached = bMatch;
    if (result == ACTIVATED || result == DEACTIVATED)
    {
@@ -539,7 +539,7 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
       return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
 
    BOOL bMatch = ((UINT32)m_sampleCount <= dwErrorCount);
-   ThresholdCheckResult result = (bMatch & !m_isReached) ? ACTIVATED : ((!bMatch & m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   ThresholdCheckResult result = (bMatch && !m_isReached) ? ACTIVATED : ((!bMatch && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
    m_isReached = bMatch;
    if (result == ACTIVATED || result == DEACTIVATED)
    {
