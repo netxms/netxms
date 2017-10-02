@@ -27,6 +27,8 @@ public class MapAccessor
 {
 	public static final int MAX_MAP_WIDTH = 4096;
 	public static final int MAX_MAP_HEIGHT = 4096;
+   public static final int MAX_MAP_ZOOM = 19;
+   public static final int MIN_MAP_ZOOM = 0;
 	
 	private double latitude = 0.0;
 	private double longitude = 0.0;
@@ -151,7 +153,7 @@ public class MapAccessor
 		if ((mapWidth < 1) || (mapHeight < 1))
 			return false;
 		
-		if ((zoom < 0) || (zoom > 18))
+		if ((zoom < MIN_MAP_ZOOM) || (zoom > MAX_MAP_ZOOM))
 			return false;
 		
 		return true;
