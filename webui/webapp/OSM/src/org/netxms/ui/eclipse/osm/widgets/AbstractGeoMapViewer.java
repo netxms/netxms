@@ -530,10 +530,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public void mouseDoubleClick(MouseEvent e)
 	{
       int zoom = accessor.getZoom();
-      if (zoom < 18)
+      if (zoom < MapAccessor.MAX_MAP_ZOOM)
       {
          int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
-         zoom = (zoom + step > 18) ? 18 : zoom + step;
+         zoom = (zoom + step > MapAccessor.MAX_MAP_ZOOM) ? MapAccessor.MAX_MAP_ZOOM : zoom + step;
          
          final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
          accessor.setZoom(zoom);
@@ -559,7 +559,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		      int zoom = accessor.getZoom();
 		      if (r.contains(e.x, e.y))
 		      {
-		         if (zoom < 18)
+		         if (zoom < MapAccessor.MAX_MAP_ZOOM)
 		            zoom++;
 		      }
 		      else
@@ -581,7 +581,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   }
 		   else if ((e.stateMask & SWT.SHIFT) != 0)
 			{
-				if (accessor.getZoom() < 18)
+				if (accessor.getZoom() < MapAccessor.MAX_MAP_ZOOM)
 					selectionStartPoint = new Point(e.x, e.y);
 			}
 			else
@@ -632,7 +632,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 				final GeoLocation lc = getLocationAtPoint(new Point(x2 - (x2 - x1) / 2, y2 - (y2 - y1) / 2));
 
 				int zoom = accessor.getZoom();
-				while(zoom < 18)
+				while(zoom < MapAccessor.MAX_MAP_ZOOM)
 				{
 					zoom++;
 					final Area area = GeoLocationCache.calculateCoverage(getSize(), lc, GeoLocationCache.CENTER, zoom);

@@ -122,8 +122,8 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 			{
 				AbstractGeolocationView.this.zoomLevel = zoomLevel;
 				mapAccessor.setZoom(zoomLevel);
-				actionZoomIn.setEnabled(zoomLevel < 18);
-				actionZoomOut.setEnabled(zoomLevel > 0);
+				actionZoomIn.setEnabled(zoomLevel < MapAccessor.MAX_MAP_ZOOM);
+				actionZoomOut.setEnabled(zoomLevel > MapAccessor.MIN_MAP_ZOOM);
 			}
 
 			@Override
@@ -262,15 +262,15 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	 */
 	private void setZoomLevel(int newLevel)
 	{
-		if ((newLevel < 0) || (newLevel > 18))
+		if ((newLevel < MapAccessor.MIN_MAP_ZOOM) || (newLevel > MapAccessor.MAX_MAP_ZOOM))
 			return;
 		
 		zoomLevel = newLevel;
 		mapAccessor.setZoom(zoomLevel);
 		map.showMap(mapAccessor);
 		
-		actionZoomIn.setEnabled(zoomLevel < 18);
-		actionZoomOut.setEnabled(zoomLevel > 0);
+		actionZoomIn.setEnabled(zoomLevel < MapAccessor.MAX_MAP_ZOOM);
+		actionZoomOut.setEnabled(zoomLevel > MapAccessor.MIN_MAP_ZOOM);
 	}
 
 	/**
