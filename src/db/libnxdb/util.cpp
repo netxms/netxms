@@ -532,8 +532,11 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
          int rows = DBGetNumRows(hResult);
          const int blen = 2048;
          TCHAR buffer[blen];
+
          // Intermediate buffers for SQLs
-         TCHAR columnList[1024], createList[1024];
+         TCHAR *columnList = (TCHAR *)malloc(rows * 96 * sizeof(TCHAR));
+         TCHAR *createList = (TCHAR *)malloc(rows * 96 * sizeof(TCHAR));
+
          // TABLE_INFO() columns
          TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
          columnList[0] = createList[0] = _T('\0');
@@ -586,6 +589,8 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
                success = DBQuery(hdb, buffer);
             }
          }
+         free(columnList);
+         free(createList);
       }
       // TODO: preserve indices and constraints??
    }
