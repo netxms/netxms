@@ -25,9 +25,6 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
-#undef min
-#undef max
-
 //mongodb
 #include <mongoc.h>
 #include <bson.h>

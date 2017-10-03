@@ -35,10 +35,6 @@
 #include "zeromq.h"
 #endif
 
-#ifndef min
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
 // WARNING! this hack works only for d2i_X509(); be careful when adding new code
 #ifdef OPENSSL_CONST
 # undef OPENSSL_CONST

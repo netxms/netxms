@@ -24,14 +24,6 @@
 #include "libnxsl.h"
 
 /**
- * For unknown reasons, min() becames undefined on Linux, despite the fact
- * that it is defined in nms_common.h
- */
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
-/**
  * Interface to compiler
  */
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, int *errorLine)
@@ -94,7 +86,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFile
             *pdwFileSize = fs.st_size;
             for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
             {
-               iNumBytes = min(16384, fs.st_size - iBufPos);
+               iNumBytes = std::min(16384, (int)fs.st_size - iBufPos);
                if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
                {
                   free(pBuffer);

@@ -348,37 +348,37 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *er
 /**
  * SELECT callback
  */
-static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNames)
+static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszNames)
 {
    int i, nPos, nMaxCol;
 
-   if (((SQLITE_RESULT *)pArg)->nCols == 0)
+   if (static_cast<SQLITE_RESULT*>(arg)->nCols == 0)
    {
-      ((SQLITE_RESULT *)pArg)->nCols = nCols;
+      static_cast<SQLITE_RESULT*>(arg)->nCols = nCols;
       nMaxCol = nCols;
    }
    else
    {
-      nMaxCol = std::min(((SQLITE_RESULT *)pArg)->nCols, nCols);
+      nMaxCol = std::min(static_cast<SQLITE_RESULT*>(arg)->nCols, nCols);
    }
 
 	// Store column names
-	if ((((SQLITE_RESULT *)pArg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
+	if ((static_cast<SQLITE_RESULT*>(arg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
 	{
-		((SQLITE_RESULT *)pArg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
+		static_cast<SQLITE_RESULT*>(arg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
 		for(i = 0; i < nCols; i++)
-			((SQLITE_RESULT *)pArg)->ppszNames[i] = strdup(ppszNames[i]);
+			static_cast<SQLITE_RESULT*>(arg)->ppszNames[i] = strdup(ppszNames[i]);
 	}
 
-   nPos = ((SQLITE_RESULT *)pArg)->nRows * ((SQLITE_RESULT *)pArg)->nCols;
-   ((SQLITE_RESULT *)pArg)->nRows++;
-   ((SQLITE_RESULT *)pArg)->ppszData = (char **)realloc(((SQLITE_RESULT *)pArg)->ppszData,
-         sizeof(char *) * ((SQLITE_RESULT *)pArg)->nCols * ((SQLITE_RESULT *)pArg)->nRows);
+   nPos = static_cast<SQLITE_RESULT*>(arg)->nRows * static_cast<SQLITE_RESULT*>(arg)->nCols;
+   static_cast<SQLITE_RESULT*>(arg)->nRows++;
+   static_cast<SQLITE_RESULT*>(arg)->ppszData = (char **)realloc(static_cast<SQLITE_RESULT*>(arg)->ppszData,
+         sizeof(char *) * static_cast<SQLITE_RESULT*>(arg)->nCols * static_cast<SQLITE_RESULT*>(arg)->nRows);
 
    for(i = 0; i < nMaxCol; i++, nPos++)
-      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup(CHECK_NULL_EX_A(ppszData[i]));
-   for(; i < ((SQLITE_RESULT *)pArg)->nCols; i++, nPos++)
-      ((SQLITE_RESULT *)pArg)->ppszData[nPos] = strdup("");
+      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = strdup(CHECK_NULL_EX_A(ppszData[i]));
+   for(; i < static_cast<SQLITE_RESULT*>(arg)->nCols; i++, nPos++)
+      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = strdup("");
    return 0;
 }
 

@@ -118,7 +118,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
          {
             if (dwTimeOut != INFINITE)
             {
-               dwTimeOut -= min(dwElapsed, dwTimeOut);
+               dwTimeOut -= std::min(dwElapsed, dwTimeOut);
             }
          }
       }
@@ -224,7 +224,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
          {
             if (dwTimeOut != INFINITE)
             {
-               dwTimeOut -= min(dwElapsed, dwTimeOut);
+               dwTimeOut -= std::min(dwElapsed, dwTimeOut);
             }
          }
       }

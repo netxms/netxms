@@ -16,11 +16,6 @@
 #define container_of(ptr_, type_, member_)  \
     ((type_ *)((char *)ptr_ - offsetof(type_, member_)))
 
-/* On some platforms, max() may already be defined */
-#ifndef max
-#define max(a, b)  ((a) > (b) ? (a) : (b))
-#endif
-
 /* va_copy is a C99 feature. In C89 implementations, it's sometimes
    available as __va_copy. If not, memcpy() should do the trick. */
 #ifndef va_copy

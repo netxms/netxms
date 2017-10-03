@@ -368,7 +368,7 @@ int Serial::read(char *pBuff, int nSize)
          if (stat.cbInQue > 0)
          {
             // Read rest of buffered data
-         	if (ReadFile(m_hPort, &pBuff[1], min(stat.cbInQue, (DWORD)nSize - 1), &nDone, NULL))
+            if (ReadFile(m_hPort, &pBuff[1], std::min(stat.cbInQue, (DWORD)nSize - 1), &nDone, NULL))
             {
                nRet += (int)nDone;
             }
