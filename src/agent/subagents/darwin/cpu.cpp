@@ -25,6 +25,8 @@
 
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
+#include <algorithm>
+
 #include "cpu.h"
 
 
@@ -167,7 +169,7 @@ static void CpuUsageCollector()
 		if (ret < 4)
 			continue;
 
-		maxCpu = max(cpu, maxCpu);
+		maxCpu = std::max(cpu, maxCpu);
 
 		uint64_t userDelta, systemDelta, idleDelta;
 
