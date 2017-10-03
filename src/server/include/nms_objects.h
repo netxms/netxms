@@ -107,6 +107,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define NDF_NETWORK_PATH_PROBLEM       0x008000
 #define NDF_QUEUED_FOR_INSTANCE_POLL   0x010000
 #define NDF_CACHE_MODE_NOT_SUPPORTED   0x020000
+#define NDF_NEW_TUNNEL_BIND            0x040000
 
 #define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE | NDF_CACHE_MODE_NOT_SUPPORTED)
 
@@ -1670,6 +1671,8 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
+   void setNewTunnelBindFlag() { m_dwDynamicFlags |= NDF_NEW_TUNNEL_BIND; }
+   void removeNewTunnelBindFlag() { m_dwDynamicFlags &= ~NDF_NEW_TUNNEL_BIND; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }

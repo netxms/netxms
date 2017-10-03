@@ -505,6 +505,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId)
    if (rcc == ERR_SUCCESS)
    {
       debugPrintf(4, _T("Bind successful, resetting tunnel"));
+      node->setNewTunnelBindFlag();
       msg.setCode(CMD_RESET_TUNNEL);
       msg.setId(InterlockedIncrement(&m_requestId));
       sendMessage(&msg);
@@ -1010,6 +1011,12 @@ retry:
                   if (tunnelGuid.equals(node->getTunnelId()))
                   {
                      nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
+                     if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
+                     {
+                        node->removeNewTunnelBindFlag();
+                        node->setRecheckCapsFlag();
+                        node->forceConfigurationPoll();
+                     }
                      nodeId = node->getId();
                      zoneUIN = node->getZoneUIN();
                   }
