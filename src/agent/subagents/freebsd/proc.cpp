@@ -256,10 +256,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 							result += currValue;
 							break;
 						case INFOTYPE_MIN:
-							result = min(result, currValue);
+							result = std::min(result, currValue);
 							break;
 						case INFOTYPE_MAX:
-							result = max(result, currValue);
+							result = std::max(result, currValue);
 							break;
 					}
 				}
