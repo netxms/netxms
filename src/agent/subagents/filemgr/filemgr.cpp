@@ -803,6 +803,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
             if(VerifyFileOperation(newName, allowOverwirite, response))
+            {
                if (Rename(oldName, newName))
                {
                   response->setField(VID_RCC, ERR_SUCCESS);
@@ -811,6 +812,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
                {
                   response->setField(VID_RCC, ERR_IO_FAILURE);
                }
+            }
          }
          else
          {
