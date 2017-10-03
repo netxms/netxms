@@ -1088,7 +1088,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
    }
    else
    {
-      int iLen = min((int)hResult->lengthFields[iColumn], iBufSize - 1);
+      int iLen = std::min((int)hResult->lengthFields[iColumn], iBufSize - 1);
       if (iLen > 0)
       {
          if (utf8)

@@ -27,6 +27,10 @@
 #define _WIN32_WINNT 0x0502
 #endif
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
