@@ -108,7 +108,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	retentionTime *= 86400;	// Convert days to seconds
 	time_t ts = time(NULL) - (time_t)retentionTime;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT alarm_id FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
@@ -127,7 +127,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=2 AND last_change_time<?"));
+	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
