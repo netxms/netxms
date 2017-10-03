@@ -24,6 +24,11 @@
 #define _db2drv_h_
 
 #ifdef _WIN32
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <winsock2.h>
 #include <windows.h>
 #define EXPORT __declspec(dllexport)
