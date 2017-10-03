@@ -392,10 +392,10 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
       switch(nType)
       {
          case INFOTYPE_MIN:
-            *pqwValue = min(*pqwValue, qwValue);
+            *pqwValue = std::min(*pqwValue, qwValue);
             break;
          case INFOTYPE_MAX:
-            *pqwValue = max(*pqwValue, qwValue);
+            *pqwValue = std::max(*pqwValue, qwValue);
             break;
          case INFOTYPE_AVG:
             *pqwValue = (*pqwValue * nCount + qwValue) / (nCount + 1);
