@@ -645,6 +645,53 @@ BOOL moveFlagsFromOldTables(const TCHAR *tableName)
 }
 
 /**
+ * Upgrade from V505 to V506 included in stable as 461
+ */
+static BOOL H_UpgradeFromV505(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
+   if (hResult != NULL)
+   {
+      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
+      if (hStmt != NULL)
+      {
+         int nRows = DBGetNumRows(hResult);
+         UINT32 rights;
+         for(int i = 0; i < nRows; i++)
+         {
+            rights = DBGetFieldULong(hResult, i, 0);
+            if (rights & OBJECT_ACCESS_READ)
+            {
+               rights |= (OBJECT_ACCESS_READ_AGENT | OBJECT_ACCESS_READ_SNMP | OBJECT_ACCESS_SCREENSHOT);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rights);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+
+               if (!SQLExecute(hStmt))
+               {
+                  if (!g_bIgnoreErrors)
+                  {
+                     DBFreeStatement(hStmt);
+                     DBFreeResult(hResult);
+                     return FALSE;
+                  }
+               }
+            }
+         }
+
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_bIgnoreErrors)
+         return FALSE;
+      DBFreeResult(hResult);
+   }
+   else if (!g_bIgnoreErrors)
+      return FALSE;
+
+   CHK_EXEC(SetSchemaVersion(506));
+   return TRUE;
+}
+
+/**
  * Upgrade from V504 to V505 included in stable as 460
  */
 static BOOL H_UpgradeFromV504(int currVersion, int newVersion)
@@ -12295,6 +12342,7 @@ static struct
    { 502, 503, H_UpgradeFromV502 },
    { 503, 504, H_UpgradeFromV503 },
    { 504, 505, H_UpgradeFromV504 },
+   { 505, 506, H_UpgradeFromV505 },
    { 0, 0, NULL }
 };
 

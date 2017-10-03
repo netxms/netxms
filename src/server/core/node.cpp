@@ -4665,24 +4665,28 @@ static UINT32 RCCFromDCIError(UINT32 error)
 /**
  * Get item's value for client
  */
-UINT32 Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize)
+UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
-   UINT32 dwResult = 0, dwRetCode;
+   UINT32 dwResult = RCC_ACCESS_DENIED, dwRetCode;
 
    // Get data from node
    switch(iOrigin)
    {
       case DS_INTERNAL:
-         dwRetCode = getInternalItem(pszParam, dwBufSize, pszBuffer);
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            dwRetCode = getInternalItem(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_NATIVE_AGENT:
-         dwRetCode = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
+            dwRetCode = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_SNMP_AGENT:
-         dwRetCode = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
+            dwRetCode = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_CHECKPOINT_AGENT:
-         dwRetCode = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
+            dwRetCode = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
       default:
          dwResult = RCC_INVALID_ARGUMENT;
@@ -4690,7 +4694,7 @@ UINT32 Node::getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuff
    }
 
    // Translate return code to RCC
-   if (dwResult != RCC_INVALID_ARGUMENT)
+   if (dwResult != RCC_INVALID_ARGUMENT && dwResult != RCC_ACCESS_DENIED)
       dwResult = RCCFromDCIError(dwRetCode);
 
    return dwResult;

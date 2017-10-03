@@ -184,6 +184,8 @@ public class AccessControl extends PropertyPage
       rights.setLayoutData(gd);
       
       createAccessCheck(rights, Messages.get().AccessControl_AccessRead, UserAccessRights.OBJECT_ACCESS_READ);
+      createAccessCheck(rights, "Read agent data", UserAccessRights.OBJECT_ACCESS_READ_AGENT);
+      createAccessCheck(rights, "Read SNMP data", UserAccessRights.OBJECT_ACCESS_READ_SNMP);
       createAccessCheck(rights, Messages.get().AccessControl_AccessModify, UserAccessRights.OBJECT_ACCESS_MODIFY);
       createAccessCheck(rights, Messages.get().AccessControl_AccessCreate, UserAccessRights.OBJECT_ACCESS_CREATE);
       createAccessCheck(rights, Messages.get().AccessControl_AccessDelete, UserAccessRights.OBJECT_ACCESS_DELETE);
@@ -199,6 +201,7 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, Messages.get().AccessControl_UploadFiles, UserAccessRights.OBJECT_ACCESS_UPLOAD);
       createAccessCheck(rights, Messages.get().AccessControl_ManageFiles, UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
       createAccessCheck(rights, "Control maintenance mode", UserAccessRights.OBJECT_ACCESS_MAINTENANCE);
+      createAccessCheck(rights, "Take screenshot", UserAccessRights.OBJECT_ACCESS_SCREENSHOT);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -210,7 +213,8 @@ public class AccessControl extends PropertyPage
 					enableAllChecks(true);
 					AccessListElement element = (AccessListElement)sel.getFirstElement();
 					int rights = element.getAccessRights();
-					for(int i = 0, mask = 1; i < 16; i++, mask <<= 1)
+
+					for(int i = 0, mask = 1; i < accessChecks.size(); i++, mask <<= 1)
 					{
 						Button check = accessChecks.get(mask);
 						if (check != null)
