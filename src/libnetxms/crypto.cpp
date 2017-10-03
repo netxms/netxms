@@ -609,7 +609,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
 #ifdef _WITH_ENCRYPTION
    BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
    UINT32 dwKeySize;
-   int nSize, nIVLen;
+   int nSize;
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
    int cipher = (int)msg->getFieldAsUInt16(VID_CIPHER);
@@ -627,7 +627,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
             memcpy(ctx->m_sessionKey, ucSessionKey, nSize);
 
             // Decrypt session IV
-            nIVLen = msg->getFieldAsUInt16(VID_IV_LENGTH);
+            int nIVLen = msg->getFieldAsUInt16(VID_IV_LENGTH);
             if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
                nIVLen = 16;
             dwKeySize = msg->getFieldAsBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
@@ -635,7 +635,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
             if ((nSize == nIVLen) &&
                 (nIVLen <= EVP_CIPHER_iv_length(s_ciphers[ctx->m_cipher]())))
             {
-               memcpy(ctx->m_iv, ucSessionKey, min(EVP_MAX_IV_LENGTH, nIVLen));
+               memcpy(ctx->m_iv, ucSessionKey, std::min(EVP_MAX_IV_LENGTH, nIVLen));
             }
             else
             {

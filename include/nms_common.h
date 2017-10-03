@@ -1127,6 +1127,12 @@ inline void nx_free(void *p)
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
 /**
  * Define _tcsicmp() for non-windows
@@ -1186,6 +1192,8 @@ inline void nx_free(void *p)
 #endif
 
 #ifdef __cplusplus
+
+#include <algorithm>
 
 /**
  * Session enumeration callback return codes

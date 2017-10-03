@@ -1616,7 +1616,7 @@ private:
 
 public:
    MacAddress() { m_length = 0; memset(m_value, 0, 16); }
-   MacAddress(const BYTE *value, size_t length) { m_length = min(length, 16); memcpy(m_value, value, m_length); }
+   MacAddress(const BYTE *value, size_t length) { m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
    MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, src.m_length); m_length = src.m_length; }
 
    static MacAddress parse(const char *str);

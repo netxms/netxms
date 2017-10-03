@@ -216,7 +216,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
       if (sp.poll(dwTimeLeft) > 0)
 		{
 			dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
-			dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
+			dwTimeLeft -= std::min(dwElapsedTime, dwTimeLeft);
 			rtt += dwElapsedTime;
 
 			// Receive reply
@@ -292,7 +292,7 @@ static UINT32 LIBNETXMS_EXPORTABLE IcmpPing4(UINT32 addr, int retries, UINT32 ti
    request.m_icmpHdr.m_cCode = 0;
    request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
    request.m_icmpHdr.m_wSeq = 0;
-   memcpy(request.m_cData, szPayload, min(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
+   memcpy(request.m_cData, szPayload, MIN(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
    UINT32 result = ICMP_TIMEOUT;
 

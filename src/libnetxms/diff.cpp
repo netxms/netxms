@@ -573,7 +573,7 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
 int DiffEngine::diff_commonPrefix(const String &text1, const String &text2)
 {
    // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-   const int n = (int)min(text1.length(), text2.length());
+   const int n = (int)std::min(text1.length(), text2.length());
    for(int i = 0; i < n; i++)
    {
       if (text1.charAt(i) != text2.charAt(i))
@@ -589,7 +589,7 @@ int DiffEngine::diff_commonSuffix(const String &text1, const String &text2)
    // Performance analysis: http://neil.fraser.name/news/2007/10/09/
    const int text1_length = (int)text1.length();
    const int text2_length = (int)text2.length();
-   const int n = min(text1_length, text2_length);
+   const int n = std::min(text1_length, text2_length);
    for(int i = 1; i <= n; i++)
    {
       if (text1.charAt(text1_length - i) != text2.charAt(text2_length - i))
@@ -621,7 +621,7 @@ size_t DiffEngine::diff_commonOverlap(const String &text1, const String &text2)
    {
       text2_trunc = text2.left(text1_length);
    }
-   const size_t text_length = min(text1_length, text2_length);
+   const size_t text_length = std::min(text1_length, text2_length);
    // Quick check for the worst case.
    if (text1_trunc == text2_trunc)
    {
@@ -799,8 +799,8 @@ void DiffEngine::diff_cleanupSemantic(ObjectArray<Diff> &diffs)
          }
          // Eliminate an equality that is smaller or equal to the edits on both
          // sides of it.
-         if (!lastequality.isEmpty() && ((int)lastequality.length() <= max(length_insertions1, length_deletions1))
-                  && ((int)lastequality.length() <= max(length_insertions2, length_deletions2)))
+         if (!lastequality.isEmpty() && ((int)lastequality.length() <= std::max(length_insertions1, length_deletions1))
+                  && ((int)lastequality.length() <= std::max(length_insertions2, length_deletions2)))
          {
             // printf("Splitting: '%s'\n", qPrintable(lastequality));
             // Walk back to offending equality.
@@ -1478,13 +1478,13 @@ int DiffEngine::diff_levenshtein(const ObjectArray<Diff> &diffs)
          break;
          case DIFF_EQUAL:
          // A deletion and an insertion is one substitution.
-         levenshtein += max(insertions, deletions);
+         levenshtein += std::max(insertions, deletions);
          insertions = 0;
          deletions = 0;
          break;
       }
    }
-   levenshtein += max(insertions, deletions);
+   levenshtein += std::max(insertions, deletions);
    return levenshtein;
 }
 
