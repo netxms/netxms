@@ -342,14 +342,17 @@ private:
 	TCHAR *m_url;
 	TCHAR *m_description;
 
+	SoftwarePackage();
+
 public:
-	SoftwarePackage(Table *table, int row);
 	~SoftwarePackage();
 
 	void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 
 	const TCHAR *getName() const { return m_name; }
 	const TCHAR *getVersion() const { return m_version; }
+
+	static SoftwarePackage *createFromTableRow(const Table *table, int row);
 };
 
 /**

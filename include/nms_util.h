@@ -1411,10 +1411,10 @@ public:
    void addAll(Table *src);
    void copyRow(Table *src, int row);
 
-   int getNumRows() { return m_data->size(); }
+   int getNumRows() const { return m_data->size(); }
    int getNumColumns() const { return m_columns->size(); }
-	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
-   int getSource() { return m_source; }
+	const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
+   int getSource() const { return m_source; }
 
    bool isExtendedFormat() { return m_extendedFormat; }
    void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
@@ -1459,14 +1459,14 @@ public:
    void setStatusAt(int row, int col, int status);
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
-   const TCHAR *getAsString(int nRow, int nCol, const TCHAR *defaultValue = NULL);
-   INT32 getAsInt(int nRow, int nCol);
-   UINT32 getAsUInt(int nRow, int nCol);
-   INT64 getAsInt64(int nRow, int nCol);
-   UINT64 getAsUInt64(int nRow, int nCol);
-   double getAsDouble(int nRow, int nCol);
+   const TCHAR *getAsString(int nRow, int nCol, const TCHAR *defaultValue = NULL) const;
+   INT32 getAsInt(int nRow, int nCol) const;
+   UINT32 getAsUInt(int nRow, int nCol) const;
+   INT64 getAsInt64(int nRow, int nCol) const;
+   UINT64 getAsUInt64(int nRow, int nCol) const;
+   double getAsDouble(int nRow, int nCol) const;
 
-   int getStatus(int nRow, int nCol);
+   int getStatus(int nRow, int nCol) const;
 
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
    int findRowByInstance(const TCHAR *instance);
@@ -1484,10 +1484,10 @@ public:
    int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getBaseRow() : 0; }
 
    static Table *createFromXML(const char *xml);
-   TCHAR *createXML();
+   TCHAR *createXML() const;
 
    static Table *createFromPackedXML(const char *packedXml);
-   char *createPackedXML();
+   char *createPackedXML() const;
 };
 
 /**

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,10 +30,40 @@
 		if (!_tcsicmp(table->getColumnName(i), _T(name))) \
 		{ \
 			const TCHAR *value = table->getAsString(row, i); \
-			field = (value != NULL) ? _tcsdup(value) : NULL; \
+			pkg->field = _tcsdup_ex(value); \
 			continue; \
 		} \
 	}
+
+/**
+ * Create from agent table
+ *
+ * @param table table received from agent
+ * @param row row number in a table
+ * @return new object on success, NULL on parse error
+ */
+SoftwarePackage *SoftwarePackage::createFromTableRow(const Table *table, int row)
+{
+   SoftwarePackage *pkg = new SoftwarePackage();
+   for(int i = 0; i < table->getNumColumns(); i++)
+   {
+      EXTRACT_VALUE("NAME", m_name);
+      EXTRACT_VALUE("VERSION", m_version);
+      EXTRACT_VALUE("VENDOR", m_vendor);
+      EXTRACT_VALUE("URL", m_url);
+      EXTRACT_VALUE("DESCRIPTION", m_description);
+
+      if (!_tcsicmp(table->getColumnName(i), _T("DATE")))
+         pkg->m_date = (time_t)table->getAsInt(row, i);
+   }
+
+   if (pkg->m_name == NULL)
+   {
+      delete pkg;
+      return NULL;
+   }
+   return pkg;
+}
 
 /**
  * Constructor
@@ -41,7 +71,7 @@
  * @param table table received from agent
  * @param row row number in a table
  */
-SoftwarePackage::SoftwarePackage(Table *table, int row)
+SoftwarePackage::SoftwarePackage()
 {
 	m_name = NULL;
 	m_version = NULL;
@@ -49,18 +79,6 @@ SoftwarePackage::SoftwarePackage(Table *table, int row)
 	m_date = 0;
 	m_url = NULL;
 	m_description = NULL;
-
-	for(int i = 0; i < table->getNumColumns(); i++)
-	{
-		EXTRACT_VALUE("NAME", m_name);
-		EXTRACT_VALUE("VERSION", m_version);
-		EXTRACT_VALUE("VENDOR", m_vendor);
-		EXTRACT_VALUE("URL", m_url);
-		EXTRACT_VALUE("DESCRIPTION", m_description);
-		
-		if (!_tcsicmp(table->getColumnName(i), _T("DATE")))
-			m_date = (time_t)table->getAsInt(row, i);
-	}
 }
 
 /**
@@ -68,11 +86,11 @@ SoftwarePackage::SoftwarePackage(Table *table, int row)
  */
 SoftwarePackage::~SoftwarePackage()
 {
-	safe_free(m_name);
-	safe_free(m_version);
-	safe_free(m_vendor);
-	safe_free(m_url);
-	safe_free(m_description);
+	free(m_name);
+	free(m_version);
+	free(m_vendor);
+	free(m_url);
+	free(m_description);
 }
 
 /**

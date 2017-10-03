@@ -350,7 +350,7 @@ Table *Table::createFromPackedXML(const char *packedXml)
 /**
  * Create XML document from table
  */
-TCHAR *Table::createXML()
+TCHAR *Table::createXML() const
 {
    String xml;
    xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
@@ -408,7 +408,7 @@ TCHAR *Table::createXML()
 /**
  * Create packed XML document
  */
-char *Table::createPackedXML()
+char *Table::createPackedXML() const
 {
    TCHAR *xml = createXML();
    if (xml == NULL)
@@ -708,32 +708,28 @@ void Table::setAt(int nRow, int nCol, double dData)
 /**
  * Get data from position
  */
-const TCHAR *Table::getAsString(int nRow, int nCol, const TCHAR *defaultValue)
+const TCHAR *Table::getAsString(int nRow, int nCol, const TCHAR *defaultValue) const
 {
-   TableRow *r = m_data->get(nRow);
+   const TableRow *r = m_data->get(nRow);
    if (r == NULL)
       return defaultValue;
    const TCHAR *v = r->getValue(nCol);
    return (v != NULL) ? v : defaultValue;
 }
 
-INT32 Table::getAsInt(int nRow, int nCol)
+INT32 Table::getAsInt(int nRow, int nCol) const
 {
-   const TCHAR *pszVal;
-
-   pszVal = getAsString(nRow, nCol);
+   const TCHAR *pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstol(pszVal, NULL, 0) : 0;
 }
 
-UINT32 Table::getAsUInt(int nRow, int nCol)
+UINT32 Table::getAsUInt(int nRow, int nCol) const
 {
-   const TCHAR *pszVal;
-
-   pszVal = getAsString(nRow, nCol);
+   const TCHAR *pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstoul(pszVal, NULL, 0) : 0;
 }
 
-INT64 Table::getAsInt64(int nRow, int nCol)
+INT64 Table::getAsInt64(int nRow, int nCol) const
 {
    const TCHAR *pszVal;
 
@@ -741,19 +737,15 @@ INT64 Table::getAsInt64(int nRow, int nCol)
    return pszVal != NULL ? _tcstoll(pszVal, NULL, 0) : 0;
 }
 
-UINT64 Table::getAsUInt64(int nRow, int nCol)
+UINT64 Table::getAsUInt64(int nRow, int nCol) const
 {
-   const TCHAR *pszVal;
-
-   pszVal = getAsString(nRow, nCol);
+   const TCHAR *pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstoull(pszVal, NULL, 0) : 0;
 }
 
-double Table::getAsDouble(int nRow, int nCol)
+double Table::getAsDouble(int nRow, int nCol) const
 {
-   const TCHAR *pszVal;
-
-   pszVal = getAsString(nRow, nCol);
+   const TCHAR *pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstod(pszVal, NULL) : 0;
 }
 
@@ -772,9 +764,9 @@ void Table::setStatusAt(int row, int col, int status)
 /**
  * Get status of given cell
  */
-int Table::getStatus(int nRow, int nCol)
+int Table::getStatus(int nRow, int nCol) const
 {
-   TableRow *r = m_data->get(nRow);
+   const TableRow *r = m_data->get(nRow);
    return (r != NULL) ? r->getStatus(nCol) : -1;
 }
 
