@@ -53,7 +53,7 @@ DB_HANDLE ConnectToDatabase();
 void CheckDatabase();
 void InitDatabase(const char *pszInitFile);
 bool ClearDatabase(bool preMigration);
-void ExportDatabase(const char *file);
+void ExportDatabase(char *file, bool skipAudit, bool skipEvent);
 void ImportDatabase(const char *file);
 void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields);
 void UpgradeDatabase();
