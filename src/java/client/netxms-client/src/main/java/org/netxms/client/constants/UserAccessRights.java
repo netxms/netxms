@@ -68,5 +68,8 @@ public class UserAccessRights
    public static final int OBJECT_ACCESS_UPLOAD        = 0x00002000;
    public static final int OBJECT_ACCESS_MANAGE_FILES  = 0x00004000;
    public static final int OBJECT_ACCESS_MAINTENANCE   = 0x00008000;
+   public static final int OBJECT_ACCESS_READ_AGENT    = 0x00010000;
+   public static final int OBJECT_ACCESS_READ_SNMP     = 0x00020000;
+   public static final int OBJECT_ACCESS_SCREENSHOT    = 0x00040000;
    
 }

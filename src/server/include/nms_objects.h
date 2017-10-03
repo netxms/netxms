@@ -1774,7 +1774,7 @@ public:
    UINT32 getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
 	UINT32 getTableFromAgent(const TCHAR *name, Table **table);
 	UINT32 getListFromAgent(const TCHAR *name, StringList **list);
-   UINT32 getItemForClient(int iOrigin, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
+   UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
    UINT32 getTableForClient(const TCHAR *name, Table **table);
    UINT32 getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer);
 

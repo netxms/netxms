@@ -6451,22 +6451,15 @@ void ClientSession::queryParameter(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-         {
-            UINT32 dwResult;
-            TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
+         UINT32 dwResult;
+         TCHAR szBuffer[256], szName[MAX_PARAM_NAME];
 
-            pRequest->getFieldAsString(VID_NAME, szName, MAX_PARAM_NAME);
-            dwResult = ((Node *)object)->getItemForClient(pRequest->getFieldAsUInt16(VID_DCI_SOURCE_TYPE),
-                                                           szName, szBuffer, 256);
-            msg.setField(VID_RCC, dwResult);
-            if (dwResult == RCC_SUCCESS)
-               msg.setField(VID_VALUE, szBuffer);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
+         pRequest->getFieldAsString(VID_NAME, szName, MAX_PARAM_NAME);
+         dwResult = ((Node *)object)->getItemForClient(pRequest->getFieldAsUInt16(VID_DCI_SOURCE_TYPE),
+                                                        m_dwUserId, szName, szBuffer, 256);
+         msg.setField(VID_RCC, dwResult);
+         if (dwResult == RCC_SUCCESS)
+            msg.setField(VID_VALUE, szBuffer);
       }
       else
       {
@@ -6499,7 +6492,7 @@ void ClientSession::queryAgentTable(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_AGENT))
          {
 				TCHAR name[MAX_PARAM_NAME];
 				pRequest->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
@@ -7615,7 +7608,7 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_AGENT))
          {
             AgentConnection *pConn;
 
@@ -8491,7 +8484,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_SNMP))
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
 
@@ -13425,7 +13418,7 @@ void ClientSession::getSwitchForwardingDatabase(NXCPMessage *request)
 }
 
 /**
- * Get switch forwarding database
+ * Get routing table
  */
 void ClientSession::getRoutingTable(NXCPMessage *request)
 {
@@ -13463,7 +13456,7 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
                }
                id += 4;
             }
-   			DestroyRoutingTable(rt);
+            DestroyRoutingTable(rt);
          }
          else
          {
@@ -13552,7 +13545,7 @@ void ClientSession::getLocationHistory(NXCPMessage *request)
 }
 
 /**
- * Get location history for object
+ * Get screenshot of object
  */
 void ClientSession::getScreenshot(NXCPMessage *request)
 {
@@ -13566,7 +13559,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
 
 	if (object != NULL)
 	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SCREENSHOT))
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
@@ -13670,7 +13663,7 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
 
 	if (object != NULL)
 	{
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
@@ -13719,7 +13712,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 
    if (object != NULL)
 	{
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
