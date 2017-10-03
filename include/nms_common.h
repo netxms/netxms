@@ -47,6 +47,11 @@
 #endif
 #endif
 
+// prevent defining min and max macros in Windows headers
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H

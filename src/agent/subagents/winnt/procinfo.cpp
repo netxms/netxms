@@ -121,9 +121,9 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
    switch(type)
    {
       case INFOTYPE_MIN:
-         return min(lastValue, value);
+         return std::min(lastValue, value);
       case INFOTYPE_MAX:
-         return max(lastValue, value);
+         return std::max(lastValue, value);
       case INFOTYPE_AVG:
          return (lastValue * (count - 1) + value) / count;
       case INFOTYPE_SUM:

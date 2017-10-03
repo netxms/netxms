@@ -696,7 +696,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	// User name
 	vp = paircreate(PW_USER_NAME, PW_TYPE_STRING, "User-Name");
 	strncpy(vp->strvalue, login, AUTH_STRING_LEN);
-	vp->length = min((int)strlen(login), AUTH_STRING_LEN);
+   vp->length = std::min((int)strlen(login), AUTH_STRING_LEN);
 	pairadd(&req, vp);
 
    char authMethod[16];

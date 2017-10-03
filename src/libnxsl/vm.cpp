@@ -124,7 +124,7 @@ static int SelectResultType(int nType1, int nType2, int nOp)
             else if (nType2 >= NXSL_DT_UINT32)
                nType2 -= 2;
          }
-         nType = max(nType1, nType2);
+         nType = std::max(nType1, nType2);
       }
    }
    return nType;
@@ -1903,7 +1903,7 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
  */
 void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
 {
-   UINT32 dwLast = min(dwStart + dwLen, (UINT32)m_instructionSet->size());
+   UINT32 dwLast = std::min(dwStart + dwLen, (UINT32)m_instructionSet->size());
    for(UINT32 i = dwStart; i < dwLast; i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);

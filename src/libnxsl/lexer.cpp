@@ -59,7 +59,7 @@ int NXSL_Lexer::lexerInput(char *pBuffer, int nMaxSize)
 
    if (m_nSourcePos < m_nSourceSize)
    {
-      nBytes = min(nMaxSize, m_nSourceSize - m_nSourcePos);
+      nBytes = std::min(nMaxSize, m_nSourceSize - m_nSourcePos);
       memcpy(pBuffer, &m_pszSourceCode[m_nSourcePos], nBytes);
       m_nSourcePos += nBytes;
    }

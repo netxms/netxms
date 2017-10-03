@@ -617,8 +617,8 @@ public:
 
    String substring(size_t start, ssize_t len) const;
 	TCHAR *substring(size_t start, ssize_t len, TCHAR *buffer) const;
-	String left(size_t len) const { return substring(0, static_cast<size_t>(len)); }
-   String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<size_t>(len)); }
+	String left(size_t len) const { return substring(0, static_cast<ssize_t>(len)); }
+   String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
    StringList *split(const TCHAR *separator) const;
 
