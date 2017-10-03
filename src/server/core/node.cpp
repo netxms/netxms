@@ -2263,7 +2263,11 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
 
    ObjectArray<SoftwarePackage> *packages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
    for(int i = 0; i < table->getNumRows(); i++)
-      packages->add(new SoftwarePackage(table, i));
+   {
+      SoftwarePackage *pkg = SoftwarePackage::createFromTableRow(table, i);
+      if (pkg != NULL)
+         packages->add(pkg);
+   }
    packages->sort(PackageNameComparator);
    delete table;
    sendPollerMsg(requestId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
