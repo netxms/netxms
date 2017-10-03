@@ -106,10 +106,10 @@ int APPAGENT_EXPORTABLE AppAgentGetMetric(HPIPE hPipe, const TCHAR *name, TCHAR 
 				{
 					int valueLen = (response->length - APPAGENT_MSG_HEADER_LEN) / sizeof(TCHAR);
 #ifdef UNICODE
-					nx_strncpy(value, (WCHAR *)response->payload, min(valueLen, bufferSize));
+					wcslcpy(value, (WCHAR *)response->payload, std::min(valueLen, bufferSize));
 #else
 					WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, (WCHAR *)response->payload, valueLen, value, bufferSize, NULL, NULL);
-					value[min(valueLen, bufferSize - 1)] = 0;
+					value[std::min(valueLen, bufferSize - 1)] = 0;
 #endif
 				}
 			}

@@ -1050,7 +1050,7 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 
          ItemValue *value = ((DCItem *)curr)->getInternalLastValue();
          if (value != NULL && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
-            status = max(status, (INT32)*value);
+            status = std::max(status, (INT32)*value);
          delete value;
       }
 	}

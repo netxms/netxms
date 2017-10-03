@@ -57,10 +57,10 @@ static APPAGENT_MSG *GetMetric(WCHAR *name, int length)
 	TCHAR metricName[256];
 
 #ifdef UNICODE
-	nx_strncpy(metricName, name, min(length, 256));
+	wcslcpy(metricName, name, std::min(length, 256));
 #else
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, name, length, metricName, 256, NULL, NULL);
-	metricName[min(length, 255)] = 0;
+	metricName[std::min(length, 255)] = 0;
 #endif
 
 	for(int i = 0; i < s_config.numMetrics; i++)

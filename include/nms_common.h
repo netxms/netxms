@@ -1127,14 +1127,12 @@ inline void nx_free(void *p)
 #endif
 
 /**
- * Define min() and max() if needed
+ * Define MIN() and MAX()
  */
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#endif
+#undef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#undef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
  * Define _tcsicmp() for non-windows

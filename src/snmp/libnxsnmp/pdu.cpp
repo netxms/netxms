@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -563,7 +563,7 @@ bool SNMP_PDU::parseV3SecurityUsm(const BYTE *data, size_t dataLength, const BYT
       return false;
    if (type != ASN_OCTET_STRING)
       return false;
-	memcpy(m_signature, currPos, min(length, 12));
+	memcpy(m_signature, currPos, MIN(length, 12));
 	m_signatureOffset = currPos - rawMsg;
    currPos += length;
    remLength -= length + idLength;
@@ -573,7 +573,7 @@ bool SNMP_PDU::parseV3SecurityUsm(const BYTE *data, size_t dataLength, const BYT
       return false;
    if (type != ASN_OCTET_STRING)
       return false;
-	memcpy(m_salt, currPos, min(length, 8));
+	memcpy(m_salt, currPos, MIN(length, 8));
 
 	return true;
 }
@@ -1390,7 +1390,7 @@ void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
  */
 void SNMP_PDU::setContextEngineId(const BYTE *id, size_t len)
 {
-	m_contextEngineIdLen = min(len, SNMP_MAX_ENGINEID_LEN);
+	m_contextEngineIdLen = std::min(len, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
 }
 
@@ -1399,7 +1399,7 @@ void SNMP_PDU::setContextEngineId(const BYTE *id, size_t len)
  */
 void SNMP_PDU::setContextEngineId(const char *id)
 {
-	m_contextEngineIdLen = min((int)strlen(id), SNMP_MAX_ENGINEID_LEN);
+	m_contextEngineIdLen = std::min(strlen(id), SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);
 }
 

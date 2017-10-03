@@ -472,10 +472,10 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 				finalVal += currVal;
 				break;
 			case INFOTYPE_MIN:
-				finalVal = min(currVal, finalVal);
+				finalVal = std::min(currVal, finalVal);
 				break;
 			case INFOTYPE_MAX:
-				finalVal = max(currVal, finalVal);
+				finalVal = std::max(currVal, finalVal);
 				break;
 		}
 	}

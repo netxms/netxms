@@ -111,11 +111,11 @@ int main(int argc, char *argv[])
 
    NXMODULE_METADATA module;
    memset(&module, 0, sizeof(NXMODULE_METADATA));
-   memcpy(&module, metadata, min(metadata->size, sizeof(NXMODULE_METADATA)));
+   memcpy(&module, metadata, std::min(static_cast<size_t>(metadata->size), sizeof(NXMODULE_METADATA)));
 
    if (strcmp(module.tagBegin, "$$$NXMINFO>$$$"))
    {
-      memcpy(module.name, ((NXMODULE_METADATA_V1 *)metadata)->name, min(metadata->size - 8, sizeof(NXMODULE_METADATA) - 24));
+      memcpy(module.name, ((NXMODULE_METADATA_V1 *)metadata)->name, std::min(static_cast<size_t>(metadata->size) - 8, sizeof(NXMODULE_METADATA) - 24));
    }
 
    _tprintf(_T("Module:         %s\n"), modname);

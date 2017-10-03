@@ -347,7 +347,7 @@ BOOL BCMXCPInterface::open()
             // Skip to model name
             nPos = m_data[0] * 2 + 1;
             nPos += (m_data[nPos] == 0) ? 5 : 3;
-            nLen = min(m_data[nPos], 255);
+            nLen = std::min((int)m_data[nPos], 255);
             if ((nPos < nBytes) && (nPos + nLen <= nBytes))
             {
                memcpy(szBuffer, &m_data[nPos + 1], nLen);

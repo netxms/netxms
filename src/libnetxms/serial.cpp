@@ -554,7 +554,7 @@ bool Serial::write(const char *data, int length)
       int pos = 0;
       while(pos < length)
       {
-         int bs = min(m_writeBlockSize, length - pos);
+         int bs = std::min(m_writeBlockSize, length - pos);
          if (!writeBlock(&data[pos], bs))
             return false;
          pos += bs;

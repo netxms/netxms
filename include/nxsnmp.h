@@ -59,12 +59,12 @@
 // Various constants
 //
 
-#define MAX_OID_LEN                 128
-#define MAX_MIB_OBJECT_NAME         64
+#define MAX_OID_LEN                 ((size_t)128)
+#define MAX_MIB_OBJECT_NAME         ((size_t)64)
 #define SNMP_DEFAULT_PORT           161
-#define SNMP_MAX_CONTEXT_NAME       256
-#define SNMP_MAX_ENGINEID_LEN       256
-#define SNMP_DEFAULT_MSG_MAX_SIZE   65536
+#define SNMP_MAX_CONTEXT_NAME       ((size_t)256)
+#define SNMP_MAX_ENGINEID_LEN       ((size_t)256)
+#define SNMP_DEFAULT_MSG_MAX_SIZE   ((size_t)65536)
 
 
 //

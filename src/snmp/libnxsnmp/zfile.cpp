@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -78,7 +78,7 @@ int ZFile::zwrite(const void *pBuf, int nLen)
 
    for(nSrcPos = 0, nRet = 0; nSrcPos < nLen; nSrcPos += nBytes)
    {
-      nBytes = min(nLen - nSrcPos, DATA_BUFFER_SIZE - m_nBufferSize);
+      nBytes = std::min(nLen - nSrcPos, DATA_BUFFER_SIZE - m_nBufferSize);
       memcpy(&m_pDataBuffer[m_nBufferSize], (BYTE *)pBuf + nSrcPos, nBytes);
       m_nBufferSize += nBytes;
       if (m_nBufferSize == DATA_BUFFER_SIZE)
@@ -158,7 +158,7 @@ int ZFile::zread(void *pBuf, int nLen)
    {
       if (!fillDataBuffer())
          return 0;   // EOF or error
-      nBytes = min(nLen - nDstPos, m_nBufferSize);
+      nBytes = std::min(nLen - nDstPos, m_nBufferSize);
       memcpy((BYTE *)pBuf + nDstPos, m_pBufferPos, nBytes);
       m_pBufferPos += nBytes;
       m_nBufferSize -= nBytes;

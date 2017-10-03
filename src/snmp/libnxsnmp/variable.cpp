@@ -166,7 +166,7 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
  */
 size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize) const
 {
-	size_t len = min(bufSize, (size_t)m_valueLength);
+	size_t len = std::min(bufSize, m_valueLength);
    memcpy(buffer, m_value, len);
 	return len;
 }
@@ -262,7 +262,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
          SNMPConvertOIDToText(m_valueLength / sizeof(UINT32), (UINT32 *)m_value, buffer, bufferSize);
          break;
       case ASN_OCTET_STRING:
-         length = min(bufferSize - 1, m_valueLength);
+         length = std::min(bufferSize - 1, m_valueLength);
          if (length > 0)
          {
 #ifdef UNICODE
@@ -303,7 +303,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 
    if (m_type == ASN_OCTET_STRING)
 	{
-      length = min(bufferSize - 1, m_valueLength);
+      length = std::min(bufferSize - 1, m_valueLength);
       if (length > 0)
       {
          bool conversionNeeded = false;

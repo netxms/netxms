@@ -526,7 +526,7 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 	}
 	msg.setField(VID_TABLE_OFFSET, (UINT32)offset);
 
-	int stopRow = (rowLimit == -1) ? m_data->size() : min(m_data->size(), offset + rowLimit);
+	int stopRow = (rowLimit == -1) ? m_data->size() : std::min(m_data->size(), offset + rowLimit);
    id = VID_TABLE_DATA_BASE;
 	for(int row = offset; row < stopRow; row++)
 	{
@@ -810,7 +810,7 @@ void Table::setBaseRowAt(int row, int baseRow)
  */
 void Table::addAll(Table *src)
 {
-   int numColumns = min(m_columns->size(), src->m_columns->size());
+   int numColumns = std::min(m_columns->size(), src->m_columns->size());
    for(int i = 0; i < src->m_data->size(); i++)
    {
       TableRow *dstRow = new TableRow(m_columns->size());
@@ -832,7 +832,7 @@ void Table::copyRow(Table *src, int row)
    if (srcRow == NULL)
       return;
 
-   int numColumns = min(m_columns->size(), src->m_columns->size());
+   int numColumns = std::min(m_columns->size(), src->m_columns->size());
    TableRow *dstRow = new TableRow(m_columns->size());
 
    for(int j = 0; j < numColumns; j++)

@@ -128,7 +128,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 			}
 			else if (v1 != NULL && v2 != NULL)
 			{
-				p = min(v1 + 4, v2 + 2);
+				p = std::min(v1 + 4, v2 + 2);
 			}
 
 			if (p != NULL)

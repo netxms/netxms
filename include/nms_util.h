@@ -614,10 +614,10 @@ public:
 
 	wchar_t charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
 
-   String substring(size_t start, int len) const;
-	TCHAR *substring(size_t start, int len, TCHAR *buffer) const;
-	String left(size_t len) const { return substring(0, (int)len); }
-   String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, (int)len); }
+   String substring(size_t start, ssize_t len) const;
+	TCHAR *substring(size_t start, ssize_t len, TCHAR *buffer) const;
+	String left(size_t len) const { return substring(0, static_cast<size_t>(len)); }
+   String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<size_t>(len)); }
 
    StringList *split(const TCHAR *separator) const;
 
@@ -626,7 +626,7 @@ public:
    void escapeCharacter(int ch, int esc);
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
 	void trim();
-	void shrink(int chars = 1);
+	void shrink(size_t chars = 1);
 };
 
 /**

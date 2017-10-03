@@ -242,7 +242,7 @@ BOOL MetaSysInterface::open()
             parseModelId();
 
             memset(m_paramList[UPS_PARAM_SERIAL].szValue, 0, 13);
-            memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, m_data + 7, min(12, nBytes - 7));
+            memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, m_data + 7, std::min(12, nBytes - 7));
             StrStripA(m_paramList[UPS_PARAM_SERIAL].szValue);
 
             sprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, "%d.%02d", m_data[5], m_data[6]);

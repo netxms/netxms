@@ -60,7 +60,7 @@ void InitSessionList()
    }
    else
    {
-      g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 4096);
+      g_dwMaxSessions = MIN(MAX(g_dwMaxSessions, 2), 4096);
    }
    nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_dwMaxSessions);
 	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);

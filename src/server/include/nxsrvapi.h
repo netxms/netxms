@@ -597,11 +597,11 @@ public:
    UINT32 getNumDataLines() { return m_dwNumDataLines; }
    const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
-   void setConnectionTimeout(UINT32 dwTimeout) { m_connectionTimeout = max(dwTimeout, 1000); }
+   void setConnectionTimeout(UINT32 dwTimeout) { m_connectionTimeout = MAX(dwTimeout, 1000); }
 	UINT32 getConnectionTimeout() { return m_connectionTimeout; }
-   void setCommandTimeout(UINT32 dwTimeout) { m_dwCommandTimeout = max(dwTimeout, 500); }
+   void setCommandTimeout(UINT32 dwTimeout) { m_dwCommandTimeout = MAX(dwTimeout, 500); }
 	UINT32 getCommandTimeout() { return m_dwCommandTimeout; }
-   void setRecvTimeout(UINT32 dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
+   void setRecvTimeout(UINT32 dwTimeout) { m_dwRecvTimeout = MAX(dwTimeout, 10000); }
    void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
    void setProxy(InetAddress addr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
