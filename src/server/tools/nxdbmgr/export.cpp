@@ -184,7 +184,7 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 /**
  * Export database
  */
-void ExportDatabase(const char *file)
+void ExportDatabase(char *file, bool skipAudit, bool skipEvent)
 {
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], queryTemplate[11][MAX_DB_STRING], *data;
@@ -214,10 +214,20 @@ void ExportDatabase(const char *file)
 	// Setup database schema
 #ifdef UNICODE
    TCHAR tmp[MAX_PATH];
-   GetNetXMSDirectory(nxDirData, tmp);
+   GetNetXMSDirectory(nxDirShare, tmp);
+#ifdef _WIN32
+   _tcslcat(tmp, _T("\\sql\\dbschema_sqlite.sql"), MAX_PATH);
+#else
+   _tcslcat(tmp, _T("/sql/dbschema_sqlite.sql"), MAX_PATH);
+#endif
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, tmp, MAX_PATH, buffer, MAX_PATH, NULL, NULL);
 #else
-   GetNetXMSDirectory(nxDirData, buffer);
+   GetNetXMSDirectory(nxDirShare, buffer);
+#ifdef _WIN32
+   strlcat(buffer, "\\sql\\dbschema_sqlite.sql", MAX_PATH);
+#else
+   strlcat(buffer, "/sql/dbschema_sqlite.sql", MAX_PATH);
+#endif
 #endif
 
    UINT32 size;
@@ -253,7 +263,11 @@ void ExportDatabase(const char *file)
 	// Export tables
 	for(int i = 0; g_tables[i] != NULL; i++)
 	{
-		if (!ExportTable(db, g_tables[i]))
+	   if (skipAudit && !_tcscmp(g_tables[i], _T("audit_log")))
+	      continue;
+      if (skipEvent && !_tcscmp(g_tables[i], _T("event_log")))
+         continue;
+      if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
 	}
 

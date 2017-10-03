@@ -497,6 +497,8 @@ int main(int argc, char *argv[])
 {
    BOOL bStart = TRUE, bQuiet = FALSE;
    bool replaceValue = true;
+   bool skipAudit = false;
+   bool skipEvent = false;
    int ch;
 
    InitNetXMSProcess(true);
@@ -564,13 +566,13 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dDfGhIMNqsStT:vX")) != -1)
+   while((ch = getopt(argc, argv, "Ac:dDEfGhIMNqsStT:vX")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n\n"));
-            _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n")
+            _tprintf(_T("Usage: nxdbmgr [<options>] <command> [<options>]\n")
                      _T("Valid commands are:\n")
 						   _T("   batch <file>         : Run SQL batch file\n")
                      _T("   check                : Check database for errors\n")
@@ -585,9 +587,11 @@ stop_search:
                      _T("   unlock               : Forced database unlock\n")
                      _T("   upgrade              : Upgrade database to new version\n")
                      _T("Valid options are:\n")
+                     _T("   -A          : Skip export of audit log\n")
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
+                     _T("   -E          : Skip export of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
 #ifdef _WIN32
 				         _T("   -G          : GUI mode.\n")
@@ -610,6 +614,9 @@ stop_search:
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n\n"));
             bStart = FALSE;
             break;
+         case 'A':
+            skipAudit = true;
+            break;
          case 'c':
 #ifdef UNICODE
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configFile, MAX_PATH);
@@ -623,6 +630,9 @@ stop_search:
 				break;
          case 'D':
             g_dataOnlyMigration = true;
+            break;
+         case 'E':
+            skipEvent = true;
             break;
          case 'f':
             m_bForce = TRUE;
@@ -791,7 +801,7 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "export"))
       {
-         ExportDatabase(argv[optind + 1]);
+         ExportDatabase(argv[optind + 1], skipAudit, skipEvent);
       }
       else if (!strcmp(argv[optind], "import"))
       {
