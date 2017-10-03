@@ -950,7 +950,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
       else
       {
-         m_status = max(m_status, mostCriticalAlarm);
+         m_status = std::max(m_status, mostCriticalAlarm);
       }
    }
 
@@ -963,7 +963,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
       else
       {
-         m_status = max(m_status, mostCriticalDCI);
+         m_status = std::max(m_status, mostCriticalDCI);
       }
    }
 
@@ -979,7 +979,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          }
          else
          {
-            m_status = max(m_status, moduleStatus);
+            m_status = std::max(m_status, moduleStatus);
          }
       }
    }

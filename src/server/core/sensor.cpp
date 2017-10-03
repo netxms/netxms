@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -462,7 +462,7 @@ void Sensor::calculateStatus(BOOL bForcedRecalc)
    else
       status = STATUS_CRITICAL;
 
-   m_status = m_status != STATUS_UNKNOWN ? max(m_status, status) : status;
+   m_status = m_status != STATUS_UNKNOWN ? std::max(m_status, status) : status;
    unlockProperties();
 }
 

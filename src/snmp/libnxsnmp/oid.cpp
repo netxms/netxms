@@ -113,7 +113,7 @@ int SNMP_ObjectId::compare(const UINT32 *oid, size_t length) const
    if ((oid == NULL) || (length == 0) || (m_value == NULL))
       return OID_ERROR;
 
-   size_t stop = min(length, m_length);
+   size_t stop = std::min(length, m_length);
    for(size_t i = 0; i < stop; i++)
    {
       if (m_value[i] != oid[i])

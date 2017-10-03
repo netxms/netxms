@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -106,7 +106,7 @@ String& String::operator +=(const TCHAR *str)
    	size_t len = _tcslen(str);
       if (m_length + len >= m_allocated)
       {
-         m_allocated += max(m_allocationStep, len + 1);
+         m_allocated += std::max(m_allocationStep, len + 1);
       	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    	_tcscpy(&m_buffer[m_length], str);
@@ -124,7 +124,7 @@ String& String::operator +=(const String &str)
    {
       if (m_length + str.m_length >= m_allocated)
       {
-         m_allocated += max(m_allocationStep, str.m_length + 1);
+         m_allocated += std::max(m_allocationStep, str.m_length + 1);
       	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
       memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
@@ -241,7 +241,7 @@ void String::append(const TCHAR *str, size_t len)
 
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len + 1);
+      m_allocated += std::max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
    memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
@@ -297,7 +297,7 @@ void String::appendMBString(const char *str, size_t len, int nCodePage)
 #ifdef UNICODE
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len + 1);
+      m_allocated += std::max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len);
@@ -317,7 +317,7 @@ void String::appendWideString(const WCHAR *str, size_t len)
 #else
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len + 1);
+      m_allocated += std::max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
@@ -340,7 +340,7 @@ void String::escapeCharacter(int ch, int esc)
 
    if (m_length + nCount >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, (size_t)nCount);
+      m_allocated += std::max(m_allocationStep, (size_t)nCount);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 
@@ -410,7 +410,7 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
             size_t delta = lenDst - lenSrc;
             if (m_length + delta >= m_allocated)
             {
-               m_allocated += max(m_allocationStep, delta);
+               m_allocated += std::max(m_allocationStep, delta);
                m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
             }
             memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
@@ -425,19 +425,19 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 /**
  * Extract substring into buffer
  */
-String String::substring(size_t start, int len) const
+String String::substring(size_t start, ssize_t len) const
 {
    String s;
    if ((start < m_length) && (start >= 0))
    {
-      int count;
+      size_t count;
       if (len == -1)
       {
-         count = (int)(m_length - start);
+         count = m_length - start;
       }
       else
       {
-         count = min(len, (int)(m_length - start));
+         count = std::min(static_cast<size_t>(len), m_length - start);
       }
       s.append(&m_buffer[start], count);
    }
@@ -447,19 +447,19 @@ String String::substring(size_t start, int len) const
 /**
  * Extract substring into buffer
  */
-TCHAR *String::substring(size_t start, int len, TCHAR *buffer) const
+TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 {
 	TCHAR *s;
 	if ((start < m_length) && (start >= 0))
 	{
-	   int count;
+	   size_t count;
 		if (len == -1)
 		{
-			count = (int)(m_length - start);
+			count = m_length - start;
 		}
 		else
 		{
-			count = min(len, (int)(m_length - start));
+			count = std::min(static_cast<size_t>(len), m_length - start);
 		}
 		s = (buffer != NULL) ? buffer : (TCHAR *)malloc((count + 1) * sizeof(TCHAR));
 		memcpy(s, &m_buffer[start], count * sizeof(TCHAR));
@@ -500,11 +500,11 @@ void String::trim()
 /**
  * Shring string by removing trailing characters
  */
-void String::shrink(int chars)
+void String::shrink(size_t chars)
 {
 	if (m_length > 0)
 	{
-		m_length -= min(m_length, (size_t)chars);
+		m_length -= std::min(m_length, chars);
 		if (m_buffer != NULL)
 			m_buffer[m_length] = 0;
 	}

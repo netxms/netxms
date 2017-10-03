@@ -3365,7 +3365,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   }
                   if ((ifInfo->ifTableSuffixLength != pInterface->getIfTableSuffixLen()) ||
                       memcmp(ifInfo->ifTableSuffix, pInterface->getIfTableSuffix(),
-                         min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
+                         std::min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
                   {
                      pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
                   }

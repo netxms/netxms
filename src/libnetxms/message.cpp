@@ -761,15 +761,15 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
  * and actual size of data will be returned
  * If pBuffer is NULL, just actual data length is returned
  */
-UINT32 NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t bufferSize) const
+size_t NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t bufferSize) const
 {
-   UINT32 size;
+   size_t size;
    void *value = get(fieldId, NXCP_DT_BINARY);
    if (value != NULL)
    {
       size = *((UINT32 *)value);
       if (pBuffer != NULL)
-         memcpy(pBuffer, (BYTE *)value + 4, min(bufferSize, size));
+         memcpy(pBuffer, (BYTE *)value + 4, std::min(bufferSize, size));
    }
    else
    {
@@ -1125,7 +1125,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    // Dump raw message
    for(i = 0; i < (int)size; i += 16)
    {
-      BinToStr(((BYTE *)msg) + i, min(16, size - i), buffer); 
+      BinToStr(((BYTE *)msg) + i, MIN(16, size - i), buffer);
       out.appendFormattedString(_T("  ** %s\n"), buffer);
    }
 

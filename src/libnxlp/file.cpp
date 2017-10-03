@@ -190,7 +190,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 					if (remaining > 0)
 					{
                   memmove(buffer, ptr, remaining);
-                  if (parser->isFilePreallocated() && !memcmp(buffer, "\x00\x00\x00\x00", min(remaining, 4)))
+                  if (parser->isFilePreallocated() && !memcmp(buffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
@@ -574,7 +574,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
                      off_t pos = lseek(fh, -bytes, SEEK_CUR);
                      if (pos > 0)
                      {
-                        int readSize = min(pos, 4);
+                        int readSize = std::min(pos, (off_t)4);
                         lseek(fh, -readSize, SEEK_CUR);
                         int bytes = _read(fh, buffer, readSize);
                         if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))

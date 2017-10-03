@@ -66,7 +66,7 @@ void RingBuffer::write(const BYTE *data, size_t dataSize)
    }
    else if (m_writePos > m_readPos)
    {
-      m_allocated += max(dataSize, m_allocationStep);
+      m_allocated += std::max(dataSize, m_allocationStep);
       m_data = (BYTE *)realloc(m_data, m_allocated);
       memcpy(&m_data[m_writePos], data, dataSize);
       m_writePos += dataSize;
@@ -100,7 +100,7 @@ void RingBuffer::write(const BYTE *data, size_t dataSize)
  */
 size_t RingBuffer::read(BYTE *buffer, size_t bufferSize)
 {
-   size_t readSize = min(bufferSize, m_size);
+   size_t readSize = std::min(bufferSize, m_size);
    if (readSize == 0)
       return 0;
 

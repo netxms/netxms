@@ -97,7 +97,7 @@ int SocketPoller::poll(UINT32 timeout)
          if ((rc != -1) || (errno != EINTR))
             break;
          UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
-         timeout -= min(timeout, elapsed);
+         timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       return rc;
    }
@@ -128,7 +128,7 @@ int SocketPoller::poll(UINT32 timeout)
          if ((rc != -1) || (errno != EINTR))
             break;
          UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
-         timeout -= min(timeout, elapsed);
+         timeout -= std::min(timeout, elapsed);
       } while(timeout > 0);
       return rc;
 #endif

@@ -515,7 +515,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_ME
 					*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
 			}
       }
-      dwBytesRead = min(dwMsgSize, nxcpBuffer->bufferSize);
+      dwBytesRead = std::min(dwMsgSize, nxcpBuffer->bufferSize);
       if (!bSkipMsg)
          memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], dwBytesRead);
       nxcpBuffer->bufferSize -= dwBytesRead;
@@ -564,7 +564,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(AbstractCommChannel *channel, NXCP_ME
 				}
          }
       }
-      dwBytesToCopy = min((UINT32)iErr, dwMsgSize - dwBytesRead);
+      dwBytesToCopy = std::min((UINT32)iErr, dwMsgSize - dwBytesRead);
       if (!bSkipMsg)
          memcpy(((char *)(*msgBuffer)) + dwBytesRead, nxcpBuffer->buffer, dwBytesToCopy);
       dwBytesRead += dwBytesToCopy;
@@ -760,7 +760,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 			{
             if (compressor != NULL)
             {
-				   iBytes = _read(hFile, compBuffer, min(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, compBuffer, MIN(FILE_BUFFER_SIZE, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;
@@ -774,7 +774,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
             }
             else
             {
-				   iBytes = _read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, pMsg->fields, MIN(FILE_BUFFER_SIZE, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;

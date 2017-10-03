@@ -312,7 +312,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 #endif   /* _WIN32 */
 
       UINT32 sleepTime = (UINT32)(GetCurrentTimeMs() - startTime);
-      dwTimeOut -= min(sleepTime, dwTimeOut);
+      dwTimeOut -= std::min(sleepTime, dwTimeOut);
    } while(dwTimeOut > 0);
 
 #ifdef _WIN32

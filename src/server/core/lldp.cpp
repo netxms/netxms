@@ -123,10 +123,10 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 		case 5:	// Interface name
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)id, (int)idLen, ifName, 128);
-			ifName[min(idLen, 127)] = 0;
+			ifName[MIN(idLen, 127)] = 0;
 #else
 			{
-				int len = min(idLen, 127);
+				int len = MIN(idLen, 127);
 				memcpy(ifName, id, len);
 				ifName[len] = 0;
 			}

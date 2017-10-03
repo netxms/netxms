@@ -8980,14 +8980,14 @@ static BOOL H_UpgradeFromV69(int currVersion, int newVersion)
 
 	// Convert event log retention time from seconds to days
 	n = ConfigReadInt(_T("EventLogRetentionTime"), 5184000) / 86400;
-	_sntprintf(buffer, 64, _T("%d"), max(n, 1));
+	_sntprintf(buffer, 64, _T("%d"), std::max(n, 1));
    if (!CreateConfigParam(_T("EventLogRetentionTime"), buffer, 1, 0, TRUE))
       if (!g_bIgnoreErrors)
          return FALSE;
 
 	// Convert event log retention time from seconds to days
 	n = ConfigReadInt(_T("SyslogRetentionTime"), 5184000) / 86400;
-	_sntprintf(buffer, 64, _T("%d"), max(n, 1));
+	_sntprintf(buffer, 64, _T("%d"), std::max(n, 1));
    if (!CreateConfigParam(_T("SyslogRetentionTime"), buffer, 1, 0, TRUE))
       if (!g_bIgnoreErrors)
          return FALSE;

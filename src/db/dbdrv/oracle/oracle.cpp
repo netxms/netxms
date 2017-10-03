@@ -1531,7 +1531,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(ORACLE_UNBUFFERED_RESULT *result,
       ub4 length = 0;
       OCILobGetLength(result->connection->handleService, result->connection->handleError, result->pBuffers[nColumn].lobLocator, &length);
 
-		nLen = min(nBufSize - 1, (int)length);
+		nLen = std::min(nBufSize - 1, (int)length);
       ub4 amount = nLen;
 #if UNICODE_UCS4
       UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
@@ -1547,7 +1547,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(ORACLE_UNBUFFERED_RESULT *result,
    }
 	else
 	{
-		nLen = min(nBufSize - 1, ((int)(result->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))));
+		nLen = std::min(nBufSize - 1, ((int)(result->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))));
 #if UNICODE_UCS4
 		ucs2_to_ucs4(result->pBuffers[nColumn].pData, nLen, pBuffer, nLen + 1);
 #else

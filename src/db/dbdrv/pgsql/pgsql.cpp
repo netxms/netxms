@@ -400,7 +400,7 @@ extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cT
 
 	if (hStmt->allocated < pos)
 	{
-		int newAllocated = max(hStmt->allocated + 16, pos);
+		int newAllocated = std::max(hStmt->allocated + 16, pos);
 		hStmt->buffers = (char **)realloc(hStmt->buffers, sizeof(char *) * newAllocated);
 		for(int i = hStmt->allocated; i < newAllocated; i++)
 			hStmt->buffers[i] = NULL;

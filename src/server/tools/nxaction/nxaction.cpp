@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
 					action[255] = 0;
 					
-					int count = min(argc - optind - 2, 256);
+					int count = std::min(argc - optind - 2, 256);
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						args[i] = WideStringFromMBString(argv[k]);
                dwError = conn->execAction(action, count, args, showOutput, OutputCallback);

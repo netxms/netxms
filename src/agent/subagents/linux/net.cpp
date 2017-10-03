@@ -320,7 +320,7 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
          case IFLA_ADDRESS:
             if (RTA_PAYLOAD(attribute) > 0)
             {
-               memcpy(ifInfo->macAddr, (BYTE *)RTA_DATA(attribute), min(RTA_PAYLOAD(attribute), sizeof(ifInfo->macAddr)));
+               memcpy(ifInfo->macAddr, (BYTE *)RTA_DATA(attribute), std::min(RTA_PAYLOAD(attribute), sizeof(ifInfo->macAddr)));
             }
             break;
          case IFLA_MTU:

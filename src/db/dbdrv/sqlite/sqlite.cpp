@@ -359,7 +359,7 @@ static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNam
    }
    else
    {
-      nMaxCol = min(((SQLITE_RESULT *)pArg)->nCols, nCols);
+      nMaxCol = std::min(((SQLITE_RESULT *)pArg)->nCols, nCols);
    }
 
 	// Store column names

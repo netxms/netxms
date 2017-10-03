@@ -345,7 +345,7 @@ Table *LogHandle::getData(INT64 startRow, INT64 numRows, bool refresh, const UIN
 	}
 
 	Table *table = createTable();
-	int maxRow = (int)min((int)(startRow + numRows), resultSize);
+	int maxRow = std::min((int)(startRow + numRows), resultSize);
 	for(int i = (int)startRow; i < maxRow; i++)
 	{
 		table->addRow();

@@ -23,11 +23,9 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Constructors
-//
-
+/**
+ * Create engine with empty ID
+ */
 SNMP_Engine::SNMP_Engine()
 {
 	m_idLen = 0;
@@ -35,14 +33,20 @@ SNMP_Engine::SNMP_Engine()
 	m_engineTime = 0;
 }
 
+/**
+ * Create engine with given ID and data
+ */
 SNMP_Engine::SNMP_Engine(BYTE *id, size_t idLen, int engineBoots, int engineTime)
 {
-	m_idLen = min(idLen, SNMP_MAX_ENGINEID_LEN);
+	m_idLen = std::min(idLen, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_id, id, m_idLen);
 	m_engineBoots = engineBoots;
 	m_engineTime = engineTime;
 }
 
+/**
+ * Copy constructor
+ */
 SNMP_Engine::SNMP_Engine(const SNMP_Engine *src)
 {
 	m_idLen = src->m_idLen;

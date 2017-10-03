@@ -280,8 +280,8 @@ static bool CollectMemoryUsageInfo()
       long lowWatermark = GetMemoryZonesLowWatermark();
       s_memAvailable = s_memFree - lowWatermark;
       long pageCache = s_memFileActive + s_memFileInactive;
-      s_memAvailable += pageCache - min(pageCache / 2, lowWatermark);
-      s_memAvailable += s_memSlabReclaimable - min(s_memSlabReclaimable / 2, lowWatermark);
+      s_memAvailable += pageCache - std::min(pageCache / 2, lowWatermark);
+      s_memAvailable += s_memSlabReclaimable - std::min(s_memSlabReclaimable / 2, lowWatermark);
       if (s_memAvailable < 0)
          s_memAvailable = 0;
    }

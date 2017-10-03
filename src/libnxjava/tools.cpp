@@ -85,15 +85,15 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCH
    jsize len = env->GetStringLength(jstr);
 #ifdef UNICODE
 #if UNICODE_UCS4
-   ucs2_to_ucs4(chars, min(len, bufferLen - 1), buffer, bufferLen);
+   ucs2_to_ucs4(chars, std::min((size_t)len, bufferLen - 1), buffer, bufferLen);
 #else
-   memcpy(buffer, chars, min((size_t)len, bufferLen) * sizeof(WCHAR));
+   memcpy(buffer, chars, std::min((size_t)len, bufferLen) * sizeof(WCHAR));
 #endif
 #else
-   ucs2_to_mb(chars, min(len, bufferLen - 1), buffer, bufferLen);
+   ucs2_to_mb(chars, std::min((size_t)len, bufferLen - 1), buffer, bufferLen);
 #endif
    env->ReleaseStringChars(jstr, chars);
-   buffer[min((size_t)len, bufferLen - 1)] = 0;
+   buffer[std::min((size_t)len, bufferLen - 1)] = 0;
    return buffer;
 }
 

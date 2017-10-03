@@ -172,7 +172,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 		return true;
 	}
 
-	m_dataPos = min(bufLen, textLen - 1);
+	m_dataPos = std::min(bufLen, textLen - 1);
 	memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos + 1);
 
 	while(1)
@@ -200,7 +200,7 @@ bool SocketConnection::waitForText(const char *text, int timeout)
 			return true;
 		}
 
-		m_dataPos = min(bufLen, textLen - 1);
+		m_dataPos = std::min(bufLen, textLen - 1);
 		memmove(m_data, &m_data[bufLen - m_dataPos], m_dataPos);
 	}
 }
