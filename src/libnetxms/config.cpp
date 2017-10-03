@@ -1002,7 +1002,7 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
       end = _tcschr(curr, _T('/'));
       if (end != NULL)
       {
-         int len = min((int )(end - curr), 255);
+         int len = std::min((int)(end - curr), 255);
          _tcsncpy(name, curr, len);
          name[len] = 0;
          entry = entry->findEntry(name);
@@ -1039,7 +1039,7 @@ ConfigEntry *Config::createEntry(const TCHAR *path)
       end = _tcschr(curr, _T('/'));
       if (end != NULL)
       {
-         int len = min((int )(end - curr), 255);
+         int len = std::min((int)(end - curr), 255);
          _tcsncpy(name, curr, len);
          name[len] = 0;
          entry = parent->findEntry(name);

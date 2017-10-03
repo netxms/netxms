@@ -62,7 +62,7 @@ void ByteStream::write(const void *data, size_t size)
 {
    if (m_pos + size > m_allocated)
    {
-      m_allocated += max(size, m_allocationStep);
+      m_allocated += std::max(size, m_allocationStep);
       m_data = (BYTE *)realloc(m_data, m_allocated);
    }
    memcpy(&m_data[m_pos], data, size);
@@ -98,7 +98,7 @@ void ByteStream::writeString(const TCHAR *s)
  */
 size_t ByteStream::read(void *buffer, size_t count)
 {
-   size_t c = min(count, m_size - m_pos);
+   size_t c = std::min(count, m_size - m_pos);
    if (c > 0)
    {
       memcpy(buffer, &m_data[m_pos], c);

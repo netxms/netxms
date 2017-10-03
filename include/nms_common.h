@@ -1198,6 +1198,8 @@ inline void nx_free(void *p)
 
 #ifdef __cplusplus
 
+#include <algorithm>
+
 /**
  * Session enumeration callback return codes
  */

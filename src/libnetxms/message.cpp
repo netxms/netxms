@@ -623,7 +623,9 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t buffe
          str = buffer;
       }
 
-      size_t length = (buffer == NULL) ? (*((UINT32 *)value) / 2) : min(*((UINT32 *)value) / 2, bufferSize - 1);
+      size_t length = (buffer == NULL) ? 
+            static_cast<size_t>(*((UINT32 *)value) / 2) : 
+            std::min(static_cast<size_t>(*((UINT32 *)value) / 2), bufferSize - 1);
 #if defined(UNICODE) && defined(UNICODE_UCS4)
 		ucs2_to_ucs4((UCS2CHAR *)((BYTE *)value + 4), length, str, length + 1);
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
@@ -667,8 +669,10 @@ char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t buffe
          str = buffer;
       }
 
-      size_t length = (buffer == NULL) ? (*((UINT32 *)value) / 2) : min(*((UINT32 *)value) / 2, bufferSize - 1);
-		ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), (int)length, str, (int)length + 1);
+      size_t length = (buffer == NULL) ? 
+            static_cast<size_t>(*((UINT32 *)value) / 2) : 
+            std::min(static_cast<size_t>(*((UINT32 *)value) / 2), bufferSize - 1);
+      ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), (int)length, str, (int)length + 1);
       str[length] = 0;
    }
    else

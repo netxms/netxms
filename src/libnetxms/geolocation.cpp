@@ -387,7 +387,7 @@ bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy) const
    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
    double distance = R * c;
-   return distance <= min(oldAccuracy, m_accuracy);
+   return distance <= std::min(oldAccuracy, m_accuracy);
 }
 
 /**

@@ -184,7 +184,7 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
       if (sp.poll(dwTimeLeft) > 0)
       {
          dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
-         dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
+         dwTimeLeft -= std::min(dwElapsedTime, dwTimeLeft);
          rtt += dwElapsedTime;
 
          // Receive reply
@@ -240,7 +240,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
 
    // Prepare packet and calculate checksum
    static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
-   int size = max(sizeof(PACKET_HEADER), min((int)packetSize, MAX_PACKET_SIZE));
+   size_t size = MAX(sizeof(PACKET_HEADER), MIN(packetSize, MAX_PACKET_SIZE));
 #if HAVE_ALLOCA
    PACKET_HEADER *p = (PACKET_HEADER *)alloca(size);
 #else
@@ -252,7 +252,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
    p->nextHeader = 58;
    p->type = 128;  // ICMPv6 Echo Request
    p->id = getpid();
-   memcpy(p->data, payload, min(33, size - sizeof(PACKET_HEADER) + 8));
+   memcpy(p->data, payload, MIN(33, size - sizeof(PACKET_HEADER) + 8));
 
    // Send packets
    int bytes = size - 40;  // excluding IPv6 header
