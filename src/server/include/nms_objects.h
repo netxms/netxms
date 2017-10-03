@@ -1863,6 +1863,8 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
+   void setNewTunnelBindFlag() { m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; }
+   void removeNewTunnelBindFlag() { m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
