@@ -2,6 +2,7 @@
 Name: "{app}\etc"
 Name: "{app}\database"
 Name: "{app}\dump"
+Name: "{app}\log"
 Name: "{app}\var\backgrounds"
 Name: "{app}\var\files"
 Name: "{app}\var\images"
@@ -24,6 +25,7 @@ Filename: "{app}\var\rm.exe"; Parameters: "-f ""{app}\bin\libnxdbw.*"""; Working
 Filename: "{app}\var\rm.exe"; Parameters: "-f ""{app}\bin\libnxmapw.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old DLL files..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-f ""{app}\bin\libnxsnmpw.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old DLL files..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\var\mibs"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old MIB directory..."; Flags: runhidden
+Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\sql"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old SQL files..."; Flags: runhidden
 Filename: "{app}\var\vcredist.exe"; WorkingDir: "{app}\var"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated
 Filename: "{app}\bin\nxmibc.exe"; Parameters: "-z -d ""{app}\share\mibs"" -o ""{app}\var\netxms.mib"""; WorkingDir: "{app}\bin"; StatusMsg: "Compiling MIB files..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's configuration file..."; Components: server
