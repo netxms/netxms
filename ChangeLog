@@ -8,7 +8,7 @@
 - New agent configuration parameter TunnelKeepaliveInterval
 - Optimizations in database access layer
 - Improved database check procedure
-- Fixed issues: NX-1147, NX-1265, NX-1282, NX-1290, NX-1296, NX-1300, NX-1309, NX-1313, NX-1314, NX-1315, NX-1324
+- Fixed issues: NX-1147, NX-1265, NX-1270, NX-1276, NX-1282, NX-1290, NX-1296, NX-1300, NX-1309, NX-1313, NX-1314, NX-1315, NX-1324
 
 
 *
