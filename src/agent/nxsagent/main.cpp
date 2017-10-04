@@ -86,7 +86,7 @@ static bool SendMsg(NXCPMessage *msg)
    if (s_socket == INVALID_SOCKET)
       return false;
 
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, s_socketLock) == ntohl(rawMsg->size));
    free(rawMsg);
    return success;
@@ -218,25 +218,32 @@ static void ProcessMessages()
       // Check for timeout
       if (err == 3)
       {
-         _tprintf(_T("Socket read timeout"));
+         _tprintf(_T("Socket read timeout\n"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(rawMsg->size) != err)
       {
-         _tprintf(_T("Actual message size doesn't match wSize value (%d,%d)"), err, ntohl(rawMsg->size));
+         _tprintf(_T("Actual message size doesn't match wSize value (%d,%d)\n"), err, ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
       UINT16 flags = ntohs(rawMsg->flags);
       if (!(flags & MF_BINARY))
       {
-         NXCPMessage *msg = new NXCPMessage(rawMsg);
-         TCHAR msgCodeName[256];
-         _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
-         ProcessRequest(msg);
-         delete msg;
+         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
+         if (msg != NULL)
+         {
+            TCHAR msgCodeName[256];
+            _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
+            ProcessRequest(msg);
+            delete msg;
+         }
+         else
+         {
+            _tprintf(_T("Message deserialization error\n"));
+         }
       }
    }
    free(rawMsg);
