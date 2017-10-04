@@ -1110,10 +1110,20 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    int numFields = (int)ntohl(msg->numFields);
 
    // Dump raw message
+   TCHAR textForm[32];
    for(i = 0; i < (int)size; i += 16)
    {
-      BinToStr(((BYTE *)msg) + i, MIN(16, size - i), buffer);
-      out.appendFormattedString(_T("  ** %s\n"), buffer);
+      const BYTE *block = reinterpret_cast<const BYTE*>(msg) + i;
+      size_t blockSize = MIN(16, size - i);
+      BinToStr(block, blockSize, buffer);
+      size_t j;
+      for(j = 0; j < blockSize; j++)
+      {
+         BYTE b = block[j];
+         textForm[j] = ((b >= ' ') && (b < 127)) ? (TCHAR)b : _T('.');
+      }
+      textForm[j] = 0;
+      out.appendFormattedString(_T("  ** %06X: %s %s\n"), i, buffer, textForm);
    }
 
    // header
@@ -1145,10 +1155,10 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       }
 
       // Calculate and validate field size
-      size_t fieldSize = CalculateFieldSize(field, TRUE);
+      size_t fieldSize = CalculateFieldSize(field, true);
       if (pos + fieldSize > size)
       {
-         out += _T("  ** message format error (invalid field size)\n");
+         out.appendFormattedString(_T("  ** message format error (invalid field size %d at offset 0x%06X)\n"), (int)fieldSize, (int)pos);
          break;
       }
 
@@ -1162,19 +1172,19 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       {
          case NXCP_DT_INT32:
             convertedField->df_int32 = ntohl(convertedField->df_int32);
-            out.appendFormattedString(_T("  ** [%6d] INT32    %d\n"), (int)convertedField->fieldId, convertedField->df_int32);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT32    %d\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int32);
             break;
          case NXCP_DT_INT64:
             convertedField->df_int64 = ntohq(convertedField->df_int64);
-            out.appendFormattedString(_T("  ** [%6d] INT64    ") INT64_FMT _T("\n"), (int)convertedField->fieldId, convertedField->df_int64);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT64    ") INT64_FMT _T("\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int64);
             break;
          case NXCP_DT_INT16:
             convertedField->df_int16 = ntohs(convertedField->df_int16);
-            out.appendFormattedString(_T("  ** [%6d] INT16    %d\n"), (int)convertedField->fieldId, (int)convertedField->df_int16);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT16    %d\n"), (int)pos, (int)convertedField->fieldId, (int)convertedField->df_int16);
             break;
          case NXCP_DT_FLOAT:
             convertedField->df_real = ntohd(convertedField->df_real);
-            out.appendFormattedString(_T("  ** [%6d] FLOAT    %f\n"), (int)convertedField->fieldId, convertedField->df_real);
+            out.appendFormattedString(_T("  ** %06X: [%6d] FLOAT    %f\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_real);
             break;
          case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
@@ -1182,12 +1192,12 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
             bswap_array_16(convertedField->df_string.value, (int)convertedField->df_string.length / 2);
 #endif
             str = GetStringFromField((BYTE *)convertedField + 8);
-            out.appendFormattedString(_T("  ** [%6d] STRING   \"%s\"\n"), (int)convertedField->fieldId, str);
+            out.appendFormattedString(_T("  ** %06X: [%6d] STRING   \"%s\"\n"), (int)pos, (int)convertedField->fieldId, str);
             free(str);
             break;
          case NXCP_DT_BINARY:
             convertedField->df_string.length = ntohl(convertedField->df_string.length);
-            out.appendFormattedString(_T("  ** [%6d] BINARY   len=%d\n"), (int)convertedField->fieldId, (int)convertedField->df_string.length);
+            out.appendFormattedString(_T("  ** %06X: [%6d] BINARY   len=%d\n"), (int)pos, (int)convertedField->fieldId, (int)convertedField->df_string.length);
             break;
          case NXCP_DT_INETADDR:
             {
@@ -1196,11 +1206,11 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
                      InetAddress(ntohl(convertedField->df_inetaddr.addr.v4)) :
                      InetAddress(convertedField->df_inetaddr.addr.v6);
                a.setMaskBits(convertedField->df_inetaddr.maskBits);
-               out.appendFormattedString(_T("  ** [%6d] INETADDR %s\n"), (int)convertedField->fieldId, (const TCHAR *)a.toString());
+               out.appendFormattedString(_T("  ** %06X: [%6d] INETADDR %s\n"), (int)pos, (int)convertedField->fieldId, (const TCHAR *)a.toString());
             }
             break;
          default:
-            out.appendFormattedString(_T("  ** [%6d] unknown type %d\n"), (int)convertedField->fieldId, (int)field->type);
+            out.appendFormattedString(_T("  ** %06X: [%6d] unknown type %d\n"), (int)pos, (int)convertedField->fieldId, (int)field->type);
             break;
       }
       free(convertedField);
