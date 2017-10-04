@@ -600,6 +600,24 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V460 to V461
+ */
+static BOOL H_UpgradeFromV460(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("UPDATE nodes SET fail_time_snmp=0 WHERE fail_time_snmp IS NULL\n")
+            _T("UPDATE nodes SET fail_time_agent=0 WHERE fail_time_agent IS NULL\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp"));
+   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent"));
+
+   CHK_EXEC(SetSchemaVersion(461));
+   return TRUE;
+}
+
+/**
  * Upgrade from V459 to V460
  */
 static BOOL H_UpgradeFromV459(int currVersion, int newVersion)
@@ -11927,6 +11945,7 @@ static struct
    { 457, 458, H_UpgradeFromV457 },
    { 458, 459, H_UpgradeFromV458 },
    { 459, 460, H_UpgradeFromV459 },
+   { 460, 461, H_UpgradeFromV460 },
    { 0, 0, NULL }
 };
 
