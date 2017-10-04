@@ -798,7 +798,7 @@ static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
             DB_RESULT flagResult = DBSelect(g_hCoreDB, query);
             if(DBGetNumRows(flagResult) >= 1)
             {
-               oldFlags = DBGetFieldULong(flagResult, i, 0);
+               oldFlags = DBGetFieldULong(flagResult, 0, 0);
             }
             else
             {
