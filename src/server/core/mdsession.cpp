@@ -384,7 +384,7 @@ void MobileDeviceSession::sendMessage(NXCPMessage *msg)
    BOOL bResult;
 
 	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
-	NXCP_MESSAGE *pRawMsg = msg->createMessage();
+	NXCP_MESSAGE *pRawMsg = msg->serialize();
    if (nxlog_get_debug_level() >= 8)
    {
       String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);

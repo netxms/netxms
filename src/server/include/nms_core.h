@@ -365,7 +365,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
+   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->serialize()); }
    void sendMessage(NXCPMessage *pMsg);
 
 	int getId() { return m_id; }
@@ -758,7 +758,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { if (!isTerminated()) m_sendQueue->put(pMsg->createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0)); }
+   void postMessage(NXCPMessage *pMsg) { if (!isTerminated()) m_sendQueue->put(pMsg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0)); }
    bool sendMessage(NXCPMessage *pMsg);
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);

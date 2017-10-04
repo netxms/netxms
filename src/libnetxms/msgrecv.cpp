@@ -73,13 +73,17 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
                   m_decryptionBuffer = (BYTE *)malloc(m_size);
                if (m_encryptionContext->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)m_buffer, m_decryptionBuffer))
                {
-                  msg = new NXCPMessage((NXCP_MESSAGE *)m_buffer);
+                  msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
+                  if (msg == NULL)
+                     *protocolError = true;  // message deserialization error
                }
             }
          }
          else
          {
-            msg = new NXCPMessage((NXCP_MESSAGE *)m_buffer);
+            msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
+            if (msg == NULL)
+               *protocolError = true;  // message deserialization error
          }
          m_dataSize -= msgSize;
          if (m_dataSize > 0)

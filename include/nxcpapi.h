@@ -66,18 +66,21 @@ private:
    BYTE *m_data;           // binary data
    size_t m_dataSize;      // binary data size
 
+   NXCPMessage(const NXCP_MESSAGE *msg, int version);
+
    void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0);
    void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL) const;
    NXCP_MESSAGE_FIELD *find(UINT32 fieldId) const;
+   bool isValid() { return m_version != -1; }
 
 public:
    NXCPMessage(int version = NXCP_VERSION);
    NXCPMessage(UINT16 code, UINT32 id, int version = NXCP_VERSION);
    NXCPMessage(NXCPMessage *msg);
-   NXCPMessage(NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
    ~NXCPMessage();
 
-   NXCP_MESSAGE *createMessage(bool allowCompression = false) const;
+   static NXCPMessage *deserialize(const NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
+   NXCP_MESSAGE *serialize(bool allowCompression = false) const;
 
    UINT16 getCode() const { return m_code; }
    void setCode(UINT16 code) { m_code = code; }

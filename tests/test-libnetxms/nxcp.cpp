@@ -74,11 +74,12 @@ void TestMessageClass()
    StartTest(_T("NXCP message compression"));
 
    msg.setField(100, longText);
-   NXCP_MESSAGE *binMsg = msg.createMessage(true);
+   NXCP_MESSAGE *binMsg = msg.serialize(true);
    AssertNotNull(binMsg);
    AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
 
-   NXCPMessage *dmsg = new NXCPMessage(binMsg);
+   NXCPMessage *dmsg = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(dmsg);
    TCHAR *longTextOut = dmsg->getFieldAsString(100);
    AssertNotNull(longTextOut);
    AssertTrue(!_tcscmp(longTextOut, longText));

@@ -373,7 +373,7 @@ public:
    void disconnect();
 
    virtual bool sendMessage(NXCPMessage *msg);
-   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->createMessage(m_allowCompression)); }
+   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->serialize(m_allowCompression)); }
    virtual bool sendRawMessage(NXCP_MESSAGE *msg);
    virtual void postRawMessage(NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression);

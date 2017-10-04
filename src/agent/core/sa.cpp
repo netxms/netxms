@@ -117,7 +117,7 @@ void SessionAgentConnector::disconnect()
  */
 bool SessionAgentConnector::sendMessage(NXCPMessage *msg)
 {
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex) == ntohl(rawMsg->size));
    free(rawMsg);
    return success;
@@ -156,7 +156,7 @@ void SessionAgentConnector::readThread()
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(rawMsg->size) != err)
       {
-         DebugPrintf(5, _T("Session agent connector %d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
+         DebugPrintf(5, _T("SA-%d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
@@ -170,24 +170,31 @@ void SessionAgentConnector::readThread()
       if (!(flags & MF_BINARY))
       {
          // Create message object from raw message
-         NXCPMessage *msg = new NXCPMessage(rawMsg);
-         if (msg->getCode() == CMD_LOGIN)
+         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg);
+         if (msg != NULL)
          {
-            m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
-            m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
+            if (msg->getCode() == CMD_LOGIN)
+            {
+               m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
+               m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
 
-            safe_free(m_sessionName);
-            m_sessionName = msg->getFieldAsString(VID_NAME);
+               safe_free(m_sessionName);
+               m_sessionName = msg->getFieldAsString(VID_NAME);
 
-            safe_free(m_userName);
-            m_userName = msg->getFieldAsString(VID_USER_NAME);
+               safe_free(m_userName);
+               m_userName = msg->getFieldAsString(VID_USER_NAME);
 
-            delete msg;
-            DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
+               delete msg;
+               DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
+            }
+            else
+            {
+               m_msgQueue.put(msg);
+            }
          }
          else
          {
-            m_msgQueue.put(msg);
+            DebugPrintf(5, _T("SA-%d: message deserialization error"), m_id);
          }
       }
    }

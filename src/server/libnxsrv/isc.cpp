@@ -227,16 +227,23 @@ void ISC::receiverThread()
 		else
 		{
 			// Create message object from raw message
-			pMsg = new NXCPMessage(pRawMsg, m_protocolVersion);
-         if (onMessage(pMsg))
-         {
-            // message was consumed by handler
-            delete pMsg;
-         }
-         else
-         {
-			   m_msgWaitQueue->put(pMsg);
-         }
+			pMsg = NXCPMessage::deserialize(pRawMsg, m_protocolVersion);
+			if (pMsg != NULL)
+			{
+            if (onMessage(pMsg))
+            {
+               // message was consumed by handler
+               delete pMsg;
+            }
+            else
+            {
+               m_msgWaitQueue->put(pMsg);
+            }
+			}
+			else
+			{
+	         printMessage(_T("RecvMsg: message deserialization error"));
+			}
 		}
    }
 
@@ -427,7 +434,7 @@ BOOL ISC::sendMessage(NXCPMessage *pMsg)
       pMsg->setId((UINT32)InterlockedIncrement(&m_requestId));
    }
 
-   pRawMsg = pMsg->createMessage();
+   pRawMsg = pMsg->serialize();
    if (m_ctx != NULL)
    {
       pEnMsg = m_ctx->encryptMessage(pRawMsg);

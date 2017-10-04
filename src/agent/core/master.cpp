@@ -156,7 +156,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 				delete msg;
 
 				// Send response to pipe
-				NXCP_MESSAGE *rawMsg = response.createMessage();
+				NXCP_MESSAGE *rawMsg = response.serialize();
             bool sendSuccess = s_pipe->write(rawMsg, ntohl(rawMsg->size));
             free(rawMsg);
             if (!sendSuccess)
@@ -180,7 +180,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
  */
 bool SendMessageToMasterAgent(NXCPMessage *msg)
 {
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = SendRawMessageToMasterAgent(rawMsg);
    free(rawMsg);
    return success;

@@ -142,9 +142,23 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
 }
 
 /**
- * Create NXCPMessage object from received message
+ * Create NXCPMessage object from serialized message
+ *
+ * @return message object or NULL on failure
  */
-NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
+NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMag, int version)
+{
+   NXCPMessage *msg = new NXCPMessage(rawMag, version);
+   if (msg->isValid())
+      return msg;
+   delete msg;
+   return NULL;
+}
+
+/**
+ * Create NXCPMessage object from serialized message
+ */
+NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
 {
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
@@ -169,6 +183,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            m_version = -1;   // error indicator
             return;
          }
 
@@ -181,6 +196,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
             inflateEnd(&stream);
             TCHAR buffer[256];
             nxlog_debug(6, _T("NXCPMessage: failed to decompress binary message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
             return;
          }
          inflateEnd(&stream);
@@ -211,6 +227,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
          if (inflateInit(&stream) != Z_OK)
          {
             nxlog_debug(6, _T("NXCPMessage: inflateInit() failed"));
+            m_version = -1;   // error indicator
             return;
          }
 
@@ -223,6 +240,7 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
             inflateEnd(&stream);
             TCHAR buffer[256];
             nxlog_debug(6, _T("NXCPMessage: failed to decompress message %s with ID %d"), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
             return;
          }
          inflateEnd(&stream);
@@ -241,15 +259,24 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
 
          // Validate position inside message
          if (pos > msgDataSize - 8)
+         {
+            m_version = -1;   // error indicator
             break;
+         }
          if ((pos > msgDataSize - 12) &&
              ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_BINARY)))
+         {
+            m_version = -1;   // error indicator
             break;
+         }
 
          // Calculate and validate field size
          size_t fieldSize = CalculateFieldSize(field, true);
          if (pos + fieldSize > msgDataSize)
+         {
+            m_version = -1;   // error indicator
             break;
+         }
 
          // Create new entry
          MessageField *entry = CreateMessageField(fieldSize);
@@ -826,7 +853,7 @@ uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId) const
 /**
  * Build protocol message ready to be send over the wire
  */
-NXCP_MESSAGE *NXCPMessage::createMessage(bool allowCompression) const
+NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
 {
    // Calculate message size
    size_t size = NXCP_HEADER_SIZE;

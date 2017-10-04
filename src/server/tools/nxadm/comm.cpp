@@ -95,7 +95,7 @@ void SendMsg(NXCPMessage *pMsg)
 {
    NXCP_MESSAGE *pRawMsg;
 
-   pRawMsg = pMsg->createMessage();
+   pRawMsg = pMsg->serialize();
    SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->size), 0, NULL);
    free(pRawMsg);
 }
