@@ -1396,7 +1396,7 @@ restart_agent_check:
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
                   PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
-                  sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
+                  sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   m_pollCountSNMP = 0;
                }
 
@@ -1441,7 +1441,7 @@ restart_agent_check:
             }
 
             nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
-            sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
+            sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
                if ((tNow > m_failTimeSNMP + tExpire) && (!(m_state & DCSF_UNREACHABLE)))
@@ -1493,7 +1493,7 @@ restart_agent_check:
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
                PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
-               sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
+               sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
             }
          }
@@ -1504,7 +1504,7 @@ restart_agent_check:
       else
       {
          nxlog_debug(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
-         sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
+         sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_failTimeAgent + tExpire) && !(m_state & DCSF_UNREACHABLE))
