@@ -515,6 +515,7 @@ static void CheckContainerMembership()
       bool match = false;
       TCHAR szQuery[1024];
 
+      SetStageWorkTotal(numContainers);
       for(int i = 0; i < numContainers; i++)
       {
          for(int n = 0; n < numObjects; n++)
@@ -538,6 +539,7 @@ static void CheckContainerMembership()
             }
          }
          match = false;
+         UpdateStageProgress(1);
       }
       DBFreeResult(containerList);
       DBFreeResult(objectList);
@@ -1040,59 +1042,50 @@ bool IsDataTableExist(const TCHAR *format, UINT32 id)
 }
 
 /**
- * Check data tables for given object class
- */
-static void CheckDataTablesForClass(const TCHAR *className, const TCHAR *classDescr)
-{
-   TCHAR query[1024];
-   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult != NULL)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         DWORD id = DBGetFieldULong(hResult, i, 0);
-
-         // IDATA
-         if (!IsDataTableExist(_T("idata_%d"), id))
-         {
-				m_iNumErrors++;
-				if (GetYesNo(_T("Data collection table (IDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
-				{
-					if (CreateIDataTable(id))
-						m_iNumFixes++;
-				}
-         }
-
-         // TDATA
-         if (!IsDataTableExist(_T("tdata_%d"), id))
-         {
-				m_iNumErrors++;
-				if (GetYesNo(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
-				{
-					if (CreateTDataTable(id))
-						m_iNumFixes++;
-				}
-         }
-      }
-      DBFreeResult(hResult);
-   }
-}
-
-/**
  * Check data tables
  */
 static void CheckDataTables()
 {
    StartStage(_T("Checking data tables"));
 
-   CheckDataTablesForClass(_T("nodes"), _T("node"));
-   CheckDataTablesForClass(_T("clusters"), _T("cluster"));
-   CheckDataTablesForClass(_T("mobile_devices"), _T("mobile device"));
-   CheckDataTablesForClass(_T("access_points"), _T("access point"));
-   CheckDataTablesForClass(_T("chassis"), _T("chassis"));
+	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+	SetStageWorkTotal(targets->size());
+	for(int i = 0; i < targets->size(); i++)
+   {
+      UINT32 objectId = targets->get(i);
 
+      // IDATA
+      if (!IsDataTableExist(_T("idata_%d"), objectId))
+      {
+			m_iNumErrors++;
+
+         TCHAR objectName[MAX_OBJECT_NAME];
+         GetObjectName(objectId, objectName);
+			if (GetYesNo(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
+			{
+				if (CreateIDataTable(objectId))
+					m_iNumFixes++;
+			}
+      }
+
+      // TDATA
+      if (!IsDataTableExist(_T("tdata_%d"), objectId))
+      {
+			m_iNumErrors++;
+
+         TCHAR objectName[MAX_OBJECT_NAME];
+         GetObjectName(objectId, objectName);
+			if (GetYesNo(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
+			{
+				if (CreateTDataTable(objectId))
+					m_iNumFixes++;
+			}
+      }
+
+      UpdateStageProgress(1);
+   }
+
+   delete targets;
 	EndStage();
 }
 
