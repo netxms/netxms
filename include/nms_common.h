@@ -52,6 +52,9 @@
 #define NOMINMAX
 #endif
 
+// prevent defining ETIMEDOUT, ECONNRESET, etc. to wrong values
+#define _CRT_NO_POSIX_ERROR_CODES
+
 #endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H
@@ -175,6 +178,10 @@ typedef int bool;
 #define __STR(x) __STR_NX(x)
 #define CPP_COMPILER_VERSION __STR(__BUILD_VERSION_STRING(Microsoft C/C++ Optimizing Compiler Version,_MSC_FULL_VER))
 #endif
+
+// Disable some warnings:
+//   4577 -  'noexcept' used with no exception handling mode specified
+#pragma warning(disable: 4577)
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT		0x0501

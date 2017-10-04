@@ -1042,11 +1042,11 @@ void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const
+size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const
 {
-   UINT32 size = getFieldAsBinary(fieldId, (BYTE *)buffer, numElements * sizeof(UINT32));
+   size_t size = getFieldAsBinary(fieldId, (BYTE *)buffer, numElements * sizeof(UINT32));
    size /= sizeof(UINT32);   // Convert bytes to elements
-   for(UINT32 i = 0; i < size; i++)
+   for(size_t i = 0; i < size; i++)
       buffer[i] = ntohl(buffer[i]);
    return size;
 }
@@ -1054,22 +1054,22 @@ UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UIN
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const
+size_t NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const
 {
    data->clear();
 
    UINT32 *value = (UINT32 *)get(fieldId, NXCP_DT_BINARY);
    if (value != NULL)
    {
-      UINT32 size = *value / sizeof(UINT32);
+      size_t size = *value / sizeof(UINT32);
       value++;
-      for(UINT32 i = 0; i < size; i++)
+      for(size_t i = 0; i < size; i++)
       {
          data->add(ntohl(*value));
          value++;
       }
    }
-   return (UINT32)data->size();
+   return data->size();
 }
 
 /**
