@@ -137,8 +137,8 @@ public:
    double getFieldAsDouble(UINT32 fieldId) const;
    bool getFieldAsBoolean(UINT32 fieldId) const;
    time_t getFieldAsTime(UINT32 fieldId) const;
-   UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
-   UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
+   size_t getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
+   size_t getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
    const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
    TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const;
 	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
