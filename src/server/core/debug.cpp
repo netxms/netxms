@@ -100,7 +100,7 @@ void ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
 		}
 		else
 		{
-			NXCP_MESSAGE *pRawMsg = console->pMsg->createMessage();
+			NXCP_MESSAGE *pRawMsg = console->pMsg->serialize();
 			SendEx(console->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, console->socketMutex);
 			free(pRawMsg);
 		}
@@ -149,7 +149,7 @@ void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
 		}
 		else
 		{
-			NXCP_MESSAGE *pRawMsg = console->pMsg->createMessage();
+			NXCP_MESSAGE *pRawMsg = console->pMsg->serialize();
 			SendEx(console->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, console->socketMutex);
 			free(pRawMsg);
 		}

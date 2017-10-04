@@ -79,7 +79,7 @@ bool ExternalSubagent::sendMessage(NXCPMessage *msg)
 	TCHAR buffer[256];
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
-	NXCP_MESSAGE *rawMsg = msg->createMessage();
+	NXCP_MESSAGE *rawMsg = msg->serialize();
 	bool success = (m_pipe != NULL) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
 	free(rawMsg);
 	return success;

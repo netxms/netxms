@@ -354,7 +354,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
    DebugPrintf(_T("NXCSession::sendMessage(\"%s\", id:%d)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
    bool result;
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
 	MutexLock(m_msgSendLock);
    if (m_encryptionContext != NULL)
    {

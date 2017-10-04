@@ -486,7 +486,7 @@ bool CommSession::sendMessage(NXCPMessage *msg)
    if (m_disconnected)
       return false;
 
-   return sendRawMessage(msg->createMessage(m_allowCompression), m_pCtx);
+   return sendRawMessage(msg->serialize(m_allowCompression), m_pCtx);
 }
 
 /**
@@ -1093,7 +1093,7 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
             msg.setCode(CMD_REQUEST_COMPLETED);
             msg.setId(pRequest->getId());
             msg.setField(VID_RCC, RCC_SUCCESS);
-            pRawMsg = msg.createMessage();
+            pRawMsg = msg.serialize();
             sendRawMessage(pRawMsg, pSavedCtx);
 				if (pSavedCtx != NULL)
 					pSavedCtx->decRefCount();

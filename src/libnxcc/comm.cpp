@@ -372,7 +372,7 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
    NXCPMessage msg;
    msg.setCode(CMD_KEEPALIVE);
    msg.setField(VID_NODE_ID, g_nxccNodeId);
-   NXCP_MESSAGE *rawMsg = msg.createMessage();
+   NXCP_MESSAGE *rawMsg = msg.serialize();
 
    while(!g_nxccShutdown)
    {
@@ -416,7 +416,7 @@ void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg)
                 NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(),
                 node->m_id, (const TCHAR *)node->m_addr->toString());
 
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
    MutexLock(node->m_mutex);
    if (node->m_socket != INVALID_SOCKET)
    {
@@ -455,7 +455,7 @@ void LIBNXCC_EXPORTABLE ClusterNotify(INT16 code)
  */
 void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg)
 {
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
 
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
    {
@@ -527,7 +527,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
 
    UINT32 requestId = (UINT32)InterlockedIncrement(&s_commandId);
    msg->setId(requestId);
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
 
    bool waitFlags[CLUSTER_MAX_NODE_ID];
    memset(waitFlags, 0, sizeof(waitFlags));
@@ -634,7 +634,7 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
 
    UINT32 requestId = (UINT32)InterlockedIncrement(&s_commandId);
    msg->setId(requestId);
-   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->serialize();
 
    TCHAR buffer[64];
    ClusterDebug(7, _T("ClusterSendDirectCommandEx: sending message %s (%d) to peer %d [%s]"),

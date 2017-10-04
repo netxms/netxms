@@ -126,7 +126,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->put(msg.createMessage());
+      s_trapQueue->put(msg.serialize());
 	}
 }
 
@@ -232,7 +232,7 @@ void ForwardTrap(NXCPMessage *msg)
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->put(msg->createMessage());
+      s_trapQueue->put(msg->serialize());
 	}
 }
 

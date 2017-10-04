@@ -1430,7 +1430,7 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
    if (isTerminated())
       return false;
 
-	NXCP_MESSAGE *rawMsg = msg->createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
+	NXCP_MESSAGE *rawMsg = msg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
 
    if ((nxlog_get_debug_level() >= 6) && (msg->getCode() != CMD_ADM_MESSAGE))
    {
@@ -6124,7 +6124,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
          FillActionInfoMessage(&msg, pAction);
       ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
-               msg.createMessage((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
+               msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
    }
 }
 

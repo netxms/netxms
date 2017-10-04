@@ -109,7 +109,7 @@ static bool Send()
    s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
 	// Send message to pipe
-	NXCP_MESSAGE *rawMsg = msg.createMessage();
+	NXCP_MESSAGE *rawMsg = msg.serialize();
 	bool success = s_pipe->write(rawMsg, ntohl(rawMsg->size));
 
 	free(rawMsg);

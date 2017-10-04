@@ -110,7 +110,13 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
       }
 		else
 		{
-			pRequest = new NXCPMessage(pRawMsg);
+			pRequest = NXCPMessage::deserialize(pRawMsg);
+			if (pRequest == NULL)
+			{
+	         DbgPrintf(5, _T("%s message deserialization error"), dbgPrefix);
+			   continue;
+			}
+
 			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
 			if (pRequest->getCode() == CMD_KEEPALIVE)
 			{
@@ -170,7 +176,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			
 			response.setId(pRequest->getId());
 			response.setCode(CMD_REQUEST_COMPLETED);
-			pRawMsgOut = response.createMessage();
+			pRawMsgOut = response.serialize();
 			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, NULL) != (int)ntohl(pRawMsgOut->size))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));

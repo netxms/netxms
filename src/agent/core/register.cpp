@@ -71,7 +71,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
          msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
 
          // Send request
-         pRawMsg = msg.createMessage();
+         pRawMsg = msg.serialize();
          nLen = ntohl(pRawMsg->size);
          if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {
@@ -83,14 +83,17 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
                                    &pDummyCtx, NULL, 30000);
             if (nLen >= 16)
             {
-               pResponse = new NXCPMessage(pRawMsg);
-               if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
-                   (pResponse->getId() == 2) &&
-                   (pResponse->getFieldAsUInt32(VID_RCC) == 0))
+               pResponse = NXCPMessage::deserialize(pRawMsg);
+               if (pResponse != NULL)
                {
-                  bRet = TRUE;
+                  if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
+                      (pResponse->getId() == 2) &&
+                      (pResponse->getFieldAsUInt32(VID_RCC) == 0))
+                  {
+                     bRet = TRUE;
+                  }
+                  delete pResponse;
                }
-               delete pResponse;
             }
             free(pBuffer);
          }

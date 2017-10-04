@@ -274,7 +274,7 @@ reconnect:
 #endif
 
    bool success = false;
-	NXCP_MESSAGE *rawMsg = msg->createMessage();
+	NXCP_MESSAGE *rawMsg = msg->serialize();
 #ifdef _WIN32
 	DWORD bytes;
 	if (!WriteFile(hPipe, rawMsg, ntohl(rawMsg->size), &bytes, NULL))

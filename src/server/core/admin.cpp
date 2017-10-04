@@ -93,7 +93,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       }
 
       response.setCode(CMD_REQUEST_COMPLETED);
-      NXCP_MESSAGE *rawMsgOut = response.createMessage();
+      NXCP_MESSAGE *rawMsgOut = response.serialize();
 		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, ctx.socketMutex);
       free(rawMsgOut);
       delete request;

@@ -363,89 +363,96 @@ void AgentConnection::receiverThread()
       else
       {
          // Create message object from raw message
-         NXCPMessage *msg = new NXCPMessage(rawMsg, m_nProtocolVersion);
-         if (nxlog_get_debug_level() >= 6)
+         NXCPMessage *msg = NXCPMessage::deserialize(rawMsg, m_nProtocolVersion);
+         if (msg != NULL)
          {
-            TCHAR buffer[64];
-            debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
-               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)m_addr.toString());
-         }
-         switch(msg->getCode())
-         {
-            case CMD_REQUEST_COMPLETED:
-            case CMD_SESSION_KEY:
-               m_pMsgWaitQueue->put(msg);
-               break;
-            case CMD_TRAP:
-               if (g_agentConnectionThreadPool != NULL)
-               {
-                  incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, msg);
-               }
-               else
-               {
-                  delete msg;
-               }
-               break;
-            case CMD_SYSLOG_RECORDS:
-               if (g_agentConnectionThreadPool != NULL)
-               {
-                  incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, msg);
-               }
-               else
-               {
-                  delete msg;
-               }
-               break;
-            case CMD_PUSH_DCI_DATA:
-               if (g_agentConnectionThreadPool != NULL)
-               {
-                  incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, msg);
-               }
-               else
-               {
-                  delete msg;
-               }
-               break;
-            case CMD_DCI_DATA:
-               if (g_agentConnectionThreadPool != NULL)
-               {
-                  incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, msg);
-               }
-               else
-               {
-                  NXCPMessage response;
-                  response.setCode(CMD_REQUEST_COMPLETED);
-                  response.setId(msg->getId());
-                  response.setField(VID_RCC, ERR_INTERNAL_ERROR);
-                  sendMessage(&response);
-                  delete msg;
-               }
-               break;
-            case CMD_FILE_MONITORING:
-               onFileMonitoringData(msg);
-               delete msg;
-               break;
-            case CMD_SNMP_TRAP:
-               if (g_agentConnectionThreadPool != NULL)
-               {
-                  incInternalRefCount();
-                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, msg);
-               }
-               else
-               {
-                  delete msg;
-               }
-               break;
-            default:
-               if (processCustomMessage(msg))
-                  delete msg;
-               else
+            if (nxlog_get_debug_level() >= 6)
+            {
+               TCHAR buffer[64];
+               debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
+                  NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), (const TCHAR *)m_addr.toString());
+            }
+            switch(msg->getCode())
+            {
+               case CMD_REQUEST_COMPLETED:
+               case CMD_SESSION_KEY:
                   m_pMsgWaitQueue->put(msg);
-               break;
+                  break;
+               case CMD_TRAP:
+                  if (g_agentConnectionThreadPool != NULL)
+                  {
+                     incInternalRefCount();
+                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
+               case CMD_SYSLOG_RECORDS:
+                  if (g_agentConnectionThreadPool != NULL)
+                  {
+                     incInternalRefCount();
+                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
+               case CMD_PUSH_DCI_DATA:
+                  if (g_agentConnectionThreadPool != NULL)
+                  {
+                     incInternalRefCount();
+                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
+               case CMD_DCI_DATA:
+                  if (g_agentConnectionThreadPool != NULL)
+                  {
+                     incInternalRefCount();
+                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, msg);
+                  }
+                  else
+                  {
+                     NXCPMessage response;
+                     response.setCode(CMD_REQUEST_COMPLETED);
+                     response.setId(msg->getId());
+                     response.setField(VID_RCC, ERR_INTERNAL_ERROR);
+                     sendMessage(&response);
+                     delete msg;
+                  }
+                  break;
+               case CMD_FILE_MONITORING:
+                  onFileMonitoringData(msg);
+                  delete msg;
+                  break;
+               case CMD_SNMP_TRAP:
+                  if (g_agentConnectionThreadPool != NULL)
+                  {
+                     incInternalRefCount();
+                     ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, msg);
+                  }
+                  else
+                  {
+                     delete msg;
+                  }
+                  break;
+               default:
+                  if (processCustomMessage(msg))
+                     delete msg;
+                  else
+                     m_pMsgWaitQueue->put(msg);
+                  break;
+            }
+         }
+         else
+         {
+            debugPrintf(6, _T("RecvMsg: message deserialization error"));
          }
       }
    }
@@ -1101,7 +1108,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    }
 
    bool success;
-   NXCP_MESSAGE *rawMsg = pMsg->createMessage(m_allowCompression);
+   NXCP_MESSAGE *rawMsg = pMsg->serialize(m_allowCompression);
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {

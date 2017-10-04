@@ -339,7 +339,7 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
       TCHAR buffer[64];
       debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
    }
-   NXCP_MESSAGE *data = msg->createMessage(false);
+   NXCP_MESSAGE *data = msg->serialize(false);
    bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
    free(data);
    return success;
