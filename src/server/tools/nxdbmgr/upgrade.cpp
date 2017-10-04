@@ -645,7 +645,25 @@ BOOL moveFlagsFromOldTables(const TCHAR *tableName)
 }
 
 /**
- * Upgrade from V503 to V504
+ * Upgrade from V504 to V505 included in stable as 460
+ */
+static BOOL H_UpgradeFromV504(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+            _T("UPDATE nodes SET fail_time_snmp=0 WHERE fail_time_snmp IS NULL\n")
+            _T("UPDATE nodes SET fail_time_agent=0 WHERE fail_time_agent IS NULL\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp"));
+   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent"));
+
+   CHK_EXEC(SetSchemaVersion(505));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V503 to V504 included in stable as 459
  */
 static BOOL H_UpgradeFromV503(int currVersion, int newVersion)
 {
@@ -654,6 +672,7 @@ static BOOL H_UpgradeFromV503(int currVersion, int newVersion)
             _T("ALTER TABLE nodes ADD fail_time_agent integer\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
    CHK_EXEC(SetSchemaVersion(504));
    return TRUE;
 }
@@ -12275,6 +12294,7 @@ static struct
    { 501, 502, H_UpgradeFromV501 },
    { 502, 503, H_UpgradeFromV502 },
    { 503, 504, H_UpgradeFromV503 },
+   { 504, 505, H_UpgradeFromV504 },
    { 0, 0, NULL }
 };
 
