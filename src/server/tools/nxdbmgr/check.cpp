@@ -710,7 +710,7 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<UINT32
 /**
  * Get all data collection targets
  */
-static IntegerArray<UINT32> *GetDataCollectionTargets()
+IntegerArray<UINT32> *GetDataCollectionTargets()
 {
    IntegerArray<UINT32> *list = new IntegerArray<UINT32>(128, 128);
    CollectObjectIdentifiers(_T("nodes"), list);

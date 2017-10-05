@@ -111,37 +111,47 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 /**
  * Import data tables
  */
-static BOOL ImportDataTables(sqlite3 *db)
+static bool ImportDataTables(sqlite3 *db)
 {
-	int i, count;
-	TCHAR buffer[1024];
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   if (targets == NULL)
+      return false;
 
-	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
-	if (hResult == NULL)
-		return FALSE;
-
-	// Create and import idata_xx tables for each node in "nodes" table
-	count = DBGetNumRows(hResult);
-	for(i = 0; i < count; i++)
+	// Create and import idata_xx tables for each data collection target
+   bool success = true;
+	for(int i = 0; i < targets->size(); i++)
 	{
-		DWORD id = DBGetFieldULong(hResult, i, 0);
+		UINT32 id = targets->get(i);
 		if (!CreateIDataTable(id))
+		{
+		   success = false;
 			break;	// Failed to create idata_xx table
+		}
 
-		_sntprintf(buffer, 1024, _T("idata_%d"), id);
-		if (!ImportTable(db, buffer))
+		TCHAR table[64];
+		_sntprintf(table, 64, _T("idata_%d"), id);
+		if (!ImportTable(db, table))
+		{
+         success = false;
 			break;
+		}
 
       if (!CreateTDataTable(id))
+      {
+         success = false;
 			break;	// Failed to create tdata tables
+      }
 
-		_sntprintf(buffer, 1024, _T("tdata_%d"), id);
-		if (!ImportTable(db, buffer))
+		_sntprintf(table, 64, _T("tdata_%d"), id);
+		if (!ImportTable(db, table))
+		{
+         success = false;
 			break;
+		}
 	}
 
-	DBFreeResult(hResult);
-	return i == count;
+	delete targets;
+	return success;
 }
 
 /**
