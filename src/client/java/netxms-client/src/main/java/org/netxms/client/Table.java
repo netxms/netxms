@@ -429,4 +429,17 @@ public class Table
    {
       this.extendedFormat = extendedFormat;
    }
+   
+   public Table getFirstRows(int numOfRows)
+   {
+      Table t = new Table();
+      t.title = title;
+      t.source = source;
+      t.columns = new ArrayList<TableColumnDefinition>(columns);
+      t.data = new ArrayList<TableRow>();
+      for (int i = 0; i < numOfRows; i++)
+         t.data.add(data.get(i));
+      t.extendedFormat = extendedFormat;
+      return t;      
+   }
 }
