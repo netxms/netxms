@@ -184,7 +184,7 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 /**
  * Export database
  */
-void ExportDatabase(char *file, bool skipAudit, bool skipEvent)
+void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
 {
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], queryTemplate[11][MAX_DB_STRING], *data;
@@ -266,6 +266,14 @@ void ExportDatabase(char *file, bool skipAudit, bool skipEvent)
 	   if (skipAudit && !_tcscmp(g_tables[i], _T("audit_log")))
 	      continue;
       if (skipEvent && !_tcscmp(g_tables[i], _T("event_log")))
+         continue;
+      if (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
+                         !_tcscmp(g_tables[i], _T("alarm_notes")) ||
+                         !_tcscmp(g_tables[i], _T("alarm_events"))))
+         continue;
+      if (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log")))
+         continue;
+      if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
          continue;
       if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
