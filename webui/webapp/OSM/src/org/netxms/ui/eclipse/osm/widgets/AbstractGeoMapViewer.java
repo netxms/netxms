@@ -475,6 +475,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       rect.height = 47 + textSize.y;
 
       gc.setBackground(INFO_BLOCK_BACKGROUND);
+      gc.setForeground(INFO_BLOCK_TEXT);
       gc.setAlpha(128);
       gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
       gc.setAlpha(255);

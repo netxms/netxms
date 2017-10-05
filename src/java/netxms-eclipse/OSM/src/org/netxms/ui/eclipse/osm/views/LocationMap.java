@@ -84,7 +84,6 @@ public class LocationMap extends AbstractGeolocationView
 	@Override
 	protected int getInitialZoomLevel()
 	{
-		// TODO Auto-generated method stub
 		return 15;
 	}
 }

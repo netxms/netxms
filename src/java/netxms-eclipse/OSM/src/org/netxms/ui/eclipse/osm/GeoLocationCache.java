@@ -162,12 +162,13 @@ public class GeoLocationCache implements SessionListener
 	}
 	
 	/**
-	 * Get all objects in given area
+	 * Get all objects in given area. If parent ID is set, only objects under given parent will be included.
 	 * 
-	 * @param area
+	 * @param area geographical area
+	 * @param parentId parent object ID or 0
 	 * @return
 	 */
-	public List<AbstractObject> getObjectsInArea(Area area)
+	public List<AbstractObject> getObjectsInArea(Area area, long parentId)
 	{
 		List<AbstractObject> list = null;
 		synchronized(locationTree)
@@ -177,8 +178,10 @@ public class GeoLocationCache implements SessionListener
 			for(Long id : idList)
 			{
 				AbstractObject o = objects.get(id);
-				if (o != null)
+				if ((o != null) && ((parentId == 0) || (o.getObjectId() == parentId) || o.isChildOf(parentId)))
+				{
 					list.add(o);
+				}
 			}
 		}
 		return list;
