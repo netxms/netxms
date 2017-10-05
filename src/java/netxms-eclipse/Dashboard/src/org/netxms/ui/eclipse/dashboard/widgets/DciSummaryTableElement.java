@@ -56,6 +56,8 @@ public class DciSummaryTableElement extends ElementWidget
 		setLayout(layout);
 
 		SummaryTableWidget viewer = new SummaryTableWidget(this, SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
+		viewer.setShowNumLine(config.getNumRowShown());
+		viewer.setSortColumns(config.getSortingColumnList());
 		viewer.setAutoRefresh(config.getRefreshInterval());
 		viewer.refresh();
 	}
