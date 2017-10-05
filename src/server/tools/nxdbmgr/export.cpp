@@ -187,7 +187,7 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
 {
 	sqlite3 *db;
-	char *errmsg, buffer[MAX_PATH], queryTemplate[11][MAX_DB_STRING], *data;
+	char *errmsg, queryTemplate[11][MAX_DB_STRING], *data;
 	TCHAR idataTable[128];
    int rowCount, version = 0;
 	DB_RESULT hResult;
@@ -212,29 +212,15 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    }
 
 	// Setup database schema
-#ifdef UNICODE
-   TCHAR tmp[MAX_PATH];
-   GetNetXMSDirectory(nxDirShare, tmp);
-#ifdef _WIN32
-   _tcslcat(tmp, _T("\\sql\\dbschema_sqlite.sql"), MAX_PATH);
-#else
-   _tcslcat(tmp, _T("/sql/dbschema_sqlite.sql"), MAX_PATH);
-#endif
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, tmp, MAX_PATH, buffer, MAX_PATH, NULL, NULL);
-#else
-   GetNetXMSDirectory(nxDirShare, buffer);
-#ifdef _WIN32
-   strlcat(buffer, "\\sql\\dbschema_sqlite.sql", MAX_PATH);
-#else
-   strlcat(buffer, "/sql/dbschema_sqlite.sql", MAX_PATH);
-#endif
-#endif
+   TCHAR schemaFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, schemaFile);
+   _tcslcat(schemaFile, FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbschema_sqlite.sql"), MAX_PATH);
 
    UINT32 size;
-	data = (char *)LoadFileA(buffer, &size);
+	data = (char *)LoadFile(schemaFile, &size);
 	if (data == NULL)
 	{
-		_tprintf(_T("ERROR: cannot load schema file \"%hs\"\n"), buffer);
+		_tprintf(_T("ERROR: cannot load schema file \"%s\"\n"), schemaFile);
 		goto cleanup;
 	}
 
@@ -296,8 +282,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 
       for(i = 0; i < 10; i++)
       {
-         sprintf(buffer, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
-         if (sqlite3_exec(db, buffer, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
+         char query[256];
+         sprintf(query, "SELECT var_value FROM metadata WHERE var_name='TDataTableCreationCommand_%d'", i);
+         if (sqlite3_exec(db, query, GetIDataQueryCB, queryTemplate[i + 1], &errmsg) != SQLITE_OK)
          {
             _tprintf(_T("ERROR: SQLite query failed (%hs)\n"), errmsg);
             sqlite3_free(errmsg);
@@ -307,14 +294,12 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
             break;
       }
 
-      hResult = SQLSelect(_T("SELECT id FROM nodes"));
-      if (hResult == NULL)
+      IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+      if (targets == NULL)
          goto cleanup;
-
-      rowCount = DBGetNumRows(hResult);
-      for(i = 0; i < rowCount; i++)
+      for(i = 0; i < targets->size(); i++)
       {
-         UINT32 id = DBGetFieldLong(hResult, i, 0);
+         UINT32 id = targets->get(i);
 
          if (!g_skipDataSchemaMigration)
          {
@@ -323,10 +308,11 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
                if (queryTemplate[j][0] == 0)
                   break;
 
-               snprintf(buffer, MAX_PATH, queryTemplate[j], id, id);
-               if (sqlite3_exec(db, buffer, NULL, NULL, &errmsg) != SQLITE_OK)
+               char query[1024];
+               snprintf(query, 1024, queryTemplate[j], id, id);
+               if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
                {
-                  _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), buffer, errmsg);
+                  _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), query, errmsg);
                   sqlite3_free(errmsg);
                   DBFreeResult(hResult);
                   goto cleanup;
@@ -352,7 +338,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
          }
       }
 
-      DBFreeResult(hResult);
+      delete targets;
 	}
 
 	success = TRUE;
