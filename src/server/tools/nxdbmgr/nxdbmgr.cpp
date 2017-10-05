@@ -498,7 +498,10 @@ int main(int argc, char *argv[])
    BOOL bStart = TRUE, bQuiet = FALSE;
    bool replaceValue = true;
    bool skipAudit = false;
+   bool skipAlarms = false;
    bool skipEvent = false;
+   bool skipSysLog = false;
+   bool skipTrapLog = false;
    int ch;
 
    InitNetXMSProcess(true);
@@ -566,7 +569,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Ac:dDEfGhIMNqsStT:vX")) != -1)
+   while((ch = getopt(argc, argv, "Ac:dDEfGhILMNqRsStT:vXY")) != -1)
    {
       switch(ch)
       {
@@ -598,15 +601,18 @@ stop_search:
 #endif
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
+                     _T("   -L          : Skip export of alarms.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
+                     _T("   -R          : Skip export of SNMP trap log.\n")
                      _T("   -s          : Skip collected data during migration or export.\n")
                      _T("   -S          : Skip collected data during migration or export and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
+                     _T("   -Y          : Skip export of sys log.\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
@@ -646,6 +652,9 @@ stop_search:
          case 'q':
             bQuiet = TRUE;
             break;
+         case 'R':
+            skipTrapLog = true;
+            break;
          case 's':
             g_skipDataMigration = true;
             break;
@@ -667,11 +676,17 @@ stop_search:
          case 'I':
             g_pszTableSuffix = _T(" TYPE=InnoDB");
             break;
+         case 'L':
+            skipAlarms = true;
+            break;
          case 'M':
             g_pszTableSuffix = _T(" TYPE=MyISAM");
             break;
          case 'X':
             g_bIgnoreErrors = TRUE;
+            break;
+         case 'Y':
+            skipSysLog = true;
             break;
          case '?':
             bStart = FALSE;
@@ -801,7 +816,7 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "export"))
       {
-         ExportDatabase(argv[optind + 1], skipAudit, skipEvent);
+         ExportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog);
       }
       else if (!strcmp(argv[optind], "import"))
       {
