@@ -807,7 +807,7 @@ Group::Group() : UserDatabaseObject()
 	m_id = GROUP_EVERYONE;
 	_tcscpy(m_name, _T("Everyone"));
 	m_flags = UF_MODIFIED;
-	m_systemRights = 0;
+	m_systemRights = (SYSTEM_ACCESS_VIEW_EVENT_DB | SYSTEM_ACCESS_VIEW_ALL_ALARMS);
 	_tcscpy(m_description, _T("Built-in everyone group"));
 	m_memberCount = 0;
 	m_members = NULL;

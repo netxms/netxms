@@ -271,6 +271,7 @@ BOOL LoadUsers()
    if (!s_userDatabase.contains(GROUP_EVERYONE))
    {
 		Group *group = new Group();
+		group->saveToDatabase(hdb);
 		AddDatabaseObject(group);
       nxlog_write(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
