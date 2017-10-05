@@ -1030,6 +1030,10 @@ if test "x$PLATFORM" = "xMinix"; then
 	AC_CHECK_PROG([CC], [clang], [clang])
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
+if test "x$PLATFORM" = "xLinux"; then
+	AC_CHECK_PROG([CC], [clang], [clang])
+	AC_CHECK_PROG([CCC], [clang++], [clang++])
+fi
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
@@ -1040,7 +1044,23 @@ if test "x$CXX" = "xg++"; then
 	fi
 fi
 if test "x$CXX" = "xclang++"; then
-	LIBS="$LIBS -lc++"
+	AC_LANG_PUSH([C++])
+
+	AC_MSG_CHECKING(whether -lc++ is needed)
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(no) ], 
+		[ 
+			OLDLIBS="$LIBS"
+			LIBS="$LIBS -lc++"
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ AC_MSG_RESULT(yes) ], 
+				[
+					LIBS="$OLDLIBS"
+					AC_MSG_RESULT(no)
+				])
+		])
+
+	AC_LANG_POP([C++])
 fi
 AM_PROG_AS
 AC_PROG_INSTALL
