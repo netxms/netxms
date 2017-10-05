@@ -33,6 +33,7 @@ static MUTEX s_dbConnectionsLock = MutexCreate();
  */
 DBConnection::DBConnection()
 {
+   m_id = NULL;
 	m_driver = NULL;
 	m_server = NULL;
 	m_dbName = NULL;
@@ -47,12 +48,12 @@ DBConnection::DBConnection()
  */
 DBConnection::~DBConnection()
 {
-   safe_free(m_id)
-   safe_free(m_driver);
-   safe_free(m_server);
-   safe_free(m_dbName);
-   safe_free(m_login);
-   safe_free(m_password);
+   free(m_id);
+   free(m_driver);
+   free(m_server);
+   free(m_dbName);
+   free(m_login);
+   free(m_password);
    if (m_hdb != NULL)
       DBDisconnect(m_hdb);
    if (m_hDriver != NULL)
