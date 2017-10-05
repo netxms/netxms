@@ -40,6 +40,9 @@ public class GeoMapConfig extends DashboardElementConfig
 	
 	@Element(required=false)
 	private int zoom = 14;
+	
+   @Element(required=false)
+	private long rootObjectId = 0;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -130,4 +133,19 @@ public class GeoMapConfig extends DashboardElementConfig
 		this.zoom = zoom;
 	}
 
+   /**
+    * @return the rootObjectId
+    */
+   public long getRootObjectId()
+   {
+      return rootObjectId;
+   }
+
+   /**
+    * @param rootObjectId the rootObjectId to set
+    */
+   public void setRootObjectId(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
+   }
 }

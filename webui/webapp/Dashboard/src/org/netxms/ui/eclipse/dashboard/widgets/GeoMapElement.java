@@ -27,7 +27,6 @@ import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
 
 /**
  * Geo map element for dashboard
- *
  */
 public class GeoMapElement extends ElementWidget
 {
@@ -60,6 +59,7 @@ public class GeoMapElement extends ElementWidget
 		mapWidget = new ObjectGeoLocationViewer(this, SWT.NONE);
 		mapWidget.setViewPart(viewPart);
 		mapWidget.setTitle(config.getTitle());
+		mapWidget.setRootObjectId(config.getRootObjectId());
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());
 	}
 }

@@ -63,6 +63,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
    private Point objectToolTipLocation = null;
    private Rectangle objectTooltipRectangle = null;
    private Font objectToolTipHeaderFont;
+   private long rootObjectId = 0;
    
    /**
     * @param parent
@@ -83,13 +84,29 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
       });
    }
 
+   /**
+    * @return the rootObjectId
+    */
+   public long getRootObjectId()
+   {
+      return rootObjectId;
+   }
+
+   /**
+    * @param rootObjectId the rootObjectId to set
+    */
+   public void setRootObjectId(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
+   }
+
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onMapLoad()
     */
    @Override
    protected void onMapLoad()
    {
-      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId);
       redraw();
    }
 
@@ -105,7 +122,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
             || ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && 
                   coverage.contains(prevLocation.getLatitude(), prevLocation.getLongitude())))
       {
-         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId);
          redraw();
       }
    }

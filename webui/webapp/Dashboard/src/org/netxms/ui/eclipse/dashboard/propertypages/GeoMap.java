@@ -27,8 +27,10 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -43,6 +45,7 @@ public class GeoMap extends PropertyPage
 	private LabeledText latitude;
 	private LabeledText longitude;
 	private Spinner zoom;
+   private ObjectSelector objectSelector;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -86,6 +89,16 @@ public class GeoMap extends PropertyPage
 		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().GeoMap_Zoom, 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		zoom.setSelection(config.getZoom());
 		
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
+      objectSelector.setObjectClass(AbstractObject.class);
+      objectSelector.setObjectId(config.getRootObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      objectSelector.setLayoutData(gd);
+		
 		return dialogArea;
 	}
 
@@ -107,6 +120,7 @@ public class GeoMap extends PropertyPage
 		}
 		config.setTitle(title.getText());
 		config.setZoom(zoom.getSelection());
+		config.setRootObjectId(objectSelector.getObjectId());
 		return true;
 	}
 }
