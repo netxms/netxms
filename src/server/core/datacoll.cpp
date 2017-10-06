@@ -453,10 +453,10 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    g_dAvgSyslogProcessingQueueSize = 0;
    g_dAvgSyslogWriterQueueSize = 0;
    g_dAvgPollerQueueSize = 0;
-   while(!IsShutdownInProgress())
+   while(!SleepAndCheckForShutdown(5))
    {
-      if (SleepAndCheckForShutdown(5))
-         break;      // Shutdown has arrived
+      if (!(g_flags & AF_SERVER_INITIALIZED))
+         continue;
 
       // Get current values
       ThreadPoolInfo poolInfo;
