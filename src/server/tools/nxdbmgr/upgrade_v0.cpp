@@ -278,30 +278,6 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
- * Finish legacy versions upgrade directly to 30.x
- */
-static bool FinishLegacyUpgradeToV30(INT32 level21, INT32 level30)
-{
-   _tprintf(_T("Upgrading from version 0.700 to 30.%d\n"), level30);
-
-   const TCHAR *batch =
-      _T("INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMajor','30')\n")
-      _T("INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionLevel.0','700')\n")
-      _T("UPDATE metadata SET var_value='700' WHERE var_name='SchemaVersion'\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionLevel.21','%d')"), level21);
-   CHK_EXEC(SQLQuery(query));
-
-   _sntprintf(query, 256, _T("INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMinor','%d')"), level30);
-   CHK_EXEC(SQLQuery(query));
-
-   return true;
-}
-
-/**
  * Finish legacy versions upgrade to 21.x
  */
 static bool FinishLegacyUpgradeToV21(INT32 minor)
@@ -320,69 +296,6 @@ static bool FinishLegacyUpgradeToV21(INT32 minor)
    CHK_EXEC(SQLQuery(query));
 
    return true;
-}
-
-/**
- * Upgrade from V506 to V700
- */
-static BOOL H_UpgradeFromV506(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(4, 7));
-   return TRUE;
-}
-
-/**
- * Upgrade from V505 to V700
- */
-static BOOL H_UpgradeFromV505(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(3, 6));
-   return TRUE;
-}
-
-/**
- * Upgrade from V504 to V700
- */
-static BOOL H_UpgradeFromV504(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(2, 5));
-   return TRUE;
-}
-
-/**
- * Upgrade from V503 to V700
- */
-static BOOL H_UpgradeFromV503(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(1, 4));
-   return TRUE;
-}
-
-/**
- * Upgrade from V502 to V700
- */
-static BOOL H_UpgradeFromV502(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(1, 3));
-   return TRUE;
-}
-
-/**
- * Upgrade from V501 to V700
- */
-static BOOL H_UpgradeFromV501(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(1, 2));
-   return TRUE;
-}
-
-/**
- * Upgrade from V500 to V700
- */
-static BOOL H_UpgradeFromV500(int currVersion, int newVersion)
-{
-   CHK_EXEC(FinishLegacyUpgradeToV30(1, 1));
-   return TRUE;
 }
 
 /**
@@ -11739,13 +11652,6 @@ static struct
    { 460, 700, H_UpgradeFromV460 },
    { 461, 700, H_UpgradeFromV461 },
    { 462, 700, H_UpgradeFromV462 },
-   { 500, 700, H_UpgradeFromV500 },
-   { 501, 700, H_UpgradeFromV501 },
-   { 502, 700, H_UpgradeFromV502 },
-   { 503, 700, H_UpgradeFromV503 },
-   { 504, 700, H_UpgradeFromV504 },
-   { 505, 700, H_UpgradeFromV505 },
-   { 506, 700, H_UpgradeFromV506 },
    { 0, 0, NULL }
 };
 

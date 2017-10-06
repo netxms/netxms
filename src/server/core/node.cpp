@@ -1845,7 +1845,7 @@ restart_agent_check:
 
    if (dwOldFlags != m_flags)
    {
-      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_flags);
+      PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", dwOldFlags, m_flags);
       lockProperties();
       setModified();
       unlockProperties();
@@ -2429,7 +2429,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       // Generate event if node flags has been changed
       if (dwOldFlags != m_flags)
       {
-         PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_flags);
+         PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", dwOldFlags, m_flags);
          hasChanges = true;
       }
 

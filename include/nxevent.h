@@ -67,7 +67,7 @@
 #define EVENT_NODE_CRITICAL                10
 #define EVENT_NODE_UNKNOWN                 11
 #define EVENT_NODE_UNMANAGED               12
-#define EVENT_NODE_FLAGS_CHANGED           13
+#define EVENT_NODE_CAPABILITIES_CHANGED    13
 #define EVENT_SNMP_FAIL                    14
 #define EVENT_AGENT_FAIL                   15
 #define EVENT_INTERFACE_DELETED            16
