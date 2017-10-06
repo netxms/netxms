@@ -44,6 +44,14 @@
  */
 #define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return false; } while (0)
 
+/**
+ * Pre-defined GUID mapping for GenerateGUID
+ */
+struct GUID_MAPPING
+{
+   UINT32 id;
+   const TCHAR *guid;
+};
 
 //
 // Functions
@@ -79,6 +87,19 @@ int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
+BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId);
+BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column);
+BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description);
+bool CreateTable(const TCHAR *pszQuery);
+bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn, const GUID_MAPPING *mapping);
+bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor);
+bool SetMinorSchemaVersion(INT32 nextMinor);
+INT32 GetSchemaLevelForMajorVersion(INT32 major);
+bool SetSchemaLevelForMajorVersion(INT32 major, INT32 level);
+
+bool IsEventPairInUse(UINT32 code1, UINT32 code2);
+int NextFreeEPPruleID();
+bool AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode);
 
 IntegerArray<UINT32> *GetDataCollectionTargets();
 bool IsDataTableExist(const TCHAR *format, UINT32 id);

@@ -1178,142 +1178,146 @@ static void CheckMapLinks()
  */
 void CheckDatabase()
 {
-   DB_RESULT hResult;
-   LONG iVersion = 0;
-   BOOL bCompleted = FALSE;
-
    if (g_checkDataTablesOnly)
 	   _tprintf(_T("Checking database (data tables only):\n"));
    else
 	   _tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
 
    // Get database format version
-   iVersion = DBGetSchemaVersion(g_hCoreDB);
-   if ((iVersion < DB_FORMAT_VERSION) && !g_checkDataTablesOnly)
+   INT32 major, minor;
+   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
    {
-      _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
-               iVersion, DB_FORMAT_VERSION);
+      _tprintf(_T("Unable to determine database schema version\n"));
+      _tprintf(_T("Database check aborted\n"));
+      return;
    }
-   else if (iVersion > DB_FORMAT_VERSION)
+   if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
    {
-       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
-                _T("You need to upgrade your server before using this database.\n"),
-                iVersion, DB_FORMAT_VERSION);
-
+       _tprintf(_T("Your database has format version %d.%d, this tool is compiled for version %d.%d.\n")
+                   _T("You need to upgrade your server before using this database.\n"),
+                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+       _tprintf(_T("Database check aborted\n"));
+       return;
    }
-   else
+   if ((major < DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor < DB_SCHEMA_VERSION_MINOR)))
    {
-      TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-      BOOL bLocked = FALSE;
+      _tprintf(_T("Your database has format version %d.%d, this tool is compiled for version %d.%d.\nUse \"upgrade\" command to upgrade your database first.\n"),
+               major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+      _tprintf(_T("Database check aborted\n"));
+      return;
+   }
 
-      // Check if database is locked
-      hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-      if (hResult != NULL)
+   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
+   BOOL bLocked = FALSE;
+   BOOL bCompleted = FALSE;
+
+   // Check if database is locked
+   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
       {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-            DecodeSQLString(szLockStatus);
-            bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
-         }
-         DBFreeResult(hResult);
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
+         DecodeSQLString(szLockStatus);
+         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
+      }
+      DBFreeResult(hResult);
 
-         if (bLocked)
+      if (bLocked)
+      {
+         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
+         if (hResult != NULL)
          {
-            hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-            if (hResult != NULL)
+            if (DBGetNumRows(hResult) > 0)
             {
-               if (DBGetNumRows(hResult) > 0)
-               {
-                  DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
-                  DecodeSQLString(szLockInfo);
-               }
-               DBFreeResult(hResult);
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+               DecodeSQLString(szLockInfo);
+            }
+            DBFreeResult(hResult);
+         }
+      }
+
+      if (bLocked)
+      {
+         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
+         {
+            if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
+            {
+               bLocked = FALSE;
+               _tprintf(_T("Database lock removed\n"));
+            }
+         }
+      }
+
+      if (!bLocked)
+      {
+         DBBegin(g_hCoreDB);
+
+         if (g_checkDataTablesOnly)
+         {
+            CheckDataTables();
+         }
+         else
+         {
+            CheckZones();
+            CheckNodes();
+            CheckComponents(_T("interface"), _T("interfaces"));
+            CheckComponents(_T("network service"), _T("network_services"));
+            CheckClusters();
+            CheckTemplateNodeMapping();
+            CheckObjectProperties();
+            CheckContainerMembership();
+            CheckEPP();
+            CheckMapLinks();
+            CheckDataTables();
+            CheckRawDciValues();
+            CheckThresholds();
+            CheckTableThresholds();
+            if (g_checkData)
+            {
+               CheckCollectedData(false);
+               CheckCollectedData(true);
             }
          }
 
-			if (bLocked)
-			{
-				if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
-				{
-					if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
-					{
-						bLocked = FALSE;
-						_tprintf(_T("Database lock removed\n"));
-					}
-				}
-			}
-
-			if (!bLocked)
-			{
-				DBBegin(g_hCoreDB);
-
-            if (g_checkDataTablesOnly)
+         if (m_iNumErrors == 0)
+         {
+            _tprintf(_T("Database doesn't contain any errors\n"));
+            DBCommit(g_hCoreDB);
+         }
+         else
+         {
+            _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
+            if (m_iNumFixes == m_iNumErrors)
+               _tprintf(_T("All errors in database was fixed\n"));
+            else
+               _tprintf(_T("Database still contain errors\n"));
+            if (m_iNumFixes > 0)
             {
-               CheckDataTables();
+               if (GetYesNo(_T("Commit changes?")))
+               {
+                  _tprintf(_T("Committing changes...\n"));
+                  if (DBCommit(g_hCoreDB))
+                     _tprintf(_T("Changes was successfully committed to database\n"));
+               }
+               else
+               {
+                  _tprintf(_T("Rolling back changes...\n"));
+                  if (DBRollback(g_hCoreDB))
+                     _tprintf(_T("All changes made to database was cancelled\n"));
+               }
             }
             else
             {
-				   CheckZones();
-				   CheckNodes();
-				   CheckComponents(_T("interface"), _T("interfaces"));
-				   CheckComponents(_T("network service"), _T("network_services"));
-				   CheckClusters();
-				   CheckTemplateNodeMapping();
-				   CheckObjectProperties();
-				   CheckContainerMembership();
-				   CheckEPP();
-               CheckMapLinks();
-               CheckDataTables();
-               CheckRawDciValues();
-               CheckThresholds();
-               CheckTableThresholds();
-				   if (g_checkData)
-				   {
-					   CheckCollectedData(false);
-                  CheckCollectedData(true);
-				   }
+               DBRollback(g_hCoreDB);
             }
-
-				if (m_iNumErrors == 0)
-				{
-					_tprintf(_T("Database doesn't contain any errors\n"));
-					DBCommit(g_hCoreDB);
-				}
-				else
-				{
-					_tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
-					if (m_iNumFixes == m_iNumErrors)
-						_tprintf(_T("All errors in database was fixed\n"));
-					else
-						_tprintf(_T("Database still contain errors\n"));
-					if (m_iNumFixes > 0)
-					{
-						if (GetYesNo(_T("Commit changes?")))
-						{
-							_tprintf(_T("Committing changes...\n"));
-							if (DBCommit(g_hCoreDB))
-								_tprintf(_T("Changes was successfully committed to database\n"));
-						}
-						else
-						{
-							_tprintf(_T("Rolling back changes...\n"));
-							if (DBRollback(g_hCoreDB))
-								_tprintf(_T("All changes made to database was cancelled\n"));
-						}
-					}
-					else
-					{
-						DBRollback(g_hCoreDB);
-					}
-				}
-				bCompleted = TRUE;
-			}
+         }
+         bCompleted = TRUE;
       }
-		else
-		{
-			_tprintf(_T("Unable to get database lock status\n"));
-		}
+   }
+   else
+   {
+      _tprintf(_T("Unable to get database lock status\n"));
    }
 
    _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));

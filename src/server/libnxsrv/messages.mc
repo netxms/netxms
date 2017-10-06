@@ -1070,4 +1070,28 @@ Language=English
 Server is waiting for database password to be supplied
 .
 
+MessageId=
+SymbolicName=MSG_SENSOR_LOAD_FAILED
+Language=English
+Failed to load sensor object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_DEBUG_TAG
+Language=English
+<%1> %2
+.
+
+MessageId=
+SymbolicName=MSG_UNABLE_TO_GET_DB_SCHEMA_VERSION
+Language=English
+Unable to get database schema version
+.
+
+MessageId=
+SymbolicName=MSG_WRONG_DB_SCHEMA_VERSION
+Language=English
+Your database has format version %1.%2, but server is compiled for version %3.%4
+.
+
 ;#endif

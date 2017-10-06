@@ -179,43 +179,70 @@ void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
 
 /**
  * Get database schema version
- * Will return 0 for unknown and -1 in case of SQL errors
+ * Will return false if version cannot be determined
  */
-int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
+bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *minor)
 {
 	DB_RESULT hResult;
-	int version = 0;
 
-	// Read schema version from 'metadata' table, where it should
-	// be stored starting from schema version 87
-	// We ignore SQL error in this case, because table 'metadata'
-	// may not exist in old schema versions
+	*major = -1;
+	*minor = -1;
+
+   // Read legacy schema version from 'metadata' table, where it should
+   // be stored starting from schema version 87
+   // We ignore SQL error in this case, because table 'metadata'
+   // may not exist in old schema versions
+	int legacy = 0;
    hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersion'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         version = DBGetFieldLong(hResult, 0, 0);
+         legacy = DBGetFieldLong(hResult, 0, 0);
       DBFreeResult(hResult);
    }
 
-	// If database schema version is less than 87, version number
-	// will be stored in 'config' table
-	if (version == 0)
-	{
-		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-				version = DBGetFieldLong(hResult, 0, 0);
-			DBFreeResult(hResult);
-		}
-		else
-		{
-			version = -1;
-		}
-	}
+   // If database schema version is less than 87, version number
+   // will be stored in 'config' table
+   if (legacy == 0)
+   {
+      hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            legacy = DBGetFieldLong(hResult, 0, 0);
+         DBFreeResult(hResult);
+      }
+   }
 
-	return version;
+   if (legacy == 0)
+      return false;  // Cannot determine legacy version or schema is invalid
+
+   if (legacy < 700)
+   {
+      // not upgraded to new major.minor versioning system
+      *major = 0;
+      *minor = legacy;
+      return true;
+   }
+
+   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'"));
+   if (hResult == NULL)
+      return false;  // DB error
+
+   if (DBGetNumRows(hResult) > 0)
+      *major = DBGetFieldLong(hResult, 0, 0);
+   DBFreeResult(hResult);
+
+   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'"));
+   if (hResult == NULL)
+      return false;  // DB error
+
+   if (DBGetNumRows(hResult) > 0)
+      *minor = DBGetFieldLong(hResult, 0, 0);
+   DBFreeResult(hResult);
+
+   // Either version at -1 means schema is incorrect
+   return ((*major != -1) && (*minor != -1));
 }
 
 /**

@@ -189,8 +189,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	sqlite3 *db;
 	char *errmsg, queryTemplate[11][MAX_DB_STRING], *data;
 	TCHAR idataTable[128];
-   int rowCount, version = 0;
+   int rowCount;
 	DB_RESULT hResult;
+   int legacy = 0, major = 0, minor = 0;
 	BOOL success = FALSE;
 
 	if (!ValidateDatabase())
@@ -234,13 +235,22 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	free(data);
 
 	// Check that dbschema_sqlite.sql and database have the same schema version
-	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
+	if ((sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &legacy, &errmsg) != SQLITE_OK) ||
+	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
+	    (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
 	{
 		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
-	if (version != DBGetSchemaVersion(g_hCoreDB))
+
+	INT32 dbmajor, dbminor;
+	if (!DBGetSchemaVersion(g_hCoreDB, &dbmajor, &dbminor))
+	{
+      _tprintf(_T("ERROR: Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
+      goto cleanup;
+	}
+	if ((dbmajor != major) || (dbminor != minor))
 	{
 		_tprintf(_T("ERROR: Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n"));
 		goto cleanup;
