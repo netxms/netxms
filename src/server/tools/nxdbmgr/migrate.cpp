@@ -88,18 +88,23 @@ static bool ConnectToSource()
    }
 
    // Check source schema version
-   int version = DBGetSchemaVersion(s_hdbSource);
-   if (version < DB_FORMAT_VERSION)
+	INT32 major, minor;
+   if (!DBGetSchemaVersion(s_hdbSource, &major, &minor))
    {
-      _tprintf(_T("Source database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade source database first.\n"),
-               version, DB_FORMAT_VERSION);
+      _tprintf(_T("Unable to determine source database version.\n"));
       return false;
    }
-   if (version > DB_FORMAT_VERSION)
+   if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
    {
-      _tprintf(_T("Source database has format version %d, this tool is compiled for version %d.\n")
+      _tprintf(_T("Source database has format version %d.%d, this tool is compiled for version %d.%d.\n")
                _T("You need to upgrade your server before using this database.\n"),
-               version, DB_FORMAT_VERSION);
+                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+       return false;
+   }
+   if ((major < DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor < DB_SCHEMA_VERSION_MINOR)))
+   {
+      _tprintf(_T("Source database has format version %d.%d, this tool is compiled for version %d.%d.\nUse \"upgrade\" command to upgrade source database first.\n"),
+               major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
       return false;
    }
 

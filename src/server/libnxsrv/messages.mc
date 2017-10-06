@@ -1082,4 +1082,16 @@ Language=English
 <%1> %2
 .
 
+MessageId=
+SymbolicName=MSG_UNABLE_TO_GET_DB_SCHEMA_VERSION
+Language=English
+Unable to get database schema version
+.
+
+MessageId=
+SymbolicName=MSG_WRONG_DB_SCHEMA_VERSION
+Language=English
+Your database has format version %1.%2, but server is compiled for version %3.%4
+.
+
 ;#endif

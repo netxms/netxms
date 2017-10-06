@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2010 Victor Kirhenshtein
+** Copyright (C) 2004-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -181,17 +181,20 @@ void ImportDatabase(const char *file)
 	}
 
 	// Check schema version
-	int version = 0;
-	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
+   int legacy = 0, major = 0, minor = 0;
+   if ((sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &legacy, &errmsg) != SQLITE_OK) ||
+       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
+       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
 	{
 		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
 		goto cleanup;
 	}
 
-	if (version != DB_FORMAT_VERSION)
+	if ((legacy != DB_LEGACY_SCHEMA_VERSION) || (major != DB_SCHEMA_VERSION_MAJOR) || (minor != DB_SCHEMA_VERSION_MINOR))
 	{
-		_tprintf(_T("ERROR: Import file was created for database format version %d, but this tool was compiled for database format version %d\n"), version, DB_FORMAT_VERSION);
+		_tprintf(_T("ERROR: Import file was created for database format version %d.%d, but this tool was compiled for database format version %d.%d\n"),
+		         major, (legacy < DB_LEGACY_SCHEMA_VERSION) ? legacy : minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
 		goto cleanup;
 	}
 

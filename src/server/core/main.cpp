@@ -729,10 +729,17 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	nxlog_debug(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
 	// Check database schema version
-	int schemaVersion = DBGetSchemaVersion(hdbBootstrap);
-	if (schemaVersion != DB_FORMAT_VERSION)
+	INT32 schemaVersionMajor, schemaVersionMinor;
+	if (!DBGetSchemaVersion(hdbBootstrap, &schemaVersionMajor, &schemaVersionMinor))
 	{
-		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", schemaVersion, DB_FORMAT_VERSION);
+	   nxlog_write(MSG_UNABLE_TO_GET_DB_SCHEMA_VERSION, NXLOG_ERROR, NULL);
+      DBDisconnect(hdbBootstrap);
+      return FALSE;
+	}
+
+	if ((schemaVersionMajor != DB_SCHEMA_VERSION_MAJOR) || (schemaVersionMinor != DB_SCHEMA_VERSION_MINOR))
+	{
+		nxlog_write(MSG_WRONG_DB_SCHEMA_VERSION, NXLOG_ERROR, "dddd", schemaVersionMajor, schemaVersionMinor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
 		DBDisconnect(hdbBootstrap);
 		return FALSE;
 	}

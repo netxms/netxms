@@ -4,10 +4,10 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO metadata (var_name,var_value)
-	VALUES ('SchemaVersion',DB_FORMAT_VERSION);
-INSERT INTO metadata (var_name,var_value)
-	VALUES ('Syntax',DB_SYNTAX);
+INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersion',DB_LEGACY_SCHEMA_VERSION);
+INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMajor',DB_SCHEMA_VERSION_MAJOR);
+INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMinor',DB_SCHEMA_VERSION_MINOR);
+INSERT INTO metadata (var_name,var_value) VALUES ('Syntax',DB_SYNTAX);
 
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)');

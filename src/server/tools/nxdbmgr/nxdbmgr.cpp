@@ -427,18 +427,23 @@ bool ValidateDatabase()
    TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
 
    // Get database format version
-   nVersion = DBGetSchemaVersion(g_hCoreDB);
-   if (nVersion < DB_FORMAT_VERSION)
+   INT32 major, minor;
+   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
    {
-      _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
-               nVersion, DB_FORMAT_VERSION);
-		return false;
+      _tprintf(_T("Unable to determine database schema version\n"));
+      return false;
    }
-   else if (nVersion > DB_FORMAT_VERSION)
+   if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
    {
-		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
-		         _T("You need to upgrade your server before using this database.\n"),
-				   nVersion, DB_FORMAT_VERSION);
+       _tprintf(_T("Your database has format version %d.%d, this tool is compiled for version %d.%d.\n")
+                   _T("You need to upgrade your server before using this database.\n"),
+                major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
+       return false;
+   }
+   if ((major < DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor < DB_SCHEMA_VERSION_MINOR)))
+   {
+      _tprintf(_T("Your database has format version %d.%d, this tool is compiled for version %d.%d.\nUse \"upgrade\" command to upgrade your database first.\n"),
+               major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
 		return false;
    }
 
@@ -612,7 +617,7 @@ stop_search:
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("   -Y          : Skip export of sys log.\n")
+                     _T("   -Y          : Skip export of collected syslog records.\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
