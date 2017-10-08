@@ -65,6 +65,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    private Rectangle objectTooltipRectangle = null;
    private Font objectToolTipHeaderFont;
    private long rootObjectId = 0;
+   private String filterString = null;
    
    /**
     * @param parent
@@ -108,7 +109,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    @Override
    protected void onMapLoad()
    {
-      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId);
+      objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
       redraw();
    }
 
@@ -124,7 +125,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
             || ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && 
                   coverage.contains(prevLocation.getLatitude(), prevLocation.getLongitude())))
       {
-         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId);
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
          redraw();
       }
    }
@@ -490,5 +491,15 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       {
          return rect.contains(p) || arrow.contains(p.x, p.y); 
       }
+   }
+   
+   /**
+    * Set string to filter object names with
+    * 
+    * @param filterString object name to filter
+    */
+   public void setFilterString(String filterString)
+   {
+      this.filterString = filterString;      
    }
 }

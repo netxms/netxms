@@ -119,6 +119,11 @@
             id="org.netxms.ui.eclipse.osm.commands.open_world_map"
             name="%command.name.WorldMap">
       </command>
+      <command
+            description="Toggle world map filter"
+            id="org.netxms.ui.eclipse.worldmap.commands.show_filter"
+            name="Toggle world map filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -143,6 +148,23 @@
       <loginlistener
             class="org.netxms.ui.eclipse.osm.LoginListener">
       </loginlistener>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.worldmap.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.osm.context.Geolocation"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.osm.context.Geolocation"
+            name="Geolocation"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>
