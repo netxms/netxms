@@ -1969,13 +1969,7 @@ void ClientSession::deleteAlarmCategory(NXCPMessage *request)
  */
 void ClientSession::sendEventDB(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   TCHAR szBuffer[4096];
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       if (!(g_flags & AF_DB_CONNECTION_LOST))
@@ -1985,7 +1979,9 @@ void ClientSession::sendEventDB(NXCPMessage *pRequest)
       }
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
    sendMessage(&msg);
 }
 
