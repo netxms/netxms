@@ -1756,34 +1756,33 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
  */
 UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 {
-   UINT32 i, dwRqId, dwResult;
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-
    *ppszConfig = NULL;
    *pdwSize = 0;
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = generateRequestId();
+   UINT32 dwResult;
+   UINT32 dwRqId = generateRequestId();
 
+   NXCPMessage msg(m_nProtocolVersion);
    msg.setCode(CMD_GET_AGENT_CONFIG);
    msg.setId(dwRqId);
 
    if (sendMessage(&msg))
    {
-      pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponse != NULL)
       {
          dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            UINT32 size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
+            size_t size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
             BYTE *utf8Text = (BYTE *)malloc(size + 1);
             pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
 
             // We expect text file, so replace all non-printable characters with spaces
-            for(i = 0; i < size; i++)
+            for(size_t i = 0; i < size; i++)
                if ((utf8Text[i] < ' ') &&
                    (utf8Text[i] != '\t') &&
                    (utf8Text[i] != '\r') &&

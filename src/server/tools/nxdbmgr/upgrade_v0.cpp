@@ -1729,10 +1729,10 @@ static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
       sysAccess = sysAccess | SYSTEM_ACCESS_VIEW_ALL_ALARMS;
 
       TCHAR query[MAX_DB_STRING];
-      _sntprintf(query, MAX_DB_STRING, _T("UPDATE user_groups SET system_access=%ld WHERE name='Everyone'"), sysAccess);
+      _sntprintf(query, MAX_DB_STRING, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE name='Everyone'"), sysAccess);
       CHK_EXEC(SQLQuery(query));
 
-   DBFreeResult(hResult);
+      DBFreeResult(hResult);
    }
    else
    {
@@ -10381,8 +10381,8 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    {
       _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,")
                                    _T("status,is_deleted,image_id,inherit_access_rights,")
-                                   _T("last_modified) VALUES (%d,'%s',%d,%d,%d,%d,%ld)"),
-                 dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, time(NULL));
+                                   _T("last_modified) VALUES (%d,'%s',%d,%d,%d,%d,") INT64_FMT _T(")"),
+                 dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, (INT64)time(NULL));
 
       if (!SQLQuery(szQuery))
          if (!g_bIgnoreErrors)
@@ -10512,10 +10512,10 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
             {
                _sntprintf(szQuery, 1024, _T("INSERT INTO object_properties (object_id,name,")
                                             _T("status,is_deleted,image_id,inherit_access_rights,")
-                                            _T("last_modified) VALUES (%d,'%s',5,0,%d,%d,%ld)"),
+                                            _T("last_modified) VALUES (%d,'%s',5,0,%d,%d,") INT64_FMT _T(")"),
                           dwId, szName, dwImageId,
                           DBGetFieldLong(hResult, i, 1) ? TRUE : FALSE,
-                          time(NULL));
+                          (INT64)time(NULL));
 
                if (!SQLQuery(szQuery))
                   if (!g_bIgnoreErrors)
