@@ -238,7 +238,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	/**
 	 * Reload current map
 	 */
-	private void reloadMap()
+	public void reloadMap()
 	{
 		Rectangle rect = this.getClientArea();
 		accessor.setMapWidth(rect.width);

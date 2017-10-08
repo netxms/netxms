@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
@@ -101,7 +102,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	 */
 	@Override
 	public void createPartControl(Composite parent)
-	{
+	{      
 		// Map control
 		map = createMapViewer(parent, SWT.BORDER);
 		map.setViewPart(this);
@@ -109,6 +110,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		activateContext();
 		
 		// Initial map view
 		mapAccessor = new MapAccessor(getInitialCenterPoint());
@@ -136,6 +138,18 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		
 		getSite().setSelectionProvider(this);
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.osm.context.Geolocation"); //$NON-NLS-1$
+      }
+   }
 
 	/**
 	 * Create actual map viewer control
