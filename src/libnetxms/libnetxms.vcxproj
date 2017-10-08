@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B1745870-F3ED-4ACB-B813-0C4F47EF0793}</ProjectGuid>
+    <RootNamespace>libnetxms</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.26730.12</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuildStep>
+      <Message />
+      <Command />
+    </CustomBuildStep>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\libexpat\libexpat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_DEBUG;_USRDLL;LIBNETXMS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <ExceptionHandling />
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libcrypto.lib;libssl.lib;crypt32.lib;dbghelp.lib;psapi.lib;rpcrt4.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <CustomBuildStep>
+      <Message />
+      <Command />
+    </CustomBuildStep>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\libexpat\libexpat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_DEBUG;_USRDLL;LIBNETXMS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <ExceptionHandling />
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libcrypto.lib;libssl.lib;crypt32.lib;dbghelp.lib;psapi.lib;rpcrt4.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuildStep>
+      <Message />
+      <Command />
+    </CustomBuildStep>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\libexpat\libexpat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_USRDLL;LIBNETXMS_EXPORTS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libcrypto.lib;libssl.lib;crypt32.lib;dbghelp.lib;psapi.lib;rpcrt4.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <CustomBuildStep>
+      <Message />
+      <Command />
+    </CustomBuildStep>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\libexpat\libexpat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;NDEBUG;_USRDLL;LIBNETXMS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libcrypto.lib;libssl.lib;crypt32.lib;dbghelp.lib;psapi.lib;rpcrt4.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="array.cpp" />
+    <ClCompile Include="base64.cpp" />
+    <ClCompile Include="bytestream.cpp" />
+    <ClCompile Include="cch.cpp" />
+    <ClCompile Include="cc_mb.cpp" />
+    <ClCompile Include="cc_ucs2.cpp" />
+    <ClCompile Include="cc_ucs4.cpp" />
+    <ClCompile Include="cc_utf8.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="crypto.cpp" />
+    <ClCompile Include="debug_tag_tree.cpp" />
+    <ClCompile Include="diff.cpp" />
+    <ClCompile Include="dir.cpp" />
+    <ClCompile Include="dirw.cpp" />
+    <ClCompile Include="dload.cpp" />
+    <ClCompile Include="geolocation.cpp" />
+    <ClCompile Include="getopt.c" />
+    <ClCompile Include="hash.cpp" />
+    <ClCompile Include="hashmapbase.cpp" />
+    <ClCompile Include="ice.c" />
+    <ClCompile Include="icmp.cpp" />
+    <ClCompile Include="inetaddr.cpp" />
+    <ClCompile Include="log.cpp" />
+    <ClCompile Include="lz4.c" />
+    <ClCompile Include="macaddr.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="md5.cpp" />
+    <ClCompile Include="message.cpp" />
+    <ClCompile Include="msgrecv.cpp" />
+    <ClCompile Include="msgwq.cpp" />
+    <ClCompile Include="net.cpp" />
+    <ClCompile Include="nxcp.cpp" />
+    <ClCompile Include="nxproc.cpp" />
+    <ClCompile Include="nxproc_win32.cpp" />
+    <ClCompile Include="pa.cpp" />
+    <ClCompile Include="qsort.c" />
+    <ClCompile Include="queue.cpp" />
+    <ClCompile Include="rbuffer.cpp" />
+    <ClCompile Include="rwlock.cpp" />
+    <ClCompile Include="scandir.c" />
+    <ClCompile Include="seh.cpp" />
+    <ClCompile Include="serial.cpp" />
+    <ClCompile Include="sha1.cpp" />
+    <ClCompile Include="sha2.cpp" />
+    <ClCompile Include="socket_listener.cpp" />
+    <ClCompile Include="spoll.cpp" />
+    <ClCompile Include="StackWalker.cpp" />
+    <ClCompile Include="streamcomp.cpp" />
+    <ClCompile Include="string.cpp" />
+    <ClCompile Include="stringlist.cpp" />
+    <ClCompile Include="strlcat.c" />
+    <ClCompile Include="strlcpy.c" />
+    <ClCompile Include="strmap.cpp" />
+    <ClCompile Include="strmapbase.cpp" />
+    <ClCompile Include="strptime.c" />
+    <ClCompile Include="strset.cpp" />
+    <ClCompile Include="strtoll.c" />
+    <ClCompile Include="strtoull.c" />
+    <ClCompile Include="table.cpp" />
+    <ClCompile Include="threads.cpp" />
+    <ClCompile Include="timegm.c" />
+    <ClCompile Include="tools.cpp" />
+    <ClCompile Include="tp.cpp" />
+    <ClCompile Include="unicode.cpp" />
+    <ClCompile Include="uuid.cpp" />
+    <ClCompile Include="wcslcat.c" />
+    <ClCompile Include="wcslcpy.c" />
+    <ClCompile Include="wcstoll.c" />
+    <ClCompile Include="wcstoull.c" />
+    <ClCompile Include="xml.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\base64.h" />
+    <ClInclude Include="..\..\include\geolocation.h" />
+    <ClInclude Include="..\..\include\netxms-regex.h" />
+    <ClInclude Include="..\..\include\netxms-version.h" />
+    <ClInclude Include="..\..\include\netxms_getopt.h" />
+    <ClInclude Include="..\..\include\nms_agent.h" />
+    <ClInclude Include="..\..\include\nms_common.h" />
+    <ClInclude Include="..\..\include\nms_cscp.h" />
+    <ClInclude Include="..\..\include\nms_threads.h" />
+    <ClInclude Include="..\..\include\nms_util.h" />
+    <ClInclude Include="..\..\include\nxconfig.h" />
+    <ClInclude Include="..\..\include\nxcpapi.h" />
+    <ClInclude Include="..\..\include\nxlog.h" />
+    <ClInclude Include="..\..\include\nxqueue.h" />
+    <ClInclude Include="..\..\include\nxstat.h" />
+    <ClInclude Include="..\..\include\rwlock.h" />
+    <ClInclude Include="..\..\include\unicode.h" />
+    <ClInclude Include="..\..\include\uthash.h" />
+    <ClInclude Include="..\..\include\uuid.h" />
+    <ClInclude Include="debug_tag_tree.h" />
+    <ClInclude Include="diff.h" />
+    <ClInclude Include="ice.h" />
+    <ClInclude Include="libnetxms.h" />
+    <ClInclude Include="lz4.h" />
+    <ClInclude Include="md5.h" />
+    <ClInclude Include="sha1.h" />
+    <ClInclude Include="sha2.h" />
+    <ClInclude Include="StackWalker.h" />
+    <ClInclude Include="strmap-internal.h" />
+    <ClInclude Include="unicode_cc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\build\build.vcxproj">
+      <Project>{4923f11b-0196-4847-9ec1-acd00b699b45}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\jansson\jansson.vcxproj">
+      <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libexpat\libexpat\libexpat.vcxproj">
+      <Project>{6a88ef62-c4f2-4295-a833-549dae4df5ed}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libtre\libtre.vcxproj">
+      <Project>{406ae5c7-343d-4c88-b8f3-84e46255b830}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\zlib\nxzlib.vcxproj">
+      <Project>{e7410eb4-3355-4c83-8e05-d2877581cda1}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

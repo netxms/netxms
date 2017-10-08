@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3B172035-5EEC-45A3-8471-2C390B7ED683}</ProjectGuid>
+    <RootNamespace>nxcore</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="..\..\..\tools\flex_bison.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.26730.12</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <FLEX>
+      <USE8BIT>true</USE8BIT>
+      <NOUNISTD>true</NOUNISTD>
+      <BATCH>true</BATCH>
+      <FAST>true</FAST>
+    </FLEX>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;NXCORE_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <FLEX>
+      <USE8BIT>true</USE8BIT>
+      <NOUNISTD>true</NOUNISTD>
+      <BATCH>true</BATCH>
+      <FAST>true</FAST>
+    </FLEX>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;NXCORE_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <FLEX>
+      <USE8BIT>true</USE8BIT>
+      <NOUNISTD>true</NOUNISTD>
+      <BATCH>true</BATCH>
+      <FAST>true</FAST>
+    </FLEX>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\..\include;..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NXCORE_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <FLEX>
+      <USE8BIT>true</USE8BIT>
+      <NOUNISTD>true</NOUNISTD>
+      <BATCH>true</BATCH>
+      <FAST>true</FAST>
+    </FLEX>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\..\include;..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NXCORE_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;libssl.lib;libcrypto.lib;iphlpapi.lib;psapi.lib;wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="accesspoint.cpp" />
+    <ClCompile Include="acl.cpp" />
+    <ClCompile Include="actions.cpp" />
+    <ClCompile Include="addrlist.cpp" />
+    <ClCompile Include="admin.cpp" />
+    <ClCompile Include="agent.cpp" />
+    <ClCompile Include="agent_policy.cpp" />
+    <ClCompile Include="alarm.cpp" />
+    <ClCompile Include="alarm_category.cpp" />
+    <ClCompile Include="ap_config.cpp" />
+    <ClCompile Include="ap_jobs.cpp" />
+    <ClCompile Include="ap_logparser.cpp" />
+    <ClCompile Include="audit.cpp" />
+    <ClCompile Include="beacon.cpp" />
+    <ClCompile Include="bizservice.cpp" />
+    <ClCompile Include="bizsvcroot.cpp" />
+    <ClCompile Include="bridge.cpp" />
+    <ClCompile Include="cas_validator.cpp" />
+    <ClCompile Include="ccy.cpp" />
+    <ClCompile Include="cdp.cpp" />
+    <ClCompile Include="cert.cpp" />
+    <ClCompile Include="chassis.cpp" />
+    <ClCompile Include="client.cpp" />
+    <ClCompile Include="cluster.cpp" />
+    <ClCompile Include="columnfilter.cpp" />
+    <ClCompile Include="components.cpp" />
+    <ClCompile Include="condition.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="console.cpp" />
+    <ClCompile Include="container.cpp" />
+    <ClCompile Include="correlate.cpp" />
+    <ClCompile Include="dashboard.cpp" />
+    <ClCompile Include="datacoll.cpp" />
+    <ClCompile Include="dbwrite.cpp" />
+    <ClCompile Include="dcitem.cpp" />
+    <ClCompile Include="dcithreshold.cpp" />
+    <ClCompile Include="dcivalue.cpp" />
+    <ClCompile Include="dcobject.cpp" />
+    <ClCompile Include="dcst.cpp" />
+    <ClCompile Include="dctable.cpp" />
+    <ClCompile Include="dctarget.cpp" />
+    <ClCompile Include="dctcolumn.cpp" />
+    <ClCompile Include="dctthreshold.cpp" />
+    <ClCompile Include="dc_nxsl.cpp" />
+    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="devdb.cpp" />
+    <ClCompile Include="dfile_info.cpp" />
+    <ClCompile Include="download_job.cpp" />
+    <ClCompile Include="ef.cpp" />
+    <ClCompile Include="email.cpp" />
+    <ClCompile Include="entirenet.cpp" />
+    <ClCompile Include="epp.cpp" />
+    <ClCompile Include="events.cpp" />
+    <ClCompile Include="evproc.cpp" />
+    <ClCompile Include="fdb.cpp" />
+    <ClCompile Include="filemonitoring.cpp" />
+    <ClCompile Include="graph.cpp" />
+    <ClCompile Include="hdlink.cpp" />
+    <ClCompile Include="hk.cpp" />
+    <ClCompile Include="id.cpp" />
+    <ClCompile Include="import.cpp" />
+    <ClCompile Include="inaddr_index.cpp" />
+    <ClCompile Include="index.cpp" />
+    <ClCompile Include="interface.cpp" />
+    <ClCompile Include="isc.cpp" />
+    <ClCompile Include="job.cpp" />
+    <ClCompile Include="jobmgr.cpp" />
+    <ClCompile Include="jobqueue.cpp" />
+    <ClCompile Include="layer2.cpp" />
+    <ClCompile Include="ldap.cpp" />
+    <ClCompile Include="lldp.cpp" />
+    <ClCompile Include="lln.cpp" />
+    <ClCompile Include="locks.cpp" />
+    <ClCompile Include="logfilter.cpp" />
+    <ClCompile Include="loghandle.cpp" />
+    <ClCompile Include="logs.cpp" />
+    <ClCompile Include="macdb.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="maint.cpp" />
+    <ClCompile Include="market.cpp" />
+    <ClCompile Include="mdconn.cpp" />
+    <ClCompile Include="mdsession.cpp" />
+    <ClCompile Include="mobile.cpp" />
+    <ClCompile Include="modules.cpp" />
+    <ClCompile Include="mt.cpp" />
+    <ClCompile Include="ndd.cpp" />
+    <ClCompile Include="ndp.cpp" />
+    <ClCompile Include="netinfo.cpp" />
+    <ClCompile Include="netmap.cpp" />
+    <ClCompile Include="netmap_element.cpp" />
+    <ClCompile Include="netmap_link.cpp" />
+    <ClCompile Include="netmap_objlist.cpp" />
+    <ClCompile Include="netobj.cpp" />
+    <ClCompile Include="netsrv.cpp" />
+    <ClCompile Include="node.cpp" />
+    <ClCompile Include="nodelink.cpp" />
+    <ClCompile Include="np.cpp" />
+    <ClCompile Include="npe.cpp" />
+    <ClCompile Include="nxslext.cpp" />
+    <ClCompile Include="nxsl_classes.cpp" />
+    <ClCompile Include="objects.cpp" />
+    <ClCompile Include="objtools.cpp" />
+    <ClCompile Include="package.cpp" />
+    <ClCompile Include="pds.cpp" />
+    <ClCompile Include="poll.cpp" />
+    <ClCompile Include="ps.cpp" />
+    <ClCompile Include="rack.cpp" />
+    <ClCompile Include="radius.cpp" />
+    <ClCompile Include="reporting.cpp" />
+    <ClCompile Include="rootobj.cpp" />
+    <ClCompile Include="schedule.cpp" />
+    <ClCompile Include="script.cpp" />
+    <ClCompile Include="sensor.cpp" />
+    <ClCompile Include="session.cpp" />
+    <ClCompile Include="slmcheck.cpp" />
+    <ClCompile Include="smclp.cpp" />
+    <ClCompile Include="sms.cpp" />
+    <ClCompile Include="snmp.cpp" />
+    <ClCompile Include="snmptrap.cpp" />
+    <ClCompile Include="stp.cpp" />
+    <ClCompile Include="subnet.cpp" />
+    <ClCompile Include="summary_email.cpp" />
+    <ClCompile Include="svccontainer.cpp" />
+    <ClCompile Include="swpkg.cpp" />
+    <ClCompile Include="syncer.cpp" />
+    <ClCompile Include="syslogd.cpp" />
+    <ClCompile Include="template.cpp" />
+    <ClCompile Include="tools.cpp" />
+    <ClCompile Include="tracert.cpp" />
+    <ClCompile Include="tunnel.cpp" />
+    <ClCompile Include="uniroot.cpp" />
+    <ClCompile Include="upload_job.cpp" />
+    <ClCompile Include="uptimecalc.cpp" />
+    <ClCompile Include="userdb.cpp" />
+    <ClCompile Include="userdb_objects.cpp" />
+    <ClCompile Include="vpnconn.cpp" />
+    <ClCompile Include="vrrp.cpp" />
+    <ClCompile Include="watchdog.cpp" />
+    <ClCompile Include="winperf.cpp" />
+    <ClCompile Include="xmpp.cpp" />
+    <ClCompile Include="zeromq.cpp" />
+    <ClCompile Include="zone.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\dbdrv.h" />
+    <ClInclude Include="..\..\..\include\ieee8021x.h" />
+    <ClInclude Include="..\..\..\include\netxms-regex.h" />
+    <ClInclude Include="..\..\..\include\netxms-version.h" />
+    <ClInclude Include="..\..\..\include\netxmsdb.h" />
+    <ClInclude Include="..\..\..\include\netxms_isc.h" />
+    <ClInclude Include="..\..\..\include\netxms_maps.h" />
+    <ClInclude Include="..\..\..\include\nms_common.h" />
+    <ClInclude Include="..\..\..\include\nms_cscp.h" />
+    <ClInclude Include="..\..\..\include\nms_threads.h" />
+    <ClInclude Include="..\..\..\include\nms_util.h" />
+    <ClInclude Include="..\..\..\include\nxcldefs.h" />
+    <ClInclude Include="..\..\..\include\nxcpapi.h" />
+    <ClInclude Include="..\..\..\include\nxevent.h" />
+    <ClInclude Include="..\..\..\include\nxlog.h" />
+    <ClInclude Include="..\..\..\include\nxqueue.h" />
+    <ClInclude Include="..\..\..\include\nxsnmp.h" />
+    <ClInclude Include="..\..\..\include\rwlock.h" />
+    <ClInclude Include="..\..\..\include\unicode.h" />
+    <ClInclude Include="..\include\hdlink.h" />
+    <ClInclude Include="..\include\local_admin.h" />
+    <ClInclude Include="..\include\nddrv.h" />
+    <ClInclude Include="..\include\netxms_mt.h" />
+    <ClInclude Include="..\include\nms_actions.h" />
+    <ClInclude Include="..\include\nms_alarm.h" />
+    <ClInclude Include="..\include\nms_core.h" />
+    <ClInclude Include="..\include\nms_dcoll.h" />
+    <ClInclude Include="..\include\nms_events.h" />
+    <ClInclude Include="..\include\nms_locks.h" />
+    <ClInclude Include="..\include\nms_objects.h" />
+    <ClInclude Include="..\include\nms_pkg.h" />
+    <ClInclude Include="..\include\nms_script.h" />
+    <ClInclude Include="..\include\nms_topo.h" />
+    <ClInclude Include="..\include\nms_users.h" />
+    <ClInclude Include="..\include\nxcore_jobs.h" />
+    <ClInclude Include="..\include\nxcore_logs.h" />
+    <ClInclude Include="..\include\nxcore_situations.h" />
+    <ClInclude Include="..\include\nxcore_smclp.h" />
+    <ClInclude Include="..\include\nxcore_winperf.h" />
+    <ClInclude Include="..\include\nxmodule.h" />
+    <ClInclude Include="..\include\nxsrvapi.h" />
+    <ClInclude Include="..\include\pdsdrv.h" />
+    <ClInclude Include="..\include\server_timers.h" />
+    <ClInclude Include="nxcore.h" />
+    <ClInclude Include="radius.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\agent\libnxagent\libnxagent.vcxproj">
+      <Project>{811f41fe-131d-491a-9184-fbe687068d34}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\db\libnxdb\libnxdb.vcxproj">
+      <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\jansson\jansson.vcxproj">
+      <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
+      <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libnxlp\libnxlp.vcxproj">
+      <Project>{64efc0c2-c67b-41f6-851d-f11dab27a60b}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libnxsl\libnxsl.vcxproj">
+      <Project>{b2988503-1921-4b9f-bbc1-5e5cf62f335e}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libstrophe\libstrophe.vcxproj">
+      <Project>{f4169894-5c48-4e11-a82e-1055f9572eef}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libtre\libtre.vcxproj">
+      <Project>{406ae5c7-343d-4c88-b8f3-84e46255b830}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\snmp\libnxsnmp\libnxsnmp.vcxproj">
+      <Project>{7dc90ee4-e31c-4f12-8f1e-81f10e9099fb}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libnxsrv\libnxsrv.vcxproj">
+      <Project>{cb89d905-c8be-4027-b2d8-f96c245e9160}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\..\tools\flex_bison.targets" />
+  </ImportGroup>
+</Project>
