@@ -39,6 +39,7 @@ target
 .libs
 .deps
 .idea
+.vs
 
 /netxms-build-tag.h
 /build/netxms-build-tag.h

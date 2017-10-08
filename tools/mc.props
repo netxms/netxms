@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(Message_compilerBeforeTargets)' == '' and '$(Message_compilerAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <Message_compilerBeforeTargets>Midl</Message_compilerBeforeTargets>
+    <Message_compilerAfterTargets>CustomBuild</Message_compilerAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Message_compilerDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(Message_compilerDependsOn)</Message_compilerDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Message_compiler>
+      <CommandLineTemplate>mc -s -U -h $(ProjectDir) -r $(ProjectDir) %(Filename)%(Extension)
+del $(ProjectDir)messages.rc
+</CommandLineTemplate>
+      <Outputs>%(Filename).h;MSG00001.bin</Outputs>
+      <ExecutionDescription>Running message compiler</ExecutionDescription>
+    </Message_compiler>
+  </ItemDefinitionGroup>
+</Project>

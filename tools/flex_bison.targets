@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="FLEX">
+      <Targets>_FLEX</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="BISON">
+      <Targets>_BISON</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="FLEX"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="BISON"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="_FLEX"
+    BeforeTargets="$(FLEXBeforeTargets)"
+    AfterTargets="$(FLEXAfterTargets)"
+    Condition="'@(FLEX)' != ''"
+    DependsOnTargets="$(FLEXDependsOn);ComputeFLEXOutput"
+    Outputs="@(FLEX-&gt;'%(Outputs)')"
+    Inputs="@(FLEX);%(FLEX.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <FLEX
+        Remove="@(FLEX)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <FLEX_tlog
+        Include="%(FLEX.Outputs)"
+        Condition="'%(FLEX.Outputs)' != '' and '%(FLEX.ExcludedFromBuild)' != 'true'">
+        <Source>@(FLEX, '|')</Source>
+      </FLEX_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(FLEX.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(FLEX_tlog)' != '' and '%(FLEX_tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(FLEX_tlog.Source);@(FLEX_tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <FLEX
+      Condition="'@(FLEX)' != '' and '%(FLEX.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(FLEX.CommandLineTemplate)"
+      USE8BIT="%(FLEX.USE8BIT)"
+      NOUNISTD="%(FLEX.NOUNISTD)"
+      BATCH="%(FLEX.BATCH)"
+      FAST="%(FLEX.FAST)"
+      PREFIX="%(FLEX.PREFIX)"
+      AdditionalOptions="%(FLEX.AdditionalOptions)"
+      Inputs="@(FLEX)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeFLEXOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeFLEXOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeFLEXOutput"
+    Condition="'@(FLEX)' != ''">
+    <ItemGroup>
+      <FLEXDirsToMake
+        Condition="'@(FLEX)' != '' and '%(FLEX.ExcludedFromBuild)' != 'true'"
+        Include="%(FLEX.Outputs)" />
+      <Link
+        Include="%(FLEXDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(FLEXDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(FLEXDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(FLEXDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_BISON"
+    BeforeTargets="$(BISONBeforeTargets)"
+    AfterTargets="$(BISONAfterTargets)"
+    Condition="'@(BISON)' != ''"
+    DependsOnTargets="$(BISONDependsOn);ComputeBISONOutput"
+    Outputs="%(BISON.Outputs)"
+    Inputs="%(BISON.Identity);%(BISON.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <BISON
+        Remove="@(BISON)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <BISON_tlog
+        Include="%(BISON.Outputs)"
+        Condition="'%(BISON.Outputs)' != '' and '%(BISON.ExcludedFromBuild)' != 'true'">
+        <Source>@(BISON, '|')</Source>
+      </BISON_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(BISON.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(BISON_tlog)' != '' and '%(BISON_tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(BISON_tlog.Source);@(BISON_tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <BISON
+      Condition="'@(BISON)' != '' and '%(BISON.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(BISON.CommandLineTemplate)"
+      PREFIX="%(BISON.PREFIX)"
+      AdditionalOptions="%(BISON.AdditionalOptions)"
+      Inputs="%(BISON.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeBISONOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeBISONOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeBISONOutput"
+    Condition="'@(BISON)' != ''">
+    <ItemGroup>
+      <BISONDirsToMake
+        Condition="'@(BISON)' != '' and '%(BISON.ExcludedFromBuild)' != 'true'"
+        Include="%(BISON.Outputs)" />
+      <Link
+        Include="%(BISONDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(BISONDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(BISONDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(BISONDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+</Project>
