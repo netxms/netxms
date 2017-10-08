@@ -399,7 +399,7 @@ BOOL LoadUsers();
 void SaveUsers(DB_HANDLE hdb, UINT32 watchdogId);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
-UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
+UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions,
 							   bool ssoAuth, UINT32 *graceLogins);

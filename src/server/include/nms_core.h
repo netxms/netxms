@@ -1161,9 +1161,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(NXCPMessage *pMsg);
-BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge,
-									  BYTE *pSignature, UINT32 dwSigLen, int nMappingMethod,
-									  const TCHAR *pszMappingData);
+bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge,
+									  const BYTE *signature, size_t sigLen, int mappingMethod,
+									  const TCHAR *mappingData);
 bool ValidateAgentCertificate(X509 *cert);
 void ReloadCertificates();
 bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size);
