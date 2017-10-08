@@ -357,7 +357,11 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	 * Oh, and sizeof(long) always == sizeof(void*) in our part of the
 	 * universe, right? (*BSD, Solaris, Linux, DEC Unix...)
 	 */
+#ifdef _WIN32
+   salt = htons((WORD)((((ULONG_PTR)vp ^ *(ULONG_PTR *)vector) & 0xffff) | 0x8000));
+#else
 	salt = htons((WORD)((((long)vp ^ *(long *)vector) & 0xffff) | 0x8000));
+#endif
 	memcpy(o, &salt, sizeof(salt));
 	o += sizeof(salt);
 

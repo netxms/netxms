@@ -498,14 +498,19 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 				pCert = CertificateFromLoginMessage(pRequest);
 				if (pCert != NULL)
 				{
-					BYTE signature[256];
-					UINT32 dwSigLen;
-
-					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
-					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
-														 m_challenge, &m_dwUserId, &userRights,
-														 &changePasswd, &intruderLockout,
-														 &closeOtherSessions, false, &graceLogins);
+               size_t sigLen;
+					const BYTE *signature = pRequest->getBinaryFieldPtr(VID_SIGNATURE, &sigLen);
+               if (signature != NULL)
+               {
+                  dwResult = AuthenticateUser(szLogin, reinterpret_cast<const TCHAR *>(signature), sigLen,
+                     pCert, m_challenge, &m_dwUserId, &userRights,
+                     &changePasswd, &intruderLockout,
+                     &closeOtherSessions, false, &graceLogins);
+               }
+               else
+               {
+                  dwResult = RCC_INVALID_REQUEST;
+               }
 					X509_free(pCert);
 				}
 				else

@@ -360,13 +360,13 @@ static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
 /**
  * Validate user's certificate
  */
-BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
-									  UINT32 dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
+bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
+									  size_t sigLen, int mappingMethod, const TCHAR *mappingData)
 {
    BOOL bValid = FALSE;
 
    char subjectName[1024];
-   X509_NAME_oneline(X509_get_subject_name(pCert), subjectName, 1024);
+   X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
 #ifdef UNICODE
    WCHAR certSubject[1024];
    MultiByteToWideChar(CP_UTF8, 0, subjectName, -1, certSubject, 1024);
@@ -374,7 +374,7 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
    const char *certSubject = subjectName;
 #endif
 
-	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, pszLogin);
+	DbgPrintf(3, _T("Validating certificate \"%s\" for user %s"), certSubject, login);
 	s_certificateStoreLock.lock();
 
 	if (s_trustedCertificateStore == NULL)
@@ -385,18 +385,18 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	}
 
 	// Validate signature
-	EVP_PKEY *pKey = X509_get_pubkey(pCert);
+	EVP_PKEY *pKey = X509_get_pubkey(cert);
 	if (pKey != NULL)
 	{
       BYTE hash[SHA1_DIGEST_SIZE];
-		CalculateSHA1Hash(pChallenge, CLIENT_CHALLENGE_SIZE, hash);
+		CalculateSHA1Hash(challenge, CLIENT_CHALLENGE_SIZE, hash);
 		switch(EVP_PKEY_id(pKey))
 		{
 			case EVP_PKEY_RSA:
-				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, EVP_PKEY_get1_RSA(pKey));
+				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, signature, static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey));
 				break;
 			default:
-				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject, pszLogin);
+				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject, login);
 				break;
 		}
 	}
@@ -407,16 +407,15 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 		X509_STORE_CTX *pStore = X509_STORE_CTX_new();
 		if (pStore != NULL)
 		{
-			X509_STORE_CTX_init(pStore, s_trustedCertificateStore, pCert, NULL);
+			X509_STORE_CTX_init(pStore, s_trustedCertificateStore, cert, NULL);
 			bValid = X509_verify_cert(pStore);
 			X509_STORE_CTX_free(pStore);
 			DbgPrintf(3, _T("Certificate \"%s\" for user %s - validation %s"),
-			          certSubject, pszLogin, bValid ? _T("successful") : _T("failed"));
+			          certSubject, login, bValid ? _T("successful") : _T("failed"));
 		}
 		else
 		{
 			TCHAR szBuffer[256];
-
 			DbgPrintf(3, _T("X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), szBuffer));
 			bValid = FALSE;
 		}
@@ -425,26 +424,25 @@ BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChalleng
 	// Check user mapping
 	if (bValid)
 	{
-		switch(nMappingMethod)
+		switch(mappingMethod)
 		{
 			case USER_MAP_CERT_BY_SUBJECT:
-				bValid = !_tcsicmp(certSubject, CHECK_NULL_EX(pszMappingData));
+				bValid = !_tcsicmp(certSubject, CHECK_NULL_EX(mappingData));
 				break;
 			case USER_MAP_CERT_BY_PUBKEY:
-				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(pszMappingData));
+				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(mappingData));
 				break;
 			case USER_MAP_CERT_BY_CN:
-            bValid = CheckCommonName(pCert, ((pszMappingData != NULL) && (*pszMappingData != 0)) ? pszMappingData : pszLogin);
+            bValid = CheckCommonName(cert, ((mappingData != NULL) && (*mappingData != 0)) ? mappingData : login);
 				break;
 			default:
-				DbgPrintf(3, _T("Invalid certificate mapping method %d for user %s"), nMappingMethod, pszLogin);
+				DbgPrintf(3, _T("Invalid certificate mapping method %d for user %s"), mappingMethod, login);
 				bValid = FALSE;
 				break;
 		}
 	}
 
 	s_certificateStoreLock.unlock();
-
 	return bValid;
 }
 
