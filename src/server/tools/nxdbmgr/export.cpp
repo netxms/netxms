@@ -189,8 +189,6 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	sqlite3 *db;
 	char *errmsg, queryTemplate[11][MAX_DB_STRING], *data;
 	TCHAR idataTable[128];
-   int rowCount;
-	DB_RESULT hResult;
    int legacy = 0, major = 0, minor = 0;
 	BOOL success = FALSE;
 
@@ -324,7 +322,6 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
                {
                   _tprintf(_T("ERROR: SQLite query failed: %hs (%hs)\n"), query, errmsg);
                   sqlite3_free(errmsg);
-                  DBFreeResult(hResult);
                   goto cleanup;
                }
             }
@@ -335,14 +332,12 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
             _sntprintf(idataTable, 128, _T("idata_%d"), id);
             if (!ExportTable(db, idataTable))
             {
-               DBFreeResult(hResult);
                goto cleanup;
             }
 
             _sntprintf(idataTable, 128, _T("tdata_%d"), id);
             if (!ExportTable(db, idataTable))
             {
-               DBFreeResult(hResult);
                goto cleanup;
             }
          }

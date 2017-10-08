@@ -272,7 +272,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 #endif
 		          pInfo->ExceptionRecord->ExceptionCode,
 		          SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
-		          pInfo->ExceptionRecord->ExceptionAddress);
+		          (ULONG_PTR)pInfo->ExceptionRecord->ExceptionAddress);
 
 		// NetXMS and OS version
 		GetWindowsVersionString(szWindowsVersion, 256);
@@ -365,7 +365,7 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 #endif
                pInfo->ExceptionRecord->ExceptionCode,
                SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
-               pInfo->ExceptionRecord->ExceptionAddress);
+               (ULONG_PTR)pInfo->ExceptionRecord->ExceptionAddress);
 	}
 
 	return TRUE;	// Terminate process

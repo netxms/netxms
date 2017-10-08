@@ -185,8 +185,7 @@ void InitDatabase(const char *pszInitFile)
 
    // Generate GUID for "Admins" group
    _uuid_generate(guid);
-   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=-2147483647"),
-              _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
+   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=-2147483647"), _uuid_to_string(guid, szGUID));
    if (!SQLQuery(szQuery))
       goto init_failed;
 
