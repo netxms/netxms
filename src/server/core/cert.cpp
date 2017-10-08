@@ -44,6 +44,18 @@ inline int EVP_PKEY_id(EVP_PKEY *key)
 }
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+inline ASN1_TIME *X509_getm_notBefore(const X509 *x)
+{
+   return X509_get_notBefore(x);
+}
+
+inline ASN1_TIME *X509_getm_notAfter(const X509 *x)
+{
+   return X509_get_notAfter(x);
+}
+#endif
+
 /**
  * Server certificate file information
  */
@@ -202,14 +214,14 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       return NULL;
    }
 
-   if (X509_gmtime_adj(X509_get_notBefore(cert), 0) == NULL)
+   if (X509_gmtime_adj(X509_getm_notBefore(cert), 0) == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot set start time"));
       X509_free(cert);
       return NULL;
    }
 
-   if (X509_gmtime_adj(X509_get_notAfter(cert), days * 86400) == NULL)
+   if (X509_gmtime_adj(X509_getm_notAfter(cert), days * 86400) == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot set end time"));
       X509_free(cert);
@@ -301,23 +313,17 @@ bool GetServerCertificateOrganization(TCHAR *buffer, size_t size)
 /**
  * Create X509 certificate structure from login message
  */
-X509 *CertificateFromLoginMessage(NXCPMessage *pMsg)
+X509 *CertificateFromLoginMessage(NXCPMessage *msg)
 {
-	UINT32 dwLen;
-	BYTE *pData;
-	OPENSSL_CONST BYTE *p;
-	X509 *pCert = NULL;
-
-	dwLen = pMsg->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
-	if (dwLen > 0)
+	X509 *cert = NULL;
+   size_t len;
+   const BYTE *data = msg->getBinaryFieldPtr(VID_CERTIFICATE, &len);
+	if ((data != NULL) && (len > 0))
 	{
-		pData = (BYTE *)malloc(dwLen);
-		pMsg->getFieldAsBinary(VID_CERTIFICATE, pData, dwLen);
-		p = pData;
-		pCert = d2i_X509(NULL, &p, dwLen);
-		free(pData);
+      OPENSSL_CONST BYTE *p = (OPENSSL_CONST BYTE *)data;
+		cert = d2i_X509(NULL, &p, (long)len);
 	}
-	return pCert;
+	return cert;
 }
 
 /**

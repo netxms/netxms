@@ -156,6 +156,29 @@ void LIBNETXMS_EXPORTABLE RSAFree(RSA *key)
    RSA_free(key);
 }
 
+/**
+ * Generate random RSA key
+ */
+RSA LIBNETXMS_EXPORTABLE *RSAGenerateKey(int bits)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   BIGNUM *bne = BN_new();
+   if (!BN_set_word(bne, RSA_F4))
+      return NULL;
+   RSA *key = RSA_new();
+   if (!RSA_generate_key_ex(key, NETXMS_RSA_KEYLEN, bne, NULL))
+   {
+      RSA_free(key);
+      BN_free(bne);
+      return NULL;
+   }
+   BN_free(bne);
+   return key;
+#else
+   return RSA_generate_key(bits, RSA_F4, NULL, NULL);
+#endif
+}
+
 #endif   /* _WITH_ENCRYPTION */
 
 #if defined(_WITH_ENCRYPTION) && WITH_COMMONCRYPTO

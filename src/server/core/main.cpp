@@ -392,8 +392,12 @@ static bool InitCryptografy()
 		return FALSE;
    nxlog_debug(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   OPENSSL_init_ssl(0, NULL);
+#else
    SSL_library_init();
    SSL_load_error_strings();
+#endif
 
    if (LoadServerCertificate(&g_pServerKey))
    {
@@ -413,7 +417,7 @@ static bool InitCryptografy()
       if (g_pServerKey == NULL)
       {
          nxlog_debug(1, _T("Generating RSA key pair..."));
-         g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, NULL);
+         g_pServerKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
          if (g_pServerKey != NULL)
          {
             int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
