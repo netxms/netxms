@@ -41,74 +41,74 @@ bool PolicyGroup::showThresholdSummary()
 /**
  * Agent policy default constructor
  */
-AgentPolicy::AgentPolicy(int type)
-            : NetObj()
+AgentPolicy::AgentPolicy(int type) : NetObj()
 {
 	m_version = 0x00010000;
 	m_policyType = type;
 }
 
-
-//
-// Constructor for user-initiated object creation
-//
-
-AgentPolicy::AgentPolicy(const TCHAR *name, int type)
-            : NetObj()
+/**
+ * Constructor for user-initiated object creation
+ */
+AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj()
 {
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_version = 0x00010000;
 	m_policyType = type;
 }
 
-
-//
-// Save common policy properties to database
-//
-
-BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
+/**
+ * Save common policy properties to database
+ */
+bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 {
-	TCHAR query[8192];
+	if (!saveCommonProperties(hdb))
+      return false;
 
-	saveCommonProperties(hdb);
-
-   // Check for object's existence in database
-	bool isNewObject = true;
-   _sntprintf(query, 256, _T("SELECT id FROM ap_common WHERE id=%d"), m_id);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         isNewObject = false;
-      DBFreeResult(hResult);
-   }
-   if (isNewObject)
-      _sntprintf(query, 8192,
-                 _T("INSERT INTO ap_common (id,policy_type,version) VALUES (%d,%d,%d)"),
-                 m_id, m_policyType, m_version);
+   DB_STATEMENT hStmt;
+   if (IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id))
+      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,version,id) VALUES (?,?,?)"));
    else
-      _sntprintf(query, 8192,
-                 _T("UPDATE ap_common SET policy_type=%d,version=%d WHERE id=%d"),
-                 m_policyType, m_version, m_id);
-   BOOL success = DBQuery(hdb, query);
+      hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_type=?,version=? WHERE id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_policyType);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_version);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Update node bindings
-   _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_id);
-   DBQuery(hdb, query);
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
+
    lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   if (success && (m_childList->size() > 0))
    {
-      _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-      DBQuery(hdb, query);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_childList->size()) && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
    }
    unlockChildList();
-
 	return success;
 }
-
 
 /**
  * Save to database
@@ -152,7 +152,7 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
    if (!m_isDeleted)
@@ -164,7 +164,7 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_sntprintf(query, 256, _T("SELECT version FROM ap_common WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == NULL)
-			return FALSE;
+			return false;
 
 		m_version = DBGetFieldULong(hResult, 0, 0);
 		DBFreeResult(hResult);
@@ -200,7 +200,7 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
