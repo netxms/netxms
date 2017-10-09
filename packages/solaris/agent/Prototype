@@ -19,6 +19,7 @@ f none /opt/netxms/lib/libnxagent.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxcrypto.so.1.0.0 0555 root other
 f none /opt/netxms/lib/libnxdb.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxexpat.so.2.0.0 0755 root root
+f none /opt/netxms/lib/libnxjansson.so.4.6.0 0755 root root
 f none /opt/netxms/lib/libnxlp.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxsnmp.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.2.0.0 0755 root root
@@ -28,6 +29,7 @@ f none /opt/netxms/lib/netxms/dbquery.nsm 0755 root root
 f none /opt/netxms/lib/netxms/devemu.nsm 0755 root root
 f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
 f none /opt/netxms/lib/netxms/filemgr.nsm 0755 root root
+f none /opt/netxms/lib/netxms/gps.nsm 0755 root root
 f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root root
 f none /opt/netxms/lib/netxms/oracle.nsm 0755 root root
 f none /opt/netxms/lib/netxms/ping.nsm 0755 root root
@@ -45,6 +47,7 @@ s none /opt/netxms/lib/libnsm_dbquery.so=/opt/netxms/lib/netxms/dbquery.nsm
 s none /opt/netxms/lib/libnsm_devemu.so=/opt/netxms/lib/netxms/devemu.nsm
 s none /opt/netxms/lib/libnsm_ecs.so=/opt/netxms/lib/netxms/ecs.nsm
 s none /opt/netxms/lib/libnsm_filemgr.so=/opt/netxms/lib/netxms/filemgr.nsm
+s none /opt/netxms/lib/libnsm_gps.so=/opt/netxms/lib/netxms/gps.nsm
 s none /opt/netxms/lib/libnsm_logwatch.so=/opt/netxms/lib/netxms/logwatch.nsm
 s none /opt/netxms/lib/libnsm_oracle.so=/opt/netxms/lib/netxms/oracle.nsm
 s none /opt/netxms/lib/libnsm_ping.so=/opt/netxms/lib/netxms/ping.nsm
@@ -57,6 +60,7 @@ s none /opt/netxms/lib/libnxddr_oracle.so=/opt/netxms/lib/netxms/dbdrv/oracle.dd
 s none /opt/netxms/lib/libnxagent.so.2=libnxagent.so.2.0.0
 s none /opt/netxms/lib/libnxdb.so.2=libnxdb.so.2.0.0
 s none /opt/netxms/lib/libnxexpat.so.2=libnxexpat.so.2.0.0
+s none /opt/netxms/lib/libnxjansson.so.4=libnxjansson.so.4.6.0
 s none /opt/netxms/lib/libnxlp.so.2=libnxlp.so.2.0.0
 s none /opt/netxms/lib/libnxsnmp.so.2=libnxsnmp.so.2.0.0
 s none /opt/netxms/lib/libnxsqlite.so.2=libnxsqlite.so.2.0.0
