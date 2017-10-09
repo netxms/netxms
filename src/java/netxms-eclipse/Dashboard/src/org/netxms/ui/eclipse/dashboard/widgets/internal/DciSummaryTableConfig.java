@@ -50,7 +50,11 @@ public class DciSummaryTableConfig extends DashboardElementConfig
    @ElementList(required = false,inline=true)
    private List<String> SortingColumnList = new ArrayList<String>();
 
-	/**
+   @Element(required=false)
+   private boolean enableSortingAndLineLimit = false;
+
+   
+   /**
 	 * Create line chart settings object from XML document
 	 * 
 	 * @param xml XML document
@@ -176,5 +180,21 @@ public class DciSummaryTableConfig extends DashboardElementConfig
    public void setSortingColumnList(List<String> sortingColumnList)
    {
       SortingColumnList = sortingColumnList;
+   }   
+
+   /**
+    * @return the enableSortingAndLineLimit
+    */
+   public boolean isEnableSortingAndLineLimit()
+   {
+      return enableSortingAndLineLimit;
+   }
+
+   /**
+    * @param enableSortingAndLineLimit the enableSortingAndLineLimit to set
+    */
+   public void setEnableSortingAndLineLimit(boolean enableSortingAndLineLimit)
+   {
+      this.enableSortingAndLineLimit = enableSortingAndLineLimit;
    }
 }
