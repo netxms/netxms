@@ -1427,6 +1427,9 @@ String DiffEngine::diff_generateLineDiff(ObjectArray<Diff> *diffs)
          case DIFF_DELETE:
             AppendLines(out, aDiff->text, _T('-'));
             break;
+         case DIFF_EQUAL:
+            /* nothing to do - added to avoid compiler warning */
+            break;
       }
    }
    return out;
