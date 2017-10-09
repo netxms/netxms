@@ -428,7 +428,7 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 String String::substring(size_t start, ssize_t len) const
 {
    String s;
-   if ((start < m_length) && (start >= 0))
+   if (start < m_length)
    {
       size_t count;
       if (len == -1)
@@ -450,7 +450,7 @@ String String::substring(size_t start, ssize_t len) const
 TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 {
 	TCHAR *s;
-	if ((start < m_length) && (start >= 0))
+	if (start < m_length)
 	{
 	   size_t count;
 		if (len == -1)
@@ -478,7 +478,7 @@ TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
  */
 int String::find(const TCHAR *str, size_t start) const
 {
-	if ((start >= m_length) || (start < 0))
+	if (start >= m_length)
 		return npos;
 
 	TCHAR *p = _tcsstr(&m_buffer[start], str);
