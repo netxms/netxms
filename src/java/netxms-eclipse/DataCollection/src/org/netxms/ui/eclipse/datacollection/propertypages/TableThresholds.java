@@ -70,6 +70,7 @@ public class TableThresholds extends DCIPropertyPageDialog
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
+   private Button duplicateButton;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -206,6 +207,26 @@ public class TableThresholds extends DCIPropertyPageDialog
 			}
 		});
       
+      duplicateButton = new Button(buttons, SWT.PUSH);
+      duplicateButton.setText("Duplicate");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      duplicateButton.setLayoutData(rd);
+      duplicateButton.setEnabled(false);
+      duplicateButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            duplicateThreshold();
+         }
+      });
+      
       modifyButton = new Button(buttons, SWT.PUSH);
       modifyButton.setText(Messages.get().TableThresholds_Edit);
       rd = new RowData();
@@ -253,6 +274,7 @@ public class TableThresholds extends DCIPropertyPageDialog
 			{
 				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
 				deleteButton.setEnabled(selection.size() > 0);
+            duplicateButton.setEnabled(selection.size() > 0);
 				if (selection.size() == 1)
 				{
 					modifyButton.setEnabled(true);
@@ -358,6 +380,24 @@ public class TableThresholds extends DCIPropertyPageDialog
 	      thresholdList.setSelection(new StructuredSelection(t));
 		}
 	}
+	
+	/**
+    * Duplicate selected threshold
+    */
+   @SuppressWarnings("unchecked")
+   private void duplicateThreshold()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      if (selection.size() > 0)
+      {
+         List<TableThreshold> list = selection.toList();
+         for(TableThreshold t : list)
+         {               
+            thresholds.add(thresholds.indexOf(t) + 1, new TableThreshold(t));
+            thresholdList.setInput(thresholds.toArray());
+         }
+      }
+   }
 	
 	/**
 	 * Move selected element up 

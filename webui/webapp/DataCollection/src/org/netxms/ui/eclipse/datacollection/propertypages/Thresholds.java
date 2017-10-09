@@ -76,6 +76,7 @@ public class Thresholds extends DCIPropertyPageDialog
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
+   private Button duplicateButton;
 
 	/*
 	 * (non-Javadoc)
@@ -223,6 +224,26 @@ public class Thresholds extends DCIPropertyPageDialog
 				addThreshold();
 			}
 		});
+		
+		duplicateButton = new Button(buttons, SWT.PUSH);
+		duplicateButton.setText("Duplicate");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      duplicateButton.setLayoutData(rd);
+      duplicateButton.setEnabled(false);
+      duplicateButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            duplicateThreshold();
+         }
+      });
 
 		modifyButton = new Button(buttons, SWT.PUSH);
 		modifyButton.setText(Messages.get().Thresholds_Edit);
@@ -275,6 +296,7 @@ public class Thresholds extends DCIPropertyPageDialog
 				downButton.setEnabled((selection.size() == 1) && (index >= 0) && (index < thresholds.size() - 1));
 				modifyButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
+				duplicateButton.setEnabled(selection.size() > 0);
 			}
 		});
 
@@ -336,6 +358,24 @@ public class Thresholds extends DCIPropertyPageDialog
 			thresholdList.setInput(thresholds.toArray());
 			thresholdList.setSelection(new StructuredSelection(threshold));
 		}
+	}
+	
+	/**
+	 * Duplicate selected threshold
+	 */
+	@SuppressWarnings("unchecked")
+   private void duplicateThreshold()
+	{
+      final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      if (selection.size() > 0)
+      {
+         List<Threshold> list = selection.toList();
+         for(Threshold t : list)
+         {               
+            thresholds.add(thresholds.indexOf(t) + 1, new Threshold(t));
+            thresholdList.setInput(thresholds.toArray());
+         }
+      }
 	}
 
 	/**
