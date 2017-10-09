@@ -20,10 +20,13 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
@@ -40,8 +43,18 @@ public class DciSummaryTableConfig extends DashboardElementConfig
 
    @Element(required=false)
    private int refreshInterval = 0;
+   
+   @Element(required=false)
+   private int numRowShown = 0;
+   
+   @ElementList(required = false,inline=true)
+   private List<String> SortingColumnList = new ArrayList<String>();
 
-	/**
+   @Element(required=false)
+   private boolean enableSortingAndLineLimit = false;
+
+   
+   /**
 	 * Create line chart settings object from XML document
 	 * 
 	 * @param xml XML document
@@ -135,5 +148,53 @@ public class DciSummaryTableConfig extends DashboardElementConfig
    public void setRefreshInterval(int refreshInterval)
    {
       this.refreshInterval = refreshInterval;
+   }
+
+   /**
+    * @return the numCollShown
+    */
+   public int getNumRowShown()
+   {
+      return numRowShown;
+   }
+
+   /**
+    * @param numCollShown the numCollShown to set
+    */
+   public void setNumRowShown(int numRowShown)
+   {
+      this.numRowShown = numRowShown;
+   }
+
+   /**
+    * @return the sortingColumnList
+    */
+   public List<String> getSortingColumnList()
+   {
+      return SortingColumnList;
+   }
+
+   /**
+    * @param sortingColumnList the sortingColumnList to set
+    */
+   public void setSortingColumnList(List<String> sortingColumnList)
+   {
+      SortingColumnList = sortingColumnList;
+   }   
+
+   /**
+    * @return the enableSortingAndLineLimit
+    */
+   public boolean isEnableSortingAndLineLimit()
+   {
+      return enableSortingAndLineLimit;
+   }
+
+   /**
+    * @param enableSortingAndLineLimit the enableSortingAndLineLimit to set
+    */
+   public void setEnableSortingAndLineLimit(boolean enableSortingAndLineLimit)
+   {
+      this.enableSortingAndLineLimit = enableSortingAndLineLimit;
    }
 }
