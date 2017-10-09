@@ -2286,7 +2286,7 @@ protected:
 	UINT32 m_version;
 	int m_policyType;
 
-	BOOL savePolicyCommonProperties(DB_HANDLE hdb);
+	bool savePolicyCommonProperties(DB_HANDLE hdb);
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
