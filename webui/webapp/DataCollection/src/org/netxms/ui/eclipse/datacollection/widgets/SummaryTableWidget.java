@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -46,6 +47,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -84,6 +86,8 @@ public class SummaryTableWidget extends Composite
    private boolean useMultipliers = true;
    private TreeColumn currentColumn = null;
    private ObjectSelectionProvider objectSelectionProvider;
+   private int showLineCount;
+   private List<String> sortingColumnList = null;
 
    /**
     * Create summary table widget
@@ -318,9 +322,80 @@ public class SummaryTableWidget extends Composite
          viewer.setComparator(new SummaryTableItemComparator(table));
       }
       labelProvider.setColumnDataTypes(table.getColumnDataTypes());
-      viewer.setInput(table);
+      if(sortingColumnList != null && sortingColumnList.size() > 0)
+      {
+         List<SortItem> sortItem = new ArrayList<SortItem>();
+         for(int i = 0; i < sortingColumnList.size() ; i++)
+         {            
+            boolean isDesc = sortingColumnList.get(i).charAt(0) == '>' ? true : false;
+            int index = table.getColumnIndex(sortingColumnList.get(i).substring(1));
+            if(index >= 0)
+            {
+               sortItem.add(new SortItem(index, isDesc));
+            }
+         }
+         
+         //find index of columns to compare and desc or asc
+         final List<SortItem> sortItemFin = sortItem;
+         table.sort(new Comparator<TableRow>() {
+            public int compare(TableRow row1, TableRow row2)
+            {
+               //compare lines
+               int result = 0;
+               int i = 0;
+               while(result == 0 && i < sortItemFin.size())
+               {
+                  result = compareItem(row1, row2, sortItemFin.get(i).colIndex, sortItemFin.get(i).isDesc);
+                  i++;
+               }
+               return result;
+            }
+            
+            private int compareItem(TableRow row1, TableRow row2, int index, boolean sortDesc)
+            {
+               TableCell c1 = row1.get(index);
+               TableCell c2 = row2.get(index);
+
+               String s1 = (c1 != null) ? c1.getValue() : "";
+               String s2 = (c2 != null) ? c2.getValue() : "";
+               
+               int result = 0;
+               try
+               {
+                  double value1 = Double.parseDouble(s1);
+                  double value2 = Double.parseDouble(s2);
+                  result = Double.compare(value1, value2);
+               }
+               catch(NumberFormatException e)
+               {
+                  result = s1.compareToIgnoreCase(s2);
+               }
+               return sortDesc ? -result : result;
+            }
+         });
+         viewer.setComparator(null);
+      }
+      if(showLineCount > 0)
+         viewer.setInput(table.getFirstRows(showLineCount));
+      else
+         viewer.setInput(table);
       viewer.expandAll();
    }
+   
+   /**
+    * Class for advanced column sorting
+    */
+   class SortItem
+   {
+      public int colIndex;
+      public boolean isDesc;
+      
+      public SortItem(int colIndex, boolean isDesc)
+      {
+         this.colIndex = colIndex;
+         this.isDesc = isDesc;
+      }
+   };
 
    /**
     * @return the viewer
@@ -484,5 +559,25 @@ public class SummaryTableWidget extends Composite
          this.nodeId = nodeId;
          this.dciId = dciId;
       }
+   }
+   
+   /**
+    * Set number of lines to show
+    * 
+    * @param lineCount line count to be shown
+    */
+   public void setShowNumLine(int lineCount)
+   {
+      this.showLineCount = lineCount;
+   }
+
+   /**
+    * Set columns that will be used to sort table
+    * 
+    * @param sortingColumnList columns to be used while sorting
+    */
+   public void setSortColumns(List<String> sortingColumnList)
+   {
+      this.sortingColumnList = sortingColumnList;      
    }
 }

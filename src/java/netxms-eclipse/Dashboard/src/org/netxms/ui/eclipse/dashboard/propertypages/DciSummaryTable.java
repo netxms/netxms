@@ -164,7 +164,7 @@ public class DciSummaryTable extends PropertyPage
       label.setText("Sort by columns");
 
       final String[] columnNames = { "Name", "Sort order" };
-      final int[] columnWidths = { 320, 30 };
+      final int[] columnWidths = { 320, 120 };
       sortTables  = new SortableTableViewer(showTopNNodes, columnNames, columnWidths, 0, 0, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
