@@ -66,7 +66,7 @@ static bool H_UpgradeFromV6()
       }
       else if (!g_bIgnoreErrors)
          return false;
-      CHK_EXEC(SetMajorSchemaVersion(21, 4));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(21, 4));
    }
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
@@ -85,9 +85,9 @@ static bool H_UpgradeFromV5()
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp"));
-      DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent"));
-      CHK_EXEC(SetMajorSchemaVersion(21, 3));
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp")));
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(21, 3));
    }
    CHK_EXEC(SetMinorSchemaVersion(6));
    return true;
@@ -105,7 +105,7 @@ static bool H_UpgradeFromV4()
                _T("ALTER TABLE nodes ADD fail_time_agent integer\n")
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
-      CHK_EXEC(SetMajorSchemaVersion(21, 2));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(21, 2));
    }
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
