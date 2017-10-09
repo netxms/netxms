@@ -83,7 +83,7 @@ int strbuffer_append_bytes(strbuffer_t *strbuff, const char *data, size_t size)
             || strbuff->length > STRBUFFER_SIZE_MAX - 1 - size)
             return -1;
 
-        new_size = max(strbuff->size * STRBUFFER_FACTOR,
+        new_size = MAX(strbuff->size * STRBUFFER_FACTOR,
                        strbuff->length + size + 1);
 
         new_value = jsonp_malloc(new_size);
