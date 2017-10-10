@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.datacollection.DataFormatter;
 import org.swtchart.Chart;
 import org.swtchart.IBarSeries;
 import org.swtchart.ILegend;
@@ -445,16 +446,16 @@ public class Legend extends Canvas implements ILegend, PaintListener
       int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
       
-      gc.drawText(Chart.roundedDecimalValue(series.getCurY(), 0.005), x, r.y, true);
+      gc.drawText(DataFormatter.roundDecimalValue(series.getCurY(), 0.005, 3), x, r.y, true);
       x += shift;
 
-      gc.drawText(Chart.roundedDecimalValue(series.getMinY(), 0.005), x, r.y, true);
+      gc.drawText(DataFormatter.roundDecimalValue(series.getMinY(), 0.005, 3), x, r.y, true);
       x += shift;
 
-      gc.drawText(Chart.roundedDecimalValue(series.getAvgY(), 0.005), x, r.y, true);
+      gc.drawText(DataFormatter.roundDecimalValue(series.getAvgY(), 0.005, 3), x, r.y, true);
       x += shift;
 
-      gc.drawText(Chart.roundedDecimalValue(series.getMaxY(), 0.005), x, r.y, true);
+      gc.drawText(DataFormatter.roundDecimalValue(series.getMaxY(), 0.005, 3), x, r.y, true);
    }
 
    /*

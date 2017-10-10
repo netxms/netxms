@@ -54,8 +54,6 @@ import org.netxms.ui.eclipse.charts.api.DataPoint;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
-import org.netxms.ui.eclipse.tools.FontTools;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxisSet;
@@ -89,6 +87,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean stacked;
 	//private boolean selectionActive = false;
 	private boolean adjustYAxis = true;
+	private boolean modifyYBase = false;
 	private int lineWidth = 2;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
@@ -192,7 +191,7 @@ public class LineChart extends Chart implements HistoricalDataChart
    					getPlotArea().setToolTipText(
    					      series.getName() + "\n" + //$NON-NLS-1$
    					      RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + //$NON-NLS-1$ 
-   					      Chart.roundedDecimalValue(value, cachedTickStep));
+   					      DataFormatter.roundDecimalValue(value, cachedTickStep, 5));
    					tooltipShown = true;
 				   }
 				}
@@ -859,11 +858,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
-		if (range.lower > 0)
-			range.lower = 0;
-		else if (range.lower < 0)
-		   range.lower = - adjustRange(Math.abs(range.lower));
-		range.upper = adjustRange(range.upper);
+      if (!modifyYBase && range.lower > 0)
+         range.lower = 0;
+      else if (range.lower < 0)
+         range.lower = - adjustRange(Math.abs(range.lower));
+      range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
 
 		if (repaint)
@@ -1161,5 +1160,14 @@ public class LineChart extends Chart implements HistoricalDataChart
       double area2 = (double)Math.abs(dy * x - dx * y + p2.x * p1.y - p2.y * p1.x);
       double dist = Math.sqrt(dx * dx + dy * dy);
       return area2 / dist;
+   }
+
+   /**
+    * @param modifyYBase
+    */
+   @Override
+   public void modifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
    }
 }

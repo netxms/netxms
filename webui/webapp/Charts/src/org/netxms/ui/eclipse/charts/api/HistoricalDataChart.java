@@ -141,8 +141,15 @@ public interface HistoricalDataChart extends DataChart
 	 */
 	public int getLineWidth();
 	
+	/**
+	 * Save chart as image
+	 */
+	public void saveAsImage();
+	
    /**
-    * Save chart as image
+    * Modify Y base
+    * 
+    * @param modifyYBase true to use min DCI value as Y base
     */
-   public void saveAsImage();
+   public void modifyYBase(boolean modifyYBase);
 }

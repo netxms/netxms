@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
-import java.text.NumberFormat;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -30,9 +29,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
-import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.client.datacollection.DataFormatter;
 
 /**
  * Label provider for NetXMS table
@@ -90,9 +87,8 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 
       if (columnIndex >= row.size())
          return null;
-      if (useMultipliers)
-         return getValueForFormat(row, columnIndex);
-      return WidgetHelper.escapeText(row.get(columnIndex).getValue(), false, false);
+      return useMultipliers ? new DataFormatter("%*s", columns[columnIndex].getDataType()).format(row.get(columnIndex).getValue())
+            : row.get(columnIndex).getValue();
 	}
 
 	/* (non-Javadoc)
@@ -123,85 +119,4 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	{
 	   return useMultipliers;
 	}
-	
-	/**
-	 * @param columnIndex
-	 * @return value converted to multiplier form
-	 */
-	private String getValueForFormat(TableRow row, int columnIndex)
-   {
-      String value;
-      String suffix = null;
-      
-      try
-      {
-         switch(columns[columnIndex].getDataType())
-         {
-            case DataCollectionObject.DT_INT:
-            case DataCollectionObject.DT_UINT:
-            case DataCollectionItem.DT_INT64:
-            case DataCollectionItem.DT_UINT64:               
-               long i = Long.parseLong(row.get(columnIndex).getValue());
-               if ((i >= 10000000000000L) || (i <= -10000000000000L))
-               {
-                  i = i / 1000000000000L;
-                  suffix = "T";
-               }
-               if ((i >= 10000000000L) || (i <= -10000000000L))
-               {
-                  i = i / 1000000000L;
-                  suffix = "G";
-               }
-               if ((i >= 10000000) || (i <= -10000000))
-               {
-                  i = i / 1000000;
-                  suffix = "M";
-               }
-               if ((i >= 10000) || (i <= -10000))
-               {
-                  i = i / 1000;
-                  suffix = "K";
-               }
-               value = Long.toString(i);
-               break;
-            case DataCollectionObject.DT_FLOAT:
-               double d = Double.parseDouble(row.get(columnIndex).getValue());
-               NumberFormat nf = NumberFormat.getNumberInstance();
-               nf.setMaximumFractionDigits(2);
-               if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
-               {
-                  d = d / 1000000000000.0;
-                  suffix = "T";
-               }
-               if ((d >= 10000000000.0) || (d <= -10000000000.0))
-               {
-                  d = d / 1000000000.0;
-                  suffix = "G";
-               }
-               if ((d >= 10000000) || (d <= -10000000))
-               {
-                  d = d / 1000000;
-                  suffix = "M";
-               }
-               if ((d >= 10000) || (d <= -10000))
-               {
-                  d = d / 1000;
-                  suffix = "K";
-               }
-               value = Double.toString(d);
-               break;
-            default:
-               value = WidgetHelper.escapeText(row.get(columnIndex).getValue(), false, false);
-               break;
-         }
-      }     
-      catch(NumberFormatException e)
-      {
-         value = WidgetHelper.escapeText(row.get(columnIndex).getValue(), false, false);
-      }
-      
-      if (suffix != null)
-         return value + " " + suffix;
-      return value;
-   }
 }

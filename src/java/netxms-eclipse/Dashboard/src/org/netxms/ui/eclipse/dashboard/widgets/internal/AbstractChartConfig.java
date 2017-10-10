@@ -61,6 +61,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    @Element(required = false)
    private int maxYScaleValue = 100;
 
+   @Element(required = false)
+   private boolean modifyYBase = false;
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
 	 */
@@ -255,5 +258,25 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;
+   }
+   
+   /**
+    * Set modify Y base
+    * 
+    * @param modifyYBase if true, use min DCI value as Y base
+    */
+   public void setModifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
+   }
+   
+   /**
+    * Modify Y base
+    * 
+    * @return true if use min DCI value as Y base
+    */
+   public boolean modifyYBase()
+   {
+      return modifyYBase;
    }
 }

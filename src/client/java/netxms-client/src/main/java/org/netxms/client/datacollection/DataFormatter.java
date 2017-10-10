@@ -18,6 +18,7 @@
  */
 package org.netxms.client.datacollection;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IllegalFormatException;
@@ -55,7 +56,7 @@ public class DataFormatter
    /**
     * @param formatString The format
     */
-   public DataFormatter(String formatString)
+   public DataFormatter(int precision, String formatString)
    {
       this(formatString, DataCollectionObject.DT_STRING, false);
    }
@@ -117,9 +118,10 @@ public class DataFormatter
       return sb.toString();
    }
    
-   private static final long[] DECIMAL_MULTIPLIERS = { 1000L, 1000000L, 1000000000L, 1000000000000L }; 
-   private static final long[] BINARY_MULTIPLIERS = { 0x400L, 0x100000L, 0x40000000L, 0x10000000000L };
-   private static final String[] SUFFIX = { " K", " M", " G", " T" }; 
+   private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L }; 
+   private static final long[] BINARY_MULTIPLIERS = { 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x1000000000000000L };
+   private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" }; 
+   private static final String[] FORMATS = { "", ".0", ".00", ".000", ".0000", ".00000", ".000000" };
 
    /**
     * Get value ready for formatter
@@ -196,6 +198,60 @@ public class DataFormatter
          v.value = value;
       }
       return v;
+   }
+   
+   /**
+    * Calculate precision of number
+    * 
+    * @param number to calculate precision of
+    * @return decimal place count
+    */
+   private static int calculatePrecision(double number)
+   {
+      int i = 0;
+      if (number == 0 || number >= 1)
+         return i;
+      for(i = 1; i < 1000; i++)
+      {
+         if (((number) *= 10) >= 1)
+            break;
+      }
+      return i;
+   }
+   
+   /**
+    * Get rounded value for char labels
+    * 
+    * @param value to round
+    * @param step of label
+    * @return rounded value
+    */
+   public static String roundDecimalValue(double value, double step, int maxPrecision)
+   {
+      if (value == 0)
+         return "0";
+      
+      double absValue = Math.abs(value);
+      final long[] multipliers = DECIMAL_MULTIPLIERS;
+      
+      int i;
+      for(i = multipliers.length - 1; i >= 0 ; i--)
+      {
+         if (absValue >= multipliers[i])
+            break;
+      }
+
+      int precision;
+      if (step < 1 || i < 0)
+         precision = (calculatePrecision(step) > maxPrecision) ? maxPrecision : calculatePrecision(step);
+      else
+         precision = (calculatePrecision(step / multipliers[i]) > maxPrecision) ? maxPrecision : calculatePrecision(step / multipliers[i]);
+      
+      DecimalFormat df = new DecimalFormat();
+      df.setMaximumFractionDigits(precision);
+      return df.format((i < 0 ? value : (value / multipliers[i]))) + (i < 0 ? "" : SUFFIX[i]);
+      /*return new DecimalFormat("0" + (precision > FORMATS.length ? FORMATS[FORMATS.length - 1] : FORMATS[precision]))
+            .format((i < 0 ? value : (value / multipliers[i]))) + (i < 0 ? "" : SUFFIX[i]);*/
    }
 
    /**

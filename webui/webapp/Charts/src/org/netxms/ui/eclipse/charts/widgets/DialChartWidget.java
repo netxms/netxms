@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
-import java.text.DecimalFormat;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -27,7 +26,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.ui.eclipse.charts.Messages;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -166,8 +165,9 @@ public class DialChartWidget extends GaugeWidget
 				Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
 				gc.drawLine(l1.x, l1.y, l2.x, l2.y);
 			}
-
-			String value = roundedMarkValue(i, angleValue, valueStep);
+			
+	      double angle = (225 - i) * angleValue + minValue;
+			String value = DataFormatter.roundDecimalValue(angle, valueStep, 5);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
 			Point ext = gc.textExtent(value);
 	      gc.setForeground(scaleTextColor);
@@ -275,62 +275,5 @@ public class DialChartWidget extends GaugeWidget
 	private Point positionOnArc(int cx, int cy, int radius, int angle)
 	{
 		return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
-	}
-	
-	/**
-	 * Get rounded value for scale mark
-	 * 
-	 * @param angle
-	 * @param angleValue
-	 * @return
-	 */
-	private String roundedMarkValue(int angle, double angleValue, double step)
-	{
-		double value = (225 - angle) * angleValue + minValue;
-		double absValue = Math.abs(value);
-		if (absValue >= 10000000000L)
-		{
-			return Long.toString(Math.round(value / 1000000000)) + Messages.get().DialChartWidget_G;
-		}
-		else if (absValue >= 1000000000)
-		{
-			return new DecimalFormat("#.#").format(value / 1000000000) + Messages.get().DialChartWidget_G; //$NON-NLS-1$
-		}
-		else if (absValue >= 10000000)
-		{
-			return Long.toString(Math.round(value / 1000000)) + Messages.get().DialChartWidget_M;
-		}
-		else if (absValue >= 1000000)
-		{
-			return new DecimalFormat("#.#").format(value / 1000000) + Messages.get().DialChartWidget_M; //$NON-NLS-1$
-		}
-		else if (absValue >= 10000)
-		{
-			return Long.toString(Math.round(value / 1000)) + Messages.get().DialChartWidget_K;
-		}
-		else if (absValue >= 1000)
-		{
-			return new DecimalFormat("#.#").format(value / 1000) + Messages.get().DialChartWidget_K; //$NON-NLS-1$
-		}
-		else if ((absValue >= 1) && (step >= 1))
-		{
-			return Long.toString(Math.round(value));
-		}
-		else if (absValue == 0)
-		{
-			return "0"; //$NON-NLS-1$
-		}
-		else
-		{
-			if (step < 0.00001)
-				return Double.toString(value);
-			if (step < 0.0001)
-				return new DecimalFormat("#.#####").format(value); //$NON-NLS-1$
-			if (step < 0.001)
-				return new DecimalFormat("#.####").format(value); //$NON-NLS-1$
-			if (step < 0.01)
-				return new DecimalFormat("#.###").format(value); //$NON-NLS-1$
-			return new DecimalFormat("#.##").format(value); //$NON-NLS-1$
-		}
 	}
 }

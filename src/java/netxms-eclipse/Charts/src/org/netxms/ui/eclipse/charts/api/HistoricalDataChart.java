@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.charts.api;
 
 import java.util.Date;
 import java.util.List;
-
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
@@ -141,4 +140,11 @@ public interface HistoricalDataChart extends DataChart
 	 * @return
 	 */
 	public int getLineWidth();
+	
+   /**
+    * Modify Y base
+    * 
+    * @param modifyYBase true to use min DCI value as Y base
+    */
+   public void modifyYBase(boolean modifyYBase);
 }

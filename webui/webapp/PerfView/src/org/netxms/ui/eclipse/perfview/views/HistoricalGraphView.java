@@ -311,9 +311,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setTranslucent(settings.isTranslucent());
       chart.setLineWidth(settings.getLineWidth());
       if(!settings.isAutoScale())
-      {
          chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
-      }
+      else
+         chart.modifyYBase(settings.modifyYBase());
 
       // Data
       final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(settings.getDciList().length);

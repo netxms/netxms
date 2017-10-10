@@ -269,7 +269,8 @@ public class AbstractChart extends PropertyPage
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
 	      yAxisRange.setLayoutData(gd);
-	      yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+	      yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
+	                              config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
 		
 		return dialogArea;
@@ -312,6 +313,7 @@ public class AbstractChart extends PropertyPage
    		config.setAutoScale(yAxisRange.isAuto());
    		config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());
+         config.setModifyYBase(yAxisRange.modifyYBase());
       }
 		if (config instanceof ComparisonChartConfig)
 		{
