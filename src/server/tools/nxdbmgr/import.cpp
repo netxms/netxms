@@ -124,8 +124,6 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
       }
       else
       {
-         if (IsTableExist(db, table))
-            _tprintf(_T("Table %s exists!!\n"), table);
          if (!IsTableExist(db, table) &&
              GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
             rc = SQLITE_OK;
