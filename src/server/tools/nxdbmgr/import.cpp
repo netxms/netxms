@@ -74,40 +74,48 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
  */
 static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 {
-	char query[256], *errmsg;
-	int rc;
+   char query[256], *errmsg;
+   int rc;
 
-	_tprintf(_T("Importing table %s\n"), table);
+   _tprintf(_T("Importing table %s\n"), table);
 
-	if (DBBegin(g_hCoreDB))
-	{
+   if (DBBegin(g_hCoreDB))
+   {
 #ifdef UNICODE
-		char *mbTable = MBStringFromWideString(table);
-		snprintf(query, 256, "SELECT * FROM %s", mbTable);
-		free(mbTable);
+      char *mbTable = MBStringFromWideString(table);
+      snprintf(query, 256, "SELECT * FROM %s", mbTable);
+      free(mbTable);
 #else
-		snprintf(query, 256, "SELECT * FROM %s", table);
+      snprintf(query, 256, "SELECT * FROM %s", table);
 #endif
-		rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
-		if (rc == SQLITE_OK)
-		{
-			DBCommit(g_hCoreDB);
-		}
-		else
-		{
-			if (g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, table) &&
-			    GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
-			   rc = SQLITE_OK;
-			sqlite3_free(errmsg);
-			DBRollback(g_hCoreDB);
-		}
-	}
-	else
-	{
-		_tprintf(_T("ERROR: unable to start transaction in target database\n"));
-		rc = -1;
-	}
-	return rc == SQLITE_OK;
+      rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
+      if (rc == SQLITE_OK)
+      {
+         DBCommit(g_hCoreDB);
+      }
+      else
+      {
+         bool tableExist = true;
+#ifdef UNICODE
+         tableExist = !g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, table);
+#else
+         WCHAR wname[256];
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
+         tableExist = !g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, wname);
+#endif
+         if (tableExist &&
+             GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
+            rc = SQLITE_OK;
+         sqlite3_free(errmsg);
+         DBRollback(g_hCoreDB);
+      }
+   }
+   else
+   {
+      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
+      rc = -1;
+   }
+   return rc == SQLITE_OK;
 }
 
 /**
