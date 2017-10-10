@@ -44,6 +44,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -92,6 +93,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean stacked;
 	private boolean selectionActive = false;
 	private boolean adjustYAxis = true;
+	private boolean modifyYBase = false;
 	private int lineWidth = 2;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
@@ -196,7 +198,7 @@ public class LineChart extends Chart implements HistoricalDataChart
    					getPlotArea().setToolTipText(
    					      series.getName() + "\n" + //$NON-NLS-1$
    					      RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + //$NON-NLS-1$ 
-   					      Chart.roundedDecimalValue(value, cachedTickStep));
+   					      DataFormatter.roundDecimalValue(value, cachedTickStep, 5));
    					tooltipShown = true;
 				   }
 				}
@@ -870,11 +872,11 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
 		final Range range = yAxis.getRange();
-		if (range.lower > 0)
-			range.lower = 0;
-		else if (range.lower < 0)
-		   range.lower = - adjustRange(Math.abs(range.lower));
-		range.upper = adjustRange(range.upper);
+      if (!modifyYBase && range.lower > 0)
+         range.lower = 0;
+      else if (range.lower < 0)
+         range.lower = - adjustRange(Math.abs(range.lower));
+      range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
 
 		if (repaint)
@@ -1187,5 +1189,13 @@ public class LineChart extends Chart implements HistoricalDataChart
       double area2 = (double)Math.abs(dy * x - dx * y + p2.x * p1.y - p2.y * p1.x);
       double dist = Math.sqrt(dx * dx + dy * dy);
       return area2 / dist;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#modifyYBase(boolean)
+    */
+   public void modifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
    }
 }

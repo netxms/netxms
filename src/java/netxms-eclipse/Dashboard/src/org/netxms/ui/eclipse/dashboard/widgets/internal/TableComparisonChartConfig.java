@@ -81,6 +81,9 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 
    @Element(required = false)
    private int maxYScaleValue = 100;
+
+   @Element(required = false)
+   private boolean modifyYBase = false;
 	
 	/**
 	 * @return the showIn3D
@@ -395,5 +398,25 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
          nodeId = md.dstNodeId;
          dciId = md.dstDciId;
       }
+   }
+   
+   /**
+    * Set modify Y base
+    * 
+    * @param modifyYBase if true, use min DCI value as Y base
+    */
+   public void setModifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
+   }
+   
+   /**
+    * Modify Y base
+    * 
+    * @return true if use min DCI value as Y base
+    */
+   public boolean modifyYBase()
+   {
+      return modifyYBase;
    }
 }

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
-import java.text.DecimalFormat;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -27,8 +26,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -273,7 +272,6 @@ public class BarGaugeWidget extends GaugeWidget
    {
       Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
       Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
-      
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
 
@@ -289,7 +287,7 @@ public class BarGaugeWidget extends GaugeWidget
                gc.setForeground(scaleColor);
                gc.drawLine(rect.x + (int)x, rect.y - 2, rect.x + (int)x, rect.y + rect.height + 1);
             }
-            String text = roundedMarkValue(value, step);
+            String text = DataFormatter.roundDecimalValue(value, step, 5);
             gc.setForeground(scaleTextColor);
             gc.drawText(text, rect.x + (int)x, rect.y + rect.height + 4, SWT.DRAW_TRANSPARENT);
          }
@@ -304,7 +302,7 @@ public class BarGaugeWidget extends GaugeWidget
                gc.setForeground(scaleColor);
                gc.drawLine(rect.x - 2, rect.y + (int)y, rect.x + rect.width + 1, rect.y + (int)y);
             }
-            String text = roundedMarkValue(value, step);
+            String text = DataFormatter.roundDecimalValue(value, step, 5);
             gc.setForeground(scaleTextColor);
             gc.drawText(text, rect.x + rect.width + 4, rect.y + (int)y - textHeight * 3 / 4, SWT.DRAW_TRANSPARENT);
          }
@@ -320,61 +318,5 @@ public class BarGaugeWidget extends GaugeWidget
             break;
       }
       return d;
-   }
-   
-   /**
-    * Get rounded value for scale mark
-    * 
-    * @param angle
-    * @param angleValue
-    * @return
-    */
-   private static String roundedMarkValue(double value, double step)
-   {
-      double absValue = Math.abs(value);
-      if (absValue >= 10000000000L)
-      {
-         return Long.toString(Math.round(value / 1000000000)) + Messages.get().DialChartWidget_G;
-      }
-      else if (absValue >= 1000000000)
-      {
-         return new DecimalFormat("#.#").format(value / 1000000000) + Messages.get().DialChartWidget_G; //$NON-NLS-1$
-      }
-      else if (absValue >= 10000000)
-      {
-         return Long.toString(Math.round(value / 1000000)) + Messages.get().DialChartWidget_M;
-      }
-      else if (absValue >= 1000000)
-      {
-         return new DecimalFormat("#.#").format(value / 1000000) + Messages.get().DialChartWidget_M; //$NON-NLS-1$
-      }
-      else if (absValue >= 10000)
-      {
-         return Long.toString(Math.round(value / 1000)) + Messages.get().DialChartWidget_K;
-      }
-      else if (absValue >= 1000)
-      {
-         return new DecimalFormat("#.#").format(value / 1000) + Messages.get().DialChartWidget_K; //$NON-NLS-1$
-      }
-      else if ((absValue >= 1) && (step >= 1))
-      {
-         return Long.toString(Math.round(value));
-      }
-      else if (absValue == 0)
-      {
-         return "0"; //$NON-NLS-1$
-      }
-      else
-      {
-         if (step < 0.00001)
-            return Double.toString(value);
-         if (step < 0.0001)
-            return new DecimalFormat("#.#####").format(value); //$NON-NLS-1$
-         if (step < 0.001)
-            return new DecimalFormat("#.####").format(value); //$NON-NLS-1$
-         if (step < 0.01)
-            return new DecimalFormat("#.###").format(value); //$NON-NLS-1$
-         return new DecimalFormat("#.##").format(value); //$NON-NLS-1$
-      }
    }
 }

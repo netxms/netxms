@@ -222,7 +222,8 @@ public class PerfTab extends DCIPropertyPageDialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(settings.isAutoScale(), settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+      yAxisRange.setSelection(settings.isAutoScale(), settings.modifyYBase(),
+                              settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -250,6 +251,7 @@ public class PerfTab extends DCIPropertyPageDialog
 		settings.setAutoScale(yAxisRange.isAuto());
 		settings.setMinYScaleValue(yAxisRange.getMinY());
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
+		settings.setModifyYBase(yAxisRange.modifyYBase());
 
 		settings.setTimeRange(timeRange.getSelection());
 		settings.setTimeUnits(timeUnits.getSelectionIndex());

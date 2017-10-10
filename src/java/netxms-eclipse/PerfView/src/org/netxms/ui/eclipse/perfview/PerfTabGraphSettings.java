@@ -87,6 +87,9 @@ public class PerfTabGraphSettings
 	
    @Element(required=false)
 	private long parentDciId = 0;
+
+   @Element(required = false)
+   private boolean modifyYBase = false;
 	
 	private PerfTabDci runtimeDciInfo = null;
 
@@ -444,7 +447,7 @@ public class PerfTabGraphSettings
    {
       this.logScaleEnabled = logScaleEnabled;
    }
-
+   
    /**
     * @return the showLegendAlways
     */
@@ -475,5 +478,25 @@ public class PerfTabGraphSettings
    public void setExtendedLegend(boolean extendedLegend)
    {
       this.extendedLegend = extendedLegend;
+   }
+   
+   /**
+    * Set modify Y base
+    * 
+    * @param modifyYBase if true, use min DCI value as Y base
+    */
+   public void setModifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
+   }
+   
+   /**
+    * Modify Y base
+    * 
+    * @return true if use min DCI value as Y base
+    */
+   public boolean modifyYBase()
+   {
+      return modifyYBase;
    }
 }

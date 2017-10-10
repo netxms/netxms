@@ -6,3 +6,4 @@ Bundle-Version: 0.7.15
 Require-Bundle: org.eclipse.rap.rwt;bundle-version="2.3.2"
 Export-Package: org.swtchart
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.netxms.client.datacollection

@@ -185,7 +185,6 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
       SeriesDefinition sdY = SeriesDefinitionImpl.create();
       yAxis.getSeriesDefinitions().add(sdY);
       sdY.getSeries().add(valueSeries);
-		
 		return chart;
 	}
 	
@@ -475,73 +474,43 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		return rotation;
 	}
+	
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#isGridVisible()
-	 */
-	@Override
-	public boolean isGridVisible()
-	{
-		// TODO Auto-generated method stub
-		return false;
-	}
+   @Override
+   public boolean isGridVisible()
+   {
+      return false;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridVisible(boolean)
-	 */
-	@Override
-	public void setGridVisible(boolean visible)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setGridVisible(boolean visible)
+   {  
+   }
 
-	@Override
-	public void setBackgroundColor(ChartColor color)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setBackgroundColor(ChartColor color)
+   {  
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setPlotAreaColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setPlotAreaColor(ChartColor color)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setPlotAreaColor(ChartColor color)
+   {  
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setLegendColor(org.netxms.ui.eclipse.charts.api.ChartColor, org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setLegendColor(ChartColor foreground, ChartColor background)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setLegendColor(ChartColor foreground, ChartColor background)
+   {  
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setAxisColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setAxisColor(ChartColor color)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setAxisColor(ChartColor color)
+   {  
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataChart#setGridColor(org.netxms.ui.eclipse.charts.api.ChartColor)
-	 */
-	@Override
-	public void setGridColor(ChartColor color)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+   @Override
+   public void setGridColor(ChartColor color)
+   {  
+   }
 	
 	/**
      * Take snapshot of network map

@@ -109,6 +109,9 @@ public class ChartConfig
 	@Element(required=false)
 	@Convert(XmlDateConverter.class)
 	protected Date timeTo;
+	
+   @Element(required = false)
+   private boolean modifyYBase = false;
 
    private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
 	
@@ -574,6 +577,26 @@ public class ChartConfig
       for(GraphSettingsChangeListener l : changeListeners)
          l.onGraphSettingsChange(this);
    }
+  
+   /**
+    * Set modify Y base
+    * 
+    * @param modifyYBase if true, use min DCI value as Y base
+    */
+   public void setModifyYBase(boolean modifyYBase)
+   {
+      this.modifyYBase = modifyYBase;
+   }
+   
+   /**
+    * Modify Y base
+    * 
+    * @return true if use min DCI value as Y base
+    */
+   public boolean modifyYBase()
+   {
+      return modifyYBase;
+   }
 
    public void setConfig(ChartConfig config)
    {
@@ -600,5 +623,6 @@ public class ChartConfig
       timeFrameType = config.timeFrameType; 
       timeFrom = config.timeFrom; 
       timeTo = config.timeTo; 
+      modifyYBase = config.modifyYBase;
    }
 }

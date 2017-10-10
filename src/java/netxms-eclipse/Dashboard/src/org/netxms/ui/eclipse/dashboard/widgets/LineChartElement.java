@@ -110,6 +110,8 @@ public class LineChartElement extends ElementWidget
 		chart.setTranslucent(config.isTranslucent());
 		if (!config.isAutoScale())
 		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
+      else
+         chart.modifyYBase(config.modifyYBase());
 		
 		final List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(config.getDciList().length);
 		int index = 0;

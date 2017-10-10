@@ -52,6 +52,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.dialogs.HistoricalDataSelectionDialog;
+import org.netxms.ui.eclipse.perfview.views.helpers.HistoricalDataComparator;
 import org.netxms.ui.eclipse.perfview.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -62,6 +63,10 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class HistoricalDataView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.HistoricalDataView"; //$NON-NLS-1$
+	
+	// Columns
+   public static final int COLUMN_TIME = 0;
+   public static final int COLUMN_DATA = 1;
 	
 	private NXCSession session;
 	private long nodeId;
@@ -136,6 +141,7 @@ public class HistoricalDataView extends ViewPart
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());
+		viewer.setComparator(new HistoricalDataComparator());
 
 		createActions();
 		contributeToActionBars();

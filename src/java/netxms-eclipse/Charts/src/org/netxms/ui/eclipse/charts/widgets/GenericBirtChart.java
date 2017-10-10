@@ -26,6 +26,7 @@ import org.eclipse.birt.chart.device.IDeviceRenderer;
 import org.eclipse.birt.chart.exception.ChartException;
 import org.eclipse.birt.chart.factory.GeneratedChartState;
 import org.eclipse.birt.chart.factory.IGenerator;
+import org.eclipse.birt.chart.factory.RunTimeContext;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ColorDefinition;
@@ -34,6 +35,7 @@ import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.PaletteImpl;
+import org.eclipse.birt.chart.script.IScriptClassLoader;
 import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
@@ -202,7 +204,16 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 
 			try
 			{
-				generatedChartState = generator.build(deviceRenderer.getDisplayServer(), chart, bounds, null, null, null);
+		      chart.setScript("org.netxms.ui.eclipse.charts.widgets.internal.AxisLabelFormatter");
+			   RunTimeContext rtc = new RunTimeContext();
+			   rtc.setScriptClassLoader(new IScriptClassLoader() {
+               @Override
+               public Class<?> loadClass(String className, ClassLoader parentLoader) throws ClassNotFoundException
+               {
+                  return getClass().getClassLoader().loadClass(className);
+               }
+            });
+				generatedChartState = generator.build(deviceRenderer.getDisplayServer(), chart, bounds, null, rtc, null);
 				generator.render(deviceRenderer, generatedChartState);
 			}
 			catch(Exception e)

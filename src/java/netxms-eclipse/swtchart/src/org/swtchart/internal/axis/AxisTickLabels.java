@@ -30,6 +30,7 @@ import org.swtchart.Chart;
 import org.swtchart.IAxis.Position;
 import org.swtchart.internal.ChartLayoutData;
 import org.swtchart.internal.Util;
+import org.netxms.client.datacollection.DataFormatter;
 
 /**
  * Axis tick labels.
@@ -468,9 +469,7 @@ public class AxisTickLabels implements PaintListener
 				tickLabels.add(format(date, 0));
 			}
 			else
-			{
 				tickLabels.add(format(b.doubleValue(), tickStep.doubleValue()));
-			}
 			tickLabelValues.add(b.doubleValue());
 
 			int tickLabelPosition = (int)((b.doubleValue() - min) / (max - min) * length);
@@ -624,7 +623,7 @@ public class AxisTickLabels implements PaintListener
 				}
 				return new SimpleDateFormat(dateFormat).format(obj);
 			}
-			return Chart.roundedDecimalValue((Double)obj, tickStep);
+			return DataFormatter.roundDecimalValue((Double)obj, tickStep, 5);
 		}
 		return format.format(obj);
 	}

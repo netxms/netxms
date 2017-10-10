@@ -6,7 +6,6 @@
  *******************************************************************************/
 package org.swtchart;
 
-import java.text.DecimalFormat;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -33,7 +32,7 @@ import org.swtchart.internal.series.SeriesSet;
  * A chart which are composed of title, legend, axes and plot area.
  */
 public class Chart extends Composite implements Listener
-{
+{   
 	/** cached tick step on Y axis */
 	protected double cachedTickStep = 0;
 	
@@ -339,70 +338,6 @@ public class Chart extends Composite implements Listener
 		image.dispose();
 	}
 	
-	/**
-	 * Get rounded value for tick mark
-	 * 
-	 * @param value
-	 * @param step
-	 * @return
-	 */
-	public static String roundedDecimalValue(double value, double step)
-	{
-		double absValue = Math.abs(value);
-		if (absValue >= 10000000000000L)
-		{
-			return Long.toString(Math.round(value / 1000000000000L)) + "T";
-		}
-		else if (absValue >= 1000000000000L)
-		{
-			return new DecimalFormat("0.0").format(value / 1000000000000L) + "T"; //$NON-NLS-1$
-		}
-		else if (absValue >= 10000000000L)
-		{
-			return Long.toString(Math.round(value / 1000000000)) + "G";
-		}
-		else if (absValue >= 1000000000)
-		{
-			return new DecimalFormat("0.0").format(value / 1000000000) + "G"; //$NON-NLS-1$
-		}
-		else if (absValue >= 10000000)
-		{
-			return Long.toString(Math.round(value / 1000000)) + "M";
-		}
-		else if (absValue >= 1000000)
-		{
-			return new DecimalFormat("0.0").format(value / 1000000) + "M"; //$NON-NLS-1$
-		}
-		else if (absValue >= 10000)
-		{
-			return Long.toString(Math.round(value / 1000)) + "K";
-		}
-		else if (absValue >= 1000)
-		{
-			return new DecimalFormat("0.0").format(value / 1000) + "K"; //$NON-NLS-1$
-		}
-		else if ((absValue >= 1) && (step >= 1))
-		{
-			return Long.toString(Math.round(value));
-		}
-		else if (absValue == 0)
-		{
-			return "0"; //$NON-NLS-1$
-		}
-		else
-		{
-			if (step < 0.00001)
-				return Double.toString(value);
-			if (step < 0.0001)
-				return new DecimalFormat("0.00000").format(value); //$NON-NLS-1$
-			if (step < 0.001)
-				return new DecimalFormat("0.0000").format(value); //$NON-NLS-1$
-			if (step < 0.01)
-				return new DecimalFormat("0.000").format(value); //$NON-NLS-1$
-			return new DecimalFormat("0.00").format(value); //$NON-NLS-1$
-		}
-	}
-
 	/**
 	 * @param cachedTickStep the cachedTickStep to set
 	 */

@@ -37,6 +37,7 @@ public class YAxisRangeEditor extends Composite
 {
    private Button radioAuto;
    private Button radioManual;
+   private Button checkYBase;
    private LabeledSpinner from;
    private LabeledSpinner to;
    
@@ -61,14 +62,21 @@ public class YAxisRangeEditor extends Composite
       radioAuto.setText(Messages.get().YAxisRangeEditor_Automatic);
       radioAuto.setSelection(true);
       
+      checkYBase = new Button(group, SWT.CHECK);
+      checkYBase.setText("Set Y base to min value");
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkYBase.setLayoutData(gd);
+
+      radioManual = new Button(group, SWT.RADIO);
+      radioManual.setText(Messages.get().YAxisRangeEditor_Manual);
+      
       from = new LabeledSpinner(group, SWT.NONE);
       from.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
       from.setLabel(Messages.get().YAxisRangeEditor_From);
       from.setSelection(0);
-      GridData gd = new GridData();
-      gd.verticalSpan = 2;
+      gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
-      gd.horizontalIndent = 15;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       from.setLayoutData(gd);
@@ -78,14 +86,10 @@ public class YAxisRangeEditor extends Composite
       to.setLabel(Messages.get().YAxisRangeEditor_To);
       to.setSelection(100);
       gd = new GridData();
-      gd.verticalSpan = 2;
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       to.setLayoutData(gd);
-
-      radioManual = new Button(group, SWT.RADIO);
-      radioManual.setText(Messages.get().YAxisRangeEditor_Manual);
       
       final SelectionAdapter s = new SelectionAdapter() {
          @Override
@@ -108,6 +112,7 @@ public class YAxisRangeEditor extends Composite
       boolean auto = radioAuto.getSelection();
       from.setEnabled(!auto);
       to.setEnabled(!auto);
+      checkYBase.setEnabled(auto);
    }
    
    /**
@@ -117,9 +122,10 @@ public class YAxisRangeEditor extends Composite
     * @param minY
     * @param maxY
     */
-   public void setSelection(boolean auto, int minY, int maxY)
+   public void setSelection(boolean auto, boolean modifyYBase, int minY, int maxY)
    {
       radioAuto.setSelection(auto);
+      checkYBase.setSelection((auto && modifyYBase));
       radioManual.setSelection(!auto);
       from.setSelection(minY);
       to.setSelection(maxY);
@@ -132,6 +138,14 @@ public class YAxisRangeEditor extends Composite
    public boolean isAuto()
    {
       return radioAuto.getSelection();
+   }
+   
+   /**
+    * @return
+    */
+   public boolean modifyYBase()
+   {
+      return checkYBase.getSelection();
    }
    
    /**

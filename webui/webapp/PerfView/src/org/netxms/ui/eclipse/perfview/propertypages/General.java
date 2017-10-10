@@ -283,7 +283,7 @@ public class General extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(config.isAutoScale(), config.getMinYScaleValue(), config.getMaxYScaleValue());
+      yAxisRange.setSelection(config.isAutoScale(),  config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       
       return dialogArea;
 	}
@@ -308,7 +308,7 @@ public class General extends PropertyPage
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
 		
-		yAxisRange.setSelection(true, 0, 100);
+		yAxisRange.setSelection(true, false, 0, 100);
 		
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
@@ -345,6 +345,7 @@ public class General extends PropertyPage
 		
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
+      config.setModifyYBase(yAxisRange.modifyYBase());
 		
 		if ((config instanceof GraphSettings) && isApply)
 		{
