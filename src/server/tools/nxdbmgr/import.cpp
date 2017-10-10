@@ -70,6 +70,35 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 }
 
 /**
+ * Table exist callback
+ */
+static int IsTableExistCB(void *arg, int cols, char **data, char **names)
+{
+   if (data[0] != NULL)
+      return !strcmp(data[0], "0");
+   return 0;
+}
+
+/**
+ * Check if table exists on imported DB
+ */
+static bool IsTableExist(sqlite3 *db, const TCHAR* table)
+{
+   char query[256], *errmsg;
+#ifdef UNICODE
+   char *mbTable = MBStringFromWideString(table);
+   snprintf(query, 256, "SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%s')", mbTable);
+   free(mbTable);
+#else
+   snprintf(query, 256, _T("SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%s')"), table);
+#endif
+   int rc = sqlite3_exec(db, query, IsTableExistCB,  NULL, &errmsg);
+   sqlite3_free(errmsg);
+
+   return rc == SQLITE_OK;
+}
+
+/**
  * Import single database table
  */
 static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
@@ -95,15 +124,9 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
       }
       else
       {
-         bool tableExist = true;
-#ifdef UNICODE
-         tableExist = !g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, table);
-#else
-         WCHAR wname[256];
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
-         tableExist = !g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, wname);
-#endif
-         if (tableExist &&
+         if (IsTableExist(db, table))
+            _tprintf(_T("Table %s exists!!\n"), table);
+         if (!IsTableExist(db, table) &&
              GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
             rc = SQLITE_OK;
          sqlite3_free(errmsg);
