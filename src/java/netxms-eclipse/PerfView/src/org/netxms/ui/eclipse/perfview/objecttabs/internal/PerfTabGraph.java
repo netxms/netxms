@@ -83,7 +83,8 @@ public class PerfTabGraph extends DashboardComposite
 		chart.setZoomEnabled(false);
 		chart.setTitleVisible(true);
 		chart.setChartTitle(settings.getRuntimeTitle());
-		chart.setLegendVisible(false);
+		chart.setLegendVisible(settings.isShowLegendAlways());
+		chart.setExtendedLegend(settings.isExtendedLegend());
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
 		chart.setStacked(settings.isStacked());
       
@@ -94,7 +95,7 @@ public class PerfTabGraph extends DashboardComposite
 		
 		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
-		if(!settings.isAutoScale())
+		if (!settings.isAutoScale())
       {
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
@@ -119,6 +120,8 @@ public class PerfTabGraph extends DashboardComposite
 	public void addItem(PerfTabDci dci, PerfTabGraphSettings settings)
 	{
 		chart.setLegendVisible(true);
+		if (settings.isExtendedLegend())
+		   chart.setExtendedLegend(true);
 		synchronized(items)
 		{
 			items.add(dci);

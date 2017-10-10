@@ -49,6 +49,8 @@ public class PerfTab extends DCIPropertyPageDialog
 	private Button checkShow;
 	private Button checkLogScale;
    private Button checkStacked;
+   private Button checkShowLegendAlways;
+   private Button checkExtendedLegend;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
@@ -199,7 +201,21 @@ public class PerfTab extends DCIPropertyPageDialog
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       checkStacked.setLayoutData(gd);
-      
+
+      checkShowLegendAlways = new Button(optionsGroup, SWT.CHECK);
+      checkShowLegendAlways.setText("Always show &legend");
+      checkShowLegendAlways.setSelection(settings.isShowLegendAlways());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkShowLegendAlways.setLayoutData(gd);
+
+      checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
+      checkExtendedLegend.setText("&Extended legend");
+      checkExtendedLegend.setSelection(settings.isExtendedLegend());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkExtendedLegend.setLayoutData(gd);
+
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
@@ -228,6 +244,8 @@ public class PerfTab extends DCIPropertyPageDialog
       settings.setGroupName(groupName.getText().trim());
 		settings.setShowThresholds(checkShowThresholds.getSelection());
 		settings.setStacked(checkStacked.getSelection());
+      settings.setShowLegendAlways(checkShowLegendAlways.getSelection());
+      settings.setExtendedLegend(checkExtendedLegend.getSelection());
 		
 		settings.setAutoScale(yAxisRange.isAuto());
 		settings.setMinYScaleValue(yAxisRange.getMinY());
