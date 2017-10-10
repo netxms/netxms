@@ -204,7 +204,7 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 	lock();
 	for(i = 0, pos = m_first; i < m_numElements; i++)
 	{
-		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
+		if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE) && comparator(key, m_elements[pos]))
 		{
 			element = m_elements[pos];
 			break;
