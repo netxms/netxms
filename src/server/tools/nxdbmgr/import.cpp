@@ -95,7 +95,9 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 		}
 		else
 		{
-			_tprintf(_T("ERROR: SQL query \"%hs\" on import file failed (%hs)\n"), query, errmsg);
+			if (g_hCoreDB->m_driver->m_fpDrvIsTableExist(g_hCoreDB->m_connection, table) &&
+			    GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
+			   rc = SQLITE_OK;
 			sqlite3_free(errmsg);
 			DBRollback(g_hCoreDB);
 		}
