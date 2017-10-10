@@ -47,6 +47,12 @@ public class PerfTabGraphSettings
    private boolean stacked = false;
    
    @Element(required = false)
+   private boolean showLegendAlways = false;
+   
+   @Element(required = false)
+   private boolean extendedLegend = true;
+   
+   @Element(required = false)
    private int minYScaleValue = 1;
    
    @Element(required = false)
@@ -437,5 +443,37 @@ public class PerfTabGraphSettings
    public void setLogScaleEnabled(boolean logScaleEnabled)
    {
       this.logScaleEnabled = logScaleEnabled;
+   }
+
+   /**
+    * @return the showLegendAlways
+    */
+   public boolean isShowLegendAlways()
+   {
+      return showLegendAlways;
+   }
+
+   /**
+    * @param showLegendAlways the showLegendAlways to set
+    */
+   public void setShowLegendAlways(boolean showLegendAlways)
+   {
+      this.showLegendAlways = showLegendAlways;
+   }
+
+   /**
+    * @return the extendedLegend
+    */
+   public boolean isExtendedLegend()
+   {
+      return extendedLegend;
+   }
+
+   /**
+    * @param extendedLegend the extendedLegend to set
+    */
+   public void setExtendedLegend(boolean extendedLegend)
+   {
+      this.extendedLegend = extendedLegend;
    }
 }
