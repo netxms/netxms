@@ -27,7 +27,7 @@
 #include <nms_util.h>
 #include <uuid.h>
 #include <nxsrvapi.h>
-#include <libnxdb.h>
+#include <nxdbapi.h>
 #include <netxmsdb.h>
 
 
