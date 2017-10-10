@@ -269,6 +269,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
          continue;
       if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
          continue;
+      if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
+           !_tcscmp(g_tables[i], _T("raw_dci_values")))
+         continue;
       if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
 	}
