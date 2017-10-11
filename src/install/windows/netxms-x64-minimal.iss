@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.1.1-116-x64-minimal
+OutputBaseFilename=netxms-2.1.2-x64-minimal
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -236,6 +236,7 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\music\*"; DestDir: "{app}\var\files"; Flags: ignoreversion; Components: server
+Source: "..\..\libnxjava\java\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\bind9\target\bind9.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\java\java\target\netxms-agent.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\jmx\target\jmx.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: server

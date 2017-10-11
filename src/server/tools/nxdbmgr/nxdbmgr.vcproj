@@ -389,6 +389,14 @@
 				RelativePath=".\upgrade.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\upgrade_v0.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\upgrade_v21.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

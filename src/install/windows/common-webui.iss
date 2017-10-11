@@ -48,6 +48,7 @@ var
 begin
   strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (jetty)" --Install="{app}\WebUI\prunsrv.exe" --Startup=auto --LogPath="{app}\WebUI\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\WebUI\jetty-runner.jar;{app}\WebUI\start.jar" --StartClass=org.eclipse.jetty.runner.Runner ++StartParams=--stop-port ++StartParams=17003 ++StartParams=--stop-key ++StartParams=nxmc$jetty$key ++StartParams=--classes ++StartParams="{app}\WebUI\nxmc\lib"');
   strJvmArgument := strJvmArgument + ' ++StartParams=--port ++StartParams=' + GetJettyPort();
+  strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams=--config ++StartParams="{app}\WebUI\nxmc\jetty.xml"');
   strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams="{app}\WebUI\nxmc\jetty-web.xml" --StopClass=org.eclipse.jetty.start.Main ++StopParams=-DSTOP.PORT=17003 ++StopParams=-DSTOP.KEY=nxmc$jetty$key ++StopParams=--stop');
 
   if IsComponentSelected('jre') then

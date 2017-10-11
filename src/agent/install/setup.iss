@@ -1,6 +1,6 @@
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 2.1
-AppVersion=2.1
+AppVerName=NetXMS Agent 3.0-M0
+AppVersion=3.0-M0
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org
@@ -13,3 +13,4 @@ SolidCompression=yes
 LanguageDetectionMethod=none
 LicenseFile=..\..\..\copying
 CloseApplications=no
+SignTool=signtool
