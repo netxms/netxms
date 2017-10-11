@@ -143,8 +143,6 @@ LONG H_GetUInt64Param(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
          {
             result = SYSINFO_RC_UNSUPPORTED;
          }
-         else
-            resultValue*1024;
          break;
       case 'M': //MemorySize
       {
