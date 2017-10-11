@@ -1979,7 +1979,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                {
                   nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
-                  node->statusPollPollerEntry(RegisterPoller(POLLER_TYPE_STATUS, node), NULL, 0);
+                  node->statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, node), NULL, 0);
                }
             }
 
