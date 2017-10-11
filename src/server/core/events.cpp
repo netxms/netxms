@@ -253,6 +253,7 @@ static bool CheckGroupMembership(UINT32 eventCode, UINT32 groupId)
          if (CheckGroupMembership(eventCode, g->getMember(i)))
             return true;
       }
+      g->decRefCount();
    }
 
    return false;
@@ -1131,6 +1132,7 @@ static bool LoadEvents()
          }
          success = true;
       }
+      DBFreeResult(hResult);
    }
    else
    {
@@ -1802,6 +1804,7 @@ UINT32 UpdateEventObject(NXCPMessage *request, NXCPMessage *response, json_t **o
 
       response->setField(VID_EVENT_CODE, obj->getCode());
    }
+   obj->decRefCount();
 
    RWLockUnlock(m_rwlockTemplateAccess);
 
@@ -1909,5 +1912,6 @@ void GetEventConfiguration(NXCPMessage *msg)
       o->fillMessage(msg, base);
       base += 10;
    }
+   delete it;
    RWLockUnlock(m_rwlockTemplateAccess);
 }
