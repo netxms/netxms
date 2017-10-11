@@ -98,7 +98,7 @@ NetworkMap::~NetworkMap()
 	delete m_links;
    delete m_filter;
    delete m_seedObjects;
-   safe_free(m_filterSource);
+   free(m_filterSource);
 }
 
 /**
@@ -324,20 +324,23 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	// Save seed nodes
    if (executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?")))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
-      if (hStmt != NULL)
+      if (m_seedObjects->size() > 0)
       {
-         for(int i = 0; i < m_seedObjects->size(); i++)
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
+         if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_seedObjects->get(i));
-            if (!DBExecute(hStmt))
+            for(int i = 0; i < m_seedObjects->size(); i++)
             {
-               DBFreeStatement(hStmt);
-               goto fail;
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_seedObjects->get(i));
+               if (!DBExecute(hStmt))
+               {
+                  DBFreeStatement(hStmt);
+                  goto fail;
+               }
             }
+            DBFreeStatement(hStmt);
          }
-         DBFreeStatement(hStmt);
       }
    }
 
