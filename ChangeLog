@@ -21,6 +21,7 @@
 	- Filter in geo map view
 	- "Duplicate" button in DCI threshold editor
 	- Option to show legend for performance tab graphs with single DCI
+	- Fixed file upload errors in web UI
 - Implemented option to show "Top N items" in a Dashboad summary table using sorting and line limitation
 - Fixed issues: NX-1147, NX-1265, NX-1270, NX-1276, NX-1282, NX-1290, NX-1296, NX-1300, NX-1309, NX-1313, NX-1314, NX-1315, NX-1320, NX-1324, NX-1325, NX-1331, NX-1333, NX-1335
 
