@@ -1501,6 +1501,10 @@ protected:
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 
+   virtual StringMap *getInstanceList(DCObject *dco);
+
+   void calculateStatus(BOOL bForcedRecalc = FALSE);
+
    Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceClass, TCHAR *vendor,
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
                TCHAR *metaType, TCHAR *description, UINT32 proxyNode);
@@ -1513,6 +1517,15 @@ public:
    static Sensor *createSensor(TCHAR *name, NXCPMessage *msg);
 
    virtual int getObjectClass() const { return OBJECT_SENSOR; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual void prepareForDeletion();
+
+   virtual NXSL_Value *createNXSLObject();
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
    const TCHAR *getXmlConfig() const { return m_xmlConfig; }
    const TCHAR *getXmlRegConfig() const { return m_xmlRegConfig; }
    UINT32 getProxyNodeId() const { return m_proxyNodeId; }
@@ -1527,20 +1540,10 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    UINT32 getFrameCount() const { return m_frameCount; }
 
-   StringMap *getInstanceList(DCObject *dco);
-
    UINT32 getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    UINT32 getListFromAgent(const TCHAR *name, StringList **list);
 
    void setProvisoned() { m_state |= SSF_PROVISIONED; }
-
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-   virtual NXSL_Value *createNXSLObject();
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-   void calculateStatus(BOOL bForcedRecalc = FALSE);
 
    virtual json_t *toJson();
 
@@ -1549,8 +1552,6 @@ public:
    void checkDlmsConverterAccessibility();
    void prepareDlmsDciParameters(String &parameter);
    void prepareLoraDciParameters(String &parameter);
-
-   virtual void prepareForDeletion();
 };
 
 class Subnet;
@@ -2981,6 +2982,7 @@ extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByUIN;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxNetMapById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
