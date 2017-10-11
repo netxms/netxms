@@ -596,6 +596,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                ConsoleWrite(pCtx, _T("ERROR: Invalid index modifier\n\n"));
             }
          }
+         else if (IsCommand(_T("NETMAP"), szBuffer, 4))
+         {
+            DumpIndex(pCtx, &g_idxNetMapById);
+         }
          else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
          {
             pArg = ExtractWord(pArg, szBuffer);
@@ -625,7 +629,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             DumpIndex(pCtx, &g_idxNodeById);
          }
-         else if (IsCommand(_T("SUBNET"), szBuffer, 1))
+         else if (IsCommand(_T("SENSOR"), szBuffer, 2))
+         {
+            DumpIndex(pCtx, &g_idxSensorById);
+         }
+         else if (IsCommand(_T("SUBNET"), szBuffer, 2))
          {
             pArg = ExtractWord(pArg, szBuffer);
             if (IsCommand(_T("ZONE"), szBuffer, 1))
