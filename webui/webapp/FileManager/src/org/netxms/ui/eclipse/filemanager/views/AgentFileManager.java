@@ -762,7 +762,7 @@ public class AgentFileManager extends ViewPart
 
       final Object[] objects = selection.toArray();
 
-      new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Reading remote directory", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -787,7 +787,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return Messages.get().SelectServerFileDialog_JobError;
+            return "Cannot read remote directory";
          }
       }.start();
    }
@@ -833,7 +833,7 @@ public class AgentFileManager extends ViewPart
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
-                              monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
                                     (int)workTotal);
                            }
          
@@ -856,7 +856,7 @@ public class AgentFileManager extends ViewPart
                            @Override
                            public void setTotalWorkAmount(long workTotal)
                            {
-                              monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                              monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
                                     (int)workTotal);
                            }
          
@@ -886,7 +886,7 @@ public class AgentFileManager extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return Messages.get().UploadFileToServer_JobError;
+               return "Cannot upload file to remote agent";
             }
          }.start();
       }
