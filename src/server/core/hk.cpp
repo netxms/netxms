@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("housekeeper")
+
 /**
  * Delete empty subnets from given list
  */
@@ -30,11 +32,11 @@ static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
    for(int i = 0; i < subnets->size(); i++)
    {
       NetObj *object = subnets->get(i);
-      DbgPrintf(7, _T("DeleteEmptySubnets: checking subnet %s [%d] (refs: %d refs, children: %d, parents: %d)"),
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("DeleteEmptySubnets: checking subnet %s [%d] (refs: %d refs, children: %d, parents: %d)"),
                 object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
       if (object->isEmpty())
       {
-         DbgPrintf(5, _T("DeleteEmptySubnets: delete subnet %s [%d] (refs: %d, children: %d, parents: %d)"),
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteEmptySubnets: delete subnet %s [%d] (refs: %d, children: %d, parents: %d)"),
                    object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
          object->deleteObject();
       }
@@ -105,6 +107,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 	if (retentionTime == 0)
 		return;
 
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing alarm log (retention time %d days)"), retentionTime);
 	retentionTime *= 86400;	// Convert days to seconds
 	time_t ts = time(NULL) - (time_t)retentionTime;
 
@@ -175,7 +178,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       minute = _tcstol(p, NULL, 10);
       if ((minute < 0) || (minute > 59))
       {
-         DbgPrintf(2, _T("Housekeeper: invalid minute value %s"), p);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid minute value %s"), p);
          minute = 0;
       }
    }
@@ -186,13 +189,13 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    hour = _tcstol(buffer, NULL, 10);
    if ((hour < 0) || (hour > 23))
    {
-      DbgPrintf(2, _T("Housekeeper: invalid hour value %s"), buffer);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid hour value %s"), buffer);
       hour = 0;
    }
-   DbgPrintf(2, _T("Housekeeper: wakeup time is %02d:%02d"), hour, minute);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
 
    int sleepTime = GetSleepTime(hour, minute, 0);
-   DbgPrintf(4, _T("Housekeeper: sleeping for %d seconds"), sleepTime);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
 
    while(!s_shutdown)
    {
@@ -200,7 +203,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       if (s_shutdown)
          break;
 
-      DbgPrintf(4, _T("Housekeeper: wakeup"));
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
@@ -211,6 +214,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		UINT32 dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
+	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing event log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
@@ -221,6 +225,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		dwRetentionTime = ConfigReadULong(_T("SyslogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing syslog (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
@@ -231,6 +236,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		dwRetentionTime = ConfigReadULong(_T("AuditLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing audit log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
@@ -241,6 +247,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		dwRetentionTime = ConfigReadULong(_T("SNMPTrapLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing SNMP trap log (retention time %d days)"), dwRetentionTime);
 			dwRetentionTime *= 86400;	// Convert days to seconds
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
@@ -252,6 +259,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 			DeleteEmptySubnets();
 
 		// Remove expired DCI data
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
 		g_idxNodeById.forEach(CleanDciData, hdb);
 		g_idxClusterById.forEach(CleanDciData, hdb);
 		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
@@ -263,7 +271,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       {
          if (g_pModuleList[i].pfHousekeeperHook != NULL)
          {
-            DbgPrintf(5, _T("Housekeeper: calling hook in module %s"), g_pModuleList[i].szName);
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Housekeeper: calling hook in module %s"), g_pModuleList[i].szName);
             g_pModuleList[i].pfHousekeeperHook();
          }
       }
@@ -272,10 +280,10 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);
-      DbgPrintf(4, _T("Housekeeper: sleeping for %d seconds"), sleepTime);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Sleeping for %d seconds"), sleepTime);
    }
 
-   DbgPrintf(1, _T("Housekeeper thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper thread terminated"));
    return THREAD_OK;
 }
 

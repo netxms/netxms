@@ -66,7 +66,7 @@ static MUTEX m_mutexDebugTagTreeWrite = INVALID_MUTEX_HANDLE;
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
  */
-static inline void swapAndWait()
+static inline void SwapAndWait()
 {
    tagTreeSecondary = InterlockedExchangeObjectPointer(&tagTreeActive, tagTreeSecondary);
    ThreadSleepMs(10);
@@ -85,7 +85,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
    {
       MutexLock(m_mutexDebugTagTreeWrite);
       tagTreeSecondary->setRootDebugLvl(level); // Update the secondary tree
-      swapAndWait();
+      SwapAndWait();
       tagTreeSecondary->setRootDebugLvl(level); // Update the previously active tree
       MutexUnlock(m_mutexDebugTagTreeWrite);
    }
@@ -102,13 +102,13 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
       if((level >= 0) && (level <= 9))
       {
          tagTreeSecondary->add(tag, level);
-         swapAndWait();
+         SwapAndWait();
          tagTreeSecondary->add(tag, level);
       }
       else if (level < 0)
       {
          tagTreeSecondary->remove(tag);
-         swapAndWait();
+         SwapAndWait();
          tagTreeSecondary->remove(tag);
       }
       MutexUnlock(m_mutexDebugTagTreeWrite);
@@ -152,8 +152,8 @@ static TCHAR *FormatLogTimestamp(TCHAR *buffer)
 #else
 	struct tm *loc = localtime(&t);
 #endif
-	_tcsftime(buffer, 32, _T("[%d-%b-%Y %H:%M:%S"), loc);
-	_sntprintf(&buffer[21], 8, _T(".%03d]"), (int)(now % 1000));
+	_tcsftime(buffer, 32, _T("[%Y.%m.%d %H:%M:%S"), loc);
+	_sntprintf(&buffer[20], 8, _T(".%03d]"), (int)(now % 1000));
 	return buffer;
 }
 
@@ -512,30 +512,29 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 /**
  * Write record to log file
  */
-static void WriteLogToFile(TCHAR *message, const WORD wType)
+static void WriteLogToFile(TCHAR *message, const WORD type)
 {
-   TCHAR buffer[64];
-   TCHAR loglevel[64];
-
-   switch(wType) 
+   const TCHAR *loglevel;
+   switch(type)
    {
-      case EVENTLOG_ERROR_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s] "), _T("ERROR"));
+      case NXLOG_ERROR:
+         loglevel = _T("*E* ");
 	      break;
-      case EVENTLOG_WARNING_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s] "), _T("WARN "));
+      case NXLOG_WARNING:
+         loglevel = _T("*W* ");
 	      break;
-      case EVENTLOG_INFORMATION_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s] "), _T("INFO "));
+      case NXLOG_INFO:
+         loglevel = _T("*I* ");
 	      break;
-      case EVENTLOG_DEBUG_TYPE:
-	      _sntprintf(loglevel, 16, _T("[%s] "), _T("DEBUG"));
+      case NXLOG_DEBUG:
+         loglevel = _T("*D* ");
 	      break;
       default:
-    	  _tcsncpy(loglevel, _T(""), 1);
+         loglevel = _T("*?* ");
 	      break;
    }
 
+   TCHAR buffer[64];
    if (s_flags & NXLOG_BACKGROUND_WRITER)
    {
       MutexLock(m_mutexLogAccess);
@@ -915,12 +914,20 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCH
    if (level > nxlog_get_debug_level_tag(tag))
       return;
 
+   TCHAR tagf[16];
+   int i;
+   for(i = 0; (i < 15) && tag[i] != 0; i++)
+      tagf[i] = tag[i];
+   for(; i < 15; i++)
+      tagf[i] = ' ';
+   tagf[i] = 0;
+
    va_list args;
    va_start(args, format);
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
    va_end(args);
-   nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tag, buffer);
+   nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tagf, buffer);
 
    if (s_debugWriter != NULL)
       s_debugWriter(tag, buffer);
