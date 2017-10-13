@@ -1,14 +1,12 @@
 db.*		Database related
 db.query	SQL query trace
-db.sessions	DB sessions (connections)
+db.conn		DB connections
 db.cpool	DB connection pool
 
 housekeeper	Housekeeper messages
 
-objects.*	Object related trace
-objects.dc.*	Data collection related
-objects.locks.*	Locks
+obj.*		Object related trace
+obj.dc.*	Data collection related
+obj.locks.*	Locks
 
 threads.*	Thread related
-
-
