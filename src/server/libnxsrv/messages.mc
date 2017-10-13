@@ -1079,7 +1079,7 @@ Failed to load sensor object with id %1 from database
 MessageId=
 SymbolicName=MSG_DEBUG_TAG
 Language=English
-<%1> %2
+[%1] %2
 .
 
 MessageId=
