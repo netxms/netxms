@@ -924,24 +924,24 @@ bool RegisterConfigHelperNatives(JNIEnv *env)
 {
    s_configClass = CreateJavaClassGlobalRef(env, s_configClassName);
    if (s_configClass == NULL)
-      return NULL;
+      return false;
 
    s_configEntryClass = CreateJavaClassGlobalRef(env, s_configEntryClassName);
    if (s_configEntryClass == NULL)
-      return NULL;
+      return false;
 
    s_configConstructor = env->GetMethodID(s_configClass, "<init>", "(J)V");
    if (s_configConstructor == NULL)
    {
       nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configClassName);
-      return NULL;
+      return false;
    }
 
    s_configEntryConstructor = env->GetMethodID(s_configEntryClass, "<init>", "(J)V");
    if (s_configEntryConstructor == NULL)
    {
       nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configEntryClass);
-      return NULL;
+      return false;
    }
 
    // register native methods exposed by Config
