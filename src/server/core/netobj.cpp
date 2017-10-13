@@ -37,7 +37,8 @@ static const TCHAR *s_className[]=
       _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
       _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
       _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint"),
-      _T("AgentPolicyLogParser"), _T("Chassis"), _T("DashboardGroup")
+      _T("AgentPolicyLogParser"), _T("Chassis"), _T("DashboardGroup"),
+      _T("Sensor")
    };
 
 /**
@@ -116,8 +117,7 @@ NetObj::~NetObj()
  */
 const TCHAR *NetObj::getObjectClassName() const
 {
-   int c = getObjectClass();
-   return ((c >= 0) && (c < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[c] : _T("Custom");
+   return getObjectClassName(getObjectClass());
 }
 
 /**
