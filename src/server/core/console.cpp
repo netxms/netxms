@@ -646,10 +646,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             DumpIndex(pCtx, &g_idxNodeById);
          }
-         else if (IsCommand(_T("SENSOR"), szBuffer, 2))
-         {
-            DumpIndex(pCtx, &g_idxSensorById);
-         }
          else if (IsCommand(_T("SUBNET"), szBuffer, 2))
          {
             pArg = ExtractWord(pArg, szBuffer);

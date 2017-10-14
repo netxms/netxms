@@ -1112,29 +1112,6 @@ static void TestDebugTags()
 }
 
 /**
- * Test get/set debug level
- */
-static void TestDebugLevel()
-{
-   StartTest(_T("Default debug level"));
-   AssertEquals(nxlog_get_debug_level(), 0);
-   EndTest();
-
-   StartTest(_T("Set debug level"));
-   nxlog_set_debug_level(7);
-   AssertEquals(nxlog_get_debug_level(), 7);
-   nxlog_set_debug_level(0);
-   AssertEquals(nxlog_get_debug_level(), 0);
-   EndTest();
-
-   StartTest(_T("nxlog_get_debug_level() performance"));
-   UINT64 startTime = GetCurrentTimeMs();
-   for(int i = 0; i < 1000000; i++)
-      nxlog_get_debug_level();
-   EndTest(GetCurrentTimeMs() - startTime);
-}
-
-/**
  * main()
  */
 int main(int argc, char *argv[])

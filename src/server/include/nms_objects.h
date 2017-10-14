@@ -2851,6 +2851,7 @@ extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByUIN;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxNetMapById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;

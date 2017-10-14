@@ -562,17 +562,6 @@ void StopDataCollection()
 }
 
 /**
- * Stop data collection
- */
-void StopDataCollection()
-{
-   ThreadJoin(s_itemPollerThread);
-   ThreadJoin(s_statCollectorThread);
-   ThreadJoin(s_cacheLoaderThread);
-   ThreadPoolDestroy(g_dataCollectorThreadPool);
-}
-
-/**
  * Update parameter list from node
  */
 static void UpdateParamList(NetObj *object, void *data)
