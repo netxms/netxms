@@ -272,10 +272,10 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 					switch(nType)
 					{
 						case INFOTYPE_MIN:
-							qwValue = min(qwValue, qwCurrVal);
+							qwValue = std::min(qwValue, qwCurrVal);
 							break;
 						case INFOTYPE_MAX:
-							qwValue = max(qwValue, qwCurrVal);
+							qwValue = std::max(qwValue, qwCurrVal);
 							break;
 						case INFOTYPE_AVG:
 							qwValue = (qwValue * nCount + qwCurrVal) / (nCount + 1);
