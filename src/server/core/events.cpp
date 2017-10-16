@@ -882,13 +882,14 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 						{
 							scriptName[i] = 0;
 							StrStrip(scriptName);
-							const TCHAR *temp = pObject->getCustomAttribute(scriptName);
+							TCHAR *temp = pObject->getCustomAttributeCopy(scriptName);
 							if (temp != NULL)
 							{
 								dwSize += (UINT32)_tcslen(temp);
 								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 								_tcscpy(&pText[dwPos], temp);
 								dwPos += (UINT32)_tcslen(temp);
+								free(temp);
 							}
 						}
 						break;

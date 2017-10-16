@@ -3700,10 +3700,9 @@ bool Node::connectToSMCLP()
       DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_name, m_id);
    }
 
-   const TCHAR *login = getCustomAttribute(_T("iLO.login"));
-   const TCHAR *password = getCustomAttribute(_T("iLO.password"));
-
-   if ((login != NULL) && (password != NULL))
+   TCHAR login[64], password[64];
+   if ((getCustomAttribute(_T("iLO.login"), login, 64) != NULL) &&
+       (getCustomAttribute(_T("iLO.password"), password, 64) != NULL))
       return m_smclpConnection->connect(login, password);
    return false;
 }
@@ -7257,13 +7256,14 @@ TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const
                   {
                      scriptName[i] = 0;
                      StrStrip(scriptName);
-                     const TCHAR *temp = getCustomAttribute(scriptName);
+                     TCHAR *temp = getCustomAttributeCopy(scriptName);
                      if (temp != NULL)
                      {
                         dwSize += (UINT32)_tcslen(temp);
                         pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                         _tcscpy(&pText[dwPos], temp);
                         dwPos += (UINT32)_tcslen(temp);
+                        free(temp);
                      }
                   }
                   break;

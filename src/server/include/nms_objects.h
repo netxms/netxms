@@ -641,11 +641,13 @@ public:
    void addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId);
    void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId);
 
-   const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
-   void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); setModified(); }
-   void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); setModified(); }
-   void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
+   TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
+   TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
+   NXSL_Value *getCustomAttributeForNXSL(const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL() const;
+   void setCustomAttribute(const TCHAR *name, const TCHAR *value);
+   void setCustomAttributePV(const TCHAR *name, TCHAR *value);
+   void deleteCustomAttribute(const TCHAR *name);
 
    virtual NXSL_Value *createNXSLObject();
 

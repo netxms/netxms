@@ -282,11 +282,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
    }
 	else
 	{
-		const TCHAR *attrValue = object->getCustomAttribute(attr);
-		if (attrValue != NULL)
-		{
-			value = new NXSL_Value(attrValue);
-		}
+		value = object->getCustomAttributeForNXSL(attr);
 	}
    return value;
 }

@@ -44,30 +44,19 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
  */
 static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	NXSL_Object *object;
-	const TCHAR *value;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
-	value = netxmsObject->getCustomAttribute(argv[1]->getValueAsCString());
-	if (value != NULL)
-	{
-		*ppResult = new NXSL_Value(value);
-	}
-	else
-	{
-		*ppResult = new NXSL_Value;	// Return NULL if attribute not found
-	}
-
+	NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(argv[1]->getValueAsCString());
+	*ppResult = (value != NULL) ? value : new NXSL_Value(); // Return NULL if attribute not found
 	return 0;
 }
 
@@ -78,32 +67,20 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  */
 static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	NXSL_Object *object;
-	const TCHAR *value;
-
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
 	if (!argv[1]->isString() || !argv[2]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	object = argv[0]->getValueAsObject();
+	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
-	value = netxmsObject->getCustomAttribute(argv[1]->getValueAsCString());
-	if (value != NULL)
-	{
-		*ppResult = new NXSL_Value(value);
-	}
-	else
-	{
-		*ppResult = new NXSL_Value;	// Return NULL if attribute not found
-	}
-
+   NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(argv[1]->getValueAsCString());
+   *ppResult = (value != NULL) ? value : new NXSL_Value(); // Return NULL if attribute not found
 	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
-
 	return 0;
 }
 

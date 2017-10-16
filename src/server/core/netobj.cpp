@@ -2227,6 +2227,101 @@ void NetObj::leaveMaintenanceMode()
 }
 
 /**
+ * Set custom attribute
+ */
+void NetObj::setCustomAttribute(const TCHAR *name, const TCHAR *value)
+{
+   lockProperties();
+   const TCHAR *curr = m_customAttributes.get(name);
+   if ((curr == NULL) || _tcscmp(curr, value))
+   {
+      m_customAttributes.set(name, value);
+      setModified();
+   }
+   unlockProperties();
+}
+
+/**
+ * Set custom attribute (value is preallocated)
+ */
+void NetObj::setCustomAttributePV(const TCHAR *name, TCHAR *value)
+{
+   lockProperties();
+   const TCHAR *curr = m_customAttributes.get(name);
+   if ((curr == NULL) || _tcscmp(curr, value))
+   {
+      m_customAttributes.setPreallocated(_tcsdup(name), value);
+      setModified();
+   }
+   else
+   {
+      free(value);
+   }
+   unlockProperties();
+}
+
+/**
+ * Delete custom attribute
+ */
+void NetObj::deleteCustomAttribute(const TCHAR *name)
+{
+   lockProperties();
+   if (m_customAttributes.contains(name))
+   {
+      m_customAttributes.remove(name);
+      setModified();
+   }
+   unlockProperties();
+}
+
+/**
+ * Get custom attribute into buffer
+ */
+TCHAR *NetObj::getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const
+{
+   TCHAR *result;
+   lockProperties();
+   const TCHAR *value = m_customAttributes.get(name);
+   if (value != NULL)
+   {
+      _tcslcpy(buffer, value, size);
+      result = buffer;
+   }
+   else
+   {
+      result = NULL;
+   }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get copy of custom attribute. Returned value must be freed by caller
+ */
+TCHAR *NetObj::getCustomAttributeCopy(const TCHAR *name) const
+{
+   lockProperties();
+   const TCHAR *value = m_customAttributes.get(name);
+   TCHAR *result = _tcsdup_ex(value);
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get custom attribute as NXSL value
+ */
+NXSL_Value *NetObj::getCustomAttributeForNXSL(const TCHAR *name) const
+{
+   NXSL_Value *value = NULL;
+   lockProperties();
+   const TCHAR *av = m_customAttributes.get(name);
+   if (av != NULL)
+      value = new NXSL_Value(av);
+   unlockProperties();
+   return value;
+}
+
+/**
  * Get all custom attributes as NXSL hash map
  */
 NXSL_Value *NetObj::getCustomAttributesForNXSL() const
