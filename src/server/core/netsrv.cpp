@@ -79,52 +79,59 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   // Form and execute INSERT or UPDATE query
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_id))
+   if (success && (m_modified & MODIFY_OTHER))
    {
-		hStmt = DBPrepare(hdb, _T("UPDATE network_services SET node_id=?,")
-                             _T("service_type=?,ip_bind_addr=?,")
-                             _T("ip_proto=?,ip_port=?,check_request=?,")
-                             _T("check_responce=?,poller_node_id=?,")
-		                       _T("required_polls=? WHERE id=?"));
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE network_services SET node_id=?,")
+                                _T("service_type=?,ip_bind_addr=?,")
+                                _T("ip_proto=?,ip_port=?,check_request=?,")
+                                _T("check_responce=?,poller_node_id=?,")
+                                _T("required_polls=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_services (node_id,")
+                                _T("service_type,ip_bind_addr,ip_proto,ip_port,")
+                                _T("check_request,check_responce,poller_node_id,")
+                                _T("required_polls,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
+      }
+      if (hStmt != NULL)
+      {
+         TCHAR szIpAddr[64];
+
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
+         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
+
+         success = DBExecute(hStmt);
+
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
    }
-   else
-   {
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_services (node_id,")
-                             _T("service_type,ip_bind_addr,ip_proto,ip_port,")
-                             _T("check_request,check_responce,poller_node_id,")
-		                       _T("required_polls,id) VALUES (?,?,?,?,?,?,?,?,?,?)"));
-   }
-	if (hStmt != NULL)
-	{
-	   TCHAR szIpAddr[64];
-
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->getId());
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
-		DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
-		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
-
-		DBExecute(hStmt);
-
-		DBFreeStatement(hStmt);
-	}
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
-   return true;
+   return success;
 }
 
 /**
@@ -407,7 +414,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 							(m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
 			lockProperties();
-			setModified();
+			setModified(MODIFY_RUNTIME);
 			unlockProperties();
 		}
    }
@@ -424,7 +431,7 @@ void NetworkService::onObjectDelete(UINT32 dwObjectId)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
-      setModified();
+      setModified(MODIFY_OTHER);
       DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_name, dwObjectId);
    }
 	unlockProperties();

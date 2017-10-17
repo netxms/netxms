@@ -85,7 +85,7 @@ bool AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 
 	// Clear modifications flag and unlock object
 	if (success)
-		m_isModified = false;
+		m_modified = 0;
    unlockProperties();
 
    return success;

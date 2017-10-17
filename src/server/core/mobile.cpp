@@ -114,37 +114,39 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   bool bResult;
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
-		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
-	else
-		hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_deviceId), DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
-		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osName), DB_BIND_STATIC);
-		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
-		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
+   if (success && (m_modified & MODIFY_OTHER))
+   {
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
+         hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_deviceId), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osName), DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
-		bResult = DBExecute(hStmt);
+         success = DBExecute(hStmt);
 
-		DBFreeStatement(hStmt);
-	}
-	else
-	{
-		bResult = false;
-	}
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
 
    // Save data collection items
-   if (bResult)
+   if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
@@ -153,14 +155,15 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
-	if (bResult)
-		m_isModified = false;
+	if (success)
+		m_modified = 0;
    unlockProperties();
 
-   return bResult;
+   return success;
 }
 
 /**
@@ -209,25 +212,25 @@ void MobileDevice::updateSystemInfo(NXCPMessage *msg)
 
 	m_lastReportTime = time(NULL);
 
-	safe_free(m_vendor);
+	free(m_vendor);
 	m_vendor = msg->getFieldAsString(VID_VENDOR);
 
-	safe_free(m_model);
+	free(m_model);
 	m_model = msg->getFieldAsString(VID_MODEL);
 
-	safe_free(m_serialNumber);
+	free(m_serialNumber);
 	m_serialNumber = msg->getFieldAsString(VID_SERIAL_NUMBER);
 
-	safe_free(m_osName);
+	free(m_osName);
 	m_osName = msg->getFieldAsString(VID_OS_NAME);
 
-	safe_free(m_osVersion);
+	free(m_osVersion);
 	m_osVersion = msg->getFieldAsString(VID_OS_VERSION);
 
-	safe_free(m_userId);
+	free(m_userId);
 	m_userId = msg->getFieldAsString(VID_USER_NAME);
 
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -262,7 +265,7 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
 	          m_name, (int)m_id, m_batteryLevel, m_ipAddress.toString(temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -332,7 +335,7 @@ void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
    {
       lockProperties();
       m_status = STATUS_NORMAL;
-      setModified();
+      setModified(MODIFY_RUNTIME);
       unlockProperties();
    }
 }

@@ -22,6 +22,9 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_SYNC           _T("sync")
+#define DEBUG_TAG_OBJECT_SYNC    _T("obj.sync")
+
 /**
  * Externals
  */
@@ -59,38 +62,38 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
 
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
-   DbgPrintf(5, _T("Syncer: %d objects to process"), objects->size());
+   nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("%d objects to process"), objects->size());
 	for(int i = 0; i < objects->size(); i++)
    {
 	   WatchdogNotify(watchdogId);
    	NetObj *object = objects->get(i);
       if (object->isDeleted())
       {
-         DbgPrintf(5, _T("Syncer: object %s [%d] marked for deletion"), object->getName(), object->getId());
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] marked for deletion"), object->getName(), object->getId());
          if (object->getRefCount() == 0)
          {
    		   DBBegin(hdb);
             if (object->deleteFromDatabase(hdb))
             {
-               DbgPrintf(4, _T("Syncer: Object %d \"%s\" deleted from database"), object->getId(), object->getName());
+               nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
                DBCommit(hdb);
                NetObjDelete(object);
             }
             else
             {
                DBRollback(hdb);
-               DbgPrintf(4, _T("Syncer: Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
+               nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
             }
          }
          else
          {
-            DbgPrintf(3, _T("Syncer: Unable to delete object with id %d because it is being referenced %d time(s)"),
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 3, _T("Unable to delete object with id %d because it is being referenced %d time(s)"),
                       object->getId(), object->getRefCount());
          }
       }
 		else if (object->isModified())
 		{
-         DbgPrintf(5, _T("Syncer: object %s [%d] modified"), object->getName(), object->getId());
+		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified"), object->getName(), object->getId());
 		   DBBegin(hdb);
 			if (object->saveToDatabase(hdb))
 			{
@@ -110,7 +113,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
 	delete objects;
-   DbgPrintf(5, _T("Syncer: save objects completed"));
+	nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Save objects completed"));
 }
 
 /**
@@ -123,24 +126,28 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    int syncInterval = ConfigReadInt(_T("SyncInterval"), 60);
    UINT32 watchdogId = WatchdogAddThread(_T("Syncer Thread"), 30);
 
-   nxlog_debug(1, _T("Syncer thread started, sync_interval = %d"), syncInterval);
+   nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread started, sync_interval = %d"), syncInterval);
 
    // Main syncer loop
    WatchdogStartSleep(watchdogId);
    while(!SleepAndCheckForShutdown(syncInterval))
    {
       WatchdogNotify(watchdogId);
+      nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer wakeup"));
       if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          SaveObjects(hdb, watchdogId, false);
+         nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Saving user database"));
          SaveUsers(hdb, watchdogId);
+         nxlog_debug_tag(DEBUG_TAG_SYNC, 5, _T("Saving NXSL persistent storage"));
          UpdatePStorageDatabase(hdb, watchdogId);
          DBConnectionPoolReleaseConnection(hdb);
       }
       WatchdogStartSleep(watchdogId);
+      nxlog_debug_tag(DEBUG_TAG_SYNC, 7, _T("Syncer run completed"));
    }
 
-   DbgPrintf(1, _T("Syncer thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG_SYNC, 1, _T("Syncer thread terminated"));
    return THREAD_OK;
 }

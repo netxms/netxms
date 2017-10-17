@@ -387,7 +387,7 @@ void Chassis::setBindUnderController(bool doBind)
       m_flags |= CHF_BIND_UNDER_CONTROLLER;
    else
       m_flags &= ~CHF_BIND_UNDER_CONTROLLER;
-   setModified(false);
+   setModified(MODIFY_COMMON_PROPERTIES, false);
    unlockProperties();
    updateControllerBinding();
 }

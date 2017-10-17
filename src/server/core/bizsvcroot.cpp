@@ -67,7 +67,7 @@ bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 
    // Unlock object and clear modification flag
    unlockProperties();
-   m_isModified = false;
+   m_modified = 0;
    return true;
 }
 

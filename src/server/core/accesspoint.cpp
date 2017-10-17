@@ -140,34 +140,41 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    saveCommonProperties(hdb);
 
    bool bResult;
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_id))
-		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=?,ap_index=? WHERE id=?"));
-	else
-		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
-	if (hStmt != NULL)
-	{
-		TCHAR macStr[16];
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, macStr), DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_state);
-		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+   if (m_modified & MODIFY_OTHER)
+   {
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_id))
+         hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=?,ap_index=? WHERE id=?"));
+      else
+         hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
+      if (hStmt != NULL)
+      {
+         TCHAR macStr[16];
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, macStr), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
-		bResult = DBExecute(hStmt);
+         bResult = DBExecute(hStmt);
 
-		DBFreeStatement(hStmt);
-	}
-	else
-	{
-		bResult = false;
-	}
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
+      }
+   }
+   else
+   {
+      bResult = true;
+   }
 
    // Save data collection items
-   if (bResult)
+   if (bResult && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
@@ -180,7 +187,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (bResult)
-		m_isModified = false;
+		m_modified = 0;
    unlockProperties();
 
    return bResult;
@@ -269,7 +276,7 @@ void AccessPoint::attachToNode(UINT32 nodeId)
 
 	lockProperties();
 	m_nodeId = nodeId;
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -380,7 +387,7 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 	free(m_serialNumber);
 	m_serialNumber = (serialNumber != NULL) ? _tcsdup(serialNumber) : NULL;
 
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -414,7 +421,7 @@ void AccessPoint::updateState(AccessPointState state)
             break;
       }
    }
-   setModified();
+   setModified(MODIFY_OTHER);
 	unlockProperties();
 
    if ((state == AP_ADOPTED) || (state == AP_UNADOPTED) || (state == AP_DOWN))

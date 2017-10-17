@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,13 +45,14 @@ bool Network::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
-   saveCommonProperties(hdb);
-   saveACLToDB(hdb);
+   bool success = saveCommonProperties(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
-   return true;
+   return success;
 }
 
 /**

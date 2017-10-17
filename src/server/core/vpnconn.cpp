@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,53 +133,57 @@ bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   // Determine owning node's ID
-   Node *pNode = getParentNode();
-   UINT32 dwNodeId = (pNode != NULL) ? pNode->getId() : 0;
-
-   // Form and execute INSERT or UPDATE query
-   TCHAR szQuery[1024];
-   if (IsDatabaseRecordExist(hdb, _T("vpn_connectors"), _T("id"), m_id))
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE vpn_connectors SET node_id=%d,peer_gateway=%d WHERE id=%d"),
-              dwNodeId, m_dwPeerGateway, m_id);
-   else
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
-              m_id, dwNodeId, m_dwPeerGateway);
-   DBQuery(hdb, szQuery);
-
-   // Save network list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
-   DBQuery(hdb, szQuery);
-
-   int i;
-   TCHAR buffer[64];
-   for(i = 0; i < m_localNetworks->size(); i++)
+   if (success && (m_modified & MODIFY_OTHER))
    {
-      InetAddress *addr = m_localNetworks->get(i);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s',%d)"),
-                 (int)m_id, addr->toString(buffer), addr->getMaskBits());
-      DBQuery(hdb, szQuery);
-   }
-   for(i = 0; i < m_remoteNetworks->size(); i++)
-   {
-      InetAddress *addr = m_remoteNetworks->get(i);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-			        _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s',%d)"),
-                 (int)m_id, addr->toString(buffer), addr->getMaskBits());
-      DBQuery(hdb, szQuery);
+      // Determine owning node's ID
+      Node *pNode = getParentNode();
+      UINT32 dwNodeId = (pNode != NULL) ? pNode->getId() : 0;
+
+      // Form and execute INSERT or UPDATE query
+      TCHAR szQuery[1024];
+      if (IsDatabaseRecordExist(hdb, _T("vpn_connectors"), _T("id"), m_id))
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE vpn_connectors SET node_id=%d,peer_gateway=%d WHERE id=%d"),
+                 dwNodeId, m_dwPeerGateway, m_id);
+      else
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
+                 m_id, dwNodeId, m_dwPeerGateway);
+      success = DBQuery(hdb, szQuery);
+
+      // Save network list
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM vpn_connector_networks WHERE vpn_id=?"));
+
+      int i;
+      TCHAR buffer[64];
+      for(i = 0; success && (i < m_localNetworks->size()); i++)
+      {
+         InetAddress *addr = m_localNetworks->get(i);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+                    _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s',%d)"),
+                    (int)m_id, addr->toString(buffer), addr->getMaskBits());
+         success = DBQuery(hdb, szQuery);
+      }
+      for(i = 0; success && (i < m_remoteNetworks->size()); i++)
+      {
+         InetAddress *addr = m_remoteNetworks->get(i);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+                    _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s',%d)"),
+                    (int)m_id, addr->toString(buffer), addr->getMaskBits());
+         success = DBQuery(hdb, szQuery);
+      }
    }
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
 
-   return true;
+   return success;
 }
 
 /**

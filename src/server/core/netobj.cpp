@@ -57,7 +57,7 @@ NetObj::NetObj()
    m_status = STATUS_UNKNOWN;
    m_name[0] = 0;
    m_comments = NULL;
-   m_isModified = false;
+   m_modified = 0;
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
@@ -172,10 +172,17 @@ static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key,
  */
 bool NetObj::saveRuntimeData(DB_HANDLE hdb)
 {
-   bool success = true;
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
+   if (hStmt == NULL)
+      return false;
 
-   // Delete module data
-   if (m_moduleData != NULL)
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_status);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+
+   // Save module data
+   if (success && (m_moduleData != NULL))
    {
       ModuleDataDatabaseCallbackParams data;
       data.id = m_id;
@@ -448,6 +455,9 @@ static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const 
  */
 bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
+   if (!(m_modified & MODIFY_COMMON_PROPERTIES))
+      return true;
+
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_id))
 	{
@@ -621,7 +631,7 @@ void NetObj::addChild(NetObj *object)
    m_childList->add(object);
    unlockChildList();
 	incRefCount();
-   setModified();
+   setModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
@@ -639,7 +649,7 @@ void NetObj::addParent(NetObj *object)
    m_parentList->add(object);
    unlockParentList();
 	incRefCount();
-   setModified();
+   setModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
@@ -665,7 +675,7 @@ void NetObj::deleteChild(NetObj *object)
    m_childList->remove(i);
    unlockChildList();
 	decRefCount();
-   setModified();
+   setModified(MODIFY_RELATIONS);
 }
 
 /**
@@ -690,7 +700,7 @@ void NetObj::deleteParent(NetObj *object)
    m_parentList->remove(i);
    unlockParentList();
 	decRefCount();
-   setModified();
+   setModified(MODIFY_RELATIONS);
 }
 
 /**
@@ -789,7 +799,7 @@ void NetObj::deleteObject(NetObj *initiator)
    lockProperties();
    m_isHidden = false;
    m_isDeleted = true;
-   setModified();
+   setModified(MODIFY_ALL);
    unlockProperties();
 
    // Notify all other objects about object deletion
@@ -985,7 +995,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          m_parentList->get(i)->calculateCompoundStatus();
       unlockParentList();
       lockProperties();
-      setModified();
+      setModified(MODIFY_RUNTIME);  // only notify clients
       unlockProperties();
    }
 }
@@ -1041,6 +1051,9 @@ static void EnumerationHandler(UINT32 dwUserId, UINT32 dwAccessRights, void *pAr
  */
 bool NetObj::saveACLToDB(DB_HANDLE hdb)
 {
+   if (!(m_modified & MODIFY_ACCESS_LIST))
+      return true;
+
    TCHAR szQuery[256];
    bool success = false;
    SAVE_PARAM sp;
@@ -1210,12 +1223,12 @@ static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
  * Mark object as modified and put on client's notification queue
  * We assume that object is locked at the time of function call
  */
-void NetObj::setModified(bool notify)
+void NetObj::setModified(UINT32 flags, bool notify)
 {
    if (g_bModificationsLocked)
       return;
 
-   m_isModified = true;
+   m_modified |= flags;
    m_timestamp = time(NULL);
 
    // Send event to all connected clients
@@ -1230,7 +1243,7 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
 {
    lockProperties();
    UINT32 rcc = modifyFromMessageInternal(msg);
-   setModified();
+   setModified(MODIFY_ALL);
    unlockProperties();
    return rcc;
 }
@@ -1438,7 +1451,7 @@ void NetObj::dropUserAccess(UINT32 dwUserId)
    if (modified)
    {
       lockProperties();
-      setModified();
+      setModified(MODIFY_ACCESS_LIST);
       unlockProperties();
    }
 }
@@ -1466,7 +1479,7 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    if (getObjectClass() == OBJECT_NODE)
       PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
 
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 
    // Change status for child objects also
@@ -1711,7 +1724,7 @@ void NetObj::setComments(TCHAR *text)
    lockProperties();
    free(m_comments);
    m_comments = text;
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 
@@ -2150,7 +2163,7 @@ void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int 
       default:
          break;
    }
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 
@@ -2178,7 +2191,21 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
       default:
          break;
    }
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set geographical location
+ */
+void NetObj::setGeoLocation(const GeoLocation& geoLocation)
+{
+   lockProperties();
+   if (!m_geoLocation.equals(geoLocation))
+   {
+      m_geoLocation = geoLocation;
+      setModified(MODIFY_COMMON_PROPERTIES);
+   }
    unlockProperties();
 }
 
@@ -2226,7 +2253,7 @@ void NetObj::setCustomAttribute(const TCHAR *name, const TCHAR *value)
    if ((curr == NULL) || _tcscmp(curr, value))
    {
       m_customAttributes.set(name, value);
-      setModified();
+      setModified(MODIFY_CUSTOM_ATTRIBUTES);
    }
    unlockProperties();
 }
@@ -2241,7 +2268,7 @@ void NetObj::setCustomAttributePV(const TCHAR *name, TCHAR *value)
    if ((curr == NULL) || _tcscmp(curr, value))
    {
       m_customAttributes.setPreallocated(_tcsdup(name), value);
-      setModified();
+      setModified(MODIFY_CUSTOM_ATTRIBUTES);
    }
    else
    {
@@ -2259,7 +2286,7 @@ void NetObj::deleteCustomAttribute(const TCHAR *name)
    if (m_customAttributes.contains(name))
    {
       m_customAttributes.remove(name);
-      setModified();
+      setModified(MODIFY_CUSTOM_ATTRIBUTES);
    }
    unlockProperties();
 }
@@ -2356,9 +2383,6 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "statusTranslation", json_integer_array(m_statusTranslation, 4));
    json_object_set_new(root, "statusSingleThreshold", json_integer(m_statusSingleThreshold));
    json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
-   json_object_set_new(root, "isModified", json_boolean(m_isModified));
-   json_object_set_new(root, "isDeleted", json_boolean(m_isDeleted));
-   json_object_set_new(root, "isHidden", json_boolean(m_isHidden));
    json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
    json_object_set_new(root, "maintenanceMode", json_boolean(m_maintenanceMode));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));

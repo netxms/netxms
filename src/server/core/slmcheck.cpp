@@ -102,11 +102,9 @@ SlmCheck::~SlmCheck()
 	delete m_pCompiledScript;
 }
 
-
-//
-// Update this check from a check template
-//
-
+/**
+ * Update this check from a check template
+ */
 void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 {
 	lockProperties();
@@ -114,10 +112,10 @@ void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 	DbgPrintf(4, _T("Updating service check %s [%d] from service check template template %s [%d]"), m_name, m_id, tmpl->getName(), tmpl->getId());
 
 	delete m_threshold;
-	safe_free(m_script);
+	free(m_script);
 	delete m_pCompiledScript;
 
-	nx_strncpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
+	_tcslcpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
 	m_type = tmpl->m_type;
 	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
 	m_threshold = NULL;
@@ -127,7 +125,7 @@ void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 
 	tmpl->unlockProperties();
 
-	setModified();
+	setModified(MODIFY_COMMON_PROPERTIES | MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -211,43 +209,48 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
 {
-	bool ret = false;
-
 	lockProperties();
 
-	saveCommonProperties(hdb);
+	bool success = saveCommonProperties(hdb);
 
-	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("slm_checks"), _T("id"), m_id))
+	if (success && (m_modified & MODIFY_OTHER))
 	{
-	   hStmt = DBPrepare(hdb, _T("UPDATE slm_checks SET type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("slm_checks"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE slm_checks SET type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO slm_checks (type,content,threshold_id,reason,is_template,template_id,current_ticket,id) VALUES (?,?,?,?,?,?,?,?)"));
+      }
+
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_type);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_templateId);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_currentTicketId);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
 	}
-	else
-	{
-      hStmt = DBPrepare(hdb, _T("INSERT INTO slm_checks (type,content,threshold_id,reason,is_template,template_id,current_ticket,id) VALUES (?,?,?,?,?,?,?,?)"));
-	}
 
-	if (hStmt != NULL)
-	{
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_type);
-      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_templateId);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_currentTicketId);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+   if (success)
+      success = saveACLToDB(hdb);
 
-      ret = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-
-      if (ret)
-         ret = saveACLToDB(hdb);
-	}
-
-   m_isModified = false;
+   m_modified = 0;
 	unlockProperties();
-	return ret;
+	return success;
 }
 
 /**
@@ -329,7 +332,7 @@ void SlmCheck::setScript(const TCHAR *script)
 {
 	if (script != NULL)
 	{
-		safe_free(m_script);
+		free(m_script);
 		delete m_pCompiledScript;
 		m_script = _tcsdup(script);
 		if (m_script != NULL)
@@ -350,7 +353,7 @@ void SlmCheck::setScript(const TCHAR *script)
 		delete_and_null(m_pCompiledScript);
 		safe_free_and_null(m_script);
 	}
-	setModified();
+	setModified(MODIFY_OTHER);
 }
 
 /**
@@ -413,7 +416,7 @@ void SlmCheck::execute()
 			insertTicket();
 		else
 			closeTicket();
-		setModified();
+		setModified(MODIFY_COMMON_PROPERTIES);
 	}
 	unlockProperties();
 }

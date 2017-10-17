@@ -74,30 +74,38 @@ void UniversalRoot::linkObjects()
  */
 bool UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024];
-
    lockProperties();
 
-   saveCommonProperties(hdb);
-
-   // Update members list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
-   DBQuery(hdb, szQuery);
-   lockChildList(FALSE);
-   for(int i = 0; i < m_childList->size(); i++)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-      DBQuery(hdb, szQuery);
-   }
-   unlockChildList();
+   bool success = saveCommonProperties(hdb);
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
+
+   unlockProperties();
+
+   // Update members list
+   if (success && (m_modified & MODIFY_RELATIONS))
+   {
+      TCHAR szQuery[1024];
+
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
+      DBQuery(hdb, szQuery);
+      lockChildList(FALSE);
+      for(int i = 0; success && (i < m_childList->size()); i++)
+      {
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+         success = DBQuery(hdb, szQuery);
+      }
+      unlockChildList();
+   }
 
    // Unlock object and clear modification flag
+   lockProperties();
+   m_modified = 0;
    unlockProperties();
-   m_isModified = false;
-   return true;
+
+   return success;
 }
 
 /**

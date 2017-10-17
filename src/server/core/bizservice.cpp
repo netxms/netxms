@@ -135,7 +135,7 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
 	saveACLToDB(hdb);
 
 	lockProperties();
-	m_isModified = false;
+	m_modified = 0;
 	unlockProperties();
 
 	return ServiceContainer::saveToDatabase(hdb);
