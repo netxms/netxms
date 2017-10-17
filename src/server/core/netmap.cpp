@@ -235,121 +235,139 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[1024];
-
 	lockProperties();
 
-	if (!saveCommonProperties(hdb))
-		goto fail;
-
-	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
-	{
-		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
-	}
-	else
-	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
-	if (hStmt == NULL)
-		goto fail;
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_discoveryRadius);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_background);
-	DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
-	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
-
-	if (!DBExecute(hStmt))
-	{
-		DBFreeStatement(hStmt);
-		goto fail;
-	}
-	DBFreeStatement(hStmt);
-
-	if (!saveACLToDB(hdb))
-		goto fail;
-
-   // Save elements
-   _sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_id);
-   if (!DBQuery(hdb, query))
-		goto fail;
-	for(int i = 0; i < m_elements->size(); i++)
+	bool success = saveCommonProperties(hdb);
+   if (success)
    {
-		NetworkMapElement *e = m_elements->get(i);
-		Config *config = new Config();
-		config->setTopLevelTag(_T("element"));
-		e->updateConfig(config);
-		String data = DBPrepareString(hdb, config->createXml());
-		delete config;
-		size_t len = data.length() + 256;
-		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
-      _sntprintf(eq, len, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (%d,%d,%d,%s,%d)"),
-		           m_id, e->getId(), e->getType(), (const TCHAR *)data, e->getFlags());
-      DBQuery(hdb, eq);
-		free(eq);
-   }
-
-	// Save links
-   _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_id);
-   if (!DBQuery(hdb, query))
-		goto fail;
-	hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
-	if (hStmt == NULL)
-		goto fail;
-	for(int i = 0; i < m_links->size(); i++)
-   {
-		NetworkMapLink *l = m_links->get(i);
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getElement1());
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement2());
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)l->getType());
-		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
-		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
-		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
-		DBExecute(hStmt);
-   }
-	DBFreeStatement(hStmt);
-
-	// Save seed nodes
-   if (executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?")))
-   {
-      if (m_seedObjects->size() > 0)
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
-         if (hStmt != NULL)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; i < m_seedObjects->size(); i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_seedObjects->get(i));
-               if (!DBExecute(hStmt))
-               {
-                  DBFreeStatement(hStmt);
-                  goto fail;
-               }
-            }
-            DBFreeStatement(hStmt);
-         }
+         hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,radius,background,bg_latitude,bg_longitude,bg_zoom,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+      }
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)m_discoveryRadius);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_background);
+         DBBind(hStmt, 5, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
+         DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
+         DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
+         DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
+         DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_id);
+
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
 
-	unlockProperties();
-	return true;
+   if (success)
+	   success = saveACLToDB(hdb);
 
-fail:
+   // Save elements
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_elements WHERE map_id=?"));
+
+   if (success && (m_elements->size() > 0))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (?,?,?,?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; success && (i < m_elements->size()); i++)
+         {
+            NetworkMapElement *e = m_elements->get(i);
+            Config *config = new Config();
+            config->setTopLevelTag(_T("element"));
+            e->updateConfig(config);
+
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getId());
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->getType());
+            DBBind(hStmt, 4, DB_SQLTYPE_TEXT, config->createXml(), DB_BIND_TRANSIENT);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, e->getFlags());
+            
+            success = DBExecute(hStmt);
+            delete config;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+	// Save links
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_links WHERE map_id=?"));
+
+   if (success && (m_links->size() > 0))
+   {
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
+   	if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; success && (i < m_links->size()); i++)
+         {
+            NetworkMapLink *l = m_links->get(i);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getElement1());
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement2());
+            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)l->getType());
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
+            DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
+            DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
+            DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
+            DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+	// Save seed nodes
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM network_map_seed_nodes WHERE map_id=?"));
+
+   if (success && (m_seedObjects->size() > 0))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; success && (i < m_seedObjects->size()); i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_seedObjects->get(i));
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   m_isModified = false;
+
 	unlockProperties();
-	return false;
+	return success;
 }
 
 /**
@@ -662,42 +680,45 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 void NetworkMap::updateContent()
 {
    nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): map type %d"), m_name, m_id, m_mapType);
-   NetworkMapObjectList objects;
-   for(int i = 0; i < m_seedObjects->size(); i++)
+   if (m_mapType != MAP_TYPE_CUSTOM)
    {
-      Node *seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
-      if (seed != NULL)
+      NetworkMapObjectList objects;
+      for(int i = 0; i < m_seedObjects->size(); i++)
       {
-         UINT32 status;
-         NetworkMapObjectList *topology;
-         switch(m_mapType)
+         Node *seed = (Node *)FindObjectById(m_seedObjects->get(i), OBJECT_NODE);
+         if (seed != NULL)
          {
-            case MAP_TYPE_LAYER2_TOPOLOGY:
-               topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               break;
-            case MAP_TYPE_IP_TOPOLOGY:
-               topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
-               break;
-            default:
-               topology = NULL;
-               break;
-         }
-         if (topology != NULL)
-         {
-            objects.merge(topology);
-            delete topology;
+            UINT32 status;
+            NetworkMapObjectList *topology;
+            switch(m_mapType)
+            {
+               case MAP_TYPE_LAYER2_TOPOLOGY:
+                  topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+                  break;
+               case MAP_TYPE_IP_TOPOLOGY:
+                  topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
+                  break;
+               default:
+                  topology = NULL;
+                  break;
+            }
+            if (topology != NULL)
+            {
+               objects.merge(topology);
+               delete topology;
+            }
+            else
+            {
+               nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): cannot get topology information for node %s [%d]"), m_name, m_id, seed->getName(), seed->getId());
+            }
          }
          else
          {
-            nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): cannot get topology information for node %s [%d]"), m_name, m_id, seed->getName(), seed->getId());
+            nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
          }
       }
-      else
-      {
-         nxlog_debug(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObjects->get(i));
-      }
+      updateObjects(&objects);
    }
-   updateObjects(&objects);
    nxlog_debug(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
 }
 
