@@ -66,7 +66,7 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
       return false;
 
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id))
+   if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id))
       hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,version,id) VALUES (?,?,?)"));
    else
       hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_type=?,version=? WHERE id=?"));
