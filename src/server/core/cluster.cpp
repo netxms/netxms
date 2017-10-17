@@ -228,7 +228,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
    }
    unlockProperties();
 
-   if (success)
+   if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		lockDciAccess(false);
       for(int i = 0; (i < m_dcObjects->size()) && success; i++)
@@ -357,7 +357,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 
    // Clear modifications flag
    lockProperties();
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
    return success;
 }
@@ -582,8 +582,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
       return;
    }
 
-	BOOL bModified = FALSE, bAllDown;
-	BYTE *pbResourceFound;
+   UINT32 modified = 0;
 
    // Create polling list
 	ObjectArray<DataCollectionTarget> pollList(m_childList->size(), 16, false);
@@ -605,15 +604,16 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling member nodes\r\n"), m_name);
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
-	for(i = 0, bAllDown = TRUE; i < pollList.size(); i++)
+	bool allDown = true;
+	for(i = 0; i < pollList.size(); i++)
 	{
 	   DataCollectionTarget *object = pollList.get(i);
 		object->statusPollPollerEntry(poller, pSession, dwRqId);
 		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
-			bAllDown = FALSE;
+			allDown = false;
 	}
 
-	if (bAllDown)
+	if (allDown)
 	{
 		if (!(m_state & CLSF_DOWN))
 		{
@@ -631,10 +631,9 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	}
 
 	// Check for cluster resource movement
-	if (!bAllDown)
+	if (!allDown)
 	{
-		pbResourceFound = (BYTE *)malloc(m_dwNumResources);
-		memset(pbResourceFound, 0, m_dwNumResources);
+		BYTE *resourceFound = (BYTE *)calloc(m_dwNumResources, 1);
 
       poller->setStatus(_T("resource poll"));
 	   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling resources\r\n"), m_name);
@@ -680,9 +679,9 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 												 node->getId(), node->getName());
 								}
 								m_pResourceList[k].dwCurrOwner = node->getId();
-								bModified = TRUE;
+								modified |= MODIFIED_CLUSTER_RESOURCES;
 							}
-							pbResourceFound[k] = 1;
+							resourceFound[k] = 1;
 						}
 					}
 				}
@@ -701,7 +700,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		lockProperties();
 		for(i = 0; i < (int)m_dwNumResources; i++)
 		{
-			if ((!pbResourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
+			if ((!resourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
 			{
 				NetObj *pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
 				PostEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
@@ -709,13 +708,12 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 							 m_pResourceList[i].dwCurrOwner,
 							 (pObject != NULL) ? pObject->getName() : _T("<unknown>"));
 				m_pResourceList[i].dwCurrOwner = 0;
-				bModified = TRUE;
+            modified |= MODIFIED_CLUSTER_RESOURCES;
 			}
 		}
 		unlockProperties();
-		free(pbResourceFound);
+		free(resourceFound);
 	}
-
 
    // Execute hook script
    poller->setStatus(_T("hook"));
@@ -731,8 +729,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	}
 
 	lockProperties();
-	if (bModified)
-		setModified();
+	if (modified != 0)
+		setModified(modified);
 	m_lastStatusPoll = time(NULL);
 	m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();

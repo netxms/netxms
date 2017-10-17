@@ -101,48 +101,45 @@ bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool NodeLink::saveToDatabase(DB_HANDLE hdb)
 {
-	BOOL bNewObject = TRUE;
+   if (m_modified & MODIFY_OTHER)
+   {
+      BOOL bNewObject = TRUE;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT nodelink_id FROM node_links WHERE nodelink_id=?"));
-	if (hStmt == NULL)
-	{
-		DbgPrintf(4, _T("Cannot prepare select from node_links"));
-		return false;
-	}
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT nodelink_id FROM node_links WHERE nodelink_id=?"));
+      if (hStmt == NULL)
+      {
+         DbgPrintf(4, _T("Cannot prepare select from node_links"));
+         return false;
+      }
 
-	lockProperties();
+      lockProperties();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	DB_RESULT hResult = DBSelectPrepared(hStmt);
-	if (hResult != NULL)
-	{
-		bNewObject = (DBGetNumRows(hResult) <= 0);
-		DBFreeResult(hResult);
-	}
-	DBFreeStatement(hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         bNewObject = (DBGetNumRows(hResult) <= 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
-											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
-	if (hStmt == NULL)
-	{
-		unlockProperties();
-		return false;
-	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-	unlockProperties();
-	if (!DBExecute(hStmt))
-	{
-		DBFreeStatement(hStmt);
-		return false;
-	}
-	DBFreeStatement(hStmt);
-
-	saveACLToDB(hdb);
-
-	lockProperties();
-	m_isModified = false;
-	unlockProperties();
+      hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
+                                      _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
+      if (hStmt == NULL)
+      {
+         unlockProperties();
+         return false;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      unlockProperties();
+      if (!DBExecute(hStmt))
+      {
+         DBFreeStatement(hStmt);
+         return false;
+      }
+      DBFreeStatement(hStmt);
+   }
 	return ServiceContainer::saveToDatabase(hdb);
 }
 

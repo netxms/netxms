@@ -96,38 +96,45 @@ bool Subnet::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   // Form and execute INSERT or UPDATE query
-   if (IsDatabaseRecordExist(hdb, _T("subnets"), _T("id"), m_id))
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask=%d,zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
-                 m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0, m_id);
-   else
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s',%d,%d,%d)"),
-                 m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0);
-   DBQuery(hdb, szQuery);
+   if (success && (m_modified & MODIFY_OTHER))
+   {
+      // Form and execute INSERT or UPDATE query
+      if (IsDatabaseRecordExist(hdb, _T("subnets"), _T("id"), m_id))
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+                    _T("UPDATE subnets SET ip_addr='%s',ip_netmask=%d,zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
+                    m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0, m_id);
+      else
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
+                    _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s',%d,%d,%d)"),
+                    m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneUIN, m_bSyntheticMask ? 1 : 0);
+      success = DBQuery(hdb, szQuery);
+   }
 
    // Update node to subnet mapping
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
-   DBQuery(hdb, szQuery);
-   lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   if (success && (m_modified & MODIFY_RELATIONS))
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
       DBQuery(hdb, szQuery);
+      lockChildList(false);
+      for(int i = 0; success && (i < m_childList->size()); i++)
+      {
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+         success = DBQuery(hdb, szQuery);
+      }
+      unlockChildList();
    }
-   unlockChildList();
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    // Clear modifications flag and unlock object
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
 
-   return true;
+   return success;
 }
 
 /**
@@ -184,7 +191,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
    {
       g_idxSubnetByAddr.put(m_ipAddress, this);
    }
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 

@@ -490,134 +490,134 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   if (!saveCommonProperties(hdb))
-   {
-      unlockProperties();
-      return false;
-   }
+   bool success = saveCommonProperties(hdb);
 
-   // Form and execute INSERT or UPDATE query
-   int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
-   DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_id))
+   if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {
-      hStmt = DBPrepare(hdb,
-         _T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,capabilities=?,snmp_version=?,community=?,")
-         _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
-         _T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
-         _T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-         _T("down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
-         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
-         _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
-         _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
-         _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=? WHERE id=?"));
-   }
-   else
-   {
-      hStmt = DBPrepare(hdb,
-        _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,capabilities,snmp_version,community,status_poll_type,")
-        _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
-        _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-        _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
-        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-        _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
-        _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,id) ")
-        _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-   }
-   if (hStmt == NULL)
-   {
-      unlockProperties();
-      return false;
-   }
+      int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb,
+            _T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,capabilities=?,snmp_version=?,community=?,")
+            _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
+            _T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
+            _T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
+            _T("down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
+            _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
+            _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
+            _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
+            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb,
+           _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,capabilities,snmp_version,community,status_poll_type,")
+           _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
+           _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
+           _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
+           _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
+           _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
+           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,id) ")
+           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+      }
+      if (hStmt != NULL)
+      {
+         TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16];
 
-   TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16];
-
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
 #ifdef UNICODE
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getCommunity()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getCommunity()), DB_BIND_DYNAMIC);
 #else
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
 #endif
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPollType);
-   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_agentPort);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_agentAuthMethod);
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_szSharedSecret, DB_BIND_STATIC);
-   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_snmpObjectId, DB_BIND_STATIC);
-   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
-   DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_agentVersion, DB_BIND_STATIC);
-   DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_platformName, DB_BIND_STATIC);
-   DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_pollerNode);
-   DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneUIN);
-   DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
-   DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
-   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
-   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-   DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPollType);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_agentPort);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_agentAuthMethod);
+         DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_szSharedSecret, DB_BIND_STATIC);
+         DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_snmpObjectId, DB_BIND_STATIC);
+         DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
+         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_agentVersion, DB_BIND_STATIC);
+         DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_platformName, DB_BIND_STATIC);
+         DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_pollerNode);
+         DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneUIN);
+         DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
+         DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
+         DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+         DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
 #ifdef UNICODE
-   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
 #else
-   DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
-   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
+         DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
+         DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
 #endif
-   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
-   DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
-   DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
-   DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
-   DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
-   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_rackImage);   // rack image
-   DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
-   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
-   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackId);   // rack ID
-   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
-   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
-   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
-   DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
-   DBBind(hStmt, 38, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
-   DBBind(hStmt, 39, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
-   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, (INT32)m_type);
-   DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
-   DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
-   DBBind(hStmt, 43, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
-   DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
-   DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_chassisId);
-   DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portRowCount);
-   DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
-   DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
-   DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_tunnelId);
-   DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
-   DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
-   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-   DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
+         DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
+         DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
+         DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_rackImage);   // rack image
+         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
+         DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackId);   // rack ID
+         DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
+         DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
+         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
+         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
+         DBBind(hStmt, 38, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
+         DBBind(hStmt, 39, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
+         DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, (INT32)m_type);
+         DBBind(hStmt, 41, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
+         DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
+         DBBind(hStmt, 43, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
+         DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
+         DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_chassisId);
+         DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portRowCount);
+         DBBind(hStmt, 47, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
+         DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_tunnelId);
+         DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
+         DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
+         DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
+         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_id);
 
-   bool bResult = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
    unlockProperties();
 
    // Save data collection items
-   if (bResult)
+   if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
       lockDciAccess(false);
-      for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDatabase(hdb);
+      for(int i = 0; success && (i < m_dcObjects->size()); i++)
+         success = m_dcObjects->get(i)->saveToDatabase(hdb);
       unlockDciAccess();
    }
 
    // Clear modifications flag
    lockProperties();
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
 
-   return bResult;
+   return success;
 }
 
 /**
@@ -1781,10 +1781,7 @@ restart_agent_check:
          if (loc.getType() != GL_UNSET)
          {
             DbgPrintf(5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
-            lockProperties();
-            m_geoLocation = loc;
-            setModified();
-            unlockProperties();
+            setGeoLocation(loc);
          }
       }
       else
@@ -1850,13 +1847,13 @@ restart_agent_check:
    if (pPollerNode != NULL)
       pPollerNode->decRefCount();
 
-   if (oldCapabilities != m_capabilities) //currectly not flags but capabilities
+   if (oldCapabilities != m_capabilities)
       PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
 
    if (oldState != m_state || oldCapabilities != m_capabilities)
    {
       lockProperties();
-      setModified();
+      setModified(MODIFY_NODE_PROPERTIES);
       unlockProperties();
    }
 
@@ -2238,7 +2235,7 @@ void Node::updatePrimaryIpAddr()
       {
          lockProperties();
          m_ipAddress = ipAddr;
-         setModified();
+         setModified(MODIFY_NODE_PROPERTIES);
          unlockProperties();
       }
       else
@@ -2355,9 +2352,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    if (IsShutdownInProgress())
       return;
 
-   UINT32 dwOldFlags = m_capabilities;
+   UINT32 oldCapabilities = m_capabilities;
    TCHAR szBuffer[4096];
-   bool hasChanges = false;
+   UINT32 modified = 0;
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
@@ -2403,9 +2400,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       sendPollerMsg(rqId, _T("Checking node's capabilities...\r\n"));
 
       if (confPollAgent(rqId))
-         hasChanges = true;
+         modified |= MODIFY_NODE_PROPERTIES;
       if (confPollSnmp(rqId))
-         hasChanges = true;
+         modified |= MODIFY_NODE_PROPERTIES;
 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
@@ -2429,10 +2426,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
 
       // Generate event if node flags has been changed
-      if (dwOldFlags != m_capabilities)
+      if (oldCapabilities != m_capabilities)
       {
-         PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", dwOldFlags, m_capabilities);
-         hasChanges = true;
+         PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+         modified |= MODIFY_NODE_PROPERTIES;
       }
 
       // Retrieve interface list
@@ -2440,7 +2437,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       sendPollerMsg(rqId, _T("Capability check finished\r\n"));
 
       if (updateInterfaceConfiguration(rqId, 0)) // maskBits
-         hasChanges = true;
+         modified |= MODIFY_NODE_PROPERTIES;
 
       m_lastConfigurationPoll = time(NULL);
 
@@ -2457,7 +2454,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          if (resolveName(FALSE))
          {
             sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-            hasChanges = true;
+            modified |= MODIFY_COMMON_PROPERTIES;
          }
          else
          {
@@ -2473,7 +2470,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             if (resolveName(TRUE))
             {
                sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-               hasChanges = true;
+               modified |= MODIFY_COMMON_PROPERTIES;
             }
          }
          else
@@ -2493,7 +2490,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          {
             DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
             if (g_pModuleList[i].pfConfPollHook(this, session, rqId, poller))
-               hasChanges = true;
+               modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
          }
       }
 
@@ -2512,7 +2509,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if ((type != NODE_TYPE_UNKNOWN) && (type != m_type))
       {
          m_type = type;
-         hasChanges = true;
+         modified |= MODIFY_NODE_PROPERTIES;
          nxlog_debug(5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
          sendPollerMsg(rqId, _T("   Node type changed to %s\r\n"), typeName(type));
       }
@@ -2523,7 +2520,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       executeHookScript(_T("ConfigurationPoll"));
 
       sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
-      sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
+      sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
       m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
    }
@@ -2536,10 +2533,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    pollerUnlock();
    DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
 
-   if (hasChanges)
+   if (modified != 0)
    {
       lockProperties();
-      setModified();
+      setModified(modified);
       unlockProperties();
    }
 }
@@ -2685,7 +2682,7 @@ bool Node::confPollAgent(UINT32 rqId)
          lockProperties();
          if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, buffer))
          {
-            safe_free(m_sysDescription);
+            free(m_sysDescription);
             m_sysDescription = _tcsdup(buffer);
             hasChanges = true;
             sendPollerMsg(rqId, _T("   System description changed to %s\r\n"), m_sysDescription);
@@ -2836,7 +2833,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    lockProperties();
    if (_tcscmp(m_snmpObjectId, szBuffer))
    {
-      nx_strncpy(m_snmpObjectId, szBuffer, MAX_OID_LEN * 4);
+      _tcslcpy(m_snmpObjectId, szBuffer, MAX_OID_LEN * 4);
       hasChanges = true;
    }
    unlockProperties();
@@ -4862,7 +4859,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       {
          lockProperties();
          m_ipAddress = ipAddr;
-         setModified();
+         setModified(MODIFY_NODE_PROPERTIES);
          unlockProperties();
       }
       else
@@ -5337,7 +5334,7 @@ void Node::onObjectDelete(UINT32 dwObjectId)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
-      setModified();
+      setModified(MODIFY_NODE_PROPERTIES);
       DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_name, dwObjectId);
    }
    unlockProperties();
@@ -5525,7 +5522,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       }
       unlockChildList();
 
-      setModified();
+      setModified(MODIFY_NODE_PROPERTIES);
    }
    unlockProperties();
 
@@ -5575,7 +5572,7 @@ void Node::changeZone(UINT32 newZone)
    unlockChildList();
 
    lockProperties();
-   setModified();
+   setModified(MODIFY_RELATIONS | MODIFY_NODE_PROPERTIES);
    unlockProperties();
 
    agentLock();
@@ -6373,13 +6370,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          MutexUnlock(m_mutexTopoAccess);
 
          lockProperties();
-         UINT32 oldFlags = m_flags;
+         UINT32 oldCaps = m_capabilities;
          if (vlanList != NULL)
             m_capabilities |= NC_HAS_VLANS;
          else
             m_capabilities &= ~NC_HAS_VLANS;
-         if (oldFlags != m_flags)
-            setModified();
+         if (oldCaps != m_capabilities)
+            setModified(MODIFY_NODE_PROPERTIES);
          unlockProperties();
       }
    }
@@ -7906,7 +7903,7 @@ void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
       nx_strncpy(m_sshLogin, login, MAX_SSH_LOGIN_LEN);
    if (password != NULL)
       nx_strncpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
-   setModified();
+   setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
 }
 
@@ -7944,7 +7941,7 @@ void Node::setTunnelId(const uuid& tunnelId)
 {
    lockProperties();
    m_tunnelId = tunnelId;
-   setModified(false);
+   setModified(MODIFY_NODE_PROPERTIES, false);
    unlockProperties();
 
    TCHAR buffer[128];

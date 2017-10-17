@@ -147,7 +147,7 @@ void Template::destroyItems()
 void Template::setAutoApplyFilter(const TCHAR *filter)
 {
 	lockProperties();
-	safe_free(m_applyFilterSource);
+	free(m_applyFilterSource);
 	delete m_applyFilter;
 	if (filter != NULL)
 	{
@@ -168,7 +168,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		m_applyFilterSource = NULL;
 		m_applyFilter = NULL;
 	}
-	setModified();
+	setModified(MODIFY_OTHER);
 	unlockProperties();
 }
 
@@ -270,63 +270,77 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
 
-   if (!saveCommonProperties(hdb))
-	{
-		unlockProperties();
-		return FALSE;
-	}
+   bool success = saveCommonProperties(hdb);
 
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
-	{
-		hStmt = DBPrepare(hdb, _T("UPDATE templates SET version=?,apply_filter=? WHERE id=?"));
-	}
-   else
-	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO templates (version,apply_filter,id) VALUES (?,?,?)"));
-	}
-	if (hStmt == NULL)
-	{
-		unlockProperties();
-		return FALSE;
-	}
+   if (success && (m_modified & MODIFY_OTHER))
+   {
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE templates SET version=?,apply_filter=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO templates (version,apply_filter,id) VALUES (?,?,?)"));
+      }
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwVersion);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_applyFilterSource, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwVersion);
-	DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_applyFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
-	BOOL success = DBExecute(hStmt);
-	DBFreeStatement(hStmt);
-
-	if (success)
-	{
-		TCHAR query[256];
-
-		// Update members list
-		_sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_id);
-		DBQuery(hdb, query);
-		lockChildList(false);
-		for(int i = 0; i < m_childList->size(); i++)
-		{
-			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-			DBQuery(hdb, query);
-		}
-		unlockChildList();
-
-		// Save access list
-		saveACLToDB(hdb);
-	}
+   // Save access list
+   if (success)
+      success = saveACLToDB(hdb);
 
    unlockProperties();
 
+	if (success && (m_modified & MODIFY_RELATIONS))
+	{
+		// Update members list
+		success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
+      lockChildList(false);
+		if (success && !m_childList->isEmpty())
+		{
+		   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"));
+		   if (hStmt != NULL)
+		   {
+		      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < m_childList->size()); i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+		   }
+		   else
+		   {
+		      success = false;
+		   }
+		}
+      unlockChildList();
+	}
+
    // Save data collection items
-	lockDciAccess(false);
-   for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->saveToDatabase(hdb);
-	unlockDciAccess();
+	if (success && (m_modified & MODIFY_DATA_COLLECTION))
+	{
+      lockDciAccess(false);
+      for(int i = 0; success && (i < m_dcObjects->size()); i++)
+         success = m_dcObjects->get(i)->saveToDatabase(hdb);
+      unlockDciAccess();
+	}
 
    // Clear modifications flag
 	lockProperties();
-   m_isModified = false;
+   m_modified = 0;
 	unlockProperties();
 
    return success;
@@ -426,7 +440,6 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
       object->clearBusyFlag();
-      m_isModified = true;
       success = true;
    }
 
@@ -436,7 +449,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 	if (success)
 	{
 		lockProperties();
-      setModified();
+      setModified(MODIFY_DATA_COLLECTION);
 		unlockProperties();
 	}
    return success;
@@ -482,7 +495,7 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 	if (success)
 	{
 	   lockProperties();
-	   setModified(false);
+	   setModified(MODIFY_DATA_COLLECTION, false);
 	   unlockProperties();
 	}
    return success;
@@ -555,12 +568,19 @@ bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNum
 				object->updateFromMessage(pMsg);
 			}
 			success = true;
-			m_isModified = true;
          break;
       }
 	}
 
    unlockDciAccess();
+
+   if (success)
+   {
+      lockProperties();
+      setModified(MODIFY_DATA_COLLECTION);
+      unlockProperties();
+   }
+
    return success;
 }
 
@@ -649,7 +669,7 @@ bool Template::unlockDCIList(int sessionId)
       {
          if (getObjectClass() == OBJECT_TEMPLATE)
             m_dwVersion++;
-         setModified();
+         setModified(MODIFY_OTHER | MODIFY_DATA_COLLECTION);
          callChangeHook = true;
       }
       m_dciListModified = false;

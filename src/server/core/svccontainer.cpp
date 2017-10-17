@@ -140,7 +140,9 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 		for(i = 0; i < m_parentList->size(); i++)
 			m_parentList->get(i)->calculateCompoundStatus();
 		unlockParentList();
-		setModified();   /* LOCK? */
+		lockProperties();
+		setModified(MODIFY_COMMON_PROPERTIES);
+		unlockProperties();
 	}
 
 	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_name, m_id, iOldStatus, m_status);
@@ -326,7 +328,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 
 	if ((prevUptimeDay != m_uptimeDay) || (prevUptimeWeek != m_uptimeWeek) || (prevUptimeMonth != m_uptimeMonth))
 	{
-		setModified();
+		setModified(MODIFY_OTHER);
 	}
 	unlockProperties();
 

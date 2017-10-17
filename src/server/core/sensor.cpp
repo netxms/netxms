@@ -265,7 +265,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 
    bool success = saveCommonProperties(hdb);
 
-   if(success)
+   if (success && (m_modified & MODIFY_SENSOR_PROPERTIES))
    {
       DB_STATEMENT hStmt;
       bool isNew = !(IsDatabaseRecordExist(hdb, _T("sensors"), _T("id"), m_id));
@@ -291,7 +291,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_frequency);
          DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_proxyNodeId);
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_id);
-         if(isNew)
+         if (isNew)
             DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmlRegConfig, DB_BIND_STATIC);
 
          success = DBExecute(hStmt);
@@ -305,7 +305,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 	}
 
    // Save data collection items
-   if (success)
+   if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
@@ -319,7 +319,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (success)
-		m_isModified = FALSE;
+		m_modified = 0;
    unlockProperties();
 
    return success;
@@ -440,7 +440,7 @@ void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
    calculateStatus(bForcedRecalc);
    lockProperties();
    if (oldStatus != m_status)
-      setModified(true);
+      setModified(MODIFY_RUNTIME);
    unlockProperties();
 }
 
@@ -551,7 +551,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    bool hasChanges = false;
 
-   if(m_commProtocol == COMM_LORAWAN)
+   if (m_commProtocol == COMM_LORAWAN)
    {
       if (!(m_state & SSF_PROVISIONED))
       {
@@ -592,7 +592,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    if (hasChanges)
    {
       lockProperties();
-      setModified();
+      setModified(MODIFY_SENSOR_PROPERTIES);
       unlockProperties();
    }
 
@@ -634,6 +634,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    m_pollRequestor = session;
    sendPollerMsg(rqId, _T("Starting status poll for sensor %s\r\n"), m_name);
    nxlog_debug(5, _T("Starting status poll for sensor %s (ID: %d)"), m_name, m_id);
+
+   UINT32 prevState = m_state;
 
    nxlog_debug(6, _T("StatusPoll(%s): checking agent"), m_name);
    poller->setStatus(_T("check agent"));
@@ -695,6 +697,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
                }
                else
                {
+                  // FIXME: modify runtime if needed
                   m_state |= SSF_ACTIVE;
                   nxlog_debug(6, _T("StatusPoll(%s [%d]): Status set to ACTIVE"), m_name, m_id);
                   getItemFromAgent(_T("LoraWAN.RSSI(*)"), MAX_DCI_STRING_VALUE, lastValue);
@@ -706,15 +709,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
                }
             }
 
-            setModified();
             unlockProperties();
          }
          break;
       case COMM_DLMS:
          checkDlmsConverterAccessibility();
-         lockProperties();
-         setModified();
-         unlockProperties();
          break;
       default:
          break;
@@ -732,6 +731,9 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 
    if (rqId == 0)
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+
+   if (prevState != m_state)
+      setModified(MODIFY_SENSOR_PROPERTIES);
 
    sendPollerMsg(rqId, _T("Finished status poll for sensor %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));

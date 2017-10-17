@@ -115,7 +115,7 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    bool success = saveCommonProperties(hdb);
-   if (success)
+   if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("zones"), _T("id"), m_id))
@@ -138,12 +138,13 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
       {
          success = false;
       }
-
-      if (success)
-         success = saveACLToDB(hdb);
    }
+
+   if (success)
+      success = saveACLToDB(hdb);
+
    // Unlock object and clear modification flag
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
    return success;
 }

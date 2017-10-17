@@ -335,108 +335,116 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
 	}
 
    // Determine owning node's ID
-   Node *pNode = getParentNode();
-   if (pNode != NULL)
-      dwNodeId = pNode->getId();
-   else
-      dwNodeId = 0;
-
-   // Form and execute INSERT or UPDATE query
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("interfaces"), _T("id"), m_id))
-	{
-		hStmt = DBPrepare(hdb,
-			_T("UPDATE interfaces SET node_id=?,if_type=?,if_index=?,mac_addr=?,")
-			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
-			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
-			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
-         _T("peer_proto=?,alias=?,mtu=?,speed=?,parent_iface=?,")
-         _T("iftable_suffix=? WHERE id=?"));
-	}
-   else
-	{
-		hStmt = DBPrepare(hdb,
-			_T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
-			_T("required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,")
-         _T("parent_iface,iftable_suffix,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
-	if (hStmt == NULL)
-	{
-		unlockProperties();
-		return FALSE;
-	}
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwNodeId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_slotNumber);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_portNumber);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_peerNodeId);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
-	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
-	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_mtu);
-	DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_speed);
-   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
-   if (m_ifTableSuffixLen > 0)
+   bool success;
+   if (m_modified & MODIFY_INTERFACE_PROPERTIES)
    {
-      TCHAR buffer[128];
-      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
-   }
-   else
-   {
-	   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
-   }
-	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
+      Node *pNode = getParentNode();
+      if (pNode != NULL)
+         dwNodeId = pNode->getId();
+      else
+         dwNodeId = 0;
 
-	bool success = DBExecute(hStmt);
-	DBFreeStatement(hStmt);
-
-   // Save IP addresses
-   if (success)
-   {
-      success = false;
-
-		hStmt = DBPrepare(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
-      if (hStmt != NULL)
+      // Form and execute INSERT or UPDATE query
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("interfaces"), _T("id"), m_id))
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
-      }
-   }
-
-   if (success && (m_ipAddressList.size() > 0))
-   {
-		hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"));
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-         for(int i = 0; (i < list->size()) && success; i++)
-         {
-            InetAddress *a = list->get(i);
-            TCHAR buffer[64];
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, a->toString(buffer), DB_BIND_STATIC);
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->getMaskBits());
-            success = DBExecute(hStmt);
-         }
-         DBFreeStatement(hStmt);
+         hStmt = DBPrepare(hdb,
+            _T("UPDATE interfaces SET node_id=?,if_type=?,if_index=?,mac_addr=?,")
+            _T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
+            _T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
+            _T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
+            _T("peer_proto=?,alias=?,mtu=?,speed=?,parent_iface=?,")
+            _T("iftable_suffix=? WHERE id=?"));
       }
       else
       {
-         success = false;
+         hStmt = DBPrepare(hdb,
+            _T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
+            _T("required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
+            _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,")
+            _T("parent_iface,iftable_suffix,id) ")
+            _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
+      if (hStmt == NULL)
+      {
+         unlockProperties();
+         return FALSE;
+      }
+
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwNodeId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_slotNumber);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_portNumber);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_peerNodeId);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
+      DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (UINT32)m_adminState);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
+      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
+      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
+      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
+      DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_mtu);
+      DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_speed);
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_parentInterfaceId);
+      if (m_ifTableSuffixLen > 0)
+      {
+         TCHAR buffer[128];
+         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+      }
+      else
+      {
+         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+      }
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
+
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+
+      // Save IP addresses
+      if (success)
+      {
+         success = false;
+
+         hStmt = DBPrepare(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            success = DBExecute(hStmt);
+            DBFreeStatement(hStmt);
+         }
+      }
+
+      if (success && (m_ipAddressList.size() > 0))
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
+            for(int i = 0; (i < list->size()) && success; i++)
+            {
+               InetAddress *a = list->get(i);
+               TCHAR buffer[64];
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, a->toString(buffer), DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->getMaskBits());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+   else
+   {
+      success = true;
    }
 
    // Save access list
@@ -445,7 +453,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (success)
-		m_isModified = false;
+		m_modified = 0;
    unlockProperties();
 
    return success;
@@ -699,7 +707,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	{
 		m_adminState = (WORD)adminState;
 		m_operState = (WORD)operState;
-		setModified();
+		setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
 	unlockProperties();
 
@@ -1000,7 +1008,7 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 		lockProperties();
 		m_dot1xPaeAuthState = (WORD)paeState;
 		m_dot1xBackendAuthState = (WORD)backendState;
-		setModified();
+		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 	}
 }
@@ -1073,7 +1081,7 @@ void Interface::setExpectedStateInternal(int state)
 	{
       m_flags &= ~IF_EXPECTED_STATE_MASK;
       m_flags |= (UINT32)state << 28;
-      setModified();
+      setModified(MODIFY_COMMON_PROPERTIES);
       if (state != IF_EXPECTED_STATE_AUTO)
          PostEvent(eventCode[state], getParentNodeId(), "ds", m_index, m_name);
 	}
@@ -1089,7 +1097,7 @@ void Interface::setExcludeFromTopology(bool excluded)
       m_flags |= IF_EXCLUDE_FROM_TOPOLOGY;
    else
       m_flags &= ~IF_EXCLUDE_FROM_TOPOLOGY;
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 
@@ -1157,7 +1165,7 @@ void Interface::updateZoneUIN()
 
 		lockProperties();
 		m_zoneUIN = node->getZoneUIN();
-		setModified();
+		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 
 		// Register in new zone
@@ -1177,7 +1185,7 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 		lockProperties();
 		m_peerNodeId = 0;
 		m_peerInterfaceId = 0;
-		setModified();
+		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 	}
 	NetObj::onObjectDelete(dwObjectId);
@@ -1194,7 +1202,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       {
          // set peer information as confirmed
          m_flags &= ~IF_PEER_REFLECTION;
-         setModified();
+         setModified(MODIFY_COMMON_PROPERTIES);
       }
       return;
    }
@@ -1206,7 +1214,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
       m_flags |= IF_PEER_REFLECTION;
    else
       m_flags &= ~IF_PEER_REFLECTION;
-   setModified();
+   setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
    if (!m_isSystem)
    {
       static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
@@ -1231,7 +1239,7 @@ void Interface::setMacAddr(const BYTE *macAddr, bool updateMacDB)
    memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
    if (updateMacDB)
       MacDbAddInterface(this);
-   setModified();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
 }
 
@@ -1246,7 +1254,7 @@ void Interface::setIpAddress(const InetAddress& addr)
       UpdateInterfaceIndex(m_ipAddressList.get(0), addr, this);
       m_ipAddressList.clear();
       m_ipAddressList.add(addr);
-      setModified();
+      setModified(MODIFY_INTERFACE_PROPERTIES);
    }
    unlockProperties();
 }
@@ -1267,7 +1275,7 @@ void Interface::addIpAddress(const InetAddress& addr)
 {
    lockProperties();
    m_ipAddressList.add(addr);
-   setModified();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
    if (!isExcludedFromTopology())
    {
@@ -1297,7 +1305,7 @@ void Interface::deleteIpAddress(InetAddress addr)
 {
    lockProperties();
    m_ipAddressList.remove(addr);
-   setModified();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
    if (!isExcludedFromTopology())
    {
@@ -1327,7 +1335,7 @@ void Interface::setNetMask(const InetAddress& addr)
 {
    lockProperties();
    m_ipAddressList.replace(addr);
-   setModified();
+   setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
 }
 

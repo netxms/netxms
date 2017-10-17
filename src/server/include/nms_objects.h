@@ -368,6 +368,23 @@ public:
 #define COLUMN_DEFINITION_MULTIVALUED     0x0002
 
 /**
+ * Object modification flags
+ */
+#define MODIFY_RUNTIME              0x0000
+#define MODIFY_OTHER                0x0001
+#define MODIFY_CUSTOM_ATTRIBUTES    0x0002
+#define MODIFY_DATA_COLLECTION      0x0004
+#define MODIFY_RELATIONS            0x0008
+#define MODIFY_COMMON_PROPERTIES    0x0010
+#define MODIFY_ACCESS_LIST          0x0020
+#define MODIFY_NODE_PROPERTIES      0x0040
+#define MODIFY_INTERFACE_PROPERTIES 0x0080
+#define MODIFIED_CLUSTER_RESOURCES  0x0100
+#define MODIFY_MAP_CONTENT          0x0200
+#define MODIFY_SENSOR_PROPERTIES    0x0400
+#define MODIFY_ALL                  0xFFFF
+
+/**
  * Column definition for DCI summary table
  */
 class NXCORE_EXPORTABLE SummaryTableColumn
@@ -478,7 +495,7 @@ protected:
    UINT32 m_flags;
    UINT32 m_runtimeFlags;
    UINT32 m_state;
-   bool m_isModified;
+   UINT32 m_modified;
    bool m_isDeleted;
    bool m_isHidden;
 	bool m_isSystem;
@@ -529,7 +546,7 @@ protected:
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   void setModified(bool notify = true);                  // Used to mark object as modified
+   void setModified(UINT32 flags, bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb);
    bool saveACLToDB(DB_HANDLE hdb);
@@ -569,23 +586,23 @@ public:
 	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
-	void setGeoLocation(const GeoLocation& geoLocation) { lockProperties(); m_geoLocation = geoLocation; setModified(); unlockProperties(); }
+	void setGeoLocation(const GeoLocation& geoLocation);
 
    const PostalAddress *getPostalAddress() const { return m_postalAddress; }
-   void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(); unlockProperties(); }
+   void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    const uuid& getMapImage() { return m_image; }
-   void setMapImage(const uuid& image) { lockProperties(); m_image = image; setModified(); unlockProperties(); }
+   void setMapImage(const uuid& image) { lockProperties(); m_image = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
-   bool isModified() const { return m_isModified; }
+   bool isModified() const { return m_modified != 0; }
    bool isDeleted() const { return m_isDeleted; }
    bool isOrphaned() const { return m_parentList->size() == 0; }
    bool isEmpty() const { return m_childList->size() == 0; }
 
 	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
-	void setFlag(UINT32 flag) { lockProperties(); m_flags |= flag; setModified(); unlockProperties(); }
-	void clearFlag(UINT32 flag) { lockProperties(); m_flags &= ~flag; setModified(); unlockProperties(); }
+	void setFlag(UINT32 flag) { lockProperties(); m_flags |= flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+	void clearFlag(UINT32 flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    UINT32 getRefCount();
    void incRefCount();
@@ -605,7 +622,7 @@ public:
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
-   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mark object as modified
+   void markAsModified(UINT32 flags) { lockProperties(); setModified(flags); unlockProperties(); }  // external API to mark object as modified
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);
@@ -613,10 +630,10 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual void linkObjects();
 
-   void setId(UINT32 dwId) { m_id = dwId; setModified(); }
+   void setId(UINT32 dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
-   void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_OBJECT_NAME); setModified(); }
-   void resetStatus() { m_status = STATUS_UNKNOWN; setModified(); }
+   void setName(const TCHAR *pszName) { lockProperties(); _tcslcpy(m_name, pszName, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
+   void resetStatus() { m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
    bool isInMaintenanceMode() const { return m_maintenanceMode; }
@@ -918,22 +935,22 @@ public:
 
    void setMacAddr(const BYTE *macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
-   void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
-   void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
-   void setPortNumber(UINT32 port) { m_portNumber = port; setModified(); }
-	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(); }
-	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(); }
+   void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void setPortNumber(UINT32 port) { m_portNumber = port; setModified(MODIFY_INTERFACE_PROPERTIES); }
+	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(MODIFY_INTERFACE_PROPERTIES); }
+	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); }
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
-   void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
-   void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
-   void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(); unlockProperties(); }
+   void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
-	void setMTU(int mtu) { m_mtu = mtu; setModified(); }
-	void setSpeed(UINT64 speed) { m_speed = speed; setModified(); }
-   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); safe_free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(); unlockProperties(); }
-   void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(); }
+	void setMTU(int mtu) { m_mtu = mtu; setModified(MODIFY_INTERFACE_PROPERTIES); }
+	void setSpeed(UINT64 speed) { m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); }
 
 	void updateZoneUIN();
 
@@ -1344,7 +1361,7 @@ public:
    Node *getParentNode();
 
 	void attachToNode(UINT32 nodeId);
-   void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(); unlockProperties(); }
+   void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
 	void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
@@ -1828,10 +1845,10 @@ public:
    const TCHAR *getSubType() const { return m_subType; }
 
    UINT32 getCapabilities() { return m_capabilities; }
-   void setCapabilitie(UINT32 flag) { lockProperties(); m_capabilities |= flag; setModified(); unlockProperties(); }
-   void clearCapabilities(UINT32 flag) { lockProperties(); m_capabilities &= ~flag; setModified(); unlockProperties(); }
-   void setLocalMgmtFlag() { m_capabilities |= NC_IS_LOCAL_MGMT; }
-   void clearLocalMgmtFlag() { m_capabilities &= ~NC_IS_LOCAL_MGMT; }
+   void setCapabilities(UINT32 flag) { lockProperties(); m_capabilities |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   void clearCapabilities(UINT32 flag) { lockProperties(); m_capabilities &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
+   void setLocalMgmtFlag() { setCapabilities(NC_IS_LOCAL_MGMT); }
+   void clearLocalMgmtFlag() { clearCapabilities(NC_IS_LOCAL_MGMT); }
 
    void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; nx_strncpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
 

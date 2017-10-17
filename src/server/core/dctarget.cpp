@@ -354,7 +354,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 	if (bResult)
 	{
 		lockProperties();
-		m_isModified = true;
+		setModified(MODIFY_DATA_COLLECTION, false);
 		unlockProperties();
 	}
    return bResult;
@@ -1132,7 +1132,7 @@ void DataCollectionTarget::enterMaintenanceMode()
    lockProperties();
    m_maintenanceMode = true;
    m_maintenanceEventId = eventId;
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 
@@ -1146,7 +1146,7 @@ void DataCollectionTarget::leaveMaintenanceMode()
    lockProperties();
    m_maintenanceMode = false;
    m_maintenanceEventId = 0;
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 

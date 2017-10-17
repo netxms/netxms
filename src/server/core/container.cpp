@@ -135,30 +135,33 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
-	{
-		hStmt = DBPrepare(hdb, _T("UPDATE object_containers SET object_class=?,auto_bind_filter=? WHERE id=?"));
-	}
-   else
-	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (object_class,auto_bind_filter,id) VALUES (?,?,?)"));
-	}
-	if (hStmt == NULL)
-	{
-		unlockProperties();
-		return FALSE;
-	}
+   if (success && (m_modified & MODIFY_OTHER))
+   {
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE object_containers SET object_class=?,auto_bind_filter=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (object_class,auto_bind_filter,id) VALUES (?,?,?)"));
+      }
+      if (hStmt == NULL)
+      {
+         unlockProperties();
+         return false;
+      }
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
-	DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
-	bool success = DBExecute(hStmt);
-	DBFreeStatement(hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
+      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 
-	if (success)
+	if (success && (m_modified & MODIFY_RELATIONS))
 	{
 		TCHAR query[256];
 
@@ -172,14 +175,14 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 			DBQuery(hdb, query);
 		}
 		unlockChildList();
-
-		// Save access list
-		saveACLToDB(hdb);
-
-		// Clear modifications flag and unlock object
-		m_isModified = false;
 	}
 
+   // Save access list
+	if (success)
+		success = saveACLToDB(hdb);
+
+   // Clear modifications flag and unlock object
+   m_modified = 0;
    unlockProperties();
    return success;
 }
@@ -234,7 +237,7 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
    {
 		lockProperties();
 		m_status = STATUS_NORMAL;
-		setModified();
+		setModified(MODIFY_RUNTIME);
 		unlockProperties();
 	}
 }
@@ -275,7 +278,7 @@ void Container::setAutoBindFilterInternal(const TCHAR *script)
 {
 	if (script != NULL)
 	{
-		safe_free(m_bindFilterSource);
+		free(m_bindFilterSource);
 		delete m_bindFilter;
 		m_bindFilterSource = _tcsdup(script);
 		if (m_bindFilterSource != NULL)
@@ -301,7 +304,7 @@ void Container::setAutoBindFilterInternal(const TCHAR *script)
 		delete_and_null(m_bindFilter);
 		safe_free_and_null(m_bindFilterSource);
 	}
-	setModified();
+	setModified(MODIFY_OTHER);
 }
 
 /**
@@ -321,7 +324,7 @@ void Container::setAutoBindMode(bool doBind, bool doUnbind)
    else
       m_flags &= ~CF_AUTO_UNBIND;
 
-   setModified();
+   setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 }
 

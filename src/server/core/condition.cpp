@@ -166,60 +166,63 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
 
    saveCommonProperties(hdb);
 
-   pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_scriptSource));
-	size_t qlen = _tcslen(pszEscScript) + 1024;
-   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
+   if (m_modified & MODIFY_OTHER)
+   {
+      pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_scriptSource));
+      size_t qlen = _tcslen(pszEscScript) + 1024;
+      pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
-   // Check for object's existence in database
-   _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, pszQuery);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
+      // Check for object's existence in database
+      _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_id);
+      hResult = DBSelect(hdb, pszQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            bNewObject = FALSE;
+         DBFreeResult(hResult);
+      }
 
-   // Form and execute INSERT or UPDATE query
-   if (bNewObject)
-   {
-      _sntprintf(pszQuery, qlen,
-			                 _T("INSERT INTO conditions (id,activation_event,")
-                          _T("deactivation_event,source_object,active_status,")
-                          _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
-                m_id, m_activationEventCode, m_deactivationEventCode,
-                m_sourceObject, m_activeStatus, m_inactiveStatus, pszEscScript);
-   }
-   else
-   {
-      _sntprintf(pszQuery, qlen,
-			                 _T("UPDATE conditions SET activation_event=%d,")
-                          _T("deactivation_event=%d,source_object=%d,active_status=%d,")
-                          _T("inactive_status=%d,script='%s' WHERE id=%d"),
-                m_activationEventCode, m_deactivationEventCode, m_sourceObject,
-                m_activeStatus, m_inactiveStatus, pszEscScript, m_id);
-   }
-   free(pszEscScript);
-   DBQuery(hdb, pszQuery);
-
-   // Save DCI mapping
-   _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_id);
-   DBQuery(hdb, pszQuery);
-   for(i = 0; i < m_dciCount; i++)
-   {
-      _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
-                                 _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
-                m_id, i, m_dciList[i].id, m_dciList[i].nodeId,
-                m_dciList[i].function, m_dciList[i].polls);
+      // Form and execute INSERT or UPDATE query
+      if (bNewObject)
+      {
+         _sntprintf(pszQuery, qlen,
+                             _T("INSERT INTO conditions (id,activation_event,")
+                             _T("deactivation_event,source_object,active_status,")
+                             _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
+                   m_id, m_activationEventCode, m_deactivationEventCode,
+                   m_sourceObject, m_activeStatus, m_inactiveStatus, pszEscScript);
+      }
+      else
+      {
+         _sntprintf(pszQuery, qlen,
+                             _T("UPDATE conditions SET activation_event=%d,")
+                             _T("deactivation_event=%d,source_object=%d,active_status=%d,")
+                             _T("inactive_status=%d,script='%s' WHERE id=%d"),
+                   m_activationEventCode, m_deactivationEventCode, m_sourceObject,
+                   m_activeStatus, m_inactiveStatus, pszEscScript, m_id);
+      }
+      free(pszEscScript);
       DBQuery(hdb, pszQuery);
+
+      // Save DCI mapping
+      _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_id);
+      DBQuery(hdb, pszQuery);
+      for(i = 0; i < m_dciCount; i++)
+      {
+         _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
+                                    _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
+                   m_id, i, m_dciList[i].id, m_dciList[i].nodeId,
+                   m_dciList[i].function, m_dciList[i].polls);
+         DBQuery(hdb, pszQuery);
+      }
+      free(pszQuery);
    }
-   free(pszQuery);
 
    // Save access list
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   m_isModified = false;
+   m_modified = 0;
    unlockProperties();
    return true;
 }
@@ -447,7 +450,7 @@ void ConditionObject::check()
             lockProperties();
             m_status = m_inactiveStatus;
             m_isActive = FALSE;
-            setModified();
+            setModified(MODIFY_RUNTIME);
             unlockProperties();
 
             PostEvent(m_deactivationEventCode,
@@ -465,7 +468,7 @@ void ConditionObject::check()
             if (m_status != m_inactiveStatus)
             {
                m_status = m_inactiveStatus;
-               setModified();
+               setModified(MODIFY_RUNTIME);
             }
             unlockProperties();
          }
@@ -478,7 +481,7 @@ void ConditionObject::check()
             lockProperties();
             m_status = m_activeStatus;
             m_isActive = TRUE;
-            setModified();
+            setModified(MODIFY_RUNTIME);
             unlockProperties();
 
             PostEvent(m_activationEventCode,
@@ -496,7 +499,7 @@ void ConditionObject::check()
             if (m_status != m_activeStatus)
             {
                m_status = m_activeStatus;
-               setModified();
+               setModified(MODIFY_RUNTIME);
             }
             unlockProperties();
          }
@@ -511,7 +514,7 @@ void ConditionObject::check()
       if (m_status != STATUS_UNKNOWN)
       {
          m_status = STATUS_UNKNOWN;
-         setModified();
+         setModified(MODIFY_RUNTIME);
       }
       unlockProperties();
    }
