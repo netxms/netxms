@@ -367,6 +367,17 @@ bool GeoLocation::parseLongitude(const TCHAR *lon)
 }
 
 /**
+ * Check if two geolocation objects are equal
+ */
+bool GeoLocation::equals(const GeoLocation &location) const
+{
+   return (location.m_accuracy == m_accuracy) &&
+            (location.m_lat == m_lat) &&
+            (location.m_lon == m_lon) &&
+            (location.m_type == m_type);
+}
+
+/**
  * Convert degrees to radians
  */
 #define DegreesToRadians(a) ((a) * 3.14159265 / 180.0)
