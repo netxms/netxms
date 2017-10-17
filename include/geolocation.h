@@ -78,7 +78,9 @@ public:
    bool isManual() const { return m_type == GL_MANUAL; }
 	int getAccuracy() const { return m_accuracy; }
 	time_t getTimestamp() const { return m_timestamp; }
-   bool sameLocation(double lat, double lon, int oldAccurasy) const;
+
+	bool equals(const GeoLocation &location) const;
+	bool sameLocation(double lat, double lon, int oldAccuracy) const;
 	int calculateDistance(GeoLocation &location) const;
 
 	void fillMessage(NXCPMessage &msg) const;
