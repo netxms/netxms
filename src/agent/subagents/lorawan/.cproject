@@ -28,6 +28,7 @@
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/agent&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.231945917" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -36,6 +37,7 @@
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/agent&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.522096378" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

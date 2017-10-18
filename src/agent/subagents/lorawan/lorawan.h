@@ -90,7 +90,7 @@ private:
    long m_response;
    MUTEX m_curlHandleMutex;
 
-   UINT32 sendRequest(const char *method, const char *url, const char *responseData = NULL, const curl_slist *headers = NULL, char *postFields = NULL);
+   UINT32 sendRequest(const char *method, const char *url, const curl_slist *headers = NULL, char *postFields = NULL);
 
 public:
    LoraWanServerLink(const ConfigEntry *config);

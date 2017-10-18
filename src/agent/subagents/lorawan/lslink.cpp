@@ -21,6 +21,14 @@
 #include "lorawan.h"
 
 /**
+ * CURL write callback
+ */
+size_t curlWriteCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+   return 0;
+}
+
+/**
  * LoraWAN server link constructor
  */
 LoraWanServerLink::LoraWanServerLink(const ConfigEntry *config)
@@ -71,13 +79,14 @@ LoraWanServerLink::~LoraWanServerLink()
 /**
  * Send cURL request
  */
-UINT32 LoraWanServerLink::sendRequest(const char *method, const char *url, const char *responseData, const curl_slist *headers, char *postFields)
+UINT32 LoraWanServerLink::sendRequest(const char *method, const char *url, const curl_slist *headers, char *postFields)
 {
    MutexLock(m_curlHandleMutex);
    curl_easy_setopt(m_curl, CURLOPT_URL, url);
    curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, method);
    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, headers);
-   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, responseData);
+   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, NULL);
+   curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, curlWriteCallback);
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, postFields);
 
    UINT32 rcc = curl_easy_perform(m_curl);
@@ -189,7 +198,7 @@ UINT32 LoraWanServerLink::registerDevice(NXCPMessage *request)
    headers = curl_slist_append(headers, "Content-Type: application/json;charset=UTF-8");
 
    UINT32 rcc;
-   if (sendRequest("POST", url, NULL, headers, jsonData) == CURLE_OK)
+   if (sendRequest("POST", url, headers, jsonData) == CURLE_OK)
    {
       if (m_response == 204)
       {
@@ -257,8 +266,7 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
 #endif
       struct curl_slist *headers = NULL;
       headers = curl_slist_append(headers, "Accept: application/json");
-      char *responseData;
-      if (sendRequest("GET", url, responseData, headers) == CURLE_OK)
+      if (sendRequest("GET", url, headers) == CURLE_OK)
       {
          if (m_response == 200)
          {
@@ -278,8 +286,6 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
       }
       else
          rcc = ERR_EXEC_FAILED;
-
-      free(responseData);
    }
    if (m_response == 204)
       rcc = RemoveDevice(data);
