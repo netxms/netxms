@@ -227,6 +227,18 @@ AC_ARG_WITH(profiler,
 	LDFLAGS="$LDFLAGS -lprofiler"
 ])
 
+AC_ARG_WITH(private-extensions,
+[AS_HELP_STRING(--with-private-extensions,enable private extensions)],
+[
+	if test "x$withval" != "xno" ; then
+		WITH_PRIVATE_EXTENSIONS="yes"
+		CXXFLAGS="$CXXFLAGS -DCUSTOM_INIT_CODE"
+	        if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			CUSTOM_INCLUDE="$withval"
+		fi
+	fi
+])
+
 AC_ARG_WITH(internal-libexpat,
 [AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
 [
@@ -3417,6 +3429,7 @@ AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
+AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
@@ -3461,9 +3474,11 @@ AS_IF([test "x$with_dist" = "xyes"],
 # Substitute variables
 #--------------------------------------------------------------------
 
-AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(AGENT_DIRS)
+AC_SUBST(AGENT_LIBS)
+AC_SUBST(CUSTOM_INCLUDE)
+AC_SUBST(DB_DRIVERS)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
