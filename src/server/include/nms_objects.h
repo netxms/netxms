@@ -1094,6 +1094,7 @@ protected:
    IntegerArray<UINT32> *m_deletedTables;
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
+   MUTEX m_hPollerMutex;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg);
 	virtual void fillMessageInternalStage2(NXCPMessage *pMsg);
@@ -1101,6 +1102,9 @@ protected:
 
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
+
+   void pollerLock() { MutexLock(m_hPollerMutex); }
+   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
    NetObj *objectFromParameter(const TCHAR *param);
 
@@ -1508,7 +1512,6 @@ protected:
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
    time_t m_lastAgentConnectAttempt;
-   MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
@@ -1555,9 +1558,6 @@ protected:
 	UINT32 m_sshProxy;
 	UINT32 m_portNumberingScheme;
 	UINT32 m_portRowCount;
-
-   void pollerLock() { MutexLock(m_hPollerMutex); }
-   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
    void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }

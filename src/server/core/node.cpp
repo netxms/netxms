@@ -58,7 +58,6 @@ Node::Node() : DataCollectionTarget()
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
-   m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
@@ -159,7 +158,6 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
-   m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
@@ -235,7 +233,6 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
 Node::~Node()
 {
    delete m_driverData;
-   MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
@@ -551,7 +548,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
          DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
          DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
-         DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+         DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
          DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
 #ifdef UNICODE
          DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
@@ -2397,9 +2394,9 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       poller->setStatus(_T("capability check"));
       sendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
 
-      if (confPollAgent(rqId))
+      if (confPollAgent(dwRqId))
          modified |= MODIFY_NODE_PROPERTIES;
-      if (confPollSnmp(rqId))
+      if (confPollSnmp(dwRqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
       // Check for CheckPoint SNMP agent on port 260
@@ -6572,7 +6569,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
          MutexUnlock(m_mutexTopoAccess);
 
          lockProperties();
-         UINT32 oldCaps = m_capabilities;
+         UINT32 oldFlags = m_flags;
          if (vlanList != NULL)
             m_flags |= NF_HAS_VLANS;
          else

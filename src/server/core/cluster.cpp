@@ -566,13 +566,6 @@ void Cluster::statusPoll(PollerInfo *poller)
  */
 void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
-   {
-      if (dwRqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
-      return;
-   }
-
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
@@ -585,17 +578,17 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
    UINT32 modified = 0;
 
    // Create polling list
-	ObjectArray<DataCollectionTarget> pollList(m_childList->size(), 16, false);
+   ObjectArray<Node> pollList(m_childList->size(), 16, false);
    lockChildList(false);
    int i;
    for(i = 0; i < m_childList->size(); i++)
    {
       NetObj *object = m_childList->get(i);
-      if ((object->getStatus() != STATUS_UNMANAGED) && object->isDataCollectionTarget())
+      if ((object->getStatus() != STATUS_UNMANAGED) && (object->getObjectClass() == OBJECT_NODE))
       {
          object->incRefCount();
-         static_cast<DataCollectionTarget*>(object)->lockForStatusPoll();
-         pollList.add(static_cast<DataCollectionTarget*>(object));
+         static_cast<Node*>(object)->lockForStatusPoll();
+         pollList.add(static_cast<Node*>(object));
       }
    }
    unlockChildList();
@@ -607,25 +600,25 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	bool allDown = true;
 	for(i = 0; i < pollList.size(); i++)
 	{
-	   DataCollectionTarget *object = pollList.get(i);
-		object->statusPollPollerEntry(poller, pSession, dwRqId);
-		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
+	   Node *object = pollList.get(i);
+		object->statusPoll(pSession, dwRqId, poller);
+		if (!object->isDown())
 			allDown = false;
 	}
 
 	if (allDown)
 	{
-		if (!(m_state & CLSF_DOWN))
+		if (!(m_flags & CLF_DOWN))
 		{
-		   m_state |= CLSF_DOWN;
+		   m_flags |= CLF_DOWN;
 			PostEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
 		}
 	}
 	else
 	{
-		if (m_state & CLSF_DOWN)
+		if (m_flags & CLF_DOWN)
 		{
-		   m_state &= ~CLSF_DOWN;
+		   m_flags &= ~CLF_DOWN;
 			PostEvent(EVENT_CLUSTER_UP, m_id, NULL);
 		}
 	}
@@ -715,10 +708,6 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 		free(resourceFound);
 	}
 
-   // Execute hook script
-   poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"));
-
    calculateCompoundStatus(true);
    poller->setStatus(_T("cleanup"));
 
@@ -732,8 +721,8 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	if (modified != 0)
 		setModified(modified);
 	m_lastStatusPoll = time(NULL);
-	m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
-	unlockProperties();
+   m_flags &= ~CLF_QUEUED_FOR_STATUS_POLL;
+   unlockProperties();
 
    sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Finished\r\n"), m_name);
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_name);

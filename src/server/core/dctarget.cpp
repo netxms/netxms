@@ -41,6 +41,7 @@ DataCollectionTarget::DataCollectionTarget() : Template()
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+   m_hPollerMutex = MutexCreate();
 }
 
 /**
@@ -52,6 +53,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+   m_hPollerMutex = MutexCreate();
 }
 
 /**
@@ -61,6 +63,7 @@ DataCollectionTarget::~DataCollectionTarget()
 {
    delete m_deletedItems;
    delete m_deletedTables;
+   MutexDestroy(m_hPollerMutex);
 }
 
 /**

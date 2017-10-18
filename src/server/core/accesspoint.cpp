@@ -155,7 +155,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_state);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
