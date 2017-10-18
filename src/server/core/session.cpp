@@ -7445,7 +7445,10 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                   DBFreeStatement(hStmt);
                }
                else
+               {
                   msg.setField(VID_RCC, RCC_DB_FAILURE);
+                  break;
+               }
 
                if (bExist)
                   hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
@@ -7462,7 +7465,10 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                   DBFreeStatement(hStmt);
                }
                else
+               {
                   msg.setField(VID_RCC, RCC_DB_FAILURE);
+                  break;
+               }
 
                if (bMove)
                {
@@ -7476,21 +7482,34 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                      DBFreeStatement(hStmt);
                   }
                   else
+                  {
                      msg.setField(VID_RCC, RCC_DB_FAILURE);
+                     break;
+                  }
                }
+
+               writeAuditLog(AUDIT_SECURITY, true, 0, _T("User variable %s %s from [%d] to [%d]"),
+                        szCurrVar, bMove ? _T("moved") : _T("copied"), dwSrcUserId, dwDstUserId);
             }
             DBFreeResult(hResult);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
+         {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
+         }
       }
       else
+      {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
+      }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on copy user variable"));
+   }
 
    // Send response
    sendMessage(&msg);
