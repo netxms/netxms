@@ -36,7 +36,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
-libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@
+libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include @MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@
+libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @ZEROMQ_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
@@ -60,6 +61,9 @@ if USE_INTERNAL_JANSSON
 libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
 libnxcore_la_LIBADD += -ljansson
+endif
+if WITH_PRIVATE_EXTENSIONS
+libnxcore_la_CXXFLAGS += -I@top_srcdir@/private/netxms/include -I@top_srcdir@/private/netxms/src/server/init -I@top_srcdir@/private/common/src/licensing
 endif
 
 EXTRA_DIST = \
