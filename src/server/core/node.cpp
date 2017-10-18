@@ -4914,7 +4914,7 @@ static UINT32 RCCFromDCIError(UINT32 error)
  */
 UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
-   UINT32 dwResult = RCC_ACCESS_DENIED, dwRetCode;
+   UINT32 dwResult = RCC_ACCESS_DENIED, dwRetCode = -1;
 
    // Get data from node
    switch(iOrigin)
@@ -4936,12 +4936,11 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
             dwRetCode = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
       default:
-         dwResult = RCC_INVALID_ARGUMENT;
-         break;
+         return RCC_INVALID_ARGUMENT;
    }
 
    // Translate return code to RCC
-   if (dwResult != RCC_INVALID_ARGUMENT && dwResult != RCC_ACCESS_DENIED)
+   if (dwRetCode != -1)
       dwResult = RCCFromDCIError(dwRetCode);
 
    return dwResult;
