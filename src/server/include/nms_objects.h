@@ -1069,9 +1069,6 @@ protected:
    time_t m_lastInstancePoll;
    MUTEX m_hPollerMutex;
 
-   void pollerLock() { MutexLock(m_hPollerMutex); }
-   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
-
 	virtual void fillMessageInternal(NXCPMessage *pMsg);
 	virtual void fillMessageInternalStage2(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -1086,6 +1083,9 @@ protected:
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
    bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
+
+   void pollerLock() { MutexLock(m_hPollerMutex); }
+   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
    NetObj *objectFromParameter(const TCHAR *param);
 
