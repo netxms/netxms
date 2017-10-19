@@ -174,6 +174,7 @@ UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 TCHAR g_systemName[MAX_OBJECT_NAME] = _T("");
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_execTimeout = 2000;     // External process execution timeout in milliseconds
+UINT32 g_eppTimeout = 30;      // External parameter processor timeout in seconds
 UINT32 g_snmpTimeout = 1000;
 UINT16 g_snmpTrapPort = 162;
 time_t g_tmAgentStartTime;
@@ -281,6 +282,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParametersConfig, NULL },
    { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, NULL },
    { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, NULL },
+   { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_eppTimeout, NULL },
    { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalSubAgentsList, NULL },
    { _T("ExternalTable"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalTablesConfig, NULL },
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, NULL },

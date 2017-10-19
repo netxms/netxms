@@ -22,6 +22,114 @@
 
 #include "nxagentd.h"
 
+class ParamExec : public CommandExec
+{
+private:
+   StringMap m_parameters;
+   bool m_isRunning;
+   String m_buffer;
+
+public:
+   ParamExec(const TCHAR *command);
+
+   const StringMap *getParameters() const { return &m_parameters; }
+
+   bool isRunning() const { return m_isRunning; }
+
+   bool execute() { m_isRunning = true; m_parameters.clear(); return CommandExec::execute(); }
+   void stop() { m_isRunning = false; }
+
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
+};
+
+/**
+ * Create new parameter executor object
+ */
+ParamExec::ParamExec(const TCHAR *command) : CommandExec(command)
+{
+   m_sendOutput = true;
+   m_isRunning = false;
+}
+
+/**
+ * Parameter executor output handler
+ */
+void ParamExec::onOutput(const char *text)
+{
+   m_isRunning = true;
+
+   if (text != NULL)
+   {
+      TCHAR *buffer;
+#ifdef UNICODE
+      buffer = WideStringFromMBStringSysLocale(text);
+#else
+      buffer = _tcsdup(text);
+#endif
+      TCHAR *newLinePtr = NULL, *lineStartPtr = buffer, *eqPtr = NULL;
+      do
+      {
+         newLinePtr = _tcschr(lineStartPtr, _T('\n'));
+         if (newLinePtr != NULL)
+         {
+            *newLinePtr = 0;
+            m_buffer.append(lineStartPtr);
+            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            {
+               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+               stop();
+               m_buffer.clear();
+               break;
+            }
+         }
+         else
+         {
+            m_buffer.append(lineStartPtr);
+            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            {
+               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+               stop();
+               m_buffer.clear();
+               break;
+            }
+            break;
+         }
+
+         eqPtr = _tcschr((const TCHAR *)m_buffer, _T('='));
+         if (eqPtr != NULL)
+         {
+            *eqPtr = 0;
+            eqPtr++;
+            m_parameters.set((const TCHAR *)m_buffer, eqPtr);
+         }
+         m_buffer.clear();
+         lineStartPtr = newLinePtr+1;
+      } while (*lineStartPtr != 0);
+
+      free(buffer);
+   }
+}
+
+/**
+ * End of output callback
+ */
+void ParamExec::endOfOutput()
+{
+   if (m_buffer.length() > 0)
+   {
+      TCHAR *ptr = _tcschr((const TCHAR *)m_buffer, _T('='));
+      if (ptr != NULL)
+      {
+         *ptr = 0;
+         ptr++;
+         m_parameters.set((const TCHAR *)m_buffer, ptr);
+      }
+      m_buffer.clear();
+   }
+   m_isRunning = false;
+}
+
 
 /**
  * External parameter provider
@@ -29,14 +137,14 @@
 class ParamProvider
 {
 private:
-	TCHAR *m_command;
 	int m_pollInterval;
 	time_t m_lastPollTime;
-	MUTEX m_mutex;
-	StringMap *m_parameters;
+	ParamExec *m_paramExec;
+   StringMap *m_parameters;
+   MUTEX m_mutex;
 
-	void lock() { MutexLock(m_mutex); }
-	void unlock() { MutexUnlock(m_mutex); }
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
 
 public:
 	ParamProvider(const TCHAR *command, int pollInterval);
@@ -55,11 +163,11 @@ public:
  */
 ParamProvider::ParamProvider(const TCHAR *command, int pollInterval)
 {
-	m_command = _tcsdup(command);
 	m_pollInterval = pollInterval;
 	m_lastPollTime = 0;
-	m_mutex = MutexCreate();
-	m_parameters = new StringMap;
+	m_paramExec = new ParamExec(command);
+	m_parameters = new StringMap();
+   m_mutex = MutexCreate();
 }
 
 /**
@@ -67,9 +175,9 @@ ParamProvider::ParamProvider(const TCHAR *command, int pollInterval)
  */
 ParamProvider::~ParamProvider()
 {
-	safe_free(m_command);
-	MutexDestroy(m_mutex);
+	delete m_paramExec;
 	delete m_parameters;
+	MutexDestroy(m_mutex);
 }
 
 /**
@@ -97,49 +205,37 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
  */
 void ParamProvider::poll()
 {
-	FILE *hPipe;
-	TCHAR buffer[1024];
-
-	StringMap *parameters = new StringMap;
-	if ((hPipe = _tpopen(m_command, _T("r"))) != NULL)
+	if (m_paramExec->execute())
 	{
-	   DebugPrintf(8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
-		while(!feof(hPipe))
-		{
-			TCHAR *line = safe_fgetts(buffer, 1024, hPipe);
-			if (line == NULL)
-			{
-				if (!feof(hPipe))
-				{
-				   DebugPrintf(4, _T("ParamProvider::poll(): pipe read error: %s"), _tcserror(errno));
-				}
-				break;
-			}
+	   nxlog_debug(4, _T("ParamProvider::poll(): started command \"%s\""), m_paramExec->getCommand());
+	   bool timeout = false;
+	   time_t start = time(NULL);
+	   while(true)
+	   {
+	      if (((time(NULL) - start) < g_eppTimeout) && m_paramExec->isRunning())
+	            ThreadSleepMs(10);
+	      else
+	      {
+	         if (m_paramExec->isRunning())
+	         {
+	            nxlog_debug(4, _T("ParamProvider::poll(): The timeout of %d seconds has been reached for command: %s"), g_eppTimeout, m_paramExec->getCommand());
+	            timeout = true;
+	            m_paramExec->stop();
+	         }
+	         break;
+	      }
+	   }
 
-			TCHAR *ptr = _tcschr(buffer, _T('\n'));
-			if (ptr != NULL)
-				*ptr = 0;
+	   if (!timeout)
+	   {
+         lock();
+         delete m_parameters;
+         m_parameters = new StringMap(*m_paramExec->getParameters());
+         unlock();
+	   }
 
-			ptr = _tcschr(buffer, _T('='));
-			if (ptr != NULL)
-			{
-				*ptr = 0;
-				ptr++;
-				parameters->set(buffer, ptr);
-			}
-		}
-		pclose(hPipe);
-		DebugPrintf(8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
+	   nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_paramExec->getCommand(), (int)m_parameters->size());
 	}
-	else
-	{
-	   DebugPrintf(4, _T("ParamProvider::poll(): pipe open error: %s"), _tcserror(errno));
-	}
-
-	lock();
-	delete m_parameters;
-	m_parameters = parameters;
-	unlock();
 
 	m_lastPollTime = time(NULL);
 }
@@ -177,7 +273,7 @@ void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *cou
    data.count = 0;
 
 	lock();
-   m_parameters->forEach(ParameterListCallback, &data);
+	m_parameters->forEach(ParameterListCallback, &data);
 	unlock();
 
 	*baseId = data.id;
@@ -199,7 +295,7 @@ static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const 
 void ParamProvider::listParameters(StringList *list)
 {
 	lock();
-   m_parameters->forEach(ParameterListCallback2, list);
+	m_parameters->forEach(ParameterListCallback2, list);
 	unlock();
 }
 
