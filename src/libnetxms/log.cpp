@@ -909,11 +909,8 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
 /**
  * Write debug message with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...)
+static void nxlog_debug_tag_internal(const TCHAR *tag, int level, const TCHAR *format, va_list args)
 {
-   if (level > nxlog_get_debug_level_tag(tag))
-      return;
-
    TCHAR tagf[16];
    int i;
    for(i = 0; (i < 15) && tag[i] != 0; i++)
@@ -922,13 +919,51 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCH
       tagf[i] = ' ';
    tagf[i] = 0;
 
-   va_list args;
-   va_start(args, format);
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
-   va_end(args);
    nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tagf, buffer);
 
    if (s_debugWriter != NULL)
       s_debugWriter(tag, buffer);
+}
+
+/**
+ * Write debug message with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...)
+{
+   if (level > nxlog_get_debug_level_tag(tag))
+      return;
+
+   va_list args;
+   va_start(args, format);
+   nxlog_debug_tag_internal(tag, level, format, args);
+   va_end(args);
+}
+
+/**
+ * Write debug message with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag2(const TCHAR *tag, int level, const TCHAR *format, va_list args)
+{
+   if (level > nxlog_get_debug_level_tag(tag))
+      return;
+
+   nxlog_debug_tag_internal(tag, level, format, args);
+}
+
+/**
+ * Write debug message with tag and object ID (added as last part of a tag)
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object(const TCHAR *tag, UINT32 objectId, int level, const TCHAR *format, ...)
+{
+   TCHAR fullTag[256];
+   _sntprintf(fullTag, 256, _T("%s.%u"), tag, objectId);
+   if (level > nxlog_get_debug_level_tag(fullTag))
+      return;
+
+   va_list args;
+   va_start(args, format);
+   nxlog_debug_tag_internal(fullTag, level, format, args);
+   va_end(args);
 }
