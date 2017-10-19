@@ -967,3 +967,16 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object(const TCHAR *tag, UINT32 object
    nxlog_debug_tag_internal(fullTag, level, format, args);
    va_end(args);
 }
+
+/**
+ * Write debug message with tag and object ID (added as last part of a tag)
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object2(const TCHAR *tag, UINT32 objectId, int level, const TCHAR *format, va_list args)
+{
+   TCHAR fullTag[256];
+   _sntprintf(fullTag, 256, _T("%s.%u"), tag, objectId);
+   if (level > nxlog_get_debug_level_tag(fullTag))
+      return;
+
+   nxlog_debug_tag_internal(fullTag, level, format, args);
+}
