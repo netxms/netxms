@@ -151,6 +151,12 @@ AC_ARG_WITH(runtime-state-dir,
    RUNTIME_STATE_DIR="$withval"
 ])
 
+AC_ARG_WITH(clang,
+[AS_HELP_STRING(--with-clang,use clang C++ compiler on Linux if available)],
+[
+	ALLOW_CLANG="yes"
+])
+
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
@@ -1054,7 +1060,7 @@ if test "x$PLATFORM" = "xMinix"; then
 	AC_CHECK_PROG([CC], [clang], [clang])
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
-if test "x$PLATFORM" = "xLinux"; then
+if test "x$PLATFORM" = "xLinux" -a "x$ALLOW_CLANG" = "xyes"; then
 	AC_CHECK_PROG([CC], [clang], [clang])
 	AC_CHECK_PROG([CCC], [clang++], [clang++])
 fi
