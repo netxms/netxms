@@ -238,7 +238,6 @@ AC_ARG_WITH(private-extensions,
 [
 	if test "x$withval" != "xno" ; then
 		WITH_PRIVATE_EXTENSIONS="yes"
-		CXXFLAGS="$CXXFLAGS -DCUSTOM_INIT_CODE"
 	        if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 			CUSTOM_INCLUDE="$withval"
 		fi
@@ -1098,6 +1097,15 @@ AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
 AC_C_CONST
 AC_PROG_GCC_TRADITIONAL
 AC_C_BIGENDIAN
+
+
+#--------------------------------------------------------------------
+# Private extensions
+#--------------------------------------------------------------------
+
+if test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"; then
+	CXXFLAGS="$CXXFLAGS -DCUSTOM_INIT_CODE"
+fi
 
 
 #--------------------------------------------------------------------
