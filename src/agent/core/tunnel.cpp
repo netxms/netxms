@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("tunnel")
+
 /**
  * Check if server address is valid
  */
@@ -93,7 +95,6 @@ private:
    VolatileCounter m_requestId;
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
-   TCHAR m_debugId[64];
    RefCountHashMap<UINT32, TunnelCommChannel> m_channels;
    MUTEX m_channelLock;
 
@@ -148,7 +149,6 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
-   _sntprintf(m_debugId, 64, _T("TUN-%s"), m_hostname);
    m_channelLock = MutexCreate();
 }
 
@@ -179,7 +179,7 @@ void Tunnel::debugPrintf(int level, const TCHAR *format, ...)
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
    va_end(args);
-   nxlog_debug(level, _T("[%s] %s"), m_debugId, buffer);
+   nxlog_debug_tag(DEBUG_TAG, level, _T("%s: %s"), m_hostname, buffer);
 }
 
 /**
@@ -1243,7 +1243,7 @@ void ParseTunnelList(TCHAR *list)
       if (t != NULL)
       {
          s_tunnels.add(t);
-         nxlog_debug(1, _T("Added server tunnel %s"), t->getHostname());
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Added server tunnel %s"), t->getHostname());
       }
       else
       {
@@ -1260,12 +1260,12 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
 {
    if (s_tunnels.size() == 0)
    {
-      nxlog_debug(3, _T("No tunnels configured, tunnel manager will not start"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("No tunnels configured, tunnel manager will not start"));
       return THREAD_OK;
    }
 
    g_tunnelKeepaliveInterval *= 1000;  // convert to milliseconds
-   nxlog_debug(3, _T("Tunnel manager started"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Tunnel manager started"));
    do
    {
       for(int i = 0; i < s_tunnels.size(); i++)
@@ -1275,6 +1275,6 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
       }
    }
    while(!AgentSleepAndCheckForShutdown(g_tunnelKeepaliveInterval));
-   nxlog_debug(3, _T("Tunnel manager stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Tunnel manager stopped"));
    return THREAD_OK;
 }

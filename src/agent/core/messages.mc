@@ -359,7 +359,7 @@ Core agent version %1
 MessageId=
 SymbolicName=MSG_DEBUG_TAG
 Language=English
-<%1> %2
+[%1] %2
 .
 
 ;#endif
