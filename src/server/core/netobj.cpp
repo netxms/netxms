@@ -2734,7 +2734,7 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   {
                      scriptName[i] = 0;
                      StrStrip(scriptName);
-                     const TCHAR *temp = getCustomAttribute(scriptName);
+                     TCHAR *temp = getCustomAttributeCopy(scriptName);
                      if (temp != NULL)
                      {
                         dwSize += (UINT32)_tcslen(temp);
