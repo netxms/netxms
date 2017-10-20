@@ -25,6 +25,8 @@
 
 #define MAX_MSG_SIZE    268435456
 
+#define DEBUG_TAG       _T("agent.tunnel")
+
 /**
  * Tunnel registration
  */
@@ -105,7 +107,7 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
 
    if (tunnel == NULL)
    {
-      nxlog_debug(4, _T("BindAgentTunnel: unbound tunnel with ID %d not found"), tunnelId);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: unbound tunnel with ID %d not found"), tunnelId);
       return RCC_INVALID_TUNNEL_ID;
    }
 
@@ -131,7 +133,7 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId)
    AgentTunnel *tunnel = GetTunnelForNode(nodeId);
    if (tunnel != NULL)
    {
-      nxlog_debug(4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel(%s): shutting down existing tunnel"), node->getName());
       tunnel->shutdown();
       tunnel->decRefCount();
    }
@@ -253,10 +255,8 @@ void AgentTunnel::debugPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   TCHAR buffer[8192];
-   _vsntprintf(buffer, 8192, format, args);
+   nxlog_debug_tag_object2(DEBUG_TAG, m_id, level, format, args);
    va_end(args);
-   nxlog_debug(level, _T("[TUN-%d] %s"), m_id, buffer);
 }
 
 /**
@@ -939,14 +939,14 @@ static void SetupTunnel(void *arg)
    const SSL_METHOD *method = SSLv23_method();
    if (method == NULL)
    {
-      nxlog_debug(4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
 
    context = SSL_CTX_new((SSL_METHOD *)method);
    if (context == NULL)
    {
-      nxlog_debug(4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create TLS context"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
 #ifdef SSL_OP_NO_COMPRESSION
@@ -956,14 +956,14 @@ static void SetupTunnel(void *arg)
 #endif
    if (!SetupServerTlsContext(context))
    {
-      nxlog_debug(4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot configure TLS context"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
 
    ssl = SSL_new(context);
    if (ssl == NULL)
    {
-      nxlog_debug(4, _T("SetupTunnel(%s): cannot create SSL object"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): cannot create SSL object"), (const TCHAR *)request->addr.toString());
       goto failure;
    }
 
@@ -981,12 +981,12 @@ retry:
          poller.add(request->sock);
          if (poller.poll(5000) > 0)
             goto retry;
-         nxlog_debug(4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), (const TCHAR *)request->addr.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), (const TCHAR *)request->addr.toString());
       }
       else
       {
          char buffer[128];
-         nxlog_debug(4, _T("SetupTunnel(%s): TLS handshake failed (%hs)"),
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (%hs)"),
                      (const TCHAR *)request->addr.toString(), ERR_error_string(sslErr, buffer));
       }
       goto failure;
@@ -1000,7 +1000,7 @@ retry:
          TCHAR ou[256], cn[256];
          if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
          {
-            nxlog_debug(4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), (const TCHAR *)request->addr.toString(), ou, cn);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), (const TCHAR *)request->addr.toString(), ou, cn);
             uuid nodeGuid = uuid::parse(ou);
             uuid tunnelGuid = uuid::parse(cn);
             if (!nodeGuid.isNull() && !tunnelGuid.isNull())
@@ -1010,7 +1010,7 @@ retry:
                {
                   if (tunnelGuid.equals(node->getTunnelId()))
                   {
-                     nxlog_debug(4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
                      if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                      {
                         node->removeNewTunnelBindFlag();
@@ -1022,35 +1022,35 @@ retry:
                   }
                   else
                   {
-                     nxlog_debug(4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel ID %s is not valid for node %s [%d]"),
                               (const TCHAR *)request->addr.toString(), (const TCHAR *)tunnelGuid.toString(),
                               node->getName(), node->getId());
                   }
                }
                else
                {
-                  nxlog_debug(4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)nodeGuid.toString());
+                  nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Node with GUID %s not found"), (const TCHAR *)request->addr.toString(), (const TCHAR *)nodeGuid.toString());
                }
             }
             else
             {
-               nxlog_debug(4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Certificate OU or CN is not a valid GUID"), (const TCHAR *)request->addr.toString());
             }
          }
          else
          {
-            nxlog_debug(4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), (const TCHAR *)request->addr.toString());
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Cannot get certificate OU and CN"), (const TCHAR *)request->addr.toString());
          }
       }
       else
       {
-         nxlog_debug(4, _T("SetupTunnel(%s): Agent certificate validation failed"), (const TCHAR *)request->addr.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate validation failed"), (const TCHAR *)request->addr.toString());
       }
       X509_free(cert);
    }
    else
    {
-      nxlog_debug(4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Agent certificate not provided"), (const TCHAR *)request->addr.toString());
    }
 
    tunnel = new AgentTunnel(context, ssl, request->sock, request->addr, nodeId, zoneUIN);
@@ -1128,7 +1128,7 @@ THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
    listener.mainLoop();
    listener.shutdown();
 
-   nxlog_debug(1, _T("Tunnel listener thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Tunnel listener thread terminated"));
    s_tunnelListenerLock.unlock();
    return THREAD_OK;
 }
@@ -1138,7 +1138,7 @@ THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
  */
 void CloseAgentTunnels()
 {
-   nxlog_debug(2, _T("Closing active agent tunnels..."));
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Closing active agent tunnels..."));
 
    // Wait for listener thread
    s_tunnelListenerLock.lock();
@@ -1166,5 +1166,5 @@ void CloseAgentTunnels()
       s_tunnelListLock.unlock();
    }
 
-   nxlog_debug(2, _T("All agent tunnels unregistered"));
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("All agent tunnels unregistered"));
 }
