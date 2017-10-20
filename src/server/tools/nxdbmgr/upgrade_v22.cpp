@@ -72,7 +72,7 @@ bool MajorSchemaUpgrade_V22()
    if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
       return false;
 
-   while(major == 21)
+   while(major == 22)
    {
       // Find upgrade procedure
       int i;
