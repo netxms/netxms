@@ -25,7 +25,7 @@
  */
 size_t curlWriteCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-   return 0;
+   return size*nmemb;
 }
 
 /**
@@ -174,8 +174,6 @@ UINT32 LoraWanServerLink::registerDevice(NXCPMessage *request)
       TCHAR appKey[33];
       request->getFieldAsString(VID_LORA_APP_EUI, appEui, 17);
       request->getFieldAsString(VID_LORA_APP_KEY, appKey, 33);
-      nxlog_debug(4, _T("LoraWAN Module: Config appEui %s"), appEui);
-      nxlog_debug(4, _T("LoraWAN Module: Config appKey %s"), appKey);
       json_object_set_new(root, "deveui", json_string_t((const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING)));
       json_object_set_new(root, "appeui", json_string_t(appEui));
       json_object_set_new(root, "appkey", json_string_t(appKey));
