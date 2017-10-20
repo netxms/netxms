@@ -27,7 +27,7 @@
  */
 static bool H_UpgradeFromV1()
 {
-   CHK_EXEC(SetMajorSchemaVersion(22, 0));
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
    return true;
 }
 
