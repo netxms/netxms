@@ -173,7 +173,7 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, true, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
