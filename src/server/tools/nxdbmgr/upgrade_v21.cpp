@@ -23,6 +23,15 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 21.4 to 22.0
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(SetMajorSchemaVersion(22, 0));
+   return true;
+}
+
+/**
  * Upgrade from 21.3 to 21.4
  */
 static bool H_UpgradeFromV3()
@@ -112,6 +121,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4, 22, 0, H_UpgradeFromV4 },
    { 3, 21, 4, H_UpgradeFromV3 },
    { 2, 21, 3, H_UpgradeFromV2 },
    { 1, 21, 2, H_UpgradeFromV1 },
@@ -127,7 +137,7 @@ bool MajorSchemaUpgrade_V21()
    if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
       return false;
 
-   while((major == 21) && (minor < DB_SCHEMA_VERSION_V21_MINOR))
+   while(major == 21)
    {
       // Find upgrade procedure
       int i;
