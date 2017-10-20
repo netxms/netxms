@@ -28,6 +28,7 @@
  */
 bool MajorSchemaUpgrade_V0();
 bool MajorSchemaUpgrade_V21();
+bool MajorSchemaUpgrade_V22();
 bool MajorSchemaUpgrade_V30();
 
 /**
@@ -415,6 +416,7 @@ static struct
 {
    { 0, MajorSchemaUpgrade_V0 },
    { 21, MajorSchemaUpgrade_V21 },
+   { 22, MajorSchemaUpgrade_V22 },
    { 30, MajorSchemaUpgrade_V30 },
    { 0, NULL }
 };

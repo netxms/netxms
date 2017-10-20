@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.7 to 30.8 (changes also included into 22.1)
+ */
+static bool H_UpgradeFromV7()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 1)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), _T("250"), _T("Maximum size for data collector thread pool."), 'I', true, true, false, false));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 30.6 to 30.7 (changes also included into 21.4)
  */
 static bool H_UpgradeFromV6()
@@ -466,6 +480,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7, 30, 8, H_UpgradeFromV7 },
    { 6, 30, 7, H_UpgradeFromV6 },
    { 5, 30, 6, H_UpgradeFromV5 },
    { 4, 30, 5, H_UpgradeFromV4 },
