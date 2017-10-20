@@ -911,11 +911,11 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
  */
 static void nxlog_debug_tag_internal(const TCHAR *tag, int level, const TCHAR *format, va_list args)
 {
-   TCHAR tagf[16];
+   TCHAR tagf[20];
    int i;
-   for(i = 0; (i < 15) && tag[i] != 0; i++)
+   for(i = 0; (i < 19) && tag[i] != 0; i++)
       tagf[i] = tag[i];
-   for(; i < 15; i++)
+   for(; i < 19; i++)
       tagf[i] = ' ';
    tagf[i] = 0;
 
