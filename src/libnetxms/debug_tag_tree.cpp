@@ -29,9 +29,9 @@ DebugTagTreeNode::DebugTagTreeNode()
 {
    m_value = NULL;
    m_direct = false;
-   m_directLvL = 0;
-   m_asterisk = false;
-   m_asteriskLvL = 0;
+   m_directLevel = 0;
+   m_wildcard = true;
+   m_wildcardLevel = 0;
    m_children = new StringObjectMap<DebugTagTreeNode>(true);
 }
 
@@ -44,36 +44,36 @@ DebugTagTreeNode::DebugTagTreeNode(const TCHAR *value, size_t len)
    memcpy(m_value, value, sizeof(TCHAR) * (int)len);
    m_value[len] = 0;
    m_direct = false;
-   m_directLvL = 0;
-   m_asterisk = false;
-   m_asteriskLvL = 0;
+   m_directLevel = 0;
+   m_wildcard = false;
+   m_wildcardLevel = 0;
    m_children = new StringObjectMap<DebugTagTreeNode>(true);
 }
 
 /**
  * Get debug LvL from tree node, returns longest match (recursive)
  */
-int DebugTagTreeNode::getDebugLvl(const TCHAR *tags)
+int DebugTagTreeNode::getDebugLevel(const TCHAR *tag) const
 {
-   if (tags == NULL)
+   if (tag == NULL)
    {
       if (m_direct)
-         return m_directLvL;
-      if (m_asterisk)
-         return m_asteriskLvL;
+         return m_directLevel;
+      if (m_wildcard)
+         return m_wildcardLevel;
       return -1;
    }
 
    int result = -1;
-   const TCHAR *ptr = _tcschr(tags, _T('.'));
-   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+   const TCHAR *ptr = _tcschr(tag, _T('.'));
+   size_t len = (ptr == NULL) ? _tcslen(tag) : (ptr - tag);
 
-   DebugTagTreeNode *child = m_children->get(tags, len);
+   DebugTagTreeNode *child = m_children->get(tag, len);
    if (child != NULL)
-      result = child->getDebugLvl((ptr != NULL) ? ptr + 1 : NULL);
+      result = child->getDebugLevel((ptr != NULL) ? ptr + 1 : NULL);
 
-   if (result == -1 && m_asterisk)
-      return m_asteriskLvL;
+   if ((result == -1) && m_wildcard)
+      return m_wildcardLevel;
 
    return result;
 }
@@ -81,88 +81,118 @@ int DebugTagTreeNode::getDebugLvl(const TCHAR *tags)
 /**
  * Add new tree node to its children and grand children etc... (recursive)
  */
-void DebugTagTreeNode::add(const TCHAR *tags, UINT32 lvl)
+void DebugTagTreeNode::add(const TCHAR *tag, int level)
 {
-   if (tags != NULL && !_tcscmp(tags, _T("*")))
+   if ((tag != NULL) && !_tcscmp(tag, _T("*")))
    {
-      if (!m_asterisk)
-         m_asterisk = true;
-      m_asteriskLvL = lvl;
+      if (!m_wildcard)
+         m_wildcard = true;
+      m_wildcardLevel = level;
       return;
    }
 
-   const TCHAR *ptr = (tags == NULL) ? NULL : _tcschr(tags, _T('.'));
+   const TCHAR *ptr = (tag == NULL) ? NULL : _tcschr(tag, _T('.'));
 
-   if (tags == NULL)
+   if (tag == NULL)
    {
       if (!m_direct)
          m_direct = true;
-      m_directLvL = lvl;
+      m_directLevel = level;
       return;
    }
 
-   int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
-
-   DebugTagTreeNode *child = m_children->get(tags, len);
+   size_t len = (ptr == NULL) ? _tcslen(tag) : (ptr - tag);
+   DebugTagTreeNode *child = m_children->get(tag, len);
    if (child != NULL)
-      child->add((ptr != NULL) ? ptr + 1 : NULL, lvl);
+      child->add((ptr != NULL) ? ptr + 1 : NULL, level);
    else
    {
-      child = new DebugTagTreeNode(tags, len);
+      child = new DebugTagTreeNode(tag, len);
       m_children->set(child->getValue(), child);
-      child->add((ptr != NULL) ? ptr + 1 : NULL, lvl);
+      child->add((ptr != NULL) ? ptr + 1 : NULL, level);
    }
 }
 
 /**
  * Remove entry from child list (recursive)
  */
-bool DebugTagTreeNode::remove(const TCHAR *tags)
+bool DebugTagTreeNode::remove(const TCHAR *tag)
 {
-   const TCHAR *ptr = NULL;
-
-   if (tags != NULL)
+   if (tag != NULL)
    {
-      ptr = _tcschr(tags, _T('.'));
-      int len = (ptr == NULL) ? _tcslen(tags) : (ptr - tags);
+      if (!_tcscmp(tag, _T("*")))
+      {
+         m_wildcard = false;
+         m_wildcardLevel = 0;
+      }
+      else
+      {
+         const TCHAR *ptr = _tcschr(tag, _T('.'));
+         size_t len = (ptr == NULL) ? _tcslen(tag) : (ptr - tag);
 
-      DebugTagTreeNode *child = m_children->get(tags, len);
-      if (child != NULL && child->remove((ptr != NULL) ? ptr + 1 : NULL))
-         m_children->remove(child->getValue());
+         DebugTagTreeNode *child = m_children->get(tag, len);
+         if (child != NULL && child->remove((ptr != NULL) ? ptr + 1 : NULL))
+         {
+            m_children->remove(child->getValue());
+         }
+      }
    }
-
-   if (tags != NULL && !_tcscmp(tags, _T("*")))
-   {
-      m_asterisk = false;
-      m_asteriskLvL = 0;
-   }
-   else if (tags == NULL)
+   else
    {
       m_direct = false;
-      m_directLvL = 0;
+      m_directLevel = 0;
    }
 
-   if ((m_children->size() == 0) && !m_asterisk)
-      return true;
+   return (m_children->size() == 0) && !m_wildcard;
+}
 
-   return false;
+/**
+ * Get all tags under this node
+ */
+void DebugTagTreeNode::getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo> *tags) const
+{
+   TCHAR name[1024];
+   _tcslcpy(name, prefix, 1024);
+   if (*prefix != 0)
+      _tcslcat(name, _T("."), 1024);
+   size_t l = _tcslen(name);
+   StructArray<KeyValuePair> *c = m_children->toArray();
+   for(int i = 0; i < c->size(); i++)
+   {
+      KeyValuePair *p = c->get(i);
+      _tcslcpy(&name[l], p->key, 1024 - l);
+      const DebugTagTreeNode *n = static_cast<const DebugTagTreeNode*>(p->value);
+      if (n->m_direct)
+      {
+         tags->add(new DebugTagInfo(name, n->m_directLevel));
+      }
+      if (n->m_wildcard)
+      {
+         _tcslcat(name, _T(".*"), 1024);
+         tags->add(new DebugTagInfo(name, n->m_wildcardLevel));
+         _tcslcpy(&name[l], p->key, 1024 - l);
+      }
+      n->getAllTags(name, tags);
+   }
 }
 
 /**
  * Get debug LvL from tree, returns longest match (recursive)
  */
-UINT32 DebugTagTree::getDebugLvl(const TCHAR *tags)
+int DebugTagTree::getDebugLevel(const TCHAR *tags)
 {
    InterlockedIncrement(&m_readerCount);
    int result;
    if (tags == NULL)
-       result = getRootDebugLvl();
-    else
-    {
-       result = m_root->getDebugLvl(tags);
-       if (result == -1)
-          result = 0;
-    }
+   {
+       result = m_root->getWildcardDebugLevel();
+   }
+   else
+   {
+      result = m_root->getDebugLevel(tags);
+      if (result == -1)
+         result = 0;
+   }
    InterlockedDecrement(&m_readerCount);
    return result;
 }
@@ -170,42 +200,22 @@ UINT32 DebugTagTree::getDebugLvl(const TCHAR *tags)
 /**
  * Get main debug level
  */
-UINT32 DebugTagTree::getRootDebugLvl()
+int DebugTagTree::getRootDebugLevel()
 {
    InterlockedIncrement(&m_readerCount);
-   UINT32 level = m_root->m_asteriskLvL;
+   int level = m_root->getWildcardDebugLevel();
    InterlockedDecrement(&m_readerCount);
    return level;
 }
 
 /**
- * Set debug lvl for root node
+ * Get all configured tags
  */
-void DebugTagTree::setRootDebugLvl(UINT32 lvl)
+ObjectArray<DebugTagInfo> *DebugTagTree::getAllTags()
 {
-   m_root->m_asteriskLvL = lvl;
-   if (!m_root->m_asterisk)
-      m_root->m_asterisk = true;
-}
-
-/**
- * Add new entry to the tree (recursive)
- */
-void DebugTagTree::add(const TCHAR *tags, UINT32 lvl)
-{
-   if (tags == NULL)
-      setRootDebugLvl(lvl);
-   else
-      m_root->add(tags, lvl);
-}
-
-/**
- * Remove entry from the tree
- */
-void DebugTagTree::remove(const TCHAR *tags)
-{
-   if (tags == NULL)
-       setRootDebugLvl(0);
-    else
-       m_root->remove(tags);
+   ObjectArray<DebugTagInfo> *tags = new ObjectArray<DebugTagInfo>(64, 64, true);
+   InterlockedIncrement(&m_readerCount);
+   m_root->getAllTags(_T(""), tags);
+   InterlockedDecrement(&m_readerCount);
+   return tags;
 }

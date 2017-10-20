@@ -2427,6 +2427,27 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
 
+#ifdef __cplusplus
+
+/**
+ * Debug tag information
+ */
+struct DebugTagInfo
+{
+   TCHAR tag[64];
+   int level;
+
+   DebugTagInfo(const TCHAR *_tag, int _level)
+   {
+      _tcslcpy(tag, _tag, 64);
+      level = _level;
+   }
+};
+
+ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags();
+
+#endif   /* __cplusplus */
+
 typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 

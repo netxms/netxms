@@ -84,9 +84,9 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
    if ((level >= 0) && (level <= 9))
    {
       MutexLock(m_mutexDebugTagTreeWrite);
-      tagTreeSecondary->setRootDebugLvl(level); // Update the secondary tree
+      tagTreeSecondary->setRootDebugLevel(level); // Update the secondary tree
       SwapAndWait();
-      tagTreeSecondary->setRootDebugLvl(level); // Update the previously active tree
+      tagTreeSecondary->setRootDebugLevel(level); // Update the previously active tree
       MutexUnlock(m_mutexDebugTagTreeWrite);
    }
 }
@@ -96,10 +96,14 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
 {
-   if (tag != NULL)
+   if ((tag == NULL) || !_tcscmp(tag, _T("*")))
+   {
+      nxlog_set_debug_level(level);
+   }
+   else
    {
       MutexLock(m_mutexDebugTagTreeWrite);
-      if((level >= 0) && (level <= 9))
+      if ((level >= 0) && (level <= 9))
       {
          tagTreeSecondary->add(tag, level);
          SwapAndWait();
@@ -120,7 +124,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 {
-   return tagTreeActive->getRootDebugLvl();
+   return tagTreeActive->getRootDebugLevel();
 }
 
 /**
@@ -128,7 +132,15 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag)
 {
-   return tagTreeActive->getDebugLvl(tag);
+   return tagTreeActive->getDebugLevel(tag);
+}
+
+/**
+ * Get all configured debug tags
+ */
+ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags()
+{
+   return tagTreeActive->getAllTags();
 }
 
 /**

@@ -21,32 +21,43 @@
 **
 **
 */
+
+#ifndef _debug_tag_tree_h_
+#define _debug_tag_tree_h_
+
 #include <nms_util.h>
 
+/**
+ * Node of debug tag tree
+ */
 class DebugTagTreeNode
 {
-   friend class DebugTagTree;
-
 private:
    TCHAR *m_value;
    StringObjectMap<DebugTagTreeNode> *m_children;
    bool m_direct;
-   bool m_asterisk;
-   UINT32 m_directLvL;
-   UINT32 m_asteriskLvL;
-
-   DebugTagTreeNode();
-   DebugTagTreeNode(const TCHAR *value, size_t len);
-
-   int getDebugLvl(const TCHAR *tags);
-   const TCHAR *getValue() const { return m_value; }
-   void add(const TCHAR *tags, UINT32 lvl);
-   bool remove(const TCHAR *tags);
+   bool m_wildcard;
+   int m_directLevel;
+   int m_wildcardLevel;
 
 public:
-   ~DebugTagTreeNode() { free(m_value); delete(m_children); }
+   DebugTagTreeNode();
+   DebugTagTreeNode(const TCHAR *value, size_t len);
+   ~DebugTagTreeNode() { free(m_value); delete m_children; }
+
+   int getDebugLevel(const TCHAR *tag) const;
+   int getWildcardDebugLevel() const { return m_wildcardLevel; }
+   const TCHAR *getValue() const { return m_value; }
+   void getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo> *tags) const;
+
+   void add(const TCHAR *tag, int level);
+   bool remove(const TCHAR *tag);
+   void setWildcardDebugLevel(int level) { m_wildcardLevel = level; }
 };
 
+/**
+ * Debug tag tree
+ */
 class DebugTagTree
 {
 private:
@@ -55,14 +66,16 @@ private:
 
 public:
    DebugTagTree() { m_root = new DebugTagTreeNode(); m_readerCount = 0; }
-   ~DebugTagTree() { delete(m_root); }
+   ~DebugTagTree() { delete m_root; }
 
-   void add(const TCHAR *tags, UINT32 lvl);
-   void remove(const TCHAR *tags);
-   UINT32 getDebugLvl(const TCHAR *tags);
+   int getDebugLevel(const TCHAR *tags);
+   int getRootDebugLevel();
+   int getReaderCount() { return (int)m_readerCount; }
+   ObjectArray<DebugTagInfo> *getAllTags();
 
-   void setRootDebugLvl(UINT32 lvl);
-   UINT32 getRootDebugLvl();
-
-   INT32 getReaderCount() { return (INT32)m_readerCount; }
+   void add(const TCHAR *tag, int level) { m_root->add(tag, level); }
+   void remove(const TCHAR *tag) { m_root->remove(tag); }
+   void setRootDebugLevel(int level) { m_root->setWildcardDebugLevel(level); }
 };
+
+#endif
