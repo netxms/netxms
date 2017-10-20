@@ -194,7 +194,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    const TCHAR *values[12] = { recordId, _time, subsys, success, _userId, workstation, _sessionId, _objectId, (const TCHAR *)text, oldValue, newValue, NULL };
    _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&m_recordId));
    _sntprintf(_time, 32, _T("%d"), (UINT32)time(NULL));
-   _sntprintf(success, 2, _T("%d"), isSuccess);
+   _sntprintf(success, 2, _T("%d"), isSuccess ? 1 : 0);
    _sntprintf(_userId, 16, _T("%d"), userId);
    _sntprintf(_sessionId, 16, _T("%d"), sessionId);
    _sntprintf(_objectId, 16, _T("%d"), objectId);
