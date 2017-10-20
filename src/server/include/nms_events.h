@@ -156,6 +156,8 @@ public:
    const TCHAR *getMessage() const { return m_messageText; }
    const TCHAR *getUserTag() const { return m_userTag; }
    time_t getTimeStamp() const { return m_timeStamp; }
+   const Array *getParameterList() const { return &m_parameters; }
+   const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setSeverity(int severity) { m_severity = severity; }
 
@@ -165,8 +167,7 @@ public:
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
-   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
+   TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL);
    void setMessage(const TCHAR *text) { free(m_messageText); m_messageText = _tcsdup_ex(text); }
    void setUserTag(const TCHAR *text) { free(m_userTag); m_userTag = _tcsdup_ex(text); }
 
@@ -228,7 +229,7 @@ private:
    bool matchSeverity(UINT32 dwSeverity);
    bool matchScript(Event *pEvent);
 
-   void generateAlarm(Event *pEvent);
+   UINT32 generateAlarm(Event *pEvent);
 
 public:
    EPRule(UINT32 id);

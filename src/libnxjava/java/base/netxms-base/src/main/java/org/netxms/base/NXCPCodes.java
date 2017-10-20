@@ -373,6 +373,7 @@ public class NXCPCodes
    public static final int CMD_CLOSE_CHANNEL = 0x015F;
    public static final int CMD_CREATE_OBJECT_ACCESS_SNAPSHOT = 0x0160;
    public static final int CMD_UNBIND_AGENT_TUNNEL = 0x0161;
+   public static final int CMD_EXPAND_MACROS = 0x0165;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -989,6 +990,9 @@ public class NXCPCodes
    public static final long VID_DCI_NAME = 600;
    public static final long VID_STATE_FLAGS = 601;
    public static final long VID_CAPABILITIES = 602;
+   public static final long VID_IN_FIELD_COUNT = 603;
+   public static final long VID_STRING_COUNT = 604;
+   public static final long VID_EXPAND_STRING = 605;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1079,5 +1083,7 @@ public class NXCPCodes
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
    public static final long VID_CALLBACK_BASE= 0x10000000L;
+   public static final long VID_EXP_STRING_BASE= 0x10000000L;
+   public static final long VID_IN_FIELD_BASE= 0x20000000L;
    public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
 }

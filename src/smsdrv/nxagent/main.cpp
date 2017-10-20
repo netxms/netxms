@@ -87,8 +87,10 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 		conn->setCommandTimeout(m_timeout);
       if (conn->connect())
       {
-			const TCHAR *argv[2] = { pszPhoneNumber, pszText };
-			UINT32 rcc = conn->execAction(_T("SMS.Send"), 2, argv);
+			StringList list;
+			list.add(pszPhoneNumber);
+         list.add(pszText);
+			UINT32 rcc = conn->execAction(_T("SMS.Send"), list);
 			nxlog_debug(4, _T("nxagent.sms: agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
          if (rcc == ERR_SUCCESS)
 				bSuccess = true;

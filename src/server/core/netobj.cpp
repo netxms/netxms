@@ -2423,3 +2423,412 @@ json_t *NetObj::toJson()
 
    return root;
 }
+
+TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields)
+{
+   const TCHAR *pCurr;
+   UINT32 dwPos, dwSize, dwParam;
+   struct tm *lt;
+#if HAVE_LOCALTIME_R
+   struct tm tmbuffer;
+#endif
+   TCHAR *pText, szBuffer[4], scriptName[256];
+   int i;
+
+   DbgPrintf(8, _T("NetObj::expandText(sourceObject=%d template='%s' alarm='%d' event='%ld')"),
+             m_id, CHECK_NULL(textTemplate), alarm == NULL ? -1 : alarm->getAlarmId() , event == NULL ? -1 : event->getId());
+
+
+   dwSize = (UINT32)_tcslen(textTemplate) + 1;
+   pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
+   for(pCurr = textTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   {
+      switch(*pCurr)
+      {
+         case '%':   // Metacharacter
+            pCurr++;
+            if (*pCurr == 0)
+            {
+               pCurr--;
+               break;   // Abnormal loop termination
+            }
+            switch(*pCurr)
+            {
+               case '%':
+                  pText[dwPos++] = '%';
+                  break;
+               case 'a':   // IP address of event source
+                  dwSize += 64;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  GetObjectIpAddress(this).toString(&pText[dwPos]);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'A':   // Associated alarm message
+                  if (alarm != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarm->getMessage());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarm->getMessage());
+                     dwPos += (UINT32)_tcslen(alarm->getMessage());
+                  }
+                  break;
+               case 'c':   // Event code
+                  dwSize += 16;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->getCode() : 0));
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'g':   // Source object's GUID
+                  dwSize += 36;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  getGuid().toString(&pText[dwPos]);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'i':   // Source object identifier in form 0xhhhhhhhh
+                  dwSize += 10;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_id);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'I':   // Source object identifier in decimal form
+                  dwSize += 10;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 11, _T("%u"), (unsigned int)m_id);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'K':   // Associated alarm key
+                  if (alarm != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarm->getKey());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarm->getKey());
+                     dwPos += (UINT32)_tcslen(alarm->getKey());
+                  }
+                  break;
+               case 'm':
+                  if ((event != NULL) && (event->getMessage() != NULL))
+                  {
+                     dwSize += (UINT32)_tcslen(event->getMessage());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->getMessage());
+                     dwPos += (UINT32)_tcslen(event->getMessage());
+                  }
+                  break;
+               case 'M':   // Custom message (usually set by matching script in EPP)
+                  if ((event != NULL) && (event->getCustomMessage() != NULL))
+                  {
+                     dwSize += (UINT32)_tcslen(event->getCustomMessage());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->getCustomMessage());
+                     dwPos += (UINT32)_tcslen(event->getCustomMessage());
+                  }
+                  break;
+               case 'n':   // Name of event source
+                  dwSize += (UINT32)_tcslen(getName());
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], getName());
+                  dwPos += (UINT32)_tcslen(getName());
+                  break;
+               case 'N':   // Event name
+                  if (event != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(event->getName());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->getName());
+                     dwPos += (UINT32)_tcslen(event->getName());
+                  }
+                  break;
+               case 's':   // Severity code
+                  if (event != NULL)
+                  {
+                     dwSize += 3;
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _sntprintf(&pText[dwPos], 4, _T("%d"), (int)event->getSeverity());
+                     dwPos = (UINT32)_tcslen(pText);
+                  }
+                  break;
+               case 'S':   // Severity text
+                  if (event != NULL)
+                  {
+                     const TCHAR *statusText = GetStatusAsText(event->getSeverity(), false);
+                     dwSize += (UINT32)_tcslen(statusText);
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], statusText);
+                     dwPos += (UINT32)_tcslen(statusText);
+                  }
+                  break;
+               case 't':   // Event's timestamp
+                  dwSize += 32;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  time_t t;
+                  if(event != NULL)
+                  {
+                     t = event->getTimeStamp();
+                  }
+                  else
+                  {
+                     t = time(NULL);
+                  }
+#if HAVE_LOCALTIME_R
+                  lt = localtime_r(&t, &tmbuffer);
+#else
+                  lt = localtime(&t);
+#endif
+                  _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'T':   // Event's timestamp as number of seconds since epoch
+                  dwSize += 16;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->getTimeStamp() : time(NULL)));
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'u':   // User tag
+                  if ((event != NULL) && (event->getUserTag() != NULL))
+                  {
+                     dwSize += (UINT32)_tcslen(event->getUserTag());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->getUserTag());
+                     dwPos += (UINT32)_tcslen(event->getUserTag());
+                  }
+                  break;
+               case 'U':   // User name
+                  dwSize += (UINT32)_tcslen(userName);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], userName);
+                  dwPos += (UINT32)_tcslen(userName);
+                  break;
+               case 'v':   // NetXMS server version
+                  dwSize += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
+                  dwPos += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+                  break;
+               case 'y': // alarm state
+                  if (alarm != NULL)
+                  {
+                     dwSize += 3;
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _sntprintf(&pText[dwPos], 4, _T("%d"), (int)alarm->getState());
+                     dwPos = (UINT32)_tcslen(pText);
+                  }
+                  break;
+               case 'Y': // alarm ID
+                  break;
+               case '0':
+               case '1':
+               case '2':
+               case '3':
+               case '4':
+               case '5':
+               case '6':
+               case '7':
+               case '8':
+               case '9':
+                  if (event != NULL)
+                  {
+                     szBuffer[0] = *pCurr;
+                     if (isdigit(*(pCurr + 1)))
+                     {
+                        pCurr++;
+                        szBuffer[1] = *pCurr;
+                        szBuffer[2] = 0;
+                     }
+                     else
+                     {
+                        szBuffer[1] = 0;
+                     }
+                     dwParam = _tcstoul(szBuffer, NULL, 10);
+                     const Array *params = event->getParameterList();
+                     if ((dwParam > 0) && (dwParam <= (UINT32)params->size()))
+                     {
+                        const TCHAR *value = (TCHAR *)params->get(dwParam - 1);
+                        if (value == NULL)
+                           value = _T("");
+                        dwSize += (UINT32)_tcslen(value);
+                        pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                        _tcscpy(&pText[dwPos], value);
+                        dwPos += (UINT32)_tcslen(value);
+                     }
+                  }
+                  break;
+               case '[':   // Script
+                  for(i = 0, pCurr++; (*pCurr != ']') && (*pCurr != 0) && (i < 255); pCurr++)
+                  {
+                     scriptName[i++] = *pCurr;
+                  }
+                  if (*pCurr == 0)  // no terminating ]
+                  {
+                     pCurr--;
+                  }
+                  else
+                  {
+                     scriptName[i] = 0;
+
+                     // Entry point can be given in form script/entry_point
+                     TCHAR *entryPoint = _tcschr(scriptName, _T('/'));
+                     if (entryPoint != NULL)
+                     {
+                        *entryPoint = 0;
+                        entryPoint++;
+                        StrStrip(entryPoint);
+                     }
+                     StrStrip(scriptName);
+
+                     NXSL_VM *vm = CreateServerScriptVM(scriptName);
+                     if (vm != NULL)
+                     {
+                        vm->setGlobalVariable(_T("$object"), createNXSLObject());
+                        if (getObjectClass() == OBJECT_NODE)
+                           vm->setGlobalVariable(_T("$node"), createNXSLObject());
+                        if (event != NULL)
+                           vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, const_cast<Event *>(event))) : new NXSL_Value);
+                        if (alarm != NULL)
+                        {
+                           vm->setGlobalVariable(_T("$alarm"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : new NXSL_Value);
+                           vm->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarm->getMessage()));
+                           vm->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarm->getKey()));
+                        }
+
+                        if (vm->run(0, NULL, NULL, NULL, NULL, entryPoint))
+                        {
+                           NXSL_Value *result = vm->getResult();
+                           if (result != NULL)
+                           {
+                              const TCHAR *temp = result->getValueAsCString();
+                              if (temp != NULL)
+                              {
+                                 dwSize += (UINT32)_tcslen(temp);
+                                 pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                                 _tcscpy(&pText[dwPos], temp);
+                                 dwPos += (UINT32)_tcslen(temp);
+                                 DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s executed successfully"),
+                                    (int)((event != NULL) ? event->getCode() : 0), textTemplate, scriptName);
+                              }
+                           }
+                        }
+                        else
+                        {
+                           DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
+                                     (int)((event != NULL) ? event->getCode() : 0), textTemplate, scriptName, vm->getErrorText());
+                           PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
+                        }
+                     }
+                     else
+                     {
+                        DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Cannot find script %s"),
+                           (int)((event != NULL) ? event->getCode() : 0), textTemplate, scriptName);
+                     }
+                  }
+                  break;
+               case '{':   // Custom attribute
+                  for(i = 0, pCurr++; (*pCurr != '}') && (*pCurr != 0) && (i < 255); pCurr++)
+                  {
+                     scriptName[i++] = *pCurr;
+                  }
+                  if (*pCurr == 0)  // no terminating }
+                  {
+                     pCurr--;
+                  }
+                  else
+                  {
+                     scriptName[i] = 0;
+                     StrStrip(scriptName);
+                     const TCHAR *temp = getCustomAttribute(scriptName);
+                     if (temp != NULL)
+                     {
+                        dwSize += (UINT32)_tcslen(temp);
+                        pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                        _tcscpy(&pText[dwPos], temp);
+                        dwPos += (UINT32)_tcslen(temp);
+                        free(temp);
+                     }
+                  }
+                  break;
+               case '(':   // Input field
+                  for(i = 0, pCurr++; (*pCurr != ')') && (*pCurr != 0) && (i < 255); pCurr++)
+                  {
+                     scriptName[i++] = *pCurr;
+                  }
+                  if (*pCurr == 0)  // no terminating )
+                  {
+                     pCurr--;
+                  }
+                  else if (inputFields != NULL)
+                  {
+                     scriptName[i] = 0;
+                     StrStrip(scriptName);
+                     const TCHAR *temp = inputFields->get(scriptName);
+                     if (temp != NULL)
+                     {
+                        dwSize += (UINT32)_tcslen(temp);
+                        pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                        _tcscpy(&pText[dwPos], temp);
+                        dwPos += (UINT32)_tcslen(temp);
+                     }
+                  }
+                  break;
+               case '<':   // Named parameter
+                  if (event != NULL)
+                  {
+                     for(i = 0, pCurr++; (*pCurr != '>') && (*pCurr != 0) && (i < 255); pCurr++)
+                     {
+                        scriptName[i++] = *pCurr;
+                     }
+                     if (*pCurr == 0)  // no terminating >
+                     {
+                        pCurr--;
+                     }
+                     else
+                     {
+                        scriptName[i] = 0;
+                        StrStrip(scriptName);
+                        const StringList *names = event->getParameterNames();
+                        int index = names->indexOfIgnoreCase(scriptName);
+                        if (index != -1)
+                        {
+                           const TCHAR *temp = (TCHAR *)names->get(index);
+                           if (temp != NULL)
+                           {
+                              dwSize += (UINT32)_tcslen(temp);
+                              pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                              _tcscpy(&pText[dwPos], temp);
+                              dwPos += (UINT32)_tcslen(temp);
+                           }
+                        }
+                     }
+                  }
+                  break;
+               default:    // All other characters are invalid, ignore
+                  break;
+            }
+            break;
+         case '\\':  // Escape character
+            pCurr++;
+            if (*pCurr == 0)
+            {
+               pCurr--;
+               break;   // Abnormal loop termination
+            }
+            switch(*pCurr)
+            {
+               case 't':
+                  pText[dwPos++] = '\t';
+                  break;
+               case 'n':
+                  pText[dwPos++] = 0x0D;
+                  pText[dwPos++] = 0x0A;
+                  break;
+               default:
+                  pText[dwPos++] = *pCurr;
+                  break;
+            }
+            break;
+         default:
+            pText[dwPos++] = *pCurr;
+            break;
+      }
+   }
+   pText[dwPos] = 0;
+   return pText;
+}

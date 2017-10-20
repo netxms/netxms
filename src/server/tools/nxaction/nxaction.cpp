@@ -270,14 +270,19 @@ int main(int argc, char *argv[])
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
 					action[255] = 0;
 					
+					StringList list;
 					int count = std::min(argc - optind - 2, 256);
 					for(i = 0, k = optind + 2; i < count; i++, k++)
-						args[i] = WideStringFromMBString(argv[k]);
-               dwError = conn->execAction(action, count, args, showOutput, OutputCallback);
+						list.addPreallocated(WideStringFromMBString(argv[k]));
+               dwError = conn->execAction(action, list, showOutput, OutputCallback);
 					for(i = 0; i < count; i++)
 						free(args[i]);
 #else
-               dwError = conn->execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2], showOutput, OutputCallback);
+               StringList list;
+               int count = std::min(argc - optind - 2, 256);
+               for(i = 0, k = optind + 2; i < count; i++, k++)
+                  list.addPreallocated(argv[k]);
+               dwError = conn->execAction(argv[optind + 1], list, showOutput, OutputCallback);
 #endif
                if (dwError == ERR_SUCCESS)
                   _tprintf(_T("Action executed successfully\n"));

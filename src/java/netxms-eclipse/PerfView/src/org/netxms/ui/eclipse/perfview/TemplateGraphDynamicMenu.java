@@ -109,6 +109,7 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
                public void widgetSelected(SelectionEvent e)
                {
                   final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+                  final GraphSettings gs = (GraphSettings)item.getData();
                   ConsoleJob job = new ConsoleJob("Get last values of " + node.getObjectName() , null, Activator.PLUGIN_ID, null) {
                      @Override
                      protected String getErrorMessage()
@@ -121,13 +122,7 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
                      {
                         
                         final DciValue[] data = session.getLastValues(node.getObjectId());
-                        runInUIThread(new Runnable() {
-                           @Override
-                           public void run()
-                           {
-                              GraphTemplateCache.execute(node, (GraphSettings)item.getData(), data);
-                           }
-                        });
+                        GraphTemplateCache.execute(node, gs, data, getDisplay());
                      }
                   };
                   job.setUser(false);

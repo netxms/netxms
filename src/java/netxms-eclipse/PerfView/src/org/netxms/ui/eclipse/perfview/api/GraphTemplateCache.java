@@ -1,16 +1,20 @@
 package org.netxms.ui.eclipse.perfview.api;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -22,6 +26,7 @@ import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class GraphTemplateCache
@@ -149,14 +154,16 @@ public class GraphTemplateCache
       return graphs;
    }
 
-   public static void execute(final AbstractNode node, final GraphSettings data, final DciValue[] values)
+   public static void execute(final AbstractNode node, final GraphSettings data, final DciValue[] values, final Display disp) throws IOException, NXCException
    {
-      ObjectContext ctx = new ObjectContext(node, null);
-      String name = ctx.substituteMacros(data.getTitle(), null);
-      GraphSettings result = new GraphSettings(data, name);
+      final NXCSession session = ConsoleSharedData.getSession();
+      List<String> textsToExpand = new ArrayList<String>();
+      textsToExpand.add(data.getTitle());
+      String name = session.substitureMacross(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0); 
+      final GraphSettings result = new GraphSettings(data, name);
       
       ChartDciConfig[] conf = result.getDciList();
-      HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
+      final HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
       int foundByDescription = -1;
       int foundDCICount = 0;
       //parse config and compare name as regexp and then compare description
@@ -193,13 +200,27 @@ public class GraphTemplateCache
       }
       if(foundDCICount > 0)
       {
-         result.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
-         showPredefinedGraph(result, node.getObjectId());
+         disp.syncExec(new Runnable() {
+            
+            @Override
+            public void run()
+            {
+               result.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
+               showPredefinedGraph(result, node.getObjectId());               
+            }
+         });
       }
       else
       {
-         MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Graph creation from template error", "None of template graphs DCI were found on a node.");
-      }
+         disp.syncExec(new Runnable() {
+            
+            @Override
+            public void run()
+            {  
+               MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Graph creation from template error", "None of template graphs DCI were found on a node.");
+            }
+         });
+       }
    }
    
    /**

@@ -217,8 +217,8 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
       }
    }
 
+   StringList list;
 	pTmp = _tcsdup(pszAction);
-	pCmd[0] = pTmp;
 	nLen = (int)_tcslen(pTmp);
 	for(i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
 	{
@@ -230,7 +230,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 					pTmp[i] = 0;
 					if (pTmp[i + 1] != 0)
 					{
-						pCmd[nCount++] = pTmp + i + 1;
+					   list.add(pTmp + i + 1);
 					}
 				}
 				break;
@@ -250,9 +250,8 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 				break;
 		}
 	}
-	pCmd[nCount] = NULL;
 
-   dwError = pConn->execAction(pCmd[0], nCount - 1, &pCmd[1]);
+   dwError = pConn->execAction(pTmp, list);
    pConn->disconnect();
    pConn->decRefCount();
    free(pTmp);
@@ -389,7 +388,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey)
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const Alarm *alarm)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
@@ -413,10 +412,10 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, cons
 
          TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
-         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), alarmMsg, alarmKey);
+         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), alarm);
          StrStrip(pszExpandedData);
 
-         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, alarmMsg, alarmKey);
+         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, alarm);
          StrStrip(pszExpandedRcpt);
 
          switch(pAction->iType)
@@ -436,7 +435,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, cons
                if (pszExpandedRcpt[0] != 0)
                {
                   DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, alarmMsg, alarmKey);
+                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, alarm);
 					   curr = pszExpandedRcpt;
 					   do
 					   {

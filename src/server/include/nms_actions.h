@@ -30,7 +30,7 @@
 
 BOOL InitActions();
 void CleanupActions();
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey);
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const Alarm *alarm);
 UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId);
 UINT32 DeleteActionFromDB(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);

@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  * Executor for object tool
  */
 public final class ObjectToolExecutor
-{
+{   
    /**
     * Private constructor to forbid instantiation 
     */
@@ -132,39 +132,64 @@ public final class ObjectToolExecutor
       {
          inputValues = new HashMap<String, String>(0);
       }
-      
-      if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
-      {
-         String message = tool.getConfirmationText();
-         if (nodes.size() == 1)
-         {
-            ObjectContext node = nodes.iterator().next();
-            message = node.substituteMacros(message, new HashMap<String, String>(0));
-         }
-         else
-         {
-            message = new ObjectContext(null, null).substituteMacros(message, new HashMap<String, String>(0));
-         }
-         if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
-               Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
-            return;
-      }
-      
-      // Check if password validation needed
-      boolean validationNeeded = false;
-      for(int i = 0; i < fields.length; i++)
-         if (fields[i].getOptions().validatePassword)
-         {
-            validationNeeded = true;
-            break;
-         }
-      
-      if (validationNeeded)
-      {
-         final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().ObjectToolExecutor_JobName, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob(Messages.get().ObjectToolExecutor_JobName, null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {      
+            List<String> expandedText = null;
+            
+            if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+            {
+               String message = tool.getConfirmationText();
+               if (nodes.size() == 1)
+               {
+                  //Expand message and action for 1 node, otherwise expansion occurs after confirmation
+                  List<String> textToExpand = new ArrayList<String>();
+                  textToExpand.add(tool.getConfirmationText());
+                  if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+                  {
+                     textToExpand.add(tool.getData());
+                  }
+                  ObjectContext node = nodes.iterator().next();
+                  expandedText = session.substitureMacross(node, textToExpand, inputValues);
+                  
+                  message = expandedText.remove(0);                  
+               }
+               else
+               {
+                  ObjectContext node = nodes.iterator().next();
+                  message = node.substituteMacrosForMultiNodes(message, inputValues);
+               }
+               
+               ConfirmationRunnable runnable = new ConfirmationRunnable(message);
+               getDisplay().syncExec(runnable);
+               if(!runnable.isConfirmed())
+                  return;
+
+               if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               {
+                  expandedText = session.substitureMacross(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+               }
+            }
+            else
+            {
+               if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               {
+                  expandedText = session.substitureMacross(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+               }
+            }
+            
+            // Check if password validation needed
+            boolean validationNeeded = false;
+            for(int i = 0; i < fields.length; i++)
+               if (fields[i].getOptions().validatePassword)
+               {
+                  validationNeeded = true;
+                  break;
+               }
+            
+            if (validationNeeded)
             {
                for(int i = 0; i < fields.length; i++)
                {
@@ -186,29 +211,67 @@ public final class ObjectToolExecutor
                      }
                   }
                }
-               
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     for(ObjectContext n : nodes)
-                        executeOnNode(n, tool, inputValues);
-                  }
-               });
             }
             
-            @Override
-            protected String getErrorMessage()
+            int i = 0;
+            for(final ObjectContext n : nodes)
             {
-               return Messages.get().ObjectToolExecutor_PasswordValidationFailed;
+               if(tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
+               {
+                  final String tmp = expandedText.get(i++);
+                  getDisplay().syncExec(new Runnable() {
+                     
+                     @Override
+                     public void run()
+                     {
+                        executeOnNode(n, tool, inputValues, tmp);
+                     }
+                  });
+               }
+               else
+               {
+                  getDisplay().syncExec(new Runnable() {
+                     
+                     @Override
+                     public void run()
+                     {
+                        executeOnNode(n, tool, inputValues, null);
+                     }
+                  });                  
+               }
             }
-         }.start();
-      }
-      else
-      {
-         for(ObjectContext n : nodes)
-            executeOnNode(n, tool, inputValues);
-      }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ObjectToolExecutor_PasswordValidationFailed;
+         }
+         
+         class ConfirmationRunnable implements Runnable
+         {
+            private boolean confirmed;
+            private String message;
+
+            public ConfirmationRunnable(String message)
+            {
+               this.message = message;
+            }
+
+            @Override
+            public void run()
+            {
+               confirmed = MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
+                     Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message);
+            }
+            
+            boolean isConfirmed()
+            {
+               return confirmed;
+            }
+         }         
+         
+      }.start();
    }
    
    /**
@@ -232,7 +295,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String expandedValue)
    {
       switch(tool.getToolType())
       {
@@ -256,7 +319,7 @@ public final class ObjectToolExecutor
             executeTableTool(node, tool);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues);
+            openURL(node, tool, inputValues, expandedValue);
             break;
       }
    }
@@ -284,99 +347,13 @@ public final class ObjectToolExecutor
    }
    
    /**
-    * Split command line into tokens
-    *  
-    * @param input
-    * @return
-    */
-   private static String[] splitCommandLine(String input)
-   {
-      char[] in = input.toCharArray();
-      List<String> args = new ArrayList<String>();
-      
-      StringBuilder sb = new StringBuilder();
-      int state = 0;
-      for(char c : in)
-      {
-         switch(state)
-         {
-            case 0: // normal
-               if (Character.isSpaceChar(c))
-               {
-                  args.add(sb.toString());
-                  sb = new StringBuilder();
-                  state = 3;
-               }
-               else if (c == '"')
-               {
-                  state = 1;
-               }
-               else if (c == '\'')
-               {
-                  state = 2;
-               }
-               else
-               {
-                  sb.append(c);
-               }
-               break;
-            case 1: // double quoted string
-               if (c == '"')
-               {
-                  state = 0;
-               }
-               else
-               {
-                  sb.append(c);
-               }
-               break;
-            case 2: // single quoted string
-               if (c == '\'')
-               {
-                  state = 0;
-               }
-               else
-               {
-                  sb.append(c);
-               }
-               break;
-            case 3: // skip
-               if (!Character.isSpaceChar(c))
-               {
-                  if (c == '"')
-                  {
-                     state = 1;
-                  }
-                  else if (c == '\'')
-                  {
-                     state = 2;
-                  }
-                  else
-                  {
-                     sb.append(c);
-                     state = 0;
-                  }
-               }
-               break;
-         }
-      }
-      if (state != 3)
-         args.add(sb.toString());
-      
-      return args.toArray(new String[args.size()]);
-   }
-
-   /**
     * @param node
     * @param tool
     * @param inputValues 
     */
-   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      String[] parts = splitCommandLine(node.substituteMacros(tool.getData(), inputValues));
-      final String action = parts[0];
-      final String[] args = Arrays.copyOfRange(parts, 1, parts.length);
       
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
@@ -390,7 +367,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeAction(node.object.getObjectId(), action, args);
+               final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -408,7 +385,7 @@ public final class ObjectToolExecutor
          try
          {
             AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(action, args);
+            view.executeAction(tool.getData(), node.getAlarmId(), inputValues);
          }
          catch(Exception e)
          {
@@ -482,7 +459,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeLibraryScript(node.object.getObjectId(), tool.getData(), inputValues, null);
+               session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -506,7 +483,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerScriptResults view = (ServerScriptResults)window.getActivePage().showView(ServerScriptResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeScript(tool.getData(), inputValues);
+            view.executeScript(tool.getData(), node.getAlarmId(), inputValues);
          }
          catch(Exception e)
          {
@@ -521,12 +498,12 @@ public final class ObjectToolExecutor
     * @param inputValues 
     * @param inputValues 
     */
-   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
       
-      final String fileName = node.substituteMacros(parameters[0], inputValues);
+      final String fileName = parameters[0];
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
       
@@ -540,7 +517,7 @@ public final class ObjectToolExecutor
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow, inputValues, node.getAlarmId(), new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
@@ -596,9 +573,8 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String url)
    {
-      final String url = node.substituteMacros(tool.getData(), inputValues);
       final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
       launcher.openURL(url);
    }

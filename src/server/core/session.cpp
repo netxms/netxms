@@ -1349,6 +1349,9 @@ void ClientSession::processingThread()
          case CMD_GET_PREDICTED_DATA:
             CALL_IN_NEW_THREAD(getPredictedData, pMsg);
             break;
+         case CMD_EXPAND_MACROS:
+            expandMacros(pMsg);
+            break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:
             zmqManageSubscription(pMsg, zmq::EVENT, true);
@@ -7579,7 +7582,8 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
                if ((pRequest->getFieldAsUInt16(VID_APPLY_FLAG) != 0) &&
                    (dwResult == ERR_SUCCESS))
                {
-                  dwResult = pConn->execAction(_T("Agent.Restart"), 0, NULL);
+                  StringList list;
+                  dwResult = pConn->execAction(_T("Agent.Restart"), list);
                }
 
                switch(dwResult)
@@ -7675,60 +7679,160 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
 }
 
 /**
+ *  Splits command line
+ */
+static StringList *SplitCommandLine(TCHAR *command)
+{
+   StringList *listOfStrings = new StringList();
+   String tmp;
+   int state = 0;
+   int size = _tcslen(command);
+   for(int i = 0; i < size; i++)
+   {
+      TCHAR c = command[i];
+      switch(state)
+      {
+         case 0:
+            if (c == _T(' '))
+            {
+               listOfStrings->add(tmp);
+               tmp = _T("");
+               state = 3;
+            }
+            else if (c == _T('"'))
+            {
+               state = 1;
+            }
+            else if (c == _T('\''))
+            {
+               state = 2;
+            }
+            else
+            {
+               tmp.append(c);
+            }
+            break;
+         case 1: // double quoted string
+            if (c == _T('"'))
+            {
+               state = 0;
+            }
+            else
+            {
+               tmp.append(c);
+            }
+            break;
+         case 2: // single quoted string
+            if (c == '\'')
+            {
+               state = 0;
+            }
+            else
+            {
+               tmp.append(c);
+            }
+            break;
+         case 3: // skip
+            if (c != _T(' '))
+            {
+               if (c == _T('"'))
+               {
+                  state = 1;
+               }
+               else if (c == '\'')
+               {
+                  state = 2;
+               }
+               else
+               {
+                  tmp.append(c);
+                  state = 0;
+               }
+            }
+            break;
+      }
+   }
+   if (state != 3)
+      listOfStrings->add(tmp);
+
+   return listOfStrings;
+}
+
+/**
  * Execute action on agent
  */
-void ClientSession::executeAction(NXCPMessage *pRequest)
+void ClientSession::executeAction(NXCPMessage *request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get object id and check prerequisites
-   NetObj *object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
          TCHAR action[MAX_PARAM_NAME];
-         pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+         request->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
 
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             AgentConnection *pConn = ((Node *)object)->createAgentConnection();
             if (pConn != NULL)
             {
-               TCHAR *argv[64];
-               int argc = pRequest->getFieldAsInt16(VID_NUM_ARGS);
-               if (argc > 64)
+               StringList *list = NULL;
+               if(request->getFieldAsBoolean(VID_EXPAND_STRING))
                {
-                  debugPrintf(4, _T("executeAction: too many arguments (%d)"), argc);
-                  argc = 64;
-               }
-               UINT32 fieldId = VID_ACTION_ARG_BASE;
-               for(int i = 0; i < argc; i++)
-                  argv[i] = pRequest->getFieldAsString(fieldId++);
-
-               UINT32 rcc;
-               bool withOutput = pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
-               if (withOutput)
-               {
-                  ActionExecutionData data(this, pRequest->getId());
-                  rcc = pConn->execAction(action, argc, argv, true, ActionExecuteCallback, &data);
+                  StringMap strMap;
+                  strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+                  Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+                  if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+                  {
+                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     sendMessage(&msg);
+                     delete alarm;
+                     return;
+                  }
+                  TCHAR *result = object->expandText(action, alarm, NULL, m_loginName, &strMap);
+                  list = SplitCommandLine(result);
+                  _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
+                  list->remove(0);
+                  delete alarm;
+                  free(result);
                }
                else
                {
-                  rcc = pConn->execAction(action, argc, argv);
+                  int argc = request->getFieldAsInt16(VID_NUM_ARGS);
+                  if (argc > 64)
+                  {
+                     debugPrintf(4, _T("executeAction: too many arguments (%d)"), argc);
+                     argc = 64;
+                  }
+
+                  list = new StringList();
+                  UINT32 fieldId = VID_ACTION_ARG_BASE;
+                  for(int i = 0; i < argc; i++)
+                     list->addPreallocated(request->getFieldAsString(fieldId++));
+               }
+
+               UINT32 rcc;
+               bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+               if (withOutput)
+               {
+                  ActionExecutionData data(this, request->getId());
+                  rcc = pConn->execAction(action, *list, true, ActionExecuteCallback, &data);
+               }
+               else
+               {
+                  rcc = pConn->execAction(action, *list);
                }
                debugPrintf(4, _T("executeAction: rcc=%d"), rcc);
 
                String args;
-               for(int i = 0; i < argc; i++)
-               {
-                  args.appendFormattedString(_T("%s, "), argv[i]);
-                  free(argv[i]);
-               }
+               args.appendPreallocated(list->join(_T(", ")));
                args.shrink(2);
 
                switch(rcc)
@@ -7752,6 +7856,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
                      break;
                }
                pConn->decRefCount();
+               delete list;
             }
             else
             {
@@ -10325,10 +10430,24 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
+			   StringMap strMap;
+			   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+            Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+            if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+            {
+               msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+               sendMessage(&msg);
+               delete alarm;
+               return;
+            }
+				TCHAR *result = object->expandText(remoteFile, alarm, NULL, m_loginName, &strMap);
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile,
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, result,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
+				msg.setField(VID_FILE_NAME, result);
+				free(result);
+				delete alarm;
 				if (AddJob(job))
 				{
 	            msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10687,8 +10806,18 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      inputFields = NULL;
                   }
 
-                  TCHAR *expScript = ((Node *)object)->expandText(script, inputFields, m_loginName);
+                  Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+                  if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+                  {
+                     msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                     sendMessage(&msg);
+                     delete alarm;
+                     delete inputFields;
+                     return;
+                  }
+                  TCHAR *expScript = object->expandText(script, alarm, NULL, m_loginName, inputFields);
                   script = expScript;
+                  delete alarm;
                   delete inputFields;
                }
 
@@ -13804,6 +13933,50 @@ void ClientSession::unbindAgentTunnel(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on unbinding agent tunnel"));
    }
+   sendMessage(&msg);
+}
+
+void ClientSession::expandMacros(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   StringMap strMap;
+   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+
+   int fieldCount = request->getFieldAsUInt32(VID_STRING_COUNT);
+   UINT32 inFieldId = VID_EXP_STRING_BASE;
+   UINT32 outFieldId = VID_EXP_STRING_BASE;
+   for(int i = 0; i < fieldCount; i++, inFieldId=inFieldId+2, outFieldId++)
+   {
+      TCHAR *textToExpand = request->getFieldAsString(inFieldId++, NULL, 0);
+      NetObj *obj = FindObjectById(request->getFieldAsUInt32(inFieldId++));
+      if(obj == NULL)
+      {
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         sendMessage(&msg);
+         return;
+      }
+      obj->incRefCount();
+      Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(inFieldId++));
+      if(!obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) || (alarm != NULL &&
+            !obj->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this)))
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         sendMessage(&msg);
+         delete alarm;
+         return;
+      }
+
+      TCHAR *result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &strMap);
+      msg.setField(outFieldId, result);
+      debugPrintf(7, _T("ClientSession::expandMacros(): String for expansion: '%s', result: '%s'"), textToExpand);
+      free(textToExpand);
+      free(result);
+      obj->decRefCount();
+      delete alarm;
+   }
+
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 

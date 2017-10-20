@@ -392,10 +392,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_CLOSE_CHANNEL"),
       _T("CMD_CREATE_OBJECT_ACCESS_SNAPSHOT"),
       _T("CMD_UNBIND_AGENT_TUNNEL"),
-      _T("CMD_RESTART")
+      _T("CMD_RESTART"),
+      _T("CMD_REGISTER_LORAWAN_SENSOR"),
+      _T("CMD_UNREGISTER_LORAWAN_SENSOR"),
+      _T("CMD_EXPAND_MACROS")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_RESTART))
+   if ((code >= CMD_LOGIN) && (code <= CMD_EXPAND_MACROS))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

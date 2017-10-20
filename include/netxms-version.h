@@ -43,7 +43,7 @@
 /**
  * Current client-server protocol versions
  */
-#define CLIENT_PROTOCOL_VERSION_BASE      50    /* Base protocol version - must match for all clients */
+#define CLIENT_PROTOCOL_VERSION_BASE      51    /* Base protocol version - must match for all clients */
 #define CLIENT_PROTOCOL_VERSION_ALARMS    3     /* Alarm management API */
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */

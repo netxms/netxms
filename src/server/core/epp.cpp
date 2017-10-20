@@ -529,18 +529,16 @@ bool EPRule::processEvent(Event *pEvent)
 			DbgPrintf(6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), pEvent->getId(), (int)m_id);
 
          // Generate alarm if requested
+         UINT32 alarmId = 0;
          if (m_dwFlags & RF_GENERATE_ALARM)
-            generateAlarm(pEvent);
+            alarmId = generateAlarm(pEvent);
 
          // Event matched, perform actions
          if (m_dwNumActions > 0)
          {
-            TCHAR *alarmMessage = pEvent->expandText(m_szAlarmMessage);
-            TCHAR *alarmKey = pEvent->expandText(m_szAlarmKey);
+            Alarm *alarm = FindAlarmById(alarmId);
             for(UINT32 i = 0; i < m_dwNumActions; i++)
-               ExecuteAction(m_pdwActionList[i], pEvent, alarmMessage, alarmKey);
-            free(alarmMessage);
-            free(alarmKey);
+               ExecuteAction(m_pdwActionList[i], pEvent, alarm);
          }
 
 			// Update persistent storage if needed
@@ -563,23 +561,25 @@ bool EPRule::processEvent(Event *pEvent)
 /**
  * Generate alarm from event
  */
-void EPRule::generateAlarm(Event *pEvent)
+UINT32 EPRule::generateAlarm(Event *pEvent)
 {
+   UINT32 alarmId = 0;
    // Terminate alarms with key == our ack_key
 	if ((m_iAlarmSeverity == SEVERITY_RESOLVE) || (m_iAlarmSeverity == SEVERITY_TERMINATE))
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			ResolveAlarmByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
+		   ResolveAlarmByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
 	{
-		CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
+	   alarmId = CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
                      (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
                      m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0, m_alarmCategoryList,
                      ((m_dwFlags & RF_CREATE_TICKET) != 0) ? true : false);
 	}
+	return alarmId;
 }
 
 /**

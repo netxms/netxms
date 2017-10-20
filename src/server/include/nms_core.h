@@ -739,6 +739,7 @@ private:
    void unbindAgentTunnel(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
+   void expandMacros(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

@@ -589,6 +589,8 @@ typedef struct
 #define CMD_RESTART                       0x0162
 #define CMD_REGISTER_LORAWAN_SENSOR       0x0163
 #define CMD_UNREGISTER_LORAWAN_SENSOR     0x0164
+#define CMD_EXPAND_MACROS                 0x0165
+#define CMD_EXECUTE_ACTION_WITH_EXPANSION 0x0166
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1206,6 +1208,9 @@ typedef struct
 #define VID_DCI_NAME                ((UINT32)600)
 #define VID_STATE_FLAGS             ((UINT32)601)
 #define VID_CAPABILITIES            ((UINT32)602)
+#define VID_IN_FIELD_COUNT          ((UINT32)603)
+#define VID_STRING_COUNT            ((UINT32)604)
+#define VID_EXPAND_STRING           ((UINT32)605)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1403,6 +1408,11 @@ typedef struct
 #define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
 
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
+
+//base value for macro expansion
+#define VID_EXP_STRING_BASE         ((UINT32)0x10000000)
+#define VID_IN_FIELD_BASE           ((UINT32)0x20000000)
+
 
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 

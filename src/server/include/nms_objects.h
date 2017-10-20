@@ -700,6 +700,7 @@ public:
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
 
    static const TCHAR *getObjectClassName(int objectClass);
+   TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
 };
 
 /**
@@ -1834,8 +1835,6 @@ public:
    virtual NXSL_Value *createNXSLObject();
 
    virtual json_t *toJson();
-
-	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
 	Cluster *getMyCluster();
 

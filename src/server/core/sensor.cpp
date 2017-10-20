@@ -319,7 +319,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
 	if (success)
-		m_modified = 0;
+	    m_isModified = false;
    unlockProperties();
 
    return success;

@@ -1400,7 +1400,7 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
 /**
  * Execute action on agent
  */
-UINT32 AgentConnection::execAction(const TCHAR *action, int argc, const TCHAR * const *argv,
+UINT32 AgentConnection::execAction(const TCHAR *action, const StringList &list,
                                    bool withOutput, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *), void *cbData)
 {
    NXCPMessage msg(m_nProtocolVersion);
@@ -1415,9 +1415,9 @@ UINT32 AgentConnection::execAction(const TCHAR *action, int argc, const TCHAR * 
    msg.setId(dwRqId);
    msg.setField(VID_ACTION_NAME, action);
    msg.setField(VID_RECEIVE_OUTPUT, (UINT16)(withOutput ? 1 : 0));
-   msg.setField(VID_NUM_ARGS, (UINT32)argc);
-   for(i = 0; i < argc; i++)
-      msg.setField(VID_ACTION_ARG_BASE + i, argv[i]);
+   msg.setField(VID_NUM_ARGS, (UINT32)list.size());
+   for(i = 0; i < list.size(); i++)
+      msg.setField(VID_ACTION_ARG_BASE + i, list.get(i));
 
    if (sendMessage(&msg))
    {

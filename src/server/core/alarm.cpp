@@ -530,7 +530,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
 /**
  * Create new alarm
  */
-void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
+UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
 									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue)
 {
    UINT32 alarmId = 0;
@@ -618,6 +618,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
 
 	free(pszExpMsg);
    free(pszExpKey);
+   return alarmId;
 }
 
 /**
@@ -1703,20 +1704,7 @@ int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
       return NXSL_ERR_NOT_INTEGER;
 
    UINT32 alarmId = argv[0]->getValueAsUInt32();
-   Alarm *alarm = NULL;
-
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
-   {
-      Alarm *a = m_alarmList->get(i);
-      if (a->getAlarmId() == alarmId)
-      {
-         alarm = new Alarm(a, false);
-         break;
-      }
-   }
-   MutexUnlock(m_mutex);
-
+   Alarm *alarm = FindAlarmById(alarmId);
    *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
    return 0;
 }
@@ -1796,4 +1784,25 @@ void ShutdownAlarmManager()
 	ThreadJoin(m_hWatchdogThread);
    MutexDestroy(m_mutex);
    delete m_alarmList;
+}
+
+/**
+ * Get alarm by id
+ */
+Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
+{
+   if(alarmId == 0)
+      return NULL;
+   Alarm *alarm = NULL;
+   MutexLock(m_mutex);
+   for(int i = 0; i < m_alarmList->size(); i++)
+   {
+      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+      {
+         alarm = new Alarm(m_alarmList->get(i), false);
+         break;
+      }
+   }
+   MutexUnlock(m_mutex);
+   return alarm;
 }

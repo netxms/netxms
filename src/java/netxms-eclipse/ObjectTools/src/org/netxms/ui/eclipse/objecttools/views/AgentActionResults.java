@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.io.IOException;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -41,9 +42,10 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.AgentActionResults"; //$NON-NLS-1$
 
    private IOConsoleOutputStream out;
-   private String lastAction = null;
-   private String[] lastArgs = null;
    private Action actionRestart;
+   private String executionString;
+   private long alarmId;
+   private Map<String, String> inputValues;
    
    /**
     * Create actions
@@ -56,7 +58,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          @Override
          public void run()
          {
-            executeAction(lastAction, lastArgs);
+            executeAction(executionString, alarmId, inputValues);
          }
       };
       actionRestart.setEnabled(false);
@@ -101,13 +103,14 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    /**
     * @param action
     */
-   public void executeAction(final String action, final String[] args)
+   public void executeAction(final String executionString, final long alarmId, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       out = console.newOutputStream();
-      lastAction = action;
-      lastArgs = args;
+      this.alarmId = alarmId;
+      this.executionString = executionString;
+      this.inputValues = inputValues;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -120,7 +123,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          {
             try
             {
-               session.executeAction(nodeId, action, args, true, AgentActionResults.this, null);
+               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, AgentActionResults.this, null);
                out.write(Messages.get().LocalCommandResults_Terminated);
             }
             finally

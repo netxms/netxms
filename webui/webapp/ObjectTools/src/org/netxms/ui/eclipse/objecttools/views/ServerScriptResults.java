@@ -45,6 +45,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    private String lastScript = null;
    private Action actionRestart;
    private Map<String, String> lastInputValues = null;
+   private long alarmId;
    
    /**
     * Create actions
@@ -57,7 +58,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
          @Override
          public void run()
          {
-            executeScript(lastScript, lastInputValues);
+            executeScript(lastScript, alarmId, lastInputValues);
          }
       };
       actionRestart.setEnabled(false);
@@ -101,14 +102,16 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    
    /**
     * @param script
+    * @param alarmId 
     * @param inputValues 
     */
-   public void executeScript(final String script, final Map<String, String> inputValues)
+   public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       out = console.newOutputStream();
       lastScript = script;
+      this.alarmId = alarmId;
       lastInputValues = inputValues;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
@@ -122,7 +125,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
          {
             try
             {
-               session.executeLibraryScript(nodeId, script, inputValues, ServerScriptResults.this);
+               session.executeLibraryScript(nodeId, alarmId, script, inputValues, ServerScriptResults.this);
             }
             finally
             {

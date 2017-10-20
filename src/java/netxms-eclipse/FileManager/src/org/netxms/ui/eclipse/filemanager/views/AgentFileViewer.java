@@ -71,6 +71,7 @@ public class AgentFileViewer extends ViewPart
    private Action actionCopy;
    private Action actionSelectAll;
    private Action actionFind;
+   private AbstractObject object;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -86,7 +87,7 @@ public class AgentFileViewer extends ViewPart
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
 		
 		nodeId = Long.parseLong(parts[0]);
-		AbstractObject object = session.findObjectById(nodeId);
+		object = session.findObjectById(nodeId);
 		if ((object == null) || (object.getObjectClass() != AbstractObject.OBJECT_NODE))
 			throw new PartInitException(Messages.get().FileViewer_InvalidObjectID);
 		
@@ -350,6 +351,17 @@ public class AgentFileViewer extends ViewPart
 	   {
 	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
 	   }
+	   view.updatePartName(file.getRemoteName()); //$NON-NLS-1$
 	   return true;
 	}
+
+	/**
+	 * Updates part view name after expanded name received
+	 * @param remoteName
+	 */
+   private void updatePartName(String remoteName)
+   {
+      remoteFileName = remoteName;
+      setPartName(object.getObjectName() + ": " + remoteFileName); //$NON-NLS-1$      
+   }
 }

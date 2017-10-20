@@ -153,6 +153,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.client.packages.PackageDeploymentListener;
@@ -5413,6 +5414,108 @@ public class NXCSession
     * Execute action on remote agent
     *
     * @param nodeId Node object ID
+    * @param alarmId Alarm ID (used for macross expansion)
+    * @param action Action with all argunets, that will be expanded and splited on server side
+    * @param inputValues Input values provided by user for expansion
+    * @return Expanded action 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String executeActionWithExpansion(long nodeId, long alarmId, String action, final Map<String, String> inputValues) throws IOException, NXCException
+   {
+      return executeActionWithExpansion(nodeId, alarmId, action, false, inputValues, null, null);
+   }
+
+   /**
+    * Execute action on remote agent
+    *
+    * @param nodeId Node object ID
+    * @param alarmId Alarm ID (used for macross expansion)
+    * @param action Action with all argunets, that will be expanded and splited on server side
+    * @param inputValues Input values provided by user for expansion
+    * @param receiveOutput true if action's output has to be read
+    * @param listener listener for action's output or null
+    * @param writer writer for action's output or null
+    * @return Expanded action 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String executeActionWithExpansion(long nodeId, long alarmId, String action, boolean receiveOutput, final Map<String, String> inputValues, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setField(NXCPCodes.VID_EXPAND_STRING,  true);
+      msg.setField(NXCPCodes.VID_ACTION_NAME,  action);
+      msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      
+
+      if(inputValues != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_IN_FIELD_COUNT, inputValues.size());
+         long varId = NXCPCodes.VID_IN_FIELD_BASE;
+         for(Entry<String, String> e : inputValues.entrySet())
+         {
+            msg.setField(varId++, e.getKey());
+            msg.setField(varId++, e.getValue());
+         }
+      }
+      else
+         msg.setFieldInt16(NXCPCodes.VID_IN_FIELD_COUNT, 0);
+      
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
+         {
+            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+            if (text != null)
+            {
+               if (listener != null)
+                  listener.messageReceived(text);
+               if (writer != null)
+               {
+                  try
+                  {
+                     writer.write(text);
+                  }
+                  catch(IOException e)
+                  {
+                  }
+               }
+            }
+            if (m.isEndOfSequence())
+               setComplete();
+            return true;
+         }
+      } : null;
+      if (receiveOutput)
+         addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
+      
+      sendMessage(msg);
+      NXCPMessage result = waitForRCC(msg.getMessageId());
+
+      if (receiveOutput)
+      {
+         synchronized(handler)
+         {
+            try
+            {
+               handler.wait();
+            }
+            catch(InterruptedException e)
+            {
+            }
+         }
+         if (handler.isTimeout())
+            throw new NXCException(RCC.TIMEOUT);
+      }    
+      return result.getFieldAsString(NXCPCodes.VID_ACTION_NAME);
+   }
+
+   /**
+    * Execute action on remote agent
+    *
+    * @param nodeId Node object ID
     * @param action Action name
     * @param args Action arguments
     * @throws IOException  if socket I/O error occurs
@@ -5930,9 +6033,27 @@ public class NXCSession
     */
    public void executeLibraryScript(long nodeId, String script, Map<String, String> inputFields, final TextOutputListener listener) throws IOException, NXCException
    {
+      executeLibraryScript(nodeId, 0, script, inputFields, listener);
+   }
+   
+   /**
+    * Execute library script on object. Script name interpreted as command line with server-side macro substitution. Map inputValues
+    * can be used to pass data for %() macros.
+    * 
+    * @param nodeId node ID to execute script on
+    * @param alarmId alarm ID to use for expansion
+    * @param script script name and parameters
+    * @param inputFields input values map for %() macro substitution (can be null)
+    * @param listener script output listener
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeLibraryScript(long nodeId, long alarmId, String script, Map<String, String> inputFields, final TextOutputListener listener) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_LIBRARY_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, listener != null);
       if (inputFields != null)
       {
@@ -8080,15 +8201,46 @@ public class NXCSession
     */
    public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, ProgressListener listener) throws IOException, NXCException
    {
+      return downloadFileFromAgent(nodeId, remoteFileName, maxFileSize, follow, null, 0, listener);
+   }
+   
+   /**
+    * Download file from remote host via agent.
+    *
+    * @param nodeId node object ID
+    * @param remoteFileName fully qualified file name on remote system
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
+    * @param inputValues input values map for %() macro substitution (can be null)
+    * @param alarmId alarm ID used for macro expansion
+    * @param listener The ProgressListener to set
+    * @return agent file handle which contains server assigned ID and handle for local file
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, Map<String, String> inputValues, long alarmId, ProgressListener listener) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, (int)maxFileSize);
       msg.setFieldInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      if(inputValues != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_IN_FIELD_COUNT, inputValues.size());
+         long varId = NXCPCodes.VID_IN_FIELD_BASE;
+         for(Entry<String, String> e : inputValues.entrySet())
+         {
+            msg.setField(varId++, e.getKey());
+            msg.setField(varId++, e.getValue());
+         }
+      }
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
+      remoteFileName = response.getFieldAsString(NXCPCodes.VID_FILE_NAME);
       if (listener != null)
       {
          final long fileSize = waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
@@ -9860,5 +10012,91 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Substitute macross in may strings and one context
+    * 
+    * @param context expansion context alarm and node
+    * @param textsToExpand texts to be expanded
+    * @param inputValues input values provided by used used for %() expansion
+    * @return same count and order of strings already expanded
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> substitureMacross(ObjectContextBase context, List<String> textsToExpand, Map<String, String> inputValues) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPAND_MACROS);
+      long varId;
+      if(inputValues != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_IN_FIELD_COUNT, inputValues.size());
+         varId = NXCPCodes.VID_IN_FIELD_BASE;
+         for(Entry<String, String> e : inputValues.entrySet())
+         {
+            msg.setField(varId++, e.getKey());
+            msg.setField(varId++, e.getValue());
+         }
+      }
+      msg.setFieldInt32(NXCPCodes.VID_STRING_COUNT, textsToExpand.size());
+      varId = NXCPCodes.VID_EXP_STRING_BASE;
+      for(String s : textsToExpand)
+      {
+         context.fillMessage(msg, varId, s);
+         varId+=5;
+      }
+
+      List<String> result = new ArrayList<String>();
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());    
+      varId = NXCPCodes.VID_EXP_STRING_BASE;
+      for(int i = 0; i < textsToExpand.size(); i++)
+      {
+         result.add(response.getFieldAsString(varId++));
+      }    
+      return result;
+   }
+   
+   /**
+    * Substitute macross in many constexts for one string
+    * 
+    * @param context expansion contexts alarm and node
+    * @param textToExpand text to be expanded
+    * @param inputValues input values provided by used used for %() expansion
+    * @return same count and order of strings already expanded
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> substitureMacross(ObjectContextBase context[], String textToExpand, Map<String, String> inputValues) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPAND_MACROS);
+      long varId;
+      if(inputValues != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_IN_FIELD_COUNT, inputValues.size());
+         varId = NXCPCodes.VID_IN_FIELD_BASE;
+         for(Entry<String, String> e : inputValues.entrySet())
+         {
+            msg.setField(varId++, e.getKey());
+            msg.setField(varId++, e.getValue());
+         }
+      }
+      msg.setFieldInt32(NXCPCodes.VID_STRING_COUNT, context.length);
+      varId = NXCPCodes.VID_EXP_STRING_BASE;
+      for(ObjectContextBase c : context)
+      {
+         c.fillMessage(msg, varId, textToExpand);
+         varId+=5;
+      }
+
+      List<String> result = new ArrayList<String>();
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());    
+      varId = NXCPCodes.VID_EXP_STRING_BASE;
+      for(int i = 0; i < context.length; i++)
+      {
+         result.add(response.getFieldAsString(varId++));
+      }    
+      return result;
    }
 }
