@@ -17,6 +17,11 @@
 #define AssertEquals(x, y) Assert((x) == (y))
 
 /**
+ * Assert that two values are not equal
+ */
+#define AssertNotEquals(x, y) Assert((x) != (y))
+
+/**
  * Assert that value is TRUE
  */
 #define AssertTrue(x) Assert((x))

@@ -184,30 +184,25 @@ stop_search:
 
    if (s_debugTags != NULL)
    {
-      TCHAR const *ptr;
-      int numTags;
-      TCHAR **tagList = SplitString(s_debugTags, _T(','), &numTags);
+      int count;
+      TCHAR **tagList = SplitString(s_debugTags, _T(','), &count);
       if (tagList != NULL)
       {
-         TCHAR tagBuffer[254], lvlBuffer[2];
-
-         for(int i = 0; i < numTags; i++)
+         for(int i = 0; i < count; i++)
          {
-            ptr = ExtractWord(tagList[i], tagBuffer);
-            if (tagBuffer[0] != 0)
+            TCHAR *level = _tcschr(tagList[i], _T(':'));
+            if (level != NULL)
             {
-               ExtractWord(ptr, lvlBuffer);
-               if (lvlBuffer[0] != 0)
-               {
-                  int lvl = _tcstol(lvlBuffer, NULL, 0);
-                  nxlog_set_debug_level_tag(tagBuffer, lvl);
-               }
+               *level = 0;
+               level++;
+               Trim(tagList[i]);
+               nxlog_set_debug_level_tag(tagList[i], _tcstol(level, NULL, 0));
             }
             free(tagList[i]);
          }
+         free(tagList);
       }
       free(s_debugTags);
-      free(tagList);
    }
 
 	// Decrypt password

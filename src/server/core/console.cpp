@@ -46,19 +46,17 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId);
 /**
  * Compare given string to command template with abbreviation possibility
  */
-static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
+static bool IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars)
 {
+   TCHAR temp[256];
+   _tcslcpy(temp, str, 256);
+   _tcsupr(temp);
+
    int i;
-
-   // Convert given string to uppercase
-   _tcsupr(pszString);
-
-   for(i = 0; pszString[i] != 0; i++)
-      if (pszString[i] != cmdTemplate[i])
+   for(i = 0; temp[i] != 0; i++)
+      if (temp[i] != cmdTemplate[i])
          return false;
-   if (i < iMinChars)
-      return false;
-   return true;
+   return i >= minChars;
 }
 
 /**
@@ -95,6 +93,14 @@ static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index)
 }
 
 /**
+ * Compare debug tags for alphabetical sorting
+ */
+static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
+{
+   return _tcsicmp((*t1)->tag, (*t2)->tag);
+}
+
+/**
  * Process command entered from command line in standalone mode
  * Return TRUE if command was _T("down")
  */
@@ -122,42 +128,62 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    else if (IsCommand(_T("DEBUG"), szBuffer, 2))
    {
       StringList *list = ParseCommandLine(pArg);
-
-      int level;
-      if (list->size() == 1)
-         level = (int)_tcstol(list->get(0), &eptr, 0);
-      else if (list->size() == 2)
-         level = (int)_tcstol(list->get(1), &eptr, 0);
-
-      if ((*eptr == 0) && (level >= -1) && (level <= 9))
+      if (list->size() == 0)
       {
-         if (list->size() == 1)
+         ConsolePrintf(pCtx, _T("Current debug levels:\n"));
+         ConsolePrintf(pCtx, _T("   DEFAULT              = %d\n"), nxlog_get_debug_level());
+
+         ObjectArray<DebugTagInfo> *tags = nxlog_get_all_debug_tags();
+         tags->sort(CompareDebugTags);
+         for(int i = 0; i < tags->size(); i++)
          {
-            nxlog_set_debug_level(level);
-            ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+            const DebugTagInfo *t = tags->get(i);
+            ConsolePrintf(pCtx, _T("   %-20s = %d\n"), t->tag, t->level);
          }
-         else if (list->size() == 2)
-         {
-            nxlog_set_debug_level_tag(list->get(0), level);
-            if (level == -1)
-               ConsolePrintf(pCtx,  _T("Debug tag <%s> removed\n"), list->get(0));
-            else
-               ConsolePrintf(pCtx,  _T("Debug level for tag <%s> set to %d\n"), list->get(0), level);
-         }
-      }
-      else if (IsCommand(_T("OFF"), szBuffer, 2))
-      {
-         nxlog_set_debug_level(0);
-         ConsoleWrite(pCtx, _T("Debug mode turned off\n"));
+         delete tags;
       }
       else
       {
-         if (szBuffer[0] == 0)
-            ConsoleWrite(pCtx, _T("ERROR: Missing argument\n\n"));
+         int index = (list->size() == 1) ? 0 : 1;
+         int level;
+         if (!_tcsicmp(list->get(index), _T("OFF")))
+         {
+            level = 0;
+         }
+         else if (IsCommand(_T("DEFAULT"), list->get(index), 3))
+         {
+            level = -1;
+         }
          else
+         {
+            level = (int)_tcstol(list->get(index), &eptr, 0);
+            if (*eptr != 0)
+               level = -99;   // mark as invalid
+         }
+         if ((level >= -1) && (level <= 9))
+         {
+            if (list->size() == 1)
+            {
+               if (level < 0)
+                  level = 0;
+               nxlog_set_debug_level(level);
+               ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
+            }
+            else if (list->size() == 2)
+            {
+               nxlog_set_debug_level_tag(list->get(0), level);
+               if (level == -1)
+                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to default\n"), list->get(0));
+               else
+                  ConsolePrintf(pCtx,  _T("Debug level for tag \"%s\" set to %d\n"), list->get(0), level);
+            }
+         }
+         else
+         {
             ConsoleWrite(pCtx, _T("ERROR: Invalid debug level\n\n"));
+         }
       }
-      delete(list);
+      delete list;
    }
    else if (IsCommand(_T("DOWN"), szBuffer, 4))
    {
