@@ -29,8 +29,13 @@ static bool H_UpgradeFromV7()
 {
    if (GetSchemaLevelForMajorVersion(22) < 1)
    {
+      int count = ConfigReadInt(_T("NumberOfDataCollectors"), 250);
+      TCHAR value[64];
+      _sntprintf(value, 64,_T("%d"), std::max(250, count));
       CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), _T("250"), _T("Maximum size for data collector thread pool."), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), value, _T("Maximum size for data collector thread pool."), 'I', true, true, false, false));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='250' WHERE var_name='DataCollector.ThreadPool.MaxSize'")));
+      CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfDataCollectors'")));
    }
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
