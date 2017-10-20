@@ -136,6 +136,16 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag)
 }
 
 /**
+ * Get current debug level for tag
+ */
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId)
+{
+   TCHAR fullTag[256];
+   _sntprintf(fullTag, 256, _T("%s.%u"), tag, objectId);
+   return tagTreeActive->getDebugLevel(fullTag);
+}
+
+/**
  * Get all configured debug tags
  */
 ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags()

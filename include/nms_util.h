@@ -2467,6 +2467,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId);
 
 #ifdef __cplusplus
 

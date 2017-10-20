@@ -29,6 +29,8 @@
 #define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
+#define DEBUG_TAG    _T("agent.conn")
+
 /**
  * Constants
  */
@@ -81,7 +83,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
 {
    m_internalRefCount = 1;
    m_userRefCount = 1;
-   _sntprintf(m_debugName, 32, _T("[AC-%d]"), InterlockedIncrement(&s_connectionId));
+   m_debugId = InterlockedIncrement(&s_connectionId);
    m_addr = addr;
    m_wPort = port;
    m_iAuthMethod = authMethod;
@@ -169,16 +171,9 @@ AgentConnection::~AgentConnection()
  */
 void AgentConnection::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (nxlog_get_debug_level() < level)
-      return;
-
    va_list args;
    va_start(args, format);
-
-   TCHAR buffer[8192];
-   _vsntprintf(buffer, 8192, format, args);
-   nxlog_debug(level, _T("%s %s"), m_debugName, buffer);
-
+   nxlog_debug_tag_object2(DEBUG_TAG, m_debugId, level, format, args);
    va_end(args);
 }
 
@@ -263,7 +258,7 @@ void AgentConnection::receiverThread()
          rawMsg->id = ntohl(rawMsg->id);
          rawMsg->code = ntohs(rawMsg->code);
          rawMsg->numFields = ntohl(rawMsg->numFields);
-         if (nxlog_get_debug_level() >= 6)
+         if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received raw message %s (%d) from agent at %s"),
@@ -352,7 +347,7 @@ void AgentConnection::receiverThread()
          rawMsg->code = ntohs(rawMsg->code);
          rawMsg->flags = ntohs(rawMsg->flags);
          rawMsg->numFields = ntohl(rawMsg->numFields);
-         if (nxlog_get_debug_level() >= 6)
+         if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
          {
             TCHAR buffer[64];
             debugPrintf(6, _T("Received control message %s from agent at %s"),
@@ -366,7 +361,7 @@ void AgentConnection::receiverThread()
          NXCPMessage *msg = NXCPMessage::deserialize(rawMsg, m_nProtocolVersion);
          if (msg != NULL)
          {
-            if (nxlog_get_debug_level() >= 6)
+            if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
             {
                TCHAR buffer[64];
                debugPrintf(6, _T("Received message %s (%d) from agent at %s"),
@@ -1100,7 +1095,7 @@ bool AgentConnection::sendMessage(NXCPMessage *pMsg)
    if (channel == NULL)
       return false;
 
-   if (nxlog_get_debug_level() >= 6)
+   if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_debugId) >= 6)
    {
       TCHAR buffer[64];
       debugPrintf(6, _T("Sending message %s (%d) to agent at %s"),
@@ -1522,7 +1517,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
       AbstractCommChannel *channel = acquireChannel();
       if (channel != NULL)
       {
-         nxlog_debug(5, _T("AgentConnection: sending file \"%s\" to agent %s compression"),
+         debugPrintf(5, _T("Sending file \"%s\" to agent %s compression"),
                   localFile, (compMethod == NXCP_STREAM_COMPRESSION_NONE) ? _T("without") : _T("with"));
          m_fileUploadInProgress = true;
          NXCPEncryptionContext *ctx = acquireEncryptionContext();

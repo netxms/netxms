@@ -464,7 +464,7 @@ class LIBNXSRV_EXPORTABLE AgentConnection
 private:
    VolatileCounter m_userRefCount;
    VolatileCounter m_internalRefCount;
-   TCHAR m_debugName[32];
+   UINT32 m_debugId;
    InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
