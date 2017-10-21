@@ -262,10 +262,9 @@ int main(int argc, char *argv[])
             if (conn->connect(pServerKey, &dwError))
             {
                UINT32 dwError;
-
+               int i, k;
 #ifdef UNICODE
 					WCHAR action[256], *args[256];
-					int i, k;
 
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
 					action[255] = 0;
