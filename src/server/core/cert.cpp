@@ -23,6 +23,8 @@
 #include "nxcore.h"
 #include <nxcrypto.h>
 
+#define DEBUG_TAG    _T("crypto.cert")
+
 #ifdef _WITH_ENCRYPTION
 
 // WARNING! this hack works only for d2i_X509(); be careful when adding new code
@@ -68,26 +70,26 @@ static Mutex s_certificateStoreLock;
  */
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days)
 {
-   nxlog_debug(4, _T("IssueCertificate: new certificate request (CN override: %hs, OU override: %hs)"),
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: new certificate request (CN override: %hs, OU override: %hs)"),
             (cn != NULL) ? cn : "<not set>", (ou != NULL) ? ou : "<not set>");
 
    X509_NAME *requestSubject = X509_REQ_get_subject_name(request);
    if (requestSubject == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: cannot get subject from certificate request"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot get subject from certificate request"));
       return NULL;
    }
 
    X509 *cert = X509_new();
    if (cert == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_new() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_new() failed"));
       return NULL;
    }
 
    if (X509_set_version(cert, 2) != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_set_version() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_set_version() failed"));
       X509_free(cert);
       return NULL;
    }
@@ -106,7 +108,7 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
 #endif
    if (rc != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: cannot set certificate serial number"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot set certificate serial number"));
       X509_free(cert);
       return NULL;
    }
@@ -123,7 +125,7 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
             if (idx != -1)
                X509_NAME_delete_entry(subject, idx);
             if (!X509_NAME_add_entry_by_txt(subject, "OU", MBSTRING_UTF8, (const BYTE *)ou, -1, -1, 0))
-               nxlog_debug(4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for OU=%hs"), ou);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for OU=%hs"), ou);
          }
          if (cn != NULL)
          {
@@ -131,12 +133,12 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
             if (idx != -1)
                X509_NAME_delete_entry(subject, idx);
             if (!X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0))
-               nxlog_debug(4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for CN=%hs"), cn);
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: X509_NAME_add_entry_by_txt failed for CN=%hs"), cn);
          }
       }
       else
       {
-         nxlog_debug(4, _T("IssueCertificate: call to X509_NAME_dup() failed"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_NAME_dup() failed"));
       }
    }
    else
@@ -155,7 +157,7 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
       X509_NAME_free(subject);
    if (rc != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_set_subject_name() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_set_subject_name() failed"));
       X509_free(cert);
       return NULL;
    }
@@ -163,14 +165,14 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
    X509_NAME *issuerName = X509_get_subject_name(s_serverCertificate);
    if (issuerName == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: cannot get CA subject name"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot get CA subject name"));
       X509_free(cert);
       return NULL;
    }
 
    if (X509_set_issuer_name(cert, issuerName) != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_set_issuer_name() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_set_issuer_name() failed"));
       X509_free(cert);
       return NULL;
    }
@@ -178,14 +180,14 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
    EVP_PKEY *pubkey = X509_REQ_get_pubkey(request);
    if (pubkey == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_REQ_get_pubkey() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_REQ_get_pubkey() failed"));
       X509_free(cert);
       return NULL;
    }
 
    if (X509_REQ_verify(request, pubkey) != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: certificate request verification failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: certificate request verification failed"));
       EVP_PKEY_free(pubkey);
       X509_free(cert);
       return NULL;
@@ -195,35 +197,35 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
    EVP_PKEY_free(pubkey);
    if (rc != 1)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_set_pubkey() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_set_pubkey() failed"));
       X509_free(cert);
       return NULL;
    }
 
    if (X509_gmtime_adj(X509_get_notBefore(cert), 0) == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: cannot set start time"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot set start time"));
       X509_free(cert);
       return NULL;
    }
 
    if (X509_gmtime_adj(X509_get_notAfter(cert), days * 86400) == NULL)
    {
-      nxlog_debug(4, _T("IssueCertificate: cannot set end time"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: cannot set end time"));
       X509_free(cert);
       return NULL;
    }
 
    if (X509_sign(cert, s_serverCertificateKey, EVP_sha256()) == 0)
    {
-      nxlog_debug(4, _T("IssueCertificate: call to X509_sign() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: call to X509_sign() failed"));
       X509_free(cert);
       return NULL;
    }
 
    char subjectName[1024];
    X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
-   nxlog_debug(4, _T("IssueCertificate: new certificate with subject \"%hs\" issued successfully"), subjectName);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("IssueCertificate: new certificate with subject \"%hs\" issued successfully"), subjectName);
    return cert;
 }
 
@@ -353,7 +355,7 @@ static BOOL CheckCommonName(X509 *cert, const TCHAR *cn)
    if (!GetCertificateCN(cert, certCn, 256))
       return FALSE;
 
-   nxlog_debug(3, _T("Certificate CN=\"%s\", user CN=\"%s\""), certCn, cn);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate CN=\"%s\", user CN=\"%s\""), certCn, cn);
    return !_tcsicmp(certCn, cn);
 }
 
@@ -454,7 +456,7 @@ bool ValidateAgentCertificate(X509 *cert)
    X509_STORE *store = X509_STORE_new();
    if (store == NULL)
    {
-      nxlog_debug(3, _T("ValidateAgentCertificate: cannot create certificate store"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("ValidateAgentCertificate: cannot create certificate store"));
    }
 
    for(int i = 0; i < s_serverCACertificates.size(); i++)
@@ -472,7 +474,7 @@ bool ValidateAgentCertificate(X509 *cert)
    else
    {
       TCHAR buffer[256];
-      nxlog_debug(3, _T("ValidateAgentCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("ValidateAgentCertificate: X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), buffer));
    }
 
    X509_STORE_free(store);
@@ -586,6 +588,7 @@ bool LoadServerCertificate(RSA **serverKey)
    {
       *next = 0;
 
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Loading CA certificate from %s"), curr);
       FILE *f = _tfopen(curr, _T("r"));
       if (f == NULL)
       {
@@ -671,7 +674,7 @@ static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
       int depth = X509_STORE_CTX_get_error_depth(ctx);
       char subjectName[1024];
       X509_NAME_oneline(X509_get_subject_name(cert), subjectName, 1024);
-      nxlog_debug(4, _T("Certificate \"%hs\" verification error %d (%hs) at depth %d"),
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Certificate \"%hs\" verification error %d (%hs) at depth %d"),
              subjectName, error, X509_verify_cert_error_string(error), depth);
    }
    return success;
@@ -690,7 +693,7 @@ bool SetupServerTlsContext(SSL_CTX *context)
    X509_STORE *store = X509_STORE_new();
    if (store == NULL)
    {
-      nxlog_debug(3, _T("SetupServerTlsContext: cannot create certificate store"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("SetupServerTlsContext: cannot create certificate store"));
       return false;
    }
 #if HAVE_X509_STORE_SET_VERIFY_CB
