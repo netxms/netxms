@@ -1170,6 +1170,7 @@ void ReloadCertificates();
 bool GetCertificateSubjectField(X509 *cert, int nid, TCHAR *buffer, size_t size);
 bool GetCertificateCN(X509 *cert, TCHAR *buffer, size_t size);
 bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size);
+String GetCertificateSubjectString(X509 *cert);
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);

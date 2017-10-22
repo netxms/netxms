@@ -291,6 +291,42 @@ bool GetCertificateOU(X509 *cert, TCHAR *buffer, size_t size)
 }
 
 /**
+ * Get subject string (C=XX,O=org,OU=unit,CN=cn) from certificate
+ */
+String GetCertificateSubjectString(X509 *cert)
+{
+   String text;
+   TCHAR buffer[256];
+   if (GetCertificateSubjectField(cert, NID_countryName, buffer, 256))
+   {
+      text.append(_T("C="));
+      text.append(buffer);
+   }
+   if (GetCertificateSubjectField(cert, NID_organizationName, buffer, 256))
+   {
+      if (!text.isEmpty())
+         text.append(_T(','));
+      text.append(_T("O="));
+      text.append(buffer);
+   }
+   if (GetCertificateSubjectField(cert, NID_organizationalUnitName, buffer, 256))
+   {
+      if (!text.isEmpty())
+         text.append(_T(','));
+      text.append(_T("OU="));
+      text.append(buffer);
+   }
+   if (GetCertificateSubjectField(cert, NID_commonName, buffer, 256))
+   {
+      if (!text.isEmpty())
+         text.append(_T(','));
+      text.append(_T("CN="));
+      text.append(buffer);
+   }
+   return text;
+}
+
+/**
  * Get country name from server certificate
  */
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size)
@@ -609,6 +645,8 @@ bool LoadServerCertificate(RSA **serverKey)
          nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", curr, _ERR_error_tstring(ERR_get_error(), buffer));
          return false;
       }
+
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Adding CA certificate %s"), static_cast<const TCHAR*>(GetCertificateSubjectString(cert)));
       s_serverCACertificates.add(cert);
 
       curr = next + 1;
@@ -645,6 +683,7 @@ bool LoadServerCertificate(RSA **serverKey)
       nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
       return false;
    }
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Server certificate: %s"), static_cast<const TCHAR*>(GetCertificateSubjectString(s_serverCertificate)));
 
    RSA *privKey = EVP_PKEY_get1_RSA(s_serverCertificateKey);
    RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(s_serverCertificate));
