@@ -33,7 +33,7 @@ extern Config g_serverConfig;
 typedef struct
 {
    TCHAR szRcpt[MAX_RCPT_ADDR_LEN];
-   TCHAR szText[160];
+   TCHAR *szText;
 } SMS;
 
 /**
@@ -72,7 +72,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 			DbgPrintf(3, _T("Failed to send SMS (complete failure)"));
 			PostEvent(EVENT_SMS_FAILURE, g_dwMgmtNode, "s", pMsg->szRcpt);
 		}
-
+		free(pMsg->szText);
       free(pMsg);
    }
    return THREAD_OK;
@@ -143,6 +143,6 @@ void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 {
 	SMS *pMsg = (SMS *)malloc(sizeof(SMS));
 	nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
-	nx_strncpy(pMsg->szText, pszText, 160);
+	pMsg->szText = _tcsdup(pszText);
 	s_smsQueue.put(pMsg);
 }
