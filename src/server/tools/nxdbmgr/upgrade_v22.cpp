@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.1 to 22.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxRecordsPerTransaction"), _T("1000"), _T("Maximum number of records per one transaction for delayed database writes."), 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 22.0 to 22.1
  */
 static bool H_UpgradeFromV0()
@@ -49,6 +59,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 1, 22, 2, H_UpgradeFromV1 },
    { 0, 22, 1, H_UpgradeFromV0 },
    { 0, 0, 0, NULL }
 };
