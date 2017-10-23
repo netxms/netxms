@@ -41,6 +41,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DBLockInfo','','',0,0,'S','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DBLockPID','0','0',0,0,'I','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DBLockStatus','UNLOCKED','UNLOCKED',0,1,'S','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DBWriter.MaxRecordsPerTransaction','1000','1000',1,1,'I','Maximum number of records per one transaction for delayed database writes');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultAgentCacheMode','2','2',1,1,'C','Default agent cache mode');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultAgentProtocolCompressionMode','1','1',1,0,'C','Default agent protocol compression mode');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultConsoleDateFormat','dd.MM.yyyy','dd.MM.yyyy',1,0,'S','Default date display format for GUI.');

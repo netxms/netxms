@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.8 to 30.9 (changes also included into 22.2)
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 2)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxRecordsPerTransaction"), _T("1000"), _T("Maximum number of records per one transaction for delayed database writes."), 'I', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 2));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 30.7 to 30.8 (changes also included into 22.1)
  */
 static bool H_UpgradeFromV7()
@@ -36,6 +50,7 @@ static bool H_UpgradeFromV7()
       CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), value, _T("Maximum size for data collector thread pool."), 'I', true, true, false, false));
       CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='250' WHERE var_name='DataCollector.ThreadPool.MaxSize'")));
       CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfDataCollectors'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 1));
    }
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
@@ -485,6 +500,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 8, 30, 9, H_UpgradeFromV8 },
    { 7, 30, 8, H_UpgradeFromV7 },
    { 6, 30, 7, H_UpgradeFromV6 },
    { 5, 30, 6, H_UpgradeFromV5 },
