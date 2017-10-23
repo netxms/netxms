@@ -9,7 +9,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .,
- lib/simple-xml-2.7.1.jar
+ lib/simple-xml-2.6.4.jar
 Export-Package: com.jcraft.jzlib,
  org.netxms.base,
  org.netxms.base.annotations,
