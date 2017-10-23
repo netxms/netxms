@@ -5,14 +5,12 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for "dial chart" dashboard element
  */
-@Root(name="element", strict=false)
 public class GaugeConfig extends AbstractChartConfig
 {
 	// gauge types
