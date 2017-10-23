@@ -540,6 +540,8 @@ void DCItem::deleteFromDatabase()
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM raw_dci_values WHERE item_id=%d"), m_id);
+   QueueSQLRequest(szQuery);
 
    if (m_owner->isDataCollectionTarget())
       static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
