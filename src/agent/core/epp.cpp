@@ -96,12 +96,12 @@ void ParamExec::onOutput(const char *text)
             break;
          }
 
-         eqPtr = _tcschr((const TCHAR *)m_buffer, _T('='));
+         eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
          if (eqPtr != NULL)
          {
             *eqPtr = 0;
             eqPtr++;
-            m_parameters.set((const TCHAR *)m_buffer, eqPtr);
+            m_parameters.set(m_buffer.getBuffer(), eqPtr);
          }
          m_buffer.clear();
          lineStartPtr = newLinePtr+1;
@@ -118,7 +118,7 @@ void ParamExec::endOfOutput()
 {
    if (m_buffer.length() > 0)
    {
-      TCHAR *ptr = _tcschr((const TCHAR *)m_buffer, _T('='));
+      TCHAR *ptr = _tcschr(m_buffer.getBuffer(), _T('='));
       if (ptr != NULL)
       {
          *ptr = 0;
