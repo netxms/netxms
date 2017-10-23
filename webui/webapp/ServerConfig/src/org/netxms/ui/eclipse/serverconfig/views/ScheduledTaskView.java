@@ -77,8 +77,9 @@ public class ScheduledTaskView extends ViewPart
    public static final int EXECUTION_TIME = 4;
    public static final int LAST_EXECUTION_TIME = 5;
    public static final int STATUS = 6;   
-   public static final int OWNER = 7;
-   public static final int COMMENTS = 8;
+   public static final int MANAGMENT_STATE = 7;   
+   public static final int OWNER = 8;
+   public static final int COMMENTS = 9;
    
    private NXCSession session;
    private SessionListener listener;
@@ -107,8 +108,8 @@ public class ScheduledTaskView extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {      
-      final int[] widths = { 50, 100, 200, 400, 150, 150, 100, 100, 200 };
-      final String[] names = { "Id", "Schedule Type", "Object", "Parameters", "Execution time", "Last execution time", "Status", "Owner", "Comments" };
+      final int[] widths = { 50, 100, 200, 400, 150, 150, 100, 200, 250, 200 };
+      final String[] names = { "Id", "Schedule Type", "Object", "Parameters", "Execution time", "Last execution time", "Execution status", "Administrative status", "Owner", "Comments" };
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScheduleTableEntryLabelProvider());
