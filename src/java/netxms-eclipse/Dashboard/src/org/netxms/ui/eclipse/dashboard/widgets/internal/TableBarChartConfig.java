@@ -19,12 +19,14 @@
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
  * Configuration for bar chart
  */
+@Root(name="element", strict=false)
 public class TableBarChartConfig extends TableComparisonChartConfig
 {
 	@Element(required=false)
