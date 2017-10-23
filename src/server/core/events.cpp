@@ -585,7 +585,7 @@ TCHAR *Event::expandText(const TCHAR *textTemplate, const Alarm *alarm)
         obj = g_pEntireNet;
    }
 
-	return obj->expandText(textTemplate, alarm, NULL, NULL, NULL);
+	return obj->expandText(textTemplate, alarm, this, NULL, NULL);
 }
 
 /**
