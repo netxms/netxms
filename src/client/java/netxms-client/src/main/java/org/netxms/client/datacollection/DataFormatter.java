@@ -121,7 +121,6 @@ public class DataFormatter
    private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L }; 
    private static final long[] BINARY_MULTIPLIERS = { 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x1000000000000000L };
    private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" }; 
-   private static final String[] FORMATS = { "", ".0", ".00", ".000", ".0000", ".00000", ".000000" };
 
    /**
     * Get value ready for formatter
@@ -250,8 +249,6 @@ public class DataFormatter
       DecimalFormat df = new DecimalFormat();
       df.setMaximumFractionDigits(precision);
       return df.format((i < 0 ? value : (value / multipliers[i]))) + (i < 0 ? "" : SUFFIX[i]);
-      /*return new DecimalFormat("0" + (precision > FORMATS.length ? FORMATS[FORMATS.length - 1] : FORMATS[precision]))
-            .format((i < 0 ? value : (value / multipliers[i]))) + (i < 0 ? "" : SUFFIX[i]);*/
    }
 
    /**
