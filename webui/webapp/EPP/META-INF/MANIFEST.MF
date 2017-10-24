@@ -14,5 +14,6 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.3"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.epp.dialogs
+Export-Package: org.netxms.ui.eclipse.epp.dialogs,
+ org.netxms.ui.eclipse.epp.dialogs.helpers
 Import-Package: org.netxms.ui.eclipse.alarmviewer.widgets

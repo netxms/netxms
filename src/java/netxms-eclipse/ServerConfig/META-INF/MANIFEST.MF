@@ -17,7 +17,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.epp;bundle-version="2.0.4",
  org.netxms.ui.eclipse.objecttools;bundle-version="2.1.0",
  org.netxms.ui.eclipse.datacollection;bundle-version="2.1.0",
- org.netxms.ui.base;bundle-version="2.1.2"
+ org.netxms.ui.base;bundle-version="2.1.2",
+ org.netxms.ui.eclipse.actionmanager;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.serverconfig.widgets,

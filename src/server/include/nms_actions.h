@@ -36,5 +36,7 @@ UINT32 DeleteActionFromDB(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
 void FillActionInfoMessage(NXCPMessage *pMsg, NXC_ACTION *pAction);
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
+void CreateActionExportRecord(String &xml, UINT32 id);
+bool ImportAction(ConfigEntry *config);
 
 #endif   /* _nms_actions_ */

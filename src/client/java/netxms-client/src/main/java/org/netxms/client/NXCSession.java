@@ -6623,7 +6623,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules, 
-         long[] scripts, long[] objectTools, long[] dciSummaryTables) throws IOException, NXCException
+         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -6639,6 +6639,8 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_TOOL_LIST, objectTools);
       msg.setFieldInt32(NXCPCodes.VID_NUM_SUMMARY_TABLES, dciSummaryTables.length);
       msg.setField(NXCPCodes.VID_SUMMARY_TABLE_LIST, dciSummaryTables);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.length);
+      msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;
