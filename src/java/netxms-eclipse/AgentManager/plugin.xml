@@ -147,12 +147,22 @@
             id="org.netxms.ui.eclipse.agentmanager.commands.open_tunnel_manager"
             name="%action.openTunnelManager">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.agentmanager.commands.show_filter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.agentmanager.context.ScreenshotView"
             name="Screenshot view"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.agentmanager.context.TunnelManager"
+            name="Tunnel Manager"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -169,6 +179,12 @@
             contextId="org.netxms.ui.eclipse.agentmanager.context.ScreenshotView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.agentmanager.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.agentmanager.context.TunnelManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
       </key>
    </extension>
 
