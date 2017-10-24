@@ -993,6 +993,7 @@ public class NXCPCodes
    public static final long VID_IN_FIELD_COUNT = 603;
    public static final long VID_STRING_COUNT = 604;
    public static final long VID_EXPAND_STRING = 605;
+   public static final long VID_ACTION_LIST = 606;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

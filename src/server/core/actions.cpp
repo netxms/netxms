@@ -704,3 +704,96 @@ void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
    msg.setField(VID_ACTION_ID, (UINT32)0);
    pSession->sendMessage(&msg);
 }
+
+/**
+ * Export action configuration
+ */
+void CreateActionExportRecord(String &xml, UINT32 id)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT action_name,action_type,")
+                                       _T("rcpt_addr,email_subject,action_data ")
+                                       _T("FROM actions WHERE action_id=?"));
+   if (hStmt == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL && DBGetNumRows(hResult) > 0)
+   {
+      xml.append(_T("\t\t<action id=\""));
+      xml.append(id);
+      xml.append(_T("\">\n\t\t\t<name>"));
+      xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 0));
+      xml.append(_T("</name>\n\t\t\t<type>"));
+      xml.append(DBGetFieldULong(hResult, 0, 1));
+      xml.append(_T("</type>\n\t\t\t<recipientAddress>"));
+      xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 2));
+      xml.append(_T("</recipientAddress>\n\t\t\t<emailSubject>"));
+      xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 3));
+      xml.append(_T("</emailSubject>\n\t\t\t<data>"));
+      xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 4));
+      xml.append(_T("</data>\n"));
+      xml.append(_T("\t\t</action>\n"));
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Import action configuration
+ */
+bool ImportAction(ConfigEntry *config)
+{
+   if (config->getSubEntryValue(_T("name")) == NULL)
+   {
+      DbgPrintf(4, _T("ImportAction: no name specified"));
+      return false;
+   }
+
+   RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
+
+   UINT32 i;
+   // Check for duplicate name
+   for(i = 0; i < m_dwNumActions; i++)
+   {
+      if (!_tcsicmp(m_pActionList[i].szName, config->getSubEntryValue(_T("name"))))
+      {
+         DbgPrintf(4, _T("ImportAction: name already exists"));
+         return false;
+      }
+   }
+
+   // If not exist, create it
+   m_dwNumActions++;
+   m_pActionList = (NXC_ACTION *)realloc(m_pActionList, sizeof(NXC_ACTION) * m_dwNumActions);
+   m_pActionList[i].dwId = CreateUniqueId(IDG_ACTION);
+   nx_strncpy(m_pActionList[i].szName, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
+   m_pActionList[i].bIsDisabled = FALSE;
+   m_pActionList[i].iType = config->getSubEntryValueAsUInt(_T("type"), 0);
+   if (config->getSubEntryValue(_T("emailSubject")) == NULL)
+      m_pActionList[i].szEmailSubject[0] = 0;
+   else
+      nx_strncpy(m_pActionList[i].szEmailSubject, config->getSubEntryValue(_T("emailSubject")), MAX_EMAIL_SUBJECT_LEN);
+   if (config->getSubEntryValue(_T("recipientAddress")) == NULL)
+      m_pActionList[i].szRcptAddr[0] = 0;
+   else
+      nx_strncpy(m_pActionList[i].szRcptAddr, config->getSubEntryValue(_T("recipientAddress")), MAX_RCPT_ADDR_LEN);
+   if (config->getSubEntryValue(_T("data")) == NULL)
+      m_pActionList[i].pszData = NULL;
+   else
+      m_pActionList[i].pszData = _tcsdup(config->getSubEntryValue(_T("data")));
+
+   qsort(m_pActionList, m_dwNumActions, sizeof(NXC_ACTION), CompareElements);
+
+   SaveActionToDB(&m_pActionList[i]);
+   m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
+   EnumerateClientSessions(SendActionDBUpdate, &m_pActionList[i]);
+
+   RWLockUnlock(m_rwlockActionListAccess);
+   return true;
+}

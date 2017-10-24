@@ -1211,6 +1211,7 @@ typedef struct
 #define VID_IN_FIELD_COUNT          ((UINT32)603)
 #define VID_STRING_COUNT            ((UINT32)604)
 #define VID_EXPAND_STRING           ((UINT32)605)
+#define VID_ACTION_LIST             ((UINT32)606)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

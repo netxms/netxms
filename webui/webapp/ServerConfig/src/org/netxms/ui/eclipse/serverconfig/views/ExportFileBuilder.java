@@ -63,6 +63,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
+import org.netxms.client.ServerAction;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.events.EventGroup;
 import org.netxms.client.events.EventObject;
@@ -73,6 +74,9 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.actionmanager.dialogs.ActionSelectionDialog;
+import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionComparator;
+import org.netxms.ui.eclipse.actionmanager.views.helpers.ActionLabelProvider;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.dialogs.RuleSelectionDialog;
@@ -117,6 +121,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer scriptViewer;
    private TableViewer toolsViewer;
    private TableViewer summaryTableViewer;
+   private TableViewer actionViewer;
 	private Action actionSave;
 	private Action actionPublish;
 	private Map<Long, EventObject> events = new HashMap<Long, EventObject>();
@@ -126,6 +131,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private Map<Long, Script> scripts = new HashMap<Long, Script>();
 	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
    private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
+   private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
@@ -162,6 +168,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		createScriptSection();
 		createToolsSection();
       createSummaryTablesSection();
+      createActionsSection();
 		
 		form.reflow(true);
 		
@@ -698,6 +705,68 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          }
       });
    }
+   
+   /**
+    * Create "Actions" section
+    */
+   private void createActionsSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Actions");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      actionViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolkit.adapt(ruleViewer.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      actionViewer.getTable().setLayoutData(gd);
+      actionViewer.setContentProvider(new ArrayContentProvider());
+      actionViewer.setLabelProvider(new ActionLabelProvider());
+      actionViewer.setComparator(new ActionComparator());
+      actionViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().ExportFileBuilder_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addActions();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeObjects(actionViewer, actions);
+         }
+      });
+   }
 
 	/**
 	 * Create actions
@@ -913,13 +982,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       for(DciSummaryTableDescriptor t : summaryTables.values())
          summaryTableList[i++] = t.getId();
       
+      final long[] actionList = new long[actions.size()];
+      i = 0;
+      for(ServerAction a : actions.values())
+         actionList[i++] = a.getId();
+      
       final String descriptionText = description.getText();
       
       new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList);
+            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1276,6 +1350,21 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          for(DciSummaryTableDescriptor t : dlg.getSelection())
             summaryTables.put(t.getId(), t);
          summaryTableViewer.setInput(summaryTables.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add actions to list
+    */
+   private void addActions()
+   {
+      ActionSelectionDialog dlg = new ActionSelectionDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(ServerAction a : dlg.getSelection())
+            actions.put(a.getId(), a);
+         actionViewer.setInput(actions.values().toArray());
          setModified();
       }
    }
