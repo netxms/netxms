@@ -97,21 +97,25 @@ void SetOperationInProgress(bool inProgress)
 }
 
 /**
+ * Flag for "all" answer in GetYesNo
+ */
+static bool s_yesForAll = false;
+static bool s_noForAll = false;
+
+/**
  * Get Yes or No answer from keyboard
  */
-bool GetYesNo(const TCHAR *format, ...)
+static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
 {
-	va_list args;
-
 	if (g_isGuiMode)
 	{
-		if (m_bForce)
+		if (m_bForce || s_yesForAll)
 			return true;
+		if (s_noForAll)
+		   return false;
 
 		TCHAR message[4096];
-		va_start(args, format);
 		_vsntprintf(message, 4096, format, args);
-		va_end(args);
 
 #ifdef _WIN32
 		return MessageBox(NULL, message, _T("NetXMS Database Manager"), MB_YESNO | MB_ICONQUESTION) == IDYES;
@@ -123,45 +127,103 @@ bool GetYesNo(const TCHAR *format, ...)
 	{
 	   if (m_operationInProgress)
 	      _tprintf(_T("\n"));
-		va_start(args, format);
 		_vtprintf(format, args);
-		va_end(args);
-		_tprintf(_T(" (Y/N) "));
+		_tprintf(allowBulk ? _T(" (Yes/No/All/Skip) ") : _T(" (Yes/No) "));
 
-		if (m_bForce)
+		if (m_bForce || s_yesForAll)
 		{
 			_tprintf(_T("Y\n"));
 			return true;
 		}
+		else if (s_noForAll)
+		{
+         _tprintf(_T("N\n"));
+         return false;
+		}
 		else
 		{
 #ifdef _WIN32
-			int ch;
-
-			while(1)
+			while(true)
 			{
-				ch = _getch();
+				int ch = _getch();
 				if ((ch == 'y') || (ch == 'Y'))
 				{
 					_tprintf(_T("Y\n"));
 					return true;
 				}
+            if (allowBulk && ((ch == 'a') || (ch == 'A')))
+            {
+               _tprintf(_T("A\n"));
+               s_yesForAll = true;
+               return true;
+            }
 				if ((ch == 'n') || (ch == 'N'))
 				{
 					_tprintf(_T("N\n"));
 					return false;
 				}
+            if (allowBulk && ((ch == 's') || (ch == 'S')))
+            {
+               _tprintf(_T("S\n"));
+               s_noForAll = true;
+               return false;
+            }
 			}
 #else
-			TCHAR szBuffer[16];
-
 			fflush(stdout);
-			_fgetts(szBuffer, 16, stdin);
-			StrStrip(szBuffer);
-			return ((szBuffer[0] == 'y') || (szBuffer[0] == 'Y'));
+         TCHAR buffer[16];
+			_fgetts(buffer, 16, stdin);
+			Trim(buffer);
+			if (allowBulk)
+			{
+			   if ((buffer[0] == 'a') || (buffer[0] == 'A'))
+			   {
+               s_yesForAll = true;
+               return true;
+			   }
+            if ((buffer[0] == 's') || (buffer[0] == 'S'))
+            {
+               s_noForAll = true;
+               return false;
+            }
+			}
+			return ((buffer[0] == 'y') || (buffer[0] == 'Y'));
 #endif
 	   }
 	}
+}
+
+/**
+ * Get Yes or No answer from keyboard
+ */
+bool GetYesNo(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool result = GetYesNoInternal(false, format, args);
+   va_end(args);
+   return result;
+}
+
+/**
+ * Get Yes or No answer from keyboard (with bulk answer options)
+ */
+bool GetYesNoEx(const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool result = GetYesNoInternal(true, format, args);
+   va_end(args);
+   return result;
+}
+
+/**
+ * Reset bulk yes/no answer
+ */
+void ResetBulkYesNo()
+{
+   s_yesForAll = false;
+   s_noForAll = false;
 }
 
 /**
