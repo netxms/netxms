@@ -9605,6 +9605,17 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          safe_free(pdwList);
          str.append(_T("\t</dciSummaryTables>\n"));
 
+         // Write actions
+         str.append(_T("\t<actions>\n"));
+         count = pRequest->getFieldAsUInt32(VID_NUM_ACTIONS);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
+         for(int i = 0; i < count; i++)
+            CreateActionExportRecord(str, pdwList[i]);
+         safe_free(pdwList);
+         str.append(_T("\t</actions>\n"));
+
+
 			// Close document
 			str += _T("</configuration>\n");
 

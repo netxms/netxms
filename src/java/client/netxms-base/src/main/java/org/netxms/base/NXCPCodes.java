@@ -987,6 +987,12 @@ public class NXCPCodes
    public static final long VID_LORA_APP_S_KEY = 598;
    public static final long VID_LORA_NWK_S_KWY = 599;
    public static final long VID_DCI_NAME = 600;
+   public static final long VID_STATE_FLAGS = 601;
+   public static final long VID_CAPABILITIES = 602;
+   public static final long VID_IN_FIELD_COUNT = 603;
+   public static final long VID_STRING_COUNT = 604;
+   public static final long VID_EXPAND_STRING = 605;
+   public static final long VID_ACTION_LIST = 606;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
