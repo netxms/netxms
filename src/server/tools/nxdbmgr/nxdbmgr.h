@@ -73,6 +73,8 @@ bool SQLExecute(DB_STATEMENT hStmt);
 bool SQLQuery(const TCHAR *pszQuery);
 bool SQLBatch(const TCHAR *pszBatch);
 bool GetYesNo(const TCHAR *format, ...);
+bool GetYesNoEx(const TCHAR *format, ...);
+void ResetBulkYesNo();
 void SetOperationInProgress(bool inProgress);
 void ShowQuery(const TCHAR *pszQuery);
 bool ExecSQLBatch(const char *pszFile);
