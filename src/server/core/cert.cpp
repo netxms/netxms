@@ -437,7 +437,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 		switch(EVP_PKEY_id(pKey))
 		{
 			case EVP_PKEY_RSA:
-				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, signature, static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey));
+				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey));
 				break;
 			default:
 				DbgPrintf(3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject, login);
