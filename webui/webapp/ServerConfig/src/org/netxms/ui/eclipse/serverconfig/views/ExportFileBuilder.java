@@ -46,6 +46,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
@@ -127,7 +128,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private Map<Long, EventObject> events = new HashMap<Long, EventObject>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
-	private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
+	private Map<Integer, EventProcessingPolicyRule> rules = new HashMap<Integer, EventProcessingPolicyRule>();
 	private Map<Long, Script> scripts = new HashMap<Long, Script>();
 	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
    private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
@@ -451,6 +452,17 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		section.setClient(clientArea);
 		
 		ruleViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+		ruleViewer.getTable().setLinesVisible(true);
+		ruleViewer.getTable().setHeaderVisible(true);
+
+      TableColumn column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
+      column.setText("Rule #");
+      column.setWidth(60);
+
+      column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
+      column.setText("Rule Name");
+      column.setWidth(250);
+      
 		toolkit.adapt(ruleViewer.getTable());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -1286,7 +1298,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			final Set<Long> eventCodes = new HashSet<Long>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
-				rules.put(r.getGuid(), r);
+				rules.put(r.getRuleNumber(), r);
 				for(Long e : r.getEvents())
 				{
 					if (e >= 100000)

@@ -33,6 +33,6 @@ public class RuleComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		return ((EventProcessingPolicyRule)e1).getComments().compareToIgnoreCase(((EventProcessingPolicyRule)e2).getComments());
+      return ((EventProcessingPolicyRule)e1).getRuleNumber() - ((EventProcessingPolicyRule)e2).getRuleNumber();
 	}
 }

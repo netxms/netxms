@@ -38,6 +38,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -118,6 +119,17 @@ public class RuleSelectionDialog extends Dialog
 			filterText.setText(filterString);
 		
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : SWT.SINGLE) | SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer.getTable().setLinesVisible(true);
+		viewer.getTable().setHeaderVisible(true);
+
+      TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
+      column.setText("Rule #");
+      column.setWidth(60);
+
+      column = new TableColumn(viewer.getTable(), SWT.LEFT);
+      column.setText("Rule Name");
+      column.setWidth(250);
+	      
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new RuleComparator());
 		viewer.setLabelProvider(new RuleLabelProvider());
@@ -202,12 +214,11 @@ public class RuleSelectionDialog extends Dialog
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
-	@Override
+	@SuppressWarnings("unchecked")
+   @Override
 	protected void okPressed()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		for(Object o : selection.toList())
-			selectedRules.add((EventProcessingPolicyRule)o);
+	   selectedRules = ((IStructuredSelection)viewer.getSelection()).toList();
 		saveSettings();
 		super.okPressed();
 	}

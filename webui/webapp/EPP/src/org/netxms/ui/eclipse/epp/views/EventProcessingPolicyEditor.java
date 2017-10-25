@@ -519,33 +519,28 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		job.start();
 	}
 
-	/**
-	 * Init policy editor
-	 */
-	private void initPolicyEditor()
-	{
-		int ruleNumber = 1;
-		for(EventProcessingPolicyRule rule : policy.getRules())
-		{
-		   if (isRuleVisible(rule))
-		   {
-            RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
+   /**
+    * Init policy editor
+    */
+   private void initPolicyEditor()
+   {
+      for(EventProcessingPolicyRule rule : policy.getRules())
+      {
+         if (isRuleVisible(rule))
+         {
+            RuleEditor editor = new RuleEditor(dataArea, rule, this);
             ruleEditors.add(editor);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             editor.setLayoutData(gd);
          }
-		   else
-		   {
-		      ruleNumber++;
-		   }
-		}
-		dataArea.layout();
+      }
+      dataArea.layout();
 
-		Rectangle r = scroller.getClientArea();
-		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
-	}
+      Rectangle r = scroller.getClientArea();
+      scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+   }
 
 	/**
 	 * Update editor's layout
@@ -983,42 +978,43 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		setModified(true);
 	}
 
-	/**
-	 * Insert new rule at given position
-	 * 
-	 * @param position
-	 */
-	private void insertRule(int position)
-	{
-		EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
-		policy.insertRule(rule, position);
+   /**
+    * Insert new rule at given position
+    * 
+    * @param position
+    */
+   private void insertRule(int position)
+   {
+      EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
+      rule.setRuleNumber(position + 1);
+      policy.insertRule(rule, position);
 
-		RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
-		ruleEditors.add(position, editor);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		editor.setLayoutData(gd);
+      RuleEditor editor = new RuleEditor(dataArea, rule, this);
+      ruleEditors.add(position, editor);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      editor.setLayoutData(gd);
 
-		for(int i = position + 1; i < ruleEditors.size(); i++)
-			ruleEditors.get(i).setRuleNumber(i + 1);
+      for(int i = position + 1; i < ruleEditors.size(); i++)
+         ruleEditors.get(i).setRuleNumber(i + 1);
 
-		if (position < ruleEditors.size() - 1)
-		{
-		   RuleEditor anchor = null;
-	      for(int i = position + 1; i < ruleEditors.size(); i++)
-	         if (!ruleEditors.get(i).isDisposed())
-	         {
-	            anchor = ruleEditors.get(i);
-	            break;
-	         }
-	      if (anchor != null)
-	         editor.moveAbove(anchor);
-		}
-		updateEditorAreaLayout();
+      if (position < ruleEditors.size() - 1)
+      {
+         RuleEditor anchor = null;
+         for(int i = position + 1; i < ruleEditors.size(); i++)
+            if (!ruleEditors.get(i).isDisposed())
+            {
+               anchor = ruleEditors.get(i);
+               break;
+            }
+         if (anchor != null)
+            editor.moveAbove(anchor);
+      }
+      updateEditorAreaLayout();
 
-		setModified(true);
-	}
+      setModified(true);
+   }
 
 	/**
 	 * Cut selected rules to internal clipboard
@@ -1060,14 +1056,14 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			clipboard.add(new EventProcessingPolicyRule(e.getRule()));
 	}
 
-	/**
-	 * Paste rules from internal clipboard
-	 */
-	private void pasteRules()
-	{
-		int position = lastSelectedRule;
+   /**
+    * Paste rules from internal clipboard
+    */
+   private void pasteRules()
+   {
+      int position = lastSelectedRule;
 
-		RuleEditor anchor = null;
+      RuleEditor anchor = null;
       if (position < ruleEditors.size() - 1)
       {
          for(int i = position; i < ruleEditors.size(); i++)
@@ -1077,12 +1073,13 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
                break;
             }
       }
-		
+
       for(EventProcessingPolicyRule rule : clipboard.paste())
 		{
+         rule.setRuleNumber(position + 1);
 			policy.insertRule(rule, position);
 
-			RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
+			RuleEditor editor = new RuleEditor(dataArea, rule, this);
 			ruleEditors.add(position, editor);
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -1218,7 +1215,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private void onFilterModify()
    {
       filterText = filterControl.getText().trim().toLowerCase();
-      
+
       // change editors visibility
       RuleEditor prev = null;
       for(int i = 0; i < ruleEditors.size(); i++)
@@ -1232,7 +1229,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          }
          else if (e.isDisposed() && visible)
          {
-            e = new RuleEditor(dataArea, e.getRule(), e.getRuleNumber(), this);
+            e = new RuleEditor(dataArea, e.getRule(), this);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
@@ -1246,10 +1243,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          if (!e.isDisposed())
             prev = e;
       }
-      
+
       updateEditorAreaLayout();
    }
-   
+
    /**
     * Check if given rule should be visible
     * 

@@ -66,6 +66,7 @@ public class EventProcessingPolicyRule
 	private Map<String, String> persistentStorageSet;
 	private List<String> persistentStorageDelete;
 	private String comments;
+	private int ruleNumber;
 	
 	/**
 	 * Create empty rule
@@ -87,6 +88,7 @@ public class EventProcessingPolicyRule
 		persistentStorageSet = new HashMap<String, String>(0);
 		persistentStorageDelete = new ArrayList<String>(0);
 		comments = "";
+	   ruleNumber = 0;
 	}
 	
 	/**
@@ -109,6 +111,7 @@ public class EventProcessingPolicyRule
 		persistentStorageSet = new HashMap<String, String>(src.persistentStorageSet);
 		persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
 		comments = src.comments;
+		ruleNumber = src.ruleNumber;
 	}
 	
 	/**
@@ -116,7 +119,7 @@ public class EventProcessingPolicyRule
 	 * 
 	 * @param msg NXCP message
 	 */
-	public EventProcessingPolicyRule(NXCPMessage msg)
+	public EventProcessingPolicyRule(NXCPMessage msg, int ruleNumber)
 	{
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		sources = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
@@ -150,6 +153,7 @@ public class EventProcessingPolicyRule
          final String key = msg.getFieldAsString(varId++); 
          persistentStorageDelete.add(key);
       }
+      this.ruleNumber = ruleNumber;
 	}
 	
 	/**
@@ -474,5 +478,23 @@ public class EventProcessingPolicyRule
 	public UUID getGuid()
 	{
 		return guid;
+	}
+	
+	/**
+	 * Get rule number
+	 * @return rule number
+	 */
+	public int getRuleNumber()
+	{
+	   return ruleNumber;
+	}
+	
+	/**
+	 * Set rule number
+	 * @param ruleNumber to set
+	 */
+	public void setRuleNumber(int ruleNumber)
+	{
+	   this.ruleNumber = ruleNumber;
 	}
 }
