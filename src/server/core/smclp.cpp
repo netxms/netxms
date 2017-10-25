@@ -53,8 +53,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
 		delete m_conn;
    }
 
-   m_conn = new TelnetConnection();
-   if (m_conn->connect(m_ip, m_port, m_timeout))
+   m_conn = TelnetConnection::createConnection(m_ip, m_port, m_timeout);
+   if (m_conn != NULL)
    {
 #ifdef UNICODE
       char *_login = UTF8StringFromWideString(login);

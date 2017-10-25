@@ -635,6 +635,11 @@ public:
  */
 class LIBNETXMS_EXPORTABLE AbstractIterator
 {
+   DISABLE_COPY_CTOR(AbstractIterator)
+
+protected:
+   AbstractIterator();
+
 public:
    virtual ~AbstractIterator();
 
@@ -648,6 +653,8 @@ public:
  */
 template <class T> class Iterator
 {
+   DISABLE_COPY_CTOR(Iterator)
+
 private:
    AbstractIterator *m_worker;
 
@@ -665,6 +672,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE Array
 {
+   DISABLE_COPY_CTOR(Array)
+
 private:
 	int m_size;
 	int m_allocated;
@@ -715,6 +724,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE ArrayIterator : public AbstractIterator
 {
+   DISABLE_COPY_CTOR(ArrayIterator)
+
 private:
    Array *m_array;
    int m_pos;
@@ -732,6 +743,8 @@ public:
  */
 template <class T> class ObjectArray : public Array
 {
+   DISABLE_COPY_CTOR(ObjectArray)
+
 private:
 	static void destructor(void *object) { delete (T*)object; }
 
@@ -768,6 +781,8 @@ public:
  */
 template <class T> class ObjectRefArray : public Array
 {
+   DISABLE_COPY_CTOR(ObjectRefArray)
+
 private:
 	static void destructor(void *object) { }
 
@@ -794,6 +809,8 @@ public:
  */
 template <class T> class IntegerArray : public Array
 {
+   DISABLE_COPY_CTOR(IntegerArray)
+
 private:
 	static void destructor(void *element) { }
 
@@ -819,6 +836,8 @@ public:
  */
 template <class T> class StructArray : public Array
 {
+   DISABLE_COPY_CTOR(StructArray)
+
 private:
 	static void destructor(void *element) { }
 
@@ -938,6 +957,8 @@ public:
  */
 template <class T> class StringObjectMap : public StringMapBase
 {
+   DISABLE_COPY_CTOR(StringObjectMap)
+
 private:
 	static void destructor(void *object) { delete (T*)object; }
 
@@ -963,6 +984,7 @@ private:
 public:
 	StringList();
 	StringList(const StringList *src);
+   StringList(const StringList &src);
 	StringList(const TCHAR *src, const TCHAR *separator);
 	~StringList();
 
@@ -1022,6 +1044,8 @@ class StringSet;
  */
 class LIBNETXMS_EXPORTABLE StringSetIterator : public AbstractIterator
 {
+   DISABLE_COPY_CTOR(StringSetIterator)
+
 private:
    StringSet *m_stringSet;
    StringSetEntry *m_curr;
@@ -1121,6 +1145,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE HashMapIterator : public AbstractIterator
 {
+   DISABLE_COPY_CTOR(HashMapIterator)
+
 private:
    HashMapBase *m_hashMap;
    HashMapEntry *m_curr;
@@ -1178,6 +1204,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE RingBuffer
 {
+   DISABLE_COPY_CTOR(RingBuffer)
+
 private:
    BYTE *m_data;
    size_t m_size;
@@ -1202,6 +1230,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE ByteStream
 {
+   DISABLE_COPY_CTOR(ByteStream)
+
 private:
    BYTE *m_data;
    size_t m_size;
@@ -1258,6 +1288,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE RefCountObject
 {
+   DISABLE_COPY_CTOR(RefCountObject)
+
 private:
 	VolatileCounter m_refCount;
 
@@ -1289,6 +1321,8 @@ class NXCPMessage;
  */
 class LIBNETXMS_EXPORTABLE TableColumnDefinition
 {
+   DISABLE_COPY_CTOR(TableColumnDefinition)
+
 private:
    TCHAR *m_name;
    TCHAR *m_displayName;
@@ -1318,6 +1352,8 @@ public:
  */
 class TableCell
 {
+   DISABLE_COPY_CTOR(TableCell)
+
 private:
    TCHAR *m_value;
    int m_status;
@@ -1349,6 +1385,8 @@ public:
  */
 class TableRow
 {
+   DISABLE_COPY_CTOR(TableRow)
+
 private:
    ObjectArray<TableCell> *m_cells;
    UINT32 m_objectId;
@@ -1388,6 +1426,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE Table : public RefCountObject
 {
+   DISABLE_COPY_CTOR(Table)
+
 private:
    ObjectArray<TableRow> *m_data;
    ObjectArray<TableColumnDefinition> *m_columns;
@@ -1668,6 +1708,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE InetAddressList
 {
+   DISABLE_COPY_CTOR(InetAddressList)
+
 private:
    ObjectArray<InetAddress> *m_list;
 
@@ -1705,13 +1747,16 @@ public:
  */
 class LIBNETXMS_EXPORTABLE SocketConnection
 {
+   DISABLE_COPY_CTOR(SocketConnection)
+
 protected:
 	SOCKET m_socket;
 	char m_data[4096];
 	int m_dataPos;
 
+   SocketConnection();
+
 public:
-	SocketConnection();
 	virtual ~SocketConnection();
 
 	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
@@ -1733,15 +1778,21 @@ public:
  */
 class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 {
+   DISABLE_COPY_CTOR(TelnetConnection)
+
 protected:
+   TelnetConnection() : SocketConnection() { }
+
 	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
 	bool connectTCP(const InetAddress& ip, WORD port, UINT32 timeout);
 
+   bool connect(const TCHAR *hostName, WORD port, UINT32 timeout);
+   bool connect(const InetAddress& ip, WORD port, UINT32 timeout);
+
 public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
+   static TelnetConnection *createConnection(const InetAddress& ip, WORD port, UINT32 timeout);
 
-   bool connect(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connect(const InetAddress& ip, WORD port, UINT32 timeout);
 	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
 	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
@@ -1751,6 +1802,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE PostalAddress
 {
+   DISABLE_COPY_CTOR(PostalAddress)
+
 private:
    TCHAR *m_country;
    TCHAR *m_city;
@@ -1785,6 +1838,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE SocketPoller
 {
+   DISABLE_COPY_CTOR(SocketPoller)
+
 private:
    bool m_write;
    int m_count;
@@ -1812,6 +1867,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE AbstractCommChannel : public RefCountObject
 {
+   DISABLE_COPY_CTOR(AbstractCommChannel)
+
 protected:
    virtual ~AbstractCommChannel();
 
@@ -1830,6 +1887,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE SocketCommChannel : public AbstractCommChannel
 {
+   DISABLE_COPY_CTOR(SocketCommChannel)
+
 private:
    SOCKET m_socket;
    bool m_owner;
