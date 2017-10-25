@@ -472,6 +472,8 @@ public:
  */
 class NXCORE_EXPORTABLE NetObj
 {
+   DISABLE_COPY_CTOR(NetObj)
+
 private:
 	static void onObjectDeleteCallback(NetObj *object, void *data);
 

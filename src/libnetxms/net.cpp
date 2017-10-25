@@ -369,3 +369,23 @@ TelnetConnection *TelnetConnection::createConnection(const TCHAR *hostName, WORD
 
 	return tc;
 }
+
+/**
+ * Helper fuction to create connected TelnetConnection object.
+ *
+ * @param ip IP address
+ * @param port port number
+ * @param timeout connection timeout in milliseconds
+ * @return connected TelnetConnection object or NULL on connection failure
+ */
+TelnetConnection *TelnetConnection::createConnection(const InetAddress& ip, WORD port, UINT32 timeout)
+{
+   TelnetConnection *tc = new TelnetConnection();
+   if (!tc->connect(ip, port, timeout))
+   {
+      delete tc;
+      tc = NULL;
+   }
+
+   return tc;
+}
