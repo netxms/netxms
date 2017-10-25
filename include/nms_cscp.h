@@ -587,6 +587,11 @@ typedef struct
 #define CMD_CREATE_OBJECT_ACCESS_SNAPSHOT 0x0160
 #define CMD_UNBIND_AGENT_TUNNEL           0x0161
 #define CMD_RESTART                       0x0162
+#define CMD_REGISTER_LORAWAN_SENSOR       0x0163
+#define CMD_UNREGISTER_LORAWAN_SENSOR     0x0164
+#define CMD_EXPAND_MACROS                 0x0165
+#define CMD_EXECUTE_ACTION_WITH_EXPANSION 0x0166
+#define CMD_HOST_BY_IP                    0x0167
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
