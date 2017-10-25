@@ -183,7 +183,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
 	   if(IsZoningEnabled() && zoneUIN != 0)
 	   {
 	      AgentConnectionEx *conn = pNode->getConnectionToZoneNodeProxy();
-	      tmp = conn->getHostByAddr(ipAddr, dnsName, MAX_DNS_NAME);
+	      tmp = conn != NULL ? conn->getHostByAddr(ipAddr, dnsName, MAX_DNS_NAME) : NULL;
 	   }
 	   else
 		{

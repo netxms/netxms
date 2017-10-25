@@ -6103,23 +6103,23 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 
    DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
 
-   TCHAR *name;
-   TCHAR dnsName[MAX_OBJECT_NAME];
+   TCHAR name[MAX_OBJECT_NAME];
+   bool nameResolved = false;
    if(m_zoneUIN != 0)
    {
       AgentConnectionEx *conn = getConnectionToZoneNodeProxy();
-      if(conn->getHostByAddr(m_ipAddress, dnsName, MAX_DNS_NAME) != NULL)
+      if(conn != NULL)
       {
-         name = dnsName;
+         nameResolved = conn->getHostByAddr(m_ipAddress, name, MAX_DNS_NAME) != NULL ? true : false;
       }
    }
-   else if (m_ipAddress.getHostByAddr(dnsName, MAX_OBJECT_NAME) != NULL)
+   else
    {
-      name = dnsName;
+      nameResolved = m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL ? true : false;
    }
 
    // Try to resolve primary IP
-   if (name != NULL)
+   if (nameResolved)
    {
       nx_strncpy(m_name, name, MAX_OBJECT_NAME);
       if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
