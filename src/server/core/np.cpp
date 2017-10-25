@@ -178,16 +178,27 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
 	// Use DNS name as primary name if required
 	if (discoveredNode && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
 	{
-		TCHAR dnsName[MAX_DNS_NAME];
-      if (ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME) != NULL)
+      TCHAR dnsName[MAX_DNS_NAME];
+      TCHAR *tmp;
+	   if(IsZoningEnabled() && zoneUIN != 0)
+	   {
+	      AgentConnectionEx *conn = pNode->getConnectionToZoneNodeProxy();
+	      tmp = conn->getHostByAddr(ipAddr, dnsName, MAX_DNS_NAME);
+	   }
+	   else
 		{
-         if (InetAddress::resolveHostName(dnsName).equals(ipAddr))
-			{
-				// We have valid DNS name which resolves back to node's IP address, use it as primary name
-				pNode->setPrimaryName(dnsName);
-				DbgPrintf(4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, szIpAddr);
-			}
+	      tmp = ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME);
 		}
+
+      if(tmp != NULL)
+      {
+         if(ResolveHostName(zoneUIN, dnsName).equals(ipAddr))
+         {
+            // We have valid DNS name which resolves back to node's IP address, use it as primary name
+            pNode->setPrimaryName(dnsName);
+            DbgPrintf(4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, szIpAddr);
+         }
+      }
 	}
 
 	// Bind node to cluster before first configuration poll

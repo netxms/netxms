@@ -1630,7 +1630,8 @@ enum ProxyType
 {
    SNMP_PROXY = 0,
    SENSOR_PROXY = 1,
-   MAX_PROXY_TYPE = 2
+   ZONE_PROXY = 2,
+   MAX_PROXY_TYPE = 3
 };
 
 /**
@@ -1989,6 +1990,7 @@ public:
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
+   AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;

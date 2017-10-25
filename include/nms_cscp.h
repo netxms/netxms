@@ -591,6 +591,7 @@ typedef struct
 #define CMD_UNREGISTER_LORAWAN_SENSOR     0x0164
 #define CMD_EXPAND_MACROS                 0x0165
 #define CMD_EXECUTE_ACTION_WITH_EXPANSION 0x0166
+#define CMD_HOST_BY_IP                    0x0167
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

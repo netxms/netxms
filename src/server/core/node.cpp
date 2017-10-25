@@ -5450,6 +5450,29 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
 }
 
 /**
+ * Get connection to zone proxy node of this node
+ */
+AgentConnectionEx *Node::getConnectionToZoneNodeProxy(bool validate)
+{
+   Zone *zone = FindZoneByUIN(m_zoneUIN);
+   if (zone == NULL)
+   {
+     DbgPrintf(1, _T("Internal error: zone is NULL in Node::getZoneProxyConnection (zone ID = %d)"), (int)m_zoneUIN);
+     return NULL;
+   }
+
+   UINT32 zoneProxyNodeId = zone->getProxyNodeId();
+   Node *zoneNode = (Node *)FindObjectById(zoneProxyNodeId, OBJECT_NODE);
+   if(zoneNode == NULL)
+   {
+      DbgPrintf(1, _T("Internal error: zone proxy node is NULL in Node::getZoneProxyConnection (zone ID = %d, node ID = %d)"), (int)m_zoneUIN, (int)zoneProxyNodeId);
+      return NULL;
+   }
+
+   return zoneNode->acquireProxyConnection(ZONE_PROXY, validate);
+}
+
+/**
  * Set node's primary IP address.
  * Assumed that all necessary locks already in place
  */
@@ -6080,9 +6103,23 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 
    DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
 
+   TCHAR *name;
+   TCHAR dnsName[MAX_OBJECT_NAME];
+   if(m_zoneUIN != 0)
+   {
+      AgentConnectionEx *conn = getConnectionToZoneNodeProxy();
+      if(conn->getHostByAddr(m_ipAddress, dnsName, MAX_DNS_NAME) != NULL)
+      {
+         name = dnsName;
+      }
+   }
+   else if (m_ipAddress.getHostByAddr(dnsName, MAX_OBJECT_NAME) != NULL)
+   {
+      name = dnsName;
+   }
+
    // Try to resolve primary IP
-   TCHAR name[MAX_OBJECT_NAME];
-   if (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL)
+   if (name != NULL)
    {
       nx_strncpy(m_name, name, MAX_OBJECT_NAME);
       if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))

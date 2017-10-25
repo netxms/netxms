@@ -588,6 +588,7 @@ public:
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
+   TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buf, size_t bufLen);
 
 	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,

@@ -656,6 +656,14 @@ void CommSession::processingThread()
 					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
+            case CMD_HOST_BY_IP:
+            {
+               InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+               TCHAR dnsName[MAX_DNS_NAME];
+               response.setField(VID_NAME, addr.getHostByAddr(dnsName, MAX_DNS_NAME));
+               response.setField(VID_RCC, ERR_SUCCESS);
+               break;
+            }
             case CMD_SET_SERVER_CAPABILITIES:
                // Servers before 2.0 use VID_ENABLED
                m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
