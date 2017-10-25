@@ -1216,6 +1216,15 @@ enum EnumerationCallbackResult
    _CONTINUE = 1
 };
 
+/**
+ * Disable copy constructor if compiler supports it
+ */
+#if CAN_DELETE_COPY_CTOR
+#define DISABLE_COPY_CTOR(c) c (const c &s) = delete;
+#else
+#define DISABLE_COPY_CTOR(c)
+#endif
+
 #endif
 
 #endif   /* _nms_common_h_ */

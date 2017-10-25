@@ -50,6 +50,18 @@ StringList::StringList(const StringList *src)
 }
 
 /**
+ * Copy constructor
+ */
+StringList::StringList(const StringList &src)
+{
+   m_count = 0;
+   m_allocated = src.m_allocated;
+   m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
+   memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   addAll(&src);
+}
+
+/**
  * Constructor: create string list by splitting source string at separators
  */
 StringList::StringList(const TCHAR *src, const TCHAR *separator)

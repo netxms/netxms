@@ -1098,6 +1098,25 @@ AC_C_CONST
 AC_PROG_GCC_TRADITIONAL
 AC_C_BIGENDIAN
 
+AC_LANG_PUSH([C++])
+
+AC_MSG_CHECKING(whether C++ compiler supports deletion of copy constructor)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A {
+public:
+   A(const A &s) = delete;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(CAN_DELETE_COPY_CTOR,1,Define to 1 if C++ compiler supports copy constructor deletion)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(CAN_DELETE_COPY_CTOR,0,Define to 1 if C++ compiler supports copy constructor deletion)
+])
+
+AC_LANG_POP([C++])
+
 
 #--------------------------------------------------------------------
 # Private extensions
@@ -1201,6 +1220,16 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		])
 
 	AC_LANG_PUSH([C++])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -std=c++11"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
 	OLD_CXXFLAGS="$CXXFLAGS"

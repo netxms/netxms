@@ -2747,6 +2747,13 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 }
 
 /**
+ * Constructor for abstract iterator
+ */
+AbstractIterator::AbstractIterator()
+{
+}
+
+/**
  * Destructor for abstract iterator
  */
 AbstractIterator::~AbstractIterator()
