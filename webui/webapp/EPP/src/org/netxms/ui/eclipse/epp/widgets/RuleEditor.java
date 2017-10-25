@@ -113,11 +113,11 @@ public class RuleEditor extends Composite
     * @param parent
     * @param rule
     */
-   public RuleEditor(Composite parent, EventProcessingPolicyRule rule, int ruleNumber, EventProcessingPolicyEditor editor)
+   public RuleEditor(Composite parent, EventProcessingPolicyRule rule, EventProcessingPolicyEditor editor)
    {
       super(parent, SWT.NONE);
       this.rule = rule;
-      this.ruleNumber = ruleNumber;
+      this.ruleNumber = rule.getRuleNumber();
       this.editor = editor;
 
       session = (NXCSession)ConsoleSharedData.getSession();

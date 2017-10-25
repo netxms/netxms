@@ -532,22 +532,17 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
     */
    private void initPolicyEditor()
    {
-      int ruleNumber = 1;
       for(EventProcessingPolicyRule rule : policy.getRules())
       {
          if (isRuleVisible(rule))
          {
-            RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
+            RuleEditor editor = new RuleEditor(dataArea, rule, this);
             editor.setDragDetect(true);
             ruleEditors.add(editor);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             editor.setLayoutData(gd);
-         }
-         else
-         {
-            ruleNumber++;
          }
       }
       dataArea.layout();
@@ -1015,9 +1010,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private void insertRule(int position)
    {
       EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
+      rule.setRuleNumber(position + 1);
       policy.insertRule(rule, position);
 
-      RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
+      RuleEditor editor = new RuleEditor(dataArea, rule, this);
       ruleEditors.add(position, editor);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -1104,9 +1100,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
       for(EventProcessingPolicyRule rule : clipboard.paste())
       {
+         rule.setRuleNumber(position + 1);
          policy.insertRule(rule, position);
 
-         RuleEditor editor = new RuleEditor(dataArea, rule, position + 1, this);
+         RuleEditor editor = new RuleEditor(dataArea, rule, this);
          ruleEditors.add(position, editor);
          GridData gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
@@ -1256,7 +1253,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          }
          else if (e.isDisposed() && visible)
          {
-            e = new RuleEditor(dataArea, e.getRule(), e.getRuleNumber(), this);
+            e = new RuleEditor(dataArea, e.getRule(), this);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;

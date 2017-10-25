@@ -5653,7 +5653,7 @@ public class NXCSession
       for(int i = 0; i < numRules; i++)
       {
          response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
-         policy.addRule(new EventProcessingPolicyRule(response));
+         policy.addRule(new EventProcessingPolicyRule(response, i+1));
       }
 
       return policy;

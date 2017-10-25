@@ -43,17 +43,10 @@ public class RuleLabelProvider extends LabelProvider implements ITableLabelProvi
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		if (columnIndex == 0)
-			return getText(element);
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
-	@Override
-	public String getText(Object element)
-	{
-		return ((EventProcessingPolicyRule)element).getComments();
+      if (columnIndex == 0)
+         return Integer.toString(((EventProcessingPolicyRule)element).getRuleNumber());
+      else if (columnIndex == 1)
+         return ((EventProcessingPolicyRule)element).getComments();
+      return null;
 	}
 }
