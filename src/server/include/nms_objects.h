@@ -1444,20 +1444,6 @@ public:
 };
 
 /**
-<<<<<<< HEAD
-=======
- * Proxy types
- */
-enum ProxyType
-{
-   SNMP_PROXY = 0,
-   SENSOR_PROXY = 1,
-   ZONE_PROXY = 2,
-   MAX_PROXY_TYPE = 3
-};
-
-/**
->>>>>>> a57224273... Do DNS resolve for node names via zone proxy. (issue #NX-1268)
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
