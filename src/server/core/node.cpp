@@ -64,8 +64,10 @@ Node::Node() : DataCollectionTarget()
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
    m_snmpProxyConnectionLock = MutexCreate();
+   m_zoneProxyConnectionLock = MutexCreate();
    m_agentConnection = NULL;
    m_snmpProxyConnection = NULL;
+   m_zoneProxyConnection = NULL;
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -165,8 +167,10 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
    m_snmpProxyConnectionLock = MutexCreate();
+   m_zoneProxyConnectionLock = MutexCreate();
    m_agentConnection = NULL;
    m_snmpProxyConnection = NULL;
+   m_zoneProxyConnection = NULL;
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -241,10 +245,13 @@ Node::~Node()
    MutexDestroy(m_mutexRTAccess);
    MutexDestroy(m_mutexTopoAccess);
    MutexDestroy(m_snmpProxyConnectionLock);
+   MutexDestroy(m_zoneProxyConnectionLock);
    if (m_agentConnection != NULL)
       m_agentConnection->decRefCount();
    if (m_snmpProxyConnection != NULL)
       m_snmpProxyConnection->decRefCount();
+   if (m_zoneProxyConnection != NULL)
+      m_zoneProxyConnection->decRefCount();
    delete m_smclpConnection;
    delete m_paramList;
    delete m_tableList;
@@ -5668,6 +5675,69 @@ AgentConnectionEx *Node::acquireSnmpProxyConnection(bool validate)
 }
 
 /**
+ * Acquire zone proxy agent connection
+ */
+AgentConnectionEx *Node::acquireZoneProxyConnection(bool validate)
+{
+   MutexLock(m_zoneProxyConnectionLock);
+
+   if ((m_zoneProxyConnection != NULL) && !m_zoneProxyConnection->isConnected())
+   {
+      m_zoneProxyConnection->decRefCount();
+      m_zoneProxyConnection = NULL;
+      nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): existing agent connection dropped"), m_name, (int)m_id);
+   }
+
+   if ((m_zoneProxyConnection != NULL) && validate)
+   {
+      UINT32 rcc = m_zoneProxyConnection->nop();
+      if (rcc != ERR_SUCCESS)
+      {
+         m_zoneProxyConnection->decRefCount();
+         m_zoneProxyConnection = NULL;
+         nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, rcc);
+      }
+   }
+
+   if (m_zoneProxyConnection == NULL)
+   {
+      m_zoneProxyConnection = createAgentConnection();
+      if (m_zoneProxyConnection != NULL)
+         nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): new agent connection created"), m_name, (int)m_id);
+   }
+
+   AgentConnectionEx *conn = m_zoneProxyConnection;
+   if (conn != NULL)
+      conn->incRefCount();
+
+   MutexUnlock(m_zoneProxyConnectionLock);
+   return conn;
+}
+
+/**
+ * Get connection to zone proxy node of this node
+ */
+AgentConnectionEx *Node::getConnectionToZoneNodeProxy(bool validate)
+{
+   Zone *zone = FindZoneByUIN(m_zoneUIN);
+   if (zone == NULL)
+   {
+     DbgPrintf(1, _T("Internal error: zone is NULL in Node::getZoneProxyConnection (zone ID = %d)"), (int)m_zoneUIN);
+     return NULL;
+   }
+
+   UINT32 zoneProxyNodeId = zone->getProxyNodeId();
+   Node *zoneNode = (Node *)FindObjectById(zoneProxyNodeId, OBJECT_NODE);
+   if(zoneNode == NULL)
+   {
+      DbgPrintf(1, _T("Internal error: zone proxy node is NULL in Node::getZoneProxyConnection (zone ID = %d, node ID = %d)"), (int)m_zoneUIN, (int)zoneProxyNodeId);
+      return NULL;
+   }
+
+   return zoneNode->acquireZoneProxyConnection(validate);
+}
+
+/**
  * Set node's primary IP address.
  * Assumed that all necessary locks already in place
  */
@@ -6290,9 +6360,23 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 
    DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
 
+   TCHAR *name;
+   TCHAR dnsName[MAX_OBJECT_NAME];
+   if(m_zoneUIN != 0)
+   {
+      AgentConnectionEx *conn = getConnectionToZoneNodeProxy();
+      if(conn->getHostByAddr(m_ipAddress, dnsName, MAX_DNS_NAME) != NULL)
+      {
+         name = dnsName;
+      }
+   }
+   else if (m_ipAddress.getHostByAddr(dnsName, MAX_OBJECT_NAME) != NULL)
+   {
+      name = dnsName;
+   }
+
    // Try to resolve primary IP
-   TCHAR name[MAX_OBJECT_NAME];
-   if (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL)
+   if (name != NULL)
    {
       nx_strncpy(m_name, name, MAX_OBJECT_NAME);
       if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))

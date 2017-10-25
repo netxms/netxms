@@ -1423,6 +1423,20 @@ public:
 };
 
 /**
+<<<<<<< HEAD
+=======
+ * Proxy types
+ */
+enum ProxyType
+{
+   SNMP_PROXY = 0,
+   SENSOR_PROXY = 1,
+   ZONE_PROXY = 2,
+   MAX_PROXY_TYPE = 3
+};
+
+/**
+>>>>>>> a57224273... Do DNS resolve for node names via zone proxy. (issue #NX-1268)
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1499,8 +1513,10 @@ protected:
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
 	MUTEX m_snmpProxyConnectionLock;
+	MUTEX m_zoneProxyConnectionLock;
    AgentConnectionEx *m_agentConnection;
    AgentConnectionEx *m_snmpProxyConnection;
+   AgentConnectionEx *m_zoneProxyConnection;
    SMCLP_Connection *m_smclpConnection;
 	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
    UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
@@ -1794,6 +1810,8 @@ public:
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *acquireSnmpProxyConnection(bool validate = false);
+   AgentConnectionEx *acquireZoneProxyConnection(bool validate = false);
+   AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;

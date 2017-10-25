@@ -2054,6 +2054,43 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
 }
 
 /**
+ * Resolve hostname by IP address in local network
+ */
+TCHAR *AgentConnection::getHostByAddr(const InetAddress& ipAddr, TCHAR *buf, size_t bufLen)
+{
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
+
+   dwRqId = generateRequestId();
+   msg.setCode(CMD_HOST_BY_IP);
+   msg.setId(dwRqId);
+   msg.setField(VID_IP_ADDRESS, ipAddr);
+   TCHAR *result = NULL;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            result = response->getFieldAsString(VID_NAME, buf, bufLen);
+         }
+         delete response;
+         return result;
+      }
+      else
+      {
+         return result;
+      }
+   }
+   else
+   {
+      return result;
+   }
+}
+
+/**
  * Send custom request to agent
  */
 NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *recvFile, bool append,
