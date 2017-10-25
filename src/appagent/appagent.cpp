@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "appagent-internal.h"
+#include <nxproc.h>
 
 #if defined(_AIX) || defined(__sun)
 #include <signal.h>
@@ -30,10 +31,7 @@
  * Application agent config
  */
 static APPAGENT_INIT s_config;
-static bool s_stop = false;
 static bool s_initialized = false;
-static HPIPE s_pipe = INVALID_PIPE_HANDLE;
-static THREAD s_connectorThread = INVALID_THREAD_HANDLE;
 
 /**
  * Write log
@@ -138,14 +136,14 @@ static APPAGENT_MSG *ListMetrics()
 /**
  * Process incoming request
  */
-static void ProcessRequest(HPIPE hPipe)
+static void ProcessRequest(NamedPipe *pipe, void *arg)
 {
 	AppAgentMessageBuffer *mb = new AppAgentMessageBuffer;
 
 	AppAgentWriteLog(7, _T("ProcessRequest: connection established"));
 	while(true)
 	{
-		APPAGENT_MSG *msg = ReadMessageFromPipe(hPipe, mb);
+		APPAGENT_MSG *msg = ReadMessageFromPipe(pipe->handle(), mb);
 		if (msg == NULL)
 			break;
 		AppAgentWriteLog(7, _T("ProcessRequest: received message %04X"), (unsigned int)msg->command);
@@ -163,199 +161,12 @@ static void ProcessRequest(HPIPE hPipe)
 				break;
 		}
 		free(msg);
-		SendMessageToPipe(hPipe, response);
+		SendMessageToPipe(pipe->handle(), response);
 		free(response);
 	}
 	AppAgentWriteLog(7, _T("ProcessRequest: connection closed"));
 	delete mb;
 }
-
-/**
- * Connector thread for application agent
- */
-#ifdef _WIN32
-
-static THREAD_RESULT THREAD_CALL AppAgentConnector(void *arg)
-{
-	SECURITY_ATTRIBUTES sa;
-	PSECURITY_DESCRIPTOR sd = NULL;
-	SID_IDENTIFIER_AUTHORITY sidAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
-	EXPLICIT_ACCESS ea;
-	PSID sidEveryone = NULL;
-	ACL *acl = NULL;
-	TCHAR errorText[1024];
-
-	// Create a well-known SID for the Everyone group.
-	if(!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidEveryone))
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: AllocateAndInitializeSid failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	// Initialize an EXPLICIT_ACCESS structure for an ACE.
-	// The ACE will allow either Everyone or given user to access pipe
-	ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
-	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
-	ea.grfAccessMode = SET_ACCESS;
-	ea.grfInheritance = NO_INHERITANCE;
-	if ((s_config.userId == NULL) || (s_config.userId[0] == 0) || !_tcscmp(s_config.userId, _T("*")))
-	{
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
-	}
-	else
-	{
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
-		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
-		ea.Trustee.ptstrName  = (LPTSTR)s_config.userId;
-		AppAgentWriteLog(2, _T("AppAgentConnector: will allow connections only for user %s"), s_config.userId);
-	}
-
-	// Create a new ACL that contains the new ACEs.
-	if (SetEntriesInAcl(1, &ea, NULL, &acl) != ERROR_SUCCESS)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: SetEntriesInAcl failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	sd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-	if (sd == NULL)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: LocalAlloc failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	if (!InitializeSecurityDescriptor(sd, SECURITY_DESCRIPTOR_REVISION))
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: InitializeSecurityDescriptor failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	// Add the ACL to the security descriptor. 
-   if (!SetSecurityDescriptorDacl(sd, TRUE, acl, FALSE))
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: SetSecurityDescriptorDacl failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	TCHAR pipeName[MAX_PATH];
-	_sntprintf(pipeName, MAX_PATH, _T("\\\\.\\pipe\\appagent.%s"), s_config.name);
-	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.bInheritHandle = FALSE;
-	sa.lpSecurityDescriptor = sd;
-	s_pipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 1, 8192, 8192, 0, &sa);
-	if (s_pipe == INVALID_HANDLE_VALUE)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: CreateNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
-
-	AppAgentWriteLog(2, _T("AppAgentConnector: named pipe created, waiting for connection"));
-	int connectErrors = 0;
-	while(!s_stop)
-	{
-		BOOL connected = ConnectNamedPipe(s_pipe, NULL);
-		if (connected || (GetLastError() == ERROR_PIPE_CONNECTED))
-		{
-			ProcessRequest(s_pipe);
-			DisconnectNamedPipe(s_pipe);
-			connectErrors = 0;
-		}
-		else
-		{
-			AppAgentWriteLog(2, _T("AppAgentConnector: ConnectNamedPipe failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-			connectErrors++;
-			if (connectErrors > 10)
-				break;	// Stop this connector if ConnectNamedPipe fails instantly
-		}
-	}
-
-cleanup:
-	if (s_pipe != NULL)
-	{
-		CloseHandle(s_pipe);
-		s_pipe = INVALID_PIPE_HANDLE;
-	}
-
-	if (sd != NULL)
-		LocalFree(sd);
-
-	if (acl != NULL)
-		LocalFree(acl);
-
-	if (sidEveryone != NULL)
-		FreeSid(sidEveryone);
-
-	AppAgentWriteLog(2, _T("AppAgentConnector: listener thread stopped"));
-	return THREAD_OK;
-}
-
-#else
-
-static THREAD_RESULT THREAD_CALL AppAgentConnector(void *arg)
-{
-	mode_t prevMask = 0;
-
-	s_pipe = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s_pipe == -1)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: socket failed (%s)"), _tcserror(errno));
-		goto cleanup;
-	}
-	
-	struct sockaddr_un addrLocal;
-	addrLocal.sun_family = AF_UNIX;
-#ifdef UNICODE
-   sprintf(addrLocal.sun_path, "/tmp/.appagent.%S", s_config.name);
-#else
-	sprintf(addrLocal.sun_path, "/tmp/.appagent.%s", s_config.name);
-#endif
-	unlink(addrLocal.sun_path);
-	prevMask = umask(S_IWGRP | S_IWOTH);
-	if (bind(s_pipe, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: bind failed (%s)"), _tcserror(errno));
-		umask(prevMask);
-		goto cleanup;
-	}
-	umask(prevMask);
-
-	if (listen(s_pipe, 5) == -1)
-	{
-		AppAgentWriteLog(2, _T("AppAgentConnector: listen failed (%s)"), _tcserror(errno));
-		goto cleanup;
-	}
-	
-	while(!s_stop)
-	{
-		struct sockaddr_un addrRemote;
-		socklen_t size = sizeof(struct sockaddr_un);
-		SOCKET cs = accept(s_pipe, (struct sockaddr *)&addrRemote, &size);
-		if (cs > 0)
-		{
-			ProcessRequest(cs);
-			shutdown(cs, 2);
-			close(cs);
-		}
-		else
-		{
-			AppAgentWriteLog(2, _T("AppAgentConnector: accept failed (%s)"), _tcserror(errno));
-		}
-	}
-
-cleanup:
-	if (s_pipe != -1)
-	{
-		close(s_pipe);
-		s_pipe = INVALID_PIPE_HANDLE;
-	}
-
-	AppAgentWriteLog(2, _T("AppAgentConnector: listener thread stopped"));
-	return THREAD_OK;
-}
-
-#endif
 
 #if defined(_AIX) || defined(__sun)
 
@@ -389,12 +200,23 @@ bool APPAGENT_EXPORTABLE AppAgentInit(APPAGENT_INIT *initData)
 }
 
 /**
+ * Pipe listener
+ */
+static NamedPipeListener *s_listener = NULL;
+
+/**
  * Start application agent
  */
 void APPAGENT_EXPORTABLE AppAgentStart()
 {
-	if ((s_initialized) && (s_connectorThread == INVALID_THREAD_HANDLE))
-		s_connectorThread = ThreadCreateEx(AppAgentConnector, 0, NULL);
+   if (!s_initialized || (s_listener != NULL))
+      return;
+
+   TCHAR name[64];
+   _sntprintf(name, 64, _T("appagent.%s"), s_config.name);
+   s_listener = NamedPipeListener::create(name, ProcessRequest, NULL, s_config.userId);
+   if (s_listener != NULL)
+      s_listener->start();
 }
 
 /**
@@ -402,23 +224,10 @@ void APPAGENT_EXPORTABLE AppAgentStart()
  */
 void APPAGENT_EXPORTABLE AppAgentStop()
 {
-	if (s_initialized && (s_connectorThread != INVALID_THREAD_HANDLE))
+	if (s_initialized && (s_listener != NULL))
 	{
-		s_stop = true;
-		if (s_pipe != INVALID_THREAD_HANDLE)
-		{
-#ifdef _WIN32
-			CloseHandle(s_pipe);
-#else
-			shutdown(s_pipe, SHUT_RDWR);
-#if defined(_AIX) || defined(__sun)
-         pthread_kill(s_connectorThread, SIGUSR2);
-#endif
-#endif
-			s_pipe = INVALID_PIPE_HANDLE;
-		}
-		ThreadJoin(s_connectorThread);
-		s_connectorThread = INVALID_THREAD_HANDLE;
+	   s_listener->stop();
+	   delete_and_null(s_listener);
 	}
 }
 
