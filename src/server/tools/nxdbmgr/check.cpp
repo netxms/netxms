@@ -1115,6 +1115,57 @@ static void CheckMapLinks()
 }
 
 /**
+ * Init DB lock
+ */
+static bool InitLocks()
+{
+   TCHAR buffer[MAX_DB_STRING], bufferInfo[MAX_DB_STRING];
+   bool result = false;
+
+   ConfigReadStr(_T("DBLockStatus"), buffer, MAX_DB_STRING, _T("ERROR"));
+   if (_tcscmp(buffer, _T("ERROR")))
+   {
+      bool locked = _tcscmp(buffer, _T("UNLOCKED"));
+
+      if (locked)
+      {
+         ConfigReadStr(_T("DBLockInfo"), bufferInfo, MAX_DB_STRING, _T("<error>"));
+         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), buffer, bufferInfo))
+         {
+            locked = false;
+            _tprintf(_T("Database lock removed\n"));
+         }
+      }
+      if (!locked)
+      {
+         CreateConfigParam(_T("DBLockStatus"), _T("NXDBMGR Check"), false, true, true);
+         GetLocalHostName(buffer, MAX_DB_STRING, false);
+         CreateConfigParam(_T("DBLockInfo"), buffer, false, false, true);
+         _sntprintf(buffer, 64, _T("%u"), GetCurrentProcessId());
+         CreateConfigParam(_T("DBLockPID"), buffer, false, false, true);
+         result = true;
+      }
+
+      return result;
+   }
+   else
+   {
+      _tprintf(_T("Unable to get database lock status\n"));
+      return result;
+   }
+}
+
+/**
+ * Unlock database
+ */
+static void UnlockDB()
+{
+   CreateConfigParam(_T("DBLockStatus"), _T("UNLOCKED"), false, true, true);
+   CreateConfigParam(_T("DBLockInfo"), _T(""),  false, false, true);
+   CreateConfigParam(_T("DBLockPID"), _T("0"), false, false, true);
+}
+
+/**
  * Check database for errors
  */
 void CheckDatabase()
@@ -1148,117 +1199,75 @@ void CheckDatabase()
       return;
    }
 
-   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-   BOOL bLocked = FALSE;
    BOOL bCompleted = FALSE;
 
    // Check if database is locked
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != NULL)
+   if (InitLocks())
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-         DecodeSQLString(szLockStatus);
-         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
-      }
-      DBFreeResult(hResult);
+      DBBegin(g_hCoreDB);
 
-      if (bLocked)
+      if (g_checkDataTablesOnly)
       {
-         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-         if (hResult != NULL)
+         CheckDataTables();
+      }
+      else
+      {
+         CheckZones();
+         CheckNodes();
+         CheckComponents(_T("interface"), _T("interfaces"));
+         CheckComponents(_T("network service"), _T("network_services"));
+         CheckClusters();
+         CheckTemplateNodeMapping();
+         CheckObjectProperties();
+         CheckContainerMembership();
+         CheckEPP();
+         CheckMapLinks();
+         CheckDataTables();
+         CheckRawDciValues();
+         CheckThresholds();
+         CheckTableThresholds();
+         if (g_checkData)
          {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
-               DecodeSQLString(szLockInfo);
-            }
-            DBFreeResult(hResult);
+            CheckCollectedData(false);
+            CheckCollectedData(true);
          }
       }
 
-      if (bLocked)
+      if (m_iNumErrors == 0)
       {
-         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
-         {
-            if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
-            {
-               bLocked = FALSE;
-               _tprintf(_T("Database lock removed\n"));
-            }
-         }
+         _tprintf(_T("Database doesn't contain any errors\n"));
+         DBCommit(g_hCoreDB);
       }
-
-      if (!bLocked)
+      else
       {
-         DBBegin(g_hCoreDB);
-
-         if (g_checkDataTablesOnly)
-         {
-            CheckDataTables();
-         }
+         _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
+         if (m_iNumFixes == m_iNumErrors)
+            _tprintf(_T("All errors in database was fixed\n"));
          else
+            _tprintf(_T("Database still contain errors\n"));
+         if (m_iNumFixes > 0)
          {
-            CheckZones();
-            CheckNodes();
-            CheckComponents(_T("interface"), _T("interfaces"));
-            CheckComponents(_T("network service"), _T("network_services"));
-            CheckClusters();
-            CheckTemplateNodeMapping();
-            CheckObjectProperties();
-            CheckContainerMembership();
-            CheckEPP();
-            CheckMapLinks();
-            CheckDataTables();
-            CheckRawDciValues();
-            CheckThresholds();
-            CheckTableThresholds();
-            if (g_checkData)
+            if (GetYesNo(_T("Commit changes?")))
             {
-               CheckCollectedData(false);
-               CheckCollectedData(true);
-            }
-         }
-
-         if (m_iNumErrors == 0)
-         {
-            _tprintf(_T("Database doesn't contain any errors\n"));
-            DBCommit(g_hCoreDB);
-         }
-         else
-         {
-            _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
-            if (m_iNumFixes == m_iNumErrors)
-               _tprintf(_T("All errors in database was fixed\n"));
-            else
-               _tprintf(_T("Database still contain errors\n"));
-            if (m_iNumFixes > 0)
-            {
-               if (GetYesNo(_T("Commit changes?")))
-               {
-                  _tprintf(_T("Committing changes...\n"));
-                  if (DBCommit(g_hCoreDB))
-                     _tprintf(_T("Changes was successfully committed to database\n"));
-               }
-               else
-               {
-                  _tprintf(_T("Rolling back changes...\n"));
-                  if (DBRollback(g_hCoreDB))
-                     _tprintf(_T("All changes made to database was cancelled\n"));
-               }
+               _tprintf(_T("Committing changes...\n"));
+               if (DBCommit(g_hCoreDB))
+                  _tprintf(_T("Changes was successfully committed to database\n"));
             }
             else
             {
-               DBRollback(g_hCoreDB);
+               _tprintf(_T("Rolling back changes...\n"));
+               if (DBRollback(g_hCoreDB))
+                  _tprintf(_T("All changes made to database was cancelled\n"));
             }
          }
-         bCompleted = TRUE;
+         else
+         {
+            DBRollback(g_hCoreDB);
+         }
       }
-   }
-   else
-   {
-      _tprintf(_T("Unable to get database lock status\n"));
+      bCompleted = TRUE;
+
+      UnlockDB();
    }
 
    _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
