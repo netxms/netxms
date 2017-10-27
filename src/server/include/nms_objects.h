@@ -1375,6 +1375,7 @@ public:
    void setBindUnderController(bool doBind);
 };
 
+
 class Subnet;
 struct ProxyInfo;
 
@@ -1420,6 +1421,13 @@ public:
    const InetAddress& getAddress() const { return m_address; }
    UINT32 getNodeId() const { return m_nodeId; }
    UINT64 getEventId() const { return m_eventId; }
+};
+
+enum ProxyType
+{
+   SNMP_PROXY = 0,
+   ZONE_PROXY = 1,
+   MAX_PROXY_TYPE = 2
 };
 
 /**
@@ -1498,11 +1506,8 @@ protected:
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
-	MUTEX m_snmpProxyConnectionLock;
-	MUTEX m_zoneProxyConnectionLock;
    AgentConnectionEx *m_agentConnection;
-   AgentConnectionEx *m_snmpProxyConnection;
-   AgentConnectionEx *m_zoneProxyConnection;
+   ObjectLock<AgentConnectionEx> *m_proxyConnections;
    SMCLP_Connection *m_smclpConnection;
 	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
    UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
@@ -1795,9 +1800,8 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *acquireSnmpProxyConnection(bool validate = false);
-   AgentConnectionEx *acquireZoneProxyConnection(bool validate = false);
    AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
+   AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;
