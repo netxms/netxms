@@ -62,11 +62,8 @@ Node::Node() : DataCollectionTarget()
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
-   m_snmpProxyConnectionLock = MutexCreate();
-   m_zoneProxyConnectionLock = MutexCreate();
    m_agentConnection = NULL;
-   m_snmpProxyConnection = NULL;
-   m_zoneProxyConnection = NULL;
+   m_proxyConnections = new ObjectLock<AgentConnectionEx>[MAX_PROXY_TYPE];
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -164,11 +161,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
-   m_snmpProxyConnectionLock = MutexCreate();
-   m_zoneProxyConnectionLock = MutexCreate();
    m_agentConnection = NULL;
-   m_snmpProxyConnection = NULL;
-   m_zoneProxyConnection = NULL;
+   m_proxyConnections = new ObjectLock<AgentConnectionEx>[MAX_PROXY_TYPE];
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -241,14 +235,12 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
    MutexDestroy(m_mutexTopoAccess);
-   MutexDestroy(m_snmpProxyConnectionLock);
-   MutexDestroy(m_zoneProxyConnectionLock);
    if (m_agentConnection != NULL)
       m_agentConnection->decRefCount();
-   if (m_snmpProxyConnection != NULL)
-      m_snmpProxyConnection->decRefCount();
-   if (m_zoneProxyConnection != NULL)
-      m_zoneProxyConnection->decRefCount();
+   for(int i = 0; i < MAX_PROXY_TYPE; i++)
+      if(m_proxyConnections[i].get() != NULL)
+         m_proxyConnections[i].get()->decRefCount();
+   delete[] m_proxyConnections;
    delete m_smclpConnection;
    delete m_paramList;
    delete m_tableList;
@@ -1442,7 +1434,7 @@ restart_agent_check:
             if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
             {
                nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy"), m_name);
-               AgentConnectionEx *pconn = acquireSnmpProxyConnection(true);
+               AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
                if (pconn != NULL)
                {
                   pconn->decRefCount();
@@ -5635,80 +5627,43 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
 /**
  * Acquire SNMP proxy agent connection
  */
-AgentConnectionEx *Node::acquireSnmpProxyConnection(bool validate)
+AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
 {
-   MutexLock(m_snmpProxyConnectionLock);
+   m_proxyConnections[type].lock();
 
-   if ((m_snmpProxyConnection != NULL) && !m_snmpProxyConnection->isConnected())
+   AgentConnectionEx *conn = m_proxyConnections[type].get();
+   if ((conn != NULL) && !conn->isConnected())
    {
-      m_snmpProxyConnection->decRefCount();
-      m_snmpProxyConnection = NULL;
-      nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): existing agent connection dropped"), m_name, (int)m_id);
+      conn->decRefCount();
+      conn = NULL;
+      m_proxyConnections[type].set(NULL);
+      nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
    }
 
-   if ((m_snmpProxyConnection != NULL) && validate)
+   if ((conn != NULL) && validate)
    {
-      UINT32 rcc = m_snmpProxyConnection->nop();
+      UINT32 rcc = conn->nop();
       if (rcc != ERR_SUCCESS)
       {
-         m_snmpProxyConnection->decRefCount();
-         m_snmpProxyConnection = NULL;
-         nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, rcc);
+         conn->decRefCount();
+         conn = NULL;
+         m_proxyConnections[type].set(NULL);
+         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
       }
    }
 
-   if (m_snmpProxyConnection == NULL)
+   if (conn == NULL)
    {
-      m_snmpProxyConnection = createAgentConnection();
-      if (m_snmpProxyConnection != NULL)
-         nxlog_debug(4, _T("Node::acquireSnmpProxyConnection(%s [%d]): new agent connection created"), m_name, (int)m_id);
+      conn = createAgentConnection();
+      m_proxyConnections[type].set(conn);
+      if (conn != NULL)
+         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
    }
 
-   AgentConnectionEx *conn = m_snmpProxyConnection;
    if (conn != NULL)
       conn->incRefCount();
 
-   MutexUnlock(m_snmpProxyConnectionLock);
-   return conn;
-}
-
-/**
- * Acquire zone proxy agent connection
- */
-AgentConnectionEx *Node::acquireZoneProxyConnection(bool validate)
-{
-   MutexLock(m_zoneProxyConnectionLock);
-
-   if ((m_zoneProxyConnection != NULL) && !m_zoneProxyConnection->isConnected())
-   {
-      m_zoneProxyConnection->decRefCount();
-      m_zoneProxyConnection = NULL;
-      nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): existing agent connection dropped"), m_name, (int)m_id);
-   }
-
-   if ((m_zoneProxyConnection != NULL) && validate)
-   {
-      UINT32 rcc = m_zoneProxyConnection->nop();
-      if (rcc != ERR_SUCCESS)
-      {
-         m_zoneProxyConnection->decRefCount();
-         m_zoneProxyConnection = NULL;
-         nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, rcc);
-      }
-   }
-
-   if (m_zoneProxyConnection == NULL)
-   {
-      m_zoneProxyConnection = createAgentConnection();
-      if (m_zoneProxyConnection != NULL)
-         nxlog_debug(4, _T("Node::acquireZoneProxyConnection(%s [%d]): new agent connection created"), m_name, (int)m_id);
-   }
-
-   AgentConnectionEx *conn = m_zoneProxyConnection;
-   if (conn != NULL)
-      conn->incRefCount();
-
-   MutexUnlock(m_zoneProxyConnectionLock);
+   m_proxyConnections[type].unlock();
    return conn;
 }
 
@@ -5732,7 +5687,7 @@ AgentConnectionEx *Node::getConnectionToZoneNodeProxy(bool validate)
       return NULL;
    }
 
-   return zoneNode->acquireZoneProxyConnection(validate);
+   return zoneNode->acquireProxyConnection(ZONE_PROXY, validate);
 }
 
 /**
@@ -6290,7 +6245,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
       Node *proxyNode = (snmpProxy == m_id) ? this : (Node *)g_idxNodeById.get(snmpProxy);
       if (proxyNode != NULL)
       {
-         AgentConnection *conn = proxyNode->acquireSnmpProxyConnection();
+         AgentConnection *conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
          if (conn != NULL)
          {
             // Use loopback address if node is SNMP proxy for itself
