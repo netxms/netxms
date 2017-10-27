@@ -949,7 +949,6 @@ UINT32 Alarm::openHelpdeskIssue(TCHAR *hdref)
       if (rcc == RCC_SUCCESS)
       {
          m_helpDeskState = ALARM_HELPDESK_OPEN;
-         //nx_strncpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
          NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
          updateInDatabase();
          if (hdref != NULL)
