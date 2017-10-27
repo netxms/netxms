@@ -339,7 +339,7 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
 #ifdef UNICODE
    mbdescr = UTF8StringFromWideString(description);
 #else
-   mbdescr = description;
+   mbdescr = const_cast<char *>(description);
 #endif
    char summary[256];
    strlcpy(summary, mbdescr, 256);
