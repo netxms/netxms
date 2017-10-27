@@ -335,14 +335,18 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    curl_easy_setopt(m_curl, CURLOPT_POST, (long)1);
    json_object_set_new(project, "key", json_string(projectCode));
    json_object_set_new(fields, "project", project);
+   char *mbdescr;
 #ifdef UNICODE
-   char *mbdescr = UTF8StringFromWideString(description);
-   json_object_set_new(fields, "summary", json_string(mbdescr));
-   json_object_set_new(fields, "description", json_string(mbdescr));
-   free(mbdescr);
+   mbdescr = UTF8StringFromWideString(description);
 #else
-   json_object_set_new(fields, "summary", json_string(description));
-   json_object_set_new(fields, "description", json_string(description));
+   mbdescr = const_cast<char *>(description);
+#endif
+   char summary[256];
+   strlcpy(summary, mbdescr, 256);
+   json_object_set_new(fields, "summary", json_string(summary));
+   json_object_set_new(fields, "description", json_string(mbdescr));
+#ifdef UNICODE
+   free(mbdescr);
 #endif
    json_t *issuetype = json_object();
 
