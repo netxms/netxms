@@ -633,6 +633,10 @@
 				RelativePath=".\xml.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ztools.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
