@@ -133,11 +133,11 @@ static void CreateMiniDump(DWORD pid)
 								 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
-         static const TCHAR *comments = _T("Version: ") NETXMS_VERSION_STRING _T("\nBuild tag: ") NETXMS_BUILD_TAG;
+         static const char *comments = "Version=" NETXMS_VERSION_STRING_A "; BuildTag=" NETXMS_BUILD_TAG_A;
          MINIDUMP_USER_STREAM us;
-         us.Type = CommentStreamW;
+         us.Type = CommentStreamA;
          us.Buffer = (void*)comments;
-         us.BufferSize = static_cast<ULONG>(_tcslen(comments) * sizeof(TCHAR));
+         us.BufferSize = static_cast<ULONG>(strlen(comments) + 1);
 
          MINIDUMP_USER_STREAM_INFORMATION usi;
          usi.UserStreamCount = 1;
