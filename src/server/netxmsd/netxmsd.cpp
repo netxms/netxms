@@ -126,11 +126,24 @@ static void CreateMiniDump(DWORD pid)
 	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (hProcess != NULL)
 	{
-		hFile = CreateFile(_T("C:\\netxmsd.mdmp"), GENERIC_WRITE, 0, NULL,
+      TCHAR fname[MAX_PATH];
+      _sntprintf(fname, MAX_PATH, _T("%s\\netxmsd-%u-%u.mdmp"), g_szDumpDir, pid, time(NULL));
+		hFile = CreateFile(fname, GENERIC_WRITE, 0, NULL,
 								 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
-			MiniDumpWriteDump(hProcess, pid, hFile, MiniDumpWithDataSegs, NULL, NULL, NULL);
+         static const TCHAR *comments = _T("Version: ") NETXMS_VERSION_STRING _T("\nBuild tag: ") NETXMS_BUILD_TAG;
+         MINIDUMP_USER_STREAM us;
+         us.Type = CommentStreamW;
+         us.Buffer = (void*)comments;
+         us.BufferSize = static_cast<ULONG>(_tcslen(comments) * sizeof(TCHAR));
+
+         MINIDUMP_USER_STREAM_INFORMATION usi;
+         usi.UserStreamCount = 1;
+         usi.UserStreamArray = &us;
+
+			MiniDumpWriteDump(hProcess, pid, hFile, 
+               static_cast<MINIDUMP_TYPE>(MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithProcessThreadData), NULL, &usi, NULL);
 			CloseHandle(hFile);
 			_tprintf(_T("INFO: Minidump created successfully\n"));
 		}
@@ -178,6 +191,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #ifdef _WIN32
 		{ (char *)"check-service", 0, NULL, '!' },
 		{ (char *)"dump", 1, NULL, '~' },
+		{ (char *)"dump-dir", 1, NULL, '@' },
 		{ (char *)"install", 0, NULL, 'I' },
 		{ (char *)"login", 1, NULL, 'L' },
 		{ (char *)"password", 1, NULL, 'P' },
@@ -311,6 +325,17 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 			case '!':	// Check service configuration (for migration from pre-0.2.20)
 				CheckServiceConfig();
 				return FALSE;
+         case '@':
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szDumpDir, MAX_PATH);
+#else
+            strlcpy(g_szDumpDir, optarg, MAX_PATH);
+#endif
+            if (g_szDumpDir[_tcslen(g_szDumpDir) - 1] == _T('\\'))
+            {
+               g_szDumpDir[_tcslen(g_szDumpDir) - 1] = 0;
+            }
+            break;
 			case '~':
 				CreateMiniDump(strtoul(optarg, NULL, 0));
 				return FALSE;
