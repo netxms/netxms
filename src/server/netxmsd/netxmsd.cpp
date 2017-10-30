@@ -142,10 +142,21 @@ static void CreateMiniDump(DWORD pid)
          usi.UserStreamCount = 1;
          usi.UserStreamArray = &us;
 
-			MiniDumpWriteDump(hProcess, pid, hFile, 
-               static_cast<MINIDUMP_TYPE>(MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithProcessThreadData), NULL, &usi, NULL);
-			CloseHandle(hFile);
-			_tprintf(_T("INFO: Minidump created successfully\n"));
+			if (MiniDumpWriteDump(hProcess, pid, hFile, 
+                   static_cast<MINIDUMP_TYPE>(MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
+                   NULL, &usi, NULL))
+         {
+   			CloseHandle(hFile);
+            if (DeflateFile(fname))
+               DeleteFile(fname);
+   			_tprintf(_T("INFO: Minidump created successfully\n"));
+         }
+         else
+         {
+   			CloseHandle(hFile);
+            DeleteFile(fname);
+   			_tprintf(_T("INFO: Minidump creation failed\n"));
+         }
 		}
 		else
 		{
