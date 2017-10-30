@@ -277,17 +277,17 @@ LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
 
 void DumpProcess(CONSOLE_CTX console)
 {
-	STARTUPINFOA si;
-	PROCESS_INFORMATION pi;
-	char cmdLine[64];
-
 	ConsolePrintf(console, _T("Dumping process to disk...\n"));
 
-	sprintf(cmdLine, "netxmsd.exe --dump %d", GetCurrentProcessId());
+	TCHAR cmdLine[MAX_PATH + 64];
+	_sntprintf(cmdLine, MAX_PATH + 64, _T("netxmsd.exe --dump-dir \"%s\" --dump %d"), g_szDumpDir, GetCurrentProcessId());
+
+	PROCESS_INFORMATION pi;
+   STARTUPINFO si;
 	memset(&si, 0, sizeof(STARTUPINFO));
 	si.cb = sizeof(STARTUPINFO);
-	if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE,
-	                   (g_flags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
+	if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE,
+            (g_flags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
 	{
 		WaitForSingleObject(pi.hProcess, INFINITE);
 		CloseHandle(pi.hThread);

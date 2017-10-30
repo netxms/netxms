@@ -251,7 +251,6 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	TCHAR szWindowsVersion[256] = _T("ERROR"), szInfoFile[MAX_PATH], szDumpFile[MAX_PATH], szProcNameUppercase[64];
 	HANDLE hFile;
 	time_t t;
-	MINIDUMP_EXCEPTION_INFORMATION mei;
    SYSTEM_INFO sysInfo;
 
 	t = time(NULL);
@@ -334,17 +333,30 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	}
 
 	// Create minidump
-	_sntprintf(szDumpFile, MAX_PATH, _T("%s\\%s-%d-%u.mdmp"),
+	_sntprintf(szDumpFile, MAX_PATH, _T("%s\\%s-%u-%u.mdmp"),
 	           m_szDumpDir, m_szBaseProcessName, GetCurrentProcessId(), (DWORD)t);
    hFile = CreateFile(szDumpFile, GENERIC_WRITE, 0, NULL,
                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
    if (hFile != INVALID_HANDLE_VALUE)
    {
+   	MINIDUMP_EXCEPTION_INFORMATION mei;
 		mei.ThreadId = GetCurrentThreadId();
 		mei.ExceptionPointers = pInfo;
 		mei.ClientPointers = FALSE;
+
+      static const TCHAR *comments = _T("Version: ") NETXMS_VERSION_STRING _T("\nBuild tag: ") NETXMS_BUILD_TAG;
+      MINIDUMP_USER_STREAM us;
+      us.Type = CommentStreamW;
+      us.Buffer = (void*)comments;
+      us.BufferSize = static_cast<ULONG>(_tcslen(comments) * sizeof(TCHAR));
+
+      MINIDUMP_USER_STREAM_INFORMATION usi;
+      usi.UserStreamCount = 1;
+      usi.UserStreamArray = &us;
+
       MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
-		                  m_writeFullDump ? MiniDumpWithDataSegs : MiniDumpNormal, &mei, NULL, NULL);
+            static_cast<MINIDUMP_TYPE>((m_writeFullDump ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
+            &mei, &usi, NULL);
       CloseHandle(hFile);
    }
 
