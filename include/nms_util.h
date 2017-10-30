@@ -2601,6 +2601,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 
 String LIBNETXMS_EXPORTABLE GenerateLineDiff(const String& left, const String& right);
 
+bool LIBNETXMS_EXPORTABLE DeflateFile(const TCHAR *inputFile, const TCHAR *outputFile = NULL);
+int LIBNETXMS_EXPORTABLE DeflateFileStream(FILE *source, FILE *dest, bool gzipFormat);
+
 #endif
 
 #endif   /* _nms_util_h_ */

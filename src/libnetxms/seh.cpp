@@ -354,10 +354,19 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
       usi.UserStreamCount = 1;
       usi.UserStreamArray = &us;
 
-      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
-            static_cast<MINIDUMP_TYPE>((m_writeFullDump ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
-            &mei, &usi, NULL);
-      CloseHandle(hFile);
+      if (MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                static_cast<MINIDUMP_TYPE>((m_writeFullDump ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
+                &mei, &usi, NULL))
+      {
+         CloseHandle(hFile);
+         if (DeflateFile(szDumpFile))
+            DeleteFile(szDumpFile);
+      }
+      else
+      {
+         CloseHandle(hFile);
+         DeleteFile(szDumpFile);
+      }
    }
 
 	// Write event log

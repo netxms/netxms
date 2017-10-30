@@ -11,7 +11,7 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	  strmapbase.cpp strptime.c \
 	  strset.cpp strtoll.c strtoull.c table.cpp threads.cpp timegm.c \
 	  tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
-	  wcscasecmp.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp
+	  wcscasecmp.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp ztools.cpp
 
 lib_LTLIBRARIES = libnetxms.la
 
