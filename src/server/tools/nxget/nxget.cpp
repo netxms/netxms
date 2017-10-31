@@ -86,20 +86,19 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
  */
 static int List(AgentConnection *pConn, const TCHAR *pszParam)
 {
-   UINT32 i, dwNumLines, dwError;
-
-   dwError = pConn->getList(pszParam);
-   if (dwError == ERR_SUCCESS)
+   StringList *data;
+   UINT32 rcc = pConn->getList(pszParam, &data);
+   if (rcc == ERR_SUCCESS)
    {
-      dwNumLines = pConn->getNumDataLines();
-      for(i = 0; i < dwNumLines; i++)
-         _tprintf(_T("%s\n"), pConn->getDataLine(i));
+      for(int i = 0; i < data->size(); i++)
+         _tprintf(_T("%s\n"), data->get(i));
+      delete data;
    }
    else
    {
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**
