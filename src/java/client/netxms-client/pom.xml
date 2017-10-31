@@ -134,10 +134,20 @@
 
   <reporting>
     <plugins>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.10.4</version>
+         <configuration>
+           <includeDependencySources>true</includeDependencySources>
+           <!--<sourcepath>../../../java/client/mobile-agent:./:../../../libnxjava/java/base/netxms-base/src/main/java</sourcepath>-->
+           <dependencySourceExcludes>
+             <dependencySourceExclude>org.simpleframework:*</dependencySourceExclude>
+             <dependencySourceExclude>junit:*</dependencySourceExclude>
+             <dependencySourceExclude>org.junit:*</dependencySourceExclude>
+           </dependencySourceExcludes>
+         </configuration>
       </plugin>
     </plugins>
   </reporting>
