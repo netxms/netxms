@@ -59,9 +59,9 @@ AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) :
  */
 AccessPoint::~AccessPoint()
 {
-	safe_free(m_vendor);
-	safe_free(m_model);
-	safe_free(m_serialNumber);
+	free(m_vendor);
+	free(m_model);
+	free(m_serialNumber);
 	delete m_radioInterfaces;
 }
 

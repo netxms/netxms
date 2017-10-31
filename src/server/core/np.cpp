@@ -212,7 +212,6 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFl
       pNode->setMgmtStatus(FALSE);
       pNode->checkSubnetBinding();
    }
-   pNode->setNewNodeFlag();
 
 	if (doConfPoll)
    {

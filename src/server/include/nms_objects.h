@@ -1151,7 +1151,6 @@ public:
    int getMostCriticalDCIStatus();
 
    UINT32 getPingTime();
-   void setNewNodeFlag() { m_runtimeFlags |= DCDF_POLL_NEW_NODE; }
 
    void statusPollWorkerEntry(PollerInfo *poller);
    void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -1184,7 +1183,6 @@ inline bool DataCollectionTarget::isReadyForInstancePoll()
           (!(m_runtimeFlags & DCDF_QUEUED_FOR_INSTANCE_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
           (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
           ((UINT32)(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval);
 
 }
@@ -1247,7 +1245,7 @@ inline bool DataCollectionTarget::isReadyForStatusPoll()
 	       (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
           (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
+          (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
           ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
 }
 inline void DataCollectionTarget::lockForStatusPoll()
@@ -2062,7 +2060,7 @@ inline bool Node::isReadyForStatusPoll()
           (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
 			 (getMyCluster() == NULL) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
+          (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
           ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
 }
 
@@ -2076,7 +2074,6 @@ inline bool Node::isReadyForDiscoveryPoll()
           (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
           (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
           ((UINT32)(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval);
 }
 
@@ -2089,7 +2086,6 @@ inline bool Node::isReadyForRoutePoll()
           (!(m_runtimeFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
           (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
           ((UINT32)(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval);
 }
 
@@ -2102,7 +2098,6 @@ inline bool Node::isReadyForTopologyPoll()
           (!(m_runtimeFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
           (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          (!(m_runtimeFlags & DCDF_POLL_NEW_NODE)) &&
           ((UINT32)(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval);
 }
 

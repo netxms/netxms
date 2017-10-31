@@ -235,7 +235,7 @@
 #define DCDF_FORCE_STATUS_POLL             0x0010
 #define DCDF_FORCE_CONFIGURATION_POLL      0x0020
 #define DCDF_CONFIGURATION_POLL_PASSED     0x0040
-#define DCDF_POLL_NEW_NODE                 0x0080
+#define DCDF_CONFIGURATION_POLL_PENDING    0x0080
 
 /**
  * Node runtime (dynamic) flags

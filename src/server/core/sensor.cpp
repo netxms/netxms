@@ -54,6 +54,7 @@ Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceCl
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
                TCHAR *metaType, TCHAR *description, UINT32 proxyNode) : DataCollectionTarget(name)
 {
+   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
    m_flags = flags;
    m_macAddress = macAddress;
 	m_deviceClass = deviceClass;
@@ -91,8 +92,6 @@ Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
                           request->getFieldAsString(VID_META_TYPE),
                           request->getFieldAsString(VID_DESCRIPTION),
                           request->getFieldAsUInt32(VID_SENSOR_PROXY));
-
-   sensor->setNewNodeFlag();
 
    switch(request->getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
@@ -589,7 +588,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    m_lastConfigurationPoll = time(NULL);
 
    nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
-   m_runtimeFlags &= ~DCDF_POLL_NEW_NODE;
+   m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
    pollerUnlock();
 
