@@ -4487,14 +4487,11 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_agentConnection->getList(name);
+      dwError = m_agentConnection->getList(name, list);
       switch(dwError)
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
-            *list = new StringList;
-            for(i = 0; i < m_agentConnection->getNumDataLines(); i++)
-               (*list)->add(m_agentConnection->getDataLine(i));
             setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:

@@ -101,8 +101,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
    m_allowCompression = allowCompression;
    m_channel = NULL;
    m_tLastCommandTime = 0;
-   m_dwNumDataLines = 0;
-   m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
 	m_connectionTimeout = 5000;	// 5 seconds
@@ -137,10 +135,6 @@ AgentConnection::~AgentConnection()
    debugPrintf(7, _T("AgentConnection destructor called (this=%p, thread=%p)"), this, (void *)m_hReceiverThread);
 
    ThreadDetach(m_hReceiverThread);
-
-   lock();
-   destroyResultData();
-   unlock();
 
    delete m_pMsgWaitQueue;
 	if (m_pCtx != NULL)
@@ -758,7 +752,6 @@ void AgentConnection::disconnect()
       m_channel->decRefCount();
       m_channel = NULL;
    }
-   destroyResultData();
    m_isConnected = false;
    unlock();
    debugPrintf(6, _T("Disconnect completed"));
@@ -779,136 +772,115 @@ void AgentConnection::setAuthData(int method, const TCHAR *secret)
 }
 
 /**
- * Destroy command execuion results data
- */
-void AgentConnection::destroyResultData()
-{
-   UINT32 i;
-
-   if (m_ppDataLines != NULL)
-   {
-      for(i = 0; i < m_dwNumDataLines; i++)
-         if (m_ppDataLines[i] != NULL)
-            free(m_ppDataLines[i]);
-      free(m_ppDataLines);
-      m_ppDataLines = NULL;
-   }
-   m_dwNumDataLines = 0;
-}
-
-/**
  * Get interface list from agent
  */
 InterfaceList *AgentConnection::getInterfaceList()
 {
-   InterfaceList *pIfList = NULL;
-   TCHAR *pChar, *pBuf;
+   StringList *data;
+   if (getList(_T("Net.InterfaceList"), &data) != ERR_SUCCESS)
+      return NULL;
 
-   if (getList(_T("Net.InterfaceList")) == ERR_SUCCESS)
+   InterfaceList *pIfList = new InterfaceList(data->size());
+
+   // Parse result set. Each line should have the following format:
+   // index ip_address/mask_bits iftype mac_address name
+   for(int i = 0; i < data->size(); i++)
    {
-      pIfList = new InterfaceList(m_dwNumDataLines);
+      TCHAR *line = _tcsdup(data->get(i));
+      TCHAR *pBuf = line;
+      UINT32 ifIndex = 0;
 
-      // Parse result set. Each line should have the following format:
-      // index ip_address/mask_bits iftype mac_address name
-      for(UINT32 i = 0; i < m_dwNumDataLines; i++)
+      // Index
+      TCHAR *pChar = _tcschr(pBuf, ' ');
+      if (pChar != NULL)
       {
-         pBuf = m_ppDataLines[i];
-         UINT32 ifIndex = 0;
+         *pChar = 0;
+         ifIndex = _tcstoul(pBuf, NULL, 10);
+         pBuf = pChar + 1;
+      }
 
-         // Index
+      bool newInterface = false;
+      InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
+      if (iface == NULL)
+      {
+         iface = new InterfaceInfo(ifIndex);
+         newInterface = true;
+      }
+
+      // Address and mask
+      pChar = _tcschr(pBuf, _T(' '));
+      if (pChar != NULL)
+      {
+         TCHAR *pSlash;
+         static TCHAR defaultMask[] = _T("24");
+
+         *pChar = 0;
+         pSlash = _tcschr(pBuf, _T('/'));
+         if (pSlash != NULL)
+         {
+            *pSlash = 0;
+            pSlash++;
+         }
+         else     // Just a paranoia protection, should'n happen if agent working correctly
+         {
+            pSlash = defaultMask;
+         }
+         InetAddress addr = InetAddress::parse(pBuf);
+         if (addr.isValid())
+         {
+            addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+            // Agent may return 0.0.0.0/0 for interfaces without IP address
+            if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
+               iface->ipAddrList.add(addr);
+         }
+         pBuf = pChar + 1;
+      }
+
+      if (newInterface)
+      {
+         // Interface type
          pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            ifIndex = _tcstoul(pBuf, NULL, 10);
+
+            TCHAR *eptr;
+            iface->type = _tcstoul(pBuf, &eptr, 10);
+
+            // newer agents can return if_type(mtu)
+            if (*eptr == _T('('))
+            {
+               pBuf = eptr + 1;
+               eptr = _tcschr(pBuf, _T(')'));
+               if (eptr != NULL)
+               {
+                  *eptr = 0;
+                  iface->mtu = _tcstol(pBuf, NULL, 10);
+               }
+            }
+
             pBuf = pChar + 1;
          }
 
-         bool newInterface = false;
-         InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
-         if (iface == NULL)
-         {
-            iface = new InterfaceInfo(ifIndex);
-            newInterface = true;
-         }
-
-         // Address and mask
-         pChar = _tcschr(pBuf, _T(' '));
+         // MAC address
+         pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
-            TCHAR *pSlash;
-            static TCHAR defaultMask[] = _T("24");
-
             *pChar = 0;
-            pSlash = _tcschr(pBuf, _T('/'));
-            if (pSlash != NULL)
-            {
-               *pSlash = 0;
-               pSlash++;
-            }
-            else     // Just a paranoia protection, should'n happen if agent working correctly
-            {
-               pSlash = defaultMask;
-            }
-            InetAddress addr = InetAddress::parse(pBuf);
-            if (addr.isValid())
-            {
-               addr.setMaskBits(_tcstol(pSlash, NULL, 10));
-               // Agent may return 0.0.0.0/0 for interfaces without IP address
-               if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
-                  iface->ipAddrList.add(addr);
-            }
+            StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
             pBuf = pChar + 1;
          }
 
-         if (newInterface)
-         {
-            // Interface type
-            pChar = _tcschr(pBuf, ' ');
-            if (pChar != NULL)
-            {
-               *pChar = 0;
+         // Name (set description to name)
+         _tcslcpy(iface->name, pBuf, MAX_DB_STRING);
+         _tcslcpy(iface->description, pBuf, MAX_DB_STRING);
 
-               TCHAR *eptr;
-               iface->type = _tcstoul(pBuf, &eptr, 10);
-
-               // newer agents can return if_type(mtu)
-               if (*eptr == _T('('))
-               {
-                  pBuf = eptr + 1;
-                  eptr = _tcschr(pBuf, _T(')'));
-                  if (eptr != NULL)
-                  {
-                     *eptr = 0;
-                     iface->mtu = _tcstol(pBuf, NULL, 10);
-                  }
-               }
-
-               pBuf = pChar + 1;
-            }
-
-            // MAC address
-            pChar = _tcschr(pBuf, ' ');
-            if (pChar != NULL)
-            {
-               *pChar = 0;
-               StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
-               pBuf = pChar + 1;
-            }
-
-            // Name (set description to name)
-            nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
-			   nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
-
-			   pIfList->add(iface);
-         }
+         pIfList->add(iface);
       }
-
-      lock();
-      destroyResultData();
-      unlock();
+      free(line);
    }
 
+   delete data;
    return pIfList;
 }
 
@@ -964,56 +936,54 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
  */
 ARP_CACHE *AgentConnection::getArpCache()
 {
-   ARP_CACHE *pArpCache = NULL;
+   StringList *data;
+   if (getList(_T("Net.ArpCache"), &data) != ERR_SUCCESS)
+      return NULL;
+
+   // Create empty structure
+   ARP_CACHE *pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+   pArpCache->dwNumEntries = data->size();
+   pArpCache->pEntries = (ARP_ENTRY *)calloc(data->size(), sizeof(ARP_ENTRY));
+
    TCHAR szByte[4], *pBuf, *pChar;
-   UINT32 i, j;
+   szByte[2] = 0;
 
-   if (getList(_T("Net.ArpCache")) == ERR_SUCCESS)
+   // Parse data lines
+   // Each line has form of XXXXXXXXXXXX a.b.c.d n
+   // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
+   // a.b.c.d is an IP address in decimal dotted notation
+   // n is an interface index
+   for(int i = 0; i < data->size(); i++)
    {
-      // Create empty structure
-      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-      pArpCache->dwNumEntries = m_dwNumDataLines;
-      pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * m_dwNumDataLines);
-      memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * m_dwNumDataLines);
+      TCHAR *line = _tcsdup(data->get(i));
+      pBuf = line;
+      if (_tcslen(pBuf) < 20)     // Invalid line
+         continue;
 
-      szByte[2] = 0;
-
-      // Parse data lines
-      // Each line has form of XXXXXXXXXXXX a.b.c.d n
-      // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
-      // a.b.c.d is an IP address in decimal dotted notation
-      // n is an interface index
-      for(i = 0; i < m_dwNumDataLines; i++)
+      // MAC address
+      for(int j = 0; j < 6; j++)
       {
-         pBuf = m_ppDataLines[i];
-         if (_tcslen(pBuf) < 20)     // Invalid line
-            continue;
-
-         // MAC address
-         for(j = 0; j < 6; j++)
-         {
-            memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
-            pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
-            pBuf+=2;
-         }
-
-         // IP address
-         while(*pBuf == ' ')
-            pBuf++;
-         pChar = _tcschr(pBuf, _T(' '));
-         if (pChar != NULL)
-            *pChar = 0;
-         pArpCache->pEntries[i].ipAddr = ntohl(_t_inet_addr(pBuf));
-
-         // Interface index
-         if (pChar != NULL)
-            pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+         memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
+         pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
+         pBuf += 2;
       }
 
-      lock();
-      destroyResultData();
-      unlock();
+      // IP address
+      while(*pBuf == ' ')
+         pBuf++;
+      pChar = _tcschr(pBuf, _T(' '));
+      if (pChar != NULL)
+         *pChar = 0;
+      pArpCache->pEntries[i].ipAddr = ntohl(_t_inet_addr(pBuf));
+
+      // Interface index
+      if (pChar != NULL)
+         pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+
+      free(line);
    }
+
+   delete data;
    return pArpCache;
 }
 
@@ -1259,49 +1229,45 @@ bool AgentConnection::processCustomMessage(NXCPMessage *pMsg)
 /**
  * Get list of values
  */
-UINT32 AgentConnection::getList(const TCHAR *pszParam)
+UINT32 AgentConnection::getList(const TCHAR *param, StringList **list)
 {
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-   UINT32 i, dwRqId, dwRetCode;
-
+   UINT32 rcc;
+   *list = NULL;
    if (m_isConnected)
    {
-      destroyResultData();
-      dwRqId = generateRequestId();
-      msg.setCode(CMD_GET_LIST);
-      msg.setId(dwRqId);
-      msg.setField(VID_PARAMETER, pszParam);
+      NXCPMessage msg(CMD_GET_LIST, generateRequestId(), m_nProtocolVersion);
+      msg.setField(VID_PARAMETER, param);
       if (sendMessage(&msg))
       {
-         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-         if (pResponse != NULL)
+         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_dwCommandTimeout);
+         if (response != NULL)
          {
-            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
-            if (dwRetCode == ERR_SUCCESS)
+            rcc = response->getFieldAsUInt32(VID_RCC);
+            if (rcc == ERR_SUCCESS)
             {
-               m_dwNumDataLines = pResponse->getFieldAsUInt32(VID_NUM_STRINGS);
-               m_ppDataLines = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumDataLines);
-               for(i = 0; i < m_dwNumDataLines; i++)
-                  m_ppDataLines[i] = pResponse->getFieldAsString(VID_ENUM_VALUE_BASE + i);
+               *list = new StringList();
+               int count = response->getFieldAsInt32(VID_NUM_STRINGS);
+               for(int i = 0; i < count; i++)
+                  (*list)->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
             }
-            delete pResponse;
+            delete response;
          }
          else
          {
-            dwRetCode = ERR_REQUEST_TIMEOUT;
+            rcc = ERR_REQUEST_TIMEOUT;
          }
       }
       else
       {
-         dwRetCode = ERR_CONNECTION_BROKEN;
+         rcc = ERR_CONNECTION_BROKEN;
       }
    }
    else
    {
-      dwRetCode = ERR_NOT_CONNECTED;
+      rcc = ERR_NOT_CONNECTED;
    }
 
-   return dwRetCode;
+   return rcc;
 }
 
 /**
@@ -1861,71 +1827,67 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
  */
 ROUTING_TABLE *AgentConnection::getRoutingTable()
 {
-   ROUTING_TABLE *pRT = NULL;
-   UINT32 i, dwBits;
-   TCHAR *pChar, *pBuf;
+   StringList *data;
+   if (getList(_T("Net.IP.RoutingTable"), &data) != ERR_SUCCESS)
+      return NULL;
 
-   if (getList(_T("Net.IP.RoutingTable")) == ERR_SUCCESS)
+   ROUTING_TABLE *pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
+   pRT->iNumEntries = data->size();
+   pRT->pRoutes = (ROUTE *)calloc(data->size(), sizeof(ROUTE));
+   for(int i = 0; i < data->size(); i++)
    {
-      pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
-      pRT->iNumEntries = m_dwNumDataLines;
-      pRT->pRoutes = (ROUTE *)malloc(sizeof(ROUTE) * m_dwNumDataLines);
-      memset(pRT->pRoutes, 0, sizeof(ROUTE) * m_dwNumDataLines);
-      for(i = 0; i < m_dwNumDataLines; i++)
+      TCHAR *line = _tcsdup(data->get(i));
+      TCHAR *pBuf = line;
+
+      // Destination address and mask
+      TCHAR *pChar = _tcschr(pBuf, _T(' '));
+      if (pChar != NULL)
       {
-         pBuf = m_ppDataLines[i];
+         TCHAR *pSlash;
+         static TCHAR defaultMask[] = _T("24");
 
-         // Destination address and mask
-         pChar = _tcschr(pBuf, _T(' '));
-         if (pChar != NULL)
+         *pChar = 0;
+         pSlash = _tcschr(pBuf, _T('/'));
+         if (pSlash != NULL)
          {
-            TCHAR *pSlash;
-            static TCHAR defaultMask[] = _T("24");
-
-            *pChar = 0;
-            pSlash = _tcschr(pBuf, _T('/'));
-            if (pSlash != NULL)
-            {
-               *pSlash = 0;
-               pSlash++;
-            }
-            else     // Just a paranoia protection, should'n happen if agent working correctly
-            {
-               pSlash = defaultMask;
-            }
-            pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
-            dwBits = _tcstoul(pSlash, NULL, 10);
-            pRT->pRoutes[i].dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
-            pBuf = pChar + 1;
+            *pSlash = 0;
+            pSlash++;
          }
-
-         // Next hop address
-         pChar = _tcschr(pBuf, _T(' '));
-         if (pChar != NULL)
+         else     // Just a paranoia protection, should'n happen if agent working correctly
          {
-            *pChar = 0;
-            pRT->pRoutes[i].dwNextHop = ntohl(_t_inet_addr(pBuf));
-            pBuf = pChar + 1;
+            pSlash = defaultMask;
          }
-
-         // Interface index
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
-         {
-            *pChar = 0;
-            pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, NULL, 10);
-            pBuf = pChar + 1;
-         }
-
-         // Route type
-         pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, NULL, 10);
+         pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
+         UINT32 dwBits = _tcstoul(pSlash, NULL, 10);
+         pRT->pRoutes[i].dwDestMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+         pBuf = pChar + 1;
       }
 
-      lock();
-      destroyResultData();
-      unlock();
+      // Next hop address
+      pChar = _tcschr(pBuf, _T(' '));
+      if (pChar != NULL)
+      {
+         *pChar = 0;
+         pRT->pRoutes[i].dwNextHop = ntohl(_t_inet_addr(pBuf));
+         pBuf = pChar + 1;
+      }
+
+      // Interface index
+      pChar = _tcschr(pBuf, ' ');
+      if (pChar != NULL)
+      {
+         *pChar = 0;
+         pRT->pRoutes[i].dwIfIndex = _tcstoul(pBuf, NULL, 10);
+         pBuf = pChar + 1;
+      }
+
+      // Route type
+      pRT->pRoutes[i].dwRouteType = _tcstoul(pBuf, NULL, 10);
+
+      free(line);
    }
 
+   delete data;
    return pRT;
 }
 

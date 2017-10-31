@@ -471,12 +471,10 @@ private:
    char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
    AbstractCommChannel *m_channel;
-   UINT32 m_dwNumDataLines;
    VolatileCounter m_requestId;
    UINT32 m_dwCommandTimeout;
 	UINT32 m_connectionTimeout;
    UINT32 m_dwRecvTimeout;
-   TCHAR **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
    bool m_isConnected;
    MUTEX m_mutexDataLock;
@@ -510,7 +508,6 @@ private:
    UINT32 setupProxyConnection();
    UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
             void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg);
-   void destroyResultData();
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
@@ -567,8 +564,8 @@ public:
    InterfaceList *getInterfaceList();
    ROUTING_TABLE *getRoutingTable();
    UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
-   UINT32 getList(const TCHAR *pszParam);
-   UINT32 getTable(const TCHAR *pszParam, Table **table);
+   UINT32 getList(const TCHAR *param, StringList **list);
+   UINT32 getTable(const TCHAR *param, Table **table);
    UINT32 nop();
    UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
@@ -594,9 +591,6 @@ public:
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,
 	         void (*downloadProgressCallback)(size_t, void *) = NULL,
 	         void (*fileResendCallback)(NXCP_MESSAGE *, void *) = NULL, void *cbArg = NULL);
-
-   UINT32 getNumDataLines() { return m_dwNumDataLines; }
-   const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
    void setConnectionTimeout(UINT32 dwTimeout) { m_connectionTimeout = MAX(dwTimeout, 1000); }
 	UINT32 getConnectionTimeout() { return m_connectionTimeout; }
