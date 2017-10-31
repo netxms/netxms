@@ -92,6 +92,8 @@ Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
                           request->getFieldAsString(VID_DESCRIPTION),
                           request->getFieldAsUInt32(VID_SENSOR_PROXY));
 
+   sensor->setNewNodeFlag();
+
    switch(request->getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
       case COMM_LORAWAN:
@@ -587,6 +589,8 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    m_lastConfigurationPoll = time(NULL);
 
    nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
+   m_runtimeFlags &= ~DCDF_POLL_NEW_NODE;
+   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
    pollerUnlock();
 
    if (hasChanges)
@@ -596,7 +600,6 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       unlockProperties();
    }
 
-   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
 }
 
 /**

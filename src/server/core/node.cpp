@@ -2522,6 +2522,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
       sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
+      m_runtimeFlags &= ~DCDF_POLL_NEW_NODE;
       m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
    }
 
