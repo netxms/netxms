@@ -48,18 +48,21 @@ WinPerfObject::~WinPerfObject()
 bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 {
 	TCHAR param[256];
-
 	_sntprintf(param, 256, _T("PDH.ObjectCounters(\"%s\")"), m_name);
-	if (conn->getList(param) != ERR_SUCCESS)
+
+	StringList *data;
+	if (conn->getList(param, &data) != ERR_SUCCESS)
 		return false;
-	for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
-		m_counters->add(conn->getDataLine(i));
+	for(int i = 0; i < data->size(); i++)
+		m_counters->add(data->get(i));
+	delete data;
 
 	_sntprintf(param, 256, _T("PDH.ObjectInstances(\"%s\")"), m_name);
-	if (conn->getList(param) != ERR_SUCCESS)
+	if (conn->getList(param, &data) != ERR_SUCCESS)
 		return false;
-	for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
-		m_instances->add(conn->getDataLine(i));
+   for(int i = 0; i < data->size(); i++)
+		m_instances->add(data->get(i));
+   delete data;
 
 	return true;
 }
@@ -89,11 +92,13 @@ UINT32 WinPerfObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
 ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node, AgentConnection *conn)
 {
 	ObjectArray<WinPerfObject> *objects;
-	if (conn->getList(_T("PDH.Objects")) == ERR_SUCCESS)
+	StringList *data;
+	if (conn->getList(_T("PDH.Objects"), &data) == ERR_SUCCESS)
 	{
-		objects = new ObjectArray<WinPerfObject>((int)conn->getNumDataLines(), 16, true);
-		for(UINT32 i = 0; i < conn->getNumDataLines(); i++)
-			objects->add(new WinPerfObject(conn->getDataLine(i)));
+		objects = new ObjectArray<WinPerfObject>(data->size(), 16, true);
+		for(UINT32 i = 0; i < data->size(); i++)
+			objects->add(new WinPerfObject(data->get(i)));
+		delete data;
 
 		for(int i = 0; i < objects->size(); i++)
 		{

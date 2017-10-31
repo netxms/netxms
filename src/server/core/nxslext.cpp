@@ -882,7 +882,6 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	return 0;
 }
 
-
 /**
  * Set interface expected state
  * Syntax:

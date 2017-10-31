@@ -932,14 +932,11 @@ UINT32 Sensor::getListFromAgent(const TCHAR *name, StringList **list)
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = conn->getList(parameter);
+      dwError = conn->getList(parameter, list);
       switch(dwError)
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
-            *list = new StringList;
-            for(i = 0; i < conn->getNumDataLines(); i++)
-               (*list)->add(conn->getDataLine(i));
             break;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;

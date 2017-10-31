@@ -162,7 +162,7 @@ static void GetAgentTable(void *pArg)
    NXCPMessage msg;
    TCHAR *pszEnum, *pszRegEx, *pszLine, buffer[256];
    AgentConnection *pConn;
-   UINT32 i, j, dwNumRows, dwNumCols, dwResult, dwLen;
+   UINT32 dwResult, dwLen;
    int *pnSubstrPos, nPos;
    regex_t preg;
    regmatch_t *pMatchList;
@@ -202,11 +202,11 @@ static void GetAgentTable(void *pArg)
          hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
-            dwNumCols = DBGetNumRows(hResult);
-            if (dwNumCols > 0)
+            int numCols = DBGetNumRows(hResult);
+            if (numCols > 0)
             {
-               pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
-               for(i = 0; i < dwNumCols; i++)
+               pnSubstrPos = (int *)malloc(sizeof(int) * numCols);
+               for(int i = 0; i < numCols; i++)
                {
                   DBGetField(hResult, i, 0, buffer, 256);
                   table.addColumn(buffer, DBGetFieldULong(hResult, i, 1));
@@ -217,20 +217,20 @@ static void GetAgentTable(void *pArg)
                   pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                   if (pConn != NULL)
                   {
-                     dwResult = pConn->getList(pszEnum);
+                     StringList *values;
+                     dwResult = pConn->getList(pszEnum, &values);
                      if (dwResult == ERR_SUCCESS)
                      {
-                        dwNumRows = pConn->getNumDataLines();
-                        pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (dwNumCols + 1));
-                        for(i = 0; i < dwNumRows; i++)
+                        pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (numCols + 1));
+                        for(int i = 0; i < values->size(); i++)
                         {
-                           pszLine = (TCHAR *)pConn->getDataLine(i);
-                           if (_tregexec(&preg, pszLine, dwNumCols + 1, pMatchList, 0) == 0)
+                           const TCHAR *line = values->get(i);
+                           if (_tregexec(&preg, pszLine, numCols + 1, pMatchList, 0) == 0)
                            {
                               table.addRow();
 
                               // Write data for current row into message
-                              for(j = 0; j < dwNumCols; j++)
+                              for(int j = 0; j < numCols; j++)
                               {
                                  nPos = pnSubstrPos[j];
                                  dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
@@ -241,6 +241,7 @@ static void GetAgentTable(void *pArg)
                            }
                         }
                         free(pMatchList);
+                        delete values;
 
                         msg.setField(VID_RCC, RCC_SUCCESS);
                         table.fillMessage(msg, 0, -1);
@@ -289,7 +290,7 @@ static void GetAgentTable(void *pArg)
    // Send response to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
-   safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+   free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
 }
 
