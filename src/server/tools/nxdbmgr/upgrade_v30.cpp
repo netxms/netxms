@@ -23,6 +23,28 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.9 to 30.10
+ */
+static bool H_UpgradeFromV9()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE snmp_communities ADD zone integer null\n")
+            _T("ALTER TABLE usm_credentials ADD zone integer null\n")
+            _T("ALTER TABLE zones ADD snmp_ports varchar(512) null\n")
+            _T("UPDATE snmp_communities SET zone=-1\n")
+            _T("UPDATE usm_credentials SET zone=-1\n")
+            _T("UPDATE zones SET snmp_ports=''\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   DBSetNotNullConstraint(g_hCoreDB, _T("snmp_communities"), _T("zone"));
+   DBSetNotNullConstraint(g_hCoreDB, _T("usm_credentials"), _T("zone"));
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 30.8 to 30.9 (changes also included into 22.2)
  */
 static bool H_UpgradeFromV8()
@@ -500,6 +522,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 9, 30, 10, H_UpgradeFromV9 },
    { 8, 30, 9, H_UpgradeFromV8 },
    { 7, 30, 8, H_UpgradeFromV7 },
    { 6, 30, 7, H_UpgradeFromV6 },

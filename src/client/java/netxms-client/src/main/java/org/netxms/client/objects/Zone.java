@@ -18,6 +18,8 @@
  */
 package org.netxms.client.objects;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -29,6 +31,7 @@ public class Zone extends GenericObject
 {
 	private long uin;
 	private long proxyNodeId;
+	private List<String> snmpPorts;
 	
 	/**
 	 * Create zone object from NXCP message
@@ -41,6 +44,11 @@ public class Zone extends GenericObject
 		super(msg, session);
 		uin = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
 		proxyNodeId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_PROXY);
+		snmpPorts = new ArrayList<String>(msg.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT));
+		for(int i = 0; i < msg.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT); i++)
+		{
+		   snmpPorts.add(msg.getFieldAsString(NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE + i));
+		}
 	}
 
 	/* (non-Javadoc)
@@ -86,5 +94,14 @@ public class Zone extends GenericObject
 	public String getObjectClassName()
 	{
 		return "Zone";
+	}
+	
+	/**
+	 * Get snmp ports
+	 * @return snmp port list
+	 */
+	public List<String> getSnmpPorts()
+	{
+	   return snmpPorts;
 	}
 }

@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class ZoneSelector extends AbstractSelector
 {
-   private long zoneUIN = 0;
+   private long zoneUIN = -1;
    private String emptySelectionName = "<none>";
    
    /**
@@ -107,5 +107,15 @@ public class ZoneSelector extends AbstractSelector
          final Zone zone = ConsoleSharedData.getSession().findZone(zoneUIN);
          setText((zone != null) ? zone.getObjectName() : ("<" + Long.toString(zoneUIN) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
       }
+   }
+   
+   /**
+    * Set empty selection text
+    * @param text to set
+    */
+   public void setEmptySelectionText(String text)
+   {
+      emptySelectionName = text;
+      setText(emptySelectionName);
    }
 }

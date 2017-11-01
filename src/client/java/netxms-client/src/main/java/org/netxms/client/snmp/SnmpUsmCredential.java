@@ -31,6 +31,7 @@ public class SnmpUsmCredential
 	private int privMethod;
 	private String authPassword;
 	private String privPassword;
+	private int zoneId;
 	
 	/**
 	 * Create credentials object from data in NXCP message
@@ -45,6 +46,7 @@ public class SnmpUsmCredential
 		privMethod = msg.getFieldAsInt32(baseId + 2);
 		authPassword = msg.getFieldAsString(baseId + 3);
 		privPassword = msg.getFieldAsString(baseId + 4);
+		zoneId = msg.getFieldAsInt32(baseId + 5);
 	}
 	
 	/**
@@ -57,6 +59,7 @@ public class SnmpUsmCredential
 		privMethod = 0;
 		authPassword = "";
 		privPassword = "";
+		zoneId = 0;
 	}
 	
 	/**
@@ -72,6 +75,7 @@ public class SnmpUsmCredential
 		msg.setFieldInt16(baseId + 2, privMethod);
 		msg.setField(baseId + 3, authPassword);
 		msg.setField(baseId + 4, privPassword);
+      msg.setFieldInt32(baseId + 5, zoneId);
 	}
 
 	/**
@@ -209,5 +213,23 @@ public class SnmpUsmCredential
 		else if (!privPassword.equals(other.privPassword))
 			return false;
 		return true;
+	}
+	
+	/**
+	 * Get zone id of credential
+	 * @return zone id
+	 */
+	public int getZoneId()
+	{
+	   return zoneId;
+	}
+	
+	/**
+	 * Set zone if of credential
+	 * @param zoneId to set
+	 */
+	public void setZoneId(int zoneId)
+	{
+	   this.zoneId = zoneId;
 	}
 }

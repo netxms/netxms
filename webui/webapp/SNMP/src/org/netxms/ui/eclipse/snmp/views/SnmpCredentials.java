@@ -29,6 +29,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -49,6 +51,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
@@ -75,6 +78,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	private TableViewer snmpPortList;
 	private Action actionSave;
 	private SnmpConfig config;
+	private ZoneSelector zoneSelector;
+	private long zoneUIN = SnmpConfig.SNMP_CONFIG_GLOBAL;
 
 	/* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -99,7 +104,31 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
-		
+
+		if (session.isZoningEnabled())
+		{
+         toolkit.decorateFormHeading(form.getForm());
+   		Composite headArea = toolkit.createComposite(form.getForm().getHead());
+   		headArea.setLayout(new GridLayout());
+         zoneSelector = new ZoneSelector(headArea, SWT.NONE, true);
+         zoneSelector.setEmptySelectionText("Global");
+         zoneSelector.setLabel("Select zone");
+   
+         GridData gd = new GridData();
+         gd.widthHint = 300;
+         zoneSelector.setLayoutData(gd);
+         form.setHeadClient(headArea);
+         zoneSelector.addModifyListener(new ModifyListener() {
+            
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               zoneUIN = zoneSelector.getZoneUIN();
+               loadSnmpConfig();
+            }
+         });
+		}
+      
 		createSnmpCommunitySection();
 		createSnmpUsmCredSection();
 		createSnmpPortList();
@@ -108,7 +137,16 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		contributeToActionBars();
 
       // Load config
-      new ConsoleJob("Loading SNMP configuration", this, Activator.PLUGIN_ID, null) {
+      loadSnmpConfig();
+	}
+	
+	/**
+	 * Load SNMP config
+	 * @param zoneUIN of config
+	 */
+	private void loadSnmpConfig()
+	{
+	   new ConsoleJob(Messages.get().SnmpCredentials_LoadingConfig, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -373,14 +411,13 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	/**
 	 * @param config
 	 */
-	public void setConfig(SnmpConfig config)
+	private void setConfig(SnmpConfig config)
 	{
-		this.config = config;		
+		this.config = config;
+		snmpCommunityList.setInput(config.getCommunities(zoneUIN));
+		snmpUsmCredList.setInput(config.getUsmCredentials(zoneUIN));
+		snmpPortList.setInput(config.getPorts(zoneUIN));
 		
-		snmpCommunityList.setInput(config.getCommunities().toArray());
-		snmpUsmCredList.setInput(config.getUsmCredentials().toArray());
-      snmpPortList.setInput(config.getPorts().toArray());
-
 		modified = false;
 		firePropertyChange(PROP_DIRTY);
 	}
@@ -487,13 +524,9 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		if (dlg.open() == Window.OK)
 		{
 			String s = dlg.getValue();
-			final List<String> list = config.getCommunities();
-			if (!list.contains(s))
-			{
-				list.add(s);
-				snmpCommunityList.setInput(list.toArray());
-				setModified();
-			}
+			config.addCommunityString(s, zoneUIN);
+         snmpCommunityList.setInput(config.getCommunities(zoneUIN));
+         setModified();
 		}
 	}
 	
@@ -502,7 +535,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void removeCommunity()
 	{
-		final List<String> list = config.getCommunities();
+		final List<String> list = config.getCommunities(zoneUIN);
 		IStructuredSelection selection = (IStructuredSelection)snmpCommunityList.getSelection();
 		if (selection.size() > 0)
 		{
@@ -510,7 +543,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			{
 				list.remove(o);
 			}
-			snmpCommunityList.setInput(list.toArray());
+			snmpCommunityList.setInput(list);
 			setModified();
 		}
 	}
@@ -524,13 +557,10 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		if (dlg.open() == Window.OK)
 		{
 			SnmpUsmCredential cred = dlg.getValue();
-			final List<SnmpUsmCredential> list = config.getUsmCredentials();
-			if (!list.contains(cred))
-			{
-				list.add(cred);
-				snmpUsmCredList.setInput(list.toArray());
-				setModified();
-			}
+			cred.setZoneId((int)zoneUIN);
+         config.addUsmCredentials(cred, zoneUIN);
+         snmpUsmCredList.setInput(config.getUsmCredentials(zoneUIN));
+         setModified();
 		}
 	}
 	
@@ -539,7 +569,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void removeUsmCredentials()
 	{
-		final List<SnmpUsmCredential> list = config.getUsmCredentials();
+		final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
 		IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
 		if (selection.size() > 0)
 		{
@@ -562,13 +592,9 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
       if (dlg.open() == Window.OK)
       {
          String value = dlg.getValue();
-         final List<String> list = config.getPorts();
-         if (!list.contains(value))
-         {
-            list.add(value);
-            snmpPortList.setInput(list.toArray());
-            setModified();
-         }
+         config.addPort(value, zoneUIN);
+         snmpPortList.setInput(config.getPorts(zoneUIN));
+         setModified();
       }
    }
    
@@ -577,7 +603,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
     */
    private void removeSnmpPort()
    {
-      final List<String> list = config.getPorts();
+      final List<String> list = config.getPorts(zoneUIN);
       IStructuredSelection selection = (IStructuredSelection)snmpPortList.getSelection();
       if (selection.size() > 0)
       {

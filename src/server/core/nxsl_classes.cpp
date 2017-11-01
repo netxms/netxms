@@ -318,6 +318,10 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value(zone->getUIN());
    }
+   else if (!_tcscmp(attr, _T("snmpPorts")))
+   {
+      value = new NXSL_Value(new NXSL_Array(zone->getSnmpPortList()));
+   }
    return value;
 }
 

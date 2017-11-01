@@ -263,6 +263,11 @@ typedef struct
 #define InetAddressListElement_RANGE      1
 
 /**
+ * SNMP config global ID
+ */
+#define SNMP_CONFIG_GLOBAL -1
+
+/**
  * IP address list element
  */
 class NXCORE_EXPORTABLE InetAddressListElement
@@ -1043,7 +1048,7 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids);
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids, UINT32 zoneUIN);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 
 void InitLocalNetInfo();

@@ -10157,8 +10157,6 @@ void ClientSession::sendSMS(NXCPMessage *pRequest)
 void ClientSession::SendCommunityList(UINT32 dwRqId)
 {
    NXCPMessage msg;
-	int i, count;
-	UINT32 id;
 	TCHAR buffer[256];
 	DB_RESULT hResult;
 
@@ -10168,15 +10166,17 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
+		hResult = DBSelect(hdb, _T("SELECT community,zone FROM snmp_communities ORDER BY zone"));
 		if (hResult != NULL)
 		{
-			count = DBGetNumRows(hResult);
+			int count = DBGetNumRows(hResult);
+			UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE, zoneBase = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
 			msg.setField(VID_NUM_STRINGS, (UINT32)count);
-			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
 				DBGetField(hResult, i, 0, buffer, 256);
-				msg.setField(id++, buffer);
+				msg.setField(stringBase++, buffer);
+				msg.setField(zoneBase++, DBGetFieldULong(hResult, i, 1));
 			}
 			DBFreeResult(hResult);
 			msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10201,9 +10201,7 @@ void ClientSession::SendCommunityList(UINT32 dwRqId)
 void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-	TCHAR value[256], query[1024];
-	int i, count;
-	UINT32 id;
+	UINT32 rcc = RCC_SUCCESS;
 
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
@@ -10214,38 +10212,40 @@ void ClientSession::UpdateCommunityList(NXCPMessage *pRequest)
 		if (DBBegin(hdb))
 		{
 			DBQuery(hdb, _T("DELETE FROM snmp_communities"));
-			count = pRequest->getFieldAsUInt32(VID_NUM_STRINGS);
-			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
+         UINT32 stringBase = VID_COMMUNITY_STRING_LIST_BASE, zoneBase = VID_COMMUNITY_STRING_ZONE_LIST_BASE;
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_communities (id,community,zone) VALUES(?,?,?)"));
+			if (hStmt != NULL)
 			{
-				pRequest->getFieldAsString(id++, value, 256);
-				String escValue = DBPrepareString(hdb, value);
-				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,%s)"), i + 1, (const TCHAR *)escValue);
-				if (!DBQuery(hdb, query))
-					break;
-			}
-
-			if (i == count)
-			{
-				DBCommit(hdb);
-				msg.setField(VID_RCC, RCC_SUCCESS);
+	         int count = pRequest->getFieldAsUInt32(VID_NUM_STRINGS);
+	         for(int i = 0; i < count; i++)
+	         {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
+	            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(stringBase++), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsUInt32(zoneBase++));
+	            if (!DBExecute(hStmt))
+	            {
+	               rcc = RCC_DB_FAILURE;
+	               break;
+	            }
+	         }
+			   DBFreeStatement(hStmt);
 			}
 			else
-			{
+			   rcc = RCC_DB_FAILURE;
+
+			if (rcc == RCC_SUCCESS)
+				DBCommit(hdb);
+			else
 				DBRollback(hdb);
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
-			}
 		}
 		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
+		   rcc = RCC_DB_FAILURE;
       DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
+		rcc = RCC_ACCESS_DENIED;
 
+	msg.setField(VID_RCC, rcc);
 	sendMessage(&msg);
 }
 
@@ -11233,12 +11233,12 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
+		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone FROM usm_credentials ORDER BY zone"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
 			msg.setField(VID_NUM_RECORDS, (UINT32)count);
-			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
+			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 4)
 			{
 				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// security name
 				msg.setField(id++, buffer);
@@ -11251,6 +11251,8 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 
 				DBGetField(hResult, i, 4, buffer, MAX_DB_STRING);	// priv password
 				msg.setField(id++, buffer);
+
+				msg.setField(id++, DBGetFieldULong(hResult, i, 5)); // zone ID
 			}
 			DBFreeResult(hResult);
 			msg.setField(VID_RCC, RCC_SUCCESS);
@@ -11278,58 +11280,57 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
+   UINT32 rcc = RCC_SUCCESS;
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
 		{
-			TCHAR query[4096];
-			UINT32 id;
-			int i = -1;
-			int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
 
 			if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
 			{
-				for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
-				{
-					TCHAR name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone) VALUES(?,?,?,?,?,?,?)"));
+			   if (hStmt != NULL)
+			   {
+		         UINT32 id;
+		         int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
+               for(int i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 4)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i+1);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Auth method
+                  DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Priv method
+                  DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
+                  DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt32(id++));
+                  if (!DBExecute(hStmt))
+                  {
+                     rcc = RCC_DB_FAILURE;
+                     break;
+                  }
+               }
+               DBFreeStatement(hStmt);
+			   }
+	         else
+	            rcc = RCC_DB_FAILURE;
+			}
+         else
+            rcc = RCC_DB_FAILURE;
 
-					request->getFieldAsString(id++, name, MAX_DB_STRING);
-					int authMethod = (int)request->getFieldAsUInt16(id++);
-					int privMethod = (int)request->getFieldAsUInt16(id++);
-					request->getFieldAsString(id++, authPasswd, MAX_DB_STRING);
-					request->getFieldAsString(id++, privPasswd, MAX_DB_STRING);
-					_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
-								  i + 1, (const TCHAR *)DBPrepareString(hdb, name), authMethod, privMethod,
-								  (const TCHAR *)DBPrepareString(hdb, authPasswd), (const TCHAR *)DBPrepareString(hdb, privPasswd));
-					if (!DBQuery(hdb, query))
-						break;
-				}
-			}
-
-			if (i == count)
-			{
-				DBCommit(hdb);
-				msg.setField(VID_RCC, RCC_SUCCESS);
-			}
-			else
-			{
-				DBRollback(hdb);
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
-			}
+			if (rcc == RCC_SUCCESS)
+            DBCommit(hdb);
+         else
+            DBRollback(hdb);
 		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
+      else
+         rcc = RCC_DB_FAILURE;
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
+      rcc = RCC_ACCESS_DENIED;
 
+   msg.setField(VID_RCC, rcc);
 	sendMessage(&msg);
 }
 

@@ -994,6 +994,7 @@ public class NXCPCodes
    public static final long VID_STRING_COUNT = 604;
    public static final long VID_EXPAND_STRING = 605;
    public static final long VID_ACTION_LIST = 606;
+   public static final long VID_ZONE_SNMP_PORT_COUNT = 607;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1087,4 +1088,7 @@ public class NXCPCodes
    public static final long VID_EXP_STRING_BASE= 0x10000000L;
    public static final long VID_IN_FIELD_BASE= 0x20000000L;
    public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
+   public static final long VID_COMMUNITY_STRING_LIST_BASE= 0x10000000L;
+   public static final long VID_COMMUNITY_STRING_ZONE_LIST_BASE= 0x20000000L;
+   public static final long VID_ZONE_SNMP_PORT_LIST_BASE= 0x10000000L;
 }

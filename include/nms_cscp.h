@@ -1213,6 +1213,7 @@ typedef struct
 #define VID_STRING_COUNT            ((UINT32)604)
 #define VID_EXPAND_STRING           ((UINT32)605)
 #define VID_ACTION_LIST             ((UINT32)606)
+#define VID_ZONE_SNMP_PORT_COUNT    ((UINT32)607)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1415,8 +1416,13 @@ typedef struct
 #define VID_EXP_STRING_BASE         ((UINT32)0x10000000)
 #define VID_IN_FIELD_BASE           ((UINT32)0x20000000)
 
-
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
+
+// base value for SNMP community strings
+#define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)
+#define VID_COMMUNITY_STRING_ZONE_LIST_BASE  ((UINT32)0x20000000)
+
+#define VID_ZONE_SNMP_PORT_LIST_BASE         ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 

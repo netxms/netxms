@@ -2315,6 +2315,7 @@ protected:
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
+	StringList m_snmpPorts;
 
    virtual void fillMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
@@ -2340,6 +2341,8 @@ public:
 	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
 
    void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
+
+   const StringList *getSnmpPortList() const { return &m_snmpPorts; }
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }

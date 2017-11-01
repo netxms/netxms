@@ -128,6 +128,7 @@ public class NXCObjectModificationData
    public static final int META_TYPE              = 76;
    public static final int SENSOR_PROXY           = 77;
    public static final int XML_CONFIG             = 78;
+   public static final int SNMP_PORT_LIST         = 79;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -230,6 +231,7 @@ public class NXCObjectModificationData
    private String metaType;
    private long sensorProxy;
    private String xmlConfig;
+   private List<String> snmpPorts;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1931,5 +1933,24 @@ public class NXCObjectModificationData
    {
       this.xmlConfig = xmlConfig;
       fieldSet.add(XML_CONFIG);
+   }
+   
+   /**
+    * Update zone snmp port list
+    * @param snmpPorts to set
+    */
+   public void setSnmpPorts(List<String> snmpPorts)
+   {
+      this.snmpPorts = snmpPorts;
+      fieldSet.add(SNMP_PORT_LIST);
+   }
+   
+   /**
+    * Get the snmp port list
+    * @return snmp port list
+    */
+   public List<String> getSnmpPorts()
+   {
+      return snmpPorts;
    }
 }

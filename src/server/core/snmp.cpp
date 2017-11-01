@@ -163,7 +163,7 @@ static bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
 /**
  * Check SNMP v3 connectivity
  */
-bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids, const TCHAR *id)
+bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids, const TCHAR *id, UINT32 zoneUIN)
 {
    pTransport->setSnmpVersion(SNMP_VERSION_3);
 
@@ -182,50 +182,63 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
 
 	// Try pre-configured SNMP v3 USM credentials
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
-	if (hResult != NULL)
-	{
-		int count = DBGetNumRows(hResult);
-		ObjectArray<SNMP_SecurityContext> contexts(count, 16, false);
-      for(int i = 0; i < count; i++)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials WHERE zone=? OR zone=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
       {
-         char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
-         DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
-         DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
-         DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
-         contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2)));
+         int count = DBGetNumRows(hResult);
+         ObjectArray<SNMP_SecurityContext> contexts(count, 16, false);
+         for(int i = 0; i < count; i++)
+         {
+            char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
+            DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
+            DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
+            DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
+            contexts.add(new SNMP_SecurityContext(name, authPasswd, privPasswd, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2)));
+         }
+
+         DBFreeResult(hResult);
+         DBConnectionPoolReleaseConnection(hdb);
+
+         bool found = false;
+         for(int i = 0; (i < contexts.size()) && !found && !IsShutdownInProgress(); i++)
+         {
+            SNMP_SecurityContext *ctx = contexts.get(i);
+            pTransport->setSecurityContext(ctx);
+            DbgPrintf(5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
+            if (SnmpTestRequest(pTransport, testOids))
+            {
+               DbgPrintf(5, _T("SnmpCheckV3CommSettings(%s): success"), id);
+               found = true;
+
+               // Delete unused contexts
+               for(int j = i + 1; j < contexts.size(); j++)
+                  delete contexts.get(j);
+
+               break;
+            }
+         }
+
+         if (found)
+            return true;
+      }
+      else
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         DbgPrintf(3, _T("SnmpCheckV3CommSettings(%s): DBSelect() failed"), id);
       }
 
-      DBFreeResult(hResult);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
       DBConnectionPoolReleaseConnection(hdb);
-
-      bool found = false;
-		for(int i = 0; (i < contexts.size()) && !found && !IsShutdownInProgress(); i++)
-		{
-		   SNMP_SecurityContext *ctx = contexts.get(i);
-			pTransport->setSecurityContext(ctx);
-			DbgPrintf(5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
-			if (SnmpTestRequest(pTransport, testOids))
-         {
-            DbgPrintf(5, _T("SnmpCheckV3CommSettings(%s): success"), id);
-            found = true;
-
-            // Delete unused contexts
-            for(int j = i + 1; j < contexts.size(); j++)
-               delete contexts.get(j);
-
-            break;
-         }
-		}
-
-		if (found)
-			return true;
-	}
-	else
-	{
-      DBConnectionPoolReleaseConnection(hdb);
-		DbgPrintf(3, _T("SnmpCheckV3CommSettings(%s): DBSelect() failed"), id);
-	}
+      DbgPrintf(3, _T("SnmpCheckV3CommSettings(%s): DBPrepare() failed"), id);
+   }
 
 	DbgPrintf(5, _T("SnmpCheckV3CommSettings(%s): failed"), id);
 	return false;
@@ -236,7 +249,7 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
  * On success, returns new security context object (dynamically created).
  * On failure, returns NULL
  */
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *testOids)
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *testOids, UINT32 zoneUIN)
 {
    DbgPrintf(5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), (const TCHAR *)ipAddr.toString(), snmpProxy, (int)originalPort);
 
@@ -246,6 +259,9 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
    TCHAR tmp[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
    StringList *ports = new StringList(tmp, _T(","));
+   Zone *zone = FindZoneByUIN(zoneUIN);
+   if (zone != NULL)
+      ports->addAll(zone->getSnmpPortList());
    for(int j = -1; (j < ports->size()) && !IsShutdownInProgress(); j++)
    {
       UINT16 port;
@@ -288,7 +304,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       }
 
       // Check for V3 USM
-      if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids, (const TCHAR *)ipAddr.toString()))
+      if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids, (const TCHAR *)ipAddr.toString(), zoneUIN))
       {
          *version = SNMP_VERSION_3;
          goto success;
@@ -320,13 +336,21 @@ restart_check:
       {
          communities = new StringList();
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
-         if (hResult != NULL)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT community FROM snmp_communities WHERE zone=? OR zone=?"));
+         if (hStmt != NULL)
          {
-            int count = DBGetNumRows(hResult);
-            for(int i = 0; i < count; i++)
-               communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
-            DBFreeResult(hResult);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, zoneUIN);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, SNMP_CONFIG_GLOBAL);
+
+            DB_RESULT hResult = DBSelectPrepared(hStmt);
+            if (hResult != NULL)
+            {
+               int count = DBGetNumRows(hResult);
+               for(int i = 0; i < count; i++)
+                  communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+               DBFreeResult(hResult);
+            }
+            DBFreeStatement(hStmt);
          }
          DBConnectionPoolReleaseConnection(hdb);
       }

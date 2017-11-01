@@ -75,36 +75,46 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (!loadCommonProperties(hdb))
       return false;
 
-   TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT zone_guid,proxy_node FROM zones WHERE id=%d"), dwId);
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
-      return false;     // Query failed
-
-   if (DBGetNumRows(hResult) == 0)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone_guid,proxy_node,snmp_ports FROM zones WHERE id=?"));
+   if (hStmt != NULL)
    {
-      DBFreeResult(hResult);
-      if (dwId == BUILTIN_OID_ZONE0)
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
       {
-         m_uin = 0;
+         if (DBGetNumRows(hResult) == 0)
+         {
+            DBFreeResult(hResult);
+            if (dwId == BUILTIN_OID_ZONE0)
+            {
+               m_uin = 0;
+               return true;
+            }
+            else
+            {
+               DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
+               return false;
+            }
+         }
+
+         m_uin = DBGetFieldULong(hResult, 0, 0);
+         m_proxyNodeId = DBGetFieldULong(hResult, 0, 1);
+         TCHAR buffer[MAX_DB_STRING];
+         DBGetField(hResult, 0, 2, buffer, MAX_DB_STRING);
+         if (buffer[0] != 0)
+            m_snmpPorts.splitAndAdd(buffer, _T(","));
+
+         DBFreeResult(hResult);
+
+         // Load access list
+         loadACLFromDB(hdb);
+
          return true;
       }
-      else
-      {
-			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
-         return false;
-      }
+      DBFreeStatement(hStmt);
    }
 
-   m_uin = DBGetFieldULong(hResult, 0, 0);
-   m_proxyNodeId = DBGetFieldULong(hResult, 0, 1);
-
-   DBFreeResult(hResult);
-
-   // Load access list
-   loadACLFromDB(hdb);
-
-   return true;
+   return false;
 }
 
 /**
@@ -120,17 +130,18 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("zones"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE zones SET zone_guid=?,proxy_node=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE zones SET zone_guid=?,proxy_node=?,snmp_ports=? WHERE id=?"));
       }
       else
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO zones (zone_guid,proxy_node,id) VALUES (?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO zones (zone_guid,proxy_node,snmp_ports,id) VALUES (?,?,?,?)"));
       }
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_uin);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_snmpPorts.join(_T(",")), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -168,6 +179,7 @@ void Zone::fillMessageInternal(NXCPMessage *msg)
    NetObj::fillMessageInternal(msg);
    msg->setField(VID_ZONE_UIN, m_uin);
    msg->setField(VID_ZONE_PROXY, m_proxyNodeId);
+   m_snmpPorts.fillMessage(msg, VID_ZONE_SNMP_PORT_LIST_BASE, VID_ZONE_SNMP_PORT_COUNT);
 }
 
 /**
@@ -177,6 +189,14 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 {
 	if (request->isFieldExist(VID_ZONE_PROXY))
 		m_proxyNodeId = request->getFieldAsUInt32(VID_ZONE_PROXY);
+	if (request->isFieldExist(VID_ZONE_SNMP_PORT_LIST_BASE) && request->isFieldExist(VID_ZONE_SNMP_PORT_COUNT))
+	{
+	   m_snmpPorts.clear();
+	   for(int i = 0; i < request->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT); i++)
+	   {
+	      m_snmpPorts.addPreallocated(request->getFieldAsString(VID_ZONE_SNMP_PORT_LIST_BASE + i));
+	   }
+	}
 
    return NetObj::modifyFromMessageInternal(request);
 }
