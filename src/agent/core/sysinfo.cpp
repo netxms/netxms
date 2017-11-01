@@ -50,39 +50,39 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
  */
 static bool MatchFileFilter(const TCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
 {
-	if (!MatchString(pattern, fileName, FALSE))
-		return false;
+   if (!MatchString(pattern, fileName, FALSE))
+      return false;
 
-	if (ageFilter != 0)
-	{
-		time_t now = time(NULL);
-		if (ageFilter < 0)
-		{
-			if (fileInfo.st_mtime < now + ageFilter)
-				return false;
-		}
-		else
-		{
-			if (fileInfo.st_mtime > now - ageFilter)
-				return false;
-		}
-	}
+   if (ageFilter != 0)
+   {
+      time_t now = time(NULL);
+      if (ageFilter < 0)
+      {
+         if (fileInfo.st_mtime < now + ageFilter)
+            return false;
+      }
+      else
+      {
+         if (fileInfo.st_mtime > now - ageFilter)
+            return false;
+      }
+   }
 
-	if (sizeFilter != 0)
-	{
-		if (sizeFilter < 0)
-		{
-			if (fileInfo.st_size > -sizeFilter)
-				return false;
-		}
-		else
-		{
-			if (fileInfo.st_size < sizeFilter)
-				return false;
-		}
-	}
+   if (sizeFilter != 0)
+   {
+      if (sizeFilter < 0)
+      {
+         if (fileInfo.st_size > -sizeFilter)
+            return false;
+      }
+      else
+      {
+         if (fileInfo.st_size < sizeFilter)
+            return false;
+      }
+   }
 
-	return true;
+   return true;
 }
 
 /**
@@ -93,7 +93,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
 {
    _TDIR *pDir = NULL;
    struct _tdirent *pFile;
-	NX_STAT_STRUCT fileInfo;
+   NX_STAT_STRUCT fileInfo;
    TCHAR szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -101,12 +101,12 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
        return SYSINFO_RC_ERROR;
 
    // if this is just a file than simply return statistics
-	// Filters ignored in this case
+   // Filters ignored in this case
    if (!S_ISDIR(fileInfo.st_mode))
    {
-		llFileSize += (UINT64)fileInfo.st_size;
-		uFileCount++;
-		return nRet;
+      llFileSize += (UINT64)fileInfo.st_size;
+      uFileCount++;
+      return nRet;
    }
 
    // this is a dir
@@ -122,9 +122,9 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
          if (!_tcscmp(pFile->d_name, _T(".")) || !_tcscmp(pFile->d_name, _T("..")))
             continue;
 
-			size_t len = _tcslen(szPath) + _tcslen(pFile->d_name) + 2;
-			if (len > MAX_PATH)
-				continue;	// Full file name is too long
+         size_t len = _tcslen(szPath) + _tcslen(pFile->d_name) + 2;
+         if (len > MAX_PATH)
+            continue;   // Full file name is too long
 
          _tcscpy(szFileName, szPath);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
@@ -137,7 +137,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
          // skip symlinks
 #ifndef _WIN32
          if (S_ISLNK(fileInfo.st_mode))
-         	continue;
+            continue;
 #endif
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
@@ -190,25 +190,25 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    if (!AgentGetParameterArg(cmd, 3, szRecursive, 10))
       return SYSINFO_RC_UNSUPPORTED;
 
-	if (!AgentGetParameterArg(cmd, 4, szBuffer, 128))
+   if (!AgentGetParameterArg(cmd, 4, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
-	INT64 sizeFilter = _tcstoll(szBuffer, NULL, 0);
+   INT64 sizeFilter = _tcstoll(szBuffer, NULL, 0);
 
-	if (!AgentGetParameterArg(cmd, 5, szBuffer, 128))
+   if (!AgentGetParameterArg(cmd, 5, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
-	int ageFilter = _tcstoul(szBuffer, NULL, 0);
+   int ageFilter = _tcstoul(szBuffer, NULL, 0);
 
-	// Recursion flag
-	bRecursive = ((_tcstol(szRecursive, NULL, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
+   // Recursion flag
+   bRecursive = ((_tcstol(szRecursive, NULL, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
 
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
       _tcscpy(szPattern, _T("*"));
 
-	// Expand strftime macros in the path and in the pattern
-	if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL) ||
-	    (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
-		return SYSINFO_RC_UNSUPPORTED;
+   // Expand strftime macros in the path and in the pattern
+   if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL) ||
+       (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
+      return SYSINFO_RC_UNSUPPORTED;
 
    int mode = CAST_FROM_POINTER(arg, int);
    DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
@@ -217,16 +217,16 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 
    switch(mode)
    {
-   	case DIRINFO_FILE_SIZE:
+      case DIRINFO_FILE_SIZE:
            ret_uint64(value, llFileSize);
            break;
-   	case DIRINFO_FILE_COUNT:
-   	case DIRINFO_FOLDER_COUNT:
+      case DIRINFO_FILE_COUNT:
+      case DIRINFO_FOLDER_COUNT:
            ret_uint(value, uFileCount);
            break;
-   	default:
+      default:
            nRet = SYSINFO_RC_UNSUPPORTED;
-			break;
+         break;
    }
 
    return nRet;
@@ -238,16 +238,16 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-	TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
    BYTE hash[MD5_DIGEST_SIZE];
    UINT32 i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+   // Expand strftime macros in the path
+   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileMD5Hash(szRealFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
@@ -266,16 +266,16 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-	TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
+   TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
    BYTE hash[SHA1_DIGEST_SIZE];
    UINT32 i;
 
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+   // Expand strftime macros in the path
+   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileSHA1Hash(szRealFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
@@ -299,9 +299,9 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
    if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+   // Expand strftime macros in the path
+   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileCRC32(szRealFileName, &dwCRC32))
       return SYSINFO_RC_UNSUPPORTED;
@@ -398,37 +398,37 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];
-	LONG nRet = SYSINFO_RC_SUCCESS;
-	NX_STAT_STRUCT fileInfo;
+   TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];
+   LONG nRet = SYSINFO_RC_SUCCESS;
+   NX_STAT_STRUCT fileInfo;
 
-	if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
-		return SYSINFO_RC_UNSUPPORTED;
+   if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	// Expand strftime macros in the path
-	if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
-		return SYSINFO_RC_UNSUPPORTED;
+   // Expand strftime macros in the path
+   if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
-	if (CALL_STAT(szRealFilePath, &fileInfo) == -1)
-		return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
+   if (CALL_STAT(szRealFilePath, &fileInfo) == -1)
+      return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
 
-	switch(CAST_FROM_POINTER(arg, int))
-	{
-		case FILETIME_ATIME:
-			ret_uint64(value, fileInfo.st_atime);
-			break;
-		case FILETIME_MTIME:
-			ret_uint64(value, fileInfo.st_mtime);
-			break;
-		case FILETIME_CTIME:
-			ret_uint64(value, fileInfo.st_ctime);
-			break;
-		default:
-			nRet = SYSINFO_RC_UNSUPPORTED;
-			break;
-	}
+   switch(CAST_FROM_POINTER(arg, int))
+   {
+      case FILETIME_ATIME:
+         ret_uint64(value, fileInfo.st_atime);
+         break;
+      case FILETIME_MTIME:
+         ret_uint64(value, fileInfo.st_mtime);
+         break;
+      case FILETIME_CTIME:
+         ret_uint64(value, fileInfo.st_ctime);
+         break;
+      default:
+         nRet = SYSINFO_RC_UNSUPPORTED;
+         break;
+   }
 
-	return nRet;
+   return nRet;
 }
 
 /**
@@ -538,4 +538,37 @@ LONG H_ThreadPoolList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
 LONG H_HostName(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    return (GetLocalHostName(value, MAX_RESULT_LENGTH, arg != NULL) != NULL) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Handler for File.LineCount parameter
+ */
+LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR szPath[MAX_PATH];
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   if (!AgentGetParameterArg(cmd, 1, szPath, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (szPath[0] != 0)
+   {
+      UINT32 lineCount = 0;
+      char buffer[4096];
+      int fd, in;
+      if ((fd = _topen(szPath, O_RDONLY)) != -1)
+      {
+         while((in = read(fd, buffer, 4096)) > 0)
+         {
+            buffer[in] = 0;
+            lineCount += NumCharsA(buffer, '\n');
+         }
+         close(fd);
+         lineCount++; // Last line will not have an '\n' char
+
+         ret_uint(value, lineCount);
+         nRet = SYSINFO_RC_SUCCESS;
+      }
+   }
+   return nRet;
 }
