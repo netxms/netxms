@@ -673,10 +673,12 @@ ARP_CACHE *Node::getArpCache()
    }
    else if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      agentLock();
-      if (connectToAgent())
-         pArpCache = m_agentConnection->getArpCache();
-      agentUnlock();
+      AgentConnectionEx *conn = getAgentConnection();
+      if (conn != NULL)
+      {
+         pArpCache = conn->getArpCache();
+         conn->decRefCount();
+      }
    }
    else if (m_capabilities & NC_IS_SNMP)
    {
@@ -702,12 +704,12 @@ InterfaceList *Node::getInterfaceList()
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      agentLock();
-      if (connectToAgent())
+      AgentConnectionEx *conn = getAgentConnection();
+      if (conn != NULL)
       {
-         pIfList = m_agentConnection->getInterfaceList();
+         pIfList = conn->getInterfaceList();
+         conn->decRefCount();
       }
-      agentUnlock();
    }
    if ((pIfList == NULL) && (m_capabilities & NC_IS_LOCAL_MGMT))
    {
@@ -4123,17 +4125,14 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
    int retry = 3;
 
-   agentLock();
-
-   // Establish connection if needed
-   if (m_agentConnection == NULL)
-      if (!connectToAgent())
-         goto end_loop;
+   AgentConnectionEx *conn = getAgentConnection();
+   if (conn == NULL)
+      goto end_loop;
 
    // Get parameter from agent
    while(retry-- > 0)
    {
-      dwError = m_agentConnection->getParameter(szParam, dwBufSize, szBuffer);
+      dwError = conn->getParameter(szParam, dwBufSize, szBuffer);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -4150,16 +4149,11 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
-            if (!connectToAgent())
-               goto end_loop;
-            break;
          case ERR_REQUEST_TIMEOUT:
-            // Reset connection to agent after timeout
-            nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-            deleteAgentConnection();
-            if (!connectToAgent())
+            conn->decRefCount();
+            conn = getAgentConnection();
+            if (conn == NULL)
                goto end_loop;
-            nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
          case ERR_INTERNAL_ERROR:
             dwResult = DCE_COLLECTION_ERROR;
@@ -4169,7 +4163,8 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
    }
 
 end_loop:
-   agentUnlock();
+   if (conn != NULL)
+      conn->decRefCount();
    nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
    return dwResult;
 }
@@ -4190,17 +4185,14 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   agentLock();
-
-   // Establish connection if needed
-   if (m_agentConnection == NULL)
-      if (!connectToAgent())
-         goto end_loop;
+   AgentConnectionEx *conn = getAgentConnection();
+   if (conn == NULL)
+      goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_agentConnection->getTable(name, table);
+      dwError = conn->getTable(name, table);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -4217,16 +4209,11 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
-            if (!connectToAgent())
-               goto end_loop;
-            break;
          case ERR_REQUEST_TIMEOUT:
-            // Reset connection to agent after timeout
-            DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-            deleteAgentConnection();
-            if (!connectToAgent())
+            conn->decRefCount();
+            conn = getAgentConnection();
+            if (conn == NULL)
                goto end_loop;
-            DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             dwResult = DCE_COLLECTION_ERROR;
@@ -4236,7 +4223,8 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
    }
 
 end_loop:
-   agentUnlock();
+   if (conn != NULL)
+      conn->decRefCount();
    DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
@@ -4257,17 +4245,14 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   agentLock();
-
-   // Establish connection if needed
-   if (m_agentConnection == NULL)
-      if (!connectToAgent())
-         goto end_loop;
+   AgentConnectionEx *conn = getAgentConnection();
+   if (conn == NULL)
+      goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_agentConnection->getList(name, list);
+      dwError = conn->getList(name, list);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -4284,16 +4269,11 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
-            if (!connectToAgent())
-               goto end_loop;
-            break;
          case ERR_REQUEST_TIMEOUT:
-            // Reset connection to agent after timeout
-            DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-            deleteAgentConnection();
-            if (!connectToAgent())
+            conn->decRefCount();
+            conn = getAgentConnection();
+            if (conn == NULL)
                goto end_loop;
-            DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             dwResult = DCE_COLLECTION_ERROR;
@@ -4303,7 +4283,8 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
    }
 
 end_loop:
-   agentUnlock();
+   if (conn != NULL)
+      conn->decRefCount();
    DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
@@ -5406,6 +5387,43 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
 }
 
 /**
+ * Get agent connection. It may or may not be primary connection. Caller should call decRefCount
+ * when connection is no longer needed. File transfers and other long running oprations should
+ * be avoided.
+ */
+AgentConnectionEx *Node::getAgentConnection()
+{
+   AgentConnectionEx *conn = NULL;
+
+   bool success;
+   int retryCount = 5;
+   while(--retryCount >= 0)
+   {
+      success = MutexTryLock(m_hAgentAccessMutex);
+      if (success)
+      {
+         if (connectToAgent())
+         {
+            conn = m_agentConnection;
+            conn->incRefCount();
+         }
+         break;
+      }
+      ThreadSleepMs(50);
+   }
+   MutexUnlock(m_hAgentAccessMutex);
+
+   if (!success)
+   {
+      // was unable to obtain lock on primary connection
+      nxlog_debug(6, _T("Node::getAgentConnection(%s [%d]): cannot obtain lock on primary connection"), m_name, (int)m_id);
+      conn = createAgentConnection(false);
+   }
+
+   return conn;
+}
+
+/**
  * Acquire SNMP proxy agent connection
  */
 AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
@@ -5644,18 +5662,16 @@ ROUTING_TABLE *Node::getRoutingTable()
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      agentLock();
-      if (connectToAgent())
+      AgentConnectionEx *conn = getAgentConnection();
+      if (conn != NULL)
       {
-         pRT = m_agentConnection->getRoutingTable();
+         pRT = conn->getRoutingTable();
+         conn->decRefCount();
       }
-      agentUnlock();
    }
    if ((pRT == NULL) && (m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)))
    {
-      SNMP_Transport *pTransport;
-
-      pTransport = createSnmpTransport();
+      SNMP_Transport *pTransport = createSnmpTransport();
       if (pTransport != NULL)
       {
          pRT = SnmpGetRoutingTable(m_capabilities, pTransport);
