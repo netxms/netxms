@@ -169,6 +169,7 @@ enum ThreadPoolStat
 #define DIRINFO_FILE_COUNT       1
 #define DIRINFO_FILE_SIZE        2
 #define DIRINFO_FOLDER_COUNT     3
+#define DIRINFO_FILE_LINE_COUNT  4
 
 /**
  * Request types for H_FileTime
