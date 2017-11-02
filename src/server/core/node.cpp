@@ -5623,11 +5623,11 @@ AgentConnectionEx *Node::getAgentConnection()
             conn = m_agentConnection;
             conn->incRefCount();
          }
+         MutexUnlock(m_hAgentAccessMutex);
          break;
       }
       ThreadSleepMs(50);
    }
-   MutexUnlock(m_hAgentAccessMutex);
 
    if (!success)
    {
