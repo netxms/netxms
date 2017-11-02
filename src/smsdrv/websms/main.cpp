@@ -161,7 +161,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 #endif
 
       char url[4096];
-      snprintf(url, 4096, "https://websms.ru/http_in5.asp?http_username=%s&http_password=%s&phone_list=%s%s%s&format=xml&message=%s",
+      snprintf(url, 4096, "https://cab.websms.ru/http_in5.asp?http_username=%s&http_password=%s&phone_list=%s%s%s&format=xml&message=%s",
                s_login, s_password, phone, (s_fromPhone[0] != 0) ? "&fromPhone=" : "", (s_fromPhone[0] != 0) ? s_fromPhone : "", msg);
       nxlog_debug(4, _T("WebSMS: URL set to \"%hs\""), url);
 
