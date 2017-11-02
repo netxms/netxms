@@ -47,6 +47,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -554,5 +555,23 @@ public class NetworkMapWidget extends Composite
             }
          }
       }
+   }
+   
+   /**
+    * Get map label provider
+    * @return label provider
+    */ 
+   public MapLabelProvider getLabelProvider()
+   {
+      return labelProvider;
+   }
+   
+   /**
+    * Get control
+    * @return control
+    */
+   public Control getControl()
+   {
+      return viewer.getControl();
    }
 }

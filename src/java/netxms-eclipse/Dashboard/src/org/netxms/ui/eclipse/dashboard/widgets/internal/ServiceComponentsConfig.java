@@ -22,6 +22,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
@@ -44,6 +46,21 @@ public class ServiceComponentsConfig extends DashboardElementConfig
    @Element(required=false)
    private boolean objectDoubleClickEnabled = false;
 
+   @Element(required=false)
+   private MapObjectDisplayMode objectDisplayMode = MapObjectDisplayMode.ICON;
+   
+   @Element(required=false)
+   private int flags = 0;
+   
+   @Element(required=false)
+   private int linkRouting = 0;
+
+   @Element(required=false)
+   private int defaultLinkColor = -1;
+
+   @Element(required=false)
+   private MapLayoutAlgorithm mapLayout = MapLayoutAlgorithm.SPARSE_VTREE;
+   
    /**
     * Create line chart settings object from XML document
     * 
@@ -154,5 +171,94 @@ public class ServiceComponentsConfig extends DashboardElementConfig
    public void setObjectDoubleClickEnabled(boolean objectDoubleClickEnabled)
    {
       this.objectDoubleClickEnabled = objectDoubleClickEnabled;
+   }
+   
+   /**
+    * Get map object display mode
+    * @return object display mode
+    */
+   public MapObjectDisplayMode getObjectDisplayMode()
+   {
+      return objectDisplayMode;
+   }
+   
+   /**
+    * Set object display mode
+    * @param mode of object display
+    */
+   public void setObjectDisplayMode(MapObjectDisplayMode mode)
+   {
+      objectDisplayMode = mode;
+   }
+   
+   /**
+    * Get object flags
+    * @return flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+   
+   /**
+    * Set object flags
+    * @param flags to set
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
+   }
+   
+   /**
+    * Get default link routing
+    * @return default link routing
+    */
+   public int getDefaultLinkRouting()
+   {
+      return linkRouting;
+   }
+   
+   /**
+    * Set default link routing
+    * @param linkRouting to set
+    */
+   public void setDefaultLinkRouting(int linkRouting)
+   {
+      this.linkRouting = linkRouting;
+   }
+   
+   /**
+    * @return the defaultLinkColor
+    */
+   public int getDefaultLinkColor()
+   {
+      return defaultLinkColor;
+   }
+   
+   /**
+    * Set default link color
+    * @param defaultLinkColor to set
+    */
+   public void setDefaultLinkColor(int defaultLinkColor)
+   {
+      this.defaultLinkColor = defaultLinkColor;
+   }
+   
+   /**
+    * Get map layout algorithm
+    * @return layout algorithm
+    */
+   public MapLayoutAlgorithm getDefaultLayoutAlgorithm()
+   {
+      return mapLayout;
+   }
+   
+   /**
+    * Set map layoyut algorithm
+    * @param algorithm to set
+    */
+   public void setDefaultLayoutAlgorithm(MapLayoutAlgorithm algorithm)
+   {
+      mapLayout = algorithm;
    }
 }

@@ -20,11 +20,11 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import java.util.Iterator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -32,11 +32,13 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
 import org.netxms.ui.eclipse.networkmaps.views.ServiceComponents;
 import org.netxms.ui.eclipse.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Service components map element for dashboard
@@ -85,9 +87,16 @@ public class ServiceComponentsElement extends ElementWidget
       if (mapPage != null)
       {
          mapWidget = new NetworkMapWidget(this, viewPart, SWT.NONE);
-         mapWidget.setLayoutAlgorithm(MapLayoutAlgorithm.SPARSE_VTREE);
-         mapWidget.setContent(mapPage);
+         mapWidget.setLayoutAlgorithm(config.getDefaultLayoutAlgorithm());
          mapWidget.zoomTo((double)config.getZoomLevel() / 100.0);
+         mapWidget.getLabelProvider().setObjectFigureType(config.getObjectDisplayMode());
+         mapWidget.getLabelProvider().setShowStatusIcons((config.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
+         mapWidget.getLabelProvider().setShowStatusFrame((config.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
+         mapWidget.getLabelProvider().setShowStatusBackground((config.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
+         mapWidget.setConnectionRouter(config.getDefaultLinkRouting());
+         if (config.getDefaultLinkColor() >= 0)
+            mapWidget.getLabelProvider().setDefaultLinkColor(new Color(mapWidget.getControl().getDisplay(), ColorConverter.rgbFromInt(config.getDefaultLinkColor())));
+         mapWidget.setContent(mapPage);
       }
 
       if (config.isObjectDoubleClickEnabled())
