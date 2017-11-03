@@ -3,7 +3,7 @@
 *
 
 - Event groups
-- Fixed issues: NX-1102, NX-1219, NX-1289, NX-1292, NX-1332
+- Fixed issues: NX-1102, NX-1199, NX-1219, NX-1289, NX-1292, NX-1332, NX-1345
 
 
 *
@@ -11,7 +11,7 @@
 *
 
 - Per stage confirmation in database manager during database check
-- Fixed issues: NX-703, NX-1268, NX-1339, NX-1341, NX-1342, NX-1343, NX-1344
+- Fixed issues: NX-703, NX-1045, NX-1268, NX-1339, NX-1341, NX-1342, NX-1343, NX-1344
 
 
 *
