@@ -394,6 +394,7 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.STATUS_INDICATOR:
 				case DashboardElement.STATUS_MAP:
 				case DashboardElement.DASHBOARD:
+            case DashboardElement.RACK_DIAGRAM:
 					config = DashboardControl.DEFAULT_OBJECT_REFERENCE_CONFIG;
 					break;
 				case DashboardElement.NETWORK_MAP:

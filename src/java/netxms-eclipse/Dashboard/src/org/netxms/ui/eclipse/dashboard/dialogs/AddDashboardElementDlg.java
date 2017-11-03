@@ -81,6 +81,7 @@ public class AddDashboardElementDlg extends Dialog
       elementTypeSelector.add("SNMP trap monitor");
       elementTypeSelector.add("Event monitor");
       elementTypeSelector.add("Service components map");
+      elementTypeSelector.add("Rack diagram");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;
