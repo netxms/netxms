@@ -67,7 +67,8 @@ struct XML_PARSER_STATE
 	StringList files;
 	IntegerArray<INT32> encodings;
    IntegerArray<INT32> preallocFlags;
-	String id;
+   IntegerArray<INT32> snapshotFlags;
+   String id;
 	String level;
 	String source;
 	String context;
@@ -86,7 +87,7 @@ struct XML_PARSER_STATE
 	int repeatInterval;
 	bool resetRepeat;
 
-	XML_PARSER_STATE() : encodings(4, 4), preallocFlags(4, 4)
+	XML_PARSER_STATE() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4)
 	{
       state = XML_STATE_INIT;
       parser = NULL;
@@ -450,7 +451,8 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			ps->encodings.add(LP_FCP_AUTO);
 		}
 		ps->preallocFlags.add(XMLGetAttrBoolean(attrs, "preallocated", false) ? 1 : 0);
-	}
+      ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
+   }
 	else if (!strcmp(name, "macros"))
 	{
 		ps->state = XML_STATE_MACROS;
@@ -807,6 +809,9 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 				p->setFileName(state.files.get(i));
 				p->m_fileEncoding = state.encodings.get(i);
 				p->m_preallocatedFile = (state.preallocFlags.get(i) != 0);
+#ifdef _WIN32
+            p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);
+#endif
 				parsers->add(p);
 			}
 		}
@@ -949,7 +954,8 @@ const TCHAR *LogParser::getStatusText() const
       _T("SUSPENDED"),
       _T("EVENT LOG SUBSCRIBE FAILED"),
       _T("EVENT LOG READ ERROR"),
-      _T("EVENT LOG OPEN ERROR")
+      _T("EVENT LOG OPEN ERROR"),
+      _T("VSS FAILURE")
    };
    return texts[m_status];
 }

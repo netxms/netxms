@@ -22,44 +22,14 @@
 **/
 
 #include "libnxlp.h"
+#include <nxstat.h>
+
+#define DEBUG_TAG    _T("logwatch")
 
 #ifdef _WIN32
 #include <share.h>
+#include <comdef.h>
 #endif
-
-
-#if defined(_WIN32)
-#define NX_STAT _tstati64
-#define NX_STAT_STRUCT struct _stati64
-#elif HAVE_STAT64 && HAVE_STRUCT_STAT64
-#define NX_STAT stat64
-#define NX_STAT_STRUCT struct stat64
-#else
-#define NX_STAT stat
-#define NX_STAT_STRUCT struct stat
-#endif
-
-#if defined(_WIN32)
-#define NX_FSTAT _fstati64
-#elif HAVE_FSTAT64 && HAVE_STRUCT_STAT64
-#define NX_FSTAT fstat64
-#else
-#define NX_FSTAT fstat
-#endif
-
-#if defined(UNICODE) && !defined(_WIN32)
-inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
-{
-	char *mbf = MBStringFromWideString(f);
-	int rc = NX_STAT(mbf, s);
-	free(mbf);
-	return rc;
-}
-#define CALL_STAT(f, s) __call_stat(f, s)
-#else
-#define CALL_STAT(f, s) NX_STAT(f, s)
-#endif
-
 
 /**
  * Constants
@@ -443,6 +413,11 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 		return false;
 	}
 
+#ifdef _WIN32
+   if (m_useSnapshot)
+      return monitorFileWithSnapshot(stopCondition, readFromCurrPos);
+#endif
+
 	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
 	bool exclusionPeriod = false;
 	while(true)
@@ -467,151 +442,287 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	   }
 
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
-		if (CALL_STAT(fname, &st) == 0)
+		if (CALL_STAT(fname, &st) != 0)
+      {
+         setStatus(LPS_NO_FILE);
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+#ifdef _WIN32
+      fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+#else
+		fh = _topen(fname, O_RDONLY);
+#endif
+		if (fh == -1)
+      {
+         setStatus(LPS_OPEN_ERROR);
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+		setStatus(LPS_RUNNING);
+		LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+
+      if (m_fileEncoding == -1)
+      {
+         m_fileEncoding = ScanFileEncoding(fh);
+         lseek(fh, 0, SEEK_SET);
+      }
+
+		size = (size_t)st.st_size;
+		if (readFromStart)
 		{
-#ifdef _WIN32
-			fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
-#else
-			fh = _topen(fname, O_RDONLY);
-#endif
-			if (fh != -1)
-			{
-				setStatus(LPS_RUNNING);
-				LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
-
-            if (m_fileEncoding == -1)
-            {
-               m_fileEncoding = ScanFileEncoding(fh);
-               lseek(fh, 0, SEEK_SET);
-            }
-
-				size = (size_t)st.st_size;
-				if (readFromStart)
-				{
-					LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
-					off_t resetPos = ParseNewRecords(this, fh);
-               lseek(fh, resetPos, SEEK_SET);
-				}
-				else if (m_preallocatedFile)
-				{
-				   SeekToZero(fh, getCharSize());
-				}
-				else
-				{
-					lseek(fh, 0, SEEK_END);
-				}
-
-				while(true)
-				{
-					if (ConditionWait(stopCondition, 5000))
-						goto stop_parser;
-
-					// Check if file name was changed
-					ExpandFileName(getFileName(), temp, MAX_PATH, true);
-					if (_tcscmp(temp, fname))
-					{
-						LogParserTrace(5, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"), m_fileName, fname, temp);
-						readFromStart = true;
-						break;
-					}
-
-					if (NX_FSTAT(fh, &st) < 0)
-					{
-						LogParserTrace(1, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
-						readFromStart = true;
-						break;
-					}
-
-					if (CALL_STAT(fname, &stn) < 0)
-					{
-						LogParserTrace(1, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
-						readFromStart = true;
-						break;
-					}
-
-#ifdef _WIN32
-					if (st.st_ctime != stn.st_ctime)
-					{
-						LogParserTrace(3, _T("LogParser: creation time for fstat(%d) is not equal to creation time for stat(%s), assume file rename"), fh, fname);
-						readFromStart = true;
-						break;
-					}
-#else
-					if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
-					{
-						LogParserTrace(3, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
-						readFromStart = true;
-						break;
-					}
-#endif
-
-					if ((size_t)st.st_size != size)
-					{
-						if ((size_t)st.st_size < size)
-						{
-							// File was cleared, start from the beginning
-							lseek(fh, 0, SEEK_SET);
-							LogParserTrace(3, _T("LogParser: file \"%s\" st_size != size"), fname);
-						}
-						size = (size_t)st.st_size;
-						LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
-						off_t resetPos = ParseNewRecords(this, fh);
-						lseek(fh, resetPos, SEEK_SET);
-					}
-					else if (m_preallocatedFile)
-					{
-					   char buffer[4];
-					   int bytes = _read(fh, buffer, 4);
-					   if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
-					   {
-                     lseek(fh, -4, SEEK_CUR);
-	                  LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
-	                  off_t resetPos = ParseNewRecords(this, fh);
-	                  lseek(fh, resetPos, SEEK_SET);
-					   }
-					   else
-					   {
-                     off_t pos = lseek(fh, -bytes, SEEK_CUR);
-                     if (pos > 0)
-                     {
-                        int readSize = std::min(pos, (off_t)4);
-                        lseek(fh, -readSize, SEEK_CUR);
-                        int bytes = _read(fh, buffer, readSize);
-                        if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
-                        {
-                           LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);
-                           lseek(fh, 0, SEEK_SET);
-                           off_t resetPos = ParseNewRecords(this, fh);
-                           lseek(fh, resetPos, SEEK_SET);
-                        }
-                     }
-					   }
-					}
-
-					if (isExclusionPeriod())
-					{
-                  LogParserTrace(6, _T("LogParser: closing file \"%s\" because of exclusion period"), fname);
-                  exclusionPeriod = true;
-                  setStatus(LPS_SUSPENDED);
-					   break;
-					}
-				}
-				_close(fh);
-			}
-			else
-			{
-				setStatus(LPS_OPEN_ERROR);
-			}
+			LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
+			off_t resetPos = ParseNewRecords(this, fh);
+         lseek(fh, resetPos, SEEK_SET);
+		}
+		else if (m_preallocatedFile)
+		{
+			SeekToZero(fh, getCharSize());
 		}
 		else
 		{
-			setStatus(LPS_NO_FILE);
-			if (ConditionWait(stopCondition, 10000))
-				break;
+			lseek(fh, 0, SEEK_END);
 		}
+
+		while(true)
+		{
+			if (ConditionWait(stopCondition, 5000))
+				goto stop_parser;
+
+			// Check if file name was changed
+			ExpandFileName(getFileName(), temp, MAX_PATH, true);
+			if (_tcscmp(temp, fname))
+			{
+				LogParserTrace(5, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"), m_fileName, fname, temp);
+				readFromStart = true;
+				break;
+			}
+
+			if (NX_FSTAT(fh, &st) < 0)
+			{
+				LogParserTrace(1, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
+				readFromStart = true;
+				break;
+			}
+
+			if (CALL_STAT(fname, &stn) < 0)
+			{
+				LogParserTrace(1, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
+				readFromStart = true;
+				break;
+			}
+
+#ifdef _WIN32
+			if (st.st_ctime != stn.st_ctime)
+			{
+				LogParserTrace(3, _T("LogParser: creation time for fstat(%d) is not equal to creation time for stat(%s), assume file rename"), fh, fname);
+				readFromStart = true;
+				break;
+			}
+#else
+			if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
+			{
+				LogParserTrace(3, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+				readFromStart = true;
+				break;
+			}
+#endif
+
+			if ((size_t)st.st_size != size)
+			{
+				if ((size_t)st.st_size < size)
+				{
+					// File was cleared, start from the beginning
+					lseek(fh, 0, SEEK_SET);
+					LogParserTrace(3, _T("LogParser: file \"%s\" st_size != size"), fname);
+				}
+				size = (size_t)st.st_size;
+				LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+				off_t resetPos = ParseNewRecords(this, fh);
+				lseek(fh, resetPos, SEEK_SET);
+			}
+			else if (m_preallocatedFile)
+			{
+				char buffer[4];
+				int bytes = _read(fh, buffer, 4);
+				if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
+				{
+               lseek(fh, -4, SEEK_CUR);
+	            LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+	            off_t resetPos = ParseNewRecords(this, fh);
+	            lseek(fh, resetPos, SEEK_SET);
+				}
+				else
+				{
+               off_t pos = lseek(fh, -bytes, SEEK_CUR);
+               if (pos > 0)
+               {
+                  int readSize = std::min(pos, (off_t)4);
+                  lseek(fh, -readSize, SEEK_CUR);
+                  int bytes = _read(fh, buffer, readSize);
+                  if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
+                  {
+                     LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);
+                     lseek(fh, 0, SEEK_SET);
+                     off_t resetPos = ParseNewRecords(this, fh);
+                     lseek(fh, resetPos, SEEK_SET);
+                  }
+               }
+				}
+			}
+
+			if (isExclusionPeriod())
+			{
+            LogParserTrace(6, _T("LogParser: closing file \"%s\" because of exclusion period"), fname);
+            exclusionPeriod = true;
+            setStatus(LPS_SUSPENDED);
+				break;
+			}
+		}
+		_close(fh);
 	}
 
 stop_parser:
-	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
 	return true;
 }
+
+#ifdef _WIN32
+
+/**
+ * File parser thread (using VSS snapshots)
+ */
+bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCurrPos)
+{
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+   if (FAILED(hr))
+   {
+      _com_error err(hr);
+      LogParserTrace(0, _T("LogParser: parser thread will not start, COM initialization failed (%s)"), err.ErrorMessage());
+      return false;
+   }
+
+   size_t size = 0;
+   time_t mtime = 0;
+   time_t ctime = 0;
+   off_t lastPos = 0;
+   bool readFromStart = !readFromCurrPos;
+   bool firstRead = true;
+
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
+   bool exclusionPeriod = false;
+   while(true)
+   {
+      if (isExclusionPeriod())
+      {
+         if (!exclusionPeriod)
+         {
+            exclusionPeriod = true;
+            LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+            setStatus(LPS_SUSPENDED);
+         }
+         if (ConditionWait(stopCondition, 30000))
+            break;
+         continue;
+      }
+
+      if (exclusionPeriod)
+      {
+         exclusionPeriod = false;
+         LogParserTrace(6, _T("LogParser: exclusion period for file \"%s\" ended"), getFileName());
+      }
+
+      TCHAR fname[MAX_PATH];
+      ExpandFileName(getFileName(), fname, MAX_PATH, true);
+      
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(fname, &st) != 0)
+      {
+         setStatus(LPS_NO_FILE);
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+      if (firstRead)
+         ctime = st.st_ctime; // prevent incorrect rotation detection on first read
+
+      if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
+      {
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+      FileSnapshot *snapshot = FileSnapshot::create(fname);
+      if (snapshot == NULL)
+      {
+         setStatus(LPS_VSS_FAILURE);
+         if (ConditionWait(stopCondition, 30000))  // retry in 30 seconds
+            break;
+         continue;
+      }
+
+      int fh = _tsopen(snapshot->name(), O_RDONLY, _SH_DENYNO);
+      if (fh == -1)
+      {
+         delete snapshot;
+         setStatus(LPS_OPEN_ERROR);
+         if (ConditionWait(stopCondition, 10000))  // retry in 10 seconds
+            break;
+         continue;
+      }
+
+      setStatus(LPS_RUNNING);
+      LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name());
+
+      if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
+            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
+         readFromStart = true;   // Assume file rotation
+         ctime = st.st_ctime;
+      }
+
+      if (m_fileEncoding == -1)
+      {
+         m_fileEncoding = ScanFileEncoding(fh);
+         lseek(fh, 0, SEEK_SET);
+      }
+
+      if (!readFromStart)
+      {
+         if (firstRead)
+         {
+            if (m_preallocatedFile)
+               SeekToZero(fh, getCharSize());
+            else
+               lseek(fh, 0, SEEK_END);
+            firstRead = false;
+         }
+         else
+         {
+            lseek(fh, lastPos, SEEK_SET);
+         }
+      }
+
+      lastPos = ParseNewRecords(this, fh);
+      _close(fh);
+      size = static_cast<size_t>(st.st_size);
+      mtime = st.st_mtime;
+
+      delete snapshot;
+      if (ConditionWait(stopCondition, 10000))
+         break;
+   }
+
+   CoUninitialize();
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+   return true;
+}
+
+#endif   /* _WIN32 */
