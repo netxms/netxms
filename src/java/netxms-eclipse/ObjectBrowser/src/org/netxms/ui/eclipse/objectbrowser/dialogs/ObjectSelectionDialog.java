@@ -202,6 +202,16 @@ public class ObjectSelectionDialog extends Dialog
 	}
 	
 	/**
+    * Create filter for rack and chassis selection
+    * 
+    * @return
+    */
+   public static Set<Integer> createRackSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createRackSelectionFilter();
+   }
+	
+	/**
     * Create object selection dialog.
     * 
     * @param parentShell parent shell
