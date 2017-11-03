@@ -49,7 +49,8 @@ enum LogParserStatus
    LPS_SUSPENDED           = 4,
    LPS_EVT_SUBSCRIBE_ERROR = 5,
    LPS_EVT_READ_ERROR      = 6,
-   LPS_EVT_OPEN_ERROR      = 7
+   LPS_EVT_OPEN_ERROR      = 7,
+   LPS_VSS_FAILURE         = 8
 };
 
 /**
@@ -230,6 +231,7 @@ private:
 	LogParserStatus m_status;
 #ifdef _WIN32
    TCHAR *m_marker;
+   bool m_useSnapshot;
 #endif
 
 	const TCHAR *checkContext(LogParserRule *rule);
@@ -247,7 +249,8 @@ private:
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
 
-	bool monitorEventLogV6(CONDITION stopCondition);
+   bool monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCurrPos);
+   bool monitorEventLogV6(CONDITION stopCondition);
 	bool monitorEventLogV4(CONDITION stopCondition);
 
    time_t readLastProcessedRecordTimestamp();
@@ -277,6 +280,11 @@ public:
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() { return m_processAllRules; }
 
+#ifdef _WIN32
+   void setSnapshotMode(bool enable) { m_useSnapshot = enable;  }
+   bool isSnapshotMode() const { return m_useSnapshot;  }
+#endif
+
 	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0, int repeatInterval = 0, int repeatCount = 0, bool resetRepeat = true);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
@@ -302,7 +310,7 @@ public:
 
 	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
 #ifdef _WIN32
-	bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
+   bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
 
