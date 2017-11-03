@@ -320,4 +320,4 @@ INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_I
 /*
 ** Default community string
 */
-INSERT INTO snmp_communities (id,community) VALUES(1,'public');
+INSERT INTO snmp_communities (id,community,zone) VALUES(1,'public',-1);

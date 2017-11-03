@@ -1292,7 +1292,7 @@ CREATE TABLE snmp_communities
 (
   id integer not null,
   community varchar(255) null,
-  zone integer not null,
+  zone integer null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1348,7 +1348,7 @@ CREATE TABLE usm_credentials
   priv_method integer not null,
   auth_password varchar(255),
   priv_password varchar(255),
-  zone integer not null,
+  zone integer null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
