@@ -194,6 +194,8 @@ typedef int bool;
 
 #define SAFE_FGETWS_WITH_POPEN  1
 
+#define FREE_IS_NULL_SAFE       1
+
 #define FS_PATH_SEPARATOR       _T("\\")
 #define FS_PATH_SEPARATOR_A     "\\"
 #define FS_PATH_SEPARATOR_W     L"\\"
