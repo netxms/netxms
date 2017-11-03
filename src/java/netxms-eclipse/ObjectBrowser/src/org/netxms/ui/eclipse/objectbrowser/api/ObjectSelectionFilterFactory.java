@@ -278,4 +278,18 @@ public class ObjectSelectionFilterFactory
 	   classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
 	   return classFilter;
 	}
+	
+	  /**
+    * Create filter for rack selection
+    * 
+    * @return Class filter for rack selection
+    */
+   public Set<Integer> createRackSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(4);
+      classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CONTAINER);
+      classFilter.add(AbstractObject.OBJECT_RACK);
+      return classFilter;
+   }
 }

@@ -216,6 +216,9 @@ public class DashboardControl extends Composite
         case DashboardElement.SERVICE_COMPONENTS:
             w = new ServiceComponentsElement(this, e, viewPart);
             break;
+        case DashboardElement.RACK_DIAGRAM:
+           w = new RackDiagramElement(this, e, viewPart);
+           break;
 			default:
 				w = new ElementWidget(this, e, viewPart);
 				break;
