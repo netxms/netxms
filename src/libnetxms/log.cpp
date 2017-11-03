@@ -61,7 +61,7 @@ static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
 static NxLogDebugWriter s_debugWriter = NULL;
 static DebugTagTree* volatile tagTreeActive = new DebugTagTree();
 static DebugTagTree* volatile tagTreeSecondary = new DebugTagTree();
-static MUTEX m_mutexDebugTagTreeWrite = INVALID_MUTEX_HANDLE;
+static Mutex s_mutexDebugTagTreeWrite;
 
 /**
  * Swaps tag tree pointers and waits till reader count drops to 0
@@ -83,11 +83,11 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 {
    if ((level >= 0) && (level <= 9))
    {
-      MutexLock(m_mutexDebugTagTreeWrite);
+      s_mutexDebugTagTreeWrite.lock();
       tagTreeSecondary->setRootDebugLevel(level); // Update the secondary tree
       SwapAndWait();
       tagTreeSecondary->setRootDebugLevel(level); // Update the previously active tree
-      MutexUnlock(m_mutexDebugTagTreeWrite);
+      s_mutexDebugTagTreeWrite.unlock();
    }
 }
 
@@ -102,7 +102,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
    }
    else
    {
-      MutexLock(m_mutexDebugTagTreeWrite);
+      s_mutexDebugTagTreeWrite.lock();
       if ((level >= 0) && (level <= 9))
       {
          tagTreeSecondary->add(tag, level);
@@ -115,7 +115,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
          SwapAndWait();
          tagTreeSecondary->remove(tag);
       }
-      MutexUnlock(m_mutexDebugTagTreeWrite);
+      s_mutexDebugTagTreeWrite.unlock();
    }
 }
 
@@ -490,7 +490,6 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       }
 
       m_mutexLogAccess = MutexCreate();
-      m_mutexDebugTagTreeWrite = MutexCreate();
 		SetDayStart();
    }
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
@@ -524,8 +523,6 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
             fclose(m_logFileHandle);
          if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
             MutexDestroy(m_mutexLogAccess);
-         if (m_mutexDebugTagTreeWrite != INVALID_MUTEX_HANDLE)
-            MutexDestroy(m_mutexDebugTagTreeWrite);
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
    }

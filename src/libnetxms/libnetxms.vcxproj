@@ -257,6 +257,7 @@
     <ClCompile Include="wcstoll.c" />
     <ClCompile Include="wcstoull.c" />
     <ClCompile Include="xml.cpp" />
+    <ClCompile Include="ztools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\base64.h" />

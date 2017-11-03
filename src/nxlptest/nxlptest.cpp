@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Log Parser Testing Utility
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,29 +27,38 @@
 #include <signal.h>
 #endif
 
-//
-// Static data
-//
-
+/**
+ * Stop condition
+ */
 static CONDITION m_stopCondition = INVALID_CONDITION_HANDLE;
 
-
-//
-// Help text
-//
-
+/**
+ * Help text
+ */
 static TCHAR m_helpText[] =
    _T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
    _T("Copyright (c) 2009-2012 Victor Kirhenshtein\n\n")
    _T("Usage:\n")
    _T("   nxlptest [options] parser\n\n")
    _T("Where valid options are:\n")
-	_T("   -f file    : Input file (overrides parser settings)\n")
+   _T("   -D level   : Set debug level\n")
+   _T("   -f file    : Input file (overrides parser settings)\n")
    _T("   -h         : Show this help\n")
-	_T("   -i         : Uses standard input instead of file defined in parser\n" )
-	_T("   -t level   : Set trace level (overrides parser settings)\n")
+	_T("   -i         : Use standard input instead of file defined in parser\n" )
+#ifdef _WIN32
+   _T("   -s         : Use VSS snapshots (overrides parser settings)\n")
+#endif
+   _T("   -t level   : Set trace level (overrides parser settings)\n")
    _T("   -v         : Show version and exit\n")
    _T("\n");
+
+/**
+ * Debug writer
+ */
+static void DebugWriter(const TCHAR *tag, const TCHAR *message)
+{
+   _tprintf(_T("[%s] %s\n"), tag, message);
+}
 
 /**
  * Trace callback
@@ -97,15 +106,21 @@ int main(int argc, char *argv[])
 	BYTE *xml;
 	UINT32 size;
 	TCHAR *inputFile = NULL;
+#ifdef _WIN32
+   bool vssSnapshots = false;
+#endif
 
    InitNetXMSProcess(true);
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "f:hit:v")) != -1)
+	while((ch = getopt(argc, argv, "D:f:hist:v")) != -1)
    {
 		switch(ch)
 		{
+         case 'D':
+            nxlog_set_debug_level(strtol(optarg, NULL, 0));
+            break;
 			case 'h':
 				_tprintf(m_helpText);
             return 0;
@@ -120,6 +135,11 @@ int main(int argc, char *argv[])
 				inputFile = optarg;
 #endif
 				break;
+#ifdef _WIN32
+         case 's':
+            vssSnapshots = true;
+            break;
+#endif
 			case 't':
 				traceLevel = strtol(optarg, NULL, 0);
 				break;
@@ -135,6 +155,8 @@ int main(int argc, char *argv[])
       _tprintf(_T("Required arguments missing\n"));
       return 1;
    }
+
+   nxlog_set_debug_writer(DebugWriter);
 
    InitLogParserLibrary();
    SetLogParserTraceCallback(LoggerCallback);
@@ -160,8 +182,12 @@ int main(int argc, char *argv[])
 				parser->setTraceLevel(traceLevel);
 			if (inputFile != NULL)
 				parser->setFileName(inputFile);
+#ifdef _WIN32
+         if (vssSnapshots)
+            parser->setSnapshotMode(true);
+#endif
 
-			m_stopCondition = ConditionCreate(TRUE);
+			m_stopCondition = ConditionCreate(true);
 			thread = ThreadCreateEx(ParserThread, 0, parser);
 #ifdef _WIN32
 			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),
