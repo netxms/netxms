@@ -102,7 +102,7 @@ protected:
 
 protected:
   // Entry for each Callstack-Entry
-  typedef struct CallstackEntry
+  struct CallstackEntry
   {
     DWORD64 offset;  // if 0, we have no valid entry
     CHAR name[STACKWALK_MAX_NAMELEN];
@@ -117,9 +117,9 @@ protected:
     CHAR moduleName[STACKWALK_MAX_NAMELEN];
     DWORD64 baseOfImage;
     CHAR loadedImageName[STACKWALK_MAX_NAMELEN];
-  } CallstackEntry;
+  };
 
-  typedef enum CallstackEntryType {firstEntry, nextEntry, lastEntry};
+  enum CallstackEntryType {firstEntry, nextEntry, lastEntry};
 
   virtual void OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUserName);
   virtual void OnLoadModule(LPCSTR img, LPCSTR mod, DWORD64 baseAddr, DWORD size, DWORD result, LPCSTR symType, LPCSTR pdbName, ULONGLONG fileVersion);
