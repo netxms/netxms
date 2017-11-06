@@ -354,6 +354,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\vss.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\vss_srv2003.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\vss_xp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\wevt.cpp"
 				>
 			</File>

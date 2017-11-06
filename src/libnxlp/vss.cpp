@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: wevt.cpp
+** File: vss.cpp
 **
 **/
 
@@ -29,6 +29,47 @@
 #include <comdef.h>
 
 #define DEBUG_TAG    _T("logwatch.vss")
+
+/**
+ * Create file snapshot using VSS (XP version)
+ */
+FileSnapshot *CreateSnapshotXP(const TCHAR *path);
+
+/**
+ * Destroy backup components (XP version)
+ */
+static void DestroyBackupComponentsXP(void *bc)
+{
+   static_cast<IVssBackupComponents*>(bc)->Release();
+}
+
+/**
+ * Create file snapshot using VSS (Server 2003 version)
+ */
+FileSnapshot *CreateSnapshotSrv2003(const TCHAR *path);
+
+/**
+ * Destroy backup components (Server 2003 version)
+ */
+static void DestroyBackupComponentsSrv2003(void *bc)
+{
+   static_cast<IVssBackupComponents*>(bc)->Release();
+}
+
+/**
+ * Entry point
+ */
+HRESULT (STDAPICALLTYPE *__CreateVssBackupComponents)(IVssBackupComponents **) = NULL;
+
+/**
+ * Selected creator function
+ */
+static FileSnapshot *(*__CreateSnapshot)(const TCHAR *) = NULL;
+
+/**
+ * Selected IVssBackupComponents destructor function
+ */
+static void (*__DestroyBackupComponents)(void *) = NULL;
 
 /**
 * Helper function to display error and return failure in FileSnapshot::create
@@ -43,12 +84,12 @@ inline FileSnapshot *CreateFailure(HRESULT hr, IVssBackupComponents *bc, const T
 }
 
 /**
-* Create file snapshot using VSS
-*/
-FileSnapshot *FileSnapshot::create(const TCHAR *path)
+ * Create file snapshot using VSS (generic version)
+ */
+static FileSnapshot *CreateSnapshotGeneric(const TCHAR *path)
 {
    IVssBackupComponents *bc;
-   HRESULT hr = CreateVssBackupComponents(&bc);
+   HRESULT hr = __CreateVssBackupComponents(&bc);
    if (FAILED(hr))
       return CreateFailure(hr, NULL, _T("Call to CreateVssBackupComponents failed (%s) HRESULT=0x%08X"));
 
@@ -104,26 +145,90 @@ FileSnapshot *FileSnapshot::create(const TCHAR *path)
    String sname(prop.m_pwszSnapshotDeviceObject);
    sname.append(s);
 
-   FileSnapshot *object = new FileSnapshot();
-   object->m_handle = bc;
-   object->m_name = _tcsdup(sname);
+   FileSnapshot *object = (FileSnapshot *)malloc(sizeof(FileSnapshot));
+   object->handle = bc;
+   object->name = _tcsdup(sname);
    return object;
 }
 
 /**
- * File snapshot object constructor
+ * Destroy backup components
  */
-FileSnapshot::FileSnapshot()
+static void DestroyBackupComponentsGeneric(void *bc)
 {
-   m_handle = NULL;
-   m_name = NULL;
+   static_cast<IVssBackupComponents*>(bc)->Release();
 }
 
 /**
- * File snapshot destructor
+ * Create file snapshot
  */
-FileSnapshot::~FileSnapshot()
+FileSnapshot *CreateFileSnapshot(const TCHAR *path)
 {
-   m_handle->Release();
-   free(m_name);
+   return __CreateSnapshot(path);
+}
+
+/**
+ * Destroy file snapshot
+ */
+void DestroyFileSnapshot(FileSnapshot *snapshot)
+{
+   __DestroyBackupComponents(snapshot->handle);
+   free(snapshot->name);
+   free(snapshot);
+}
+
+/**
+ * Initialize VSS wrapper
+ */
+bool InitVSSWrapper()
+{
+   HMODULE lib = LoadLibrary(_T("vssapi.dll"));
+   if (lib == NULL)
+   {
+      TCHAR buffer[1024];
+      nxlog_write_generic(NXLOG_ERROR, _T("Cannot load vssapi.dll (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      return false;
+   }
+
+	OSVERSIONINFOEX ver;
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	if (!GetVersionEx((OSVERSIONINFO *)&ver))
+   {
+      TCHAR buffer[1024];
+      nxlog_write_generic(NXLOG_ERROR, _T("Cannot get Windows version (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		return false;
+   }
+
+   if ((ver.dwMajorVersion == 5) && (ver.dwMinorVersion == 1))
+   {
+      // Windows XP
+      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z");
+      __CreateSnapshot = CreateSnapshotXP;
+      __DestroyBackupComponents = DestroyBackupComponentsXP;
+   }
+   else if ((ver.dwMajorVersion == 5) && (ver.dwMinorVersion == 2))
+   {
+      // Windows Server 2003
+#ifdef _WIN64
+      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YAJPEAPEAVIVssBackupComponents@@@Z");
+#else
+      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z");
+#endif
+      __CreateSnapshot = CreateSnapshotSrv2003;
+      __DestroyBackupComponents = DestroyBackupComponentsSrv2003;
+   }
+   else
+   {
+      // Assume Vista or later
+      __CreateVssBackupComponents = (HRESULT (STDAPICALLTYPE *)(IVssBackupComponents **))GetProcAddress(lib, "CreateVssBackupComponentsInternal");
+      __CreateSnapshot = CreateSnapshotGeneric;
+      __DestroyBackupComponents = DestroyBackupComponentsGeneric;
+   }
+
+   if (__CreateVssBackupComponents == NULL)
+   {
+      nxlog_write_generic(NXLOG_ERROR, _T("Cannot find entry point for vssapi.dll"));
+		return false;
+   }
+   return true;
 }
