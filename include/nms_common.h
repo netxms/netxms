@@ -53,7 +53,9 @@
 #endif
 
 // prevent defining ETIMEDOUT, ECONNRESET, etc. to wrong values
+#ifndef ALLOW_CRT_POSIX_ERROR_CODES
 #define _CRT_NO_POSIX_ERROR_CODES
+#endif
 
 #endif   /* _WIN32 */
 
