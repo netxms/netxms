@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Message_compiler>
-      <CommandLineTemplate>mc -s -U -h $(ProjectDir) -r $(ProjectDir) %(Filename)%(Extension)
+      <CommandLineTemplate>mc -U -h $(ProjectDir) -r $(ProjectDir) %(Filename)%(Extension)
 del $(ProjectDir)messages.rc
 </CommandLineTemplate>
       <Outputs>%(Filename).h;MSG00001.bin</Outputs>
