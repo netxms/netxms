@@ -682,7 +682,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
 
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
+         nxlog_debug(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
             static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
          readFromStart = true;   // Assume file rotation
          ctime = st.st_ctime;

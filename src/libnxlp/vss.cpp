@@ -28,15 +28,15 @@
 #include <vsbackup.h>
 #include <comdef.h>
 
-#define DEBUG_TAG    _T("logwatch.vss")
-
 /**
 * Helper function to display error and return failure in FileSnapshot::create
 */
 inline FileSnapshot *CreateFailure(HRESULT hr, IVssBackupComponents *bc, const TCHAR *format)
 {
    _com_error err(hr);
-   nxlog_debug_tag(DEBUG_TAG, 3, format, err.ErrorMessage(), hr);
+   TCHAR buffer[8192];
+   _sntprintf(buffer, 8192, format, err.ErrorMessage(), hr);
+   nxlog_debug(3, _T("LogWatch: %s"), buffer);
    if (bc != NULL)
       bc->Release();
    return NULL;
@@ -78,7 +78,7 @@ FileSnapshot *FileSnapshot::create(const TCHAR *path)
    TCHAR device[64];
    _tcslcpy(device, path, std::min(static_cast<size_t>(64), len + 1));
    _tcslcat(device, _T("\\"), 64);
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Adding device %s to VSS snapshot"), device);
+   nxlog_debug(7, _T("LogWatch: Adding device %s to VSS snapshot"), device);
 
    VSS_ID snapshotId;
    hr = bc->AddToSnapshotSet(device, GUID_NULL, &snapshotId);
@@ -100,7 +100,7 @@ FileSnapshot *FileSnapshot::create(const TCHAR *path)
    if (FAILED(hr))
       return CreateFailure(hr, bc, _T("Call to IVssBackupComponents::GetSnapshotProperties failed (%s) HRESULT=0x%08X"));
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Created VSS snapshot %s"), prop.m_pwszSnapshotDeviceObject);
+   nxlog_debug(7, _T("LogWatch: Created VSS snapshot %s"), prop.m_pwszSnapshotDeviceObject);
    String sname(prop.m_pwszSnapshotDeviceObject);
    sname.append(s);
 
