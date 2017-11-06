@@ -129,7 +129,7 @@ void InstallService(const TCHAR *pszExecName, const TCHAR *pszLogin, const TCHAR
       return;
    }
 
-   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), pszExecName, g_configFile);
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\""), pszExecName, g_configFile);
    hService = CreateService(hMgr, NXCPROXY_SERVICE_NAME, _T("NetXMS Client Proxy"),
                             GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
