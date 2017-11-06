@@ -55,9 +55,9 @@ static TCHAR m_helpText[] =
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *message)
+static void DebugWriter(const TCHAR *message)
 {
-   _tprintf(_T("[%s] %s\n"), tag, message);
+   _tprintf(_T("%s\n"), message);
 }
 
 /**
