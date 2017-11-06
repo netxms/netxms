@@ -55,7 +55,6 @@
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
-#define _WINSOCKAPI_    /* Prevent inclusion of winsock.h in windows.h */
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
