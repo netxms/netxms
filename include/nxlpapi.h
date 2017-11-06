@@ -91,6 +91,19 @@ typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const T
 
 class LIBNXLP_EXPORTABLE LogParser;
 
+#ifdef _WIN32
+
+/**
+ * Snapshot handle
+ */
+struct FileSnapshot
+{
+   void *handle;
+   TCHAR *name;
+};
+
+#endif
+
 /**
  * Per object rule statistics
  */
@@ -337,5 +350,19 @@ void LIBNXLP_EXPORTABLE CleanupLogParserLibrary();
  * Set trace callback for log parser library
  */
 void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list));
+
+#ifdef _WIN32
+
+/**
+ * Create file snapshot
+ */
+FileSnapshot LIBNXLP_EXPORTABLE *CreateFileSnapshot(const TCHAR *path);
+
+/**
+* Destroy file snapshot
+*/
+void LIBNXLP_EXPORTABLE DestroyFileSnapshot(FileSnapshot *snapshot);
+
+#endif
 
 #endif
