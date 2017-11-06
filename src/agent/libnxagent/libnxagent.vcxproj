@@ -170,7 +170,6 @@
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="cmdexec.cpp" />
     <ClCompile Include="dfile_info.cpp" />
-    <ClCompile Include="lora_device_data.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="tools.cpp" />

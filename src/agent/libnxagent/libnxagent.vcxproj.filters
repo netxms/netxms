@@ -24,9 +24,6 @@
     <ClCompile Include="dfile_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lora_device_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
