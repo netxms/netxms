@@ -415,7 +415,10 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 
 #ifdef _WIN32
    if (m_useSnapshot)
+   {
+	   LogParserTrace(0, _T("LogParser: using VSS snapshots for file \"%s\""), m_fileName);
       return monitorFileWithSnapshot(stopCondition, readFromCurrPos);
+   }
 #endif
 
 	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
@@ -613,7 +616,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
    bool readFromStart = !readFromCurrPos;
    bool firstRead = true;
 
-   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started (using VSS snapshots)"), m_fileName);
    bool exclusionPeriod = false;
    while(true)
    {
@@ -658,7 +661,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
          continue;
       }
 
-      FileSnapshot *snapshot = FileSnapshot::create(fname);
+      FileSnapshot *snapshot = CreateFileSnapshot(fname);
       if (snapshot == NULL)
       {
          setStatus(LPS_VSS_FAILURE);
@@ -667,10 +670,10 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
          continue;
       }
 
-      int fh = _tsopen(snapshot->name(), O_RDONLY, _SH_DENYNO);
+      int fh = _tsopen(snapshot->name, O_RDONLY, _SH_DENYNO);
       if (fh == -1)
       {
-         delete snapshot;
+         DestroyFileSnapshot(snapshot);
          setStatus(LPS_OPEN_ERROR);
          if (ConditionWait(stopCondition, 10000))  // retry in 10 seconds
             break;
@@ -678,7 +681,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       }
 
       setStatus(LPS_RUNNING);
-      LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name());
+      LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
 
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
       {
@@ -715,7 +718,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
 
-      delete snapshot;
+      DestroyFileSnapshot(snapshot);
       if (ConditionWait(stopCondition, 10000))
          break;
    }

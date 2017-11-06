@@ -32,23 +32,18 @@ void LogParserTrace(int level, const TCHAR *format, ...);
 
 #ifdef _WIN32
 
-class IVssBackupComponents;
-
-class FileSnapshot
+/**
+ * Snapshot handle
+ */
+struct FileSnapshot
 {
-private:
-   IVssBackupComponents *m_handle;
-   TCHAR *m_name;
-
-   FileSnapshot();
-
-public:
-   static FileSnapshot *create(const TCHAR *path);
-
-   ~FileSnapshot();
-
-   const TCHAR *name() const { return m_name; }
+   void *handle;
+   TCHAR *name;
 };
+
+bool InitVSSWrapper();
+FileSnapshot *CreateFileSnapshot(const TCHAR *path);
+void DestroyFileSnapshot(FileSnapshot *snapshot);
 
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 bool InitEventLogParsersV6();

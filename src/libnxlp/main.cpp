@@ -80,6 +80,7 @@ void LIBNXLP_EXPORTABLE InitLogParserLibrary()
 		s_eventLogV6 = false;
 		InitEventLogParsers();
 	}
+   InitVSSWrapper();
 #endif
 }
 
