@@ -36,6 +36,12 @@
     <ClCompile Include="vss.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vss_srv2003.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vss_xp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libnxlp.h">

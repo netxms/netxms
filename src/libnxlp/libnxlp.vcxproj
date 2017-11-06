@@ -173,6 +173,8 @@
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="rule.cpp" />
     <ClCompile Include="vss.cpp" />
+    <ClCompile Include="vss_srv2003.cpp" />
+    <ClCompile Include="vss_xp.cpp" />
     <ClCompile Include="wevt.cpp" />
   </ItemGroup>
   <ItemGroup>
