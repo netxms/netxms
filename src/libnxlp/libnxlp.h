@@ -32,23 +32,11 @@ void LogParserTrace(int level, const TCHAR *format, ...);
 
 #ifdef _WIN32
 
-/**
- * Snapshot handle
- */
-struct FileSnapshot
-{
-   void *handle;
-   TCHAR *name;
-};
-
-bool InitVSSWrapper();
-FileSnapshot *CreateFileSnapshot(const TCHAR *path);
-void DestroyFileSnapshot(FileSnapshot *snapshot);
-
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 bool InitEventLogParsersV6();
 void InitEventLogParsers();
 void CleanupEventLogParsers();
+bool InitVSSWrapper();
 
 #endif
 
