@@ -110,7 +110,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 				for(int i = 0; i < dciList.length; i++)
 				{
 					if (dciList[i].type == ChartDciConfig.ITEM)
-						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1);
+						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1, false);
 					else
 						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
 				}

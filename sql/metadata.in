@@ -10,7 +10,7 @@ INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMinor',DB_SCHEMA
 INSERT INTO metadata (var_name,var_value) VALUES ('Syntax',DB_SYNTAX);
 
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)');
+	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null,raw_value varchar(255) null)');
 #if defined(DB_MSSQL)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('IDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)');

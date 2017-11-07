@@ -50,6 +50,8 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
 				return RegionalSettings.getDateTimeFormat().format(((DciDataRow)element).getTimestamp());
 			case 1:
 				return ((DciDataRow)element).getValueAsString();
+         case 2:
+            return ((DciDataRow)element).getRawValueAsString();
 		}
 		return null;
 	}

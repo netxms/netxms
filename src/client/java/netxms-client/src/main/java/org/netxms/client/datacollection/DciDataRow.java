@@ -29,14 +29,26 @@ public class DciDataRow
 {
 	private Date timestamp;
 	private Object value;
+	private Object rawValue;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
 		super();
 		this.timestamp = timestamp;
 		this.value = value;
+		this.rawValue = null;
 	}
 
+	/**
+	 * Set raw value
+	 * 
+	 * @param rawValue new raw value
+	 */
+	public void setRawValue(Object rawValue)
+	{
+	   this.rawValue = rawValue;
+	}
+	
 	/**
 	 * @return the timestamp
 	 */
@@ -58,7 +70,7 @@ public class DciDataRow
 	 */
 	public String getValueAsString()
 	{
-		return value.toString();
+		return (value != null) ? value.toString() : "";
 	}
 
 	/**
@@ -90,6 +102,50 @@ public class DciDataRow
 	}
 
    /**
+    * @return raw value
+    */
+   public Object getRawValue()
+   {
+      return rawValue;
+   }
+   
+   /**
+    * @return raw value as string
+    */
+   public String getRawValueAsString()
+   {
+      return (rawValue != null) ? rawValue.toString() : "";
+   }
+
+   /**
+    * @return raw value as long
+    */
+   public long getRawValueAsLong()
+   {
+      if (rawValue instanceof Long)
+         return ((Long)rawValue).longValue();
+
+      if (rawValue instanceof Double)
+         return ((Double)rawValue).longValue();
+      
+      return 0;
+   }
+
+   /**
+    * @return raw value as double
+    */
+   public double getRawValueAsDouble()
+   {
+      if (rawValue instanceof Long)
+         return ((Long)rawValue).doubleValue();
+
+      if (rawValue instanceof Double)
+         return ((Double)rawValue).doubleValue();
+      
+      return 0;
+   }
+	
+   /**
     * Invert value
     */
    public void invert()
@@ -106,6 +162,6 @@ public class DciDataRow
    @Override
    public String toString()
    {
-      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + "]";
+      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + ", rawValue=" + rawValue + "]";
    }
 }

@@ -3,6 +3,7 @@
 *
 
 - Event groups
+- Raw DCI values saved in history along with corresponding transformed values
 - Fixed issues: NX-900, NX-1102, NX-1199, NX-1219, NX-1289, NX-1292, NX-1332, NX-1345
 
 

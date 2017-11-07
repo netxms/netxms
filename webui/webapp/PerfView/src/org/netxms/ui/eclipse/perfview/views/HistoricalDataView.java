@@ -73,7 +73,9 @@ public class HistoricalDataView extends ViewPart
 	private long dciId;
 	private String nodeName;
 	private String[] subparts;
-	private String tableName, instance, column;
+	private String tableName;
+	private String instance;
+	private String column;
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -110,10 +112,10 @@ public class HistoricalDataView extends ViewPart
          subparts = parts[1].split("@");
          try
          {
-         dciId = Long.parseLong(subparts[0]);
-         tableName = URLDecoder.decode(subparts[1], "UTF-8"); //$NON-NLS-1$
-         instance = URLDecoder.decode(subparts[2], "UTF-8"); //$NON-NLS-1$
-         column = URLDecoder.decode(subparts[3], "UTF-8"); //$NON-NLS-1$
+            dciId = Long.parseLong(subparts[0]);
+            tableName = URLDecoder.decode(subparts[1], "UTF-8"); //$NON-NLS-1$
+            instance = URLDecoder.decode(subparts[2], "UTF-8"); //$NON-NLS-1$
+            column = URLDecoder.decode(subparts[3], "UTF-8"); //$NON-NLS-1$
          }
          catch(NumberFormatException e)
          {
@@ -125,8 +127,9 @@ public class HistoricalDataView extends ViewPart
          }
       }
       else
+      {
          dciId = Long.parseLong(parts[1]);		
-		
+      }
 		setPartName(nodeName + ": [" + (tableName == null ? Long.toString(dciId) : tableName) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
@@ -136,8 +139,10 @@ public class HistoricalDataView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue };
-		final int[] widths = { 150, 400 };
+		final String[] names = (tableName != null) ? 
+         new String[] { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue } :
+         new String[] { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue, "Raw value" };
+		final int[] widths = { 150, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());
@@ -272,7 +277,7 @@ public class HistoricalDataView extends ViewPart
 			   if (subparts != null)
 			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit);
+			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
 			   
 				runInUIThread(new Runnable() {
 					@Override

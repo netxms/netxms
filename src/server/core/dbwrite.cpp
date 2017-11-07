@@ -23,6 +23,40 @@
 #include "nxcore.h"
 
 /**
+ * Delayed SQL request
+ */
+struct DELAYED_SQL_REQUEST
+{
+   TCHAR *query;
+   int bindCount;
+   BYTE *sqlTypes;
+   TCHAR *bindings[1]; /* actual size determined by bindCount field */
+};
+
+/**
+ * Delayed request for idata_ INSERT
+ */
+struct DELAYED_IDATA_INSERT
+{
+   time_t timestamp;
+   UINT32 nodeId;
+   UINT32 dciId;
+   TCHAR rawValue[MAX_RESULT_LENGTH];
+   TCHAR transformedValue[MAX_RESULT_LENGTH];
+};
+
+/**
+ * Delayed request for raw_dci_values UPDATE
+ */
+struct DELAYED_RAW_DATA_UPDATE
+{
+   time_t timestamp;
+   UINT32 dciId;
+   TCHAR rawValue[MAX_RESULT_LENGTH];
+   TCHAR transformedValue[MAX_RESULT_LENGTH];
+};
+
+/**
  * Generic DB writer queue
  */
 Queue *g_dbWriterQueue = NULL;
@@ -117,13 +151,14 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value)
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
 {
 	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
 	rq->timestamp = timestamp;
 	rq->nodeId = nodeId;
 	rq->dciId = dciId;
-	nx_strncpy(rq->value, value, MAX_RESULT_LENGTH);
+   _tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
+   _tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
 	g_dciDataWriterQueue->put(rq);
 	g_idataWriteRequests++;
 }
@@ -136,8 +171,8 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 	DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
 	rq->timestamp = timestamp;
 	rq->dciId = dciId;
-	nx_strncpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
-	nx_strncpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
+	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
 	g_dciRawDataWriterQueue->put(rq);
 	g_rawDataWriteRequests++;
 }
@@ -207,13 +242,14 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (g_dbSyntax == DB_SYNTAX_ORACLE)
 				{
 	            TCHAR query[256];
-               _sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (?,?,?)"), (int)rq->nodeId);
+               _sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"), (int)rq->nodeId);
                DB_STATEMENT hStmt = DBPrepare(hdb, query);
                if (hStmt != NULL)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->value, DB_BIND_STATIC);
+                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                   success = DBExecute(hStmt);
                   DBFreeStatement(hStmt);
                }
@@ -225,8 +261,10 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				else
 				{
                TCHAR query[1024];
-               _sntprintf(query, 1024, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value) VALUES (%d,%d,%s)"),
-                          (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp, (const TCHAR *)DBPrepareString(hdb, rq->value));
+               _sntprintf(query, 1024, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%s,%s)"),
+                          (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
+                          (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
+                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
                success = DBQuery(hdb, query);
 				}
 

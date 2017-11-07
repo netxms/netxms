@@ -709,7 +709,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)
-	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, pValue->getString());
+	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 

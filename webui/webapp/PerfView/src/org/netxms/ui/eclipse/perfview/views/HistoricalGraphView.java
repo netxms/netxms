@@ -433,7 +433,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                if (currentItem.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, settings.getTimeFrom(),
-                        settings.getTimeTo(), 0);
+                        settings.getTimeTo(), 0, false);
                   thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else

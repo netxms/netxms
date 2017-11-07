@@ -4041,6 +4041,7 @@ public class NXCSession
    {
       final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
       int rows = 0;
+      DciDataRow row = null;
 
       try
       {
@@ -4052,25 +4053,24 @@ public class NXCSession
 
          for(int i = 0; i < rows; i++)
          {
-            long timestamp = inputStream.readUnsignedInt() * 1000; // convert to
-            // milliseconds
-
+            long timestamp = inputStream.readUnsignedInt() * 1000; // convert to milliseconds
+            Object value;
             switch(dataType)
             {
                case DataCollectionItem.DT_INT:
-                  data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readInt())));
+                  value = new Long(inputStream.readInt());
                   break;
                case DataCollectionItem.DT_UINT:
-                  data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readUnsignedInt())));
+                  value = new Long(inputStream.readUnsignedInt());
                   break;
                case DataCollectionItem.DT_INT64:
                case DataCollectionItem.DT_UINT64:
                   inputStream.skipBytes(4); // padding
-                  data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readLong())));
+                  value = new Long(inputStream.readLong());
                   break;
                case DataCollectionItem.DT_FLOAT:
                   inputStream.skipBytes(4); // padding
-                  data.addDataRow(new DciDataRow(new Date(timestamp), new Double(inputStream.readDouble())));
+                  value = new Double(inputStream.readDouble());
                   break;
                case DataCollectionItem.DT_STRING:
                   StringBuilder sb = new StringBuilder(256);
@@ -4086,8 +4086,22 @@ public class NXCSession
                      sb.append(ch);
                   }
                   inputStream.skipBytes(count * 2);
-                  data.addDataRow(new DciDataRow(new Date(timestamp), sb.toString()));
+                  value = sb.toString();
                   break;
+               default:
+                  value = null;
+                  break;
+            }
+            if (timestamp > 0)
+            {
+               row = new DciDataRow(new Date(timestamp), value);
+               data.addDataRow(row);
+            }
+            else
+            {
+               // raw value for previous entry
+               if (row != null)
+                  row.setRawValue(value);
             }
          }
       }
@@ -4110,11 +4124,13 @@ public class NXCSession
     * @param from       Start of time range or null for no limit
     * @param to         End of time range or null for no limit
     * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
+    * @param includeRawValues if true raw DCI values will be included into set
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows) throws IOException, NXCException
+   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows, boolean includeRawValues) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -4129,6 +4145,7 @@ public class NXCSession
       }
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setField(NXCPCodes.VID_INCLUDE_RAW_VALUES, includeRawValues);
 
       DciData data = new DciData(nodeId, dciId);
 
@@ -4154,7 +4171,8 @@ public class NXCSession
          if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
          {
             // adjust boundaries for next request
-            if (rowsRemaining > 0) rowsRemaining -= rowsReceived;
+            if (rowsRemaining > 0) 
+               rowsRemaining -= rowsReceived;
 
             // Rows goes in newest to oldest order, so if we need to
             // retrieve additional data, we should update timeTo limit
@@ -4184,13 +4202,15 @@ public class NXCSession
     * @param from    Start of time range or null for no limit
     * @param to      End of time range or null for no limit
     * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+    * @param includeRawValues if true raw values will be included into result set
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows) throws IOException, NXCException
+   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, boolean includeRawValues)
+         throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows);
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, includeRawValues);
    }
 
    /**
@@ -4208,13 +4228,12 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedTableData(
-      long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows)
-      throws IOException, NXCException
+   public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows)
+         throws IOException, NXCException
    {
       if (instance == null || dataColumn == null) 
          throw new NXCException(RCC.INVALID_ARGUMENT);
-      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, false);
    }
 
    /**

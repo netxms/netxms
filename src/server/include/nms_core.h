@@ -551,7 +551,7 @@ private:
    void applyTemplate(NXCPMessage *pRequest);
    void getCollectedData(NXCPMessage *pRequest);
    void getTableCollectedData(NXCPMessage *pRequest);
-	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType);
+	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues);
 	void clearDCIData(NXCPMessage *pRequest);
 	void forceDCIPoll(NXCPMessage *pRequest);
    void changeDCIStatus(NXCPMessage *pRequest);
@@ -823,39 +823,6 @@ public:
 };
 
 /**
- * Delayed SQL request
- */
-typedef struct
-{
-	TCHAR *query;
-	int bindCount;
-	BYTE *sqlTypes;
-	TCHAR *bindings[1]; /* actual size determined by bindCount field */
-} DELAYED_SQL_REQUEST;
-
-/**
- * Delayed request for idata_ INSERT
- */
-typedef struct
-{
-	time_t timestamp;
-	UINT32 nodeId;
-	UINT32 dciId;
-	TCHAR value[MAX_RESULT_LENGTH];
-} DELAYED_IDATA_INSERT;
-
-/**
- * Delayed request for raw_dci_values UPDATE
- */
-typedef struct
-{
-	time_t timestamp;
-	UINT32 dciId;
-	TCHAR rawValue[MAX_RESULT_LENGTH];
-	TCHAR transformedValue[MAX_RESULT_LENGTH];
-} DELAYED_RAW_DATA_UPDATE;
-
-/**
  * Graph ACL entry
  */
 struct GRAPH_ACL_ENTRY
@@ -1038,7 +1005,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value);
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void StartDBWriter();
 void StopDBWriter();

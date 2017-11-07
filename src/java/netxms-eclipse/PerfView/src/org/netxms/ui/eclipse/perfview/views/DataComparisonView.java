@@ -675,7 +675,7 @@ public class DataComparisonView extends ViewPart
 				{
 					GraphItem item = items.get(i);
 					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
-							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1) :
+							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, false) :
 							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;

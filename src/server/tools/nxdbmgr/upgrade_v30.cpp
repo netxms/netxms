@@ -23,6 +23,26 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.10 to 30.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null,raw_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
+
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   for(int i = 0; i < targets->size(); i++)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD raw_value varchar(255)"), targets->get(i));
+      CHK_EXEC(SQLQuery(query));
+   }
+   delete targets;
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 30.9 to 30.10
  */
 static bool H_UpgradeFromV9()
@@ -522,6 +542,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 10, 30, 11, H_UpgradeFromV10 },
    { 9, 30, 10, H_UpgradeFromV9 },
    { 8, 30, 9, H_UpgradeFromV8 },
    { 7, 30, 8, H_UpgradeFromV7 },

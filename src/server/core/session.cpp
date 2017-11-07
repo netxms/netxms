@@ -3828,7 +3828,7 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
 /**
  * Prepare statement for reading data from idata/tdata table
  */
-static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, const TCHAR *condition)
+static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, bool withRawValues, const TCHAR *condition)
 {
 	TCHAR query[512];
 
@@ -3836,22 +3836,26 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-			           (int)maxRows, tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix);
+			_sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
+			         (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+			         tablePrefix, (int)nodeId, condition, tablePrefix);
 			break;
 		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
-			           tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+			         tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+			         tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 			break;
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
-			           tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+			         tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+			         tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 			break;
 		case DB_SYNTAX_DB2:
-		   _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-		              tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+		   _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+		            tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+		            tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 		   break;
 		default:
 			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareDataSelect"));
@@ -3863,7 +3867,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
 /**
  * Get collected data for table or simple DCI
  */
-bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType)
+bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType, bool withRawValues)
 {
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16 };
 
@@ -3901,7 +3905,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
    DCI_DATA_ROW *pCurr;
 
 	// If only last value requested, try to get it from cache first
-	if ((maxRows == 1) && (timeTo == 0))
+	if ((maxRows == 1) && (timeTo == 0) && !withRawValues)
 	{
 	   debugPrintf(7, _T("getCollectedDataFromDB: maxRows set to 1, will try to read cached value"));
 
@@ -4037,7 +4041,7 @@ read_from_db:
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, condition);
+	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, withRawValues, condition);
 	if (hStmt != NULL)
 	{
 		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
@@ -4131,6 +4135,48 @@ read_from_db:
 #endif
                      SwapUCS2String(pCurr->value.string);
                      break;
+               }
+
+               if (withRawValues)
+               {
+                  pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
+                  if (rows == allocated)
+                  {
+                     allocated += 8192;
+                     pData = (DCI_DATA_HEADER *)realloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+                     pCurr = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
+                  }
+                  rows++;
+
+                  pCurr->timeStamp = 0;   // raw value indicator
+                  switch(dataType)
+                  {
+                     case DCI_DT_INT:
+                     case DCI_DT_UINT:
+                        pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 2));
+                        break;
+                     case DCI_DT_INT64:
+                     case DCI_DT_UINT64:
+                        pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 2));
+                        break;
+                     case DCI_DT_FLOAT:
+                        pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 2));
+                        break;
+                     case DCI_DT_STRING:
+   #ifdef UNICODE
+   #ifdef UNICODE_UCS4
+                        DBGetField(hResult, 2, szBuffer, MAX_DCI_STRING_VALUE);
+                        ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+   #else
+                        DBGetField(hResult, 2, pCurr->value.string, MAX_DCI_STRING_VALUE);
+   #endif
+   #else
+                        DBGetField(hResult, 2, szBuffer, MAX_DCI_STRING_VALUE);
+                        mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+   #endif
+                        SwapUCS2String(pCurr->value.string);
+                        break;
+                  }
                }
 				}
 				else
@@ -4228,7 +4274,8 @@ void ClientSession::getCollectedData(NXCPMessage *request)
 			{
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
-					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_ITEM);
+					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object,
+					         DCO_TYPE_ITEM, request->getFieldAsBoolean(VID_INCLUDE_RAW_VALUES));
 				}
 				else
 				{
@@ -4276,7 +4323,7 @@ void ClientSession::getTableCollectedData(NXCPMessage *request)
 			{
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
-					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE);
+					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE, false);
 				}
 				else
 				{
