@@ -97,6 +97,7 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.DialogData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -950,7 +951,7 @@ public class AgentFileManager extends ViewPart
 
       final AgentFile sf = ((AgentFile)objects[0]);
 
-      ConsoleJob job = new ConsoleJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
+      ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
@@ -972,7 +973,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            });
+            }, this);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1012,7 +1013,7 @@ public class AgentFileManager extends ViewPart
       }
       else
       {      
-         ConsoleJob job = new ConsoleJob("Download from agent", null, Activator.PLUGIN_ID, null) {
+         ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob("Download from agent", null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
@@ -1030,7 +1031,7 @@ public class AgentFileManager extends ViewPart
                final File zipFile = File.createTempFile("download_", ".zip");
                FileOutputStream fos = new FileOutputStream(zipFile);
                ZipOutputStream zos = new ZipOutputStream(fos);
-               downloadDir(sf, sf.getName(), zos, monitor);
+               downloadDir(sf, sf.getName(), zos, monitor, this);
                zos.close();
                fos.close();
                
@@ -1064,7 +1065,7 @@ public class AgentFileManager extends ViewPart
     * @throws IOException 
     * @throws NXCException 
     */
-   private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
+   private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor, ConsoleJobCallingServerJob job) throws NXCException, IOException
    {
       List<AgentFile> files = sf.getChildren();
       if (files == null)
@@ -1076,7 +1077,7 @@ public class AgentFileManager extends ViewPart
       {
          if (f.isDirectory())
          {
-            downloadDir(f, localFileName + "/" + f.getName(), zos, monitor);
+            downloadDir(f, localFileName + "/" + f.getName(), zos, monitor, job);
          }
          else
          {
@@ -1091,7 +1092,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            });
+            }, job);
             
        		FileInputStream fis = new FileInputStream(file.getFile());
        		ZipEntry zipEntry = new ZipEntry(localFileName + "/" + f.getName());
@@ -1115,7 +1116,7 @@ public class AgentFileManager extends ViewPart
     */
    private void downloadFile(final String remoteName)
    {
-      ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+	   ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
@@ -1131,7 +1132,7 @@ public class AgentFileManager extends ViewPart
                {
                   monitor.worked((int)workDone);
                }
-            });
+            }, this);
             
             DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
             runInUIThread(new Runnable() {

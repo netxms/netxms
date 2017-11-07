@@ -2117,6 +2117,31 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 }
 
 /**
+ * Send custom request to agent
+ */
+bool AgentConnection::cancelFileDownload()
+{
+   UINT32 dwRqId, rcc;
+   NXCPMessage msg(getProtocolVersion());
+   dwRqId = generateRequestId();
+   msg.setId(dwRqId);
+   msg.setCode(CMD_CANCEL_FILE_DOWNLOAD);
+   msg.setField(VID_REQUEST_ID, m_dwDownloadRequestId);
+   bool success = false;
+
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *result = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if(result != NULL && result->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+      {
+         success = true;
+      }
+      delete result;
+   }
+   return success;
+}
+
+/**
  * Prepare for file download
  */
 UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
