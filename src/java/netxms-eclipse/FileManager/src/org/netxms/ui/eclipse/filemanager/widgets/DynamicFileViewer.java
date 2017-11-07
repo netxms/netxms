@@ -31,6 +31,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -189,7 +190,7 @@ public class DynamicFileViewer extends BaseFileViewer
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
       showMessage(ERROR, Messages.get().FileViewer_NotifyFollowConnectionLost);
       
-      restartJob = new ConsoleJob(Messages.get().DynamicFileViewer_RestartFileTracking, null, Activator.PLUGIN_ID, null) {
+      restartJob = new ConsoleJobCallingServerJob(Messages.get().DynamicFileViewer_RestartFileTracking, null, Activator.PLUGIN_ID, null) {
          private boolean running = true;
 
          @Override
@@ -218,7 +219,7 @@ public class DynamicFileViewer extends BaseFileViewer
                      {
                         monitor.worked((int)workDone);
                      }
-                  });
+                  }, this);
 
                   // When successfully connected - display notification to client.
                   runInUIThread(new Runnable() {

@@ -104,7 +104,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
-                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool),
+                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, const TCHAR *dataDirectory);
@@ -683,11 +683,11 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag)
 {
 	if (session == NULL)
 		return false;
-	return ((CommSession *)session)->sendFile(requestId, file, offset, allowCompression);
+	return ((CommSession *)session)->sendFile(requestId, file, offset, allowCompression, cancelationFlag);
 }
 
 /**

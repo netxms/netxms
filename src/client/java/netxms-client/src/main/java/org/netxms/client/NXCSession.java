@@ -166,6 +166,7 @@ import org.netxms.client.server.AgentFile;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
 import org.netxms.client.server.ServerJob;
+import org.netxms.client.server.ServerJobIdUpdater;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
@@ -8259,9 +8260,9 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, ProgressListener listener) throws IOException, NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
-      return downloadFileFromAgent(nodeId, remoteFileName, maxFileSize, follow, null, 0, listener);
+      return downloadFileFromAgent(nodeId, remoteFileName, maxFileSize, follow, null, 0, listener, updateServerJobId);
    }
    
    /**
@@ -8278,7 +8279,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, Map<String, String> inputValues, long alarmId, ProgressListener listener) throws IOException, NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, Map<String, String> inputValues, long alarmId, ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -8301,6 +8302,8 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       remoteFileName = response.getFieldAsString(NXCPCodes.VID_FILE_NAME);
+      if(updateServerJobId != null)
+         updateServerJobId.setJobIdCallback(response.getFieldAsInt32(NXCPCodes.VID_REQUEST_ID));
       if (listener != null)
       {
          final long fileSize = waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
@@ -8315,7 +8318,7 @@ public class NXCSession
       if (remoteFile == null)
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile);
-      
+
       try
       {
          waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console

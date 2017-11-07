@@ -30,7 +30,7 @@ static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NU
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
 static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
-static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool) = NULL;
+static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
 static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 static const TCHAR *s_dataDirectory = NULL;
@@ -44,7 +44,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
-                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool),
+                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, const TCHAR *dataDirectory)
@@ -165,11 +165,11 @@ bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* c
 /**
  * Send file to server
  */
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression)
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelFlag)
 {
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
-	return s_fpSendFile(session, requestId, file, offset, allowCompression);
+	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancelFlag);
 }
 
 /**

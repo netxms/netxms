@@ -536,7 +536,7 @@ public:
    virtual void postMessage(NXCPMessage *msg) = 0;
    virtual bool sendRawMessage(NXCP_MESSAGE *msg) = 0;
    virtual void postRawMessage(NXCP_MESSAGE *msg) = 0;
-	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression) = 0;
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
@@ -786,7 +786,7 @@ void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId);
 
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression);
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag);
 
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);

@@ -10503,6 +10503,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, result,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
+            msg.setField(VID_REQUEST_ID, job->getId());
 				msg.setField(VID_FILE_NAME, result);
 				free(result);
 				delete alarm;

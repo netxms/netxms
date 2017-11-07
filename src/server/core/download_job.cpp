@@ -175,7 +175,7 @@ ServerJobResult FileDownloadJob::run()
 					{
 						success = JOB_RESULT_SUCCESS;
 					}
-					else
+					else if(getStatus() != JOB_CANCELLED && getStatus() != JOB_CANCEL_PENDING)
 					{
 						TCHAR buffer[1024];
 
@@ -265,8 +265,7 @@ ServerJobResult FileDownloadJob::run()
  */
 bool FileDownloadJob::onCancel()
 {
-   if (m_agentConnection != NULL)
-      m_agentConnection->disconnect();
+   m_agentConnection->cancelFileDownload();
 	return true;
 }
 
