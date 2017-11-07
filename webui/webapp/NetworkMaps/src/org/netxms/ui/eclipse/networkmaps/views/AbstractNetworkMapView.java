@@ -95,6 +95,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
@@ -1331,37 +1332,39 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		if (currentSelection == null)
 			return;
 
+		long objectId = 0;
 		Object object = currentSelection.getFirstElement();
 		if (object instanceof AbstractObject)
-		{
-			long objectId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getDrillDownObjectId();			
-			if (objectId != 0)
-			{
-			   Object test = session.findObjectById(objectId);
-	         if (test instanceof NetworkMap)
-	         {
-               try
-               {
-                  getSite().getPage().showView(PredefinedMap.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
-               }
-               catch(PartInitException e)
-               {
-                  MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
-               }
+			objectId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getDrillDownObjectId();
+		else if (object instanceof NetworkMapTextBox)
+		   objectId = ((NetworkMapTextBox)object).getDrillDownObjectId();
+		
+		if (objectId != 0)
+      {
+         Object test = session.findObjectById(objectId);
+         if (test instanceof NetworkMap)
+         {
+            try
+            {
+               getSite().getPage().showView(PredefinedMap.ID, Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
             }
-	         if (test instanceof Dashboard)
-	         {
-   				try
-   				{
-   					getSite().getPage().showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
-   				}
-   				catch(PartInitException e)
-               {
-                  MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
-               }
-	         }
-			}
-		}
+            catch(PartInitException e)
+            {
+               MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
+            }
+         }
+         if (test instanceof Dashboard)
+         {
+            try
+            {
+               getSite().getPage().showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE);
+            }
+            catch(PartInitException e)
+            {
+               MessageDialogHelper.openError(getSite().getShell(), Messages.get().AbstractNetworkMapView_Error, String.format("Cannot open drill-down object view: %s", e.getMessage()));
+            }
+         }
+      }
 	}
 	
 	/**

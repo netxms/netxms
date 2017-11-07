@@ -343,7 +343,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			clearDecorationSelection(false);
 			for(Object o : l)
 			{
-				if ((o instanceof NetworkMapDecoration) || (o instanceof NetworkMapDCIContainer) || (o instanceof NetworkMapDCIImage))
+				if ((o instanceof NetworkMapDecoration) || (o instanceof NetworkMapDCIContainer) || (o instanceof NetworkMapDCIImage) || (o instanceof NetworkMapDCIContainer))
 				{
 					selectedDecorations.add((NetworkMapElement)o);
 					DecorationLayerAbstractFigure f = decorationFigures.get(((NetworkMapElement)o).getId());

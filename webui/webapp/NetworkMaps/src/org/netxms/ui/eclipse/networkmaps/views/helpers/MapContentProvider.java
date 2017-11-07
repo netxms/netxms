@@ -35,6 +35,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -175,7 +176,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if (!(e instanceof NetworkMapDecoration) && !(e instanceof NetworkMapDCIContainer) && !(e instanceof NetworkMapDCIImage))
+			if (!(e instanceof NetworkMapDecoration) && !(e instanceof NetworkMapDCIContainer) && !(e instanceof NetworkMapDCIImage) && !(e instanceof NetworkMapTextBox))
 				elements.add(e);
 		return elements.toArray();
 	}
@@ -247,7 +248,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) || (e instanceof NetworkMapDCIImage))
+			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) || (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox))
 				elements.add((NetworkMapElement)e);
 		return elements;
 	}

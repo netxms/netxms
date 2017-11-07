@@ -56,6 +56,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -91,6 +92,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
 	private Action actionAddDCIImage;
+	private Action actionAddTextBox;
+	private Action actionTextBoxProperties;
 	private Color defaultLinkColor = null;
 	private boolean readOnly;
 
@@ -389,6 +392,22 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				showLinkProperties();
 			}
 		};
+		
+      actionAddTextBox = new Action("Text box") {
+         @Override
+         public void run()
+         {
+            addTextBoxToMap();
+         }
+      };
+      
+      actionTextBoxProperties = new Action("Text box properties") {
+         @Override
+         public void run()
+         {
+            showTextBoxProperties();
+         }
+      };
 	}
 
 	/**
@@ -401,6 +420,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		MenuManager menu = new MenuManager(Messages.get().PredefinedMap_AddDecoration);
 		menu.add(actionAddGroupBox);
 		menu.add(actionAddImage);
+		menu.add(actionAddTextBox);
 		return menu;
 	}
 
@@ -488,6 +508,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    		   manager.add(actionDCIContainerProperties);
    		if(o instanceof NetworkMapDCIImage)
             manager.add(actionDCIImageProperties);
+         if(o instanceof NetworkMapTextBox)
+            manager.add(actionTextBoxProperties);
    		manager.add(new Separator());
 	   }
 		super.fillElementContextMenu(manager);
@@ -710,6 +732,20 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 
 		saveMap();
 	}
+	
+	/**
+	 * Add text box element
+	 */
+	private void addTextBoxToMap()
+	{
+      NetworkMapTextBox textBox = new NetworkMapTextBox(mapPage.createElementId());
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, textBox);
+	   if (dlg.open() != Window.OK)
+	      return;
+	   
+      mapPage.addElement(textBox);
+      saveMap();
+	}
 
 	/**
 	 * Save map on server
@@ -782,7 +818,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected boolean isSelectableElement(Object element)
 	{
-		return (element instanceof NetworkMapDecoration) || (element instanceof NetworkMapLink) || (element instanceof NetworkMapDCIContainer) || (element instanceof NetworkMapDCIImage);
+		return (element instanceof NetworkMapDecoration) || (element instanceof NetworkMapLink) ||
+		       (element instanceof NetworkMapDCIContainer) || (element instanceof NetworkMapDCIImage) ||
+		       (element instanceof NetworkMapTextBox);
 	}
 
 	/* (non-Javadoc)
@@ -947,5 +985,22 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			if (link.isModified())
 				saveMap();
 		}
+	}
+	
+	/**
+	 * Show text box properties
+	 */
+	private void showTextBoxProperties()
+	{
+      updateObjectPositions();
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
+         return;
+
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, (NetworkMapTextBox)selection.getFirstElement());
+      if (dlg.open() != Window.OK)
+         return;
+
+      saveMap();
 	}
 }

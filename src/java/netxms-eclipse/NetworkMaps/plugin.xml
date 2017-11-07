@@ -334,6 +334,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.networkmaps.propertypages.GeneralTextBox"
+            id="org.netxms.ui.eclipse.networkmaps.propertypages.GeneralTextBox#0"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.maps.elements.NetworkMapTextBox">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
