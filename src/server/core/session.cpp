@@ -10478,6 +10478,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
+            msg.setField(VID_REQUEST_ID, job->getId());
 				if (AddJob(job))
 				{
 	            msg.setField(VID_RCC, RCC_SUCCESS);

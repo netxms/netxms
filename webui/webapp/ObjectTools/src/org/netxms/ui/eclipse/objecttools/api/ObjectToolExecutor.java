@@ -42,6 +42,7 @@ import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -530,7 +531,7 @@ public final class ObjectToolExecutor
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
       
-      ConsoleJob job = new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
+      ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
@@ -552,7 +553,7 @@ public final class ObjectToolExecutor
                {
                   monitor.worked((int)workDone);
                }
-            });
+            }, this);
             runInUIThread(new Runnable() {
                @Override
                public void run()

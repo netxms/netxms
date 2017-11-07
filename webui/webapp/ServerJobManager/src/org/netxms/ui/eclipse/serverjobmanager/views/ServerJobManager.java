@@ -298,7 +298,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void refreshJobList(boolean userInitiated)
 	{
-		ConsoleJob job = new ConsoleJob(Messages.get().ServerJobManager_RefreshJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.get(viewer.getControl().getDisplay()).ServerJobManager_RefreshJobName, this, Activator.PLUGIN_ID, JOB_FAMILY, viewer.getControl().getDisplay()) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

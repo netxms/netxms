@@ -46,11 +46,13 @@ RootFolder::RootFolder(const TCHAR *folder)
  * Root folders
  */
 static ObjectArray<RootFolder> *g_rootFileManagerFolders;
+static HashMap<UINT32, VolatileCounter> *g_downloadFileStopMarkers;
 
 /**
  * Monitored file list
  */
 MonitoredFileList g_monitorFileList;
+
 
 #ifdef _WIN32
 
@@ -94,6 +96,7 @@ static void ConvertPathToNetwork(TCHAR *path)
 static BOOL SubagentInit(Config *config)
 {
    g_rootFileManagerFolders = new ObjectArray<RootFolder>(16, 16, true);
+   g_downloadFileStopMarkers = new HashMap<UINT32, VolatileCounter>();
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {
@@ -114,6 +117,7 @@ static BOOL SubagentInit(Config *config)
 static void SubagentShutdown()
 {
    delete g_rootFileManagerFolders;
+   delete g_downloadFileStopMarkers;
 }
 
 #ifndef _WIN32
@@ -636,7 +640,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 
    AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s, compress = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
-   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression);
+   bool success = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset, data->allowCompression, g_downloadFileStopMarkers->get(data->id));
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileNameCode);
@@ -645,6 +649,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    }
    free(data->fileName);
    free(data->fileNameCode);
+   g_downloadFileStopMarkers->remove(data->id);
    delete data;
    return THREAD_OK;
 }
@@ -935,6 +940,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             data->id = request->getId();
             data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
             data->session = session;
+            g_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
 
             ThreadCreateEx(SendFile, 0, data);
 
@@ -944,6 +950,18 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
+         return TRUE;
+      }
+      case CMD_CANCEL_FILE_DOWNLOAD:
+      {
+         VolatileCounter *counter = g_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
+         if(counter != NULL)
+         {
+            InterlockedIncrement(counter);
+            response->setField(VID_RCC, ERR_SUCCESS);
+         }
+         else
+            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
          return TRUE;
       }
       case CMD_CANCEL_FILE_MONITORING:

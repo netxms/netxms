@@ -392,10 +392,16 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_CLOSE_CHANNEL"),
       _T("CMD_CREATE_OBJECT_ACCESS_SNAPSHOT"),
       _T("CMD_UNBIND_AGENT_TUNNEL"),
-      _T("CMD_RESTART")
+      _T("CMD_RESTART"),
+      _T("CMD_REGISTER_LORAWAN_SENSOR"),
+      _T("CMD_UNREGISTER_LORAWAN_SENSOR"),
+      _T("CMD_EXPAND_MACROS"),
+      _T("CMD_EXECUTE_ACTION_WITH_EXPANSION"),
+      _T("CMD_HOST_BY_IP"),
+      _T("CMD_CANCEL_FILE_DOWNLOAD")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_RESTART))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_FILE_DOWNLOAD))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }
@@ -715,7 +721,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
                                            MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
 {
    SocketCommChannel *ch = new SocketCommChannel(hSocket, false);
-   bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod);
+   bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod, NULL);
    ch->decRefCount();
    return result;
 }
@@ -726,7 +732,8 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
+														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod,
+														 VolatileCounter *cancelationFlag)
 {
    int hFile, iBytes;
 	INT64 bytesTransferred = 0;
@@ -758,6 +765,9 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 
 			while(true)
 			{
+			   if(cancelationFlag != NULL && (*cancelationFlag) > 0)
+			      break;
+
             if (compressor != NULL)
             {
 				   iBytes = _read(hFile, compBuffer, MIN(FILE_BUFFER_SIZE, bytesToRead));
