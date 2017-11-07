@@ -59,6 +59,7 @@ import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.maps.elements.NetworkMapResource;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.UnknownObject;
@@ -290,6 +291,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       {
          return new DCIImageFigure((NetworkMapDCIImage)element, this, viewer);
       }
+		if (element instanceof NetworkMapTextBox)
+		{
+		   return new TextBoxFigure((NetworkMapTextBox)element, this, viewer);
+		}
 		return null;
 	}
 

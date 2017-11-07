@@ -31,6 +31,7 @@ public class NetworkMapElement
 	public static final int MAP_ELEMENT_DECORATION = 2;
 	public static final int MAP_ELEMENT_DCI_CONTAINER = 3;
    public static final int MAP_ELEMENT_DCI_IMAGE = 4;
+   public static final int MAP_ELEMENT_TEXT_BOX = 5;
 	
 	protected long id;
 	protected int type;
@@ -58,6 +59,8 @@ public class NetworkMapElement
             return new NetworkMapDCIContainer(msg, baseId);
          case MAP_ELEMENT_DCI_IMAGE:
             return new NetworkMapDCIImage(msg, baseId);
+         case MAP_ELEMENT_TEXT_BOX:
+            return new NetworkMapTextBox(msg, baseId);
 			default:
 				return new NetworkMapElement(msg, baseId);
 		}

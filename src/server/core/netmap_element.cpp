@@ -396,3 +396,68 @@ json_t *NetworkMapDCIImage::toJson() const
    json_object_set_new(root, "config", json_string_t(m_config));
    return root;
 }
+
+/**************************
+ * Network Map Text Box
+ **************************/
+
+/**
+ * Text Box default constructor
+ */
+NetworkMapTextBox::NetworkMapTextBox(UINT32 id, TCHAR* config, UINT32 flags) : NetworkMapElement(id, flags)
+{
+   m_type = MAP_ELEMENT_TEXT_BOX;
+   m_config = _tcsdup(config);
+}
+
+/**
+ * Text Box config constructor
+ */
+NetworkMapTextBox::NetworkMapTextBox(UINT32 id, Config *config, UINT32 flags) : NetworkMapElement(id, config, flags)
+{
+   m_config = _tcsdup(config->getValue(_T("/TextBox"), _T("")));
+}
+
+/**
+ * DCI image NXCP constructor
+ */
+NetworkMapTextBox::NetworkMapTextBox(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+{
+   m_config = msg->getFieldAsString(baseId + 10);
+}
+
+/**
+ * DCI image destructor
+ */
+NetworkMapTextBox::~NetworkMapTextBox()
+{
+   free(m_config);
+}
+
+/**
+ * Update image's persistent configuration
+ */
+void NetworkMapTextBox::updateConfig(Config *config)
+{
+   NetworkMapElement::updateConfig(config);
+   config->setValue(_T("/TextBox"), m_config);
+}
+
+/**
+ * Fill NXCP message with container's data
+ */
+void NetworkMapTextBox::fillMessage(NXCPMessage *msg, UINT32 baseId)
+{
+   NetworkMapElement::fillMessage(msg, baseId);
+   msg->setField(baseId + 10, m_config);
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *NetworkMapTextBox::toJson() const
+{
+   json_t *root = NetworkMapElement::toJson();
+   json_object_set_new(root, "config", json_string_t(m_config));
+   return root;
+}
