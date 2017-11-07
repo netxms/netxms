@@ -65,10 +65,6 @@ FileSnapshot *CreateSnapshotXP(const TCHAR *path)
    if (FAILED(hr))
       return CreateFailure(hr, bc, _T("Call to IVssBackupComponents::SetBackupState failed (%s) HRESULT=0x%08X"));
 
-   hr = bc->SetContext(VSS_CTX_FILE_SHARE_BACKUP);
-   if (FAILED(hr))
-      return CreateFailure(hr, bc, _T("Call to IVssBackupComponents::SetContext failed (%s) HRESULT=0x%08X"));
-
    VSS_ID snapshotSetId;
    hr = bc->StartSnapshotSet(&snapshotSetId);
    if (FAILED(hr))
