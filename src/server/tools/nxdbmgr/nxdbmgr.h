@@ -40,11 +40,6 @@
 #define SQL_TYPE_INT64     2
 
 /**
- * Execute with error check
- */
-#define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return false; } while (0)
-
-/**
  * Pre-defined GUID mapping for GenerateGUID
  */
 struct GUID_MAPPING
@@ -112,10 +107,9 @@ BOOL CreateTDataTable_preV281(DWORD nodeId);
 
 void ResetSystemAccount();
 
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
 extern BOOL g_bTrace;
@@ -129,5 +123,48 @@ extern int g_migrationTxnSize;
 extern int g_dbSyntax;
 extern const TCHAR *g_pszTableSuffix;
 extern const TCHAR *g_pszSqlType[6][3];
+
+/**
+ * Create save point
+ */
+inline INT64 CreateSavePoint()
+{
+   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+      return 0;
+   INT64 id = GetCurrentTimeMs();
+   TCHAR query[64];
+   _sntprintf(query, 64, _T("SAVEPOINT nxdbmgr_") INT64_FMT, id);
+   SQLQuery(query);
+   return id;
+}
+
+/**
+ * Release save point
+ */
+inline void ReleaseSavePoint(INT64 id)
+{
+   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+      return;
+   TCHAR query[64];
+   _sntprintf(query, 64, _T("RELEASE SAVEPOINT nxdbmgr_") INT64_FMT, id);
+   SQLQuery(query);
+}
+
+/**
+ * Rollback to save point
+ */
+inline void RollbackToSavePoint(INT64 id)
+{
+   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+      return;
+   TCHAR query[64];
+   _sntprintf(query, 64, _T("ROLLBACK TO SAVEPOINT nxdbmgr_") INT64_FMT, id);
+   SQLQuery(query);
+}
+
+/**
+ * Execute with error check
+ */
+#define CHK_EXEC(x) do { INT64 s = CreateSavePoint(); if (!(x)) { RollbackToSavePoint(s); if (!g_bIgnoreErrors) return false; } ReleaseSavePoint(s); } while (0)
 
 #endif
