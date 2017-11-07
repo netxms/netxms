@@ -108,6 +108,7 @@ public:
 #define MAP_ELEMENT_DECORATION      2
 #define MAP_ELEMENT_DCI_CONTAINER   3
 #define MAP_ELEMENT_DCI_IMAGE       4
+#define MAP_ELEMENT_TEXT_BOX        5
 
 /**
  * Decoration types
@@ -232,24 +233,45 @@ public:
 };
 
 /**
- * DCI map image
+ * Network map text box
  */
-class NetworkMapDCIImage : public NetworkMapElement
+class NetworkMapTextBox : public NetworkMapElement
 {
 protected:
 	TCHAR *m_config;
 
 public:
-	NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
-	NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDCIImage(NXCPMessage *msg, UINT32 baseId);
-	virtual ~NetworkMapDCIImage();
+	NetworkMapTextBox(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+	NetworkMapTextBox(UINT32 id, Config *config, UINT32 flags = 0);
+	NetworkMapTextBox(NXCPMessage *msg, UINT32 baseId);
+	virtual ~NetworkMapTextBox();
 
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
    virtual json_t *toJson() const;
 
 	TCHAR *getObjectDCIList() const { return m_config; }
+};
+
+/**
+ * DCI map image
+ */
+class NetworkMapDCIImage : public NetworkMapElement
+{
+protected:
+   TCHAR *m_config;
+
+public:
+   NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+   NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
+   NetworkMapDCIImage(NXCPMessage *msg, UINT32 baseId);
+   virtual ~NetworkMapDCIImage();
+
+   virtual void updateConfig(Config *config);
+   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual json_t *toJson() const;
+
+   TCHAR *getObjectDCIList() const { return m_config; }
 };
 
 /**

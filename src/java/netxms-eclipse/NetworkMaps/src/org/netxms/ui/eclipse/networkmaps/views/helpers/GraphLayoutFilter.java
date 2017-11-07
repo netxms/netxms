@@ -24,6 +24,7 @@ import org.eclipse.gef4.zest.core.widgets.LayoutFilter;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.client.maps.elements.NetworkMapTextBox;
 
 /**
  * Custom graph layout filter which prevents decoration
@@ -55,9 +56,9 @@ public class GraphLayoutFilter implements LayoutFilter
 		if (item instanceof GraphNode)
 		{
 			if (filterDecoration)
-				return (item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer || item.getData() instanceof NetworkMapDCIImage);
+				return (item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer || item.getData() instanceof NetworkMapDCIImage || item.getData() instanceof NetworkMapTextBox);
 			else
-				return !(item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer || item.getData() instanceof NetworkMapDCIImage);
+				return !(item.getData() instanceof NetworkMapDecoration || item.getData() instanceof NetworkMapDCIContainer || item.getData() instanceof NetworkMapDCIImage || item.getData() instanceof NetworkMapTextBox);
 		}
 		return false;
 	}
