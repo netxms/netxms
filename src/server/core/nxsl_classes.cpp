@@ -1470,6 +1470,26 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
 		value = new NXSL_Value(dci->getSystemTag());
    }
+   else if (!_tcscmp(attr, _T("template")))
+   {
+      if (dci->getTemplateId() != 0)
+      {
+         NetObj *object = FindObjectById(dci->getTemplateId());
+         value = (object != NULL) ? object->createNXSLObject() : new NXSL_Value();
+      }
+      else
+      {
+         value = new NXSL_Value();
+      }
+   }
+   else if (!_tcscmp(attr, _T("templateId")))
+   {
+      value = new NXSL_Value(dci->getTemplateId());
+   }
+   else if (!_tcscmp(attr, _T("templateItemId")))
+   {
+      value = new NXSL_Value(dci->getTemplateItemId());
+   }
    else if (!_tcscmp(attr, _T("type")))
    {
 		value = new NXSL_Value((LONG)dci->getType());

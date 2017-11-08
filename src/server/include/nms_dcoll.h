@@ -654,6 +654,9 @@ class DCObjectInfo
 {
 private:
    UINT32 m_id;
+   UINT32 m_ownerId;
+   UINT32 m_templateId;
+   UINT32 m_templateItemId;
    int m_type;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_description[MAX_DB_STRING];
@@ -665,13 +668,14 @@ private:
    int m_status;
    UINT32 m_errorCount;
    time_t m_lastPollTime;
-   UINT32 m_ownerId;
 
 public:
    DCObjectInfo(DCObject *object);
    ~DCObjectInfo();
 
    UINT32 getId() const { return m_id; }
+   UINT32 getTemplateId() const { return m_templateId; }
+   UINT32 getTemplateItemId() const { return m_templateItemId; }
    int getType() const { return m_type; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
