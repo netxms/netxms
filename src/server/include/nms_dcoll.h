@@ -360,7 +360,7 @@ protected:
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
-   void updateCacheSizeInternal(UINT32 conditionId = 0);
+   void updateCacheSizeInternal(bool allowLoad, UINT32 conditionId = 0);
    void clearCache();
 
 	virtual bool isCacheLoaded();
@@ -388,7 +388,7 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
-   void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(conditionId); unlock(); }
+   void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
    void reloadCache();
 
    int getDataType() const { return m_dataType; }
@@ -429,6 +429,9 @@ public:
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
+
+	void prepareForRecalc();
+	void recalculateValue(ItemValue &value);
 
    static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };

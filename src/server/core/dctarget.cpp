@@ -1159,7 +1159,23 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
    DCObject *dci = getDCObjectById(dciId, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      ((DCItem *)dci)->updateCacheSize(conditionId);
+      static_cast<DCItem*>(dci)->updateCacheSize(conditionId);
+   }
+   unlockDciAccess();
+}
+
+/**
+ * Reload DCI cache
+ */
+void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
+{
+   lockDciAccess(false);
+   DCObject *dci = getDCObjectById(dciId, false);
+   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
+               dci->getName(), dci->getId(), m_name, m_id);
+      static_cast<DCItem*>(dci)->reloadCache();
    }
    unlockDciAccess();
 }

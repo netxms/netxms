@@ -4260,6 +4260,25 @@ public class NXCSession
    }
    
    /**
+    * Start recalculation of DCI values using preserver raw values.
+    * 
+    * @param objectId object ID
+    * @param dciId DCI ID
+    * @return assigned job ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long recalculateDCIValues(long objectId, long dciId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALCULATE_DCI_VALUES);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_JOB_ID);
+   }
+   
+   /**
     * Force DCI poll for given DCI
     *
     * @param nodeId Node object ID

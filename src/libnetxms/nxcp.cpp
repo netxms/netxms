@@ -49,7 +49,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_MODIFY_OBJECT"),
       _T("CMD_OBJECT_LIST_END"),
       _T("CMD_OBJECT_UPDATE"),
-      _T("<unused>0x000B"),
+      _T("CMD_RECALCULATE_DCI_VALUES"),
       _T("CMD_EVENTLOG_RECORDS"),
       _T("CMD_GET_CONFIG_VARLIST"),
       _T("CMD_SET_CONFIG_VARIABLE"),

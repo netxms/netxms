@@ -245,6 +245,25 @@ public:
 	const TCHAR *getLocalFileName();
 };
 
+/**
+ * DCI recalculation job
+ */
+class DCIRecalculationJob : public ServerJob
+{
+private:
+   DataCollectionTarget *m_object;
+   DCItem *m_dci;
+   bool m_cancelled;
+
+protected:
+   virtual ServerJobResult run();
+   virtual bool onCancel();
+
+public:
+   DCIRecalculationJob(DataCollectionTarget *object, DCItem *dci, UINT32 userId);
+   virtual ~DCIRecalculationJob();
+};
+
 class AgentPolicy;
 
 /**

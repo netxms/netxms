@@ -1136,6 +1136,7 @@ public:
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
+   void reloadDCItemCache(UINT32 dciId);
    void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling();
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);

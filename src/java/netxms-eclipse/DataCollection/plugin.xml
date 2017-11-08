@@ -160,6 +160,13 @@
                label="Force DCI Poll"
                menubarPath="secondary">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.StartDataRecalculation"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.RecalculateData_DciValue"
+               label="Start data &amp;recalculation"
+               menubarPath="secondary">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -178,6 +185,13 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ForceDCIPoll_DataCollectionObject"
                label="Force DCI Poll"
+               menubarPath="secondary">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.StartDataRecalculation"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.RecalculateData_DataCollectionObject"
+               label="Start data &amp;recalculation"
                menubarPath="secondary">
          </action>
       </objectContribution>

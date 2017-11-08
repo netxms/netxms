@@ -8,7 +8,7 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	cert.cpp chassis.cpp client.cpp cluster.cpp columnfilter.cpp \
 	components.cpp condition.cpp config.cpp console.cpp \
 	container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
-	dc_nxsl.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
+	dc_nxsl.cpp dci_recalc.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 	dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
 	dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 	download_job.cpp ef.cpp email.cpp entirenet.cpp \

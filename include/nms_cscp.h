@@ -247,7 +247,7 @@ typedef struct
 #define CMD_MODIFY_OBJECT                 0x0008
 #define CMD_OBJECT_LIST_END               0x0009
 #define CMD_OBJECT_UPDATE                 0x000A
-//unused: #define CMD_GET_EVENTS                    0x000B
+#define CMD_RECALCULATE_DCI_VALUES        0x000B
 #define CMD_EVENTLOG_RECORDS              0x000C
 #define CMD_GET_CONFIG_VARLIST            0x000D
 #define CMD_SET_CONFIG_VARIABLE           0x000E

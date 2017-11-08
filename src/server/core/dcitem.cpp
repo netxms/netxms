@@ -191,7 +191,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 
-   updateCacheSizeInternal();
+   updateCacheSizeInternal(false);
 }
 
 /**
@@ -235,7 +235,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 		m_thresholds = NULL;
 	}
 
-	updateCacheSizeInternal();
+	updateCacheSizeInternal(false);
 }
 
 /**
@@ -645,9 +645,9 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    for(int i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-	safe_free(ppNewList);
-   safe_free(newThresholds);
-   updateCacheSizeInternal();
+	free(ppNewList);
+   free(newThresholds);
+   updateCacheSizeInternal(true);
    unlock();
 }
 
@@ -987,7 +987,7 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
 	}
 
    clearCache();
-   updateCacheSizeInternal();
+   updateCacheSizeInternal(true);
    unlock();
 }
 
@@ -997,10 +997,8 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
  * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
  * condition object
  */
-void DCItem::updateCacheSizeInternal(UINT32 conditionId)
+void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
 {
-   UINT32 dwSize, dwRequiredSize;
-
    // Sanity check
    if (m_owner == NULL)
    {
@@ -1014,41 +1012,45 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
         ((m_owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {
-      dwRequiredSize = 1;
+      UINT32 requiredSize = 1;
 
       // Calculate required cache size
       for(int i = 0; i < getThresholdCount(); i++)
-         if (dwRequiredSize < m_thresholds->get(i)->getRequiredCacheSize())
-            dwRequiredSize = m_thresholds->get(i)->getRequiredCacheSize();
+         if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
+            requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
 		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects(true);
 		for(int i = 0; i < conditions->size(); i++)
       {
 		   ConditionObject *c = (ConditionObject *)conditions->get(i);
-			dwSize = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
-         if (dwSize > dwRequiredSize)
-            dwRequiredSize = dwSize;
+			UINT32 size = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
+         if (size > requiredSize)
+            requiredSize = size;
          c->decRefCount();
       }
 		delete conditions;
+
+		m_requiredCacheSize = requiredSize;
    }
    else
    {
-      dwRequiredSize = 0;
+      m_requiredCacheSize = 0;
    }
 
+   nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::updateCacheSizeInternal(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
+            m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
+
    // Update cache if needed
-   if (dwRequiredSize < m_cacheSize)
+   if (m_requiredCacheSize < m_cacheSize)
    {
       // Destroy unneeded values
       if (m_cacheSize > 0)
 		{
-         for(UINT32 i = dwRequiredSize; i < m_cacheSize; i++)
+         for(UINT32 i = m_requiredCacheSize; i < m_cacheSize; i++)
             delete m_ppValueCache[i];
 		}
 
-      m_cacheSize = dwRequiredSize;
-      m_requiredCacheSize = dwRequiredSize;
+      m_cacheSize = m_requiredCacheSize;
       if (m_cacheSize > 0)
       {
          m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_cacheSize);
@@ -1059,25 +1061,24 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
          m_ppValueCache = NULL;
       }
    }
-   else if (dwRequiredSize > m_cacheSize)
+   else if (m_requiredCacheSize > m_cacheSize)
    {
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if ((m_owner != NULL) && (((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
+      if (allowLoad && (m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
       {
-         m_requiredCacheSize = dwRequiredSize;
          m_bCacheLoaded = false;
          g_dciCacheLoaderQueue.put(new DCObjectInfo(this));
       }
       else
       {
          // will not read data from database, fill cache with empty values
-         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-         for(UINT32 i = m_cacheSize; i < dwRequiredSize; i++)
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
+         for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
-         m_cacheSize = dwRequiredSize;
+         m_cacheSize = m_requiredCacheSize;
          m_bCacheLoaded = true;
       }
    }
@@ -1135,6 +1136,8 @@ void DCItem::reloadCache()
       m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
    }
 
+   nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
+            m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
    if (hResult != NULL)
    {
       // Create cache entries
@@ -1154,9 +1157,13 @@ void DCItem::reloadCache()
       }
 
       // Fill up cache with empty values if we don't have enough values in database
-      for(; i < m_requiredCacheSize; i++)
-         m_ppValueCache[i] = new ItemValue(_T(""), 1);
-
+      if (i < m_requiredCacheSize)
+      {
+         nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
+                  m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
+         for(; i < m_requiredCacheSize; i++)
+            m_ppValueCache[i] = new ItemValue(_T(""), 1);
+      }
       DBFreeResult(hResult);
    }
    else
@@ -1387,7 +1394,7 @@ bool DCItem::deleteAllData()
 	success = DBQuery(hdb, szQuery) ? true : false;
    DBConnectionPoolReleaseConnection(hdb);
 	clearCache();
-	updateCacheSizeInternal();
+	updateCacheSizeInternal(true);
    unlock();
 	return success;
 }
@@ -1447,7 +1454,7 @@ void DCItem::updateFromTemplate(DCObject *src)
    for(i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-   updateCacheSizeInternal();
+   updateCacheSizeInternal(true);
    unlock();
 }
 
@@ -1738,7 +1745,7 @@ void DCItem::updateFromImport(ConfigEntry *config)
       delete_and_null(m_thresholds);
    }
 
-   updateCacheSizeInternal();
+   updateCacheSizeInternal(true);
    unlock();
 }
 
@@ -1768,4 +1775,49 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
    return root;
+}
+
+/**
+ * Prepare DCI object for recalculation (should be executed on DCI copy)
+ */
+void DCItem::prepareForRecalc()
+{
+   m_tPrevValueTimeStamp = 0;
+   m_tLastPoll = 0;
+   updateCacheSizeInternal(false);
+}
+
+/**
+ * Recalculate old value (should be executed on DCI copy)
+ */
+void DCItem::recalculateValue(ItemValue &value)
+{
+   if (m_tPrevValueTimeStamp == 0)
+      m_prevRawValue = value;  // Delta should be zero for first poll
+   ItemValue rawValue = value;
+
+   // Cluster can have only aggregated data, and transformation
+   // should not be used on aggregation
+   if ((m_owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
+   {
+      if (!transform(value, (value.getTimeStamp() > m_tPrevValueTimeStamp) ? (value.getTimeStamp() - m_tPrevValueTimeStamp) : 0))
+      {
+         return;
+      }
+   }
+
+   if (value.getTimeStamp() > m_tPrevValueTimeStamp)
+   {
+      m_prevRawValue = rawValue;
+      m_tPrevValueTimeStamp = value.getTimeStamp();
+   }
+
+   if ((m_cacheSize > 0) && (value.getTimeStamp() >= m_tPrevValueTimeStamp))
+   {
+      delete m_ppValueCache[m_cacheSize - 1];
+      memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
+      m_ppValueCache[0] = new ItemValue(&value);
+   }
+
+   m_tLastPoll = value.getTimeStamp();
 }

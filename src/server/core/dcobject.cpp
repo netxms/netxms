@@ -91,7 +91,7 @@ DCObject::DCObject(const DCObject *pSrc)
 	_tcscpy(m_name, pSrc->m_name);
 	_tcscpy(m_description, pSrc->m_description);
 	_tcscpy(m_systemTag, pSrc->m_systemTag);
-   m_owner = NULL;
+   m_owner = pSrc->m_owner;
    m_hMutex = MutexCreateRecursive();
    m_tLastCheck = 0;
    m_dwErrorCount = 0;

@@ -520,8 +520,8 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
          DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), true);
          if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
          {
-            DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
-                      ref->getName(), ref->getId(), object->getName(), object->getId());
+            nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
+                     ref->getName(), ref->getId(), object->getName(), object->getId());
             static_cast<DCItem*>(dci)->reloadCache();
          }
          object->decRefCount();

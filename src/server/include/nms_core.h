@@ -499,6 +499,7 @@ private:
    DECLARE_THREAD_STARTER(queryL2Topology)
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
+   DECLARE_THREAD_STARTER(recalculateDCIValues)
    DECLARE_THREAD_STARTER(sendMib)
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
    DECLARE_THREAD_STARTER(getRepositories)
@@ -554,6 +555,7 @@ private:
 	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues);
 	void clearDCIData(NXCPMessage *pRequest);
 	void forceDCIPoll(NXCPMessage *pRequest);
+   void recalculateDCIValues(NXCPMessage *request);
    void changeDCIStatus(NXCPMessage *pRequest);
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);

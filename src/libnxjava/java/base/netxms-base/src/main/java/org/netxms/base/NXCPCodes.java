@@ -34,7 +34,7 @@ public class NXCPCodes
 	public static final int CMD_MODIFY_OBJECT = 0x0008;
 	public static final int CMD_OBJECT_LIST_END = 0x0009;
 	public static final int CMD_OBJECT_UPDATE = 0x000A;
-	//unused: public static final int CMD_GET_EVENTS = 0x000B;
+	public static final int CMD_RECALCULATE_DCI_VALUES = 0x000B;
 	public static final int CMD_EVENTLOG_RECORDS = 0x000C;
 	public static final int CMD_GET_CONFIG_VARLIST = 0x000D;
 	public static final int CMD_SET_CONFIG_VARIABLE = 0x000E;
