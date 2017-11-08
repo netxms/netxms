@@ -231,24 +231,32 @@ ServerJobResult FileDownloadJob::run()
 	   NXCPMessage abortCmd;
 	   abortCmd.setCode(CMD_ABORT_FILE_TRANSFER);
 	   abortCmd.setId(m_requestId);
+	   abortCmd.setField(VID_JOB_CANCELED, getStatus() != JOB_CANCELLED || getStatus() != JOB_CANCEL_PENDING);
 	   m_session->sendMessage(&abortCmd);
 
-      switch(rcc)
-      {
-         case ERR_ACCESS_DENIED:
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-            break;
-         case ERR_IO_FAILURE:
-            response.setField(VID_RCC, RCC_IO_ERROR);
-            break;
-			case ERR_FILE_OPEN_ERROR:
-			case ERR_FILE_STAT_FAILED:
-            response.setField(VID_RCC, RCC_FILE_IO_ERROR);
-            break;
-         default:
-            response.setField(VID_RCC, RCC_COMM_FAILURE);
-            break;
-      }
+	   if(getStatus() != JOB_CANCELLED || getStatus() != JOB_CANCEL_PENDING)
+	   {
+	      response.setField(VID_RCC, RCC_SUCCESS);
+	   }
+	   else
+	   {
+         switch(rcc)
+         {
+            case ERR_ACCESS_DENIED:
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
+               break;
+            case ERR_IO_FAILURE:
+               response.setField(VID_RCC, RCC_IO_ERROR);
+               break;
+            case ERR_FILE_OPEN_ERROR:
+            case ERR_FILE_STAT_FAILED:
+               response.setField(VID_RCC, RCC_FILE_IO_ERROR);
+               break;
+            default:
+               response.setField(VID_RCC, RCC_COMM_FAILURE);
+               break;
+         }
+	   }
 		m_session->sendMessage(&response);
 	}
 
