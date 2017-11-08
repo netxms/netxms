@@ -1298,6 +1298,8 @@ public class AgentFileManager extends ViewPart
       }
       for(AgentFile f : files)
       {
+         if(job.isCanceled())
+            break;
          if (f.isDirectory())
          {
             downloadDir(f, localFileName + "/" + f.getName(), monitor, job); //$NON-NLS-1$
@@ -1333,19 +1335,22 @@ public class AgentFileManager extends ViewPart
             monitor.worked((int)workDone);
          }
       }, job);
-      File outputFile = new File(localName);
-      outputFile.createNewFile();
-      InputStream in = new FileInputStream(file.getFile());
-      OutputStream out = new FileOutputStream(outputFile);
-      byte[] buf = new byte[1024];
-      int len;
-      while((len = in.read(buf)) > 0)
+      if(file.getFile() != null)
       {
-         out.write(buf, 0, len);
+         File outputFile = new File(localName);
+         outputFile.createNewFile();
+         InputStream in = new FileInputStream(file.getFile());
+         OutputStream out = new FileOutputStream(outputFile);
+         byte[] buf = new byte[1024];
+         int len;
+         while((len = in.read(buf)) > 0)
+         {
+            out.write(buf, 0, len);
+         }
+         in.close();
+         out.close();
+         outputFile.setLastModified(sf.getModifyicationTime().getTime());
       }
-      in.close();
-      out.close();
-      outputFile.setLastModified(sf.getModifyicationTime().getTime());
    }
    
    /**
