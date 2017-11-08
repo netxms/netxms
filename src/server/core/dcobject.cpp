@@ -1291,6 +1291,9 @@ json_t *DCObject::toJson()
 DCObjectInfo::DCObjectInfo(DCObject *object)
 {
    m_id = object->getId();
+   m_ownerId = object->getOwnerId();
+   m_templateId = object->getTemplateId();
+   m_templateItemId = object->getTemplateItemId();
    m_type = object->getType();
    nx_strncpy(m_name, object->getName(), MAX_ITEM_NAME);
    nx_strncpy(m_description, object->getDescription(), MAX_DB_STRING);
@@ -1302,7 +1305,6 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    m_status = object->getStatus();
    m_errorCount = object->getErrorCount();
    m_lastPollTime = object->getLastPollTime();
-   m_ownerId = object->getOwnerId();
 }
 
 /**
