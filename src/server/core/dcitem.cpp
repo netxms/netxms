@@ -999,8 +999,6 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
  */
 void DCItem::updateCacheSizeInternal(UINT32 conditionId)
 {
-   UINT32 dwSize, dwRequiredSize;
-
    // Sanity check
    if (m_owner == NULL)
    {
@@ -1014,41 +1012,42 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
         ((m_owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {
-      dwRequiredSize = 1;
+      UINT32 requiredSize = 1;
 
       // Calculate required cache size
       for(int i = 0; i < getThresholdCount(); i++)
-         if (dwRequiredSize < m_thresholds->get(i)->getRequiredCacheSize())
-            dwRequiredSize = m_thresholds->get(i)->getRequiredCacheSize();
+         if (requiredSize < m_thresholds->get(i)->getRequiredCacheSize())
+            requiredSize = m_thresholds->get(i)->getRequiredCacheSize();
 
 		ObjectArray<NetObj> *conditions = g_idxConditionById.getObjects(true);
 		for(int i = 0; i < conditions->size(); i++)
       {
 		   ConditionObject *c = (ConditionObject *)conditions->get(i);
-			dwSize = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
-         if (dwSize > dwRequiredSize)
-            dwRequiredSize = dwSize;
+			UINT32 size = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
+         if (size > requiredSize)
+            requiredSize = size;
          c->decRefCount();
       }
 		delete conditions;
+
+      m_requiredCacheSize = requiredSize;
    }
    else
    {
-      dwRequiredSize = 0;
+      m_requiredCacheSize = 0;
    }
 
    // Update cache if needed
-   if (dwRequiredSize < m_cacheSize)
+   if (m_requiredCacheSize < m_cacheSize)
    {
       // Destroy unneeded values
       if (m_cacheSize > 0)
 		{
-         for(UINT32 i = dwRequiredSize; i < m_cacheSize; i++)
+         for(UINT32 i = m_requiredCacheSize; i < m_cacheSize; i++)
             delete m_ppValueCache[i];
 		}
 
-      m_cacheSize = dwRequiredSize;
-      m_requiredCacheSize = dwRequiredSize;
+      m_cacheSize = m_requiredCacheSize;
       if (m_cacheSize > 0)
       {
          m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_cacheSize);
@@ -1059,25 +1058,24 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
          m_ppValueCache = NULL;
       }
    }
-   else if (dwRequiredSize > m_cacheSize)
+   else if (m_requiredCacheSize > m_cacheSize)
    {
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if ((m_owner != NULL) && (((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
+      if ((m_owner != NULL) && (((m_requiredCacheSize - m_cacheSize) * m_iPollingInterval > 300) || (m_source == DS_PUSH_AGENT)))
       {
-         m_requiredCacheSize = dwRequiredSize;
          m_bCacheLoaded = false;
          g_dciCacheLoaderQueue.put(new DCObjectInfo(this));
       }
       else
       {
          // will not read data from database, fill cache with empty values
-         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-         for(UINT32 i = m_cacheSize; i < dwRequiredSize; i++)
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
+         for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
-         m_cacheSize = dwRequiredSize;
+         m_cacheSize = m_requiredCacheSize;
          m_bCacheLoaded = true;
       }
    }
