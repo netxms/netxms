@@ -18,9 +18,6 @@
  */
 package org.netxms.ui.eclipse.jobs;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerJobIdUpdater;
@@ -40,40 +37,6 @@ public abstract class ConsoleJobCallingServerJob extends ConsoleJob implements S
    {
       super(name, wbPart, pluginId, jobFamily);
       session = (NXCSession)ConsoleSharedData.getSession();
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
-    */
-   @Override
-   protected IStatus run(IProgressMonitor monitor)
-   {
-      IStatus status;
-      try
-      {
-         runInternal(monitor);
-         status = Status.OK_STATUS;
-      }
-      catch(Exception e)
-      {
-         if(jobCanceled)
-         {
-            status = Status.CANCEL_STATUS;
-         }
-         else
-         {
-            Activator.logError("Exception in ConsoleJob", e); //$NON-NLS-1$
-            jobFailureHandler();
-            status = createFailureStatus(e);
-         }
-      }
-      finally
-      {
-         jobFinalize();
-      }
-      return status;
    }
 
    /* (non-Javadoc)
@@ -97,5 +60,10 @@ public abstract class ConsoleJobCallingServerJob extends ConsoleJob implements S
    public void setJobIdCallback(int id)
    {
       serverJobId = id;
+   }
+
+   public boolean isCanceled()
+   {
+      return jobCanceled;
    }
 }

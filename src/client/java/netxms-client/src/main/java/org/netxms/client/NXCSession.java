@@ -763,6 +763,7 @@ public class NXCSession
       private void processFileTransferError(final NXCPMessage msg)
       {
          long id = msg.getMessageId();
+         
          NXCReceivedFile file;
          synchronized(receivedFiles)
          {
@@ -772,7 +773,7 @@ public class NXCSession
                file = new NXCReceivedFile(id);
                receivedFiles.put(id, file);
             }
-            file.abortTransfer();
+            file.abortTransfer(msg.getFieldAsBoolean(NXCPCodes.VID_JOB_CANCELED));
             receivedFiles.notifyAll();
          }
       }
@@ -1652,10 +1653,11 @@ public class NXCSession
     * @param timeout Wait timeout in milliseconds
     * @return Received file or null in case of failure
     */
-   public File waitForFile(final long id, final int timeout)
+   public RecievedFile waitForFile(final long id, final int timeout)
    {
       int timeRemaining = timeout;
       File file = null;
+      int status = RecievedFile.FAILED;
 
       while(timeRemaining > 0)
       {
@@ -1667,7 +1669,10 @@ public class NXCSession
                if (rf.getStatus() != NXCReceivedFile.OPEN)
                {
                   if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
+                  {
                      file = rf.getFile();
+                     status = RecievedFile.SUCCESS;
+                  }
                   break;
                }
             }
@@ -1683,7 +1688,7 @@ public class NXCSession
             timeRemaining -= System.currentTimeMillis() - startTime;
          }
       }
-      return file;
+      return new RecievedFile(file, timeRemaining <= 0 ? RecievedFile.TIMEOUT : status);
    }
    
    /**
@@ -7602,9 +7607,9 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_GUID, guid);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      final File imageFile = waitForFile(msg.getMessageId(), 600000);
-      if (imageFile == null) throw new NXCException(RCC.IO_ERROR);
-      return new LibraryImage(response, imageFile);
+      final RecievedFile imageFile = waitForFile(msg.getMessageId(), 600000);
+      if (imageFile.isErrorRecieved()) throw new NXCException(RCC.IO_ERROR);
+      return new LibraryImage(response, imageFile.getFile());
    }
 
    /**
@@ -8050,10 +8055,10 @@ public class NXCSession
          }
       }
       
-      File remoteFile = waitForFile(msg.getMessageId(), 36000000);
+      RecievedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
       if (remoteFile == null)
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
-      AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile);
+      AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile.getFile());
 
       try
       {
@@ -8080,7 +8085,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      return waitForFile(msg.getMessageId(), 3600000);
+      return waitForFile(msg.getMessageId(), 3600000).getFile();
    }
    
    /**
@@ -9128,12 +9133,12 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      final File file = waitForFile(msg.getMessageId(), 600000);
-      if (file == null)
+      final RecievedFile file = waitForFile(msg.getMessageId(), 600000);
+      if (file.isErrorRecieved())
       {
          throw new NXCException(RCC.IO_ERROR);
       }
-      return file;
+      return file.getFile();
    }
 
 	/**
