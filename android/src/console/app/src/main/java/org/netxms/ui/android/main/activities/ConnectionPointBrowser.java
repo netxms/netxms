@@ -1,23 +1,5 @@
 package org.netxms.ui.android.main.activities;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.netxms.client.MacAddress;
-import org.netxms.client.MacAddressFormatException;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
-import org.netxms.client.topology.ConnectionPoint;
-import org.netxms.ui.android.R;
-import org.netxms.ui.android.main.adapters.ConnectionPointListAdapter;
-import org.netxms.ui.android.tools.BarcodeScannerIntegrator;
-import org.netxms.ui.android.tools.BarcodeScannerIntentResult;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -44,6 +26,24 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.netxms.base.MacAddress;
+import org.netxms.base.MacAddressFormatException;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Node;
+import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.ui.android.R;
+import org.netxms.ui.android.main.adapters.ConnectionPointListAdapter;
+import org.netxms.ui.android.tools.BarcodeScannerIntegrator;
+import org.netxms.ui.android.tools.BarcodeScannerIntentResult;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MAC address search result browser
