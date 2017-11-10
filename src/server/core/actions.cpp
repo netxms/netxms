@@ -176,10 +176,6 @@ static int CompareElements(const void *p1, const void *p2)
 static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 {
    AgentConnection *pConn;
-   UINT32 dwError;
-   int i, nLen, nState, nCount = 0;
-   TCHAR *pCmd[128], *pTmp;
-
    if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name shuld be in @name format.
@@ -218,9 +214,9 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    }
 
    StringList list;
-	pTmp = _tcsdup(pszAction);
-	nLen = (int)_tcslen(pTmp);
-	for(i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
+	TCHAR *pTmp = _tcsdup(pszAction);
+	int nLen = (int)_tcslen(pTmp);
+	for(int i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
 	{
 		switch(pTmp[i])
 		{
@@ -251,11 +247,11 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 		}
 	}
 
-   dwError = pConn->execAction(pTmp, list);
+   UINT32 rcc = pConn->execAction(pTmp, list);
    pConn->disconnect();
    pConn->decRefCount();
    free(pTmp);
-   return dwError == ERR_SUCCESS;
+   return rcc == ERR_SUCCESS;
 }
 
 /**

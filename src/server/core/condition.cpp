@@ -78,7 +78,6 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
-   UINT32 i;
 
    m_id = dwId;
 
@@ -139,7 +138,7 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (m_dciCount > 0)
    {
       m_dciList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dciCount);
-      for(i = 0; i < m_dciCount; i++)
+      for(int i = 0; i < m_dciCount; i++)
       {
          m_dciList[i].id = DBGetFieldULong(hResult, i, 0);
          m_dciList[i].nodeId = DBGetFieldULong(hResult, i, 1);
@@ -160,7 +159,6 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
    TCHAR *pszEscScript, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
-   UINT32 i;
 
    lockProperties();
 
@@ -207,7 +205,7 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
       // Save DCI mapping
       _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_id);
       DBQuery(hdb, pszQuery);
-      for(i = 0; i < m_dciCount; i++)
+      for(int i = 0; i < m_dciCount; i++)
       {
          _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
                                     _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
@@ -254,7 +252,8 @@ void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
    pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
    pMsg->setField(VID_NUM_ITEMS, m_dciCount);
-   for(UINT32 i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+   UINT32 dwId = VID_DCI_LIST_BASE;
+   for(int i = 0; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
    {
       pMsg->setField(dwId++, m_dciList[i].id);
       pMsg->setField(dwId++, m_dciList[i].nodeId);
@@ -270,7 +269,6 @@ void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   UINT32 i, dwId;
    NetObj *pObject;
 
    // Change script
@@ -278,7 +276,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       TCHAR szError[1024];
 
-      safe_free(m_scriptSource);
+      free(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
       NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024, NULL);
@@ -322,12 +320,13 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change DCI list
    if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
-      safe_free(m_dciList);
+      free(m_dciList);
       m_dciCount = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
       if (m_dciCount > 0)
       {
          m_dciList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dciCount);
-         for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+         UINT32 dwId = VID_DCI_LIST_BASE;
+         for(int i = 0; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
          {
             m_dciList[i].id = pRequest->getFieldAsUInt32(dwId++);
             m_dciList[i].nodeId = pRequest->getFieldAsUInt32(dwId++);
@@ -337,7 +336,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
          }
 
          // Update cache size of DCIs
-         for(i = 0; i < m_dciCount; i++)
+         for(int i = 0; i < m_dciCount; i++)
          {
             pObject = FindObjectById(m_dciList[i].nodeId);
             if (pObject != NULL)
@@ -390,7 +389,6 @@ void ConditionObject::check()
 {
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
-   UINT32 i, dwNumValues;
    int iOldStatus = m_status;
 
    if ((m_script == NULL) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
@@ -399,7 +397,7 @@ void ConditionObject::check()
    lockProperties();
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dciCount);
    memset(ppValueList, 0, sizeof(NXSL_Value *) * m_dciCount);
-   for(i = 0; i < m_dciCount; i++)
+   for(int i = 0; i < m_dciCount; i++)
    {
       pObject = FindObjectById(m_dciList[i].nodeId);
       if (pObject != NULL)
@@ -427,19 +425,19 @@ void ConditionObject::check()
       if (ppValueList[i] == NULL)
          ppValueList[i] = new NXSL_Value;
    }
-   dwNumValues = m_dciCount;
+   int numValues = m_dciCount;
    unlockProperties();
 
 	// Create array from values
 	NXSL_Array *array = new NXSL_Array;
-	for(i = 0; i < dwNumValues; i++)
+	for(int i = 0; i < numValues; i++)
 	{
 		array->set(i + 1, new NXSL_Value(ppValueList[i]));
 	}
    m_script->setGlobalVariable(_T("$values"), new NXSL_Value(array));
 
    DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_id, m_name);
-   if (m_script->run(dwNumValues, ppValueList))
+   if (m_script->run(numValues, ppValueList))
    {
       pValue = m_script->getResult();
       if (pValue->getValueAsInt32() == 0)
@@ -535,12 +533,11 @@ void ConditionObject::check()
  */
 int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
 {
-   UINT32 i;
    int nSize = 0;
 
    if (!noLock)
       lockProperties();
-   for(i = 0; i < m_dciCount; i++)
+   for(int i = 0; i < m_dciCount; i++)
    {
       if (m_dciList[i].id == itemId)
       {

@@ -2392,7 +2392,7 @@ public:
 class NXCORE_EXPORTABLE ConditionObject : public NetObj
 {
 protected:
-   UINT32 m_dciCount;
+   int m_dciCount;
    INPUT_DCI *m_dciList;
    TCHAR *m_scriptSource;
    NXSL_VM *m_script;
