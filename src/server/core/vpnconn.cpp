@@ -223,9 +223,9 @@ Node *VPNConnector::getParentNode()
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessageInternal(NXCPMessage *pMsg)
+void VPNConnector::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg);
+   NetObj::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
    pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());

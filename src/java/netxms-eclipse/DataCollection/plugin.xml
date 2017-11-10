@@ -357,6 +357,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.VisibilityControl"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#50"
+              name="Visibility">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension

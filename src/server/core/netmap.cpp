@@ -537,9 +537,9 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Fill NXCP message with object's data
  */
-void NetworkMap::fillMessageInternal(NXCPMessage *msg)
+void NetworkMap::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-	NetObj::fillMessageInternal(msg);
+	NetObj::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->setField(VID_LAYOUT, (WORD)m_layout);

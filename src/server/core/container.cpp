@@ -247,9 +247,9 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Container::fillMessageInternal(NXCPMessage *msg)
+void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(msg);
+   NetObj::fillMessageInternal(msg, userId);
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
 }

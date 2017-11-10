@@ -592,8 +592,8 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
 
-   virtual void fillMessageInternal(NXCPMessage *msg);
-   virtual void fillMessageInternalStage2(NXCPMessage *msg);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
 
    void addLocationToHistory();
@@ -669,7 +669,7 @@ public:
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
 
-   void fillMessage(NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg, UINT32 userId);
    UINT32 modifyFromMessage(NXCPMessage *msg);
 
 	virtual void postModify();
@@ -782,7 +782,7 @@ protected:
 
    virtual void prepareForDeletion();
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    virtual void onDataCollectionChange();
@@ -819,17 +819,15 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
-   bool deleteDCObject(UINT32 dcObjectId, bool needLock);
+   bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userID);
+   bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userID);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
-   int getItemType(UINT32 dwItemId);
-   DCObject *getDCObjectById(UINT32 itemId, bool lock = true);
-   DCObject *getDCObjectByGUID(const uuid& guid, bool lock = true);
-   DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
-   DCObject *getDCObjectByIndex(int index);
-   DCObject *getDCObjectByName(const TCHAR *name);
-   DCObject *getDCObjectByDescription(const TCHAR *description);
-   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
+   DCObject *getDCObjectById(UINT32 itemId, UINT32 userID, bool lock = true);
+   DCObject *getDCObjectByGUID(const uuid& guid, UINT32 userID, bool lock = true);
+   DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userID);
+   DCObject *getDCObjectByName(const TCHAR *name, UINT32 userID);
+   DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userID);
+   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userID);
    bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    bool unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_dciListModified = true; }
@@ -852,7 +850,7 @@ public:
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
 
-   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects);
+   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
 };
 
 class Cluster;
@@ -902,7 +900,7 @@ protected:
 protected:
    virtual void onObjectDelete(UINT32 dwObjectId);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    void setExpectedStateInternal(int state);
@@ -1016,7 +1014,7 @@ protected:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -1049,7 +1047,7 @@ protected:
    ObjectArray<InetAddress> *m_localNetworks;
    ObjectArray<InetAddress> *m_remoteNetworks;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    Node *getParentNode();
@@ -1098,8 +1096,8 @@ protected:
    time_t m_pingLastTimeStamp;
    MUTEX m_hPollerMutex;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
-	virtual void fillMessageInternalStage2(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	virtual bool isDataCollectionDisabled();
@@ -1115,8 +1113,8 @@ protected:
    void applyUserTemplates();
    void updateContainerMembership();
 
-   void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
-   void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+   void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
+   void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
 
    void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
@@ -1148,9 +1146,9 @@ public:
    UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
-	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);
-	UINT32 getPerfTabDCIList(NXCPMessage *pMsg);
-   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
+	UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
+   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
@@ -1188,7 +1186,7 @@ protected:
 	LONG m_batteryLevel;
    InetAddress m_ipAddress;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -1240,7 +1238,7 @@ protected:
    AccessPointState m_state;
    AccessPointState m_prevState;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    virtual void updatePingData();
@@ -1290,7 +1288,7 @@ protected:
    time_t m_lastConfigurationPoll;
 	UINT32 m_zoneUIN;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    virtual void onDataCollectionChange();
@@ -1361,7 +1359,7 @@ protected:
    UINT32 m_rackId;
    uuid m_rackImage;
 
-   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
    virtual void onDataCollectionChange();
@@ -1626,7 +1624,7 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    virtual void updatePingData();
@@ -2010,7 +2008,7 @@ protected:
 
    virtual void prepareForDeletion();
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 
    void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
@@ -2100,7 +2098,7 @@ protected:
 	NXSL_Program *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
-   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
    void setAutoBindFilterInternal(const TCHAR *script);
@@ -2161,7 +2159,7 @@ protected:
 	int m_height;	// Rack height in units
 	bool m_topBottomNumbering;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2190,7 +2188,7 @@ protected:
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
 
-   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
 public:
@@ -2277,7 +2275,7 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2318,7 +2316,7 @@ protected:
 
 	bool savePolicyCommonProperties(DB_HANDLE hdb);
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2348,7 +2346,7 @@ class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
 protected:
 	TCHAR *m_fileContent;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2376,7 +2374,7 @@ class NXCORE_EXPORTABLE AgentPolicyLogParser : public AgentPolicy
  protected:
    TCHAR *m_fileContent;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
  public:
    AgentPolicyLogParser();
@@ -2478,7 +2476,7 @@ protected:
 	TCHAR *m_filterSource;
 	NXSL_VM *m_filter;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	void updateObjects(NetworkMapObjectList *objects);
@@ -2557,7 +2555,7 @@ protected:
 	UINT32 m_options;
 	ObjectArray<DashboardElement> *m_elements;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2612,7 +2610,7 @@ protected:
 
    virtual void onObjectDelete(UINT32 objectId);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    void setScript(const TCHAR *script);
@@ -2672,7 +2670,7 @@ protected:
 	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
 	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	void initServiceContainer();
@@ -2730,7 +2728,7 @@ protected:
 
    virtual void prepareForDeletion();
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
@@ -2762,7 +2760,7 @@ protected:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	void applyTemplate(SlmCheck *tmpl);

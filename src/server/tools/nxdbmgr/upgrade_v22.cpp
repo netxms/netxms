@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.2 to 22.3
+ */
+static bool H_UpgradeFromV2()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE dc_tables ADD visibility_rights varchar(2000)\n")
+            _T("ALTER TABLE items ADD visibility_rights varchar(2000)\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 22.1 to 22.2
  */
 static bool H_UpgradeFromV1()
@@ -59,6 +73,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 2, 22, 3, H_UpgradeFromV2 },
    { 1, 22, 2, H_UpgradeFromV1 },
    { 0, 22, 1, H_UpgradeFromV0 },
    { 0, 0, 0, NULL }

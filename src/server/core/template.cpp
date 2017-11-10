@@ -385,7 +385,7 @@ void Template::loadItemsFromDB(DB_HANDLE hdb)
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
 	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name ")
+				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,visibility_rights ")
 				  _T("FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
@@ -405,7 +405,7 @@ void Template::loadItemsFromDB(DB_HANDLE hdb)
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
-              _T("transformation_script,comments,guid,instd_method,instd_data,instd_filter,instance FROM dc_tables WHERE node_id=?"));
+              _T("transformation_script,comments,guid,instd_method,instd_data,instd_filter,instance,visibility_rights FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -460,7 +460,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 /**
  * Delete data collection object from node
  */
-bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
+bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId)
 {
    bool success = false;
 
@@ -473,20 +473,25 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 		DCObject *object = m_dcObjects->get(i);
       if (object->getId() == dcObjectId)
       {
-         // Check if it is instance DCI
-         if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
+         if(object->hasAccess(userId))
          {
-            deleteChildDCIs(dcObjectId);
+            // Check if it is instance DCI
+            if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
+            {
+               deleteChildDCIs(dcObjectId);
 
-            // Index may be incorrect at this point
-            if (m_dcObjects->get(i) != object)
-               i = m_dcObjects->indexOf(object);
+               // Index may be incorrect at this point
+               if (m_dcObjects->get(i) != object)
+                  i = m_dcObjects->indexOf(object);
+            }
+            // Destroy item
+            DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
+            destroyItem(object, i);
+            success = true;
+            DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
          }
-         // Destroy item
-			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
-			destroyItem(object, i);
-         success = true;
-			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
+         else
+            DbgPrintf(3, _T("Template::DeleteDCObject: access denied DCO %d"), (int)m_id);
          break;
       }
 	}
@@ -545,7 +550,7 @@ void Template::destroyItem(DCObject *object, int index)
 /**
  * Modify data collection object from NXCP message
  */
-bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
+bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userID)
 {
    bool success = false;
 
@@ -557,19 +562,24 @@ bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNum
 		DCObject *object = m_dcObjects->get(i);
       if (object->getId() == dwItemId)
       {
-			if (object->getType() == DCO_TYPE_ITEM)
-			{
-				((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-            if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
+         if(object->hasAccess(userID))
+         {
+            if (object->getType() == DCO_TYPE_ITEM)
             {
-               updateInstanceDiscoveryItems((DCItem *)object);
+               ((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
+               if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
+               {
+                  updateInstanceDiscoveryItems((DCItem *)object);
+               }
             }
-			}
-			else
-			{
-				object->updateFromMessage(pMsg);
-			}
-			success = true;
+            else
+            {
+               object->updateFromMessage(pMsg);
+            }
+            success = true;
+         }
+         else
+            DbgPrintf(3, _T("Template::updateDCObject: access denied DCO %d"), (int)m_id);
          break;
       }
 	}
@@ -701,9 +711,14 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
    // Walk through items list
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-		m_dcObjects->get(i)->createMessage(&msg);
-		pSession->sendMessage(&msg);
-		msg.deleteAllFields();
+      if(m_dcObjects->get(i)->hasAccess(pSession->getUserId()))
+      {
+         m_dcObjects->get(i)->createMessage(&msg);
+         pSession->sendMessage(&msg);
+         msg.deleteAllFields();
+      }
+      else
+         DbgPrintf(3, _T("Template::sendItemsToClient: access denied DCO %d"), (int)m_id);
    }
 
    unlockDciAccess();
@@ -714,35 +729,9 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
 }
 
 /**
- * Get DCI's data type
- */
-int Template::getItemType(UINT32 dwItemId)
-{
-   int iType = -1;
-
-   lockDciAccess(false);
-   // Check if that item exists
-   for(int i = 0; i < m_dcObjects->size(); i++)
-	{
-		DCObject *object = m_dcObjects->get(i);
-      if (object->getId() == dwItemId)
-      {
-			if (object->getType() == DCO_TYPE_ITEM)
-			{
-				iType = ((DCItem *)object)->getDataType();
-			}
-         break;
-      }
-	}
-
-   unlockDciAccess();
-   return iType;
-}
-
-/**
  * Get item by it's id
  */
-DCObject *Template::getDCObjectById(UINT32 itemId, bool lock)
+DCObject *Template::getDCObjectById(UINT32 itemId, UINT32 userID, bool lock)
 {
    DCObject *object = NULL;
 
@@ -754,7 +743,10 @@ DCObject *Template::getDCObjectById(UINT32 itemId, bool lock)
 		DCObject *curr = m_dcObjects->get(i);
       if (curr->getId() == itemId)
 		{
-			object = curr;
+         if(curr->hasAccess(userID))
+            object = curr;
+         else
+            DbgPrintf(3, _T("Template::getDCObjectById: access denied DCO %d"), (int)m_id);
          break;
 		}
 	}
@@ -767,7 +759,7 @@ DCObject *Template::getDCObjectById(UINT32 itemId, bool lock)
 /**
  * Get item by template item id
  */
-DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
+DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userID)
 {
    DCObject *object = NULL;
 
@@ -778,7 +770,10 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
 		DCObject *curr = m_dcObjects->get(i);
       if (curr->getTemplateItemId() == tmplItemId)
 		{
-			object = curr;
+         if(object->hasAccess(userID))
+            object = curr;
+         else
+            DbgPrintf(3, _T("Template::getDCObjectByTemplateId: access denied DCO %d"), (int)m_id);
          break;
 		}
 	}
@@ -790,7 +785,7 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId)
 /**
  * Get item by it's name (case-insensetive)
  */
-DCObject *Template::getDCObjectByName(const TCHAR *name)
+DCObject *Template::getDCObjectByName(const TCHAR *name, UINT32 userID)
 {
    DCObject *object = NULL;
 
@@ -801,7 +796,10 @@ DCObject *Template::getDCObjectByName(const TCHAR *name)
 		DCObject *curr = m_dcObjects->get(i);
       if (!_tcsicmp(curr->getName(), name))
 		{
-			object = curr;
+         if(curr->hasAccess(userID))
+            object = curr;
+         else
+            DbgPrintf(3, _T("Template::getDCObjectByName: access denied DCO %d"), (int)m_id);
          break;
 		}
 	}
@@ -812,7 +810,7 @@ DCObject *Template::getDCObjectByName(const TCHAR *name)
 /**
  * Get item by it's description (case-insensetive)
  */
-DCObject *Template::getDCObjectByDescription(const TCHAR *description)
+DCObject *Template::getDCObjectByDescription(const TCHAR *description, UINT32 userID)
 {
    DCObject *object = NULL;
 
@@ -823,7 +821,10 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *description)
 		DCObject *curr = m_dcObjects->get(i);
       if (!_tcsicmp(curr->getDescription(), description))
 		{
-			object = curr;
+         if(curr->hasAccess(userID))
+            object = curr;
+         else
+            DbgPrintf(3, _T("Template::getDCObjectByDescription: access denied DCO %d"), (int)m_id);
          break;
 		}
 	}
@@ -834,7 +835,7 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *description)
 /**
  * Get item by GUID
  */
-DCObject *Template::getDCObjectByGUID(const uuid& guid, bool lock)
+DCObject *Template::getDCObjectByGUID(const uuid& guid, UINT32 userID, bool lock)
 {
    DCObject *object = NULL;
 
@@ -847,7 +848,10 @@ DCObject *Template::getDCObjectByGUID(const uuid& guid, bool lock)
       DCObject *curr = m_dcObjects->get(i);
       if (guid.equals(curr->getGuid()))
       {
-         object = curr;
+         if(curr->hasAccess(userID))
+            object = curr;
+         else
+            DbgPrintf(3, _T("Template::getDCObjectByGUID: access denied DCO %d"), (int)m_id);
          break;
       }
    }
@@ -858,20 +862,9 @@ DCObject *Template::getDCObjectByGUID(const uuid& guid, bool lock)
 }
 
 /**
- * Get item by it's index
- */
-DCObject *Template::getDCObjectByIndex(int index)
-{
-   lockDciAccess(false);
-	DCObject *object = m_dcObjects->get(index);
-   unlockDciAccess();
-   return object;
-}
-
-/**
  * Get all DC objects with matching name and description
  */
-NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description)
+NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userID)
 {
    NXSL_Array *list = new NXSL_Array();
    lockDciAccess(false);
@@ -879,7 +872,8 @@ NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *des
 	{
 		DCObject *curr = m_dcObjects->get(i);
       if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
-          ((description == NULL) || MatchString(description, curr->getDescription(), false)))
+          ((description == NULL) || MatchString(description, curr->getDescription(), false)) &&
+          curr->hasAccess(userID))
 		{
          list->set(list->size(), curr->createNXSLObject());
 		}
@@ -899,9 +893,9 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessageInternal(NXCPMessage *pMsg)
+void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg);
+   NetObj::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
@@ -1258,7 +1252,7 @@ AutoBindDecision Template::isApplicable(DataCollectionTarget *target)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects)
+UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId)
 {
    lockDciAccess(false);
 
@@ -1268,7 +1262,8 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->hasValue() || includeNoValueObjects) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
-          (!overviewOnly || object->isShowInObjectOverview()))
+          (!overviewOnly || object->isShowInObjectOverview()) &&
+          object->hasAccess(userId))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
@@ -1326,7 +1321,7 @@ void Template::updateFromImport(ConfigEntry *config)
       {
          ConfigEntry *e = dcis->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : NULL;
          if ((curr != NULL) && (curr->getType() == DCO_TYPE_ITEM))
          {
             curr->updateFromImport(e);
@@ -1344,7 +1339,7 @@ void Template::updateFromImport(ConfigEntry *config)
       {
          ConfigEntry *e = dctables->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : NULL;
          if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
          {
             curr->updateFromImport(e);
@@ -1379,7 +1374,7 @@ void Template::updateFromImport(ConfigEntry *config)
    }
 
    for(int i = 0; i < deleteList.size(); i++)
-      deleteDCObject(deleteList.get(i), false);
+      deleteDCObject(deleteList.get(i), false, 0);
 
    unlockDciAccess();
 

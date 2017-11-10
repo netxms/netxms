@@ -704,13 +704,13 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
 		      DCObject *pItem;
             if (dciId != 0)
             {
-               pItem = device->getDCObjectById(dciId);
+               pItem = device->getDCObjectById(dciId, 0);
             }
             else
             {
                TCHAR name[MAX_PARAM_NAME];
                request->getFieldAsString(varId++, name, MAX_PARAM_NAME);
-               pItem = device->getDCObjectByName(name);
+               pItem = device->getDCObjectByName(name, 0);
             }
 
             if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))

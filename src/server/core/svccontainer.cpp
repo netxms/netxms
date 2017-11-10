@@ -91,9 +91,9 @@ bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void ServiceContainer::fillMessageInternal(NXCPMessage *pMsg)
+void ServiceContainer::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   Container::fillMessageInternal(pMsg);
+   Container::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_UPTIME_DAY, m_uptimeDay);
    pMsg->setField(VID_UPTIME_WEEK, m_uptimeWeek);
    pMsg->setField(VID_UPTIME_MONTH, m_uptimeMonth);

@@ -163,9 +163,9 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessageInternal(NXCPMessage *msg)
+void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(msg);
+   NetObj::fillMessageInternal(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
    msg->setField(VID_ZONE_PROXY, m_proxyNodeId);
 }

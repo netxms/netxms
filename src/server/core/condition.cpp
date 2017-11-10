@@ -243,9 +243,9 @@ bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void ConditionObject::fillMessageInternal(NXCPMessage *pMsg)
+void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg);
+   NetObj::fillMessageInternal(pMsg, userId);
 
    pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
@@ -405,7 +405,7 @@ void ConditionObject::check()
       {
          if (pObject->getObjectClass() == OBJECT_NODE)
          {
-            DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id);
+            DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id, 0);
             if (pItem != NULL)
             {
                if (pItem->getType() == DCO_TYPE_ITEM)

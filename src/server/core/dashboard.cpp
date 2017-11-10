@@ -182,9 +182,9 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessageInternal(NXCPMessage *msg)
+void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-	Container::fillMessageInternal(msg);
+	Container::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->setField(VID_FLAGS, m_options);

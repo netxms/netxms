@@ -87,17 +87,17 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
+void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   Template::fillMessageInternal(msg);
+   Template::fillMessageInternal(msg, userId);
 }
 
 /**
  * Create NXCP message with object's data - stage 2
  */
-void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
+void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
 {
-   Template::fillMessageInternalStage2(msg);
+   Template::fillMessageInternalStage2(msg, userId);
 
    // Sent all DCIs marked for display on overview page or in tooltips
    UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
@@ -110,7 +110,8 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
       DCObject *dci = m_dcObjects->get(i);
       if ((dci->getType() == DCO_TYPE_ITEM) &&
           (dci->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (((DCItem *)dci)->getInstanceDiscoveryMethod() == IDM_NONE))
+          (((DCItem *)dci)->getInstanceDiscoveryMethod() == IDM_NONE) &&
+          dci->hasAccess(userId))
 		{
          if  (dci->isShowInObjectOverview())
          {
@@ -381,7 +382,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
       }
 
    for(i = 0; i < dwNumDeleted; i++)
-      deleteDCObject(pdwDeleteList[i], false);
+      deleteDCObject(pdwDeleteList[i], false, 0);
 
    unlockDciAccess();
    free(pdwDeleteList);
@@ -408,7 +409,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
          }
 
 		for(i = 0; i < numDeleted; i++)
-			deleteDCObject(deleteList[i], false);
+			deleteDCObject(deleteList[i], false, 0);
 
       unlockDciAccess();
 		free(deleteList);
@@ -430,7 +431,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDC
 /**
  * Get list of DCIs to be shown on performance tab
  */
-UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
+UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
 {
 	lockDciAccess(false);
 
@@ -441,7 +442,8 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
       if ((object->getPerfTabSettings() != NULL) &&
           object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
-          object->matchClusterResource())
+          object->matchClusterResource() &&
+          object->hasAccess(userId))
 		{
 			pMsg->setField(dwId++, object->getId());
 			pMsg->setField(dwId++, object->getDescription());
@@ -457,7 +459,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
                // DCI created via instance discovery - send ID of root template item
                // to allow UI to resolve double template case
                // (template -> instance discovery item on node -> actual item on node)
-               DCObject *src = getDCObjectById(object->getTemplateItemId(), false);
+               DCObject *src = getDCObjectById(object->getTemplateItemId(), userId, false);
                pMsg->setField(dwId++, (src != NULL) ? src->getTemplateItemId() : 0);
                dwId += 2;
             }
@@ -482,7 +484,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
 /**
  * Get threshold violation summary into NXCP message
  */
-UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId)
+UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId)
 {
 	UINT32 varId = baseId;
 
@@ -494,7 +496,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE))
+		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE) && object->hasAccess(userId))
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{
@@ -912,18 +914,18 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
 /**
  * Get last (current) DCI values for summary table.
  */
-void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
 {
    if (tableDefinition->isTableDciSource())
-      getTableDciValuesSummary(tableDefinition, tableData);
+      getTableDciValuesSummary(tableDefinition, tableData, userId);
    else
-      getItemDciValuesSummary(tableDefinition, tableData);
+      getItemDciValuesSummary(tableDefinition, tableData, userId);
 }
 
 /**
  * Get last (current) DCI values for summary table using single-value DCIs
  */
-void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
 {
    int offset = tableDefinition->isMultiInstance() ? 2 : 1;
    int baseRow = tableData->getNumRows();
@@ -940,7 +942,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
              ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ?
                RegexpMatch(object->getName(), tc->m_dciName, FALSE) :
                !_tcsicmp(object->getName(), tc->m_dciName)
-             ))
+             ) && object->hasAccess(userId))
          {
             int row;
             if (tableDefinition->isMultiInstance())
@@ -1019,7 +1021,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
 /**
  * Get last (current) DCI values for summary table using table DCIs
  */
-void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId)
 {
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1027,7 +1029,8 @@ void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinitio
       DCObject *o = m_dcObjects->get(i);
       if ((o->getType() == DCO_TYPE_TABLE) && o->hasValue() &&
            (o->getStatus() == ITEM_STATUS_ACTIVE) &&
-           !_tcsicmp(o->getName(), tableDefinition->getTableDciName()))
+           !_tcsicmp(o->getName(), tableDefinition->getTableDciName()) &&
+           o->hasAccess(userId))
       {
          Table *lastValue = ((DCTable*)o)->getLastValue();
          if (lastValue == NULL)
@@ -1150,7 +1153,7 @@ void DataCollectionTarget::leaveMaintenanceMode()
 void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
 {
    lockDciAccess(false);
-   DCObject *dci = getDCObjectById(dciId, false);
+   DCObject *dci = getDCObjectById(dciId, 0, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
       ((DCItem *)dci)->updateCacheSize(conditionId);

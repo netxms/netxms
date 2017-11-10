@@ -119,9 +119,9 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::fillMessageInternal(NXCPMessage *pMsg)
+void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   Container::fillMessageInternal(pMsg);
+   Container::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
    pMsg->setField(VID_TOP_BOTTOM, (INT16)(m_topBottomNumbering ? 1 : 0));
 }

@@ -19,7 +19,9 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.AgentCacheMode;
@@ -99,6 +101,7 @@ public abstract class DataCollectionObject
    private int instanceDiscoveryMethod;
    private String instanceDiscoveryData;
    private String instanceDiscoveryFilter;
+   private List<Long> accessRightList;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -138,6 +141,12 @@ public abstract class DataCollectionObject
       instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
       instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
+
+      Long arr[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
+      if(arr == null)
+         accessRightList = new ArrayList<Long>(0);
+      else
+         accessRightList = new ArrayList<Long>(Arrays.asList(arr));
 	}
 
 	/**
@@ -167,6 +176,7 @@ public abstract class DataCollectionObject
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instance = "";
+      accessRightList = new ArrayList<Long>(0);
 	}
 	
 	/**
@@ -206,6 +216,8 @@ public abstract class DataCollectionObject
          msg.setField(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
       if (instanceDiscoveryFilter != null)
          msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
+      
+      msg.setField(NXCPCodes.VID_ACL, accessRightList.toArray(new Long[accessRightList.size()]));
 	}
 
 	/**
@@ -701,5 +713,15 @@ public abstract class DataCollectionObject
    public final void setInstanceDiscoveryFilter(String instanceDiscoveryFilter)
    {
       this.instanceDiscoveryFilter = instanceDiscoveryFilter;
+   }
+
+   public List<Long> getAccessList()
+   {
+      return accessRightList;
+   }
+
+   public void setAccessList(List<Long> list)
+   {
+      accessRightList = list;
    }
 }

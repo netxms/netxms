@@ -140,7 +140,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16 };
 
    // Find DCI object
-   DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID));
+   DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
    if (dci == NULL)
    {
       response->setField(VID_RCC, RCC_INVALID_DCI_ID);
