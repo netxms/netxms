@@ -603,7 +603,7 @@ public:
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
-   bool cancelFileDownload();
+   UINT32 cancelFileDownload();
 };
 
 /**

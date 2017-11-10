@@ -2117,28 +2117,32 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
 }
 
 /**
- * Send custom request to agent
+ * Cancel file download
  */
-bool AgentConnection::cancelFileDownload()
+UINT32 AgentConnection::cancelFileDownload()
 {
-   UINT32 dwRqId, rcc;
-   NXCPMessage msg(getProtocolVersion());
-   dwRqId = generateRequestId();
-   msg.setId(dwRqId);
-   msg.setCode(CMD_CANCEL_FILE_DOWNLOAD);
+   NXCPMessage msg(CMD_CANCEL_FILE_DOWNLOAD, generateRequestId(), getProtocolVersion());
    msg.setField(VID_REQUEST_ID, m_dwDownloadRequestId);
-   bool success = false;
 
+   UINT32 rcc;
    if (sendMessage(&msg))
    {
-      NXCPMessage *result = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-      if(result != NULL && result->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+      NXCPMessage *result = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_dwCommandTimeout);
+      if (result != NULL)
       {
-         success = true;
+         rcc = result->getFieldAsUInt32(VID_RCC);
+         delete result;
       }
-      delete result;
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
    }
-   return success;
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
 }
 
 /**
