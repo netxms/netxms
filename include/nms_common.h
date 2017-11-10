@@ -181,6 +181,8 @@ typedef int bool;
 #define CPP_COMPILER_VERSION __STR(__BUILD_VERSION_STRING(Microsoft C/C++ Optimizing Compiler Version,_MSC_FULL_VER))
 #endif
 
+#define _Noreturn __declspec(noreturn)
+
 // Disable some warnings:
 //   4577 -  'noexcept' used with no exception handling mode specified
 #pragma warning(disable: 4577)
