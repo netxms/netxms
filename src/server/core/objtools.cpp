@@ -159,24 +159,15 @@ BOOL CheckObjectToolAccess(UINT32 toolId, UINT32 userId)
  */
 static void GetAgentTable(void *pArg)
 {
-   NXCPMessage msg;
-   TCHAR *pszEnum, *pszRegEx, *pszLine, buffer[256];
-   AgentConnection *pConn;
-   UINT32 dwResult, dwLen;
-   int *pnSubstrPos, nPos;
-   regex_t preg;
-   regmatch_t *pMatchList;
-   DB_RESULT hResult;
-	Table table;
+   NXCPMessage msg(CMD_TABLE_DATA, ((TOOL_STARTUP_INFO *)pArg)->dwRqId);
 
-   // Prepare data message
-   msg.setCode(CMD_TABLE_DATA);
-   msg.setId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
+   TCHAR *pszRegEx, buffer[256];
+	Table table;
 
    // Parse tool data. For agent table, it should have the following format:
    // table_title<separator>enum<separator>matching_regexp
    // where <separator> is a character with code 0x7F
-   pszEnum = _tcschr(((TOOL_STARTUP_INFO *)pArg)->pszToolData, _T('\x7F'));
+   TCHAR *pszEnum = _tcschr(((TOOL_STARTUP_INFO *)pArg)->pszToolData, _T('\x7F'));
    if (pszEnum != NULL)
    {
       *pszEnum = 0;
@@ -199,43 +190,45 @@ static void GetAgentTable(void *pArg)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
 
-         hResult = DBSelectPrepared(hStmt);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
             int numCols = DBGetNumRows(hResult);
             if (numCols > 0)
             {
-               pnSubstrPos = (int *)malloc(sizeof(int) * numCols);
+               int *pnSubstrPos = (int *)malloc(sizeof(int) * numCols);
                for(int i = 0; i < numCols; i++)
                {
                   DBGetField(hResult, i, 0, buffer, 256);
                   table.addColumn(buffer, DBGetFieldULong(hResult, i, 1));
                   pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
                }
+
+               regex_t preg;
                if (_tregcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
                {
-                  pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
+                  AgentConnection *pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                   if (pConn != NULL)
                   {
                      StringList *values;
-                     dwResult = pConn->getList(pszEnum, &values);
+                     UINT32 dwResult = pConn->getList(pszEnum, &values);
                      if (dwResult == ERR_SUCCESS)
                      {
-                        pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (numCols + 1));
+                        regmatch_t *pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (numCols + 1));
                         for(int i = 0; i < values->size(); i++)
                         {
                            const TCHAR *line = values->get(i);
-                           if (_tregexec(&preg, pszLine, numCols + 1, pMatchList, 0) == 0)
+                           if (_tregexec(&preg, line, numCols + 1, pMatchList, 0) == 0)
                            {
                               table.addRow();
 
                               // Write data for current row into message
                               for(int j = 0; j < numCols; j++)
                               {
-                                 nPos = pnSubstrPos[j];
-                                 dwLen = pMatchList[nPos].rm_eo - pMatchList[nPos].rm_so;
-                                 memcpy(buffer, &pszLine[pMatchList[nPos].rm_so], dwLen * sizeof(TCHAR));
-                                 buffer[dwLen] = 0;
+                                 int pos = pnSubstrPos[j];
+                                 size_t len = pMatchList[pos].rm_eo - pMatchList[pos].rm_so;
+                                 memcpy(buffer, &line[pMatchList[pos].rm_so], len * sizeof(TCHAR));
+                                 buffer[len] = 0;
                                  table.set(j, buffer);
                               }
                            }
