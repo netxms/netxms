@@ -136,12 +136,12 @@ static UINT32 DeployConfig(AbstractCommSession *session, const uuid& guid, NXCPM
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
-		UINT32 size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+		size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (_write(fh, data, size) == size)
+			if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
 			{
 		      session->debugPrintf(3, _T("Configuration file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;
@@ -182,12 +182,12 @@ static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NX
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
-		UINT32 size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+		size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
 			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (_write(fh, data, size) == size)
+			if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
 			{
 		      session->debugPrintf(3, _T("Log parser file %s saved successfully"), path);
 				rcc = ERR_SUCCESS;

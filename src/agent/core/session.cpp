@@ -1005,16 +1005,12 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    if (m_masterServer)
    {
-      BYTE *pConfig;
-      int hFile;
-      UINT32 size;
-
       if (pRequest->isFieldExist(VID_CONFIG_FILE))
       {
-         size = pRequest->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
-         pConfig = (BYTE *)malloc(size);
+         size_t size = pRequest->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
+         BYTE *pConfig = (BYTE *)malloc(size);
          pRequest->getFieldAsBinary(VID_CONFIG_FILE, pConfig, size);
-         hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+         int hFile = _topen(g_szConfigFile, O_CREAT | O_TRUNC | O_WRONLY, 0644);
          if (hFile != -1)
          {
             if (size > 0)
@@ -1027,7 +1023,7 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 							i--;
                   }
             }
-            if (_write(hFile, pConfig, size) == size)
+            if (_write(hFile, pConfig, static_cast<unsigned int>(size)) == size)
                pMsg->setField(VID_RCC, ERR_SUCCESS);
             else
                pMsg->setField(VID_RCC, ERR_IO_FAILURE);
