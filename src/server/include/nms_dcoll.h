@@ -217,6 +217,7 @@ protected:
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
    TCHAR m_instance[MAX_DB_STRING];
+   IntegerArray<UINT32> *m_visibilityRights;
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -334,6 +335,7 @@ public:
    const TCHAR *getInstance() const { return m_instance; }
    void expandInstance();
    bool hasValue();
+   bool hasAccess(UINT32 userId);
 };
 
 /**

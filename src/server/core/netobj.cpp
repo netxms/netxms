@@ -1106,7 +1106,7 @@ static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const 
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
  */
-void NetObj::fillMessageInternal(NXCPMessage *pMsg)
+void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
@@ -1186,19 +1186,19 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
  * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
-void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg)
+void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
 {
 }
 
 /**
  * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *msg)
+void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
 {
    lockProperties();
-   fillMessageInternal(msg);
+   fillMessageInternal(msg, userId);
    unlockProperties();
-   fillMessageInternalStage2(msg);
+   fillMessageInternalStage2(msg, userId);
 
    lockACL();
    m_accessList->fillMessage(msg);

@@ -157,9 +157,9 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void BusinessService::fillMessageInternal(NXCPMessage *pMsg)
+void BusinessService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   ServiceContainer::fillMessageInternal(pMsg);
+   ServiceContainer::fillMessageInternal(pMsg, userId);
 }
 
 /**

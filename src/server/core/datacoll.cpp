@@ -517,7 +517,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       if ((object != NULL) && object->isDataCollectionTarget())
       {
          object->incRefCount();
-         DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), true);
+         DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), 0, true);
          if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
@@ -667,7 +667,7 @@ int GetDCObjectType(UINT32 nodeId, UINT32 dciId)
    Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    if (node != NULL)
    {
-      DCObject *dco = node->getDCObjectById(dciId);
+      DCObject *dco = node->getDCObjectById(dciId, 0);
       if (dco != NULL)
       {
          return dco->getType();

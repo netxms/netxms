@@ -133,9 +133,9 @@ bool AgentPolicyLogParser::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Create NXCP message with policy data
  */
-void AgentPolicyLogParser::fillMessageInternal(NXCPMessage *msg)
+void AgentPolicyLogParser::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   AgentPolicy::fillMessageInternal(msg);
+   AgentPolicy::fillMessageInternal(msg, userId);
 	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 

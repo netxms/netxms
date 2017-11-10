@@ -267,9 +267,9 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::fillMessageInternal(NXCPMessage *pMsg)
+void SlmCheck::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-	NetObj::fillMessageInternal(pMsg);
+	NetObj::fillMessageInternal(pMsg, userId);
 	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->setField(VID_REASON, m_reason);

@@ -4719,9 +4719,9 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 /**
  * Create NXCP message with object's data
  */
-void Node::fillMessageInternal(NXCPMessage *pMsg)
+void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(pMsg);
+   DataCollectionTarget::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);

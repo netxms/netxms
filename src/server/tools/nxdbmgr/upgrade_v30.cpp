@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.11 to 30.12
+ */
+static bool H_UpgradeFromV11()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 3)
+   {
+      static const TCHAR *batch =
+               _T("ALTER TABLE dc_tables ADD visibility_rights varchar(2000)\n")
+               _T("ALTER TABLE items ADD visibility_rights varchar(2000)\n")
+               _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 3));
+      CHK_EXEC(SetMinorSchemaVersion(12));
+   }
+   return true;
+}
+
+/**
  * Upgrade from 30.10 to 30.11
  */
 static bool H_UpgradeFromV10()
@@ -542,6 +560,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 30, 12, H_UpgradeFromV11 },
    { 10, 30, 11, H_UpgradeFromV10 },
    { 9, 30, 10, H_UpgradeFromV9 },
    { 8, 30, 9, H_UpgradeFromV8 },

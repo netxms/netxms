@@ -207,9 +207,9 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void AccessPoint::fillMessageInternal(NXCPMessage *msg)
+void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg);
+   DataCollectionTarget::fillMessageInternal(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);

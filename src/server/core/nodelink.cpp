@@ -157,9 +157,9 @@ bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void NodeLink::fillMessageInternal(NXCPMessage *pMsg)
+void NodeLink::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-	ServiceContainer::fillMessageInternal(pMsg);
+	ServiceContainer::fillMessageInternal(pMsg, userId);
 	pMsg->setField(VID_NODE_ID, m_nodeId);
 }
 

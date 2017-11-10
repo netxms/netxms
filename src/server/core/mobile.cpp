@@ -180,9 +180,9 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::fillMessageInternal(NXCPMessage *msg)
+void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg);
+   DataCollectionTarget::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));

@@ -70,6 +70,7 @@ DCObject::DCObject()
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    m_instance[0] = 0;
+   m_visibilityRights = new IntegerArray<UINT32>();
 }
 
 /**
@@ -115,6 +116,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_instanceFilter = NULL;
    setInstanceFilter(pSrc->m_instanceFilterSource);
    _tcscpy(m_instance, pSrc->m_instance);
+   m_visibilityRights = new IntegerArray<UINT32>(pSrc->m_visibilityRights);
 }
 
 /**
@@ -160,6 +162,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    m_instance[0] = 0;
+   m_visibilityRights = new IntegerArray<UINT32>();
 }
 
 /**
@@ -225,6 +228,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_instanceFilter = NULL;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   m_visibilityRights = new IntegerArray<UINT32>();
 }
 
 /**
@@ -241,6 +245,7 @@ DCObject::~DCObject()
    free(m_instanceDiscoveryData);
    free(m_instanceFilterSource);
    delete m_instanceFilter;
+   delete m_visibilityRights;
 }
 
 /**
@@ -692,6 +697,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    if (m_instanceFilterSource != NULL)
       pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
    pMsg->setField(VID_INSTANCE, m_instance);
+   pMsg->setFieldFromInt32Array(VID_ACL, m_visibilityRights);
    unlock();
 }
 
@@ -754,6 +760,8 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    setInstanceFilter(pszStr);
    safe_free(pszStr);
    pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   m_visibilityRights->clear();
+   pMsg->getFieldAsInt32Array(VID_ACL, m_visibilityRights);
 
 	unlock();
 }
@@ -1249,6 +1257,34 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
 }
 
 /**
+ * Checks if this DCO object is visible by current user
+ */
+bool DCObject::hasAccess(UINT32 userId)
+{
+   if(m_visibilityRights->isEmpty())
+      return true;
+
+   if(userId == 0)
+      return true;
+
+   for(int i = 0; i < m_visibilityRights->size(); i++)
+   {
+      UINT32 id = m_visibilityRights->get(i);
+      if((id & GROUP_FLAG) != 0)
+      {
+         if(CheckUserMembership(userId, id))
+            return true;
+      }
+      else
+      {
+         if(id == userId)
+            return true;
+      }
+   }
+   return false;
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *DCObject::toJson()
@@ -1282,6 +1318,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
    json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    json_object_set_new(root, "instance", json_string_t(m_instance));
+   json_object_set_new(root, "visibility", m_visibilityRights->toJson());
    return root;
 }
 

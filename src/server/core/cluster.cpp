@@ -382,11 +382,11 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessageInternal(NXCPMessage *pMsg)
+void Cluster::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
 	UINT32 i, dwId;
 
-   DataCollectionTarget::fillMessageInternal(pMsg);
+   DataCollectionTarget::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
 
@@ -796,7 +796,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
          continue;
 
       Node *node = (Node *)m_childList->get(i);
-      DCObject *dco = node->getDCObjectByTemplateId(item->getId());
+      DCObject *dco = node->getDCObjectByTemplateId(item->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
@@ -860,7 +860,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
          continue;
 
       Node *node = (Node *)m_childList->get(i);
-      DCObject *dco = node->getDCObjectByTemplateId(table->getId());
+      DCObject *dco = node->getDCObjectByTemplateId(table->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&

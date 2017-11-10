@@ -234,9 +234,9 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessageInternal(NXCPMessage *pMsg)
+void NetworkService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg);
+   NetObj::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_IP_PROTO, m_proto);

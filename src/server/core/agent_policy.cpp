@@ -206,9 +206,9 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Create NXCP message with policy data
  */
-void AgentPolicy::fillMessageInternal(NXCPMessage *msg)
+void AgentPolicy::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-	NetObj::fillMessageInternal(msg);
+	NetObj::fillMessageInternal(msg, userId);
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->setField(VID_VERSION, m_version);
 }

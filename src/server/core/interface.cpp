@@ -1016,9 +1016,9 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessageInternal(NXCPMessage *pMsg)
+void Interface::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg);
+   NetObj::fillMessageInternal(pMsg, userId);
 
    m_ipAddressList.fillMessage(pMsg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
    pMsg->setField(VID_IF_INDEX, m_index);

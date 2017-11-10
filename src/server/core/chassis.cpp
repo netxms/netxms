@@ -154,9 +154,9 @@ void Chassis::updateControllerBinding()
 /**
  * Create NXCP message with object's data
  */
-void Chassis::fillMessageInternal(NXCPMessage *msg)
+void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg);
+   DataCollectionTarget::fillMessageInternal(msg, userId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_RACK_ID, m_rackId);
    msg->setField(VID_RACK_IMAGE, m_rackImage);

@@ -436,7 +436,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData);
+         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData, userId);
       }
       obj->decRefCount();
    }

@@ -365,9 +365,9 @@ json_t *Sensor::toJson()
    return root;
 }
 
-void Sensor::fillMessageInternal(NXCPMessage *msg)
+void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg);
+   DataCollectionTarget::fillMessageInternal(msg, userId);
    msg->setField(VID_SENSOR_FLAGS, m_flags);
 	msg->setField(VID_MAC_ADDR, m_macAddress);
    msg->setField(VID_DEVICE_CLASS, m_deviceClass);
