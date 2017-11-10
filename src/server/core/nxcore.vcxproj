@@ -229,6 +229,7 @@
     <ClCompile Include="dcitem.cpp" />
     <ClCompile Include="dcithreshold.cpp" />
     <ClCompile Include="dcivalue.cpp" />
+    <ClCompile Include="dci_recalc.cpp" />
     <ClCompile Include="dcobject.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="dctable.cpp" />
