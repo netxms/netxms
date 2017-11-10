@@ -178,10 +178,6 @@ stop_search:
 	if (*debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
 	   *debugLevel = (int)s_debugLevel;
 
-   int numTags = 0, lvl = 0;
-   TCHAR tagBuffer[254], lvlBuffer[2];
-   TCHAR const *ptr;
-
    if (s_debugTags != NULL)
    {
       int count;

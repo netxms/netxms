@@ -9620,7 +9620,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          count = pRequest->getFieldAsUInt32(VID_NUM_ACTIONS);
          pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
          pRequest->getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
-         for(int i = 0; i < count; i++)
+         for(i = 0; i < count; i++)
             CreateActionExportRecord(str, pdwList[i]);
          safe_free(pdwList);
          str.append(_T("\t</actions>\n"));
@@ -9849,7 +9849,7 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
-	UINT32 dwLen, dwQLen, dwCertId;
+	UINT32 dwCertId;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert;
@@ -9862,15 +9862,15 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
-		dwLen = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
-		if (dwLen > 0)
+		size_t len = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
+		if (len > 0)
 		{
-			pData = (BYTE *)malloc(dwLen);
-			pRequest->getFieldAsBinary(VID_CERTIFICATE, pData, dwLen);
+			pData = (BYTE *)malloc(len);
+			pRequest->getFieldAsBinary(VID_CERTIFICATE, pData, len);
 
 			// Validate certificate
 			p = pData;
-			pCert = d2i_X509(NULL, &p, dwLen);
+			pCert = d2i_X509(NULL, &p, (long)len);
 			if (pCert != NULL)
 			{
             char subjectName[1024];
@@ -9887,13 +9887,13 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 				pszEscComments = EncodeSQLString(pszComments);
 				free(pszComments);
 				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
-				dwQLen = dwLen * 2 + (UINT32)_tcslen(pszEscComments) + (UINT32)_tcslen(pszEscSubject) + 256;
-				pszQuery = (TCHAR *)malloc(dwQLen * sizeof(TCHAR));
-				_sntprintf(pszQuery, dwQLen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
+				size_t qlen = len * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256;
+				pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+				_sntprintf(pszQuery, qlen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
 				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
 				free(pszEscSubject);
 				free(pszEscComments);
-				BinToStr(pData, dwLen, &pszQuery[_tcslen(pszQuery)]);
+				BinToStr(pData, len, &pszQuery[_tcslen(pszQuery)]);
 				_tcscat(pszQuery, _T("')"));
 				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 				if (DBQuery(hdb, pszQuery))
