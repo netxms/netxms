@@ -154,8 +154,8 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    list.splitAndAdd(pszTmp, _T(","));
    for(int i = 0; i < list.size(); i++)
    {
-      if(*(list.get(i)) != 0)
-         m_visibilityRights->add(_tcstoll(list.get(i), NULL, 0));
+      if (*(list.get(i)) != 0)
+         m_visibilityRights->add(_tcstol(list.get(i), NULL, 0));
    }
    free(pszTmp);
 
