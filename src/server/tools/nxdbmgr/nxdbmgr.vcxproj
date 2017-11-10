@@ -179,6 +179,7 @@
     <ClCompile Include="upgrade.cpp" />
     <ClCompile Include="upgrade_v0.cpp" />
     <ClCompile Include="upgrade_v21.cpp" />
+    <ClCompile Include="upgrade_v22.cpp" />
     <ClCompile Include="upgrade_v30.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -902,7 +902,7 @@ UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *s
 UINT32 Sensor::getListFromAgent(const TCHAR *name, StringList **list)
 {
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
-   UINT32 i, dwTries = 3;
+   UINT32 dwTries = 3;
 
    *list = NULL;
 

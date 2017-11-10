@@ -1405,7 +1405,9 @@ restart_agent_check:
 
             }
             else
+            {
                m_pollCountSNMP = 0;
+            }
 
             // Update authoritative engine data for SNMPv3
             if ((pTransport->getSnmpVersion() == SNMP_VERSION_3) && (pTransport->getAuthoritativeEngine() != NULL))
@@ -4235,7 +4237,7 @@ end_loop:
 UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
 {
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
-   UINT32 i, dwTries = 3;
+   UINT32 dwTries = 3;
 
    *list = NULL;
 

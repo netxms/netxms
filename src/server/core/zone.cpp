@@ -189,12 +189,15 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 {
 	if (request->isFieldExist(VID_ZONE_PROXY))
 		m_proxyNodeId = request->getFieldAsUInt32(VID_ZONE_PROXY);
+
 	if (request->isFieldExist(VID_ZONE_SNMP_PORT_LIST_BASE) && request->isFieldExist(VID_ZONE_SNMP_PORT_COUNT))
 	{
 	   m_snmpPorts.clear();
-	   for(int i = 0; i < request->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT); i++)
+      int count = request->getFieldAsUInt32(VID_ZONE_SNMP_PORT_COUNT);
+      UINT32 fieldId = VID_ZONE_SNMP_PORT_LIST_BASE;
+	   for(int i = 0; i < count; i++)
 	   {
-	      m_snmpPorts.addPreallocated(request->getFieldAsString(VID_ZONE_SNMP_PORT_LIST_BASE + i));
+	      m_snmpPorts.addPreallocated(request->getFieldAsString(fieldId++));
 	   }
 	}
 
