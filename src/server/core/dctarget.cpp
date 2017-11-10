@@ -1173,7 +1173,7 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
 void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
 {
    lockDciAccess(false);
-   DCObject *dci = getDCObjectById(dciId, false);
+   DCObject *dci = getDCObjectById(dciId, 0, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
       nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
