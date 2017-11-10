@@ -3550,7 +3550,7 @@ void ClientSession::recalculateDCIValues(NXCPMessage *request)
          {
             UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
             debugPrintf(4, _T("recalculateDCIValues: request for DCI %d at target %s [%d]"), dciId, object->getName(), object->getId());
-            DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId);
+            DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, m_dwUserId);
             if (dci != NULL)
             {
                if (dci->getType() == DCO_TYPE_ITEM)

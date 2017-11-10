@@ -1156,10 +1156,10 @@ void DataCollectionTarget::leaveMaintenanceMode()
 /**
  * Update cache size for given data collection item
  */
-void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 userId, UINT32 conditionId)
+void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
 {
    lockDciAccess(false);
-   DCObject *dci = getDCObjectById(dciId, userId, false);
+   DCObject *dci = getDCObjectById(dciId, 0, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
       static_cast<DCItem*>(dci)->updateCacheSize(conditionId);
