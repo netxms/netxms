@@ -351,9 +351,6 @@
     <ClCompile Include="script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sensor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
