@@ -101,7 +101,7 @@ public abstract class DataCollectionObject
    private int instanceDiscoveryMethod;
    private String instanceDiscoveryData;
    private String instanceDiscoveryFilter;
-   private List<Long> accessRightList;
+   private List<Long> accessList;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -144,9 +144,9 @@ public abstract class DataCollectionObject
 
       Long arr[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
       if(arr == null)
-         accessRightList = new ArrayList<Long>(0);
+         accessList = new ArrayList<Long>(0);
       else
-         accessRightList = new ArrayList<Long>(Arrays.asList(arr));
+         accessList = new ArrayList<Long>(Arrays.asList(arr));
 	}
 
 	/**
@@ -176,7 +176,7 @@ public abstract class DataCollectionObject
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instance = "";
-      accessRightList = new ArrayList<Long>(0);
+      accessList = new ArrayList<Long>(0);
 	}
 	
 	/**
@@ -217,7 +217,7 @@ public abstract class DataCollectionObject
       if (instanceDiscoveryFilter != null)
          msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
       
-      msg.setField(NXCPCodes.VID_ACL, accessRightList.toArray(new Long[accessRightList.size()]));
+      msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
 	}
 
 	/**
@@ -715,13 +715,23 @@ public abstract class DataCollectionObject
       this.instanceDiscoveryFilter = instanceDiscoveryFilter;
    }
 
+   /**
+    * Get data collection object access list
+    * 
+    * @return access list
+    */
    public List<Long> getAccessList()
    {
-      return accessRightList;
+      return accessList;
    }
 
+   /**
+    * Set data collection object access list
+    * 
+    * @param list new access list
+    */
    public void setAccessList(List<Long> list)
    {
-      accessRightList = list;
+      accessList = list;
    }
 }

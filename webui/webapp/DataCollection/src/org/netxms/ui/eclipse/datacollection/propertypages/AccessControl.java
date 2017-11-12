@@ -43,9 +43,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
-import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
-import org.netxms.ui.eclipse.datacollection.propertypages.helpers.VisibilityUserListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -54,9 +53,8 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 /**
  * "Access Control" property page
  */
-public class VisibilityControl extends DCIPropertyPageDialog
+public class AccessControl extends DCIPropertyPageDialog
 {
-   private DataCollectionObjectEditor editor;
    private DataCollectionObject dco;
 	private Set<AbstractUserObject> acl = new HashSet<AbstractUserObject>();
 	private TableViewer viewer;
@@ -65,22 +63,12 @@ public class VisibilityControl extends DCIPropertyPageDialog
 	private static final String info[] = {"Inherited from object access rights"};
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createControl(Composite parent)
-	{
-		noDefaultAndApplyButton();
-		super.createControl(parent);
-	}
-	
-	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-      editor = (DataCollectionObjectEditor)getElement().getAdapter(DataCollectionObjectEditor.class);
+      Composite dialogArea = (Composite)super.createContents(parent);
       dco = editor.getObject();      
 
       // Initiate loading of user manager plugin if it was not loaded before
@@ -95,8 +83,6 @@ public class VisibilityControl extends DCIPropertyPageDialog
 				acl.add(o);
 		}
 		
-		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginWidth = 0;
@@ -104,11 +90,11 @@ public class VisibilityControl extends DCIPropertyPageDialog
 		dialogArea.setLayout(layout);
 		
 		Label label = new Label(dialogArea, SWT.NONE);
-		label.setText("Visible to:");
+		label.setText("Restrict access to the following users");
 		
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new VisibilityUserListLabelProvider());
+		viewer.setLabelProvider(new AccessListLabelProvider());
 		viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
 		viewer.getTable().setSortDirection(SWT.UP);
 		GridData gd = new GridData();
@@ -118,8 +104,7 @@ public class VisibilityControl extends DCIPropertyPageDialog
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 300;
 		viewer.getTable().setLayoutData(gd);
-		viewer.setInput(acl.toArray());
-		updateInfoNote();
+		setViewerInput();
 		
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -174,14 +159,14 @@ public class VisibilityControl extends DCIPropertyPageDialog
 	}
 	
 	/**
-	 * Adds info element to the list if empty
+	 * Set viewer input
 	 */
-	public void updateInfoNote()
+	private void setViewerInput()
 	{
-      if(acl.size() == 0)
-      {
+      if (acl.isEmpty())
          viewer.setInput(info);
-      }
+      else
+         viewer.setInput(acl.toArray());
 	}
 	
 	/**
@@ -194,7 +179,7 @@ public class VisibilityControl extends DCIPropertyPageDialog
 		{
 			for(AbstractUserObject o : dlg.getSelection())
 				acl.add(o);
-			viewer.setInput(acl.toArray());
+			setViewerInput();
 		}
 	}
 	
@@ -206,8 +191,7 @@ public class VisibilityControl extends DCIPropertyPageDialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		for(Object o : selection.toList())
 			acl.remove(o);
-		viewer.setInput(acl.toArray());
-		updateInfoNote();
+      setViewerInput();
 	}
 	
 	/**
@@ -241,4 +225,14 @@ public class VisibilityControl extends DCIPropertyPageDialog
 		applyChanges(false);
 		return true;
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
+   @Override
+   protected void performDefaults()
+   {
+      acl.clear();
+      setViewerInput();
+   }
 }

@@ -1,7 +1,10 @@
 package org.netxms.ui.eclipse.datacollection.propertypages.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 /**
@@ -9,14 +12,16 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
  * Uses default workbench label provider for user object and 
  * implements own for String like with warning. 
  */
-public class VisibilityUserListLabelProvider extends LabelProvider
+public class AccessListLabelProvider extends LabelProvider implements IColorProvider
 {
+   private static final Color HINT_FOREGROUND = new Color(Display.getDefault(), 192, 192, 192);
+   
    private WorkbenchLabelProvider workbenchLabelProvider;
    
    /**
     * Default constructor
     */
-   public VisibilityUserListLabelProvider()
+   public AccessListLabelProvider()
    {
       workbenchLabelProvider = new WorkbenchLabelProvider();
    }    
@@ -27,7 +32,7 @@ public class VisibilityUserListLabelProvider extends LabelProvider
    @Override
    public Image getImage(Object element)
    {
-      if(element instanceof String)
+      if (element instanceof String)
          return null;
       return workbenchLabelProvider.getImage(element);
    }
@@ -51,5 +56,25 @@ public class VisibilityUserListLabelProvider extends LabelProvider
    {
       workbenchLabelProvider.dispose();
       super.dispose();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (element instanceof String)
+         return HINT_FOREGROUND;
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return null;
    }
 }
