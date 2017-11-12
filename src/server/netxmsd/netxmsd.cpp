@@ -112,12 +112,11 @@ static BOOL ExecAndWait(char *pszCommand)
    return bSuccess;
 }
 
-/**
- * Create minidump of given process
- */
-
 #ifdef _WIN32
 
+/**
+* Create minidump of given process
+*/
 static void CreateMiniDump(DWORD pid)
 {
    HANDLE hFile, hProcess;
@@ -128,7 +127,7 @@ static void CreateMiniDump(DWORD pid)
 	if (hProcess != NULL)
 	{
       TCHAR fname[MAX_PATH];
-      _sntprintf(fname, MAX_PATH, _T("%s\\netxmsd-%u-%u.mdmp"), g_szDumpDir, pid, time(NULL));
+      _sntprintf(fname, MAX_PATH, _T("%s\\netxmsd-%u-%I64u.mdmp"), g_szDumpDir, pid, static_cast<UINT64>(time(NULL)));
 		hFile = CreateFile(fname, GENERIC_WRITE, 0, NULL,
 								 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != INVALID_HANDLE_VALUE)
