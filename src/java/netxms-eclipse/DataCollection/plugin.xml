@@ -293,7 +293,7 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptions"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#110"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#200"
               name="%page.name.OtherOptions">
            <enabledWhen>
               <instanceof
@@ -372,9 +372,9 @@
            </enabledWhen>
         </page>
         <page
-              class="org.netxms.ui.eclipse.datacollection.propertypages.VisibilityControl"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.InstanceDiscovery#50"
-              name="Visibility">
+              class="org.netxms.ui.eclipse.datacollection.propertypages.AccessControl"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.AccessControl#120"
+              name="Access Control">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionObject">
