@@ -582,29 +582,26 @@ bool User::saveToDatabase(DB_HANDLE hdb)
  */
 bool User::deleteFromDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-	bool success;
-
-	success = DBBegin(hdb);
+	bool success = DBBegin(hdb);
 	if (success)
 	{
-		_sntprintf(query, 256, _T("DELETE FROM users WHERE id=%d"), m_id);
-		success = DBQuery(hdb, query);
-		if (success)
-		{
-			_sntprintf(query, 256, _T("DELETE FROM user_profiles WHERE user_id=%d"), m_id);
-			success = DBQuery(hdb, query);
-			if (success)
-			{
-				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				success = DBQuery(hdb, query);
-			}
-		}
-		if (success)
-			DBCommit(hdb);
-		else
-			DBRollback(hdb);
+	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM users WHERE id=?"));
 	}
+
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_profiles WHERE user_id=?"));
+   }
+
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
+   }
+
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
 	return success;
 }
 
@@ -918,29 +915,26 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
  */
 bool Group::deleteFromDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-	bool success;
-
-	success = DBBegin(hdb);
+	bool success = DBBegin(hdb);
 	if (success)
 	{
-		_sntprintf(query, 256, _T("DELETE FROM user_groups WHERE id=%d"), m_id);
-		success = DBQuery(hdb, query);
-		if (success)
-		{
-			_sntprintf(query, 256, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
-			success = DBQuery(hdb, query);
-			if (success)
-			{
-				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				success = DBQuery(hdb, query);
-			}
-		}
-		if (success)
-			DBCommit(hdb);
-		else
-			DBRollback(hdb);
+	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_groups WHERE id=?"));
 	}
+
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM user_group_members WHERE group_id=?"));
+   }
+
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
+   }
+
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
 	return success;
 }
 
