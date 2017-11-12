@@ -160,7 +160,8 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
- *    transformation_script,comments,guid,visibility_rights
+ *    transformation_script,comments,guid,instd_method,instd_data,
+ *    instd_filter,instance
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -184,6 +185,14 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
    m_guid = DBGetFieldGUID(hResult, iRow, 17);
    setTransformationScript(pszTmp);
    free(pszTmp);
+   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
+   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, NULL, 0);
+   m_instanceFilterSource = NULL;
+   m_instanceFilter = NULL;
+   pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
+   setInstanceFilter(pszTmp);
+   free(pszTmp);
+   DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
 
    m_owner = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
@@ -204,29 +213,11 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
 		DBFreeStatement(hStmt);
 	}
 
-	loadCustomSchedules(hdb);
+   loadAccessList(hdb);
+   loadCustomSchedules(hdb);
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
    loadThresholds(hdb);
-
-   m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
-   m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, NULL, 0);
-   m_instanceFilterSource = NULL;
-   m_instanceFilter = NULL;
-   pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
-   setInstanceFilter(pszTmp);
-   free(pszTmp);
-   DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
-   //set visibility rights
-   pszTmp = DBGetField(hResult, iRow, 21, NULL, 0);
-   StringList list;
-   list.splitAndAdd(pszTmp, _T(","));
-   for(int i = 0; i < list.size(); i++)
-   {
-      if(*(list.get(i)) != 0)
-         m_visibilityRights->add(_tcstol(list.get(i), NULL, 0));
-   }
-   free(pszTmp);
 }
 
 /**
@@ -499,16 +490,16 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
 									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=?,")
-									  _T("instd_method=?,instd_data=?,instd_filter=?,instance=?,visibility_rights=? WHERE item_id=?"));
+									  _T("instd_method=?,instd_data=?,instd_filter=?,instance=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,comments,guid, ")
-									  _T("instd_method,instd_data,instd_filter,instance,visibility_rights,item_id) ")
-									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,guid,")
+									  _T("instd_method,instd_data,instd_filter,instance,item_id) ")
+									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -537,16 +528,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
    DBBind(hStmt, 21, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
-   String tmp;
-   int size = m_visibilityRights->size();
-   for(int i = 0; i < size; i++)
-   {
-      tmp.append(m_visibilityRights->get(i));
-      if(i != (size - 1))
-         tmp.append(_T(','));
-   }
-   DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, tmp, DB_BIND_STATIC);
-   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

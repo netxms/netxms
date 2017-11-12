@@ -217,12 +217,13 @@ protected:
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
    TCHAR m_instance[MAX_DB_STRING];
-   IntegerArray<UINT32> *m_visibilityRights;
+   IntegerArray<UINT32> *m_accessList;
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
+   bool loadAccessList(DB_HANDLE hdb);
 	bool loadCustomSchedules(DB_HANDLE hdb);
    bool matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp);
 

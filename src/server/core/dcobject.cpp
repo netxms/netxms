@@ -70,7 +70,7 @@ DCObject::DCObject()
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    m_instance[0] = 0;
-   m_visibilityRights = new IntegerArray<UINT32>();
+   m_accessList = new IntegerArray<UINT32>(0, 16);
 }
 
 /**
@@ -116,7 +116,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_instanceFilter = NULL;
    setInstanceFilter(pSrc->m_instanceFilterSource);
    _tcscpy(m_instance, pSrc->m_instance);
-   m_visibilityRights = new IntegerArray<UINT32>(pSrc->m_visibilityRights);
+   m_accessList = new IntegerArray<UINT32>(pSrc->m_accessList);
 }
 
 /**
@@ -162,7 +162,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    m_instance[0] = 0;
-   m_visibilityRights = new IntegerArray<UINT32>();
+   m_accessList = new IntegerArray<UINT32>(0, 16);
 }
 
 /**
@@ -228,7 +228,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_instanceFilter = NULL;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
-   m_visibilityRights = new IntegerArray<UINT32>();
+   m_accessList = new IntegerArray<UINT32>(0, 16);
 }
 
 /**
@@ -245,7 +245,33 @@ DCObject::~DCObject()
    free(m_instanceDiscoveryData);
    free(m_instanceFilterSource);
    delete m_instanceFilter;
-   delete m_visibilityRights;
+   delete m_accessList;
+}
+
+/**
+ * Load access list
+ */
+bool DCObject::loadAccessList(DB_HANDLE hdb)
+{
+   m_accessList->clear();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id FROM dci_access WHERE dci_id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         m_accessList->add(DBGetFieldULong(hResult, i, 0));
+      }
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+   return hResult != NULL;
 }
 
 /**
@@ -257,10 +283,12 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
    if (!(m_flags & DCF_ADVANCED_SCHEDULE))
 		return true;
 
-	TCHAR query[256];
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT schedule FROM dci_schedules WHERE item_id=?"));
+   if (hStmt == NULL)
+      return false;
 
-   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_id);
-   DB_RESULT hResult = DBSelect(hdb, query);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
@@ -274,7 +302,7 @@ bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
       }
       DBFreeResult(hResult);
    }
-
+   DBFreeStatement(hStmt);
 	return hResult != NULL;
 }
 
@@ -697,7 +725,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    if (m_instanceFilterSource != NULL)
       pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
    pMsg->setField(VID_INSTANCE, m_instance);
-   pMsg->setFieldFromInt32Array(VID_ACL, m_visibilityRights);
+   pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
    unlock();
 }
 
@@ -718,14 +746,17 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
 	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
 	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
-	safe_free(m_pszPerfTabSettings);
+   m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+
+	free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
-	m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
-   TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
-   safe_free_and_null(m_comments);
+
+	free(m_comments);
    m_comments = pMsg->getFieldAsString(VID_COMMENTS);
+
+   TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    setTransformationScript(pszStr);
-   safe_free(pszStr);
+   free(pszStr);
 
    // Update schedules
    int count = pMsg->getFieldAsInt32(VID_NUM_SCHEDULES);
@@ -753,15 +784,16 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
 
    m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
 
-   safe_free(m_instanceDiscoveryData);
+   free(m_instanceDiscoveryData);
    m_instanceDiscoveryData = pMsg->getFieldAsString(VID_INSTD_DATA);
 
    pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
    setInstanceFilter(pszStr);
-   safe_free(pszStr);
+   free(pszStr);
    pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
-   m_visibilityRights->clear();
-   pMsg->getFieldAsInt32Array(VID_ACL, m_visibilityRights);
+
+   m_accessList->clear();
+   pMsg->getFieldAsInt32Array(VID_ACL, m_accessList);
 
 	unlock();
 }
@@ -776,17 +808,45 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
 	lock();
 
    // Save schedules
-   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
-   bool success = DBQuery(hdb, query);
-	if (success && (m_schedules != NULL))
+   bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_schedules WHERE item_id=?"));
+	if (success && (m_schedules != NULL) && !m_schedules->isEmpty())
    {
-      for(int i = 0; i < m_schedules->size(); i++)
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (?,?,?)"));
+	   if (hStmt != NULL)
+	   {
+	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_schedules->size()) && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i + 1);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_schedules->get(i), DB_BIND_STATIC);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+	   }
+	   else
+	   {
+	      success = false;
+	   }
+   }
+
+   // Save access list
+   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE dci_id=?"));
+   if (success && !m_accessList->isEmpty())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_access (dci_id,user_id) VALUES (?,?)"));
+      if (hStmt != NULL)
       {
-         _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,%s)"),
-                    m_id, i + 1, (const TCHAR *)DBPrepareString(hdb, m_schedules->get(i)));
-         success = DBQuery(hdb, query);
-			if (!success)
-				break;
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_accessList->size()) && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_accessList->get(i));
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
 
@@ -1261,24 +1321,23 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
  */
 bool DCObject::hasAccess(UINT32 userId)
 {
-   if(m_visibilityRights->isEmpty())
+   if (m_accessList->isEmpty())
       return true;
 
    if(userId == 0)
       return true;
 
-   for(int i = 0; i < m_visibilityRights->size(); i++)
+   for(int i = 0; i < m_accessList->size(); i++)
    {
-      UINT32 id = m_visibilityRights->get(i);
-      if((id & GROUP_FLAG) != 0)
+      UINT32 id = m_accessList->get(i);
+      if (id & GROUP_FLAG)
       {
-         if(CheckUserMembership(userId, id))
+         if (CheckUserMembership(userId, id))
             return true;
       }
-      else
+      else if (id == userId)
       {
-         if(id == userId)
-            return true;
+         return true;
       }
    }
    return false;
@@ -1318,7 +1377,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceDiscoveryData", json_string_t(m_instanceDiscoveryData));
    json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    json_object_set_new(root, "instance", json_string_t(m_instance));
-   json_object_set_new(root, "visibility", m_visibilityRights->toJson());
+   json_object_set_new(root, "accessList", m_accessList->toJson());
    return root;
 }
 

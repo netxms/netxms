@@ -759,6 +759,16 @@ CREATE TABLE raw_dci_values
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 #endif
 
+/**
+ * DCI level access control
+ */
+CREATE TABLE dci_access
+(
+   dci_id integer not null,
+   user_id integer not null,
+   PRIMARY KEY(dci_id,user_id);
+) TABLE_TYPE;
+
 /*
 ** Events configuration
 */
