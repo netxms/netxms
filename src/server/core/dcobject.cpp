@@ -863,6 +863,9 @@ void DCObject::deleteFromDatabase()
 	TCHAR query[256];
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
    QueueSQLRequest(query);
+
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_access WHERE dci_id=%d"), (int)m_id);
+   QueueSQLRequest(query);
 }
 
 /**

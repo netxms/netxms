@@ -439,6 +439,11 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
       {
          _sntprintf(query, 8192, _T("DELETE FROM dci_schedules WHERE item_id IN (%s)"), (const TCHAR *)listAll);
          success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 8192, _T("DELETE FROM dci_access WHERE dci_id IN (%s)"), (const TCHAR *)listAll);
+            success = DBQuery(hdb, query);
+         }
       }
    }
 
