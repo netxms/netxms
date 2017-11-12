@@ -642,6 +642,7 @@ public:
    int getColumnDataType(const TCHAR *name);
    ObjectArray<DCTableColumn> *getColumns() { return m_columns; }
    Table *getLastValue();
+   IntegerArray<UINT32> *getThresholdIdList();
 
    void mergeValues(Table *dest, Table *src, int count);
 

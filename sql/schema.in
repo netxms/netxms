@@ -635,6 +635,33 @@ CREATE TABLE items
 
 CREATE INDEX idx_items_node_id ON items(node_id);
 
+/**
+ * Threshold checking rules
+ */
+CREATE TABLE thresholds
+(
+  threshold_id integer not null,
+  item_id integer not null,
+  sequence_number integer not null,
+  fire_value varchar(255) null,
+  rearm_value varchar(255) null,
+  check_function integer not null,
+  check_operation integer not null,
+  sample_count integer not null,
+  script SQL_TEXT null,
+  event_code integer not null,
+  rearm_event_code integer not null,
+  repeat_interval integer not null,
+  current_state integer not null,
+  current_severity integer not null,
+  match_count integer not null,
+  last_event_timestamp integer not null,
+  PRIMARY KEY(threshold_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
+CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
+
 /*
 ** Data collection tables
 */
@@ -737,8 +764,8 @@ CREATE TABLE dct_threshold_instances
 */
 CREATE TABLE dci_schedules
 (
-  schedule_id integer not null,
   item_id integer not null,
+  schedule_id integer not null,
   schedule varchar(255) null,
   PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
@@ -927,33 +954,6 @@ CREATE TABLE policy_pstorage_actions
   action integer not null,
   PRIMARY KEY(rule_id,ps_key,action)
 ) TABLE_TYPE;
-
-/*
-** Threshold checking rules
-*/
-CREATE TABLE thresholds
-(
-  threshold_id integer not null,
-  item_id integer not null,
-  sequence_number integer not null,
-  fire_value varchar(255) null,
-  rearm_value varchar(255) null,
-  check_function integer not null,
-  check_operation integer not null,
-  sample_count integer not null,
-  script SQL_TEXT null,
-  event_code integer not null,
-  rearm_event_code integer not null,
-  repeat_interval integer not null,
-  current_state integer not null,
-  current_severity integer not null,
-  match_count integer not null,
-  last_event_timestamp integer not null,
-  PRIMARY KEY(threshold_id)
-) TABLE_TYPE;
-
-CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
-CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
 
 /*
 ** Alarms

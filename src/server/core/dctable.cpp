@@ -1128,3 +1128,21 @@ json_t *DCTable::toJson()
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
    return root;
 }
+
+/**
+ * Get list of all threshold IDs
+ */
+IntegerArray<UINT32> *DCTable::getThresholdIdList()
+{
+   IntegerArray<UINT32> *list = new IntegerArray<UINT32>(16, 16);
+   lock();
+   if (m_thresholds != NULL)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         list->add(m_thresholds->get(i)->getId());
+      }
+   }
+   unlock();
+   return list;
+}
