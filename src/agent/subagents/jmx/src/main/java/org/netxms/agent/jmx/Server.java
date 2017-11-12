@@ -86,7 +86,8 @@ public class Server
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(5, "JMX: cannot setup connection to " + url, e);
+            Platform.writeDebugLog(5, "JMX: cannot setup connection to " + url);
+            Platform.writeDebugLog(5, "JMX:   ", e);
             throw e;
          }
       }
@@ -100,7 +101,8 @@ public class Server
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(5, "JMX: cannot get MBean server connection for " + url, e);
+            Platform.writeDebugLog(5, "JMX: cannot get MBean server connection for " + url);
+            Platform.writeDebugLog(5, "JMX:   ", e);
             jmxc.close();
             jmxc = null;
             throw e;
@@ -121,7 +123,8 @@ public class Server
          }
          catch(Exception e)
          {
-            Platform.writeDebugLog(6, "JMX: exception in disconnect() call for " + url, e);
+            Platform.writeDebugLog(6, "JMX: exception in disconnect() call for " + url);
+            Platform.writeDebugLog(6, "JMX:   ", e);
          }
          jmxc = null;
       }
