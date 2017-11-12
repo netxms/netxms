@@ -49,9 +49,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <NetXMS-Plugin-Classname>
-                                org.netxms.agent.jmx.JmxPlugin
-                            </NetXMS-Plugin-Classname>
+                            <NetXMS-Plugin-Classname>org.netxms.agent.jmx.JmxPlugin</NetXMS-Plugin-Classname>
                         </manifestEntries>
                     </archive>
 
