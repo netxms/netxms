@@ -352,23 +352,102 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 bool Template::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = NetObj::deleteFromDatabase(hdb);
+   if (!success)
+      return false;
+
+   if (getObjectClass() == OBJECT_TEMPLATE)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM templates WHERE id=?"));
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
+   }
+   else
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
+   }
+
+   // Delete DCI configuration
    if (success)
    {
-      if (getObjectClass() == OBJECT_TEMPLATE)
+      String listItems, listTables, listAll, listTableThresholds;
+      for(int i = 0; i < m_dcObjects->size(); i++)
       {
-         success = executeQueryOnObject(hdb, _T("DELETE FROM templates WHERE id=?"));
+         DCObject *o = m_dcObjects->get(i);
+         if (!listAll.isEmpty())
+            listAll.append(_T(','));
+         listAll.append(o->getId());
+         if (o->getType() == DCO_TYPE_ITEM)
+         {
+            if (!listItems.isEmpty())
+               listItems.append(_T(','));
+            listItems.append(o->getId());
+         }
+         else if (o->getType() == DCO_TYPE_TABLE)
+         {
+            if (!listTables.isEmpty())
+               listTables.append(_T(','));
+            listTables.append(o->getId());
+
+            IntegerArray<UINT32> *idList = static_cast<DCTable*>(o)->getThresholdIdList();
+            for(int j = 0; j < idList->size(); j++)
+            {
+               if (!listTableThresholds.isEmpty())
+                  listTableThresholds.append(_T(','));
+               listTableThresholds.append(idList->get(j));
+            }
+            delete idList;
+         }
+      }
+
+      TCHAR query[8192];
+      if (!listItems.isEmpty())
+      {
+         _sntprintf(query, 8192, _T("DELETE FROM thresholds WHERE item_id IN (%s)"), (const TCHAR *)listItems);
+         success = DBQuery(hdb, query);
          if (success)
-            success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
+         {
+            _sntprintf(query, 8192, _T("DELETE FROM raw_dci_values WHERE item_id IN (%s)"), (const TCHAR *)listItems);
+            success = DBQuery(hdb, query);
+         }
       }
-      else
+
+      if (!listTables.isEmpty())
       {
-         success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
+         _sntprintf(query, 8192, _T("DELETE FROM dc_table_columns WHERE table_id IN (%s)"), (const TCHAR *)listTables);
+         success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 8192, _T("DELETE FROM dct_thresholds WHERE table_id IN (%s)"), (const TCHAR *)listTables);
+            success = DBQuery(hdb, query);
+         }
       }
-      if (success)
-         success = executeQueryOnObject(hdb, _T("DELETE FROM items WHERE node_id=?"));
-      if (success)
-         success = executeQueryOnObject(hdb, _T("UPDATE items SET template_id=0 WHERE template_id=?"));
+
+      if (!listTableThresholds.isEmpty())
+      {
+         _sntprintf(query, 8192, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (%s)"), (const TCHAR *)listTableThresholds);
+         success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 8192, _T("DELETE FROM dct_threshold_instances WHERE threshold_id IN (%s)"), (const TCHAR *)listTableThresholds);
+            success = DBQuery(hdb, query);
+         }
+      }
+
+      if (!listAll.isEmpty())
+      {
+         _sntprintf(query, 8192, _T("DELETE FROM dci_schedules WHERE item_id IN (%s)"), (const TCHAR *)listAll);
+         success = DBQuery(hdb, query);
+      }
    }
+
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM items WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("UPDATE items SET template_id=0,template_item_id=0 WHERE template_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dc_tables WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("UPDATE dc_tables SET template_id=0,template_item_id=0 WHERE template_id=?"));
    return success;
 }
 
