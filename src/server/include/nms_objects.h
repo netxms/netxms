@@ -792,15 +792,15 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userID);
-   bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userID);
+   bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userId);
+   bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
-   DCObject *getDCObjectById(UINT32 itemId, UINT32 userID, bool lock = true);
-   DCObject *getDCObjectByGUID(const uuid& guid, UINT32 userID, bool lock = true);
-   DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userID);
-   DCObject *getDCObjectByName(const TCHAR *name, UINT32 userID);
-   DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userID);
-   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userID);
+   DCObject *getDCObjectById(UINT32 itemId, UINT32 userId, bool lock = true);
+   DCObject *getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock = true);
+   DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId);
+   DCObject *getDCObjectByName(const TCHAR *name, UINT32 userId);
+   DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
+   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userId);
    bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    bool unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_dciListModified = true; }

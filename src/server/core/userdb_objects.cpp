@@ -605,6 +605,11 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
    }
 
    if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
+   }
+
+   if (success)
       DBCommit(hdb);
    else
       DBRollback(hdb);
@@ -936,6 +941,11 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM userdb_custom_attributes WHERE object_id=?"));
+   }
+
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE user_id=?"));
    }
 
    if (success)

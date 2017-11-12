@@ -36,11 +36,11 @@ static bool H_UpgradeFromV3()
  */
 static bool H_UpgradeFromV2()
 {
-   static const TCHAR *batch =
-            _T("ALTER TABLE dc_tables ADD visibility_rights varchar(2000)\n")
-            _T("ALTER TABLE items ADD visibility_rights varchar(2000)\n")
-            _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE dci_access (")
+         _T("   dci_id integer not null,")
+         _T("   user_id integer not null,")
+         _T("   PRIMARY KEY(dci_id,user_id))")));
    CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
 }

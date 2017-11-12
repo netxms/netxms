@@ -506,7 +506,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 {
    ThreadSetName("CacheLoader");
-   DbgPrintf(2, _T("DCI cache loader thread started"));
+   nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread started"));
    while(true)
    {
       DCObjectInfo *ref = (DCObjectInfo *)g_dciCacheLoaderQueue.getOrBlock();
@@ -528,7 +528,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       }
       delete ref;
    }
-   DbgPrintf(2, _T("DCI cache loader thread stopped"));
+   nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread stopped"));
    return THREAD_OK;
 }
 
