@@ -84,7 +84,7 @@ public class ActionSelectionDialog extends Dialog
          }
       });
       
-      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Get server actions", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception

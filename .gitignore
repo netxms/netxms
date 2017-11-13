@@ -183,9 +183,12 @@ target
 /src/java/nxreporting/src/main/resources/nxreporting.xml
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
-/src/libnxjava/java/.classpath
-/src/libnxjava/java/.project
-/src/libnxjava/java/.settings
+/src/libnxjava/java/base/netxms-base/.classpath
+/src/libnxjava/java/base/netxms-base/.project
+/src/libnxjava/java/base/netxms-base/.settings
+/src/libnxjava/java/bridge/.classpath
+/src/libnxjava/java/bridge/.project
+/src/libnxjava/java/bridge/.settings
 /src/libnxsl/lex.parser.cpp
 /src/libnxsl/lex.yy.cpp
 /src/libnxsl/parser.output
