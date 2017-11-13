@@ -287,7 +287,7 @@ public class NXCSession
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
    
    // Received file updates(for file monitoring)
-   private Map<String, String> recievedUpdates = new HashMap<String, String>();
+   private Map<String, String> receivedFileUpdates = new HashMap<String, String>();
 
    // Server information
    private ProtocolVersion protocolVersion;
@@ -718,10 +718,10 @@ public class NXCSession
          String fileName = msg.getFieldAsString(NXCPCodes.VID_FILE_NAME);
          String fileContent = msg.getFieldAsString(NXCPCodes.VID_FILE_DATA);
          
-         synchronized(recievedUpdates)
+         synchronized(receivedFileUpdates)
          {
-            recievedUpdates.put(fileName, fileContent);
-            recievedUpdates.notifyAll();
+            receivedFileUpdates.put(fileName, fileContent);
+            receivedFileUpdates.notifyAll();
          }
       }
 
@@ -1653,11 +1653,11 @@ public class NXCSession
     * @param timeout Wait timeout in milliseconds
     * @return Received file or null in case of failure
     */
-   public RecievedFile waitForFile(final long id, final int timeout)
+   public ReceivedFile waitForFile(final long id, final int timeout)
    {
       int timeRemaining = timeout;
       File file = null;
-      int status = RecievedFile.FAILED;
+      int status = ReceivedFile.FAILED;
 
       while(timeRemaining > 0)
       {
@@ -1671,7 +1671,7 @@ public class NXCSession
                   if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
                   {
                      file = rf.getFile();
-                     status = RecievedFile.SUCCESS;
+                     status = ReceivedFile.SUCCESS;
                   }
                   break;
                }
@@ -1688,7 +1688,7 @@ public class NXCSession
             timeRemaining -= System.currentTimeMillis() - startTime;
          }
       }
-      return new RecievedFile(file, timeRemaining <= 0 ? RecievedFile.TIMEOUT : status);
+      return new ReceivedFile(file, timeRemaining <= 0 ? ReceivedFile.TIMEOUT : status);
    }
    
    /**
@@ -1705,19 +1705,19 @@ public class NXCSession
 
       while(timeRemaining > 0)
       {
-         synchronized(recievedUpdates)
+         synchronized(receivedFileUpdates)
          {
-            tail = recievedUpdates.get(fileName);
+            tail = receivedFileUpdates.get(fileName);
             if (tail != null)
             {
-               recievedUpdates.remove(fileName);
+               receivedFileUpdates.remove(fileName);
                break;
             }
 
             long startTime = System.currentTimeMillis();
             try
             {
-               recievedUpdates.wait(timeRemaining);
+               receivedFileUpdates.wait(timeRemaining);
             }
             catch(InterruptedException e)
             {
@@ -2116,7 +2116,7 @@ public class NXCSession
       consoleListeners.clear();
       messageSubscriptions.clear();
       receivedFiles.clear();
-      recievedUpdates.clear();
+      receivedFileUpdates.clear();
       objectList.clear();
       objectListGUID.clear();
       zoneList.clear();
@@ -7607,8 +7607,8 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_GUID, guid);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      final RecievedFile imageFile = waitForFile(msg.getMessageId(), 600000);
-      if (imageFile.isErrorRecieved()) throw new NXCException(RCC.IO_ERROR);
+      final ReceivedFile imageFile = waitForFile(msg.getMessageId(), 600000);
+      if (imageFile.isFailed()) throw new NXCException(RCC.IO_ERROR);
       return new LibraryImage(response, imageFile.getFile());
    }
 
@@ -8055,7 +8055,7 @@ public class NXCSession
          }
       }
       
-      RecievedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
+      ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
       if (remoteFile == null)
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile.getFile());
@@ -9133,8 +9133,8 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, format.getCode());
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      final RecievedFile file = waitForFile(msg.getMessageId(), 600000);
-      if (file.isErrorRecieved())
+      final ReceivedFile file = waitForFile(msg.getMessageId(), 600000);
+      if (file.isFailed())
       {
          throw new NXCException(RCC.IO_ERROR);
       }

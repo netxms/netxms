@@ -3,30 +3,30 @@ package org.netxms.client;
 import java.io.File;
 
 /**
- * Class that returns recieved file and 
- *
+ * Class that returns received file and 
  */
-public class RecievedFile
+public class ReceivedFile
 {
    public static final int SUCCESS = 0;
    public static final int CANCELED = 1;
    public static final int FAILED = 2;
    public static final int TIMEOUT = 3;
    
-   
    private File file;
    private int status;
    
-   /*
-    * Constructor
+   /**
+    * Create new received file handle
     */
-   public RecievedFile(File f, int status)
+   public ReceivedFile(File f, int status)
    {
       file = f;
       this.status = status;
    }
 
    /**
+    * Get status of receive operation
+    * 
     * @return the status
     */
    public int getStatus()
@@ -35,6 +35,8 @@ public class RecievedFile
    }
 
    /**
+    * Get received file
+    * 
     * @return the file
     */
    public File getFile()
@@ -44,8 +46,10 @@ public class RecievedFile
    
    /**
     * Method that checks if error should be generated
+    * 
+    * @return true if file transfer operation has failed
     */
-   public boolean isErrorRecieved()
+   public boolean isFailed()
    {
       return status == FAILED || status == TIMEOUT;
    }
