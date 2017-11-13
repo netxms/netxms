@@ -793,7 +793,7 @@ CREATE TABLE dci_access
 (
    dci_id integer not null,
    user_id integer not null,
-   PRIMARY KEY(dci_id,user_id);
+   PRIMARY KEY(dci_id,user_id)
 ) TABLE_TYPE;
 
 /*
