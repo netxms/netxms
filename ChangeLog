@@ -5,7 +5,7 @@
 - Option to read log files using VSS snapshots on Windows
 - Per stage confirmation in database manager during database check
 - Fixed file download cancelation
-- Fixed issues: NX-703, NX-1045, NX-1268, NX-1339, NX-1341, NX-1342, NX-1343, NX-1344
+- Fixed issues: NX-703, NX-1045, NX-1201, NX-1268, NX-1339, NX-1341, NX-1342, NX-1343, NX-1344
 
 
 *
