@@ -20,10 +20,13 @@ package org.netxms.client.maps.configs;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -33,9 +36,9 @@ public class LinkConfig
 {
    @ElementArray(required=false)
    private SingleDciConfig[] dciList;
-   
-   @ElementArray(required=false)
-   private Long[] objectStatusList = new Long[0];
+
+   @ElementList(required=false)
+   private List<Long> objectStatusList = new ArrayList<Long>();
    
    @Element(required=false)
    private int color;
@@ -61,7 +64,7 @@ public class LinkConfig
    /**
     * Constructor for creating XML
     */
-   public LinkConfig(SingleDciConfig[] dciList, Long[] objectStatusList, int color, int routing,
+   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int color, int routing,
          long[] bendPoints)
    {
       super();
@@ -102,7 +105,7 @@ public class LinkConfig
    /**
     * @return the objectStatusList
     */
-   public Long[] getObjectStatusList()
+   public List<Long> getObjectStatusList()
    {
       return objectStatusList;
    }
@@ -110,7 +113,7 @@ public class LinkConfig
    /**
     * @param objectStatusList the objectStatusList to set
     */
-   public void setObjectStatusList(Long[] objectStatusList)
+   public void setObjectStatusList(List<Long> objectStatusList)
    {
       this.objectStatusList = objectStatusList;
    }
@@ -185,7 +188,7 @@ public class LinkConfig
    @Override
    public String toString()
    {
-      return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + Arrays.toString(objectStatusList)
+      return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString()
             + ", color=" + color + ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + "]";
    }
 }

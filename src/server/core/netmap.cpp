@@ -733,7 +733,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 {
    bool modified = false;
 
-   DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_name);
+   nxlog_debug(5, _T("NetworkMap(%s): updateObjects called"), m_name);
 
    // Filter out disallowed objects
    if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != NULL))
@@ -778,7 +778,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
       if (!linkExists)
       {
-         DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_name, link->getElement1(), link->getElement2());
+         nxlog_debug(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_name, link->getElement1(), link->getElement2());
          m_links->remove(i);
          i--;
          modified = true;
@@ -794,7 +794,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
       if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()))
       {
-         DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_name, e->getId());
+         nxlog_debug(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_name, e->getId());
          m_elements->remove(i);
          i--;
          modified = true;
@@ -850,11 +850,50 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
             l->setConnector1Name(objects->getLinks()->get(i)->port1);
             l->setConnector2Name(objects->getLinks()->get(i)->port2);
-            l->setConfig(objects->getLinks()->get(i)->config);
+            String config;
+            config.append(_T("<config>\n"));
+            config.append(_T("\t<dciList length=\"0\"/>\n"));
+            config.append(_T("\t<objectStatusList class=\"java.util.ArrayList\">\n"));
+
+            Interface *interf = NULL;
+            Node *obj = static_cast<Node*>(FindObjectById(objects->getLinks()->get(i)->id1, OBJECT_NODE));
+            if (obj != NULL)
+            {
+               for(int n = 0; n < objects->getLinks()->get(i)->portIdCount; n++)
+               {
+                  interf = obj->findInterfaceByIndex(objects->getLinks()->get(i)->portIdArray1[n]);
+                  if (interf != NULL)
+                  {
+                     config.append(_T("\t\t<long>"));
+                     config.append(interf->getId());
+                     config.append(_T("</long>\n"));
+                  }
+               }
+            }
+            obj = static_cast<Node*>(FindObjectById(objects->getLinks()->get(i)->id2, OBJECT_NODE));
+            if (obj != NULL)
+            {
+               for(int n = 0; n < objects->getLinks()->get(i)->portIdCount; n++)
+               {
+                  interf = obj->findInterfaceByIndex(objects->getLinks()->get(i)->portIdArray2[n]);
+                  if (interf != NULL)
+                  {
+                     config.append(_T("\t\t<long>"));
+                     config.append(interf->getId());
+                     config.append(_T("</long>\n"));
+                  }
+               }
+            }
+
+            config.append(_T("\t</objectStatusList>\n"));
+            config.append(_T("\t<color>-1</color>\n"));
+            config.append(_T("\t<routing>0</routing>\n"));
+            config.append(_T("</config>"));
+            l->setConfig(config);
             l->setFlags(AUTO_GENERATED);
             m_links->add(l);
             modified = true;
-            DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
+            nxlog_debug(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
          }
       }
    }

@@ -33,33 +33,7 @@ ObjLink::ObjLink()
    port1[0] = 0;
    port2[0] = 0;
 	portIdCount = 0;
-	config = NULL;
 	flags = 0;
-}
-
-/**
- * Create new object link
- */
-ObjLink::ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags)
-{
-   this->id1 = id1;
-   this->id2 = id2;
-   this->type = type;
-	_tcscpy(this->port1, port1);
-	_tcscpy(this->port2, port2);
-	this->portIdCount = portIdCount;
-
-	for(int i = 0; i < portIdCount; i++)
-	{
-      this->portIdArray1[i] = portIdArray1[i];
-      this->portIdArray2[i] = portIdArray2[i];
-	}
-
-   if(config != NULL)
-      this->config = _tcsdup(config);
-   else
-      config = NULL;
-	this->flags = flags;
 }
 
 /**
@@ -80,19 +54,7 @@ ObjLink::ObjLink(const ObjLink *src)
       this->portIdArray2[i] = src->portIdArray2[i];
 	}
 
-   if(src->config != NULL)
-      config = _tcsdup(src->config);
-   else
-      config = NULL;
 	flags = src->flags;
-}
-
-/**
- * Object link destructor
- */
-ObjLink::~ObjLink()
-{
-   free(config);
 }
 
 /**
@@ -102,32 +64,6 @@ NetworkMapObjectList::NetworkMapObjectList()
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
-}
-
-/**
- * Create object list from NXCP message
- */
-NetworkMapObjectList::NetworkMapObjectList(NXCPMessage *msg)
-{
-   m_objectList = new IntegerArray<UINT32>(16, 16);
-   m_linkList = new ObjectArray<ObjLink>(16, 16, true);
-
-	msg->getFieldAsInt32Array(VID_OBJECT_LIST, m_objectList);
-
-   int linksCount = msg->getFieldAsInt32(VID_NUM_LINKS);
-	UINT32 dwId = VID_OBJECT_LINKS_BASE;
-	for(int i = 0; i < linksCount; i++, dwId += 3)
-	{
-      ObjLink *obj = new ObjLink();
-		obj->id1 = msg->getFieldAsUInt32(dwId++);
-		obj->id2 = msg->getFieldAsUInt32(dwId++);
-		obj->type = (int)msg->getFieldAsUInt16(dwId++);
-		msg->getFieldAsString(dwId++, obj->port1, MAX_CONNECTOR_NAME);
-		msg->getFieldAsString(dwId++, obj->port2, MAX_CONNECTOR_NAME);
-		obj->config = msg->getFieldAsString(dwId++);
-		obj->flags = msg->getFieldAsUInt32(dwId++);
-		m_linkList->add(obj);
-	}
 }
 
 /**
@@ -332,7 +268,6 @@ void NetworkMapObjectList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *po
 			obj->portIdArray2[0] = portId2;
 			nx_strncpy(obj->port1, port1, MAX_CONNECTOR_NAME);
 			nx_strncpy(obj->port2, port2, MAX_CONNECTOR_NAME);
-			obj->config = NULL;
 			m_linkList->add(obj);
       }
    }
@@ -359,7 +294,7 @@ void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 		msg->setField(dwId++, (WORD)l->type);
 		msg->setField(dwId++, l->port1);
 		msg->setField(dwId++, l->port2);
-		msg->setField(dwId++, CHECK_NULL_EX(m_linkList->get(i)->config));
+		msg->setField(dwId++, _T(""));
 		msg->setField(dwId++, m_linkList->get(i)->flags);
 	}
 }
