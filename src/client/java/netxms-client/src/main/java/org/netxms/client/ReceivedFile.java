@@ -16,8 +16,8 @@ public class ReceivedFile
    private File file;
    private int status;
    
-   /*
-    * Constructor
+   /**
+    * Create new received file handle
     */
    public ReceivedFile(File f, int status)
    {
