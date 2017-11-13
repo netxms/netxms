@@ -145,7 +145,7 @@ public class NetworkMapLink
       {
          Logger.warning("NetworkMapLink", "Cannot create data from XML (" + xml + ")", e);
          config = new LinkConfig();
-      }		
+      }
 	}
 	
 	/**
@@ -155,7 +155,7 @@ public class NetworkMapLink
 	 * @param baseId base variable ID
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
-	{     
+	{
 	   String xml = "";
       try
       {
@@ -165,7 +165,6 @@ public class NetworkMapLink
       {
          Logger.warning("NetworkMapLink", "Cannot create XML from config (" + config.toString() + ")", e);
       }
-	   
 		msg.setFieldInt16(baseId, type);
 		msg.setField(baseId + 1, name);
 		msg.setField(baseId + 2, connectorName1);
@@ -319,13 +318,7 @@ public class NetworkMapLink
 	 */
 	public List<Long> getStatusObject()
 	{
-	   Long [] statusObject = config.getObjectStatusList();
-	   List<Long> result = new ArrayList<Long>();
-	   if(statusObject == null)
-	      return result;
-	   for(int i = 0; i < statusObject.length; i++)
-	      result.add(statusObject[i]);
-		return result;
+		return config.getObjectStatusList();
 	}
 
 	/**
@@ -334,7 +327,7 @@ public class NetworkMapLink
 	public void setStatusObject(List<Long> statusObject)
 	{
 	   if(statusObject != null)
-	      config.setObjectStatusList(statusObject.toArray(new Long[statusObject.size()]));
+	      config.setObjectStatusList(statusObject);
 	}
 
 	/**

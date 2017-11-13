@@ -61,13 +61,10 @@ public:
 	int portIdCount;
 	UINT32 portIdArray1[MAX_PORT_COUNT];
 	UINT32 portIdArray2[MAX_PORT_COUNT];
-	TCHAR *config;
 	UINT32 flags;
 
    ObjLink();
-   ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags);
    ObjLink(const ObjLink *src);
-   ~ObjLink();
  };
 
 /**
@@ -82,7 +79,6 @@ protected:
 public:
    NetworkMapObjectList();
    NetworkMapObjectList(NetworkMapObjectList *src);
-   NetworkMapObjectList(NXCPMessage *msg);
    ~NetworkMapObjectList();
 
    void merge(const NetworkMapObjectList *src);
