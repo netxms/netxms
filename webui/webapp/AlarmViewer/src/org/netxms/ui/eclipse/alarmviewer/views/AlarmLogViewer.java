@@ -36,6 +36,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
+/**
+ * Alarm log viewer
+ */
 public class AlarmLogViewer extends LogViewer
 {
    public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.alarm_log_viewer"; //$NON-NLS-1$
