@@ -27,9 +27,8 @@ import com.jcraft.jzlib.JZlib;
 
 /**
  * Represents file received from server
- *
  */
-public class NXCReceivedFile
+final class NXCReceivedFile
 {
 	// Status codes
 	public static final int OPEN = 0;
