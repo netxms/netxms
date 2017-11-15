@@ -197,9 +197,9 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=?,flags=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=? WHERE id=?"));
       else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,flags,id) VALUES (?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,id) VALUES (?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
@@ -207,8 +207,7 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImage);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_rackPosition);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackHeight);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -259,7 +258,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height,flags FROM chassis WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height FROM chassis WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -276,7 +275,6 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_rackImage = DBGetFieldGUID(hResult, 0, 2);
    m_rackPosition = DBGetFieldULong(hResult, 0, 3);
    m_rackHeight = DBGetFieldULong(hResult, 0, 4);
-   m_flags = DBGetFieldULong(hResult, 0, 5);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
