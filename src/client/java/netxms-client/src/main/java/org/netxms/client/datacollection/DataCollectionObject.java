@@ -102,6 +102,7 @@ public abstract class DataCollectionObject
    private String instanceDiscoveryData;
    private String instanceDiscoveryFilter;
    private List<Long> accessList;
+   private int instanceRetentionTime;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -128,6 +129,7 @@ public abstract class DataCollectionObject
 		perfTabSettings = msg.getFieldAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
 		snmpPort = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_PORT);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
+		instanceRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_RETENTION);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SCHEDULES);
 		schedules = new ArrayList<String>(count);
@@ -177,6 +179,7 @@ public abstract class DataCollectionObject
 		comments = "";
       instance = "";
       accessList = new ArrayList<Long>(0);
+      instanceRetentionTime = -1;
 	}
 	
 	/**
@@ -202,6 +205,7 @@ public abstract class DataCollectionObject
 			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
+		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
 		
 		msg.setFieldInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
 		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
@@ -733,5 +737,25 @@ public abstract class DataCollectionObject
    public void setAccessList(List<Long> list)
    {
       accessList = list;
+   }
+   
+   /**
+    * Get instance retention time
+    * 
+    * @return instance retention time
+    */
+   public int getInstanceRetentionTime()
+   {
+      return instanceRetentionTime;
+   }
+   
+   /**
+    * Set instance retention time
+    * 
+    * @param instanceRetentionTime the retention time to set
+    */
+   public void setInstanceRetentionTime(int instanceRetentionTime)
+   {
+      this.instanceRetentionTime = instanceRetentionTime;
    }
 }

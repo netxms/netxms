@@ -23,6 +23,28 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.12 to 30.13
+ */
+static bool H_UpgradeFromV12()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE items ADD instance_retention_time integer\n")
+            _T("ALTER TABLE dc_tables ADD instance_retention_time integer\n")
+            _T("UPDATE items SET instance_retention_time=-1\n")
+            _T("UPDATE dc_tables SET instance_retention_time=-1\n")
+            _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) ")
+            _T("VALUES ('InstanceRetentionTime','0','0',1,1,'Y','I','Time, in days, for instance DCO retention')\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 30.11 to 30.12
  */
 static bool H_UpgradeFromV11()
@@ -561,6 +583,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 30, 13, H_UpgradeFromV12 },
    { 11, 30, 12, H_UpgradeFromV11 },
    { 10, 30, 11, H_UpgradeFromV10 },
    { 9, 30, 10, H_UpgradeFromV9 },

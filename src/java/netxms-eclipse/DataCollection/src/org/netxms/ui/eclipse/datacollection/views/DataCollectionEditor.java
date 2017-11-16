@@ -612,6 +612,7 @@ public class DataCollectionEditor extends ViewPart
 						{
 							((DataCollectionObject)dci).setStatus(newStatus);
 							viewer.update(dci, null);
+                     new DataCollectionObjectEditor((DataCollectionObject)dci).modify();
 						}
 					}
 				});

@@ -148,6 +148,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
    m_guid = DBGetFieldGUID(hResult, iRow, 28);
    DBGetField(hResult, iRow, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
+   m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 30);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -323,7 +324,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
 	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
 					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,")
-					  _T("comments=?,guid=?,npe_name=? WHERE item_id=?"));
+					  _T("comments=?,guid=?,npe_name=?,instance_retention_time=? WHERE item_id=?"));
 	}
    else
 	{
@@ -333,8 +334,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
                  _T("transformation,description,instance,template_item_id,flags,")
                  _T("resource_id,proxy_node,base_units,unit_multiplier,")
 		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,item_id) VALUES ")
-		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,instance_retention_time,item_id) VALUES ")
+		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return false;
@@ -371,7 +372,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
-	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
+	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1509,6 +1511,7 @@ void DCItem::createExportRecord(String &str)
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n"),
+                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
@@ -1516,7 +1519,8 @@ void DCItem::createExportRecord(String &str)
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (int)m_flags,
-								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod);
+								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod),
+								  m_instanceRetentionTime;
 
 	if (m_transformationScriptSource != NULL)
 	{

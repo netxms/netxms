@@ -1638,7 +1638,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
       if (instances->forEach(FindInstanceCallback, (void *)dcoInstance) == _STOP)
       {
          // found, remove value from instances
-         DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
+         nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName(), root->getId(), dcoInstance);
          const TCHAR *name = instances->get(dcoInstance);
          if (_tcscmp(name, object->getInstance()))
@@ -1648,15 +1648,35 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
             changed = true;
          }
          instances->remove(dcoInstance);
+
+         if (object->getLastAttemptToRemove() > 0)
+         {
+            object->setLastAttemptToRemove(0);
+            object->setStatus(ITEM_STATUS_ACTIVE, false);
+         }
       }
       else
       {
-         // not found, delete DCO
-         DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
-                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
-         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
-         deleteList.add(object->getId());
-         changed = true;
+         if (object->getLastAttemptToRemove() == 0)
+         {
+            object->setLastAttemptToRemove(time(NULL));
+            object->setStatus(ITEM_STATUS_DISABLED, false);
+            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, last failure time updated"),
+                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, last failure time updated\r\n"), dcoInstance);
+         }
+
+         time_t retentionTime = ((object->getInstanceRetentionTime() != -1) ? object->getInstanceRetentionTime() : g_instanceRetentionTime) * 86400;
+
+         if ((time(NULL) - object->getLastAttemptToRemove()) > retentionTime)
+         {
+            // not found, delete DCO
+            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
+                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
+            deleteList.add(object->getId());
+            changed = true;
+         }
       }
    }
 
