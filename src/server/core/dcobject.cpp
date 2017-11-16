@@ -71,6 +71,8 @@ DCObject::DCObject()
    m_instanceFilter = NULL;
    m_instance[0] = 0;
    m_accessList = new IntegerArray<UINT32>(0, 16);
+   m_instanceRetentionTime = -1;
+   m_lastAttemptToRemove = 0;
 }
 
 /**
@@ -117,6 +119,7 @@ DCObject::DCObject(const DCObject *pSrc)
    setInstanceFilter(pSrc->m_instanceFilterSource);
    _tcscpy(m_instance, pSrc->m_instance);
    m_accessList = new IntegerArray<UINT32>(pSrc->m_accessList);
+   m_instanceRetentionTime = pSrc->m_instanceRetentionTime;
 }
 
 /**
@@ -163,6 +166,8 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceFilter = NULL;
    m_instance[0] = 0;
    m_accessList = new IntegerArray<UINT32>(0, 16);
+   m_instanceRetentionTime = -1;
+   m_lastAttemptToRemove = 0;
 }
 
 /**
@@ -229,6 +234,8 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_accessList = new IntegerArray<UINT32>(0, 16);
+   m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
+   m_lastAttemptToRemove = 0;
 }
 
 /**
@@ -726,6 +733,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
       pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
    pMsg->setField(VID_INSTANCE, m_instance);
    pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
+   pMsg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
    unlock();
 }
 
@@ -794,6 +802,8 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
 
    m_accessList->clear();
    pMsg->getFieldAsInt32Array(VID_ACL, m_accessList);
+
+   m_instanceRetentionTime = pMsg->getFieldAsInt32(VID_INSTANCE_RETENTION);
 
 	unlock();
 }
@@ -935,6 +945,7 @@ void DCObject::updateFromTemplate(DCObject *src)
       delete_and_null(m_instanceFilter);
       setInstanceFilter(src->m_instanceFilterSource);
    }
+   m_instanceRetentionTime = src->m_instanceRetentionTime;
 
 	unlock();
 }
@@ -1093,6 +1104,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_instanceDiscoveryData = _tcsdup_ex(value);
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
 
    unlock();
 }
@@ -1381,6 +1393,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instanceFilter", json_string_t(m_instanceFilterSource));
    json_object_set_new(root, "instance", json_string_t(m_instance));
    json_object_set_new(root, "accessList", m_accessList->toJson());
+   json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    return root;
 }
 

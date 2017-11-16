@@ -632,6 +632,7 @@ CREATE TABLE items
   samples integer not null,
   npe_name varchar(15) null,
   comments SQL_TEXT null,
+  instance_retention_time integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -692,6 +693,7 @@ CREATE TABLE dc_tables
   instd_method integer not null,
   instd_data varchar(255) null,
   instd_filter SQL_TEXT null,
+  instance_retention_time integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

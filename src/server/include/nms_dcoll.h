@@ -218,6 +218,8 @@ protected:
    NXSL_Program *m_instanceFilter;
    TCHAR m_instance[MAX_DB_STRING];
    IntegerArray<UINT32> *m_accessList;
+   time_t m_lastAttemptToRemove;       // If instance is not found, the time is updated
+   INT32 m_instanceRetentionTime;   // Retention time if instance is not found
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -337,6 +339,10 @@ public:
    void expandInstance();
    bool hasValue();
    bool hasAccess(UINT32 userId);
+
+   time_t getLastAttemptToRemove() const { return m_lastAttemptToRemove; }
+   void setLastAttemptToRemove(time_t time) { m_lastAttemptToRemove = time; }
+   INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
 };
 
 /**

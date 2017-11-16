@@ -27,6 +27,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
@@ -49,6 +51,9 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	private Combo discoveryMethod;
 	private LabeledText discoveryData;
 	private ScriptEditor filterScript;
+	private Group groupRetention;
+   private Combo instanceRetentionMode;
+	private Spinner instanceRetentionTime;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -83,6 +88,8 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 		      discoveryData.setLabel(getDataLabel(method));
 		      discoveryData.setEnabled(method != DataCollectionObject.IDM_NONE);
 		      filterScript.setEnabled(method != DataCollectionObject.IDM_NONE);
+            instanceRetentionMode.setEnabled(method != DataCollectionObject.IDM_NONE);
+		      instanceRetentionTime.setEnabled(method != DataCollectionObject.IDM_NONE && instanceRetentionMode.getSelectionIndex() > 0);
 			}
 			
 			@Override
@@ -100,7 +107,54 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
       gd.grabExcessHorizontalSpace = true;
       discoveryData.setLayoutData(gd);
       discoveryData.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
-     
+      
+      groupRetention = new Group(dialogArea, SWT.NONE);
+      groupRetention.setText("Instance retention");
+      gd = new GridData();
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      groupRetention.setLayoutData(gd);
+      GridLayout retentionLayout = new GridLayout();
+      retentionLayout.numColumns = 2;
+      retentionLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      groupRetention.setLayout(retentionLayout);
+      
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      instanceRetentionMode = WidgetHelper.createLabeledCombo(groupRetention, SWT.READ_ONLY, "Instance retention mode", gd);
+      instanceRetentionMode.add("Server default");
+      instanceRetentionMode.add("Custom");
+      instanceRetentionMode.select(dco.getInstanceRetentionTime() == -1 ? 0 : 1);
+      instanceRetentionMode.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
+      instanceRetentionMode.addSelectionListener(new SelectionListener() {
+          /* (non-Javadoc)
+          * @see org.eclipse.swt.events.SelectionListener#widgetSelected(org.eclipse.swt.events.SelectionEvent)
+          */
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() == 1);
+         }
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.SelectionListener#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
+          */
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+           widgetSelected(e); 
+         }
+      });
+      
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      instanceRetentionTime = WidgetHelper.createLabeledSpinner(groupRetention, SWT.BORDER, "Instance retention time (days)", 0, 100,  new GridData());
+      instanceRetentionTime.setSelection(dco.getInstanceRetentionTime());
+      instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() > 0);
+      
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -165,6 +219,10 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 	   dco.setInstanceDiscoveryMethod(discoveryMethod.getSelectionIndex());
 	   dco.setInstanceDiscoveryData(discoveryData.getText());
 	   dco.setInstanceDiscoveryFilter(filterScript.getText());
+	   if (instanceRetentionMode.getSelectionIndex() == 0)
+	      dco.setInstanceRetentionTime(-1);
+	   else
+	      dco.setInstanceRetentionTime(instanceRetentionTime.getSelection());
 		editor.modify();
 	}
 
@@ -200,5 +258,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 		discoveryData.setEnabled(false);
 		filterScript.setText(""); //$NON-NLS-1$
 		filterScript.setEnabled(false);
+		instanceRetentionMode.select(0);
+		instanceRetentionTime.setSelection(0);
 	}
 }
