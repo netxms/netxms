@@ -352,6 +352,85 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
 }
 
 /**
+* Get column data type for given column (MS SQL version)
+*/
+static bool GetColumnDataType_MSSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+{
+   bool success = false;
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT data_type,character_maximum_length,numeric_precision,numeric_scale FROM information_schema.columns WHERE table_name='%s' AND column_name='%s'"), table, column);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         TCHAR type[128];
+         DBGetField(hResult, 0, 0, type, 128);
+         if (!_tcsicmp(type, _T("decimal")) || !_tcsicmp(type, _T("numeric")))
+         {
+            int p = DBGetFieldLong(hResult, 0, 2);
+            if (p > 0)
+            {
+               TCHAR type[128];
+               DBGetField(hResult, 0, 0, type, 128);
+               int s = DBGetFieldLong(hResult, 0, 3);
+               if (s > 0)
+               {
+                  _sntprintf(definition, len, _T("%s(%d,%d)"), type, p, s);
+               }
+               else
+               {
+                  _sntprintf(definition, len, _T("%s(%d)"), type, p);
+               }
+            }
+            else
+            {
+               _tcslcpy(definition, type, len);
+            }
+         }
+         else if (!_tcsicmp(type, _T("varchar")) || !_tcsicmp(type, _T("nvarchar")) ||
+                  !_tcsicmp(type, _T("char")) || !_tcsicmp(type, _T("nchar")))
+         {
+            int ch = DBGetFieldLong(hResult, 0, 1);
+            if (ch < INT_MAX)
+            {
+               _sntprintf(definition, len, _T("%s(%d)"), type, ch);
+            }
+            else
+            {
+               _tcslcpy(definition, type, len);
+            }
+         }
+         else
+         {
+            _tcslcpy(definition, type, len);
+         }
+         success = true;
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
+ * Get column data type for given column
+ */
+bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+{
+   bool success;
+   switch(DBGetSyntax(hdb))
+   {
+      case DB_SYNTAX_MSSQL:
+         success = GetColumnDataType_MSSQL(hdb, table, column, definition, len);
+         break;
+      default:
+         success = false;
+         break;
+   }
+   return success;
+}
+
+/**
  * Drop primary key from table
  */
 bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
@@ -479,25 +558,36 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
  */
 bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
 {
-   int syntax = DBGetSyntax(hdb);
+   bool success;
+   TCHAR query[1024], type[128];
 
-   TCHAR query[1024] = _T("");
-   switch(syntax)
+   switch(DBGetSyntax(hdb))
    {
+      case DB_SYNTAX_MSSQL:
+         success = GetColumnDataType_MSSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s %s NOT NULL"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("DECLARE already_not_null EXCEPTION; ")
                                  _T("PRAGMA EXCEPTION_INIT(already_not_null, -1442); ")
                                  _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s NOT NULL'; ")
                                  _T("EXCEPTION WHEN already_not_null THEN null; END;"), table, column);
+         success = DBQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
+         success = DBQuery(hdb, query);
          break;
       default:
+         success = false;
          break;
    }
 
-   return (query[0] != 0) ? DBQuery(hdb, query) : true;
+   return success;
 }
 
 /**
