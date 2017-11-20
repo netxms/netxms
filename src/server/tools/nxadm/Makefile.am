@@ -5,5 +5,5 @@ nxadm_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../.
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	nxadm.vcproj \
+	nxadm.vcxproj nxadm.vcxproj.filters \
 	nxadm.h

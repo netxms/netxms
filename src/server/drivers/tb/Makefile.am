@@ -9,7 +9,7 @@ tb_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	tb.vcproj \
+	tb.vcxproj tb.vcxproj.filters \
 	tb.h \
 	Makefile.w32
 

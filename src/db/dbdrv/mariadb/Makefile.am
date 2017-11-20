@@ -7,7 +7,7 @@ mariadb_la_LDFLAGS = -module -avoid-version @MARIADB_LDFLAGS@
 mariadb_la_LIBADD = ../../../libnetxms/libnetxms.la @MARIADB_LIBS@
 
 EXTRA_DIST = \
-	mariadb.vcproj \
+	mariadb.vcxproj mariadb.vcxproj.filters \
 	mariadbdrv.h
 
 install-exec-hook:

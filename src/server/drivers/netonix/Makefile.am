@@ -9,7 +9,7 @@ netonix_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		  ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	netonix.vcproj \
+	netonix.vcxproj netonix.vcxproj.filters \
 	netonix.h \
 	Makefile.w32
 

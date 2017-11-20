@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	Makefile.w32 \
 	hashtable.h \
 	jansson.def \
-	jansson.vcproj \
+	jansson.vcxproj jansson.vcxproj.filters \
 	jansson_private.h \
 	lookup3.h \
 	strbuffer.h \

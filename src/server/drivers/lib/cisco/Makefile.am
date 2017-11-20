@@ -7,7 +7,7 @@ libcisco_la_LIBADD = ../../../../libnetxms/libnetxms.la \
 		     ../../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	cisco.vcproj \
+	cisco.vcxproj cisco.vcxproj.filters \
 	cisco.h \
 	Makefile.w32
 

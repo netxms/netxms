@@ -9,7 +9,7 @@ if USE_INTERNAL_LIBTRE
 mysql_la_LIBADD += ../../../libtre/libnxtre.la
 endif
 
-EXTRA_DIST = mysql.vcproj mysql_subagent.h
+EXTRA_DIST = mysql.vcxproj mysql.vcxproj.filters mysql_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

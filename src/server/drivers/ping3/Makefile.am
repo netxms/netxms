@@ -9,7 +9,7 @@ ping3_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	ping3.vcproj \
+	ping3.vcxproj ping3.vcxproj.filters \
 	ping3.h \
 	Makefile.w32
 

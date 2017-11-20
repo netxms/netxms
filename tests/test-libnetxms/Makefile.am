@@ -17,4 +17,4 @@ if USE_INTERNAL_LIBTRE
 test_libnetxms_LDADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
-EXTRA_DIST = test-libnetxms.vcproj
+EXTRA_DIST = test-libnetxms.vcxproj test-libnetxms.vcxproj.filters

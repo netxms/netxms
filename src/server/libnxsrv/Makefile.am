@@ -19,6 +19,6 @@ messages.h: messages.mc
 	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 
 EXTRA_DIST = \
-	libnxsrv.vcproj libnxsrv.rc \
+	libnxsrv.vcxproj libnxsrv.vcxproj.filters libnxsrv.rc \
 	messages.mc messages.c messages.h \
 	libnxsrv.h resource.h

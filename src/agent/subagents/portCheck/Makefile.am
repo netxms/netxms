@@ -9,7 +9,7 @@ if USE_INTERNAL_LIBTRE
 portcheck_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
-EXTRA_DIST = main.h net.h portcheck.vcproj
+EXTRA_DIST = main.h net.h portcheck.vcxproj portcheck.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

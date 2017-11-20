@@ -9,7 +9,7 @@ if USE_INTERNAL_LIBTRE
 postgresql_la_LIBADD += ../../../libtre/libnxtre.la
 endif
 
-EXTRA_DIST = postgresql.vcproj postgresql_subagent.h
+EXTRA_DIST = postgresql.vcxproj postgresql.vcxproj.filters postgresql_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

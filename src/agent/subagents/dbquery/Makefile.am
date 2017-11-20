@@ -6,7 +6,7 @@ dbquery_la_CPPFLAGS = -I@top_srcdir@/include
 dbquery_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 dbquery_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST = dbquery.vcproj dbquery.h Makefile.w32
+EXTRA_DIST = dbquery.vcxproj dbquery.vcxproj.filters dbquery.h Makefile.w32
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -4,5 +4,5 @@ nxgenguid_CPPFLAGS=-I@top_srcdir@/include
 nxgenguid_LDADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	nxgenguid.vcproj \
+	nxgenguid.vcxproj nxgenguid.vcxproj.filters \
 	Makefile.w32

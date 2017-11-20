@@ -9,7 +9,7 @@ if USE_INTERNAL_LIBTRE
 oracle_la_LIBADD += ../../../libtre/libnxtre.la
 endif
 
-EXTRA_DIST = oracle.vcproj oracle_subagent.h
+EXTRA_DIST = oracle.vcxproj oracle.vcxproj.filters oracle_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

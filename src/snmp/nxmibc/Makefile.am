@@ -13,7 +13,7 @@ nxmibc_SOURCES = lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
 nxmibc_CPPFLAGS=-I@top_srcdir@/include
 nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
-EXTRA_DIST = Makefile.w32 nxmibc.vcproj nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
+EXTRA_DIST = Makefile.w32 nxmibc.vcxproj nxmibc.vcxproj.filters nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
 
 lex.parser.cpp: parser.l parser.tab.cpp parser.tab.hpp
 	$(LEX) -Pmp -B -f -olex.parser.cpp parser.l

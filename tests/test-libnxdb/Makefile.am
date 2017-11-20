@@ -17,4 +17,4 @@ if USE_INTERNAL_LIBTRE
 test_libnxdb_LDADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
-EXTRA_DIST = test-libnxdb.vcproj
+EXTRA_DIST = test-libnxdb.vcxproj test-libnxdb.vcxproj.filters

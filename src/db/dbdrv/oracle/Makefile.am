@@ -7,7 +7,7 @@ oracle_la_LDFLAGS = -module -avoid-version @ORACLE_LDFLAGS@
 oracle_la_LIBADD = ../../../libnetxms/libnetxms.la @ORACLE_LIBS@
 
 EXTRA_DIST = \
-	oracle.vcproj \
+	oracle.vcxproj oracle.vcxproj.filters \
 	oracledrv.h
 
 install-exec-hook:

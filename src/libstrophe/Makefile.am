@@ -13,7 +13,7 @@ endif
 EXTRA_DIST = \
 	Makefile.w32 \
 	GPL-LICENSE.txt LICENSE.txt MIT-LICENSE.txt \
-	libstrophe.vcproj \
+	libstrophe.vcxproj libstrophe.vcxproj.filters \
 	common.h \
 	hash.h \
 	md5.h \

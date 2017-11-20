@@ -9,7 +9,7 @@ hpsw_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	hpsw.vcproj \
+	hpsw.vcxproj hpsw.vcxproj.filters \
 	hpsw.h \
 	Makefile.w32
 

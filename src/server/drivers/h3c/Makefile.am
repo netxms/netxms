@@ -9,7 +9,7 @@ h3c_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	h3c.vcproj \
+	h3c.vcxproj h3c.vcxproj.filters \
 	h3c.h \
 	Makefile.w32
 

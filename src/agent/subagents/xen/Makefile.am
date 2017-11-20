@@ -6,7 +6,7 @@ xen_la_CPPFLAGS=-I@top_srcdir@/include @XEN_CPPFLAGS@
 xen_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @XEN_LDFLAGS@
 xen_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @XEN_LIBS@
 
-EXTRA_DIST = xen.h xen.vcproj
+EXTRA_DIST = xen.h xen.vcxproj xen.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

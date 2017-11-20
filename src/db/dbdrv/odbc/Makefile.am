@@ -6,7 +6,7 @@ odbc_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @ODBC_
 odbc_la_LDFLAGS = -module -avoid-version @ODBC_LDFLAGS@
 odbc_la_LIBADD = ../../../libnetxms/libnetxms.la @ODBC_LIBS@
 
-EXTRA_DIST = Makefile.w32 odbc.vcproj odbcdrv.h
+EXTRA_DIST = Makefile.w32 odbc.vcxproj odbc.vcxproj.filters odbcdrv.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER).so ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

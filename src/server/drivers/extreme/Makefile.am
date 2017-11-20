@@ -9,7 +9,7 @@ extreme_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	extreme.vcproj \
+	extreme.vcxproj extreme.vcxproj.filters \
 	extreme.h \
 	Makefile.w32
 

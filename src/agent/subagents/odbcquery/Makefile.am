@@ -6,7 +6,7 @@ odbcquery_la_CPPFLAGS=-I@top_srcdir@/include
 odbcquery_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 odbcquery_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @ODBC_LIBS@
 
-EXTRA_DIST = odbcquery.vcproj odbcquery.h
+EXTRA_DIST = odbcquery.vcxproj odbcquery.vcxproj.filters odbcquery.h
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -28,7 +28,7 @@ messages.h: messages.mc
 	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 
 EXTRA_DIST = \
-	nxcproxy.vcproj \
+	nxcproxy.vcxproj nxcproxy.vcxproj.filters \
 	messages.mc messages.h messages.c \
 	nxcproxy.rc \
 	resource.h \

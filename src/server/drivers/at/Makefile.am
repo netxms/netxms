@@ -9,7 +9,7 @@ at_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	at.vcproj \
+	at.vcxproj at.vcxproj.filters \
 	at.h \
 	Makefile.w32
 

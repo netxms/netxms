@@ -9,7 +9,7 @@ ntws_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	ntws.vcproj \
+	ntws.vcxproj ntws.vcxproj.filters \
 	ntws.h \
 	Makefile.w32
 

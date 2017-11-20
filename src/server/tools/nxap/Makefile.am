@@ -5,4 +5,4 @@ nxap_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../..
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	nxap.vcproj
+	nxap.vcxproj nxap.vcxproj.filters

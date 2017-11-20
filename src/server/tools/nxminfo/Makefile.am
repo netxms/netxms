@@ -5,4 +5,4 @@ nxminfo_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la @SERV
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	nxminfo.vcproj
+	nxminfo.vcxproj nxminfo.vcxproj.filters

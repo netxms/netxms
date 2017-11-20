@@ -9,7 +9,7 @@ ignitenet_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	ignitenet.vcproj \
+	ignitenet.vcxproj ignitenet.vcxproj.filters \
 	ignitenet.h \
 	Makefile.w32
 

@@ -22,5 +22,5 @@ endif
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	libnxsnmp.vcproj \
+	libnxsnmp.vcxproj libnxsnmp.vcxproj.filters \
 	libnxsnmp.h

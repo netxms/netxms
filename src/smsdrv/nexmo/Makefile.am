@@ -12,7 +12,7 @@ nexmo_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	nexmo.vcproj
+	nexmo.vcxproj nexmo.vcxproj.filters
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER).so ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

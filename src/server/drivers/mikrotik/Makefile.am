@@ -9,7 +9,7 @@ mikrotik_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	mikrotik.vcproj \
+	mikrotik.vcxproj mikrotik.vcxproj.filters \
 	mikrotik.h \
 	Makefile.w32
 

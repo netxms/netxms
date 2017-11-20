@@ -49,7 +49,7 @@ endif
 
 
 EXTRA_DIST = \
-	libnetxms.vcproj \
+	libnetxms.vcxproj libnetxms.vcxproj.filters \
 	libnetxms.h diff.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
 	debug_tag_tree.h \
 	dir.cpp dirw.cpp \

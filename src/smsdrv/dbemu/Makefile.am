@@ -7,7 +7,7 @@ dbemu_la_LDFLAGS = -module -avoid-version
 dbemu_la_LIBADD = ../../db/libnxdb/libnxdb.la ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	dbemu.h dbemu.vcproj
+	dbemu.h dbemu.vcxproj dbemu.vcxproj.filters
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER).so ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

@@ -9,5 +9,5 @@ libnxmb_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	libnxmb.vcproj \
+	libnxmb.vcxproj libnxmb.vcxproj.filters \
 	libnxmb.h

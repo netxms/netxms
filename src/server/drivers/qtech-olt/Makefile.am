@@ -9,7 +9,7 @@ qtech_olt_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	qtech-olt.vcproj \
+	qtech-olt.vcxproj qtech-olt.vcxproj.filters \
 	qtech-olt.h \
 	Makefile.w32
 

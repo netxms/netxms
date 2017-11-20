@@ -8,5 +8,5 @@ libnxcc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcc_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxcc.vcproj \
+	libnxcc.vcxproj libnxcc.vcxproj.filters \
 	libnxcc.h

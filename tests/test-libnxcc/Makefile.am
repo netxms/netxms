@@ -13,4 +13,4 @@ test_libnxcc_SOURCES = test-libnxcc.cpp
 test_libnxcc_CPPFLAGS = -I@top_srcdir@/include -I../include
 test_libnxcc_LDADD = @top_srcdir@/src/libnxcc/libnxcc.la @top_srcdir@/src/libnetxms/libnetxms.la
 
-EXTRA_DIST = test-libnxcc.vcproj
+EXTRA_DIST = test-libnxcc.vcxproj test-libnxcc.vcxproj.filters
