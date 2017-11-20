@@ -14,6 +14,7 @@ housekeeper	Housekeeper messages
 obj.*		Object related trace
 obj.dc.*	Data collection related
 obj.locks.*	Locks
+obj.netmap	Network maps
 obj.sync	Object synchronization
 
 sync		Syncer messages
