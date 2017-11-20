@@ -35,8 +35,9 @@ static bool H_UpgradeFromV11()
             _T("   user_id integer not null,")
             _T("   PRIMARY KEY(dci_id,user_id))")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 3));
-      CHK_EXEC(SetMinorSchemaVersion(12));
    }
+
+   CHK_EXEC(SetMinorSchemaVersion(12));
    return true;
 }
 
@@ -117,11 +118,11 @@ static bool H_UpgradeFromV7()
 }
 
 /**
- * Upgrade from 30.6 to 30.7 (changes also included into 21.4)
+ * Upgrade from 30.6 to 30.7 (changes also included into 21.4 and all 22.x)
  */
 static bool H_UpgradeFromV6()
 {
-   if (GetSchemaLevelForMajorVersion(21) < 4)
+   if ((GetSchemaLevelForMajorVersion(21) < 4) && (GetSchemaLevelForMajorVersion(22) < 1))
    {
       DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
       if (hResult != NULL)
@@ -167,11 +168,11 @@ static bool H_UpgradeFromV6()
 }
 
 /**
- * Upgrade from 30.5 to 30.6 (changes also included into 21.3)
+ * Upgrade from 30.5 to 30.6 (changes also included into 21.3 and all 22.x)
  */
 static bool H_UpgradeFromV5()
 {
-   if (GetSchemaLevelForMajorVersion(21) < 3)
+   if ((GetSchemaLevelForMajorVersion(21) < 3) && (GetSchemaLevelForMajorVersion(22) < 1))
    {
       static const TCHAR *batch =
                _T("UPDATE nodes SET fail_time_snmp=0 WHERE fail_time_snmp IS NULL\n")
@@ -188,11 +189,11 @@ static bool H_UpgradeFromV5()
 }
 
 /**
- * Upgrade from 30.4 to 30.5 (changes also included into 21.2)
+ * Upgrade from 30.4 to 30.5 (changes also included into 21.2 and all 22.x)
  */
 static bool H_UpgradeFromV4()
 {
-   if (GetSchemaLevelForMajorVersion(21) < 2)
+   if ((GetSchemaLevelForMajorVersion(21) < 2) && (GetSchemaLevelForMajorVersion(22) < 1))
    {
       static const TCHAR *batch =
                _T("ALTER TABLE nodes ADD fail_time_snmp integer\n")
