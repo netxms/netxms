@@ -6,7 +6,7 @@ logwatch_la_CPPFLAGS=-I@top_srcdir@/include
 logwatch_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 logwatch_la_LIBADD = ../../libnxagent/libnxagent.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/libnxlp/libnxlp.la
 
-EXTRA_DIST = logwatch.h logwatch.vcproj
+EXTRA_DIST = logwatch.h logwatch.vcxproj logwatch.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

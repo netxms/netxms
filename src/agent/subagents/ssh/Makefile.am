@@ -6,7 +6,7 @@ ssh_la_CPPFLAGS=-I@top_srcdir@/include
 ssh_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 ssh_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lssh
 
-EXTRA_DIST = ssh_subagent.h ssh.vcproj
+EXTRA_DIST = ssh_subagent.h ssh.vcxproj ssh.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -9,7 +9,7 @@ symbol_ws_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	symbol-ws.vcproj \
+	symbol-ws.vcxproj symbol-ws.vcxproj.filters \
 	symbol-ws.h \
 	Makefile.w32
 

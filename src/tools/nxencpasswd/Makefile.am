@@ -8,5 +8,5 @@ nxencpasswd_LDADD += ../../libtre/libnxtre.la
 endif
 
 EXTRA_DIST = \
-	nxencpasswd.vcproj \
+	nxencpasswd.vcxproj nxencpasswd.vcxproj.filters \
 	Makefile.w32

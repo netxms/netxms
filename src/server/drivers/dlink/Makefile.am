@@ -9,7 +9,7 @@ dlink_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		  ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	dlink.vcproj \
+	dlink.vcxproj dlink.vcxproj.filters \
 	dlink.h \
 	Makefile.w32
 

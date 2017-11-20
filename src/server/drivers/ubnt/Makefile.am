@@ -9,7 +9,7 @@ ubnt_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	ubnt.vcproj \
+	ubnt.vcxproj ubnt.vcxproj.filters \
 	ubnt.h \
 	Makefile.w32
 

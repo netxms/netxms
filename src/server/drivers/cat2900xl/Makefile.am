@@ -10,7 +10,7 @@ cat2900xl_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../lib/cisco/libcisco.la
 
 EXTRA_DIST = \
-	cat2900xl.vcproj \
+	cat2900xl.vcxproj cat2900xl.vcxproj.filters \
 	cat2900xl.h \
 	Makefile.w32
 

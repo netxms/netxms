@@ -7,7 +7,7 @@ mysql_la_LDFLAGS = -module -avoid-version @MYSQL_LDFLAGS@
 mysql_la_LIBADD = ../../../libnetxms/libnetxms.la @MYSQL_LIBS@
 
 EXTRA_DIST = \
-	mysql.vcproj \
+	mysql.vcxproj mysql.vcxproj.filters \
 	mysqldrv.h
 
 install-exec-hook:

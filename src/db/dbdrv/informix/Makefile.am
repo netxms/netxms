@@ -6,7 +6,7 @@ informix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @I
 informix_la_LDFLAGS = -module -avoid-version @INFORMIX_LDFLAGS@
 informix_la_LIBADD = ../../../libnetxms/libnetxms.la @INFORMIX_LIBS@
 
-EXTRA_DIST = informix.vcproj informixdrv.h
+EXTRA_DIST = informix.vcxproj informix.vcxproj.filters informixdrv.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$(DRIVER).a $(DESTDIR)$(pkglibdir)/$(DRIVER).so ; rm -f $(DESTDIR)$(pkglibdir)/$(DRIVER).a ; fi

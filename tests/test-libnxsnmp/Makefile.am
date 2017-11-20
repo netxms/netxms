@@ -17,4 +17,4 @@ if USE_INTERNAL_LIBTRE
 test_libnxsnmp_LDADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
-EXTRA_DIST = test-libnxsnmp.vcproj
+EXTRA_DIST = test-libnxsnmp.vcxproj test-libnxsnmp.vcxproj.filters

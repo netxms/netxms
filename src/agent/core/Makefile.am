@@ -32,7 +32,7 @@ static_subagents.cpp: @top_srcdir@/config.h Makefile
 
 EXTRA_DIST = \
     Makefile.w32 \
-    nxagentd.vcproj \
+    nxagentd.vcxproj nxagentd.vcxproj.filters \
     messages.mc messages.h messages.c \
     nxagentd.rc \
     win32.cpp resource.h \

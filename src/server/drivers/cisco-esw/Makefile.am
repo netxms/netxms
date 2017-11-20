@@ -9,7 +9,7 @@ cisco_esw_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	cisco-esw.vcproj \
+	cisco-esw.vcxproj cisco-esw.vcxproj.filters \
 	cisco-esw.h \
 	Makefile.w32
 

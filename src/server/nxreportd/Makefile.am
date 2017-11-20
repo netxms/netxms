@@ -13,5 +13,5 @@ messages.h: messages.mc
 
 EXTRA_DIST = \
 	messages.mc messages.h messages.c \
-	nxreportd.vcproj \
+	nxreportd.vcxproj nxreportd.vcxproj.filters \
 	winsrv.cpp

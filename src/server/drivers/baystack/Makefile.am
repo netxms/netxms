@@ -8,7 +8,7 @@ baystack_la_LIBADD = ../lib/avaya-ers/libavaya-ers.la ../../libnxsrv/libnxsrv.la
                      ../../../snmp/libnxsnmp/libnxsnmp.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	baystack.vcproj \
+	baystack.vcxproj baystack.vcxproj.filters \
 	baystack.h \
 	Makefile.w32
 

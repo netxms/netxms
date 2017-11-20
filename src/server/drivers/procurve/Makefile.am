@@ -9,7 +9,7 @@ procurve_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	procurve.vcproj \
+	procurve.vcxproj procurve.vcxproj.filters \
 	procurve.h \
 	Makefile.w32
 

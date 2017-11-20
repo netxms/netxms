@@ -6,7 +6,7 @@ tuxedo_la_CPPFLAGS=-I@top_srcdir@/include @TUXEDO_CPPFLAGS@
 tuxedo_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @TUXEDO_LDFLAGS@
 tuxedo_la_LIBADD = ../../libnxagent/libnxagent.la ../../libnxtux/libnxtux.la ../../../libnetxms/libnetxms.la -ltux -lfml32 @TUXEDO_LIBS@
 
-EXTRA_DIST = tuxedo.vcproj tuxedo_subagent.h
+EXTRA_DIST = tuxedo.vcxproj tuxedo.vcxproj.filters tuxedo_subagent.h
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -5,4 +5,4 @@ nxget_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../.
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	nxget.vcproj
+	nxget.vcxproj nxget.vcxproj.filters

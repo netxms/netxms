@@ -10,7 +10,7 @@ java_la_LIBADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la \
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	java.vcproj \
+	java.vcxproj java.vcxproj.filters \
 	java_subagent.h \
 	SubAgent.h
 

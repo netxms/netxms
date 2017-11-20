@@ -7,7 +7,7 @@ catalyst_la_LDFLAGS = -module -avoid-version
 catalyst_la_LIBADD = ../lib/cisco/libcisco.la ../../libnxsrv/libnxsrv.la ../../../snmp/libnxsnmp/libnxsnmp.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	catalyst.vcproj \
+	catalyst.vcxproj catalyst.vcxproj.filters \
 	catalyst.h \
 	Makefile.w32
 

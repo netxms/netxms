@@ -9,7 +9,7 @@ dell_pwc_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	dell-pwc.vcproj \
+	dell-pwc.vcxproj dell-pwc.vcxproj.filters \
 	dell-pwc.h \
 	Makefile.w32
 

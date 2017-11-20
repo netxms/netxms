@@ -7,7 +7,7 @@ ers8000_la_LDFLAGS = -module -avoid-version
 ers8000_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../lib/avaya-ers/libavaya-ers.la
 
 EXTRA_DIST = \
-	ers8000.vcproj \
+	ers8000.vcxproj ers8000.vcxproj.filters \
 	ers8000.h \
 	Makefile.w32
 

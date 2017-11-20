@@ -7,7 +7,7 @@ libnxjava_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	libnxjava.vcproj \
+	libnxjava.vcxproj libnxjava.vcxproj.filters \
 	libnxjava.h
 
 SUBDIRS = java

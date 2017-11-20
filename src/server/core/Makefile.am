@@ -67,6 +67,6 @@ libnxcore_la_CXXFLAGS += -I@top_srcdir@/private/netxms/include -I@top_srcdir@/pr
 endif
 
 EXTRA_DIST = \
-	nxcore.vcproj \
+	nxcore.vcxproj nxcore.vcxproj.filters \
 	nxcore.h radius.h \
 	radius.dict

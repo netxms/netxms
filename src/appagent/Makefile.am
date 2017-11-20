@@ -7,4 +7,4 @@ libappagent_la_CPPFLAGS=-I@top_srcdir@/include
 libappagent_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libappagent_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
-EXTRA_DIST = Makefile.w32 appagent-internal.h appagent.vcproj
+EXTRA_DIST = Makefile.w32 appagent-internal.h appagent.vcxproj appagent.vcxproj.filters

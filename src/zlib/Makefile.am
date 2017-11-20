@@ -38,4 +38,4 @@ EXTRA_DIST = \
 	README \
 	Makefile.w32 \
 	nxzlib.def \
-	nxzlib.vcproj
+	nxzlib.vcxproj nxzlib.vcxproj.filters

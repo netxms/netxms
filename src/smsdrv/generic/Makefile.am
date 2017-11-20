@@ -7,7 +7,7 @@ generic_la_LDFLAGS = -module -avoid-version
 generic_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	generic.vcproj \
+	generic.vcxproj generic.vcxproj.filters \
 	generic_smsdrv.h
 
 install-exec-hook:

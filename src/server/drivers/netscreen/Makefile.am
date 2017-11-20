@@ -9,7 +9,7 @@ netscreen_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	netscreen.vcproj \
+	netscreen.vcxproj netscreen.vcxproj.filters \
 	netscreen.h \
 	Makefile.w32
 

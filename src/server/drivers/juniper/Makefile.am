@@ -9,7 +9,7 @@ juniper_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	juniper.vcproj \
+	juniper.vcxproj juniper.vcxproj.filters \
 	juniper.h \
 	Makefile.w32
 

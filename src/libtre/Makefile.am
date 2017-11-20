@@ -37,6 +37,6 @@ EXTRA_DIST = \
 	THANKS \
 	Makefile.w32 \
 	libtre.def \
-	libtre.vcproj \
+	libtre.vcxproj libtre.vcxproj.filters \
 	windll.cpp \
 	xmalloc.c

@@ -6,7 +6,7 @@ sms_la_CPPFLAGS=-I@top_srcdir@/include
 sms_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 sms_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = sms.h sms.vcproj
+EXTRA_DIST = sms.h sms.vcxproj sms.vcxproj.filters
 
 if !STATIC_BUILD
 install-exec-hook:

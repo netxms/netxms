@@ -8,7 +8,7 @@ portech_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	portech.h \
-	portech.vcproj \
+	portech.vcxproj portech.vcxproj.filters \
 	README.txt
 
 install-exec-hook:

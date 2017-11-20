@@ -19,5 +19,5 @@ endif
 EXTRA_DIST = \
 	Makefile.w32 \
 	eventlog.cpp vss.cpp wevt.cpp \
-	libnxlp.vcproj \
+	libnxlp.vcxproj libnxlp.vcxproj.filters \
 	libnxlp.h

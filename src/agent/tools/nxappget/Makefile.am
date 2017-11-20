@@ -12,4 +12,4 @@ endif
 
 EXTRA_DIST = \
     Makefile.w32 \
-    nxappget.vcproj
+    nxappget.vcxproj nxappget.vcxproj.filters

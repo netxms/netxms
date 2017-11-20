@@ -5,4 +5,4 @@ nxupload_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../.
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	nxupload.vcproj
+	nxupload.vcxproj nxupload.vcxproj.filters

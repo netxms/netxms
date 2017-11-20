@@ -6,7 +6,7 @@ libnxexpat_la_CPPFLAGS = -I@top_srcdir@/include -DHAVE_EXPAT_CONFIG_H -I..
 libnxexpat_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 
 EXTRA_DIST = \
-	libexpat.vcproj \
+	libexpat.vcxproj libexpat.vcxproj.filters \
 	libexpat.def \
 	libexpat.cpp \
 	amigaconfig.h \

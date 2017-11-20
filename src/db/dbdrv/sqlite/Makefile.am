@@ -15,7 +15,7 @@ endif
 
 EXTRA_DIST = \
 	Makefile.w32 \
-	sqlite.vcproj \
+	sqlite.vcxproj sqlite.vcxproj.filters \
 	sqlitedrv.h
 
 install-exec-hook:

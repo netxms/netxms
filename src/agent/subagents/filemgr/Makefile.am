@@ -6,7 +6,7 @@ filemgr_la_CPPFLAGS=-I@top_srcdir@/include
 filemgr_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 filemgr_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = filemgr.vcproj filemgr.h Makefile.w32
+EXTRA_DIST = filemgr.vcxproj filemgr.vcxproj.filters filemgr.h Makefile.w32
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -6,7 +6,7 @@ db2_la_CPPFLAGS    = -I@top_srcdir@/include
 db2_la_LDFLAGS     = -module -avoid-version -export-symbols ../subagent.sym
 db2_la_LIBADD      = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
-EXTRA_DIST         = db2_subagent.h db2dci.h db2.vcproj Makefile.w32
+EXTRA_DIST         = db2_subagent.h db2dci.h db2.vcxproj db2.vcxproj.filters Makefile.w32
 
 if !STATIC_BUILD
 install-exec-hook:
