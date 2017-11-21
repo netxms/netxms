@@ -48,17 +48,47 @@ set_return() {
 	fi
 }
 
+# Wait for given processes to stop
+# $1=process identifiers
+
+waitproc() {
+	retry=20
+	while [ $retry -gt 0 ]; do
+		all_stopped=1
+		for p in $1; do
+			kill -0 $p 2>/dev/null
+			if [ $? -eq 0 ]; then
+				all_stopped=0
+			fi
+		done
+		if [ $all_stopped -eq 0 ]; then
+			retry=`expr $retry - 1`
+		else
+			return 0
+		fi
+		sleep 1
+	done
+	return 1
+}
+
 # Kill the named process(es).
 # $1=<search pattern for your process>
 
 killproc() {
-	pid=`ps -el | awk '( ($NF ~ /'"$1"'/) && ($4 != mypid) && ($5 != mypid)  ){ print $4 }' mypid=$$ `
+	pid=`ps -el | awk '( ($NF ~ /'"$1"'/) && ($4 != mypid) && ($5 != mypid)  ){ print $4 }' mypid=$$ | xargs`
 	if [ "X$pid" != "X" ]; then
-		if kill "$pid"; then
+		if kill $pid; then
+			waitproc "$pid"
+			if [ $? -ne 0 ]; then
+				echo "Sending SIGKILL to remaining processes"
+				for p in $pid; do
+					kill -9 $p 2>/dev/null
+				done
+			fi
 			echo "$1 stopped"
 		else
 			rval=1
-			echo "Unable to stop $1"
+			echo "Unable to stop $1 ($pid)"
 		fi
 	fi
 }
