@@ -308,7 +308,7 @@ int Tunnel::sslWrite(const void *data, size_t size)
          int err = SSL_get_error(m_ssl, bytes);
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
-            SocketPoller sp(true);
+            SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(5000) > 0)
                canRetry = true;
