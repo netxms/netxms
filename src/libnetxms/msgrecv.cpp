@@ -251,6 +251,7 @@ TlsMessageReceiver::~TlsMessageReceiver()
 int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
    bool doRead = true;
+   bool needWrite = false;
    int bytes = 0;
    MutexLock(m_mutex);
    while(doRead)
@@ -258,11 +259,12 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
       if (SSL_pending(m_ssl) == 0)
       {
          MutexUnlock(m_mutex);
-         SocketPoller sp;
+         SocketPoller sp(needWrite);
          sp.add(m_socket);
          int rc = sp.poll(timeout);
          if (rc <= 0)
             return (rc == 0) ? -2 : -1;   // -2 for timeout
+         needWrite = false;
          MutexLock(m_mutex);
       }
       doRead = false;
@@ -273,6 +275,7 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
             doRead = true;
+            needWrite = (err == SSL_ERROR_WANT_WRITE);
          }
          else
          {
