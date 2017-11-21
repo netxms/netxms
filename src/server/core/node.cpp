@@ -1371,6 +1371,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
       return;
    }
 
+   poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_name);
    nxlog_debug(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
@@ -1386,6 +1387,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 restart_agent_check:
    if (g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
    {
+      poller->setStatus(_T("updating primary IP"));
       updatePrimaryIpAddr();
    }
 
@@ -6582,6 +6584,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    if (IsShutdownInProgress())
       return;
 
+   poller->setStatus(_T("wait for lock"));
    pollerLock();
 
    if (IsShutdownInProgress())
@@ -6596,6 +6599,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
 
    if (m_driver != NULL)
    {
+      poller->setStatus(_T("reading VLANs"));
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != NULL)
       {
@@ -6634,6 +6638,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       }
    }
 
+   poller->setStatus(_T("reading FDB"));
    ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
    MutexLock(m_mutexTopoAccess);
    if (m_fdb != NULL)
@@ -6651,6 +6656,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
       sendPollerMsg(dwRqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
 
+   poller->setStatus(_T("building neighbor list"));
    LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
    if (nbs != NULL)
    {
@@ -6776,6 +6782,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    // Read list of associated wireless stations
    if ((m_driver != NULL) && (m_flags & NF_IS_WIFI_CONTROLLER))
    {
+      poller->setStatus(_T("reading wireless stations"));
       SNMP_Transport *snmp = createSnmpTransport();
       if (snmp != NULL)
       {
@@ -6823,6 +6830,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
    }
 
    // Call hooks in loaded modules
+   poller->setStatus(_T("calling modules"));
    for(UINT32 i = 0; i < g_dwNumModules; i++)
    {
       if (g_pModuleList[i].pfTopologyPollHook != NULL)
