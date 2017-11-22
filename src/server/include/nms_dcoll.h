@@ -392,6 +392,7 @@ public:
    void reloadCache();
 
    int getDataType() const { return m_dataType; }
+   int getNXSLDataType() const;
 	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
