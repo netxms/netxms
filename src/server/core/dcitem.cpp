@@ -902,7 +902,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
       if (vm->load(m_transformationScript))
       {
-         NXSL_Value *pValue = new NXSL_Value((const TCHAR *)value);
+         NXSL_Value *nxslValue = new NXSL_Value(value.getString());
+         nxslValue->convert(getNXSLDataType()); // make sure that input NXSL variable type is the same as DCI type
          vm->setGlobalVariable(_T("$object"), m_owner->createNXSLObject());
          if (m_owner->getObjectClass() == OBJECT_NODE)
          {
@@ -913,32 +914,32 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
          // remove lock from DCI for script execution to avoid deadlocks
          unlock();
-         success = vm->run(1, &pValue);
+         success = vm->run(1, &nxslValue);
          lock();
          if (success)
          {
-            pValue = vm->getResult();
-            if (pValue != NULL)
+            nxslValue = vm->getResult();
+            if (nxslValue != NULL)
             {
                switch(m_dataType)
                {
                   case DCI_DT_INT:
-                     value = pValue->getValueAsInt32();
+                     value = nxslValue->getValueAsInt32();
                      break;
                   case DCI_DT_UINT:
-                     value = pValue->getValueAsUInt32();
+                     value = nxslValue->getValueAsUInt32();
                      break;
                   case DCI_DT_INT64:
-                     value = pValue->getValueAsInt64();
+                     value = nxslValue->getValueAsInt64();
                      break;
                   case DCI_DT_UINT64:
-                     value = pValue->getValueAsUInt64();
+                     value = nxslValue->getValueAsUInt64();
                      break;
                   case DCI_DT_FLOAT:
-                     value = pValue->getValueAsReal();
+                     value = nxslValue->getValueAsReal();
                      break;
                   case DCI_DT_STRING:
-                     value = CHECK_NULL_EX(pValue->getValueAsCString());
+                     value = CHECK_NULL_EX(nxslValue->getValueAsCString());
                      break;
                   default:
                      break;
@@ -971,6 +972,15 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       delete vm;
    }
    return success;
+}
+
+/**
+ * Get DCI data type as NXSL data type
+ */
+int DCItem::getNXSLDataType() const
+{
+   static int nxslTypes[] = { NXSL_DT_INT32, NXSL_DT_UINT32, NXSL_DT_INT64, NXSL_DT_UINT64, NXSL_DT_STRING, NXSL_DT_REAL, NXSL_DT_NULL };
+   return ((m_dataType >= 0) && (m_dataType < sizeof(nxslTypes) / sizeof(int))) ? nxslTypes[m_dataType] : NXSL_DT_STRING;
 }
 
 /**
