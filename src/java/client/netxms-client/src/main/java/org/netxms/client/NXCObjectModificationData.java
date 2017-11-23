@@ -203,6 +203,7 @@ public class NXCObjectModificationData
 	private UUID rackImage;
 	private short rackPosition;
 	private short rackHeight;
+   private short rackOrientation;
 	private Long[] dashboards;
 	private boolean rackNumberingTopBottom;
 	private long controllerId;
@@ -1605,12 +1606,13 @@ public class NXCObjectModificationData
     * @param rackPosition The rack position to set
     * @param rackHeight the rack height to set
     */
-   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight)
+   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight, short rackOrientation)
    {
       this.rackId = rackId;
       this.rackImage = rackImage;
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
+      this.rackOrientation = rackOrientation;
       fieldSet.add(RACK_PLACEMENT);
    }
 
@@ -1784,5 +1786,23 @@ public class NXCObjectModificationData
    {
       this.seedObjectIds = seedObjectIds;
       fieldSet.add(SEED_OBJECTS);
+   }
+   
+   /**
+    * Set rack orientation
+    * @param rackOrientation to set
+    */
+   public void setRackOrientation(short rackOrientation)
+   {
+      this.rackOrientation = rackOrientation;
+   }
+   
+   /**
+    * Get rack orientation
+    * @return rack orientation
+    */
+   public short getRackOrientation()
+   {
+      return rackOrientation;
    }
 }
