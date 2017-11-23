@@ -138,6 +138,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    protected long sshProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
+   protected int rackOrientation;
 	
 	/**
 	 * Create new node object.
@@ -209,6 +210,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
+      rackOrientation = msg.getFieldAsInt16(NXCPCodes.VID_RACK_ORIENTATION);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -787,5 +789,21 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       addString(strings, systemDescription);
       addString(strings, platformName);
       return strings;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRackOrientation()
+    */
+   public int getRackOrientation()
+   {
+      return rackOrientation;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#setRackOrientation(int)
+    */
+   public void setRackOrientation(int rackOrientation)
+   {
+      this.rackOrientation = rackOrientation;
    }
 }

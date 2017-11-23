@@ -26,6 +26,10 @@ import org.netxms.client.constants.ObjectStatus;
  */
 public interface RackElement
 {
+   public static final int RACK_POSITION_FRONT = 0;
+   public static final int RACK_POSITION_REAR = 1;
+   public static final int RACK_POSITION_FILL = 2;
+   
    /**
     * Get object ID
     * 
@@ -74,4 +78,18 @@ public interface RackElement
     * @return device height in rack units
     */
    public short getRackHeight();
+   
+   /**
+    * Get orientation of object in rack
+    * 
+    * @return orientation of object in rack
+    */
+   public int getRackOrientation();
+   
+   /**
+    * Set orientation of object in rack
+    * 
+    * @param rackOrientation to set
+    */
+   public void setRackOrientation(int rackOrientation);
 }

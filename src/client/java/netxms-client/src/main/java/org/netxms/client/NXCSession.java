@@ -5080,6 +5080,7 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_RACK_IMAGE, data.getRackImage());
          msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
          msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
+         msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.DASHBOARD_LIST))

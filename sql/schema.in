@@ -274,6 +274,7 @@ CREATE TABLE chassis
   rack_image varchar(36) null,
   rack_position integer not null,
   rack_height integer not null,
+  rack_orientation integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

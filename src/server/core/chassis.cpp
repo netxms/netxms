@@ -31,6 +31,7 @@ Chassis::Chassis() : DataCollectionTarget()
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_rackOrientation = RACK_POSITION_FILL;
 }
 
 /**
@@ -42,6 +43,7 @@ Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : DataCollectionTarget(
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_rackOrientation = RACK_POSITION_FILL;
 }
 
 /**
@@ -162,6 +164,7 @@ void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_RACK_IMAGE, m_rackImage);
    msg->setField(VID_RACK_POSITION, m_rackPosition);
    msg->setField(VID_RACK_HEIGHT, m_rackHeight);
+   msg->setField(VID_RACK_ORIENTATION, m_rackOrientation);
 }
 
 /**
@@ -182,6 +185,8 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
       m_rackPosition = request->getFieldAsInt16(VID_RACK_POSITION);
    if (request->isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = request->getFieldAsInt16(VID_RACK_HEIGHT);
+   if (request->isFieldExist(VID_RACK_ORIENTATION))
+      m_rackOrientation = request->getFieldAsInt16(VID_RACK_ORIENTATION);
 
    return DataCollectionTarget::modifyFromMessageInternal(request);
 }
@@ -197,9 +202,9 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=?,rack_orientation=? WHERE id=?"));
       else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,id) VALUES (?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,rack_orientation,id) VALUES (?,?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
@@ -207,7 +212,8 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImage);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_rackPosition);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackHeight);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_rackOrientation);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -258,7 +264,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height FROM chassis WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height,rack_orientation FROM chassis WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -275,6 +281,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_rackImage = DBGetFieldGUID(hResult, 0, 2);
    m_rackPosition = DBGetFieldULong(hResult, 0, 3);
    m_rackHeight = DBGetFieldULong(hResult, 0, 4);
+   m_rackHeight = DBGetFieldULong(hResult, 0, 5);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -399,6 +406,7 @@ json_t *Chassis::toJson()
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
+   json_object_set_new(root, "rackOrientation", json_integer(m_rackPosition));
    json_object_set_new(root, "rackId", json_integer(m_rackId));
    json_object_set_new(root, "rackImage", m_rackImage.toJson());
    return root;

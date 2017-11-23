@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -44,11 +45,14 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
  */
 public class RackPlacement extends PropertyPage
 {
+   private final static String[] ORIENTATION = { "Front", "Rear", "Fill" };
+   
 	private RackElement object;
 	private ObjectSelector rackSelector;
 	private ImageSelector rackImageSelector;
 	private LabeledSpinner rackHeight;
 	private LabeledSpinner rackPosition;
+	private Combo rackOrientation;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -64,7 +68,7 @@ public class RackPlacement extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
+		layout.numColumns = 3;
       dialogArea.setLayout(layout);
 
       rackSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -74,7 +78,7 @@ public class RackPlacement extends PropertyPage
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
-		gd.horizontalSpan = 2;
+		gd.horizontalSpan = 3;
 		rackSelector.setLayoutData(gd);
 		
 		rackImageSelector = new ImageSelector(dialogArea, SWT.NONE);
@@ -83,7 +87,7 @@ public class RackPlacement extends PropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       rackImageSelector.setLayoutData(gd);
       
       rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
@@ -104,6 +108,14 @@ public class RackPlacement extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       rackHeight.setLayoutData(gd);
       
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      rackHeight.setLayoutData(gd);
+      rackOrientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
+      rackOrientation.setItems(ORIENTATION);
+      rackOrientation.setText(ORIENTATION[object.getRackOrientation()]);
+      
 		return dialogArea;
 	}
 
@@ -118,7 +130,8 @@ public class RackPlacement extends PropertyPage
 			setValid(false);
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection());
+		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
+		                    (short)rackOrientation.getSelectionIndex());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, object.getObjectName()), null, Activator.PLUGIN_ID, null) {

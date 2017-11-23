@@ -125,6 +125,7 @@ Node::Node() : DataCollectionTarget()
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
+   m_rackOrientation = RACK_POSITION_FILL;
 }
 
 /**
@@ -228,6 +229,7 @@ Node::Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 ag
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
+   m_rackOrientation = RACK_POSITION_FILL;
 }
 
 /**
@@ -305,7 +307,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
-      _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent FROM nodes WHERE id=?"));
+      _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,rack_orientation")
+      _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -413,6 +416,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_capabilities = DBGetFieldULong(hResult, 0, 48);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 49);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 50);
+   m_rackOrientation = DBGetFieldULong(hResult, 0, 51);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -508,7 +512,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
             _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
             _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
-            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=? WHERE id=?"));
+            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=?,rack_orientation=? WHERE id=?"));
       }
       else
       {
@@ -519,8 +523,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
            _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
            _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
            _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
-           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,id) ")
-           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,rack_orientation,id) ")
+           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       if (hStmt != NULL)
       {
@@ -587,7 +591,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
          DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
          DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
-         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
+         DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -4781,6 +4786,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
    pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
    pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
+   pMsg->setField(VID_RACK_ORIENTATION, m_rackOrientation);
 }
 
 /**
@@ -5039,6 +5045,9 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    if (pRequest->isFieldExist(VID_AGENT_COMPRESSION_MODE))
       m_agentCompressionMode = pRequest->getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
+
+   if (pRequest->isFieldExist(VID_RACK_ORIENTATION))
+      m_rackOrientation = pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION);
 
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
@@ -7849,6 +7858,7 @@ json_t *Node::toJson()
    json_object_set_new(root, "baseBridgeAddress", json_string_a(BinToStrA(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseBridgeAddrText)));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
+   json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));
    json_object_set_new(root, "rackId", json_integer(m_rackId));
    json_object_set_new(root, "rackImage", m_rackImage.toJson());
    json_object_set_new(root, "chassisId", json_integer(m_chassisId));

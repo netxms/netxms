@@ -23,11 +23,11 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 30.12 to 30.13
+ * Upgrade from 30.13 to 30.14
  */
-static bool H_UpgradeFromV12()
+static bool H_UpgradeFromV13()
 {
-   static const TCHAR *batch =
+   static const TCHAR *batch = 
             _T("ALTER TABLE items ADD instance_retention_time integer\n")
             _T("ALTER TABLE dc_tables ADD instance_retention_time integer\n")
             _T("UPDATE items SET instance_retention_time=-1\n")
@@ -39,6 +39,26 @@ static bool H_UpgradeFromV12()
 
    CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
    CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
+ * Upgrade from 30.12 to 30.13
+ */
+static bool H_UpgradeFromV12()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE nodes ADD rack_orientation integer null\n")
+            _T("ALTER TABLE chassis ADD rack_orientation integer null\n")
+            _T("UPDATE nodes SET rack_orientation=2\n")
+            _T("UPDATE chassis SET rack_orientation=2\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
 
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
@@ -583,6 +603,10 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+<<<<<<< HEAD
+   { 13, 30, 14, H_UpgradeFromV13 },
+=======
+>>>>>>> a5831b94e... Implemented rear view for racks
    { 12, 30, 13, H_UpgradeFromV12 },
    { 11, 30, 12, H_UpgradeFromV11 },
    { 10, 30, 11, H_UpgradeFromV10 },

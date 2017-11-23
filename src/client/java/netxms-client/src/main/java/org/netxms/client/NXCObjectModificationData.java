@@ -232,6 +232,7 @@ public class NXCObjectModificationData
    private long sensorProxy;
    private String xmlConfig;
    private List<String> snmpPorts;
+   private short rackOrientation;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1624,12 +1625,13 @@ public class NXCObjectModificationData
     * @param rackPosition The rack position to set
     * @param rackHeight the rack height to set
     */
-   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight)
+   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight, short rackOrientation)
    {
       this.rackId = rackId;
       this.rackImage = rackImage;
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
+      this.rackOrientation = rackOrientation;
       fieldSet.add(RACK_PLACEMENT);
    }
 
@@ -1952,5 +1954,23 @@ public class NXCObjectModificationData
    public List<String> getSnmpPorts()
    {
       return snmpPorts;
+   }
+   
+   /**
+    * Set rack orientation
+    * @param rackOrientation to set
+    */
+   public void setRackOrientation(short rackOrientation)
+   {
+      this.rackOrientation = rackOrientation;
+   }
+   
+   /**
+    * Get rack orientation
+    * @return rack orientation
+    */
+   public short getRackOrientation()
+   {
+      return rackOrientation;
    }
 }
