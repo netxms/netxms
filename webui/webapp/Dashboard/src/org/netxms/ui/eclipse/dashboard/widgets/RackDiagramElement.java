@@ -19,11 +19,16 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -33,9 +38,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class RackDiagramElement extends ElementWidget
 {
-   private RackWidget rackWidget;
+   private RackWidget rackFrontWidget;
+   private RackWidget rackRearWidget;
    private NXCSession session;
    private RackDiagramConfig config;
+   private Composite rackArea;
 
    /**
     * Create new rack diagram element
@@ -62,30 +69,77 @@ public class RackDiagramElement extends ElementWidget
       Rack rack = session.findObjectById(config.getObjectId(), Rack.class);
       
       if (rack != null)
-         setRackWidget(new RackWidget(this, SWT.NONE, rack));
-      
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      setLayout(layout);
+      {
+         rackArea = new Composite(this, SWT.NONE) {
+            @Override
+            public Point computeSize(int wHint, int hHint, boolean changed)
+            {
+               if ((rackFrontWidget == null) || (rackRearWidget == null) || (hHint == SWT.DEFAULT))
+                  return super.computeSize(wHint, hHint, changed);
+               
+               Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
+               return new Point(s.x * 2, s.y);
+            }
+         };
+         rackArea.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
+         rackArea.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e)
+            {
+               if ((rackFrontWidget == null) || (rackRearWidget == null))
+                  return;
+               
+               int height = rackArea.getSize().y;
+               Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
+               rackFrontWidget.setSize(size);
+               rackRearWidget.setSize(size);
+               rackRearWidget.setLocation(size.x, 0);
+            }
+         });
+         
+         setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackWidget.RACK_FRONT_VIEW));
+         setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackWidget.RACK_REAR_VIEW));
+      }
+      setLayout(new FillLayout());
    }
 
    /**
-    * Get rack widget
-    * @return rack widget
+    * Get rear rack widget
+    * 
+    * @return Rear rack widget
     */
-   public RackWidget getRackWidget()
+   public RackWidget getRackRearWidget()
    {
-      return rackWidget;
+      return rackRearWidget;
    }
 
    /**
-    * Set rack widget
-    * @param rackWidget to set
+    * Set rear rack widget
+    * 
+    * @param rackRearWidget to set
     */
-   public void setRackWidget(RackWidget rackWidget)
+   public void setRackRearWidget(RackWidget rackRearWidget)
    {
-      this.rackWidget = rackWidget;
+      this.rackRearWidget = rackRearWidget;
    }
 
+   /**
+    * Get front rack widget
+    * 
+    * @return Front rack widget
+    */
+   public RackWidget getRackFrontWidget()
+   {
+      return rackFrontWidget;
+   }
+
+   /**
+    * Set front rack widget
+    * 
+    * @param rackFrontWidget to set
+    */
+   public void setRackFrontWidget(RackWidget rackFrontWidget)
+   {
+      this.rackFrontWidget = rackFrontWidget;
+   }
 }
