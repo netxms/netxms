@@ -6,7 +6,7 @@
 - Raw DCI values saved in history along with corresponding transformed values
 - Collected DCI data recalculation based on stored raw values and current transformation settings
 - Implemented separate access rights for each DCI object
-- Fixed issues: NX-900, NX-1102, NX-1199, NX-1219, NX-1289, NX-1292, NX-1332, NX-1345, NX-1347
+- Fixed issues: NX-757, NX-900, NX-1102, NX-1199, NX-1219, NX-1289, NX-1292, NX-1332, NX-1345, NX-1347
 
 
 *
