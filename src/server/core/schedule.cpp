@@ -471,8 +471,7 @@ static void DeleteScheduledTaskFromDB(UINT32 id)
 UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
 {
    DbgPrintf(7, _T("RemoveSchedule: schedule(%d) removed"), id);
-   bool found = false;
-   UINT32 rcc = RCC_SUCCESS;
+   UINT32 rcc = RCC_INVALID_OBJECT_ID;
 
    s_cronScheduleLock.lock();
    for(int i = 0; i < s_cronSchedules.size(); i++)
@@ -485,20 +484,14 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
             break;
          }
          s_cronSchedules.remove(i);
-         found = true;
+         rcc = RCC_SUCCESS;
          break;
       }
    }
    s_cronScheduleLock.unlock();
 
-   if (!found)
-   {
-      DeleteScheduledTaskFromDB(id);
-      return rcc;
-   }
-
    s_oneTimeScheduleLock.lock();
-   for(int i = 0; i < s_oneTimeSchedules.size(); i++)
+   for(int i = 0; i < s_oneTimeSchedules.size() && rcc == RCC_INVALID_OBJECT_ID; i++)
    {
       if (s_oneTimeSchedules.get(i)->getId() == id)
       {
@@ -509,17 +502,18 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
          }
          s_oneTimeSchedules.remove(i);
          s_oneTimeSchedules.sort(ScheduledTaskComparator);
-         found = true;
+         s_wakeupCondition.set();
+         rcc = RCC_SUCCESS;
          break;
       }
    }
    s_oneTimeScheduleLock.unlock();
 
-   if (found)
+   if (rcc == RCC_SUCCESS)
    {
-      s_wakeupCondition.set();
       DeleteScheduledTaskFromDB(id);
    }
+
    return rcc;
 }
 
