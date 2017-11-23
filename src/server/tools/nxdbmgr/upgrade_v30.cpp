@@ -603,10 +603,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-<<<<<<< HEAD
    { 13, 30, 14, H_UpgradeFromV13 },
-=======
->>>>>>> a5831b94e... Implemented rear view for racks
    { 12, 30, 13, H_UpgradeFromV12 },
    { 11, 30, 12, H_UpgradeFromV11 },
    { 10, 30, 11, H_UpgradeFromV10 },
