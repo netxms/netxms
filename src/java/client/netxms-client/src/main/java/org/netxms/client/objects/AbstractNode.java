@@ -29,6 +29,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.NodeType;
+import org.netxms.client.constants.RackOrientation;
 
 /**
  * Abstract base class for node objects.
@@ -134,13 +135,13 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected UUID rackImage;
 	protected short rackPosition;
 	protected short rackHeight;
+   protected RackOrientation rackOrientation;
    protected long chassisId;
    protected String sshLogin;
    protected String sshPassword;
    protected long sshProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
-   protected int rackOrientation;
 	
 	/**
 	 * Create new node object.
@@ -211,7 +212,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
-      rackOrientation = msg.getFieldAsInt16(NXCPCodes.VID_RACK_ORIENTATION);
+      rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -787,16 +788,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    /* (non-Javadoc)
     * @see org.netxms.client.objects.RackElement#getRackOrientation()
     */
-   public int getRackOrientation()
+   public RackOrientation getRackOrientation()
    {
       return rackOrientation;
-   }
-   
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#setRackOrientation(int)
-    */
-   public void setRackOrientation(int rackOrientation)
-   {
-      this.rackOrientation = rackOrientation;
    }
 }

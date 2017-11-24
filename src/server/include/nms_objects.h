@@ -1328,10 +1328,15 @@ public:
    NXSL_Array *getNodesForNXSL();
 };
 
-// Rack element orientation
-#define RACK_POSITION_FRONT 0
-#define RACK_POSITION_REAR  1
-#define RACK_POSITION_FILL  2
+/**
+ * Rack orientation
+ */
+enum RackOrientation
+{
+   FILL = 0,
+   FRONT = 1,
+   REAR = 2
+};
 
 /**
  * Chassis (represents physical chassis)
@@ -1344,7 +1349,7 @@ protected:
    INT16 m_rackPosition;
    UINT32 m_rackId;
    uuid m_rackImage;
-   INT16 m_rackOrientation;
+   RackOrientation m_rackOrientation;
 
    virtual void fillMessageInternal(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
@@ -1553,7 +1558,7 @@ protected:
 	UINT32 m_sshProxy;
 	UINT32 m_portNumberingScheme;
 	UINT32 m_portRowCount;
-	INT16 m_rackOrientation;
+	RackOrientation m_rackOrientation;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }

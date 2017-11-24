@@ -31,7 +31,7 @@ Chassis::Chassis() : DataCollectionTarget()
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
-   m_rackOrientation = RACK_POSITION_FILL;
+   m_rackOrientation = FILL;
 }
 
 /**
@@ -43,7 +43,7 @@ Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : DataCollectionTarget(
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
-   m_rackOrientation = RACK_POSITION_FILL;
+   m_rackOrientation = FILL;
 }
 
 /**
@@ -164,7 +164,7 @@ void Chassis::fillMessageInternal(NXCPMessage *msg)
    msg->setField(VID_RACK_IMAGE, m_rackImage);
    msg->setField(VID_RACK_POSITION, m_rackPosition);
    msg->setField(VID_RACK_HEIGHT, m_rackHeight);
-   msg->setField(VID_RACK_ORIENTATION, m_rackOrientation);
+   msg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
 }
 
 /**
@@ -186,7 +186,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = request->getFieldAsInt16(VID_RACK_HEIGHT);
    if (request->isFieldExist(VID_RACK_ORIENTATION))
-      m_rackOrientation = request->getFieldAsInt16(VID_RACK_ORIENTATION);
+      m_rackOrientation = static_cast<RackOrientation>(request->getFieldAsInt16(VID_RACK_ORIENTATION));
 
    return DataCollectionTarget::modifyFromMessageInternal(request);
 }
@@ -282,7 +282,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_rackImage = DBGetFieldGUID(hResult, 0, 2);
    m_rackPosition = DBGetFieldULong(hResult, 0, 3);
    m_rackHeight = DBGetFieldULong(hResult, 0, 4);
-   m_rackOrientation = DBGetFieldULong(hResult, 0, 5);
+   m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 5));
    m_flags = DBGetFieldULong(hResult, 0, 6);
 
    DBFreeResult(hResult);

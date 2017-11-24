@@ -35,6 +35,7 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -182,10 +183,10 @@ public class RackTab extends ObjectTab implements ISelectionProvider
             }
          };
          
-         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackWidget.RACK_FRONT_VIEW);
+         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT);
          rackFrontWidget.addSelectionListener(listener);
 
-         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackWidget.RACK_REAR_VIEW);
+         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR);
          rackRearWidget.addSelectionListener(listener);
          
          scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));

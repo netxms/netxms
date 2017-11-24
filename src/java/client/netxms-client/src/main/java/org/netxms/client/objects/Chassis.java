@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RackOrientation;
 
 /**
  * Chassis object
@@ -33,7 +34,7 @@ public class Chassis extends DataCollectionTarget implements RackElement
    protected UUID rackImage;
    protected short rackPosition;
    protected short rackHeight;
-   protected int rackOrientation;
+   protected RackOrientation rackOrientation;
 
    /**
     * @param msg
@@ -47,7 +48,7 @@ public class Chassis extends DataCollectionTarget implements RackElement
       rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
       rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
-      rackOrientation = msg.getFieldAsInt16(NXCPCodes.VID_RACK_ORIENTATION);
+      rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
    }
 
    /* (non-Javadoc)
@@ -116,17 +117,8 @@ public class Chassis extends DataCollectionTarget implements RackElement
     * @see org.netxms.client.objects.RackElement#getRackOrientation()
     */
    @Override
-   public int getRackOrientation()
+   public RackOrientation getRackOrientation()
    {
       return rackOrientation;
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#setRackOrientation(int)
-    */
-   @Override
-   public void setRackOrientation(int rackOrientation)
-   {
-      this.rackOrientation = rackOrientation;
    }
 }
