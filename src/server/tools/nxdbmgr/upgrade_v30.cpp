@@ -50,10 +50,10 @@ static bool H_UpgradeFromV13()
 static bool H_UpgradeFromV12()
 {
    static const TCHAR *batch =
-            _T("ALTER TABLE nodes ADD rack_orientation integer null\n")
-            _T("ALTER TABLE chassis ADD rack_orientation integer null\n")
-            _T("UPDATE nodes SET rack_orientation=2\n")
-            _T("UPDATE chassis SET rack_orientation=2\n")
+            _T("ALTER TABLE nodes ADD rack_orientation integer\n")
+            _T("ALTER TABLE chassis ADD rack_orientation integer\n")
+            _T("UPDATE nodes SET rack_orientation=0\n")
+            _T("UPDATE chassis SET rack_orientation=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 

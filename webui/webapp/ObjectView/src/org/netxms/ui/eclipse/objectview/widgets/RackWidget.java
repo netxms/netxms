@@ -41,6 +41,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.NXCommon;
+import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -62,11 +63,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener, MouseListener, MouseTrackListener, MouseMoveListener
 {
-   // Rack views
-   public static final int RACK_FRONT_VIEW = 0;
-   public static final int RACK_REAR_VIEW = 1;
-   private static final String[] VIEW_LABELS = { "Front", "Back" };
-   
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 15;
    private static final int FULL_UNIT_WIDTH = 482;
@@ -79,6 +75,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_SPACING = 6;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   private static final String[] VIEW_LABELS = { "Front", "Back" };
    
    private Rack rack;
    private Font[] labelFonts;
@@ -95,17 +92,17 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Font objectToolTipHeaderFont;
    private AbstractObject tooltipObject = null;
    private ColorCache colorCache;
-   private int view;
+   private RackOrientation view;
    
    /**
     * @param parent
     * @param style
     */
-   public RackWidget(Composite parent, int style, Rack rack, int view)
+   public RackWidget(Composite parent, int style, Rack rack, RackOrientation view)
    {
       super(parent, style | SWT.DOUBLE_BUFFERED);
       this.rack = rack;
-      this.view = (view > 1 ? 0 : view);
+      this.view = (view == RackOrientation.FILL) ? RackOrientation.FRONT : view;
       
       colorCache = new ColorCache(this);
       
@@ -175,8 +172,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       // Title
       gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
-      Point titleSize = gc.textExtent(VIEW_LABELS[view]);
-      gc.drawText(VIEW_LABELS[view], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
+      Point titleSize = gc.textExtent(VIEW_LABELS[view.getValue() - 1]);
+      gc.drawText(VIEW_LABELS[view.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2);
 
       // Rack itself
       gc.setBackground(SharedColors.getColor(SharedColors.RACK_EMPTY_SPACE, getDisplay()));
@@ -228,7 +225,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          if ((n.getRackPosition() < 1) || (n.getRackPosition() > rack.getHeight()) || 
              (rack.isTopBottomNumbering() && (n.getRackPosition() + n.getRackHeight() > rack.getHeight() + 1)) ||
              (!rack.isTopBottomNumbering() && (n.getRackPosition() - n.getRackHeight() < 0)) || 
-             ((n.getRackOrientation() == view) ? false : ((n.getRackOrientation() == RackElement.RACK_POSITION_FILL) ? false : true)))
+             ((n.getRackOrientation() != view) && (n.getRackOrientation() != RackOrientation.FILL)))
             continue;
          
          int topLine, bottomLine;
@@ -261,7 +258,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          }
          else // Draw default representation
          {
-            Image imageTop = (view == RACK_REAR_VIEW && n.getRackOrientation() == RackElement.RACK_POSITION_FILL) ? imageDefaultRear : imageDefaultTop;
+            Image imageTop = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultTop;
             
             Rectangle r = imageTop.getBounds();
             if (n.getRackHeight() == 1)
@@ -270,8 +267,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             }
             else
             {
-               Image imageMiddle = (view == RACK_REAR_VIEW && n.getRackOrientation() == RackElement.RACK_POSITION_FILL) ? imageDefaultRear : imageDefaultMiddle;
-               Image imageBottom = (view == RACK_REAR_VIEW && n.getRackOrientation() == RackElement.RACK_POSITION_FILL) ? imageDefaultRear : imageDefaultBottom;
+               Image imageMiddle = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultMiddle;
+               Image imageBottom = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultBottom;
                if (rack.isTopBottomNumbering())
                {
                   unitRect.height = unitBaselines[n.getRackPosition()] - topLine;
@@ -495,6 +492,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultTop.dispose();
       imageDefaultMiddle.dispose();
       imageDefaultBottom.dispose();
+      imageDefaultRear.dispose();
       
       ImageProvider.getInstance().removeUpdateListener(this);
    }

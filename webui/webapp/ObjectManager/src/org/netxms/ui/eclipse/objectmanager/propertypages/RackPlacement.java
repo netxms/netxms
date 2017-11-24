@@ -29,6 +29,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.RackElement;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
@@ -45,7 +46,7 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
  */
 public class RackPlacement extends PropertyPage
 {
-   private final static String[] ORIENTATION = { "Front", "Rear", "Fill" };
+   private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
    
 	private RackElement object;
 	private ObjectSelector rackSelector;
@@ -114,7 +115,7 @@ public class RackPlacement extends PropertyPage
       rackHeight.setLayoutData(gd);
       rackOrientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
       rackOrientation.setItems(ORIENTATION);
-      rackOrientation.setText(ORIENTATION[object.getRackOrientation()]);
+      rackOrientation.setText(ORIENTATION[object.getRackOrientation().getValue()]);
       
 		return dialogArea;
 	}
@@ -131,7 +132,7 @@ public class RackPlacement extends PropertyPage
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
-		                    (short)rackOrientation.getSelectionIndex());
+		                    RackOrientation.getByValue(rackOrientation.getSelectionIndex()));
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
@@ -194,5 +195,6 @@ public class RackPlacement extends PropertyPage
 		rackImageSelector.setImageGuid(NXCommon.EMPTY_GUID, true);
 		rackPosition.setSelection(1);
 		rackHeight.setSelection(1);
+		rackOrientation.select(0);
 	}
 }
