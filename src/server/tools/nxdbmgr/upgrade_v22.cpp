@@ -23,6 +23,30 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.3 to 22.4
+ */
+static bool H_UpgradeFromV3()
+{
+   if (GetSchemaLevelForMajorVersion(21) < 5)
+   {
+      static const TCHAR *batch =
+               _T("ALTER TABLE nodes ADD rack_orientation integer\n")
+               _T("ALTER TABLE chassis ADD rack_orientation integer\n")
+               _T("UPDATE nodes SET rack_orientation=0\n")
+               _T("UPDATE chassis SET rack_orientation=0\n")
+               _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(21, 5));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 22.2 to 22.3
  */
 static bool H_UpgradeFromV2()
@@ -73,6 +97,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 3, 22, 4, H_UpgradeFromV3 },
    { 2, 22, 3, H_UpgradeFromV2 },
    { 1, 22, 2, H_UpgradeFromV1 },
    { 0, 22, 1, H_UpgradeFromV0 },
