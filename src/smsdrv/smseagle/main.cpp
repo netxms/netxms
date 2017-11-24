@@ -58,6 +58,7 @@ static char s_hostname[128] = "127.0.0.1";
 static int s_port = 80;
 static char s_login[128] = "user";
 static char s_password[128] = "password";
+static bool s_useHttps = false;
 
 /**
  * Init driver
@@ -97,6 +98,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
    s_port = (int)ExtractNamedOptionValueAsIntA(realInitArgs, "port", s_port);
    ExtractNamedOptionValueA(realInitArgs, "login", s_login, 128);
    ExtractNamedOptionValueA(realInitArgs, "password", s_password, 128);
+   s_useHttps = ExtractNamedOptionValueAsBoolA(realInitArgs, "https", false);
 
    return true;
 }
@@ -163,8 +165,8 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 
       char url[4096];
       snprintf(url, 4096,
-               intlPrefix ? "http://%s:%d/index.php/http_api/send_sms?login=%s&pass=%s&to=%s&message=%s" : "http://%s:%d/index.php/http_api/send_togroup?login=%s&pass=%s&groupname=%s&message=%s",
-               s_hostname, s_port, s_login, s_password, phone, msg);
+               intlPrefix ? "%s://%s:%d/index.php/http_api/send_sms?login=%s&pass=%s&to=%s&message=%s" : "%s://%s:%d/index.php/http_api/send_togroup?login=%s&pass=%s&groupname=%s&message=%s",
+               s_useHttps ? "https" : "http", s_hostname, s_port, s_login, s_password, phone, msg);
       nxlog_debug(4, _T("SMSEagle: URL set to \"%hs\""), url);
 
       curl_free(phone);
