@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -97,8 +98,8 @@ public class RackDiagramElement extends ElementWidget
             }
          });
          
-         setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackWidget.RACK_FRONT_VIEW));
-         setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackWidget.RACK_REAR_VIEW));
+         setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT));
+         setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR));
       }
       setLayout(new FillLayout());
    }

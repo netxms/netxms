@@ -35,6 +35,7 @@ import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.MapLayoutAlgorithm;
@@ -203,7 +204,7 @@ public class NXCObjectModificationData
 	private UUID rackImage;
 	private short rackPosition;
 	private short rackHeight;
-   private short rackOrientation;
+   private RackOrientation rackOrientation;
 	private Long[] dashboards;
 	private boolean rackNumberingTopBottom;
 	private long controllerId;
@@ -1599,6 +1600,15 @@ public class NXCObjectModificationData
    }
    
    /**
+    * Get rack orientation
+    * @return rack orientation
+    */
+   public RackOrientation getRackOrientation()
+   {
+      return rackOrientation;
+   }
+   
+   /**
     * Set rack placement data
     * 
     * @param rackId The rack ID to set
@@ -1606,7 +1616,7 @@ public class NXCObjectModificationData
     * @param rackPosition The rack position to set
     * @param rackHeight the rack height to set
     */
-   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight, short rackOrientation)
+   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight, RackOrientation rackOrientation)
    {
       this.rackId = rackId;
       this.rackImage = rackImage;
@@ -1786,23 +1796,5 @@ public class NXCObjectModificationData
    {
       this.seedObjectIds = seedObjectIds;
       fieldSet.add(SEED_OBJECTS);
-   }
-   
-   /**
-    * Set rack orientation
-    * @param rackOrientation to set
-    */
-   public void setRackOrientation(short rackOrientation)
-   {
-      this.rackOrientation = rackOrientation;
-   }
-   
-   /**
-    * Get rack orientation
-    * @return rack orientation
-    */
-   public short getRackOrientation()
-   {
-      return rackOrientation;
    }
 }

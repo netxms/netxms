@@ -123,7 +123,7 @@ Node::Node() : DataCollectionTarget()
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
-   m_rackOrientation = RACK_POSITION_FILL;
+   m_rackOrientation = FILL;
 }
 
 /**
@@ -224,7 +224,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
-   m_rackOrientation = RACK_POSITION_FILL;
+   m_rackOrientation = FILL;
 }
 
 /**
@@ -414,7 +414,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       safe_free_and_null(m_lldpNodeId);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 50);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 51);
-   m_rackOrientation = DBGetFieldULong(hResult, 0, 52);
+   m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 52));
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -5002,7 +5002,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_PORT_ROW_COUNT, m_portRowCount);
    pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
    pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
-   pMsg->setField(VID_RACK_ORIENTATION, m_rackOrientation);
+   pMsg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
 }
 
 /**
@@ -5265,7 +5265,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_agentCompressionMode = pRequest->getFieldAsInt16(VID_AGENT_COMPRESSION_MODE);
 
    if (pRequest->isFieldExist(VID_RACK_ORIENTATION))
-      m_rackOrientation = pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION);
+      m_rackOrientation = static_cast<RackOrientation>(pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION));
 
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }

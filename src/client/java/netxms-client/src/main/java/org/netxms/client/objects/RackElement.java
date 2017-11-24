@@ -20,16 +20,13 @@ package org.netxms.client.objects;
 
 import java.util.UUID;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.RackOrientation;
 
 /**
  * Common interface for rack elements (anything that can be mounted in rack)
  */
 public interface RackElement
 {
-   public static final int RACK_POSITION_FRONT = 0;
-   public static final int RACK_POSITION_REAR = 1;
-   public static final int RACK_POSITION_FILL = 2;
-   
    /**
     * Get object ID
     * 
@@ -84,12 +81,5 @@ public interface RackElement
     * 
     * @return orientation of object in rack
     */
-   public int getRackOrientation();
-   
-   /**
-    * Set orientation of object in rack
-    * 
-    * @param rackOrientation to set
-    */
-   public void setRackOrientation(int rackOrientation);
+   public RackOrientation getRackOrientation();
 }
