@@ -23,6 +23,26 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 21.4 to 21.5
+ */
+static bool H_UpgradeFromV4()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE nodes ADD rack_orientation integer\n")
+            _T("ALTER TABLE chassis ADD rack_orientation integer\n")
+            _T("UPDATE nodes SET rack_orientation=0\n")
+            _T("UPDATE chassis SET rack_orientation=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 21.3 to 21.4
  */
 static bool H_UpgradeFromV3()
