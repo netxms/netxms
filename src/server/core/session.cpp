@@ -5114,7 +5114,10 @@ void ClientSession::createObject(NXCPMessage *request)
 						   // If creation was successful do binding and set comments if needed
 						   if (object != NULL)
 						   {
-							   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s created"), object->getName());
+                        json_t *objData = object->toJson();
+                        WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), NULL, objData, 
+                           _T("Object %s created (class %s)"), object->getName(), object->getObjectClassName());
+                        json_decref(objData);
 							   if ((parent != NULL) &&          // parent can be NULL for nodes
 							       (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
