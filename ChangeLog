@@ -10,6 +10,7 @@
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
+	NX-801 (Deleted nodes not removed from trusted nodes lists of other objects)
 	NX-1045 (Add rack/chassis diagram as dashboard element)
 	NX-1142 (Back view for racks)
 	NX-1201 (Discovered node links on map should automatically be set to color based on the status of the interfaces shown in connector names)

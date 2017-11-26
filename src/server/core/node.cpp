@@ -5535,17 +5535,19 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
 /**
  * Handler for object deletion
  */
-void Node::onObjectDelete(UINT32 dwObjectId)
+void Node::onObjectDelete(UINT32 objectId)
 {
    lockProperties();
-   if (dwObjectId == m_pollerNode)
+   if (objectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified();
-      DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_name, dwObjectId);
+      DbgPrintf(3, _T("Node::onObjectDelete(%s [%u]): poller node %u deleted"), m_name, m_id, objectId);
    }
    unlockProperties();
+
+   DataCollectionTarget::onObjectDelete(objectId);
 }
 
 /**
