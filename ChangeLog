@@ -7,6 +7,7 @@
 - Fixed file download cancelation
 - HTTPS support in SMSEagle driver
 - New network map element - text box
+- Improved audit logging on object creation
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
