@@ -812,7 +812,7 @@ void NetObj::onObjectDelete(UINT32 objectId)
       {
          nxlog_debug(5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %u was listed as trusted node"), m_name, m_id, objectId);
          m_trustedNodes->remove(index);
-         setModified(MODIFY_COMMON_PROPERTIES);
+         setModified();
       }
    }
    unlockProperties();
