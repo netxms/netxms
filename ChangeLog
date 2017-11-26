@@ -20,6 +20,7 @@
 	NX-1342 (Increase text length limit in SMS sender)
 	NX-1343 (Server crash on re-enabling temporary disabled user)
 	NX-1344 (Search Bar for Agent Tunnel Manager)
+	NX-1348 (Continuous warnings in server log: seed object 0 cannot be found)
 	NX-1361 (Data type of transformation script's input value can be incorrect)
 
 
