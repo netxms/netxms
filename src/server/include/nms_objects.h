@@ -590,7 +590,7 @@ protected:
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
    virtual void prepareForDeletion();
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 objectId);
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
@@ -898,7 +898,7 @@ protected:
 	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
 
 protected:
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 objectId);
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -1012,7 +1012,7 @@ protected:
 	int m_requiredPollCount;
    UINT32 m_responseTime;  // Response time from last poll
 
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 objectId);
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -1634,7 +1634,7 @@ protected:
    virtual void collectProxyInfo(ProxyInfo *info);
 
    virtual void prepareForDeletion();
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 objectId);
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -2509,7 +2509,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 objectId);
 
    virtual json_t *toJson();
 

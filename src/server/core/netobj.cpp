@@ -803,7 +803,7 @@ void NetObj::deleteObject(NetObj *initiator)
    unlockProperties();
 
    // Notify all other objects about object deletion
-   DbgPrintf(5, _T("NetObj::deleteObject(): calling onObjectDelete(%d)"), m_id);
+   nxlog_debug(5, _T("NetObj::deleteObject(%s [%d]): calling onObjectDelete()"), m_name, m_id);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
    DbgPrintf(4, _T("Object %d successfully deleted"), m_id);
@@ -812,8 +812,20 @@ void NetObj::deleteObject(NetObj *initiator)
 /**
  * Default handler for object deletion notification
  */
-void NetObj::onObjectDelete(UINT32 dwObjectId)
+void NetObj::onObjectDelete(UINT32 objectId)
 {
+   lockProperties();
+   if (m_trustedNodes != NULL)
+   {
+      int index = m_trustedNodes->indexOf(objectId);
+      if (index != -1)
+      {
+         nxlog_debug(5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %u was listed as trusted node"), m_name, m_id, objectId);
+         m_trustedNodes->remove(index);
+         setModified(MODIFY_COMMON_PROPERTIES);
+      }
+   }
+   unlockProperties();
 }
 
 /**

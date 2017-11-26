@@ -424,17 +424,19 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 /**
  * Handler for object deletion
  */
-void NetworkService::onObjectDelete(UINT32 dwObjectId)
+void NetworkService::onObjectDelete(UINT32 objectId)
 {
 	lockProperties();
-   if (dwObjectId == m_pollerNode)
+   if (objectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
       setModified(MODIFY_OTHER);
-      DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_name, dwObjectId);
+      DbgPrintf(3, _T("NetworkService::onObjectDelete(%s [%u]): poller node %u deleted"), m_name, m_id, objectId);
    }
 	unlockProperties();
+
+   NetObj::onObjectDelete(objectId);
 }
 
 /**
