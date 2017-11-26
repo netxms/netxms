@@ -601,10 +601,6 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
-   DBBind(hStmt, 55, DB_SQLTYPE_INTEGER, m_id);
-
-   bool bResult = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
 
    // Save access list
    if (success)
@@ -4460,7 +4456,7 @@ end_loop:
 UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
 {
    UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
-   UINT32 i, dwTries = 3;
+   UINT32 dwTries = 3;
 
    *list = NULL;
 
