@@ -366,7 +366,7 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, Ite
       if (ppValueList[i]->getTimeStamp() != 1) \
       { \
          vtype curr = (vtype)(*ppValueList[i]); \
-         if (first || (curr < var)) { var = curr; } \
+         if (first || (curr < var)) { var = curr; first = false; } \
       } \
    } \
    result = var; \
@@ -414,7 +414,7 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
       if (ppValueList[i]->getTimeStamp() != 1) \
       { \
          vtype curr = (vtype)(*ppValueList[i]); \
-         if (first || (curr > var)) { var = curr; } \
+         if (first || (curr > var)) { var = curr; first = false; } \
       } \
    } \
    result = var; \

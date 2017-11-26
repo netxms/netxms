@@ -15,6 +15,7 @@
 	NX-1289 (Override PollCountForStatusChange at Node level)
 	NX-1292 (Option for line charts to not always use 0 as base)
 	NX-1332 (Execution timeout for external parameter provider)
+	NX-1336 (Cluster DCI Max/Min aggregation returns value from last node instead of expected max/min)
 	NX-1345 (Add rule number to EPP export)
 	NX-1347 (New agent parameter File.LineCount)
 
