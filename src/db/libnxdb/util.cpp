@@ -413,6 +413,28 @@ static bool GetColumnDataType_MSSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
 }
 
 /**
+* Get column data type for given column (MS SQL version)
+*/
+static bool GetColumnDataType_MYSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+{
+   bool success = false;
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = database() AND table_name = '%s' AND COLUMN_NAME = '%s'"), table, column);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         TCHAR type[128];
+         DBGetField(hResult, 0, 0, definition, len);
+         success = true;
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
  * Get column data type for given column
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
@@ -422,6 +444,9 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
    {
       case DB_SYNTAX_MSSQL:
          success = GetColumnDataType_MSSQL(hdb, table, column, definition, len);
+         break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, table, column, definition, len);
          break;
       default:
          success = false;
@@ -565,7 +590,16 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
          success = DBQuery(hdb, query);
          break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
       default:
+         _tprintf(_T("Unable to remove not null constraint.\n"));
          success = false;
          break;
    }
@@ -611,7 +645,16 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
          success = DBQuery(hdb, query);
          break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s NOT NULL"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
       default:
+         _tprintf(_T("Unable to set not null constraint.\n"));
          success = false;
          break;
    }
