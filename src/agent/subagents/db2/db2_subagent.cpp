@@ -588,7 +588,7 @@ static BOOL DB2Init(Config *config)
       {
          ConfigEntry *entry = db2SubXmlSubEntries->get(i);
          _tcscpy(entryName, _T("db2sub/"));
-         _tcscat_s(entryName, STR_MAX, entry->getName());
+         _tcslcat(entryName, entry->getName(), STR_MAX);
 
          const PDB2_INFO db2Info = GetConfigs(config, entry, entryName);
          if (db2Info == NULL)
