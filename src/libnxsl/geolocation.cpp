@@ -48,7 +48,7 @@ NXSL_GeoLocationClass::~NXSL_GeoLocationClass()
  */
 void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (GeoLocation *)object->getData();
+   delete static_cast<GeoLocation*>(object->getData());
 }
 
 /**
@@ -57,7 +57,7 @@ void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
 NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
    NXSL_Value *value = NULL;
-   GeoLocation *gl = (GeoLocation *)object->getData();
+   GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
    if (!_tcscmp(attr, _T("isManual")))
    {
       value = new NXSL_Value(gl->isManual());

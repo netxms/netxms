@@ -91,6 +91,7 @@ int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, i
  */
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
+   { _T("__new@GeoLocation"), F_GeoLocation, -1 },
    { _T("__new@Table"), F_Table, 0 },
    { _T("__new@TIME"), F_TIME, 0 },
 	{ _T("_exit"), F_exit, -1 },
@@ -140,12 +141,10 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("AddrInRange"), F_AddrInRange, 3 },
    { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
    { _T("ArrayToString"), F_ArrayToString, 2 },
-   { _T("GeoLocation"), F_GeoLocation, -1 },
    { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
    { _T("SplitString"), F_SplitString, 2 },
 	{ _T("TCPConnector"), F_tcpConnector, 2 },
-   { _T("TIME"), F_TIME, 0 },
 	{ _T("UDPConnector"), F_udpConnector, 2 },
    { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
 };
