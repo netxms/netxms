@@ -545,30 +545,31 @@ LONG H_HostName(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCom
  */
 LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szPath[MAX_PATH];
-   LONG nRet = SYSINFO_RC_ERROR;
-
-   if (!AgentGetParameterArg(cmd, 1, szPath, MAX_PATH))
+   TCHAR fname[MAX_PATH];
+   if (!AgentGetParameterArg(cmd, 1, fname, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (szPath[0] != 0)
+   LONG nRet = SYSINFO_RC_ERROR;
+   int fd, in;
+   if ((fd = _topen(fname, O_RDONLY)) != -1)
    {
       UINT32 lineCount = 0;
       char buffer[4096];
-      int fd, in;
-      if ((fd = _topen(szPath, O_RDONLY)) != -1)
+      bool lastCharIsNL = false;
+      while((in = _read(fd, buffer, 4096)) > 0)
       {
-         while((in = read(fd, buffer, 4096)) > 0)
-         {
-            buffer[in] = 0;
-            lineCount += NumCharsA(buffer, '\n');
-         }
-         close(fd);
-         lineCount++; // Last line will not have an '\n' char
-
-         ret_uint(value, lineCount);
-         nRet = SYSINFO_RC_SUCCESS;
+         for(int i = 0; i < in; i++)
+            if (buffer[i] == '\n')
+               lineCount++;
+         lastCharIsNL = (buffer[in - 1] == '\n');      
       }
+      _close(fd);
+      
+      if (!lastCharIsNL)
+         lineCount++; // Last line without '\n' char
+
+      ret_uint(value, lineCount);
+      nRet = SYSINFO_RC_SUCCESS;
    }
    return nRet;
 }
