@@ -996,7 +996,7 @@ void DCTable::createExportRecord(String &str)
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
-								  (const TCHAR *)EscapeStringForXML2(m_instance)), m_instanceRetentionTime;
+								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime);
 
 	if (m_transformationScriptSource != NULL)
 	{
