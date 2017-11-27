@@ -532,10 +532,10 @@ bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const
  */
 bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column)
 {
-   int syntax = DBGetSyntax(hdb);
+   bool success;
+   TCHAR query[1024], type[128];
 
-   TCHAR query[1024] = _T("");
-   switch(syntax)
+   switch(DBGetSyntax(hdb))
    {
       case DB_SYNTAX_DB2:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
@@ -546,20 +546,31 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
             success = DBQuery(hdb, query);
          }
          break;
+      case DB_SYNTAX_MSSQL:
+         success = GetColumnDataType_MSSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s %s NULL"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
                                  _T("PRAGMA EXCEPTION_INIT(already_null, -1451); ")
                                  _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s null'; ")
                                  _T("EXCEPTION WHEN already_null THEN null; END;"), table, column);
+         success = DBQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
+         success = DBQuery(hdb, query);
          break;
       default:
+         success = false;
          break;
    }
 
-   return (query[0] != 0) ? DBQuery(hdb, query) : true;
+   return success;
 }
 
 /**
