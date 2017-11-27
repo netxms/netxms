@@ -1,14 +1,21 @@
 *
-* 2.1.3
+* 2.2.1
 *
 
+- Implemented separate access rights for each DCI object
 - Option to read log files using VSS snapshots on Windows
 - Per stage confirmation in database manager during database check
 - Fixed file download cancelation
 - HTTPS support in SMSEagle driver
 - New network map element - text box
+- New debug log format with tags
+- Ability to set debug level per tag or tag mask
 - Improved audit logging on object creation
 - NXSL function "GeoLocation" replaced with "GeoLocation" class constructor
+- Optimized object updates in database (to reduce load on database in large installations)
+- Thread pool used for data collection instead of fixed number of poller threads
+- Optimized data collection from agents
+- Configurable number of records per transaction for writing DCI data
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
