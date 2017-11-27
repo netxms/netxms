@@ -537,6 +537,15 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
    TCHAR query[1024] = _T("");
    switch(syntax)
    {
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
+         success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+            success = DBQuery(hdb, query);
+         }
+         break;
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
                                  _T("PRAGMA EXCEPTION_INIT(already_null, -1451); ")
@@ -563,6 +572,15 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
 
    switch(DBGetSyntax(hdb))
    {
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
+         success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+            success = DBQuery(hdb, query);
+         }
+         break;
       case DB_SYNTAX_MSSQL:
          success = GetColumnDataType_MSSQL(hdb, table, column, type, 128);
          if (success)
