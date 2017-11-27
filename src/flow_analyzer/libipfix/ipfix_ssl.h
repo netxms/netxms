@@ -16,6 +16,7 @@ $$LIC$$
 #include <openssl/rand.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
+#include <openssl/dh.h>
 
 #define CIPHER_LIST "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"
 
