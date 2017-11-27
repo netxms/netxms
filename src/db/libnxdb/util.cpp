@@ -352,9 +352,9 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
 }
 
 /**
-* Get column data type for given column (MS SQL version)
-*/
-static bool GetColumnDataType_MSSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+ * Get column data type for given column (MS SQL and PostgreSQL version)
+ */
+static bool GetColumnDataType_MSSQL_PGSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
 {
    bool success = false;
    TCHAR query[1024];
@@ -389,10 +389,11 @@ static bool GetColumnDataType_MSSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
             }
          }
          else if (!_tcsicmp(type, _T("varchar")) || !_tcsicmp(type, _T("nvarchar")) ||
-                  !_tcsicmp(type, _T("char")) || !_tcsicmp(type, _T("nchar")))
+                  !_tcsicmp(type, _T("char")) || !_tcsicmp(type, _T("nchar")) ||
+                  !_tcsicmp(type, _T("character")) || !_tcsicmp(type, _T("character varying")))
          {
             int ch = DBGetFieldLong(hResult, 0, 1);
-            if (ch < INT_MAX)
+            if ((ch < INT_MAX) && (ch > 0))
             {
                _sntprintf(definition, len, _T("%s(%d)"), type, ch);
             }
@@ -413,13 +414,13 @@ static bool GetColumnDataType_MSSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
 }
 
 /**
-* Get column data type for given column (MS SQL version)
-*/
+ * Get column data type for given column (MySQL version)
+ */
 static bool GetColumnDataType_MYSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
 {
    bool success = false;
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = database() AND table_name = '%s' AND COLUMN_NAME = '%s'"), table, column);
+   _sntprintf(query, 1024, _T("SELECT column_type FROM information_schema.columns WHERE table_schema=database() AND table_name='%s' AND column_name='%s'"), table, column);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
@@ -443,7 +444,8 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
    switch(DBGetSyntax(hdb))
    {
       case DB_SYNTAX_MSSQL:
-         success = GetColumnDataType_MSSQL(hdb, table, column, definition, len);
+      case DB_SYNTAX_PGSQL:
+         success = GetColumnDataType_MSSQL_PGSQL(hdb, table, column, definition, len);
          break;
       case DB_SYNTAX_MYSQL:
          success = GetColumnDataType_MYSQL(hdb, table, column, definition, len);
@@ -572,10 +574,18 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
          }
          break;
       case DB_SYNTAX_MSSQL:
-         success = GetColumnDataType_MSSQL(hdb, table, column, type, 128);
+         success = GetColumnDataType_MSSQL_PGSQL(hdb, table, column, type, 128);
          if (success)
          {
             _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s %s NULL"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s"), table, column, type);
             success = DBQuery(hdb, query);
          }
          break;
@@ -589,14 +599,6 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
          success = DBQuery(hdb, query);
-         break;
-      case DB_SYNTAX_MYSQL:
-         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
-         if (success)
-         {
-            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s"), table, column, type);
-            success = DBQuery(hdb, query);
-         }
          break;
       default:
          _tprintf(_T("Unable to remove not null constraint.\n"));
@@ -627,10 +629,18 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          }
          break;
       case DB_SYNTAX_MSSQL:
-         success = GetColumnDataType_MSSQL(hdb, table, column, type, 128);
+         success = GetColumnDataType_MSSQL_PGSQL(hdb, table, column, type, 128);
          if (success)
          {
             _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s %s NOT NULL"), table, column, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s NOT NULL"), table, column, type);
             success = DBQuery(hdb, query);
          }
          break;
@@ -644,14 +654,6 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
          success = DBQuery(hdb, query);
-         break;
-      case DB_SYNTAX_MYSQL:
-         success = GetColumnDataType_MYSQL(hdb, table, column, type, 128);
-         if (success)
-         {
-            _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s NOT NULL"), table, column, type);
-            success = DBQuery(hdb, query);
-         }
          break;
       default:
          _tprintf(_T("Unable to set not null constraint.\n"));
@@ -676,6 +678,7 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
          break;
       case DB_SYNTAX_MSSQL:
+      case DB_SYNTAX_MYSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
          break;
       case DB_SYNTAX_PGSQL:
