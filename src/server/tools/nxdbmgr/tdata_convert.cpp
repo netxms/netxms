@@ -81,7 +81,10 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
    _sntprintf(oldName, 64, _T("tdata_%d"), id);
    _sntprintf(newName, 64, _T("tdata_temp_%d"), id);
    if (!DBRenameTable(g_hCoreDB, oldName, newName))
+   {
+      _tprintf(_T("Table rename failed (%s -> %s)\n"), oldName, newName);
       return false;
+   }
 
    bool success = false;
    if (CreateTDataTable(id))
