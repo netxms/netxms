@@ -2,8 +2,12 @@
 
 my $file = shift || die "Usage : updatetag.pl <file>";
 
-my $tag = `git describe`;
+my $tag = `git describe --always`;
 chomp $tag;
+if ($tag =~ /^Release-(.*)/)
+{
+	$tag = $1;
+}
 print "Git tag: $tag\n";
 
 my $update = 1;
