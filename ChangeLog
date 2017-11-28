@@ -10,9 +10,7 @@
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
 	NX-1219 (Add 'created' and 'last login' columns to User Manager)
-	NX-1292 (Option for line charts to not always use 0 as base)
 	NX-1332 (Execution timeout for external parameter provider)
-	NX-1345 (Add rule number to EPP export)
 
 
 *
@@ -44,12 +42,14 @@
 	NX-1252 (Fix automatically generated transformation scripts for 64 bit interface counters)
 	NX-1268 (Do DNS resolve for node names via zone proxy)
 	NX-1289 (Override PollCountForStatusChange at Node level)
+	NX-1292 (Option for line charts to not always use 0 as base)
 	NX-1336 (Cluster DCI Max/Min aggregation returns value from last node instead of expected max/min)
 	NX-1339 (JIRA restricts subject field to 254 chars, helpdesk integration should trim alarm text or move reset of the message to issue description)
 	NX-1341 (Scheduled tasks enabled/disabled indicator)
 	NX-1342 (Increase text length limit in SMS sender)
 	NX-1343 (Server crash on re-enabling temporary disabled user)
 	NX-1344 (Search Bar for Agent Tunnel Manager)
+	NX-1345 (Add rule number to EPP export)
 	NX-1347 (New agent parameter File.LineCount)
 	NX-1348 (Continuous warnings in server log: seed object 0 cannot be found)
 	NX-1361 (Data type of transformation script's input value can be incorrect)
