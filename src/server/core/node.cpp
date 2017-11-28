@@ -7832,8 +7832,8 @@ json_t *Node::toJson()
    json_object_set_new(root, "agentAuthMethod", json_integer(m_agentAuthMethod));
    json_object_set_new(root, "agentCacheMode", json_integer(m_agentCacheMode));
    json_object_set_new(root, "agentCompressionMode", json_integer(m_agentCompressionMode));
-   json_object_set_new(root, "szSharedSecret", json_string_t(m_szSharedSecret));
-   json_object_set_new(root, "iStatusPollType", json_integer(m_iStatusPollType));
+   json_object_set_new(root, "sharedSecret", json_string_t(m_szSharedSecret));
+   json_object_set_new(root, "statusPollType", json_integer(m_iStatusPollType));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "nUseIfXTable", json_integer(m_nUseIfXTable));
