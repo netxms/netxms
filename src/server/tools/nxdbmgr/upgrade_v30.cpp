@@ -23,23 +23,25 @@
 #include "nxdbmgr.h"
 
 /**
- * Upgrade from 30.13 to 30.14
+ * Upgrade from 30.13 to 30.14 (changes also included into 22.5)
  */
 static bool H_UpgradeFromV13()
 {
-   static const TCHAR *batch = 
-            _T("ALTER TABLE items ADD instance_retention_time integer\n")
-            _T("ALTER TABLE dc_tables ADD instance_retention_time integer\n")
-            _T("UPDATE items SET instance_retention_time=-1\n")
-            _T("UPDATE dc_tables SET instance_retention_time=-1\n")
-            _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) ")
-            _T("VALUES ('InstanceRetentionTime','0','0',1,1,'Y','I','Time, in days, for instance DCO retention')\n")
-            _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   if (GetSchemaLevelForMajorVersion(22) < 5)
+   {
+      static const TCHAR *batch =
+               _T("ALTER TABLE items ADD instance_retention_time integer\n")
+               _T("ALTER TABLE dc_tables ADD instance_retention_time integer\n")
+               _T("UPDATE items SET instance_retention_time=-1\n")
+               _T("UPDATE dc_tables SET instance_retention_time=-1\n")
+               _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) ")
+               _T("VALUES ('InstanceRetentionTime','0','0',1,1,'Y','I','Default retention time (in days) for missing DCI instances')\n")
+               _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
-
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
+      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+   }
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
 }

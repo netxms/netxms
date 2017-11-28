@@ -1647,13 +1647,12 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
             object->updateFromTemplate(root);
             changed = true;
          }
-         instances->remove(dcoInstance);
-
          if (object->getInstanceGracePeriodStart() > 0)
          {
             object->setInstanceGracePeriodStart(0);
             object->setStatus(ITEM_STATUS_ACTIVE, false);
          }
+         instances->remove(dcoInstance);
       }
       else
       {
