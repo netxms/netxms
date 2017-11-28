@@ -1714,12 +1714,13 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
-   void setNewTunnelBindFlag() { m_dwDynamicFlags |= NDF_NEW_TUNNEL_BIND; }
-   void removeNewTunnelBindFlag() { m_dwDynamicFlags &= ~NDF_NEW_TUNNEL_BIND; }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
+
+   void setNewTunnelBindFlag() { lockProperties(); m_dwDynamicFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
+   void clearNewTunnelBindFlag() { lockProperties(); m_dwDynamicFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }
 
    void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }
    Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);

@@ -1014,7 +1014,7 @@ retry:
                      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%d]"), (const TCHAR *)request->addr.toString(), node->getName(), node->getId());
                      if (node->getRuntimeFlags() & NDF_NEW_TUNNEL_BIND)
                      {
-                        node->removeNewTunnelBindFlag();
+                        node->clearNewTunnelBindFlag();
                         node->setRecheckCapsFlag();
                         node->forceConfigurationPoll();
                      }
