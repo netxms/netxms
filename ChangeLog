@@ -6,7 +6,6 @@
 - Raw DCI values saved in history along with corresponding transformed values
 - Collected DCI data recalculation based on stored raw values and current transformation settings
 - Fixed issues:
-	NX-757 (Instance discovery - grace period for removed instances before deleting DCIs)
 	NX-900 (Server started during nxdbmgr check forced repair)
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
@@ -37,6 +36,7 @@
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
+	NX-757 (Instance discovery - grace period for removed instances before deleting DCIs)
 	NX-801 (Deleted nodes not removed from trusted nodes lists of other objects)
 	NX-1045 (Add rack/chassis diagram as dashboard element)
 	NX-1142 (Back view for racks)

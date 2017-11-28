@@ -218,8 +218,8 @@ protected:
    NXSL_Program *m_instanceFilter;
    TCHAR m_instance[MAX_DB_STRING];
    IntegerArray<UINT32> *m_accessList;
-   time_t m_lastAttemptToRemove;       // If instance is not found, the time is updated
-   INT32 m_instanceRetentionTime;   // Retention time if instance is not found
+   time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
+   INT32 m_instanceRetentionTime;      // Retention time if instance is not found
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -330,6 +330,7 @@ public:
 
    WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
    const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
+   INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    void filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
@@ -337,12 +338,10 @@ public:
    void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
    const TCHAR *getInstance() const { return m_instance; }
    void expandInstance();
+   time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
+   void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
    bool hasValue();
    bool hasAccess(UINT32 userId);
-
-   time_t getLastAttemptToRemove() const { return m_lastAttemptToRemove; }
-   void setLastAttemptToRemove(time_t time) { m_lastAttemptToRemove = time; }
-   INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
 };
 
 /**
