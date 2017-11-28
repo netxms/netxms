@@ -23,6 +23,28 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.4 to 22.5
+ */
+static bool H_UpgradeFromV4()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE items ADD instance_retention_time integer\n")
+            _T("ALTER TABLE dc_tables ADD instance_retention_time integer\n")
+            _T("UPDATE items SET instance_retention_time=-1\n")
+            _T("UPDATE dc_tables SET instance_retention_time=-1\n")
+            _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) ")
+            _T("VALUES ('InstanceRetentionTime','0','0',1,1,'Y','I','Default retention time (in days) for missing DCI instances')\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 22.3 to 22.4
  */
 static bool H_UpgradeFromV3()
@@ -97,6 +119,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 4, 22, 5, H_UpgradeFromV4 },
    { 3, 22, 4, H_UpgradeFromV3 },
    { 2, 22, 3, H_UpgradeFromV2 },
    { 1, 22, 2, H_UpgradeFromV1 },

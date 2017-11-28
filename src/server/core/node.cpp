@@ -3895,16 +3895,35 @@ bool Node::updateInstances(DCObject *root, StringMap *instances, UINT32 requestI
             object->updateFromTemplate(root);
             changed = true;
          }
+         if (object->getInstanceGracePeriodStart() > 0)
+         {
+            object->setInstanceGracePeriodStart(0);
+            object->setStatus(ITEM_STATUS_ACTIVE, false);
+         }
          instances->remove(dcoInstance);
       }
       else
       {
-         // not found, delete DCO
-         DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
-                   m_name, m_id, root->getName(), root->getId(), dcoInstance);
-         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
-         deleteList.add(object->getId());
-         changed = true;
+         time_t retentionTime = ((object->getInstanceRetentionTime() != -1) ? object->getInstanceRetentionTime() : g_instanceRetentionTime) * 86400;
+
+         if ((object->getInstanceGracePeriodStart() == 0) && (retentionTime > 0))
+         {
+            object->setInstanceGracePeriodStart(time(NULL));
+            object->setStatus(ITEM_STATUS_DISABLED, false);
+            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
+                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance);
+         }
+
+         if ((retentionTime == 0) || ((time(NULL) - object->getInstanceGracePeriodStart()) > retentionTime))
+         {
+            // not found, delete DCO
+            nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCO will be deleted"),
+                      m_name, m_id, root->getName(), root->getId(), dcoInstance);
+            sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dcoInstance);
+            deleteList.add(object->getId());
+            changed = true;
+         }
       }
    }
 
