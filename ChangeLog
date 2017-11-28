@@ -19,6 +19,7 @@
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
+	NX-757 (Instance discovery - grace period for removed instances before deleting DCIs)
 	NX-801 (Deleted nodes not removed from trusted nodes lists of other objects)
 	NX-1045 (Add rack/chassis diagram as dashboard element)
 	NX-1142 (Back view for racks)

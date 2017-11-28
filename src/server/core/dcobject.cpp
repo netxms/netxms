@@ -72,7 +72,7 @@ DCObject::DCObject()
    m_instance[0] = 0;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
-   m_lastAttemptToRemove = 0;
+   m_instanceGracePeriodStart = 0;
 }
 
 /**
@@ -120,6 +120,7 @@ DCObject::DCObject(const DCObject *pSrc)
    _tcscpy(m_instance, pSrc->m_instance);
    m_accessList = new IntegerArray<UINT32>(pSrc->m_accessList);
    m_instanceRetentionTime = pSrc->m_instanceRetentionTime;
+   m_instanceGracePeriodStart = pSrc->m_instanceGracePeriodStart;
 }
 
 /**
@@ -167,7 +168,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instance[0] = 0;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
-   m_lastAttemptToRemove = 0;
+   m_instanceGracePeriodStart = 0;
 }
 
 /**
@@ -235,7 +236,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
-   m_lastAttemptToRemove = 0;
+   m_instanceGracePeriodStart = 0;
 }
 
 /**
