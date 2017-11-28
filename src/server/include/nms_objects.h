@@ -1716,6 +1716,7 @@ public:
    const uuid& getTunnelId() const { return m_tunnelId; }
    void setNewTunnelBindFlag() { m_dwDynamicFlags |= NDF_NEW_TUNNEL_BIND; }
    void removeNewTunnelBindFlag() { m_dwDynamicFlags &= ~NDF_NEW_TUNNEL_BIND; }
+   UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1873,8 +1874,6 @@ public:
 	void incSnmpTrapCount();
 
 	static const TCHAR *typeName(NodeType type);
-
-	UINT32 getRequiredPolls() const { return m_requiredPollCount; }
 };
 
 /**

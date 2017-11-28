@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
@@ -41,6 +40,7 @@ import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
  * "Polling" property page for nodes
@@ -49,13 +49,13 @@ public class NodePolling extends PropertyPage
 {
 	private AbstractNode object;
 	private ObjectSelector pollerNode;
-   private Spinner pollCount;
 	private Button radioIfXTableDefault;
 	private Button radioIfXTableEnable;
 	private Button radioIfXTableDisable;
 	private Button radioAgentCacheDefault;
    private Button radioAgentCacheOn;
    private Button radioAgentCacheOff;
+   private LabeledSpinner pollCount;
 	private List<Button> flagButtons = new ArrayList<Button>();
 	private List<Integer> flagValues = new ArrayList<Integer>();
 	
@@ -102,6 +102,14 @@ public class NodePolling extends PropertyPage
 		gd = new GridData();
 		gd.widthHint = 250;
 		label.setLayoutData(gd);
+
+      /* poll count */
+      if (object instanceof AbstractNode)
+      {
+         pollCount = new LabeledSpinner(dialogArea, SWT.NONE);
+         pollCount.setLabel("Required poll count for status change");
+         pollCount.setSelection(((AbstractNode)object).getRequredPollCount());
+      }
 
 		/* options */
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
@@ -174,15 +182,6 @@ public class NodePolling extends PropertyPage
       radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
       radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
       
-      /* poll count */
-      if (object instanceof AbstractNode)
-      {
-         gd = new GridData();
-         gd.verticalSpan = 1;
-         pollCount = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Required poll count", 0, 1000, gd);
-         pollCount.setSelection(((AbstractNode)object).getRequredPollCount());
-      }
-
       return dialogArea;
    }
 
