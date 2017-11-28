@@ -642,7 +642,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
-	                    ((getParentNode()->getRequiredPolls() > 0) ? getParentNode()->getRequiredPolls() : g_requiredPolls);
+	                    ((getParentNode()->getRequiredPollCount() > 0) ? getParentNode()->getRequiredPollCount() : g_requiredPolls);
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
 	              GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
 	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
