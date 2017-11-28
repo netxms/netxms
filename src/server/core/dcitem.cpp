@@ -1510,8 +1510,8 @@ void DCItem::createExportRecord(String &str)
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (int)m_flags,
-								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod),
-								  m_instanceRetentionTime;
+								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod, 
+                          m_instanceRetentionTime);
 
 	if (m_transformationScriptSource != NULL)
 	{
