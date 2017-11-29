@@ -862,7 +862,7 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId)
 		DCObject *curr = m_dcObjects->get(i);
       if (curr->getTemplateItemId() == tmplItemId)
 		{
-         if (object->hasAccess(userId))
+         if (curr->hasAccess(userId))
             object = curr;
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), object->getId(), userId);
