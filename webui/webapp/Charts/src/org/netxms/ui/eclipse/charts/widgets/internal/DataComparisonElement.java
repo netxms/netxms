@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.widgets.internal;
 
+import java.util.Arrays;
 import org.eclipse.birt.chart.model.component.Series;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.GraphItem;
@@ -212,4 +213,14 @@ public class DataComparisonElement
 	{
 	   return dci.getDisplayFormat();
 	}
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DataComparisonElement [dci=" + dci + ", thresholds=" + Arrays.toString(thresholds) + ", value=" + value
+            + ", rawValue=" + rawValue + ", series=" + series + "]";
+   }
 }

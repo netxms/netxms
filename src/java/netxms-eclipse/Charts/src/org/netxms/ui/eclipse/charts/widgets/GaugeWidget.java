@@ -256,6 +256,14 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    @Override
    public void updateParameterThresholds(int index, Threshold[] thresholds)
    {
+      try
+      {
+         DataComparisonElement p = parameters.get(index);
+         p.setThresholds(thresholds);
+      }
+      catch(IndexOutOfBoundsException e)
+      {
+      }
    }
 
 	/* (non-Javadoc)

@@ -75,48 +75,48 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    protected String fontName = "Verdana"; //$NON-NLS-1$
    protected GaugeColorMode colorMode = GaugeColorMode.ZONE;
    protected RGB customColor = new RGB(0, 0, 0);
-	
-	private boolean fontsCreated = false;
-	
-	/**
-	 * @param parent
-	 * @param style
-	 */
-	public GaugeWidget(Composite parent, int style)
-	{
-		super(parent, style | SWT.NO_BACKGROUND);
-		
-		colors = new ColorCache(this);
-		addPaintListener(this);
-		addDisposeListener(this);
-		addControlListener(new ControlListener() {
-			@Override
-			public void controlResized(ControlEvent e)
-			{
-				if (chartImage != null)
-				{
-					chartImage.dispose();
-					chartImage = null;
-				}
-				refresh();
-			}
-			
-			@Override
-			public void controlMoved(ControlEvent e)
-			{
-			}
-		});
-	}
-	
-	/**
-	 * Create fonts
-	 */
-	protected abstract void createFonts();
-	
-	/**
-	 * Dispose fonts
-	 */
-	protected abstract void disposeFonts();
+
+   private boolean fontsCreated = false;
+
+   /**
+    * @param parent
+    * @param style
+    */
+   public GaugeWidget(Composite parent, int style)
+   {
+      super(parent, style | SWT.NO_BACKGROUND);
+
+      colors = new ColorCache(this);
+      addPaintListener(this);
+      addDisposeListener(this);
+      addControlListener(new ControlListener() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            if (chartImage != null)
+            {
+               chartImage.dispose();
+               chartImage = null;
+            }
+            refresh();
+         }
+
+         @Override
+         public void controlMoved(ControlEvent e)
+         {
+         }
+      });
+   }
+
+   /**
+    * Create fonts
+    */
+   protected abstract void createFonts();
+
+   /**
+    * Dispose fonts
+    */
+   protected abstract void disposeFonts();
 
 	/* (non-Javadoc)
     * @see org.netxms.ui.eclipse.charts.api.DataChart#initializationComplete()
@@ -255,6 +255,14 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    @Override
    public void updateParameterThresholds(int index, Threshold[] thresholds)
    {
+      try
+      {
+         DataComparisonElement p = parameters.get(index);
+         p.setThresholds(thresholds);
+      }
+      catch(IndexOutOfBoundsException e)
+      {
+      }
    }
 
 	/* (non-Javadoc)
