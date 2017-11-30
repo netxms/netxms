@@ -64,6 +64,7 @@ public class GaugeElement extends ComparisonChartElement
             break;
 			case GaugeConfig.TEXT:
 				chart = ChartFactory.createCurrentValueChart(this, SWT.NONE);
+		      updateThresholds = true;
 				break;
 			default:
 				chart = ChartFactory.createDialChart(this, SWT.NONE);

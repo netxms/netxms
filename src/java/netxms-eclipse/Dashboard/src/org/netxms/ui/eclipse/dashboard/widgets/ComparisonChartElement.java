@@ -34,6 +34,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -49,6 +50,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 	protected DataComparisonChart chart;
 	protected NXCSession session;
 	protected int refreshInterval = 30;
+	protected boolean updateThresholds = false;
 	
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
@@ -114,6 +116,21 @@ public abstract class ComparisonChartElement extends ElementWidget
 					else
 						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
 				}
+
+            final Threshold[][] thresholds;
+            if (updateThresholds)
+            {
+               thresholds = new Threshold[dciList.length][];
+               for(int i = 0; i < dciList.length; i++)
+               {
+                  thresholds[i] = session.getThresholds(dciList[i].nodeId, dciList[i].dciId);
+               }
+            }
+            else
+            {
+               thresholds = null;
+            }
+				
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -124,6 +141,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 							{
 								DciDataRow lastValue = data[i].getLastValue();
 								chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
+								if (updateThresholds)
+								   chart.updateParameterThresholds(i, thresholds[i]);
 							}
 							chart.refresh();
 							chart.clearErrors();
