@@ -67,23 +67,23 @@ public class HistoricalData extends AbstractObjectHandler
       
       if (timeFrom != null || timeTo != null)
       {
-         data = session.getCollectedData(obj.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0));
+         data = session.getCollectedData(obj.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0), false);
       }
       else if (timeInteval != null)
       {
          Date now = new Date();
          long from = now.getTime() - parseLong(timeInteval, 0) * 1000;
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0));         
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), false);         
       }
       else if (itemCount != null)
       {         
-         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0));
+         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0), false);
       }  
       else
       {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0));           
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), false);           
       }
       
       return new ResponseContainer("values", data);

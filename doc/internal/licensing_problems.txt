@@ -4,6 +4,4 @@ libnetxms:
 
 base64.h	- GPL
 base64.cpp	- GPL
-netxms-getopt.h	- GPL
-getopt.c	- GPL
 scandir.c   - GPL
