@@ -83,6 +83,7 @@ public class MapOptions extends PropertyPage
       objectDisplayMode.add(Messages.get().MapOptions_SmallLabels);
       objectDisplayMode.add(Messages.get().MapOptions_LargeLabels);
       objectDisplayMode.add(Messages.get().MapOptions_StatusIcons);
+      objectDisplayMode.add("Floor plan");
       objectDisplayMode.select(object.getObjectDisplayMode().getValue());
       
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);

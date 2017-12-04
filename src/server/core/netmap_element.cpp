@@ -125,6 +125,8 @@ NetworkMapObject::NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags) : N
 {
 	m_type = MAP_ELEMENT_OBJECT;
 	m_objectId = objectId;
+	m_width = 100;
+	m_height = 100;
 }
 
 /**
@@ -133,6 +135,8 @@ NetworkMapObject::NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags) : N
 NetworkMapObject::NetworkMapObject(UINT32 id, Config *config, UINT32 flags) : NetworkMapElement(id, config, flags)
 {
 	m_objectId = config->getValueAsUInt(_T("/objectId"), 0);
+	m_width = config->getValueAsUInt(_T("/width"), 100);
+   m_height = config->getValueAsUInt(_T("/height"), 100);
 }
 
 /**
@@ -141,6 +145,8 @@ NetworkMapObject::NetworkMapObject(UINT32 id, Config *config, UINT32 flags) : Ne
 NetworkMapObject::NetworkMapObject(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
 {
 	m_objectId = msg->getFieldAsUInt32(baseId + 10);
+	m_width = msg->getFieldAsUInt32(baseId + 11);
+   m_height = msg->getFieldAsUInt32(baseId + 12);
 }
 
 /**
@@ -157,6 +163,8 @@ void NetworkMapObject::updateConfig(Config *config)
 {
 	NetworkMapElement::updateConfig(config);
 	config->setValue(_T("/objectId"), m_objectId);
+	config->setValue(_T("/width"), m_width);
+   config->setValue(_T("/height"), m_height);
 }
 
 /**
@@ -166,6 +174,8 @@ void NetworkMapObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	NetworkMapElement::fillMessage(msg, baseId);
 	msg->setField(baseId + 10, m_objectId);
+   msg->setField(baseId + 11, m_width);
+   msg->setField(baseId + 12, m_height);
 }
 
 /**
@@ -175,6 +185,8 @@ json_t *NetworkMapObject::toJson() const
 {
    json_t *root = NetworkMapElement::toJson();
    json_object_set_new(root, "objectId", json_integer(m_objectId));
+   json_object_set_new(root, "width", json_integer(m_width));
+   json_object_set_new(root, "height", json_integer(m_height));
    return root;
 }
 

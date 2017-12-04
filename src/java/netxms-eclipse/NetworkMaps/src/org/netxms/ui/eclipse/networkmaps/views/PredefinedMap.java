@@ -50,6 +50,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
@@ -931,7 +932,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		}
 
 		setLayoutAlgorithm(mapObject.getLayout(), false);
-		
+		setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);

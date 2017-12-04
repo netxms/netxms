@@ -27,6 +27,8 @@ import org.netxms.base.NXCPMessage;
 public class NetworkMapObject extends NetworkMapElement
 {
 	private long objectId;
+	private int width;
+	private int height;
 	
 	/**
 	 * @param msg
@@ -36,6 +38,8 @@ public class NetworkMapObject extends NetworkMapElement
 	{
 		super(msg, baseId);
 		objectId = msg.getFieldAsInt64(baseId + 10);
+		width = msg.getFieldAsInt32(baseId + 11);
+		height = msg.getFieldAsInt32(baseId + 12);
 	}
 	
 	/**
@@ -49,6 +53,8 @@ public class NetworkMapObject extends NetworkMapElement
 		super(id);
 		this.objectId = objectId;
 		type = MAP_ELEMENT_OBJECT;
+		width = 100;
+		height = 100;
 	}
 
 	/**
@@ -67,6 +73,8 @@ public class NetworkMapObject extends NetworkMapElement
 	{
 		super.fillMessage(msg, baseId);
 		msg.setFieldInt32(baseId + 10, (int)objectId);
+      msg.setFieldInt32(baseId + 11, width);
+      msg.setFieldInt32(baseId + 12, height);
 	}
 
    /* (non-Javadoc)
@@ -75,6 +83,40 @@ public class NetworkMapObject extends NetworkMapElement
    @Override
    public String toString()
    {
-      return "NetworkMapObject [objectId=" + objectId + ", id=" + id + ", type=" + type + ", x=" + x + ", y=" + y + "]";
+      return "NetworkMapObject [objectId=" + objectId + ", id=" + id +
+             ", type=" + type + ", x=" + x + ", y=" + y + " width: " +
+             width + " height: " + height +"]";
+   }
+   
+   /**
+    * Set object size (For floor plan view)
+    * 
+    * @param width to set
+    * @param height to set
+    */
+   public void setSize(int width, int height)
+   {
+      this.width = width;
+      this.height = height;
+   }
+   
+   /**
+    * Get width
+    * 
+    * @return width
+    */
+   public int getWidth()
+   {
+      return width;
+   }
+   
+   /**
+    * Get height
+    * 
+    * @return height
+    */
+   public int getHeight()
+   {
+      return height;
    }
 }
