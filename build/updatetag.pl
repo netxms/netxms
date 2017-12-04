@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
-my $file = shift || die "Usage : updatetag.pl <file>";
+my $file_prefix = shift || "netxms";
+my $define_prefix = shift || "NETXMS";
+my $file = shift || $file_prefix . "-build-tag.h";
 
 my $tag = `git describe --always`;
 chomp $tag;
@@ -34,10 +36,10 @@ if ($update == 1)
 {
 	open(OUT, ">$file") or die "Cannot open output file: $!";
 	print OUT "/* BUILDTAG:$tag */\n";
-	print OUT "#ifndef _build_tag_h_\n";
-	print OUT "#define _build_tag_h_\n";
-	print OUT "#define NETXMS_BUILD_TAG _T(\"$tag\")\n";
-	print OUT "#define NETXMS_BUILD_TAG_A \"$tag\"\n";
+	print OUT "#ifndef _" . $file_prefix . "_build_tag_h_\n";
+	print OUT "#define _" . $file_prefix . "_build_tag_h_\n";
+	print OUT "#define " . $define_prefix . "_BUILD_TAG _T(\"$tag\")\n";
+	print OUT "#define " . $define_prefix . "_BUILD_TAG_A \"$tag\"\n";
 	print OUT "#endif\n";
 	close OUT;
 

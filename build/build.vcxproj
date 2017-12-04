@@ -84,7 +84,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl $(SolutionDir)\include\netxms-build-tag.h</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)\include\netxms-build-tag.h</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <ClCompile>
@@ -103,7 +103,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl $(SolutionDir)\include\netxms-build-tag.h</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)\include\netxms-build-tag.h</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <ClCompile>
@@ -121,7 +121,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl $(SolutionDir)\include\netxms-build-tag.h</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)\include\netxms-build-tag.h</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <Midl>
@@ -143,7 +143,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CustomBuildStep>
       <Message>Update build tag</Message>
-      <Command>updatetag.pl $(SolutionDir)\include\netxms-build-tag.h</Command>
+      <Command>updatetag.pl netxms NETXMS $(SolutionDir)\include\netxms-build-tag.h</Command>
       <Outputs>PHONY;%(Outputs)</Outputs>
     </CustomBuildStep>
     <Midl>
