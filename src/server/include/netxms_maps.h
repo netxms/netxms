@@ -167,6 +167,8 @@ class NetworkMapObject : public NetworkMapElement
 {
 protected:
 	UINT32 m_objectId;
+   UINT32 m_width;
+   UINT32 m_height;
 
 public:
 	NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags = 0);

@@ -103,6 +103,7 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -180,6 +181,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
 	protected Action actionFiguresStatusIcons;
+	protected Action actionFiguresFloorPlan;
 	protected Action actionShowGrid;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
@@ -343,6 +345,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				if (selectionType == SELECTION_OBJECTS)
 				{
 					AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
+					if (object instanceof Rack)
+					{
+					   openRackView(Long.toString(object.getObjectId()));
+					   return;
+					}
 
 					for(DoubleClickHandlerData h : doubleClickHandlers)
 					{
@@ -806,6 +813,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             setObjectDisplayMode(MapObjectDisplayMode.STATUS, true);
          }
       };
+      
+      actionFiguresFloorPlan = new Action("Floor plan", Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            setObjectDisplayMode(MapObjectDisplayMode.FLOOR_PLAN, true);
+         }
+      };
+
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -956,6 +972,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
 		figureType.add(actionFiguresStatusIcons);
+		figureType.add(actionFiguresFloorPlan);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -1099,6 +1116,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
       figureType.add(actionFiguresStatusIcons);
+      figureType.add(actionFiguresFloorPlan);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -1623,5 +1641,25 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.SMALL_LABEL);
       actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
       actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
+      actionFiguresFloorPlan.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.FLOOR_PLAN);
+   }
+   
+   /**
+    * Open rack view handler
+    * 
+    * @param rackId of rack to view
+    */
+   private void openRackView(String rackId)
+   {
+      IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+      try
+      {
+         page.showView(RackView.ID, rackId, IWorkbenchPage.VIEW_ACTIVATE);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(getSite().getShell(), "Error",
+               "Could not open rack view " + e.getLocalizedMessage());
+      }
    }
 }

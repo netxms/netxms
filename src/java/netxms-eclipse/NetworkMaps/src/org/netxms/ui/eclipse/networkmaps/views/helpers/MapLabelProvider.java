@@ -269,7 +269,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				case ICON:
 					return new ObjectFigureIcon((NetworkMapObject)element, this);
 				case STATUS:
-               return new ObjectStatusIcon((NetworkMapObject)element, this);				   
+               return new ObjectStatusIcon((NetworkMapObject)element, this);		
+				case FLOOR_PLAN:
+				   return new ObjectFloorPlan((NetworkMapObject)element, this);
 				default:
 					return null;
 			}

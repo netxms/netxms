@@ -30,7 +30,8 @@ public enum MapObjectDisplayMode
 	ICON(0), 
 	SMALL_LABEL(1), 
 	LARGE_LABEL(2), 
-	STATUS(3);
+	STATUS(3),
+	FLOOR_PLAN(4);
 
 	private int value;
 	private static Map<Integer, MapObjectDisplayMode> lookupTable = new HashMap<Integer, MapObjectDisplayMode>();
