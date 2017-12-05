@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.perfview.objecttabs.internal;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,10 +30,15 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -43,7 +50,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
@@ -107,6 +116,60 @@ public class PerfTabGraph extends DashboardComposite
          {
             if (refreshController != null)
                refreshController.dispose();
+         }
+      });
+		
+		chart.addMouseListener(new MouseListener() {
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+         
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+         
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            openHistoryGraph();
+         }
+      });
+		
+		chart.getPlotArea().addMouseListener(new MouseListener() {
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+         
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+         }
+         
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            openHistoryGraph();
          }
       });
 	}
@@ -226,5 +289,49 @@ public class PerfTabGraph extends DashboardComposite
 		};
 		job.setUser(false);
 		job.start();
+	}
+	
+	/**
+	 * Open history graph of dci
+	 */
+	private void openHistoryGraph()
+	{
+	   StringBuilder sb = new StringBuilder();
+	   
+	   for(PerfTabDci td : items)
+	   {
+	      sb.append("&");
+         sb.append(nodeId);
+         sb.append("@");
+         sb.append(td.getId());
+         sb.append("@");
+         sb.append(0);
+         sb.append("@");
+         sb.append(0);
+         sb.append("@");         
+         sb.append("");
+         sb.append("@");         
+         try
+         {
+            sb.append(URLEncoder.encode(td.getDescription(), "UTF-8"));
+         }
+         catch(UnsupportedEncodingException e)
+         {
+            sb.append("");
+            e.printStackTrace();
+         }
+
+	   }
+	   
+	   IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+	   try
+	   {
+	      page.showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+	   }
+	   catch(PartInitException e)
+	   {
+	      MessageDialogHelper.openError(getShell(), "Error",
+	            "Could not open history graph view " + e.getLocalizedMessage());
+	   }
 	}
 }

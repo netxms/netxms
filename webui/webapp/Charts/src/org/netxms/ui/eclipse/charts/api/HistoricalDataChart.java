@@ -23,6 +23,8 @@ import java.util.List;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.widgets.Canvas;
 
 /**
  * Historical data chart interface
@@ -152,4 +154,18 @@ public interface HistoricalDataChart extends DataChart
     * @param modifyYBase true to use min DCI value as Y base
     */
    public void modifyYBase(boolean modifyYBase);
+   
+   /**
+    * Add mouse listener to chart
+    * 
+    * @param listener to add
+    */
+   public void addMouseListener(MouseListener listener);
+   
+   /**
+    * Gets the plot area.
+    * 
+    * @return the plot area
+    */
+   public Canvas getPlotArea();
 }
