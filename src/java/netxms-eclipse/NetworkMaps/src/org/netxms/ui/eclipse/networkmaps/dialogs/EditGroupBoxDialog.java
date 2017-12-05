@@ -28,7 +28,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.ui.eclipse.networkmaps.Messages;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -37,27 +39,24 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  * Dialog for adding group box decoration
  *
  */
-public class AddGroupBoxDialog extends Dialog
+public class EditGroupBoxDialog extends Dialog
 {
 	private static final RGB DEFAULT_COLOR = new RGB(64, 105, 156);
-	
-	private String title;
-	private int width;
-	private int height;
-	private RGB color;
 	
 	private LabeledText textTitle;
 	private Spinner spinnerWidth;
 	private Spinner spinnerHeight;
 	private ColorSelector colorSelector;
+	private NetworkMapDecoration groupBox;
 	
 	/**
 	 * 
 	 * @param parentShell
 	 */
-	public AddGroupBoxDialog(Shell parentShell)
+	public EditGroupBoxDialog(Shell parentShell, NetworkMapDecoration groupBox)
 	{
-		super(parentShell);
+      super(parentShell);
+	   this.groupBox = groupBox;
 	}
 
 	/* (non-Javadoc)
@@ -87,6 +86,7 @@ public class AddGroupBoxDialog extends Dialog
 		/* title */
 		textTitle = new LabeledText(dialogArea, SWT.NONE);
 		textTitle.setLabel(Messages.get().AddGroupBoxDialog_Title);
+		textTitle.setText(groupBox.getTitle());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -117,9 +117,9 @@ public class AddGroupBoxDialog extends Dialog
 			}
 		};
 		spinnerWidth = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.get().AddGroupBoxDialog_Width, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerWidth.setSelection(250);
+		spinnerWidth.setSelection(groupBox.getWidth());
 		spinnerHeight = (Spinner)WidgetHelper.createLabeledControl(attrArea, SWT.NONE, factory, Messages.get().AddGroupBoxDialog_Height, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		spinnerHeight.setSelection(100);
+		spinnerHeight.setSelection(groupBox.getHeight());
 		
 		colorSelector = WidgetHelper.createLabeledColorSelector(attrArea, Messages.get().AddGroupBoxDialog_Color, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		colorSelector.setColorValue(DEFAULT_COLOR);
@@ -133,42 +133,9 @@ public class AddGroupBoxDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		title = textTitle.getText();
-		width = spinnerWidth.getSelection();
-		height = spinnerHeight.getSelection();
-		color = colorSelector.getColorValue();
+		groupBox.setTitle(textTitle.getText());
+		groupBox.setSize(spinnerWidth.getSelection(), spinnerHeight.getSelection());
+		groupBox.setColor(ColorConverter.rgbToInt(colorSelector.getColorValue()));
 		super.okPressed();
-	}
-
-	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return title;
-	}
-
-	/**
-	 * @return the width
-	 */
-	public int getWidth()
-	{
-		return width;
-	}
-
-	/**
-	 * @return the height
-	 */
-	public int getHeight()
-	{
-		return height;
-	}
-
-	/**
-	 * @return the color
-	 */
-	public RGB getColor()
-	{
-		return color;
 	}
 }

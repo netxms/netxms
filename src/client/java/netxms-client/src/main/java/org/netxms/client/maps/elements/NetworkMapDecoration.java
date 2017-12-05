@@ -61,8 +61,8 @@ public class NetworkMapDecoration extends NetworkMapElement
 		type = MAP_ELEMENT_DECORATION;
 		this.decorationType = decorationType;
 		title = "";
-		width = 50;
-		height = 20;
+		width = 250;
+		height = 100;
 		color = 0;
 	}
 

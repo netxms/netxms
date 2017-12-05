@@ -67,7 +67,7 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
-import org.netxms.ui.eclipse.networkmaps.dialogs.AddGroupBoxDialog;
+import org.netxms.ui.eclipse.networkmaps.dialogs.EditGroupBoxDialog;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -95,6 +95,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private Action actionAddDCIImage;
 	private Action actionAddTextBox;
 	private Action actionTextBoxProperties;
+	private Action actionGroupBoxEdit;
 	private Color defaultLinkColor = null;
 	private boolean readOnly;
 	private Display display;
@@ -412,6 +413,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             showTextBoxProperties();
          }
       };
+      
+      actionGroupBoxEdit = new Action("Group box properties") {
+         @Override
+         public void run()
+         {
+            editGroupBox();
+         }
+      };
 	}
 
 	/**
@@ -514,6 +523,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             manager.add(actionDCIImageProperties);
          if(o instanceof NetworkMapTextBox)
             manager.add(actionTextBoxProperties);
+         if(o instanceof NetworkMapDecoration)
+            manager.add(actionGroupBoxEdit);
    		manager.add(new Separator());
 	   }
 		super.fillElementContextMenu(manager);
@@ -704,14 +715,11 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	 */
 	private void addGroupBoxDecoration()
 	{
-		AddGroupBoxDialog dlg = new AddGroupBoxDialog(getSite().getShell());
+      NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.GROUP_BOX);
+		EditGroupBoxDialog dlg = new EditGroupBoxDialog(getSite().getShell(), element);
 		if (dlg.open() != Window.OK)
 			return;
-
-		NetworkMapDecoration element = new NetworkMapDecoration(mapPage.createElementId(), NetworkMapDecoration.GROUP_BOX);
-		element.setSize(dlg.getWidth(), dlg.getHeight());
-		element.setTitle(dlg.getTitle());
-		element.setColor(ColorConverter.rgbToInt(dlg.getColor()));
+		
 		mapPage.addElement(element);
 
 		saveMap();
@@ -1008,5 +1016,23 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          return;
 
       saveMap();
+	}
+	
+	/**
+	 * Edit group box
+	 */
+	private void editGroupBox()
+	{
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
+         return;
+      
+      NetworkMapDecoration groupBox = (NetworkMapDecoration)selection.getFirstElement();
+      EditGroupBoxDialog dlg = new EditGroupBoxDialog(getSite().getShell(), groupBox);
+      if (dlg.open() == Window.OK)
+      {
+         mapPage.addElement(groupBox);
+         saveMap();
+      }
 	}
 }
