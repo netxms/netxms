@@ -40,6 +40,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
@@ -102,7 +103,7 @@ public class PerfTabGraph extends DashboardComposite
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 		
-		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
+		GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
 		chart.setItemStyles(Arrays.asList(new GraphItemStyle[] { style }));
 		if (!settings.isAutoScale())
       {
@@ -188,7 +189,7 @@ public class PerfTabGraph extends DashboardComposite
 		synchronized(items)
 		{
 			items.add(dci);
-			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, 0);
+			GraphItemStyle style = new GraphItemStyle(settings.getType(), settings.getColorAsInt(), 2, settings.isInvertedValues() ? GraphItemStyle.INVERTED : 0);
 			List<GraphItemStyle> styles = new ArrayList<GraphItemStyle>(chart.getItemStyles());
 			if (styles.size() < items.size())
 				styles.add(style);
@@ -298,28 +299,31 @@ public class PerfTabGraph extends DashboardComposite
 	{
 	   StringBuilder sb = new StringBuilder();
 	   
-	   for(PerfTabDci td : items)
+	   for(int i = 0; i < items.size(); i++)
 	   {
 	      sb.append("&");
+         sb.append(Integer.toString(ChartDciConfig.ITEM));
+         sb.append("@");
          sb.append(nodeId);
          sb.append("@");
-         sb.append(td.getId());
+         sb.append(items.get(i).getId());
          sb.append("@");
-         sb.append(0);
-         sb.append("@");
-         sb.append(0);
-         sb.append("@");         
-         sb.append("");
-         sb.append("@");         
          try
          {
-            sb.append(URLEncoder.encode(td.getDescription(), "UTF-8"));
+            sb.append(URLEncoder.encode(items.get(i).getDescription(), "UTF-8"));
          }
          catch(UnsupportedEncodingException e)
          {
-            sb.append("");
-            e.printStackTrace();
+            sb.append("<description unavailable>");
          }
+         sb.append("@");
+         sb.append("");
+         sb.append("@");
+         sb.append(chart.getItemStyles().get(i).getFlags());
+         sb.append("@");
+         sb.append(chart.getItemStyles().get(i).getType());
+         sb.append("@");
+         sb.append(chart.getItemStyles().get(i).getColor());
 
 	   }
 	   

@@ -53,6 +53,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -492,24 +493,32 @@ public class TableValue extends Composite
       if (cells.length == 0)
          return;
 
-      String id = Long.toString(uniqueId++);
+      StringBuilder sb = new StringBuilder();
+      sb.append(uniqueId++);
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          final String instance = buildInstanceString(cells[i].getViewerRow());
-         int source = currentData.getSource();
-
-         id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-               + Integer.toString(column.getDataType()) + "@" + safeEncode(currentData.getTitle()) + "@" //$NON-NLS-1$ //$NON-NLS-2$
-               + safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + "@" + safeEncode(instance) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-               + safeEncode(column.getName());
+         
+         sb.append("&");
+         sb.append(ChartDciConfig.TABLE);
+         sb.append("@");
+         sb.append(objectId);
+         sb.append("@");
+         sb.append(dciId);
+         sb.append("@");
+         sb.append(safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")));
+         sb.append("@");
+         sb.append(safeEncode(instance));
+         sb.append("@");
+         sb.append(safeEncode(column.getName()));
       }
 
       final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench()
             .getActiveWorkbenchWindow().getActivePage();
       try
       {
-         page.showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+         page.showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
       }
       catch(Exception e)
       {

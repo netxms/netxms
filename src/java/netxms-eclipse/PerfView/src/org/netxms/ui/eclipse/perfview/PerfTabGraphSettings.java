@@ -90,8 +90,11 @@ public class PerfTabGraphSettings
 
    @Element(required = false)
    private boolean modifyYBase = false;
+   
+   @Element(required = false)
+   private boolean invertedValues = false;
 	
-	private PerfTabDci runtimeDciInfo = null;
+   private PerfTabDci runtimeDciInfo = null;
 
 	/**
 	 * Create performance tab graph settings object from XML document
@@ -498,5 +501,21 @@ public class PerfTabGraphSettings
    public boolean modifyYBase()
    {
       return modifyYBase;
+   }
+   
+   /**
+    * @return the invertedValues
+    */
+   public boolean isInvertedValues()
+   {
+      return invertedValues;
+   }
+
+   /**
+    * @param invertedValues the invertedValues to set
+    */
+   public void setInvertedValues(boolean invertedValues)
+   {
+      this.invertedValues = invertedValues;
    }
 }

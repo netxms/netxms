@@ -23,8 +23,10 @@ import java.net.URLEncoder;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
@@ -46,26 +48,38 @@ public class ShowLineChart implements DciOpenHandler
 		if ((dci.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM) ||
 		    (dci.getDataType() == DataCollectionObject.DT_STRING))
 			return false;
-		
-		String name = null, description = null;
-		try
-		{
-			name = URLEncoder.encode(dci.getName(), "UTF-8"); //$NON-NLS-1$
-			description = URLEncoder.encode(dci.getDescription(), "UTF-8"); //$NON-NLS-1$
-		}
-		catch(UnsupportedEncodingException e)
-		{
-			description = Messages.get().ShowLineChart_DescriptionUnavailable;
-		}
-		
-		final String id = Long.toString(uniqueId++) + "&" + Long.toString(dci.getNodeId()) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
-				Long.toString(dci.getId()) + "@" + Integer.toString(dci.getSource()) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
-				Integer.toString(dci.getDataType()) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$
+
+      final StringBuilder sb = new StringBuilder();
+      sb.append(uniqueId);
+      sb.append("&");
+      sb.append(Integer.toString(dci instanceof SimpleDciValue ? ChartDciConfig.ITEM : ChartDciConfig.TABLE));
+      sb.append("@");
+      sb.append(Long.toString(dci.getNodeId()));
+      sb.append("@");
+      sb.append(Long.toString(dci.getId()));
+      sb.append("@");
+      try
+      {
+         sb.append(URLEncoder.encode(dci.getDescription(), "UTF-8"));
+      }
+      catch(UnsupportedEncodingException e1)
+      {
+         sb.append(Messages.get().ShowLineChart_DescriptionUnavailable);
+      }
+      sb.append("@");
+      try
+      {
+         sb.append(URLEncoder.encode(dci.getName(), "UTF-8"));
+      }
+      catch(UnsupportedEncodingException e1)
+      {
+         sb.append("<name unavailable>");
+      }
 		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		try
 		{
-			window.getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+			window.getActivePage().showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
 		}
 		catch(Exception e)
 		{

@@ -28,8 +28,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -61,46 +63,69 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 	{
 		if (currentSelection != null)
 		{
-			String id = Long.toString(uniqueId++);
-			for(int i = 0; i < currentSelection.length; i++)
-			{
-				long dciId = 0, nodeId = 0;
-				int source = 0, dataType = 0;
-				String name = null, description = null;
-				
-				try
-				{
-					if (currentSelection[i] instanceof DciValue)
-					{
-						dciId = ((DciValue)currentSelection[i]).getId(); 
-						nodeId = ((DciValue)currentSelection[i]).getNodeId();
-						source = ((DciValue)currentSelection[i]).getSource();
-						dataType = ((DciValue)currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DciValue)currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
-						description = URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
-					}
-					else if (currentSelection[i] instanceof DataCollectionItem)
-					{
-						dciId = ((DataCollectionItem)currentSelection[i]).getId(); 
-						nodeId = ((DataCollectionItem)currentSelection[i]).getNodeId();
-						source = ((DataCollectionItem)currentSelection[i]).getOrigin();
-						dataType = ((DataCollectionItem)currentSelection[i]).getDataType();
-						name = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getName(), "UTF-8"); //$NON-NLS-1$
-						description = URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8"); //$NON-NLS-1$
-					}
-				}
-				catch(UnsupportedEncodingException e)
-				{
-					description = Messages.get().ShowHistoryGraph_DescriptionUnavailable;
-				}
-				
-				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					Integer.toString(source) + "@" + Integer.toString(dataType) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
+		   StringBuilder sb = new StringBuilder();
+         sb.append(uniqueId++);
+         for(int i = 0; i < currentSelection.length; i++)
+         {           
+            if (currentSelection[i] instanceof DciValue)
+            {
+               sb.append("&");
+               sb.append(Integer.toString(((DciValue)currentSelection[i]) instanceof SimpleDciValue ? ChartDciConfig.ITEM : ChartDciConfig.TABLE));
+               sb.append("@");
+               sb.append(Long.toString(((DciValue)currentSelection[i]).getNodeId()));
+               sb.append("@");
+               sb.append(Long.toString(((DciValue)currentSelection[i]).getId()));
+               sb.append("@");
+               try
+               {
+                  sb.append(URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8"));
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  sb.append(Messages.get().ShowHistoryGraph_DescriptionUnavailable);
+               }
+               sb.append("@");
+               try
+               {
+                  sb.append(URLEncoder.encode(((DciValue)currentSelection[i]).getName(), "UTF-8"));
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  sb.append("<name unavailable>");
+               }
+            }
+            else if (currentSelection[i] instanceof DataCollectionItem)
+            {
+               sb.append("&");
+               sb.append(Integer.toString(ChartDciConfig.ITEM));
+               sb.append("@");
+               sb.append(Long.toString(((DataCollectionItem)currentSelection[i]).getNodeId()));
+               sb.append("@");
+               sb.append(Long.toString(((DataCollectionItem)currentSelection[i]).getId()));
+               sb.append("@");
+               try
+               {
+                  sb.append(URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8"));
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  sb.append(Messages.get().ShowHistoryGraph_DescriptionUnavailable);
+               }
+               sb.append("@");
+               try
+               {
+                  sb.append(URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getName(), "UTF-8"));
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  sb.append("<name unavailable>");
+               }
+            }
+         }
 			
 			try
 			{
-				window.getActivePage().showView(HistoricalGraphView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{

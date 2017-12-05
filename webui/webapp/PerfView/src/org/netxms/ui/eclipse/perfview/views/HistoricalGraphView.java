@@ -155,16 +155,28 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          for(int i = 1; i < fields.length; i++)
          {
             String[] subfields = fields[i].split("\\@"); //$NON-NLS-1$
-            if (subfields.length == 6) // item
+            if (subfields.length == 0)
+               continue;
+            if (Integer.parseInt(subfields[0]) == ChartDciConfig.ITEM)
             {
                try
                {
                   ChartDciConfig dci = new ChartDciConfig();
-                  dci.nodeId = Long.parseLong(subfields[0], 10);
-                  dci.dciId = Long.parseLong(subfields[1], 10);
-                  dci.name = URLDecoder.decode(subfields[5], "UTF-8"); //$NON-NLS-1$
+                  dci.type = Integer.parseInt(subfields[0]);
+                  dci.nodeId = Long.parseLong(subfields[1], 10);
+                  dci.dciId = Long.parseLong(subfields[2], 10);
+                  dci.name = URLDecoder.decode(subfields[3], "UTF-8"); //$NON-NLS-1$
+                  dci.dciDescription = URLDecoder.decode(subfields[3], "UTF-8"); //$NON-NLS-1$
                   dci.dciName = URLDecoder.decode(subfields[4], "UTF-8"); //$NON-NLS-1$
-                  dci.dciDescription = URLDecoder.decode(subfields[5], "UTF-8"); //$NON-NLS-1$
+                  
+                  // Extra fields
+                  if (subfields.length >= 6)
+                     dci.invertValues = (Integer.parseInt(subfields[5]) & GraphItemStyle.INVERTED) > 0 ? true : false;
+                  if (subfields.length >= 7)
+                     dci.area = Integer.parseInt(subfields[6]) == GraphItemStyle.AREA ? true : false;
+                  if (subfields.length >= 8)
+                     dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[7]) );
+                     
                   items.add(dci);
                }
                catch(NumberFormatException e)
@@ -176,18 +188,19 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                   e.printStackTrace();
                }
             }
-            else if (subfields.length == 8) // table
+            else if (Integer.parseInt(subfields[0]) == ChartDciConfig.TABLE)
             {
                try
                {
                   ChartDciConfig dci = new ChartDciConfig();
-                  dci.type = ChartDciConfig.TABLE;
-                  dci.nodeId = Long.parseLong(subfields[0], 10);
-                  dci.dciId = Long.parseLong(subfields[1], 10);
-                  dci.name = URLDecoder.decode(subfields[5], "UTF-8"); //$NON-NLS-1$
-                  dci.dciName = URLDecoder.decode(subfields[5], "UTF-8"); //$NON-NLS-1$
-                  dci.instance = URLDecoder.decode(subfields[6], "UTF-8"); //$NON-NLS-1$
-                  dci.column = URLDecoder.decode(subfields[7], "UTF-8"); //$NON-NLS-1$
+                  dci.type = Integer.parseInt(subfields[0]);
+                  dci.nodeId = Long.parseLong(subfields[1], 10);
+                  dci.dciId = Long.parseLong(subfields[2], 10);
+                  dci.name = URLDecoder.decode(subfields[3], "UTF-8"); //$NON-NLS-1$
+                  dci.dciName = URLDecoder.decode(subfields[3], "UTF-8"); //$NON-NLS-1$
+                  dci.instance = URLDecoder.decode(subfields[4], "UTF-8"); //$NON-NLS-1$
+                  dci.column = URLDecoder.decode(subfields[5], "UTF-8"); //$NON-NLS-1$
+                  
                   items.add(dci);
                }
                catch(NumberFormatException e)
