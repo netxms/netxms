@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -32,9 +33,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCObjectModificationData;
@@ -58,38 +56,24 @@ public class WorldMap extends AbstractGeolocationView
 	public static final String ID = "org.netxms.ui.eclipse.osm.views.WorldMap"; //$NON-NLS-1$
 	
 	private GeoLocation initialLocation = new GeoLocation(0.0, 0.0);
-	private int initialZoom = 2;
+	private int initialZoom;
 	private Action actionPlaceObject;
    private Action actionShowFilter;
    private boolean filterEnabled;
    private FilterText filterControl;
-   
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		if (memento != null)
-		{
-			if (memento.getInteger("zoom") != null) //$NON-NLS-1$
-				initialZoom = memento.getInteger("zoom"); //$NON-NLS-1$
-			
-			Float lat = memento.getFloat("latitude"); //$NON-NLS-1$
-			Float lon = memento.getFloat("longitude"); //$NON-NLS-1$
-			if ((lat != null) && (lon != null))
-				initialLocation = new GeoLocation(lat, lon);
-		}		
-		super.init(site, memento);
-	}
 
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
-   {      
-      filterEnabled = Activator.getDefault().getDialogSettings().getBoolean(ID + "filterEnabled");
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      
+      initialZoom = settings.get(ID + "zoom") != null ? settings.getInt(ID + "zoom") : 2;
+      if (settings.get(ID + "latitude") != null && settings.get(ID + "longitude") != null)
+         initialLocation = new GeoLocation(settings.getDouble(ID + "latitude"), settings.getDouble(ID + "longitude"));
+      filterEnabled = settings.get(ID + "filterEnabled") != null ? settings.getBoolean(ID + "filterEnabled") : true;
       
       super.createPartControl(parent);
       
@@ -148,22 +132,15 @@ public class WorldMap extends AbstractGeolocationView
    @Override
    public void dispose()
    {
-      Activator.getDefault().getDialogSettings().put(ID + "filterEnabled", filterEnabled);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      MapAccessor m = getMapAccessor();
+
+      settings.put(ID + "zoom", m.getZoom());
+      settings.put(ID + "latitude", m.getLatitude());
+      settings.put(ID + "longitude", m.getLongitude());
+      settings.put(ID + "filterEnabled", filterEnabled);
       super.dispose();
    }
-
-   /* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void saveState(IMemento memento)
-	{
-		super.saveState(memento);
-		MapAccessor m = getMapAccessor();
-		memento.putFloat("latitude", (float)m.getLatitude()); //$NON-NLS-1$
-		memento.putFloat("longitude", (float)m.getLongitude()); //$NON-NLS-1$
-		memento.putInteger("zoom", m.getZoom()); //$NON-NLS-1$
-	}
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
