@@ -51,6 +51,7 @@ public class PerfTab extends DCIPropertyPageDialog
    private Button checkStacked;
    private Button checkShowLegendAlways;
    private Button checkExtendedLegend;
+   private Button checkInvertValues;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
@@ -216,6 +217,13 @@ public class PerfTab extends DCIPropertyPageDialog
       gd.horizontalSpan = layout.numColumns;
       checkExtendedLegend.setLayoutData(gd);
 
+      checkInvertValues = new Button(optionsGroup, SWT.CHECK);
+      checkInvertValues.setText("&Inverted values");
+      checkInvertValues.setSelection(settings.isInvertedValues());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkInvertValues.setLayoutData(gd);
+      
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
@@ -247,6 +255,7 @@ public class PerfTab extends DCIPropertyPageDialog
 		settings.setStacked(checkStacked.getSelection());
       settings.setShowLegendAlways(checkShowLegendAlways.getSelection());
       settings.setExtendedLegend(checkExtendedLegend.getSelection());
+      settings.setInvertedValues(checkInvertValues.getSelection());
 		
 		settings.setAutoScale(yAxisRange.isAuto());
 		settings.setMinYScaleValue(yAxisRange.getMinY());
