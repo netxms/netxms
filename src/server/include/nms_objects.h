@@ -1008,8 +1008,8 @@ protected:
    TCHAR *m_request;  // Service-specific request
    TCHAR *m_response; // Service-specific expected response
 	int m_pendingStatus;
-	int m_pollCount;
-	int m_requiredPollCount;
+	UINT32 m_pollCount;
+	UINT32 m_requiredPollCount;
    UINT32 m_responseTime;  // Response time from last poll
 
    virtual void onObjectDelete(UINT32 objectId);

@@ -814,8 +814,6 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
  */
 bool DCObject::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[1024];
-
 	lock();
 
    // Save schedules

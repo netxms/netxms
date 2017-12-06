@@ -1333,7 +1333,7 @@ extern time_t g_serverStartTime;
 extern UINT32 g_lockTimeout;
 extern UINT32 g_agentCommandTimeout;
 extern UINT32 g_thresholdRepeatInterval;
-extern int g_requiredPolls;
+extern UINT32 g_requiredPolls;
 extern UINT32 g_slmPollingInterval;
 extern UINT32 g_offlineDataRelevanceTime;
 extern INT32 g_instanceRetentionTime;

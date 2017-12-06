@@ -96,7 +96,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	if (conn->getList(_T("PDH.Objects"), &data) == ERR_SUCCESS)
 	{
 		objects = new ObjectArray<WinPerfObject>(data->size(), 16, true);
-		for(UINT32 i = 0; i < data->size(); i++)
+		for(int i = 0; i < data->size(); i++)
 			objects->add(new WinPerfObject(data->get(i)));
 		delete data;
 

@@ -426,7 +426,6 @@ static bool GetColumnDataType_MYSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         TCHAR type[128];
          DBGetField(hResult, 0, 0, definition, len);
          success = true;
       }
