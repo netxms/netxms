@@ -111,7 +111,7 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
          DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
-         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_requiredPollCount);
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
@@ -167,7 +167,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_request = DBGetField(hResult, 0, 5, NULL, 0);
       m_response = DBGetField(hResult, 0, 6, NULL, 0);
       m_pollerNode = DBGetFieldULong(hResult, 0, 7);
-      m_requiredPollCount = DBGetFieldLong(hResult, 0, 8);
+      m_requiredPollCount = DBGetFieldULong(hResult, 0, 8);
 
       // Link service to node
       if (!m_isDeleted)

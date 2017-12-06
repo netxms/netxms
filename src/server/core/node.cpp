@@ -1377,7 +1377,7 @@ restart_agent_check:
       updatePrimaryIpAddr();
    }
 
-   int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
+   UINT32 requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
 
    // Check SNMP agent connectivity
    if ((m_capabilities & NC_IS_SNMP) && (!(m_flags & NF_DISABLE_SNMP)) && m_ipAddress.isValidUnicast())

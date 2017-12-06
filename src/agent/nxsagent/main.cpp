@@ -259,7 +259,7 @@ static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 	switch(uMsg)
 	{
       case WM_WTSSESSION_CHANGE:
-         _tprintf(_T(">> session change: %d\n"), wParam);
+         _tprintf(_T(">> session change: %d\n"), (int)wParam);
          if ((wParam == WTS_CONSOLE_CONNECT) || (wParam == WTS_CONSOLE_DISCONNECT) ||
              (wParam == WTS_REMOTE_CONNECT) || (wParam == WTS_REMOTE_DISCONNECT))
          {
