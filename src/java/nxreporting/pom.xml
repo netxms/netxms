@@ -136,6 +136,11 @@
         <!-- NetXMS client API -->
         <dependency>
             <groupId>org.netxms</groupId>
+            <artifactId>netxms-base</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netxms</groupId>
             <artifactId>netxms-client</artifactId>
             <version>${project.version}</version>
         </dependency>
