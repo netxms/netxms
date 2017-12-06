@@ -39,6 +39,7 @@
 	NX-1348 (Continuous warnings in server log: seed object 0 cannot be found)
 	NX-1357 (Line chart is now opened on double clicking a Performance Chart)
 	NX-1359 (Last location in World Map is now saved)
+	NX-1366 (Group box decoration in Network Map can now be edited after creation)
 	NX-1361 (Data type of transformation script's input value can be incorrect)
 
 
