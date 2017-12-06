@@ -20,7 +20,7 @@ BUILD_TAG=`git describe --always 2>/dev/null`
 [ -z $BUILD_TAG ] && BUILD_TAG=UNKNOWN
 BUILD_TAG=`echo $BUILD_TAG | sed 's/^Release-//'`
 
-grep "BUILDTAG:$BUILD_TAG" $HEADER >/dev/null 2>&1
+grep -F "BUILDTAG:$BUILD_TAG" $HEADER >/dev/null 2>&1
 if [ $? != 0 ]; then
   echo "/* BUILDTAG:$BUILD_TAG */" > $HEADER
   echo "#ifndef _${FILE_PREFIX}_build_tag_h_" >> $HEADER
