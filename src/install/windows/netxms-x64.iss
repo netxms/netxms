@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.2-x64
+OutputBaseFilename=netxms-2.2.1-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -273,7 +273,7 @@ Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignore
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
-Source: "..\files\windows\x64\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "..\files\windows\x64\oraociei12.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\bin\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files
 Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
