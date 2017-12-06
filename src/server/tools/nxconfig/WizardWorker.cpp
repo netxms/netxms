@@ -524,7 +524,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
 
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Initializing database"));
 
-      _sntprintf(szInitFile, MAX_PATH, _T("%s\\lib\\sql\\dbinit_%s.sql"),
+      _sntprintf(szInitFile, MAX_PATH, _T("%s\\share\\sql\\dbinit_%s.sql"),
                  pc->m_szInstallDir, szEngineName[pc->m_iDBEngine]);
       bResult = ExecSQLBatch(hConn, szInitFile);
 
