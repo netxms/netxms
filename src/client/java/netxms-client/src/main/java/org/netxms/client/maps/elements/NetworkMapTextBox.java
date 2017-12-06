@@ -82,6 +82,7 @@ public class NetworkMapTextBox extends NetworkMapElement
       textColor = 0;//black
       borderColor = 0;//black
       borderRequired = true;
+      fontSize = 10;
       type = MAP_ELEMENT_TEXT_BOX;
    }
    

@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -31,8 +33,9 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 
 public class TextBoxFigure extends DecorationLayerAbstractFigure
 {
-   private static final int BORDER_SIZE = 7;
-   private static final int MARGIN = 7;
+   private static final int MARGIN_X = 3;
+   private static final int MARGIN_Y = 3;
+   private static final int BORDER_SIZE = 3;
    
    private Label text;
    private NetworkMapTextBox textBoxElement;
@@ -49,22 +52,22 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
       super(decoration, viewer);
       this.textBoxElement = decoration;
       this.labelProvider = labelProvider;
+      
+      setLayoutManager(new BorderLayout());
 
       text = new Label(textBoxElement.getText());
       text.setFont(new Font(Display.getCurrent(), "Verdana", textBoxElement.getFontSize(), SWT.NONE));
-      add(text);
+      text.setLabelAlignment(PositionConstants.CENTER);
       
       Dimension d = text.getPreferredSize();
-      text.setSize(d.width+MARGIN, d.height+MARGIN);
-      int border = 0;
-      if(textBoxElement.isBorderRequired())
-      {
-         text.setLocation(new Point(BORDER_SIZE, BORDER_SIZE));
-         border = BORDER_SIZE;
-      }
-      setSize(d.width + (border *2) + MARGIN, d.height + (border *2) + MARGIN);
+      text.setSize(d);
       
-      text.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBackgroundColor())));
+      Point p = text.getLocation();
+      p.translate(MARGIN_X*4, MARGIN_Y);
+      text.setLocation(p);
+      add(text);
+      setSize(d.width + MARGIN_X*8, d.height + MARGIN_Y*2);
+      
       text.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getTextColor())));  
    }
    
@@ -76,18 +79,27 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
    {
       gc.setAntialias(SWT.ON);
       
+      Rectangle rect = new Rectangle(getBounds());
+      rect.x+=MARGIN_X;
+      rect.y+=MARGIN_Y;
+      rect.width -= MARGIN_X*2;
+      rect.height -= MARGIN_Y*2;
+      gc.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBackgroundColor())));
+      gc.fillRoundRectangle(rect, 3, 3);
+      
       if(textBoxElement.isBorderRequired())
       {
-         Rectangle rect = new Rectangle(text.getClientArea());
+         rect = new Rectangle(getBounds());
+         rect.x++;
+         rect.y++;
+         rect.width -= MARGIN_X;
+         rect.height -= MARGIN_Y;
          
-         gc.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getTextColor())));
+         gc.setForegroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBorderColor())));
          gc.setLineWidth(BORDER_SIZE);
          gc.setLineStyle(SWT.LINE_SOLID);
          gc.drawRoundRectangle(rect, 8, 8);         
       }
-
-      gc.setBackgroundColor(labelProvider.getColors().create(ColorConverter.rgbFromInt(textBoxElement.getBackgroundColor())));
-      gc.fillRoundRectangle(text.getBounds(), 8, 8);
    }
 
    /* (non-Javadoc)
@@ -96,14 +108,15 @@ public class TextBoxFigure extends DecorationLayerAbstractFigure
    @Override
    public void refresh()
    {
-      //Set new label text
       text.setText(textBoxElement.getText());
       
-      //Recalculate figure size
       Dimension d = text.getPreferredSize();
-      text.setSize(d.width+MARGIN, d.height+MARGIN);
-      int border = textBoxElement.isBorderRequired() ? BORDER_SIZE : 0;
-      setSize(d.width + (border *2) + MARGIN, d.height + (border *2) + MARGIN);    
+      text.setSize(d);
+      
+      Point p = text.getLocation();
+      p.translate(MARGIN_X*4, MARGIN_Y);
+      text.setLocation(p);
+      setSize(d.width + MARGIN_X*8, d.height + MARGIN_Y*2);  
       
       repaint();
    }
