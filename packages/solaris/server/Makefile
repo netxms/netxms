@@ -1,4 +1,4 @@
-NX_VERSION=$(shell grep AC_INIT ../../../configure.ac | awk -F '[][]' '{ print $$4; }')
+NX_VERSION=$(shell grep AC_INIT ../../../configure.ac | grep -v git | cut -d[ -f4| cut -d] -f1)
 PLATFORM=$(shell uname -p)
 
 ifdef SUFIX
