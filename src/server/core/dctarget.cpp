@@ -607,9 +607,9 @@ NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
 /**
  * Get value for server's internal parameter
  */
-UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   UINT32 dwError = DCE_SUCCESS;
+   DataCollectionError error = DCE_SUCCESS;
 
    if (!_tcsicmp(param, _T("Status")))
    {
@@ -628,7 +628,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       }
       else
       {
-         dwError = DCE_NOT_SUPPORTED;
+         error = DCE_NOT_SUPPORTED;
       }
    }
    else if (MatchString(_T("ConditionStatus(*)"), param, FALSE))
@@ -660,20 +660,20 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 			}
 			else
 			{
-	         dwError = DCE_NOT_SUPPORTED;
+	         error = DCE_NOT_SUPPORTED;
 			}
       }
       else
       {
-         dwError = DCE_NOT_SUPPORTED;
+         error = DCE_NOT_SUPPORTED;
       }
    }
    else
    {
-      dwError = DCE_NOT_SUPPORTED;
+      error = DCE_NOT_SUPPORTED;
    }
 
-   return dwError;
+   return error;
 }
 
 /**
@@ -734,9 +734,9 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
 /**
  * Get parameter value from NXSL script
  */
-UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject)
 {
-   UINT32 rc = DCE_NOT_SUPPORTED;
+   DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {
@@ -795,9 +795,9 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
 /**
  * Get table from NXSL script
  */
-UINT32 DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
+DataCollectionError DataCollectionTarget::getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject)
 {
-   UINT32 rc = DCE_NOT_SUPPORTED;
+   DataCollectionError rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = runDataCollectionScript(param, targetObject);
    if (vm != NULL)
    {

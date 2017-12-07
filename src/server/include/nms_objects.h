@@ -1134,9 +1134,9 @@ public:
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
 
-   virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
-   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
-   virtual UINT32 getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
+   virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
+   virtual DataCollectionError getScriptTable(const TCHAR *param, Table **result, DataCollectionTarget *targetObject);
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
@@ -1218,7 +1218,7 @@ public:
 	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
 	const LONG getBatteryLevel() { return m_batteryLevel; }
 
-	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };
 
 /**
@@ -1404,7 +1404,6 @@ public:
 
    void setBindUnderController(bool doBind);
 };
-
 
 class Subnet;
 struct ProxyInfo;
@@ -1806,19 +1805,21 @@ public:
 
    bool connectToSMCLP();
 
-	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
-   UINT32 getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
-	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
-   UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
-   UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values);
-   UINT32 getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
-   UINT32 getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
-	UINT32 getTableFromAgent(const TCHAR *name, Table **table);
-	UINT32 getListFromAgent(const TCHAR *name, StringList **list);
+   DataCollectionError getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
+   DataCollectionError getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
+   DataCollectionError getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
+   DataCollectionError getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values);
+   DataCollectionError getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   DataCollectionError getTableFromAgent(const TCHAR *name, Table **table);
+   DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
+   DataCollectionError getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size);
+   DataCollectionError getItemFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
+
    UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
    UINT32 getTableForClient(const TCHAR *name, Table **table);
-   UINT32 getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer);
 
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getTemplatesForNXSL();

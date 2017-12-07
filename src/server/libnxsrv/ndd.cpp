@@ -834,3 +834,38 @@ AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, 
 {
    return AP_UNKNOWN;
 }
+
+/**
+ * Check if driver can provide additional metrics
+ */
+bool NetworkDeviceDriver::hasMetrics()
+{
+   return false;
+}
+
+/**
+ * Get value of given metric
+ *
+ * @param node node object GUID
+ * @param snmp SNMP transport
+ * @param name metric name
+ * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
+ * @param size buffer size
+ * @return data collection error code
+ */
+DataCollectionError NetworkDeviceDriver::getMetric(const uuid& node, SNMP_Transport *snmp, const TCHAR *name, TCHAR *value, size_t size)
+{
+   return DCE_NOT_SUPPORTED;
+}
+
+/**
+ * Get list of metrics supported by driver
+ *
+ * @param node node object GUID
+ * @param snmp SNMP transport
+ * @return list of metrics supported by driver or NULL on error
+ */
+ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(const uuid& node, SNMP_Transport *snmp)
+{
+   return NULL;
+}

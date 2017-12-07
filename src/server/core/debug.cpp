@@ -215,16 +215,16 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
 /**
  * Get thread pool stat (for internal DCI)
  */
-LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
+DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
 {
    TCHAR poolName[64], options[64];
    if (!AgentGetParameterArg(param, 1, poolName, 64) ||
        !AgentGetParameterArg(param, 2, options, 64))
-      return SYSINFO_RC_UNSUPPORTED;
+      return DCE_NOT_SUPPORTED;
 
    ThreadPoolInfo info;
    if (!ThreadPoolGetInfo(poolName, &info))
-      return SYSINFO_RC_UNSUPPORTED;
+      return DCE_NOT_SUPPORTED;
 
    switch(stat)
    {
@@ -265,9 +265,9 @@ LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
          ret_int(value, info.usage);
          break;
       default:
-         return SYSINFO_RC_UNSUPPORTED;
+         return DCE_NOT_SUPPORTED;
    }
-   return SYSINFO_RC_SUCCESS;
+   return DCE_SUCCESS;
 }
 
 /**
