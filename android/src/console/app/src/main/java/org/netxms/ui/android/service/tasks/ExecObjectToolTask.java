@@ -41,7 +41,7 @@ public class ExecObjectToolTask extends AsyncTask<Object, Void, Exception>
         service = (ClientConnectorService)params[3];
         try
         {
-            switch(((ObjectTool)params[2]).getType())
+            switch(((ObjectTool)params[2]).getToolType())
             {
                 case ObjectTool.TYPE_INTERNAL:
                     if (((ObjectTool)params[2]).getData().equals("wakeup"))
