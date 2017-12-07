@@ -73,6 +73,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.getSystemInformation();
          case TunnelManager.COL_SYSNAME:
             return t.getSystemName();
+         case TunnelManager.COL_HOSTNAME:
+            return t.getHostname();
       }
       return null;
    }
