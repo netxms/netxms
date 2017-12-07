@@ -104,14 +104,14 @@ enum AccessPointState
 /**
  * Module layout definition
  */
-typedef struct __ndd_module_layout
+struct NDD_MODULE_LAYOUT
 {
 	int rows;					// number of port rows on the module
 	int numberingScheme;		// port numbering scheme
 	int columns;            // number of columns for custom layout
 	WORD portRows[256];     // row numbers for ports
 	WORD portColumns[256];  // column numbers for ports
-} NDD_MODULE_LAYOUT;
+};
 
 /**
  * Radio interface information
@@ -229,6 +229,9 @@ public:
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
                                                 UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
+   virtual bool hasMetrics();
+   virtual DataCollectionError getMetric(const uuid& node, SNMP_Transport *snmp, const TCHAR *name, TCHAR *value, size_t size);
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(const uuid& node, SNMP_Transport *snmp);
 };
 
 #endif   /* _nddrv_h_ */

@@ -151,6 +151,20 @@
 #define ENCRYPTION_REQUIRED   3
 
 /**
+ * Data collection errors
+ */
+enum DataCollectionError
+{
+   DCE_SUCCESS           = 0,
+   DCE_COMM_ERROR        = 1,
+   DCE_NOT_SUPPORTED     = 2,
+   DCE_IGNORE            = 3,
+   DCE_NO_SUCH_INSTANCE  = 4,
+   DCE_COLLECTION_ERROR  = 5,
+   DCE_ACCESS_DENIED     = 6
+};
+
+/**
  * Agent action output callback events
  */
 enum ActionCallbackEvent

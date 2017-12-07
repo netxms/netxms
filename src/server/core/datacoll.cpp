@@ -83,6 +83,12 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
+         case DS_DEVICE_DRIVER:
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
+               *error = ((Node *)dcTarget)->getItemFromDeviceDriver(pItem->getName(), pBuffer, MAX_LINE_SIZE);
+            else
+               *error = DCE_NOT_SUPPORTED;
+            break;
          case DS_CHECKPOINT_AGENT:
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
@@ -152,7 +158,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), pBuffer, MAX_LINE_SIZE);
             }
             else
             {

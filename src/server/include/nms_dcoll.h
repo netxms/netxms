@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,18 +22,6 @@
 
 #ifndef _nms_dcoll_h_
 #define _nms_dcoll_h_
-
-
-//
-// Data collection errors
-//
-
-#define DCE_SUCCESS           0
-#define DCE_COMM_ERROR        1
-#define DCE_NOT_SUPPORTED     2
-#define DCE_IGNORE            3
-#define DCE_NO_SUCH_INSTANCE  4
-#define DCE_COLLECTION_ERROR  5
 
 /**
  * Threshold check results

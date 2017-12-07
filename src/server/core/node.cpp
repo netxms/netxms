@@ -3812,7 +3812,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 /**
  * Convert SNMP error code to DC collection error code
  */
-inline UINT32 DCErrorFromSNMPError(UINT32 snmpError)
+inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 {
    switch(snmpError)
    {
@@ -3832,7 +3832,7 @@ inline UINT32 DCErrorFromSNMPError(UINT32 snmpError)
 /**
  * Get DCI value via SNMP
  */
-UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
+DataCollectionError Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
 {
    UINT32 dwResult;
 
@@ -3965,7 +3965,7 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
 /**
  * Get table from SNMP
  */
-UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
+DataCollectionError Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table)
 {
    *table = NULL;
 
@@ -4014,7 +4014,7 @@ static UINT32 SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, 
 /**
  * Get list of values from SNMP
  */
-UINT32 Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
+DataCollectionError Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
 {
    *list = NULL;
    SNMP_Transport *snmp = createSnmpTransport(port);
@@ -4065,7 +4065,7 @@ static UINT32 SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *
 /**
  * Get list of OID suffixes from SNMP
  */
-UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values)
+DataCollectionError Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values)
 {
    *values = NULL;
    SNMP_Transport *snmp = createSnmpTransport(port);
@@ -4098,7 +4098,7 @@ UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **v
 /**
  * Get item's value via SNMP from CheckPoint's agent
  */
-UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
    UINT32 dwResult;
 
@@ -4117,13 +4117,13 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
       delete pTransport;
    }
    DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_name, szParam, dwResult);
-   return DCErrorFromSNMPError(dwResult == SNMP_ERR_SUCCESS);
+   return DCErrorFromSNMPError(dwResult);
 }
 
 /**
  * Get item's value via native agent
  */
-UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
    if ((m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -4131,7 +4131,8 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
        !(m_capabilities & NC_IS_NATIVE_AGENT))
       return DCE_COMM_ERROR;
 
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError rc = DCE_COMM_ERROR;
    int retry = 3;
 
    AgentConnectionEx *conn = getAgentConnection();
@@ -4145,15 +4146,15 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
       switch(dwError)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            rc = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+            rc = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            rc = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4165,7 +4166,7 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
                goto end_loop;
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            rc = DCE_COLLECTION_ERROR;
             setLastAgentCommTime();
             goto end_loop;
       }
@@ -4174,16 +4175,17 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
 end_loop:
    if (conn != NULL)
       conn->decRefCount();
-   nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
-   return dwResult;
+   nxlog_debug(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, rc);
+   return rc;
 }
 
 /**
  * Get table from agent
  */
-UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
+DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError result = DCE_COMM_ERROR;
    UINT32 dwTries = 3;
 
    *table = NULL;
@@ -4205,15 +4207,15 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
       switch(dwError)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            result = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+            result = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            result = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4225,7 +4227,7 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
                goto end_loop;
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            result = DCE_COLLECTION_ERROR;
             setLastAgentCommTime();
             goto end_loop;
       }
@@ -4234,16 +4236,17 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
 end_loop:
    if (conn != NULL)
       conn->decRefCount();
-   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
-   return dwResult;
+   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, result);
+   return result;
 }
 
 /**
  * Get list from agent
  */
-UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
+DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError rc = DCE_COMM_ERROR;
    UINT32 dwTries = 3;
 
    *list = NULL;
@@ -4265,15 +4268,15 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
       switch(dwError)
       {
          case ERR_SUCCESS:
-            dwResult = DCE_SUCCESS;
+            rc = DCE_SUCCESS;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
-            dwResult = DCE_NOT_SUPPORTED;
+            rc = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NO_SUCH_INSTANCE:
-            dwResult = DCE_NO_SUCH_INSTANCE;
+            rc = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4285,7 +4288,7 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
                goto end_loop;
             break;
          case ERR_INTERNAL_ERROR:
-            dwResult = DCE_COLLECTION_ERROR;
+            rc = DCE_COLLECTION_ERROR;
             setLastAgentCommTime();
             goto end_loop;
       }
@@ -4294,16 +4297,16 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
 end_loop:
    if (conn != NULL)
       conn->decRefCount();
-   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
-   return dwResult;
+   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, rc);
+   return rc;
 }
 
 /**
  * Get item's value via SM-CLP protocol
  */
-UINT32 Node::getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
+DataCollectionError Node::getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size)
 {
-   UINT32 result = DCE_COMM_ERROR;
+   DataCollectionError result = DCE_COMM_ERROR;
    int tries = 3;
 
    if (m_state & DCSF_UNREACHABLE)
@@ -4330,7 +4333,7 @@ UINT32 Node::getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
       TCHAR *value = m_smclpConnection->get(path, attr);
       if (value != NULL)
       {
-         nx_strncpy(buffer, value, bufSize);
+         _tcslcpy(buffer, value, size);
          free(value);
          result = DCE_SUCCESS;
          break;
@@ -4351,11 +4354,31 @@ end_loop:
 }
 
 /**
+ * Get metric value from network device driver
+ */
+DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size)
+{
+   lockProperties();
+   NetworkDeviceDriver *driver = m_driver;
+   unlockProperties();
+
+   if ((driver == NULL) || !driver->hasMetrics())
+      return DCE_NOT_SUPPORTED;
+
+   SNMP_Transport *transport = createSnmpTransport();
+   if (transport == NULL)
+      return DCE_COMM_ERROR;
+   DataCollectionError rc = driver->getMetric(m_guid, transport, param, buffer, size);
+   delete transport;
+   return rc;
+}
+
+/**
  * Get value for server's internal parameter
  */
-UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+   DataCollectionError rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
@@ -4660,7 +4683,7 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 /**
  * Translate DCI error code into RCC
  */
-static UINT32 RCCFromDCIError(UINT32 error)
+inline UINT32 RCCFromDCIError(DataCollectionError error)
 {
    switch(error)
    {
@@ -4674,6 +4697,8 @@ static UINT32 RCCFromDCIError(UINT32 error)
          return RCC_DCI_NOT_SUPPORTED;
       case DCE_COLLECTION_ERROR:
          return RCC_AGENT_ERROR;
+      case DCE_ACCESS_DENIED:
+         return RCC_ACCESS_DENIED;
       default:
          return RCC_SYSTEM_FAILURE;
    }
@@ -4684,36 +4709,32 @@ static UINT32 RCCFromDCIError(UINT32 error)
  */
 UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize)
 {
-   UINT32 dwResult = RCC_ACCESS_DENIED, dwRetCode = -1;
+   DataCollectionError rc = DCE_ACCESS_DENIED;
 
    // Get data from node
    switch(iOrigin)
    {
       case DS_INTERNAL:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ))
-            dwRetCode = getInternalItem(pszParam, dwBufSize, pszBuffer);
+            rc = getInternalItem(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_NATIVE_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-            dwRetCode = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
+            rc = getItemFromAgent(pszParam, dwBufSize, pszBuffer);
          break;
       case DS_SNMP_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            dwRetCode = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
+            rc = getItemFromSNMP(0, pszParam, dwBufSize, pszBuffer, SNMP_RAWTYPE_NONE);
          break;
       case DS_CHECKPOINT_AGENT:
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
-            dwRetCode = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
+            rc = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
       default:
          return RCC_INVALID_ARGUMENT;
    }
 
-   // Translate return code to RCC
-   if (dwRetCode != -1)
-      dwResult = RCCFromDCIError(dwRetCode);
-
-   return dwResult;
+   return RCCFromDCIError(rc);
 }
 
 /**
@@ -4721,8 +4742,7 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
  */
 UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 {
-   UINT32 dwRetCode = getTableFromAgent(name, table);
-   return RCCFromDCIError(dwRetCode);
+   return RCCFromDCIError(getTableFromAgent(name, table));
 }
 
 /**

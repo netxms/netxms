@@ -879,6 +879,7 @@ enum SessionState
 #define DS_SCRIPT             7
 #define DS_SSH                8
 #define DS_MQTT               9
+#define DS_DEVICE_DRIVER      10
 
 /**
  * Item status

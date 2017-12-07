@@ -1161,7 +1161,7 @@ void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
 void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *pszName);
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
-LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
+DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
 void DumpProcess(CONSOLE_CTX console);
 
 #define GRAPH_FLAG_TEMPLATE 1

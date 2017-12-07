@@ -832,12 +832,13 @@ void Sensor::prepareDlmsDciParameters(String &parameter)
 /**
  * Get item's value via native agent
  */
-UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+DataCollectionError Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
 {
    if (m_state & DCSF_UNREACHABLE)
       return DCE_COMM_ERROR;
 
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError dwResult = DCE_COMM_ERROR;
    int retry = 3;
 
    nxlog_debug(7, _T("Sensor(%s)->GetItemFromAgent(%s)"), m_name, szParam);
@@ -899,9 +900,10 @@ UINT32 Sensor::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *s
 /**
  * Get list from agent
  */
-UINT32 Sensor::getListFromAgent(const TCHAR *name, StringList **list)
+DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **list)
 {
-   UINT32 dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
+   UINT32 dwError = ERR_NOT_CONNECTED;
+   DataCollectionError dwResult = DCE_COMM_ERROR;
    UINT32 dwTries = 3;
 
    *list = NULL;
