@@ -67,7 +67,7 @@ static bool ParseDrbdStatus()
 
 	if (regcomp(&pregVersion, "version: (.*) \\(api\\:([0-9]+)\\/proto\\:([0-9\\-]+)\\)", REG_EXTENDED) != 0)
 		return false;
-	if (regcomp(&pregDevice, "^[[:space:]]*([0-9]+)\\: cs\\:(.*) (st|ro)\\:(.*)\\/(.*) ds\\:(.*)\\/(.*) ([A-Z]).*", REG_EXTENDED) != 0)
+	if (regcomp(&pregDevice, "^[[:space:]]*([0-9]+)\\: cs\\:(.*) (st|ro)\\:(.*)\\/(.*) ds\\:(.*)\\/([^[:space:]]*) ([^[:space:]]*) .*", REG_EXTENDED) != 0)
 	{
 		regfree(&pregVersion);
 		return false;
