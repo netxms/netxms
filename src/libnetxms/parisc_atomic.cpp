@@ -84,4 +84,16 @@ VolatileCounter parisc_atomic_dec(VolatileCounter *v)
         return nv;
 }
 
+/**
+ * Atomic swap pointers
+ */
+void *parisc_atomic_swap_ptr(void *volatile *p, void *v)
+{
+        spinlock_lock(lockArea);
+	void *o = *p;
+	*p = v;
+        spinlock_unlock(lockArea);
+	return o;
+}
+
 #endif
