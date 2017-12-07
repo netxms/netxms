@@ -93,6 +93,7 @@ protected:
    UINT32 m_zoneUIN;
    AgentTunnelState m_state;
    TCHAR *m_systemName;
+   TCHAR m_hostname[MAX_DNS_NAME];
    TCHAR *m_platformName;
    TCHAR *m_systemInfo;
    TCHAR *m_agentVersion;
@@ -128,6 +129,7 @@ public:
    UINT32 getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
    const TCHAR *getSystemName() const { return m_systemName; }
+   const TCHAR *getHostname() const { return m_hostname; }
    const TCHAR *getSystemInfo() const { return m_systemInfo; }
    const TCHAR *getPlatformName() const { return m_platformName; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }

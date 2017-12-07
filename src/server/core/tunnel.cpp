@@ -176,26 +176,26 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 
    ConsolePrintf(console,
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Node ID | Peer IP Address          | System Name              | Platform Name    | Agent Version\n")
-            _T("-----+---------+--------------------------+--------------------------+------------------+------------------------\n"));
+            _T("ID   | Node ID | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version\n")
+            _T("-----+---------+--------------------------+--------------------------+--------------------------+------------------+------------------------\n"));
    Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
       AgentTunnel *t = it->next();
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getNodeId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
+      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getNodeId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion());
    }
    delete it;
 
    ConsolePrintf(console,
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Peer IP Address          | System Name              | Platform Name    | Agent Version\n")
-            _T("-----+--------------------------+--------------------------+------------------+------------------------\n"));
+            _T("ID   | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version\n")
+            _T("-----+--------------------------+--------------------------+--------------------------+------------------+------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       const AgentTunnel *t = s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getPlatformName(), t->getAgentVersion());
+      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion());
    }
 
    s_tunnelListLock.unlock();
@@ -227,6 +227,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_agentVersion = NULL;
    m_bindRequestId = 0;
    m_channelLock = MutexCreate();
+   m_hostname[0] = 0;
 }
 
 /**
@@ -443,6 +444,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_systemInfo = request->getFieldAsString(VID_SYS_DESCRIPTION);
       m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
+      request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);
@@ -454,6 +456,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
 
       debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
       debugPrintf(5, _T("   System name:        %s"), m_systemName);
+      debugPrintf(5, _T("   Hostname:           %s"), m_hostname);
       debugPrintf(5, _T("   System information: %s"), m_systemInfo);
       debugPrintf(5, _T("   Platform name:      %s"), m_platformName);
       debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
@@ -687,6 +690,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 8, m_channels.size());
    MutexUnlock(m_channelLock);
    msg->setField(baseId + 9, m_zoneUIN);
+   msg->setField(baseId + 10, m_hostname);
 }
 
 /**
