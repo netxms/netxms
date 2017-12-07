@@ -201,21 +201,10 @@ public:
    }
 };
 
-
 //
 // Functions
 //
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitStateStack();
 MP_MODULE *ParseMIB(const TCHAR *fileName);
-
-#ifdef __cplusplus
-}
-#endif
-
 
 #endif
