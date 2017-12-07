@@ -100,6 +100,7 @@ typedef volatile uint32_t VolatileCounter;
 #if defined(__hppa) && !HAVE_ATOMIC_H
 VolatileCounter parisc_atomic_inc(VolatileCounter *v);
 VolatileCounter parisc_atomic_dec(VolatileCounter *v);
+void *parisc_atomic_swap_ptr(void *volatile *p, void *v);
 #endif
 
 /**
@@ -109,13 +110,11 @@ inline VolatileCounter InterlockedIncrement(VolatileCounter *v)
 {
 #if HAVE_ATOMIC_H
    return atomic_inc_32(v) + 1;
-#else
-#ifdef __hppa
+#elif defined(__hppa)
    return parisc_atomic_inc(v);
 #else
    _Asm_mf(_DFLT_FENCE);
    return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
-#endif
 #endif
 }
 
@@ -126,12 +125,36 @@ inline VolatileCounter InterlockedDecrement(VolatileCounter *v)
 {
 #if HAVE_ATOMIC_H
    return atomic_dec_32(v) - 1;
-#else
-#ifdef __hppa
+#elif defined(__hppa)
    return parisc_atomic_inc(v);
 #else
    _Asm_mf(_DFLT_FENCE);
    return (uint32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
+#endif
+}
+
+/**
+ * Atomically set pointer
+ */
+inline void *InterlockedExchangePointer(void *volatile *target, void *value)
+{
+#ifdef __64BIT__
+#if HAVE_ATOMIC_H
+   return (void*)atomic_swap_64((uint64_t*)target, (uint64_t)value);
+#elif defined(__hppa)
+   return parisc_atomic_swap_ptr(target, value);
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (void*)_Asm_xchg(_SZ_D, (void*)target, (uint64_t)value, _LDHINT_NONE);
+#endif
+#else /* __64BIT__ */
+#if HAVE_ATOMIC_H
+   return (void*)atomic_swap_32((uint32_t*)target, (uint32_t)value);
+#elif defined(__hppa)
+   return parisc_atomic_swap_ptr(target, value);
+#else
+   _Asm_mf(_DFLT_FENCE);
+   return (void*)_Asm_xchg(_SZ_W, (void*)target, (uint32_t)value, _LDHINT_NONE);
 #endif
 #endif
 }
