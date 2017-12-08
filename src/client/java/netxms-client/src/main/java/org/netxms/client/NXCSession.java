@@ -6458,7 +6458,7 @@ public class NXCSession
     * Update list of well-known SNMP USM credentials on server. Existing list
     * will be replaced by given one.
     *
-    * @param map New map of SNMP USM credentials
+    * @param list New list of SNMP USM credentials
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
