@@ -377,7 +377,7 @@ static BOOL SubagentInit(Config *config)
 		// Parse target list
 		if (m_pszTargetList != NULL)
 		{
-			for(pItem = m_pszTargetList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
+			for(pItem = pEnd = m_pszTargetList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
 			{
 				pEnd = _tcschr(pItem, _T('\n'));
 				if (pEnd != NULL)
