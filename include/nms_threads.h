@@ -1058,7 +1058,39 @@ template <typename T, typename R> void __ThreadPoolExecute_Wrapper(void *arg)
  */
 template <typename T, typename B, typename R> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<B,R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+}
+
+/**
+ * Wrapper data for ThreadPoolExecute (two arguments)
+ */
+template <typename T, typename R1, typename R2> class __ThreadPoolExecute_WrapperData2
+{
+public:
+   T *m_object;
+   void (T::*m_func)(R1, R2);
+   R1 m_arg1;
+   R2 m_arg2;
+
+   __ThreadPoolExecute_WrapperData2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) { m_object = object; m_func = func; m_arg1 = arg1; m_arg2 = arg2; }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (two arguments)
+ */
+template <typename T, typename R1, typename R2> void __ThreadPoolExecute_Wrapper2(void *arg)
+{
+   __ThreadPoolExecute_WrapperData2<T, R1, R2> *wd = static_cast<__ThreadPoolExecute_WrapperData2<T, R1, R2> *>(arg);
+   ((*wd->m_object).*(wd->m_func))(wd->m_arg1, wd->m_arg2);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member with two arguments)
+ */
+template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper2<B, R1, R2>, new __ThreadPoolExecute_WrapperData2<B, R1, R2>(object, f, arg1, arg2));
 }
 
 /**
