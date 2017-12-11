@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
    int i, ch, iPos, iExitCode = 3, iInterval = 0;
    int authMethod = AUTH_NONE, proxyAuth = AUTH_NONE, serviceType = NETSRV_SSH;
 #ifdef _WITH_ENCRYPTION
-   int iEncryptionPolicy = ENCRYPTION_ALLOWED;
+   int iEncryptionPolicy = ENCRYPTION_PREFERRED;
 #else
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
@@ -611,14 +611,18 @@ int main(int argc, char *argv[])
             pServerKey = LoadRSAKeys(keyFile);
             if (pServerKey == NULL)
             {
-               _tprintf(_T("Error loading RSA keys from \"%s\"\n"), keyFile);
-               if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
-                  start = FALSE;
+               pServerKey = RSAGenerateKey(2048);
+               if (pServerKey == NULL)
+               {
+                  _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), keyFile);
+                  if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
+                     start = FALSE;
+               }
             }
          }
          else
          {
-            printf("Error initializing cryptografy module\n");
+            printf("Error initializing cryptography module\n");
             if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
                start = FALSE;
          }
@@ -645,6 +649,7 @@ int main(int argc, char *argv[])
          }
          else
          {
+            DecryptPassword(_T("netxms"), szSecret, szSecret, MAX_SECRET_LENGTH);
             AgentConnection *conn = new AgentConnection(addr, agentPort, authMethod, szSecret);
 
             conn->setConnectionTimeout(dwConnTimeout);
