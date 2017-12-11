@@ -244,6 +244,31 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 }
 
 /**
+ * Queue prediction engine training when necessary
+ */
+void DataCollectionTarget::queuePredictionEngineTraining()
+{
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (o->getType() == DCO_TYPE_ITEM)
+      {
+         DCItem *dci = static_cast<DCItem*>(o);
+         if (dci->getPredictionEngine()[0] != 0)
+         {
+            PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
+            if ((e != NULL) && e->requiresTraining())
+            {
+               QueuePredictionEngineTraining(e, dci->getOwner()->getId(), dci->getId());
+            }
+         }
+      }
+   }
+   unlockDciAccess();
+}
+
+/**
  * Schedule cleanup of DCI data after DCI deletion
  */
 void DataCollectionTarget::scheduleItemDataCleanup(UINT32 dciId)

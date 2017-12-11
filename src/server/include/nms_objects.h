@@ -1140,6 +1140,7 @@ public:
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
 	void scheduleItemDataCleanup(UINT32 dciId);
    void scheduleTableDataCleanup(UINT32 dciId);
+   void queuePredictionEngineTraining();
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);

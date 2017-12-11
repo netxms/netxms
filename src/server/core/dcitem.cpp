@@ -721,7 +721,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    {
       PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
       if (engine != NULL)
-         engine->update(m_id, tmTimeStamp, pValue->getDouble());
+         engine->update(m_owner->getId(), m_id, tmTimeStamp, pValue->getDouble());
    }
 
    // Check thresholds and add value to cache

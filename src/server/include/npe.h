@@ -71,34 +71,58 @@ public:
    virtual bool initialize(TCHAR *errorMessage);
 
    /**
+    * Check if engine requires training
+    *
+    * @return true if engine requires training
+    */
+   virtual bool requiresTraining();
+
+   /**
+    * Train engine using existing data for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void train(UINT32 nodeId, UINT32 dciId);
+
+   /**
     * Update internal model for given DCI
     *
+    * @param nodeId Node object ID
     * @param dciId DCI ID
     * @param timestamp timestamp of new value
     * @param value new value
     */
-   virtual void update(UINT32 dciId, time_t timestamp, double value) = 0;
+   virtual void update(UINT32 nodeId, UINT32 dciId, time_t timestamp, double value) = 0;
 
    /**
     * Reset internal model for given DCI
     *
+    * @param nodeId Node object ID
     * @param dciId DCI ID
     */
-   virtual void reset(UINT32 dciId) = 0;
+   virtual void reset(UINT32 nodeId, UINT32 dciId) = 0;
 
    /**
     * Get predicted value for given DCI and time
     *
+    * @param nodeId Node object ID
     * @param dciId DCI ID
     * @param timestamp timestamp of interest
     * @return predicted value
     */
-   virtual double getPredictedValue(UINT32 dciId, time_t timestamp) = 0;
+   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp) = 0;
+
+   /**
+    * Get DCi cache size required by this engine
+    */
+   virtual int getRequiredCacheSize() const = 0;
 };
 
 /**
  * API
  */
 PredictionEngine NXCORE_EXPORTABLE *FindPredictionEngine(const TCHAR *name);
+void NXCORE_EXPORTABLE QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId);
 
 #endif

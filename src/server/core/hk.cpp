@@ -144,7 +144,17 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 static void CleanDciData(NetObj *object, void *data)
 {
-	((DataCollectionTarget *)object)->cleanDCIData((DB_HANDLE)data);
+	static_cast<DataCollectionTarget*>(object)->cleanDCIData((DB_HANDLE)data);
+}
+
+/**
+ * Callback for queuing prediction engines training
+ */
+static void QueuePredictionEngineTraining(NetObj *object, void *arg)
+{
+   if (!object->isDataCollectionTarget())
+      return;
+   static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
 }
 
 /**
@@ -278,6 +288,9 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       }
 
 		SaveCurrentFreeId();
+
+		// Run training on prediction engines
+		g_idxObjectById.forEach(QueuePredictionEngineTraining, NULL);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);

@@ -46,15 +46,36 @@ bool PredictionEngine::initialize(TCHAR *errorMessage)
 }
 
 /**
+ * Default implementation - always return false
+ */
+bool PredictionEngine::requiresTraining()
+{
+   return false;
+}
+
+/**
+ * Default trainig method - do nothing
+ */
+void PredictionEngine::train(UINT32 nodeId, UINT32 dciId)
+{
+}
+
+/**
  * Prediction engine registry
  */
 static StringObjectMap<PredictionEngine> s_engines(true);
+
+/**
+ * Prediction engine thread pool
+ */
+ThreadPool *g_npeThreadPool = NULL;
 
 /**
  * Register prediction engines on startup
  */
 void RegisterPredictionEngines()
 {
+   g_npeThreadPool = ThreadPoolCreate(0, 1024, _T("NPE"));
    ENUMERATE_MODULES(pfGetPredictionEngines)
    {
       ObjectArray<PredictionEngine> *engines = g_pModuleList[__i].pfGetPredictionEngines();
@@ -185,7 +206,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
       }
       rows++;
 
-      double value = engine->getPredictedValue(dci->getId(), timestamp);
+      double value = engine->getPredictedValue(dci->getOwner()->getId(), dci->getId(), timestamp);
       pCurr->timeStamp = (UINT32)timestamp;
       switch(dataType)
       {
@@ -224,4 +245,12 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    session->sendRawMessage(msg);
    free(msg);
    return true;
+}
+
+/**
+ * Queue training run for prediction engine
+ */
+void QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId)
+{
+   ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, nodeId, dciId);
 }
