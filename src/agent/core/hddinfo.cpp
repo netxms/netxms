@@ -131,11 +131,11 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
 
       // Allocate buffer for result
       pResult = (SENDCMDOUTPARAMS *)malloc(sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE);
-
       if (DeviceIoControl(hDevice, nCmd, &rq, sizeof(SENDCMDINPARAMS) - 1,
                           pResult, sizeof(SENDCMDOUTPARAMS) - 1 + SMART_BUFFER_SIZE,
                           &dwBytes, NULL))
       {
+         nxlog_debug(7, _T("H_PhysicalDiskInfo: call to DeviceIoControl successful, %u bytes received"), dwBytes);
 #if !(WORDS_BIGENDIAN)
          if (bSwapWords)
          {
@@ -235,9 +235,19 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
                break;
          }
       }
+      else
+      {
+         TCHAR buffer[1024];
+         nxlog_debug(7, _T("H_PhysicalDiskInfo: call to DeviceIoControl failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      }
 
       free(pResult);
       CloseHandle(hDevice);
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      nxlog_debug(7, _T("H_PhysicalDiskInfo: cannot open device (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
    }
 
    return nRet;
