@@ -19,14 +19,8 @@
 package org.netxms.ui.eclipse.objectview.widgets;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -54,28 +48,34 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -83,7 +83,7 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 /**
  * Widget showing "heat" map of nodes under given root object
  */
-public class ObjectStatusMap extends Composite implements ISelectionProvider, ObjectStatusMapInterface
+public class ObjectStatusMapRadial extends Composite implements ISelectionProvider, ObjectStatusMapInterface
 {
 	private IViewPart viewPart;
 	private long rootObjectId;
@@ -91,16 +91,14 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
    private FilterText filterTextControl;
    private ScrolledComposite scroller;
 	private Composite dataArea;
-	private List<Composite> sections = new ArrayList<Composite>();
-	private Map<Long, ObjectStatusWidget> statusWidgets = new HashMap<Long, ObjectStatusWidget>();
 	private ISelection selection = null;
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private MenuManager menuManager;
 	private Font titleFont;
-	private boolean groupObjects = true;
 	private boolean filterEnabled = true;
 	private int severityFilter = 0xFF;
 	private String textFilter = "";
+	ObjectStatusRadialWidget widget;
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
 	private Set<Runnable> refreshListeners = new HashSet<Runnable>();
 	
@@ -108,7 +106,7 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectStatusMap(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
+	public ObjectStatusMapRadial(IViewPart viewPart, Composite parent, int style, boolean allowFilterClose)
 	{
 		super(parent, style);
 		
@@ -120,10 +118,15 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() == SessionNotification.OBJECT_CHANGED)
-					onObjectChange((AbstractObject)n.getObject());
-				else if (n.getCode() == SessionNotification.OBJECT_DELETED)
-					onObjectDelete(n.getSubCode());
+				if (n.getCode() == SessionNotification.OBJECT_CHANGED || n.getCode() == SessionNotification.OBJECT_DELETED)
+				   getDisplay().asyncExec(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {
+                     refresh();
+                  }
+               });
 			}
 		};
 		session.addListener(sessionListener);
@@ -241,24 +244,80 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 		refresh();
 	}
 	
+	public Set<Long> createFilteredList(AbstractObject root)
+	{
+	   Set<Long> aceptedlist = new HashSet<Long>();
+	   for(AbstractObject obj : root.getAllChilds(-1))
+	   {
+	      if(obj instanceof Interface || obj instanceof NetworkService || obj instanceof VPNConnector)
+	         continue;
+	      if(obj.getObjectName().contains(textFilter))
+	      {
+	         aceptedlist.add(obj.getObjectId());
+	      }
+	   }
+	   return aceptedlist;
+	}
+	
 	/**
 	 * Refresh form
 	 */
 	public void refresh()
 	{
-		for(Composite s : sections)
-			s.dispose();
-		sections.clear();
+      AbstractObject root = session.findObjectById(rootObjectId);
+      Set<Long> aceptedlist = null;
+      
+      if(!textFilter.isEmpty())
+      {
+         aceptedlist = createFilteredList(root);
+      }
+      
+      if (widget == null)
+      {
+         widget = new ObjectStatusRadialWidget(dataArea, root, aceptedlist);
+
+         widget.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseUp(MouseEvent e)
+            {
+            }
+            
+            @Override
+            public void mouseDown(MouseEvent e)
+            {
+               AbstractObject curr = widget.getObjectByPoint(e.x, e.y);
+               if (curr != null)
+               {
+                  setSelection(new StructuredSelection(curr));
+                  if (e.button == 1)
+                     callDetailsProvider(curr);
+               }
+               else
+               {
+                  setSelection(new StructuredSelection());
+               }
+            }
+            
+            @Override
+            public void mouseDoubleClick(MouseEvent e)
+            {
+            }
+         });
+
+         // Create popup menu
+         Menu menu = menuManager.createContextMenu(widget);
+         widget.setMenu(menu);
+
+         // Register menu for extension.
+         if (viewPart != null)
+            viewPart.getSite().registerContextMenu(menuManager, this);
+      }
+      else
+      {
+         widget.updateObject(root, aceptedlist);
+         widget.redraw();
+      }
 		
-		synchronized(statusWidgets)
-		{
-			statusWidgets.clear();
-		}
-		
-		if (groupObjects)
-			buildSection(rootObjectId, ""); //$NON-NLS-1$
-		else
-			buildFlatView();
 		dataArea.layout(true, true);
 		
 		Rectangle r = getClientArea();
@@ -267,217 +326,23 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 		for(Runnable l : refreshListeners)
 		   l.run();
 	}
-	
-	/**
-	 * Build flat view - all nodes in one group
-	 */
-	private void buildFlatView()
-	{
-		AbstractObject root = session.findObjectById(rootObjectId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
-			return;
-		
-		List<AbstractObject> objects = 
-		      new ArrayList<AbstractObject>(root.getAllChilds(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER }));
-		
-		// apply filter
-		if (((severityFilter & 0x3F) != 0x3F) || !textFilter.isEmpty())
-		{
-			Iterator<AbstractObject> it = objects.iterator();
-			while(it.hasNext())
-			{
-				AbstractObject o = it.next();
-				if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
-				{
-					it.remove();
-				}
-				else if (!textFilter.isEmpty())
-				{
-				   boolean match = false;
-               for(String s : o.getStrings())
-               {
-                  if (s.toLowerCase().contains(textFilter))
-                  {
-                     match = true;
-                     break;
-                  }
-               }
-               if (!match)
-                  it.remove();
-				}
-			}
-		}
-		
-		Collections.sort(objects, new Comparator<AbstractObject>() {
-			@Override
-			public int compare(AbstractObject o1, AbstractObject o2)
-			{
-				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
-			}
-		});
-
-		final Composite clientArea = new Composite(dataArea, SWT.NONE);
-		clientArea.setBackground(getBackground());
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		clientArea.setLayoutData(gd);
-		RowLayout clayout = new RowLayout();
-		clayout.marginBottom = 0;
-		clayout.marginTop = 0;
-		clayout.marginLeft = 0;
-		clayout.marginRight = 0;
-		clayout.type = SWT.HORIZONTAL;
-		clayout.wrap = true;
-		clayout.pack = false;
-		clientArea.setLayout(clayout);
-		sections.add(clientArea);
-		
-		for(AbstractObject o : objects)
-		{
-			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
-				continue;
-
-			addObjectElement(clientArea, o);
-		}
-	}
-	
-	/**
-	 * Build section of the form corresponding to one container
-	 */
-	private void buildSection(long rootId, String namePrefix)
-	{
-		AbstractObject root = session.findObjectById(rootId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
-			return;
-		
-		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildsAsArray()));
-		Collections.sort(objects, new Comparator<AbstractObject>() {
-			@Override
-			public int compare(AbstractObject o1, AbstractObject o2)
-			{
-				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
-			}
-		});
-		
-		Composite section = null;
-		Composite clientArea = null;
-		
-		// Add nodes and clusters
-		for(AbstractObject o : objects)
-		{
-			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
-				continue;
-			
-			if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
-				continue;
-
-         if (!textFilter.isEmpty())
+   
+   /**
+    * Call object details provider
+    * 
+    * @param node
+    */
+   private void callDetailsProvider(AbstractObject object)
+   {
+      for(ObjectDetailsProvider p : detailsProviders.values())
+      {
+         if (p.canProvideDetails(object))
          {
-            boolean match = false;
-            for(String s : o.getStrings())
-            {
-               if (s.toLowerCase().contains(textFilter))
-               {
-                  match = true;
-                  break;
-               }
-            }
-            if (!match)
-               continue;
+            p.provideDetails(object, viewPart);
+            break;
          }
-			
-			if (section == null)
-			{
-				section = new Composite(dataArea, SWT.NONE);
-				section.setBackground(getBackground());
-				GridData gd = new GridData();
-				gd.grabExcessHorizontalSpace = true;
-				gd.horizontalAlignment = SWT.FILL;
-				section.setLayoutData(gd);
-				
-				GridLayout layout = new GridLayout();
-				layout.marginHeight = 0;
-				layout.marginWidth = 0;
-				section.setLayout(layout);
-				
-				final Label title = new Label(section, SWT.NONE);
-				title.setBackground(getBackground());
-				title.setFont(titleFont);
-				title.setText(namePrefix + root.getObjectName());
-
-				clientArea = new Composite(section, SWT.NONE);
-				clientArea.setBackground(getBackground());
-				gd = new GridData();
-				gd.grabExcessHorizontalSpace = true;
-				gd.horizontalAlignment = SWT.FILL;
-				clientArea.setLayoutData(gd);
-				RowLayout clayout = new RowLayout();
-				clayout.marginBottom = 0;
-				clayout.marginTop = 0;
-				clayout.marginLeft = 0;
-				clayout.marginRight = 0;
-				clayout.type = SWT.HORIZONTAL;
-				clayout.wrap = true;
-				clayout.pack = false;
-				clientArea.setLayout(clayout);
-				
-				sections.add(section);
-			}
-			
-			addObjectElement(clientArea, o);
-		}
-		
-		// Add subcontainers
-		for(AbstractObject o : objects)
-		{
-			if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster))
-				continue;
-			
-			buildSection(o.getObjectId(), namePrefix + root.getObjectName() + " / "); //$NON-NLS-1$
-		}
-	}
-	
-	/**
-	 * @param object
-	 */
-	private void addObjectElement(final Composite parent, final AbstractObject object)
-	{
-		ObjectStatusWidget w = new ObjectStatusWidget(parent, object);
-		w.setBackground(getBackground());
-		w.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseUp(MouseEvent e)
-			{
-			}
-			
-			@Override
-			public void mouseDown(MouseEvent e)
-			{
-				setSelection(new StructuredSelection(object));
-				if (e.button == 1)
-					callDetailsProvider(object);
-			}
-			
-			@Override
-			public void mouseDoubleClick(MouseEvent e)
-			{
-			}
-		});
-
-		// Create popup menu
-		Menu menu = menuManager.createContextMenu(w);
-		w.setMenu(menu);
-
-		// Register menu for extension.
-		if (viewPart != null)
-			viewPart.getSite().registerContextMenu(menuManager, this);
-		
-		synchronized(statusWidgets)
-		{
-			statusWidgets.put(object.getObjectId(), w);
-		}
-	}
+      }
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
@@ -517,22 +382,6 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 		for(ISelectionChangedListener l : selectionListeners)
 			l.selectionChanged(event);
 	}
-
-	/**
-	 * @return the groupObjects
-	 */
-	public boolean isGroupObjects()
-	{
-		return groupObjects;
-	}
-
-	/**
-	 * @param groupObjects the groupObjects to set
-	 */
-	public void setGroupObjects(boolean groupObjects)
-	{
-		this.groupObjects = groupObjects;
-	}
 	
 	/**
 	 * Initialize object details providers
@@ -562,80 +411,6 @@ public class ObjectStatusMap extends Composite implements ISelectionProvider, Ob
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-		}
-	}
-	
-	/**
-	 * Call object details provider
-	 * 
-	 * @param node
-	 */
-	private void callDetailsProvider(AbstractObject object)
-	{
-		for(ObjectDetailsProvider p : detailsProviders.values())
-		{
-			if (p.canProvideDetails(object))
-			{
-				p.provideDetails(object, viewPart);
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * Handle object change
-	 */
-	private void onObjectChange(final AbstractObject object)
-	{
-		if (!((object instanceof AbstractNode) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
-			return;
-		
-		synchronized(statusWidgets)
-		{
-			final ObjectStatusWidget w = statusWidgets.get(object.getObjectId());
-			if (w != null)
-			{
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!w.isDisposed())
-							w.updateObject(object);
-					}
-				});
-			}
-			else if ((object.getObjectId() == rootObjectId) || object.isChildOf(rootObjectId))
-			{
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!isDisposed())
-							refresh();
-					}
-				});
-			}
-		}
-	}
-	
-	/**
-	 * Handle object delete
-	 */
-	private void onObjectDelete(long objectId)
-	{
-		synchronized(statusWidgets)
-		{
-			if (statusWidgets.containsKey(objectId))
-			{
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!isDisposed())
-							refresh();
-					}
-				});
 			}
 		}
 	}
