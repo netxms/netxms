@@ -26,22 +26,65 @@
 #include <nddrv.h>
 
 /**
+ * Metric information
+ */
+struct RittalMetric
+{
+   UINT32 index;
+   TCHAR name[MAX_OBJECT_NAME];
+   TCHAR description[MAX_DB_STRING];
+   int dataType;
+   UINT32 oid[15];
+};
+
+/**
+ * Device information
+ */
+struct RittalDevice
+{
+   UINT32 index;
+   UINT32 bus;
+   UINT32 position;
+   TCHAR name[MAX_OBJECT_NAME];
+   TCHAR alias[MAX_OBJECT_NAME];
+   ObjectArray<RittalMetric> *metrics;
+
+   RittalDevice(UINT32 _index, UINT32 _bus, UINT32 _position, const SNMP_Variable *_name, const SNMP_Variable *_alias)
+   {
+      index = _index;
+      bus = _bus;
+      position = _position;
+      _name->getValueAsString(name, MAX_OBJECT_NAME);
+      _alias->getValueAsString(alias, MAX_OBJECT_NAME);
+      metrics = new ObjectArray<RittalMetric>(32, 32, true);
+   }
+
+   ~RittalDevice()
+   {
+      delete metrics;
+   }
+};
+
+/**
  * Device data
  */
-class RittalDriverData : public DriverData
+class RittalDriverData : public HostMibDriverData
 {
 private:
-   StringMap m_oids;
+   ObjectArray<RittalDevice> m_devices;
    time_t m_cacheTimestamp;
 
-   void updateOidCache(SNMP_Transport *snmp);
-   UINT32 cacheUpdateWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   UINT32 deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   UINT32 metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   RittalDevice *getDevice(UINT32 index);
+   RittalDevice *getDevice(UINT32 bus, UINT32 position);
 
 public:
    RittalDriverData();
    virtual ~RittalDriverData();
 
-   const TCHAR *getMetricOid(const TCHAR *name, SNMP_Transport *snmp);
+   void updateDeviceInfo(SNMP_Transport *snmp);
+   const RittalMetric *getMetric(const TCHAR *name, SNMP_Transport *snmp);
 };
 
 /**
