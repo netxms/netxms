@@ -508,4 +508,24 @@ public class ColorConverter
       
 	   return colorNames.get(cdef.toLowerCase());
 	}
+	
+	public static Color selectTextColorByBackgroundColor(Color color, ColorCache cache)
+	{
+	   float arr[] = new float[3];
+	   arr[0] = color.getRed();
+      arr[1] = color.getGreen();
+      arr[2] = color.getBlue();
+	   
+      for(int i = 0; i < arr.length ; i++)
+      {
+         arr[i] = arr[i]/255;
+         if (arr[i] <= 0.03928) 
+            arr[i] = (float)(arr[i]/12.92); 
+         else 
+            arr[i] = (float)Math.pow(((arr[i]+0.055)/1.055), 2.4);
+      }
+      float l = (float)(0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2]);
+      
+      return l > 0.179 ? cache.create(rgbFromInt(0xFF000000)) : cache.create(rgbFromInt(0xFFFFFFFF));
+	}
 }
