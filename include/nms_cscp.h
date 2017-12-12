@@ -593,6 +593,7 @@ typedef struct
 #define CMD_EXECUTE_ACTION_WITH_EXPANSION 0x0166
 #define CMD_HOST_BY_IP                    0x0167
 #define CMD_CANCEL_FILE_DOWNLOAD          0x0168
+#define CMD_FILEMGR_COPY_FILE             0x0169
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1141,7 +1142,7 @@ typedef struct
 #define VID_IS_MASTER               ((UINT32)531)
 #define VID_AGENT_COMM_TIME         ((UINT32)532)
 #define VID_GRAPH_TEMPALTE          ((UINT32)533)
-#define VID_OVERVRITE               ((UINT32)534)
+#define VID_OVERWRITE               ((UINT32)534)
 #define VID_IPV6_SUPPORT            ((UINT32)535)
 #define VID_BULK_RECONCILIATION     ((UINT32)536)
 #define VID_STATUS                  ((UINT32)537)

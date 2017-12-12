@@ -48,6 +48,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewerEditor;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
@@ -318,52 +319,7 @@ public class AgentFileManager extends ViewPart
    public void enableDropSupport()// SubtreeType infrastructure
    {
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-      viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
-
-         @Override
-         public boolean performDrop(Object data)
-         {
-            IStructuredSelection selection = (IStructuredSelection)data;
-            List<?> movableSelection = selection.toList();
-            for(int i = 0; i < movableSelection.size(); i++)
-            {
-               AgentFile movableObject = (AgentFile)movableSelection.get(i);
-
-               moveFile((AgentFile)getCurrentTarget(), movableObject);
-
-            }
-            return true;
-         }
-
-         @Override
-         public boolean validateDrop(Object target, int operation, TransferData transferType)
-         {
-            if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
-               return false;
-
-            IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            if (selection.isEmpty())
-               return false;
-
-            for(final Object object : selection.toList())
-            {
-               if (!(object instanceof AgentFile))
-                  return false;
-            }
-            if (!(target instanceof AgentFile))
-            {
-               return false;
-            }
-            else
-            {
-               if (!((AgentFile)target).isDirectory())
-               {
-                  return false;
-               }
-            }
-            return true;
-         }
-      });
+      viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new AgentFileDropAdapter(viewer));
    }
    
    /**
@@ -1199,15 +1155,69 @@ public class AgentFileManager extends ViewPart
             
             if(verify.isOkPressed())
             {
+               target.setChildren(session.listAgentFiles(target, target.getFullName(), objectId));
+               object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), objectId));
+               
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     object.getParent().removeChield(object);
                      viewer.refresh(object.getParent(), true);
                      object.setParent(target);
-                     target.addChield(object);
                      viewer.refresh(object.getParent(), true);
+                  }
+               });
+            }
+         }
+      }.start();
+   }
+   
+   /**
+    * Copy agent file
+    * 
+    * @param target where the file will be moved
+    * @param object file being moved
+    */
+   private void copyFile(final AgentFile target, final AgentFile object)
+   {
+      new ConsoleJob("Copying file", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot copy file";
+         }         
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            NestedVerifyOverwrite verify = new NestedVerifyOverwrite(object.getType(), object.getName(), true, true, false) {
+               
+               @Override
+               public void executeAction() throws NXCException, IOException
+               {
+                  session.copyAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName(), false); //$NON-NLS-1$
+               }
+
+               @Override
+               public void executeSameFunctionWithOverwrite() throws IOException, NXCException
+               {
+                  session.copyAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName(), true); //$NON-NLS-1$
+               }
+            };
+            verify.run(viewer.getControl().getDisplay());
+            
+            if(verify.isOkPressed())
+            {
+               target.setChildren(session.listAgentFiles(target, target.getFullName(), objectId));
+               object.getParent().setChildren(session.listAgentFiles(object.getParent(), object.getParent().getFullName(), objectId));
+               
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.refresh(object.getParent(), true);
+                     object.setParent(target);
+                     viewer.refresh(target, true);
                   }
                });
             }
@@ -1482,5 +1492,78 @@ public class AgentFileManager extends ViewPart
       }
       public abstract void executeAction() throws NXCException, IOException;
       public abstract void executeSameFunctionWithOverwrite() throws NXCException, IOException;
+   }
+   
+   /**
+    * Custom implementation of ViewerDropAdapter for Agent File Manager
+    */
+   public class AgentFileDropAdapter extends ViewerDropAdapter
+   {
+      int operation = 0;
+
+      /**
+       * Agent file drop adapter constructor
+       * 
+       * @param viewer
+       * @param mode Copy or Move
+       */
+      protected AgentFileDropAdapter(Viewer viewer)
+      {
+         super(viewer);
+      }
+
+      /* (non-Javadoc)
+       * @see org.eclipse.jface.viewers.ViewerDropAdapter#performDrop(java.lang.Object)
+       */
+      @Override
+      public boolean performDrop(Object data)
+      {
+         IStructuredSelection selection = (IStructuredSelection)data;
+         List<?> movableSelection = selection.toList();
+         for(int i = 0; i < movableSelection.size(); i++)
+         {
+            AgentFile movableObject = (AgentFile)movableSelection.get(i);
+            
+            if (operation == DND.DROP_COPY)
+               copyFile((AgentFile)getCurrentTarget(), movableObject);
+            else
+               moveFile((AgentFile)getCurrentTarget(), movableObject);
+
+         }
+         return true;
+      }
+
+      /* (non-Javadoc)
+       * @see org.eclipse.jface.viewers.ViewerDropAdapter#validateDrop(java.lang.Object, int, org.eclipse.swt.dnd.TransferData)
+       */
+      @Override
+      public boolean validateDrop(Object target, int operation, TransferData transferType)
+      {
+         this.operation = operation;
+         if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+            return false;
+
+         IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+         if (selection.isEmpty())
+            return false;
+
+         for(final Object object : selection.toList())
+         {
+            if (!(object instanceof AgentFile))
+               return false;
+         }
+         if (!(target instanceof AgentFile))
+         {
+            return false;
+         }
+         else
+         {
+            if (!((AgentFile)target).isDirectory())
+            {
+               return false;
+            }
+         }
+         return true;
+      }      
    }
 }

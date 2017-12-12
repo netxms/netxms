@@ -264,10 +264,10 @@ int CheckFileType(const TCHAR *fileName)
    return -1;
 }
 
-bool VerifyFileOperation(const TCHAR *fileName, bool allowOverwirite, NXCPMessage *response)
+bool VerifyFileOperation(const TCHAR *fileName, bool allowOverwrite, NXCPMessage *response)
 {
    int fileType = CheckFileType(fileName);
-   if(fileType > 0 && !allowOverwirite)
+   if(fileType > 0 && !allowOverwrite)
    {
       response->setField(VID_RCC, fileType == DIRECTORY ? ERR_FOLDER_ALREADY_EXISTS : ERR_FILE_ALREADY_EXISTS);
       return false;
@@ -535,15 +535,51 @@ static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 #ifndef _WIN32
 
 /**
- * Copy file/folder
+ * Copy files or Folders
  */
-static BOOL CopyFile(NX_STAT_STRUCT *st, const TCHAR *oldName, const TCHAR *newName)
+static bool CopyFiles(const TCHAR *oldName, const TCHAR *newName)
 {
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(oldName, &st) != 0)
+      return FALSE;
+
+   if (S_ISDIR(st.st_mode))
+   {
+      _tmkdir(newName, st.st_mode);
+      _TDIR *dir = _topendir(oldName);
+      if (dir != NULL)
+      {
+         struct _tdirent *d;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+               continue;
+
+            TCHAR nextNewName[MAX_PATH];
+            _tcscpy(nextNewName, newName);
+            _tcscat(nextNewName, _T("/"));
+            _tcscat(nextNewName, d->d_name);
+
+            TCHAR nextOldaName[MAX_PATH];
+            _tcscpy(nextOldaName, oldName);
+            _tcscat(nextOldaName, _T("/"));
+            _tcscat(nextOldaName, d->d_name);
+
+            CopyFiles(nextOldaName, nextNewName);
+         }
+         _tclosedir(dir);
+      }
+      else
+         return false;
+
+      return true;
+   }
+
    int oldFile = _topen(oldName, O_RDONLY | O_BINARY);
    if (oldFile == -1)
       return FALSE;
 
-   int newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st->st_mode); // should be copied with the same acess rights
+   int newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st.st_mode); // should be copied with the same access rights
    if (newFile == -1)
    {
       close(oldFile);
@@ -624,7 +660,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    }
    else
    {
-      if (!CopyFile(&st, oldName, newName))
+      if (!CopyFiles(oldName, newName))
          return FALSE;
    }
    return TRUE;
@@ -794,7 +830,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
          response->setId(request->getId());
          if (oldName[0] == 0 && newName[0] == 0)
          {
@@ -832,7 +868,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
          response->setId(request->getId());
          if ((oldName[0] == 0) && (newName[0] == 0))
          {
@@ -868,7 +904,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR name[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
-         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERVRITE);
+         bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
          response->setId(request->getId());
          if (name[0] == 0)
          {
@@ -1010,6 +1046,40 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          else
          {
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Access denied"));
+            response->setField(VID_RCC, ERR_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_FILEMGR_COPY_FILE:
+      {
+         TCHAR oldName[MAX_PATH];
+         request->getFieldAsString(VID_FILE_NAME, oldName, MAX_PATH);
+         TCHAR newName[MAX_PATH];
+         request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
+         bool allowOverwrite = request->getFieldAsBoolean(VID_OVERWRITE);
+         response->setId(request->getId());
+         response->setField(VID_RCC, ERR_SUCCESS);
+
+         if ((oldName[0] == 0) && (newName[0] == 0))
+         {
+            response->setField(VID_RCC, ERR_IO_FAILURE);
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
+            return TRUE;
+         }
+         ConvertPathToHost(oldName);
+         ConvertPathToHost(newName);
+
+         if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
+         {
+            if(VerifyFileOperation(newName, allowOverwrite, response))
+            {
+               if (!CopyFiles(oldName, newName))
+                  response->setField(VID_RCC, ERR_IO_FAILURE);
+            }
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
          return TRUE;

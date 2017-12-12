@@ -669,6 +669,8 @@ public class ObjectTree extends Composite
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
       objectTree.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(objectTree) {
          
+         int operation = 0;
+         
          @Override
          public boolean performDrop(Object data) 
          {
@@ -679,7 +681,7 @@ public class ObjectTree extends Composite
                AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
                TreePath path = selection.getPaths()[0];
                AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject);
+               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject, operation == DND.DROP_MOVE ? true : false);
             }
             return true;
          }
@@ -687,6 +689,7 @@ public class ObjectTree extends Composite
 			@Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
+			   this.operation = operation;
             if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 
