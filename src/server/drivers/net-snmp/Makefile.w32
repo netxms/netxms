@@ -1,0 +1,8 @@
+TARGET = net-snmp.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = net-snmp.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

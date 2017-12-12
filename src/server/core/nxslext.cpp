@@ -1310,7 +1310,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	TCHAR buffer[MAX_RESULT_LENGTH];
-	UINT32 rcc = ((Node *)object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+	UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
 	if (rcc == DCE_SUCCESS)
 		*ppResult = new NXSL_Value(buffer);
 	else
@@ -1341,7 +1341,7 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		return NXSL_ERR_BAD_CLASS;
 
 	Table *table;
-   UINT32 rcc = ((Node *)object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+   UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
 	if (rcc == DCE_SUCCESS)
       *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, table));
 	else
@@ -1372,13 +1372,44 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 		return NXSL_ERR_BAD_CLASS;
 
 	StringList *list;
-   UINT32 rcc = ((Node *)object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
+   UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
 	if (rcc == DCE_SUCCESS)
       *ppResult = new NXSL_Value(new NXSL_Array(list));
 	else
 		*ppResult = new NXSL_Value;
    delete list;
 	return 0;
+}
+
+/**
+ * Read parameter's value from network device driver
+ * Syntax:
+ *    DriverReadParameter(object, name)
+ * where:
+ *     object - NetXMS node object
+ *     name   - name of the parameter
+ * Return value:
+ *     paramater's value on success and null on failure
+ */
+static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   if (rcc == DCE_SUCCESS)
+      *ppResult = new NXSL_Value(buffer);
+   else
+      *ppResult = new NXSL_Value;
+   return 0;
 }
 
 /**
@@ -1491,6 +1522,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("CurrencyExponent"), F_CurrencyExponent, 1 },
    { _T("CurrencyName"), F_CurrencyName, 1 },
 	{ _T("DeleteCustomAttribute"), F_DeleteCustomAttribute, 2 },
+   { _T("DriverReadParameter"), F_DriverReadParameter, 2 },
    { _T("EnterMaintenance"), F_EnterMaintenance, 1 },
    { _T("GetAllNodes"), F_GetAllNodes, -1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },

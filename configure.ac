@@ -3768,12 +3768,14 @@ AC_CONFIG_FILES([
 	src/server/drivers/lib/avaya-ers/Makefile
 	src/server/drivers/lib/cisco/Makefile
 	src/server/drivers/mikrotik/Makefile
+	src/server/drivers/net-snmp/Makefile
 	src/server/drivers/netonix/Makefile
 	src/server/drivers/netscreen/Makefile
 	src/server/drivers/ntws/Makefile
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/qtech-olt/Makefile
+	src/server/drivers/rittal/Makefile
 	src/server/drivers/symbol-ws/Makefile
 	src/server/drivers/tb/Makefile
 	src/server/drivers/ubnt/Makefile

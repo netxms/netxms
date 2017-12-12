@@ -10,6 +10,7 @@
 
 SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
 	  dell-pwc dlink ers8000 extreme h3c hpsw ignitenet juniper mikrotik \
-	  netonix netscreen ntws ping3 procurve qtech-olt symbol-ws tb ubnt
+	  net-snmp netonix netscreen ntws ping3 procurve qtech-olt rittal \
+	  symbol-ws tb ubnt
 
 EXTRA_DIST = Makefile.w32
