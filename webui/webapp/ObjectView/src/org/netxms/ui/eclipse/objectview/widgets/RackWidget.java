@@ -48,6 +48,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.RackElement;
+import org.netxms.client.objects.configs.RackPassiveElementConfigEntry;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
@@ -84,6 +85,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Image imageDefaultMiddle;
    private Image imageDefaultBottom;
    private Image imageDefaultRear;
+   private Image imagePatchPanel;
+   private Image imageFillerPanel;
+   private Image imageOrganiserPanel;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
    private AbstractObject selectedObject = null;
    private Set<RackSelectionListener> selectionListeners = new HashSet<RackSelectionListener>(0);
@@ -123,6 +127,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
       imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
       imageDefaultRear = Activator.getImageDescriptor("icons/rack-default-rear.png").createImage(); //$NON-NLS-1$
+      imagePatchPanel = Activator.getImageDescriptor("icons/rack-patch-panel.png").createImage();
+      imageOrganiserPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage(); // FIXME use actual organiser panel image once available!
+      imageFillerPanel = Activator.getImageDescriptor("icons/rack-filler-panel.png").createImage();
       
       addPaintListener(this);
       addMouseListener(this);
@@ -216,6 +223,50 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       }
       if (!rack.isTopBottomNumbering())
          unitBaselines[rack.getHeight()] = (int)dy;
+      
+      // Draw attributes
+      List<RackPassiveElementConfigEntry> attributes = rack.getPassiveElementConfig().getEntryList();
+      for(RackPassiveElementConfigEntry c : attributes)
+      {
+         if ((c.getPosition() < 1) || (c.getPosition() > rack.getHeight()) ||
+            (c.getOrientation() != view) && (c.getOrientation() != RackOrientation.FILL))
+            continue;
+         
+         int topLine, bottomLine;
+         if (rack.isTopBottomNumbering())
+         {
+            bottomLine = unitBaselines[c.getPosition()]; // lower border
+            topLine = unitBaselines[c.getPosition() - 1];   // upper border
+         }
+         else
+         {
+            bottomLine = unitBaselines[c.getPosition() - 1]; // lower border
+            topLine = unitBaselines[c.getPosition()];   // upper border
+         }
+         final Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
+
+         if ((unitRect.width <= 0) || (unitRect.height <= 0))
+            break;
+         
+         Image image;
+         switch(c.getType())
+         {
+            case FILLER_PANEL:
+               image = imageFillerPanel;
+               break;
+            case PATCH_PANEL:
+               image = imagePatchPanel;
+               break;
+            case ORGANISER_PANEL:
+               image = imageOrganiserPanel;
+               break;
+            default:
+               continue;
+         }
+
+         Rectangle r = image.getBounds();
+         gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+      }
       
       // Draw units
       objects.clear();
@@ -493,6 +544,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultMiddle.dispose();
       imageDefaultBottom.dispose();
       imageDefaultRear.dispose();
+      imageFillerPanel.dispose();
+      imagePatchPanel.dispose();
+      imageOrganiserPanel.dispose();
       
       ImageProvider.getInstance().removeUpdateListener(this);
    }

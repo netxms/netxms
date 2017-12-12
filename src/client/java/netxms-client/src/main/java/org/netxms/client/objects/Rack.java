@@ -25,6 +25,7 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.configs.RackPassiveElementConfig;
 
 /**
  * Rack object
@@ -33,6 +34,7 @@ public class Rack extends GenericObject
 {
 	private int height;
 	private boolean topBottomNumbering;
+	private RackPassiveElementConfig passiveElementConfig;
 	
 	/**
 	 * @param msg
@@ -43,8 +45,16 @@ public class Rack extends GenericObject
 		super(msg, session);
 		height = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
 		topBottomNumbering = msg.getFieldAsBoolean(NXCPCodes.VID_TOP_BOTTOM);
+		try
+      {
+		   passiveElementConfig = RackPassiveElementConfig.createFromXml(msg.getFieldAsString(NXCPCodes.VID_PASSIVE_ELEMENT_CONFIG));
+      }
+      catch(Exception e)
+      {
+         passiveElementConfig = new RackPassiveElementConfig();
+      }
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
@@ -86,6 +96,16 @@ public class Rack extends GenericObject
    public boolean isTopBottomNumbering()
    {
       return topBottomNumbering;
+   }
+   
+   /**
+    * Get rack passive element config
+    * 
+    * @return passiveElementConfig
+    */
+   public RackPassiveElementConfig getPassiveElementConfig()
+   {
+      return passiveElementConfig;
    }
 
    /**

@@ -5065,6 +5065,11 @@ public class NXCSession
       {
          msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
       }
+      
+      if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENT_CONFIG))
+      {
+         msg.setField(NXCPCodes.VID_PASSIVE_ELEMENT_CONFIG, data.getPassiveElementsConfig());
+      }
             
       modifyCustomObject(data, userData, msg);
 
