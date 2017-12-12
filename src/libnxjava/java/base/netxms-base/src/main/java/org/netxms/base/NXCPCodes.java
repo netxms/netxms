@@ -374,6 +374,10 @@ public class NXCPCodes
    public static final int CMD_CREATE_OBJECT_ACCESS_SNAPSHOT = 0x0160;
    public static final int CMD_UNBIND_AGENT_TUNNEL = 0x0161;
    public static final int CMD_EXPAND_MACROS = 0x0165;
+   public static final int CMD_EXECUTE_ACTION_WITH_EXPANSION = 0x0166;
+   public static final int CMD_HOST_BY_IP = 0x0167;
+   public static final int CMD_CANCEL_FILE_DOWNLOAD = 0x0168;
+   public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -921,7 +925,7 @@ public class NXCPCodes
    public static final long VID_IS_MASTER = 531;
    public static final long VID_AGENT_COMM_TIME = 532;
    public static final long VID_GRAPH_TEMPALTE = 533;
-   public static final long VID_OVERVRITE = 534;
+   public static final long VID_OVERWRITE = 534;
    public static final long VID_IPV6_SUPPORT = 535;
    public static final long VID_BULK_RECONCILIATION = 536;
    public static final long VID_STATUS = 537;

@@ -304,7 +304,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 
    UINT32 graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
 	pRequest->getFieldAsString(VID_NAME,dwGraphName,255);
-	UINT16 overwrite = pRequest->getFieldAsUInt16(VID_OVERVRITE);
+	UINT16 overwrite = pRequest->getFieldAsUInt16(VID_OVERWRITE);
 
    GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
 

@@ -74,6 +74,24 @@ public class AgentFile
    }
    
    /**
+    * Copy constructor for agent file
+    * 
+    * @param src AgentFile to copy
+    */
+   public AgentFile(AgentFile src)
+   {
+      this.name = src.name;
+      this.size = src.size;
+      this.modificationTime = src.modificationTime;
+      this.type = src.type;
+      this.owner = src.owner;
+      this.group = src.group;
+      this.accessRights = src.accessRights;
+      this.nodeId = src.nodeId;
+      setExtension();
+   }
+   
+   /**
     * Set file extension
     */
    private void setExtension()
@@ -167,6 +185,8 @@ public class AgentFile
     */
    public void removeChield(AgentFile chield)
    {
+      if(children == null)
+         return;
       for(int i=0; i<children.size(); i++)
       {
          if(children.get(i).getName().equalsIgnoreCase(chield.getName()))

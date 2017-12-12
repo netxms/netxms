@@ -1285,6 +1285,7 @@ void ClientSession::processingThread()
          case CMD_FILEMGR_RENAME_FILE:
          case CMD_FILEMGR_MOVE_FILE:
          case CMD_FILEMGR_CREATE_FOLDER:
+         case CMD_FILEMGR_COPY_FILE:
             CALL_IN_NEW_THREAD(fileManagerControl, pMsg);
             break;
          case CMD_FILEMGR_UPLOAD:
@@ -13356,6 +13357,14 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                                          _T("Create folder \"%s\""), fileName);
                            break;
                         }
+                        case CMD_FILEMGR_COPY_FILE:
+                        {
+                           TCHAR newFileName[MAX_PATH];
+                           request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
+                                         _T("Copy agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+                           break;
+                        }
                      }
                   }
                   else
@@ -13424,6 +13433,14 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
          {
             WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
                _T("Acess denied to create folder \"%s\""), fileName);
+            break;
+         }
+         case CMD_FILEMGR_COPY_FILE:
+         {
+            TCHAR newFileName[MAX_PATH];
+            request->getFieldAsString(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
+               _T("Acess denied to copy agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
             break;
          }
       }

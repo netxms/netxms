@@ -1464,7 +1464,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    else
    {
       msg.setCode(CMD_FILEMGR_UPLOAD);
-      msg.setField(VID_OVERVRITE, true);
+      msg.setField(VID_OVERWRITE, true);
 		msg.setField(VID_FILE_NAME, destinationFile);
    }
    msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);

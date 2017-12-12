@@ -7594,7 +7594,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
       graph.fillMessage(msg);
-      msg.setFieldInt16(NXCPCodes.VID_OVERVRITE, overwrite ? 1 : 0);
+      msg.setFieldInt16(NXCPCodes.VID_OVERWRITE, overwrite ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt64(NXCPCodes.VID_GRAPH_ID);
@@ -8245,7 +8245,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
-      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overvrite);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
@@ -8447,18 +8447,19 @@ public class NXCSession
     * Rename agent's file
     *
     * @param nodeId node id
-    * @param oldName old full file path
-    * @param newFileName new full file path
+    * @param oldName old file path
+    * @param newFileName new file path
+    * @param overwrite should the file in destination be overwritten
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void renameAgentFile(long nodeId, String oldName, String newFileName, boolean overvrite) throws IOException, NXCException
+   public void renameAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_RENAME_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
-      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -8469,16 +8470,38 @@ public class NXCSession
     * @param nodeId node id
     * @param oldName old file path
     * @param newFileName new file path
+    * @param overwrite should the file in destination be overwritten
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void moveAgentFile(long nodeId, String oldName, String newFileName, boolean overvrite) throws IOException, NXCException
+   public void moveAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_MOVE_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
-      msg.setField(NXCPCodes.VID_OVERVRITE, overvrite);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Copy file from agent
+    *
+    * @param nodeId node id
+    * @param oldName old file path
+    * @param newFileName new file path
+    * @param overwrite should the file in destination be overwritten
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void copyAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_COPY_FILE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
+      msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

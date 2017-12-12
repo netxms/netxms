@@ -774,12 +774,12 @@ public class ObjectBrowser extends ViewPart
 	      final AbstractObject target = dlg.getSelectedObjects().get(0);
 	      for (int i = 0; i < selection.length; i++)
 	      {
-	         performObjectMove(target, parentObject.get(i), currentObject.get(i));
+	         performObjectMove(target, parentObject.get(i), currentObject.get(i), true);
 	      }
 		}
 	}
 	
-	public void performObjectMove(final AbstractObject target, final Object parentObject, final Object currentObject){
+	public void performObjectMove(final AbstractObject target, final Object parentObject, final Object currentObject, final boolean isMove){
       if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
       {
          final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -790,7 +790,8 @@ public class ObjectBrowser extends ViewPart
             {
                long objectId = ((AbstractObject)currentObject).getObjectId();
                session.bindObject(target.getObjectId(), objectId);
-               session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
+               if (isMove)
+                  session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
             }
    
             @Override
