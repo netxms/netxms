@@ -1219,6 +1219,7 @@ typedef struct
 #define VID_JOB_CANCELED            ((UINT32)609)
 #define VID_INSTANCE_RETENTION      ((UINT32)610)
 #define VID_RACK_ORIENTATION        ((UINT32)611)
+#define VID_PASSIVE_ELEMENT_CONFIG  ((UINT32)612)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

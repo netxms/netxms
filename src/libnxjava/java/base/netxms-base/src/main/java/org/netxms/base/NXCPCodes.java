@@ -999,6 +999,7 @@ public class NXCPCodes
    public static final long VID_JOB_CANCELED = 609;
    public static final long VID_INSTANCE_RETENTION = 610;
    public static final long VID_RACK_ORIENTATION = 611;
+   public static final long VID_PASSIVE_ELEMENT_CONFIG = 612;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

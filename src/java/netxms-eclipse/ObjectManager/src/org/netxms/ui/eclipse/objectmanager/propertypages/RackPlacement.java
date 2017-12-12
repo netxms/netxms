@@ -112,7 +112,6 @@ public class RackPlacement extends PropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      rackHeight.setLayoutData(gd);
       rackOrientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
       rackOrientation.setItems(ORIENTATION);
       rackOrientation.setText(ORIENTATION[object.getRackOrientation().getValue()]);

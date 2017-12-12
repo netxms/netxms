@@ -23,6 +23,19 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.14 to 30.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static TCHAR batch[] =
+            _T("ALTER TABLE racks ADD passive_element_config $SQL:TEXT\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 30.13 to 30.14 (changes also included into 22.5)
  */
 static bool H_UpgradeFromV13()
@@ -610,6 +623,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 14, 30, 15, H_UpgradeFromV14 },
    { 13, 30, 14, H_UpgradeFromV13 },
    { 12, 30, 13, H_UpgradeFromV12 },
    { 11, 30, 12, H_UpgradeFromV11 },

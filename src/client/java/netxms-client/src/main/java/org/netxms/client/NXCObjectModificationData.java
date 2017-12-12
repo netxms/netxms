@@ -130,6 +130,7 @@ public class NXCObjectModificationData
    public static final int SENSOR_PROXY           = 77;
    public static final int XML_CONFIG             = 78;
    public static final int SNMP_PORT_LIST         = 79;
+   public static final int PASSIVE_ELEMENT_CONFIG = 80;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -234,8 +235,9 @@ public class NXCObjectModificationData
    private long sensorProxy;
    private String xmlConfig;
    private List<String> snmpPorts;
-	
-	/**
+   private String passiveElementsConfig;
+
+   /**
 	 * Constructor for creating modification data for given object
 	 * 
 	 * @param objectId Object ID
@@ -1964,5 +1966,22 @@ public class NXCObjectModificationData
    public List<String> getSnmpPorts()
    {
       return snmpPorts;
+   }
+   
+   /**
+    * @return the passiveElementsConfig
+    */
+   public String getPassiveElementsConfig()
+   {
+      return passiveElementsConfig;
+   }
+
+   /**
+    * @param passiveElementsConfig the passiveElementsConfig to set
+    */
+   public void setPassiveElementsConfig(String passiveElementsConfig)
+   {
+      this.passiveElementsConfig = passiveElementsConfig;
+      fieldSet.add(PASSIVE_ELEMENT_CONFIG);
    }
 }
