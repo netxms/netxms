@@ -85,6 +85,8 @@ void RittalDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringM
 {
    if (*driverData == NULL)
       *driverData = new RittalDriverData();
+   static_cast<RittalDriverData*>(*driverData)->updateStorageCache(snmp);
+   static_cast<RittalDriverData*>(*driverData)->updateDeviceInfo(snmp);
 }
 
 /**
