@@ -783,6 +783,45 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
                                      UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
                                      void *userArg, bool logErrors = false);
 
+/**
+ * Wrapper data for SnmpWalk
+ */
+template <typename T> class __SnmpWalk_WrapperData
+{
+public:
+   T *m_object;
+   void (T::*m_func)(SNMP_Variable *, SNMP_Transport *);
+
+   __SnmpWalk_WrapperData(T *object, void (T::*func)(SNMP_Variable *, SNMP_Transport *)) { m_object = object; m_func = func; }
+};
+
+/**
+ * Callback wrapper for calling SnmpWalk on object
+ */
+template <typename T> UINT32 __SnmpWalk_Wrapper(SNMP_Variable *v, SNMP_Transport *transport, void *arg)
+{
+   __SnmpWalk_WrapperData<T> *wd = static_cast<__SnmpWalk_WrapperData<T>*>(arg);
+   return ((*wd->m_object).*(wd->m_func))(v, transport);
+}
+
+/**
+ * Wrapper function for calling SnmpWalk on object
+ */
+template <typename T> UINT32 SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
+{
+   __SnmpWalk_WrapperData<T> data(object, func);
+   return SnmpWalk(transport, rootOid, __SnmpWalk_Wrapper, &data);
+}
+
+/**
+ * Wrapper function for calling SnmpWalk on object
+ */
+template <typename T> UINT32 SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
+{
+   __SnmpWalk_WrapperData<T> data(object, func);
+   return SnmpWalk(transport, rootOid, rootOidLen, __SnmpWalk_Wrapper, &data);
+}
+
 #endif   /* __cplusplus */
 
 /** @} */
