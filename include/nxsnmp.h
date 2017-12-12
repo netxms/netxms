@@ -790,9 +790,9 @@ template <typename T> class __SnmpWalk_WrapperData
 {
 public:
    T *m_object;
-   void (T::*m_func)(SNMP_Variable *, SNMP_Transport *);
+   UINT32 (T::*m_func)(SNMP_Variable *, SNMP_Transport *);
 
-   __SnmpWalk_WrapperData(T *object, void (T::*func)(SNMP_Variable *, SNMP_Transport *)) { m_object = object; m_func = func; }
+   __SnmpWalk_WrapperData(T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *)) { m_object = object; m_func = func; }
 };
 
 /**
@@ -810,7 +810,7 @@ template <typename T> UINT32 __SnmpWalk_Wrapper(SNMP_Variable *v, SNMP_Transport
 template <typename T> UINT32 SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
-   return SnmpWalk(transport, rootOid, __SnmpWalk_Wrapper, &data);
+   return SnmpWalk(transport, rootOid, __SnmpWalk_Wrapper<T>, &data);
 }
 
 /**
@@ -819,7 +819,7 @@ template <typename T> UINT32 SnmpWalk(SNMP_Transport *transport, const TCHAR *ro
 template <typename T> UINT32 SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen, T *object, UINT32 (T::*func)(SNMP_Variable *, SNMP_Transport *))
 {
    __SnmpWalk_WrapperData<T> data(object, func);
-   return SnmpWalk(transport, rootOid, rootOidLen, __SnmpWalk_Wrapper, &data);
+   return SnmpWalk(transport, rootOid, rootOidLen, __SnmpWalk_Wrapper<T>, &data);
 }
 
 #endif   /* __cplusplus */
