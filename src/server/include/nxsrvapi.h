@@ -424,6 +424,7 @@ private:
 public:
    AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId);
    AgentParameterDefinition(AgentParameterDefinition *src);
+   AgentParameterDefinition(const TCHAR *name, const TCHAR *description, int dataType);
    ~AgentParameterDefinition();
 
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);

@@ -2881,6 +2881,11 @@ bool Node::confPollSnmp(UINT32 rqId)
 
    // Allow driver to gather additional info
    m_driver->analyzeDevice(pTransport, m_snmpObjectId, &m_customAttributes, &m_driverData);
+   if (m_driverData != NULL)
+   {
+      m_driverData->attachToNode(m_id, m_guid, m_name);
+   }
+
    NDD_MODULE_LAYOUT layout;
    m_driver->getModuleLayout(pTransport, &m_customAttributes, m_driverData, 1, &layout); // TODO module set to 1
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
@@ -4368,7 +4373,7 @@ DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buf
    SNMP_Transport *transport = createSnmpTransport();
    if (transport == NULL)
       return DCE_COMM_ERROR;
-   DataCollectionError rc = driver->getMetric(m_guid, transport, param, buffer, size);
+   DataCollectionError rc = driver->getMetric(transport, &m_customAttributes, m_driverData, param, buffer, size);
    delete transport;
    return rc;
 }

@@ -81,6 +81,9 @@ void AccessPointInfo::addRadioInterface(RadioInterfaceInfo *iface)
  */
 DriverData::DriverData()
 {
+   m_nodeId = 0;
+   m_nodeGuid = uuid::NULL_UUID;
+   m_nodeName[0] = 0;
 }
 
 /**
@@ -88,6 +91,17 @@ DriverData::DriverData()
  */
 DriverData::~DriverData()
 {
+}
+
+/**
+ * Attach driver data to node
+ */
+void DriverData::attachToNode(UINT32 nodeId, const uuid& nodeGuid, const TCHAR *nodeName)
+{
+   m_nodeId = nodeId;
+   m_nodeGuid = nodeGuid;
+   _tcslcpy(m_nodeName, nodeName, MAX_OBJECT_NAME);
+   nxlog_debug_tag(_T("ndd.common"), 5, _T("Driver data attached to node %s [%u]"), nodeName, nodeId);
 }
 
 /**
@@ -162,6 +176,7 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
  * @param snmp SNMP transport
+ * @param oid Device OID
  * @param attributes Node's custom attributes
  * @param driverData pointer to pointer to driver-specific data
  */
@@ -846,14 +861,15 @@ bool NetworkDeviceDriver::hasMetrics()
 /**
  * Get value of given metric
  *
- * @param node node object GUID
  * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
  * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetworkDeviceDriver::getMetric(const uuid& node, SNMP_Transport *snmp, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -861,11 +877,12 @@ DataCollectionError NetworkDeviceDriver::getMetric(const uuid& node, SNMP_Transp
 /**
  * Get list of metrics supported by driver
  *
- * @param node node object GUID
  * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(const uuid& node, SNMP_Transport *snmp)
+ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return NULL;
 }

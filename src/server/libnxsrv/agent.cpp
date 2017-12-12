@@ -2324,9 +2324,19 @@ AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 base
  */
 AgentParameterDefinition::AgentParameterDefinition(AgentParameterDefinition *src)
 {
-   m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
-   m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+   m_name = _tcsdup_ex(src->m_name);
+   m_description = _tcsdup_ex(src->m_description);
    m_dataType = src->m_dataType;
+}
+
+/**
+ * Create new agent parameter definition from scratch
+ */
+AgentParameterDefinition::AgentParameterDefinition(const TCHAR *name, const TCHAR *description, int dataType)
+{
+   m_name = _tcsdup_ex(name);
+   m_description = _tcsdup_ex(description);
+   m_dataType = dataType;
 }
 
 /**

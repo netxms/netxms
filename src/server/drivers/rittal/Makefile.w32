@@ -1,0 +1,8 @@
+TARGET = rittal.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = data.cpp rittal.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

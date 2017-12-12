@@ -195,9 +195,79 @@ struct WirelessStationInfo
  */
 class LIBNXSRV_EXPORTABLE DriverData
 {
+protected:
+   UINT32 m_nodeId;
+   uuid m_nodeGuid;
+   TCHAR m_nodeName[MAX_OBJECT_NAME];
+
 public:
    DriverData();
    virtual ~DriverData();
+
+   void attachToNode(UINT32 nodeId, const uuid& nodeGuid, const TCHAR *nodeName);
+
+   UINT32 getNodeId() const { return m_nodeId; }
+   const uuid& getNodeGuid() const { return m_nodeGuid; }
+   const TCHAR *getNodeName() const { return m_nodeName; }
+};
+
+/**
+ * Storage type
+ */
+enum HostMibStorageType
+{
+   hrStorageCompactDisc = 7,
+   hrStorageFixedDisk = 4,
+   hrStorageFlashMemory = 9,
+   hrStorageFloppyDisk = 6,
+   hrStorageNetworkDisk = 10,
+   hrStorageOther = 1,
+   hrStorageRam = 2,
+   hrStorageRamDisk = 8,
+   hrStorageRemovableDisk = 5,
+   hrStorageVirtualMemory = 3
+};
+
+/**
+ * Storage entry
+ */
+struct HostMibStorageEntry
+{
+   TCHAR name[128];
+   UINT32 unitSize;
+   UINT32 size;
+   UINT32 used;
+   HostMibStorageType type;
+   UINT32 oid[12];
+   time_t lastUpdate;
+
+   void getFree(TCHAR *buffer, size_t len) const;
+   void getFreePerc(TCHAR *buffer, size_t len) const;
+   void getTotal(TCHAR *buffer, size_t len) const;
+   void getUsed(TCHAR *buffer, size_t len) const;
+   void getUsedPerc(TCHAR *buffer, size_t len) const;
+   bool getMetric(const TCHAR *name, TCHAR *buffer, size_t len) const;
+};
+
+/**
+ * Host MIB support for drivers
+ */
+class LIBNXSRV_EXPORTABLE HostMibDriverData : public DriverData
+{
+protected:
+   ObjectArray<HostMibStorageEntry> *m_storage;
+   time_t m_storageCacheTimestamp;
+   MUTEX m_storageCacheMutex;
+
+   UINT32 updateStorageCacheCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+
+public:
+   HostMibDriverData();
+   virtual ~HostMibDriverData();
+
+   void updateStorageCache(SNMP_Transport *snmp);
+   const HostMibStorageEntry *getStorageEntry(SNMP_Transport *snmp, const TCHAR *name, HostMibStorageType type);
+   const HostMibStorageEntry *getPhysicalMemory(SNMP_Transport *snmp) { return getStorageEntry(snmp, NULL, hrStorageRam); }
 };
 
 /**
@@ -230,8 +300,8 @@ public:
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
                                                 UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
    virtual bool hasMetrics();
-   virtual DataCollectionError getMetric(const uuid& node, SNMP_Transport *snmp, const TCHAR *name, TCHAR *value, size_t size);
-   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(const uuid& node, SNMP_Transport *snmp);
+   virtual DataCollectionError getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
 };
 
 #endif   /* _nddrv_h_ */
