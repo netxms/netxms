@@ -6,6 +6,7 @@
 - Fixed issues:
 	NX-669 (Fixed regexp for DRBD parsing in Linux subagent)
 	NX-1366 (Edit option for "group box" decorations on network maps)
+	NX-1372 (PING subagent is not working)
 	NX-1373 (Error message "Error loading RSA keys from ..." in all server-to-agent command line tools)
 
 
