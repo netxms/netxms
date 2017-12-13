@@ -20,7 +20,7 @@ package org.netxms.client.objects.configs;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import org.netxms.client.constants.RackAttributeType;
+import org.netxms.client.constants.RackElementType;
 import org.netxms.client.constants.RackOrientation;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -28,16 +28,16 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Rack attribute configuration entry
+ * Rack element configuration entry
  */
-@Root(name="rackPassiveElementEntry")
-public class RackPassiveElementConfigEntry
+@Root(name="element")
+public class PassiveRackElement
 {
    @Element(required=true)
    public String name;
 
    @Element(required=true)
-   public RackAttributeType type;
+   public RackElementType type;
    
    @Element(required=true)
    public int position;
@@ -48,12 +48,12 @@ public class RackPassiveElementConfigEntry
    /**
     * Create empty rack attribute entry
     */
-   public RackPassiveElementConfigEntry()
+   public PassiveRackElement()
    {
       name = "";
-      type = RackAttributeType.getByValue(1);
+      type = RackElementType.FILLER_PANEL;
       position = 0;
-      orientation = RackOrientation.getByValue(1);
+      orientation = RackOrientation.FRONT;
    }
    
    /**
@@ -63,10 +63,10 @@ public class RackPassiveElementConfigEntry
     * @return attribute
     * @throws Exception
     */
-   public static RackPassiveElementConfigEntry createFromXml(final String xml) throws Exception
+   public static PassiveRackElement createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(RackPassiveElementConfigEntry.class, xml);
+      return serializer.read(PassiveRackElement.class, xml);
    }
    
    /**
@@ -84,16 +84,21 @@ public class RackPassiveElementConfigEntry
    }
    
    /**
-    * Set attribute type
+    * Set element type
     * 
     * @param type to set
     */
-   public void setType(RackAttributeType type)
+   public void setType(RackElementType type)
    {
       this.type = type;
    }
    
-   public RackAttributeType getType()
+   /**
+    * Get element type
+    * 
+    * @return element type
+    */
+   public RackElementType getType()
    {
       return type;
    }
@@ -139,7 +144,9 @@ public class RackPassiveElementConfigEntry
    }
    
    /**
-    * @return the name
+    * Get element name
+    * 
+    * @return element name
     */
    public String getName()
    {
@@ -147,7 +154,9 @@ public class RackPassiveElementConfigEntry
    }
 
    /**
-    * @param name the name to set
+    * Set element name
+    * 
+    * @param name new element name
     */
    public void setName(String name)
    {

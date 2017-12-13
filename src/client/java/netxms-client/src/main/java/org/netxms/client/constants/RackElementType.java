@@ -25,18 +25,18 @@ import org.netxms.base.Logger;
 /**
  * Rack attribute
  */
-public enum RackAttributeType
+public enum RackElementType
 {
    PATCH_PANEL(0),
    FILLER_PANEL(1),
-   ORGANISER_PANEL(2);
+   ORGANISER(2);
    
    private int value;
-   private static Map<Integer, RackAttributeType> lookupTable = new HashMap<Integer, RackAttributeType>();
+   private static Map<Integer, RackElementType> lookupTable = new HashMap<Integer, RackElementType>();
    
    static
    {
-      for(RackAttributeType element : RackAttributeType.values())
+      for(RackElementType element : RackElementType.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -47,7 +47,7 @@ public enum RackAttributeType
     * 
     * @param value integer value
     */
-   private RackAttributeType(int value)
+   private RackElementType(int value)
    {
       this.value = value;
    }
@@ -68,12 +68,12 @@ public enum RackAttributeType
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static RackAttributeType getByValue(int value)
+   public static RackElementType getByValue(int value)
    {
-      final RackAttributeType element = lookupTable.get(value);
+      final RackElementType element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(RackOrientation.class.getName(), "Unknown element " + value);
+         Logger.warning(RackElementType.class.getName(), "Unknown element " + value);
          return FILLER_PANEL; // fall-back
       }
       return element;

@@ -28,8 +28,8 @@
 static bool H_UpgradeFromV14()
 {
    static TCHAR batch[] =
-            _T("ALTER TABLE racks ADD passive_element_config $SQL:TEXT\n")
-            _T("<END>");
+      _T("ALTER TABLE racks ADD passive_elements $SQL:TEXT\n")
+      _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetMinorSchemaVersion(15));
    return true;

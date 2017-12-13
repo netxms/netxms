@@ -41,8 +41,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.configs.RackPassiveElementConfig;
-import org.netxms.client.objects.configs.RackPassiveElementConfigEntry;
+import org.netxms.client.objects.configs.PassiveRackElementGroup;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.dialogs.RackPassiveElementEditDialog;
@@ -68,7 +68,7 @@ public class RackPassiveElements extends PropertyPage
    private Button addButton;
    private Button editButton;
    private Button deleteButton;
-   private RackPassiveElementConfig passiveElementConfig;
+   private PassiveRackElementGroup passiveElements;
    private boolean isModified = false;
 
    /* (non-Javadoc)
@@ -97,8 +97,8 @@ public class RackPassiveElements extends PropertyPage
       viewer.setLabelProvider(new RackPassiveElementLabelProvider());
       viewer.setComparator(new RackPassiveElementComparator());
       
-      passiveElementConfig = new RackPassiveElementConfig(rack.getPassiveElementConfig());
-      viewer.setInput(passiveElementConfig.getEntryList());
+      passiveElements = new PassiveRackElementGroup(rack.getPassiveElements());
+      viewer.setInput(passiveElements.getElements());
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -137,8 +137,8 @@ public class RackPassiveElements extends PropertyPage
             RackPassiveElementEditDialog dlg = new RackPassiveElementEditDialog(getShell(), null);
             if (dlg.open() == Window.OK)
             {
-               passiveElementConfig.addEntry(dlg.getPassiveElement());
-               viewer.setInput(passiveElementConfig.getEntryList());
+               passiveElements.add(dlg.getElement());
+               viewer.setInput(passiveElements.getElements());
                isModified = true;
             }
          }
@@ -162,10 +162,10 @@ public class RackPassiveElements extends PropertyPage
             IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
             if (selection.size() == 1)
             {
-               RackPassiveElementEditDialog dlg = new RackPassiveElementEditDialog(getShell(), (RackPassiveElementConfigEntry)selection.getFirstElement());
+               RackPassiveElementEditDialog dlg = new RackPassiveElementEditDialog(getShell(), (PassiveRackElement)selection.getFirstElement());
                if (dlg.open() == Window.OK)
                {
-                  viewer.setInput(passiveElementConfig.getEntryList());
+                  viewer.setInput(passiveElements.getElements());
                   isModified = true;
                }
             }
@@ -188,8 +188,8 @@ public class RackPassiveElements extends PropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            passiveElementConfig.getEntryList().removeAll(selection.toList());
-            viewer.setInput(passiveElementConfig.getEntryList());
+            passiveElements.getElements().removeAll(selection.toList());
+            viewer.setInput(passiveElements.getElements());
             isModified = true;
          }
       });
@@ -231,7 +231,7 @@ public class RackPassiveElements extends PropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
       try
       {
-         md.setPassiveElementsConfig(passiveElementConfig.createXml());
+         md.setPassiveElements(passiveElements.createXml());
       }
       catch(Exception e)
       {

@@ -5172,9 +5172,9 @@ public class NXCSession
          }
       }
       
-      if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENT_CONFIG))
+      if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENTS))
       {
-         msg.setField(NXCPCodes.VID_PASSIVE_ELEMENT_CONFIG, data.getPassiveElementsConfig());
+         msg.setField(NXCPCodes.VID_PASSIVE_ELEMENTS, data.getPassiveElements());
       }
             
       modifyCustomObject(data, userData, msg);

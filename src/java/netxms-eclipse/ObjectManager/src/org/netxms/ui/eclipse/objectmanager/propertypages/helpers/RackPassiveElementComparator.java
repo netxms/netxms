@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.objects.configs.RackPassiveElementConfigEntry;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.objectmanager.propertypages.RackPassiveElements;
 
 /**
@@ -45,16 +45,16 @@ public class RackPassiveElementComparator extends ViewerComparator
       switch((Integer)sortColumn.getData("ID"))
       {
          case RackPassiveElements.COLUMN_NAME:
-            rc = ((RackPassiveElementConfigEntry)e1).getName().compareToIgnoreCase(((RackPassiveElementConfigEntry)e2).getName());
+            rc = ((PassiveRackElement)e1).getName().compareToIgnoreCase(((PassiveRackElement)e2).getName());
             break;
          case RackPassiveElements.COLUMN_POSITION:
-            rc = Integer.signum(((RackPassiveElementConfigEntry)e1).getPosition() - ((RackPassiveElementConfigEntry)e2).getPosition());
+            rc = Integer.signum(((PassiveRackElement)e1).getPosition() - ((PassiveRackElement)e2).getPosition());
             break;
          case RackPassiveElements.COLUMN_TYPE:
-            rc = Integer.signum(((RackPassiveElementConfigEntry)e1).getType().getValue() - ((RackPassiveElementConfigEntry)e2).getType().getValue());
+            rc = Integer.signum(((PassiveRackElement)e1).getType().getValue() - ((PassiveRackElement)e2).getType().getValue());
             break;
          case RackPassiveElements.COLUMN_ORIENTATION:
-            rc = Integer.signum(((RackPassiveElementConfigEntry)e1).getOrientation().getValue() - ((RackPassiveElementConfigEntry)e2).getOrientation().getValue());
+            rc = Integer.signum(((PassiveRackElement)e1).getOrientation().getValue() - ((PassiveRackElement)e2).getOrientation().getValue());
          default:
             rc = 0;
             break;
