@@ -48,7 +48,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.RackElement;
-import org.netxms.client.objects.configs.RackPassiveElementConfigEntry;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
@@ -225,8 +225,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          unitBaselines[rack.getHeight()] = (int)dy;
       
       // Draw attributes
-      List<RackPassiveElementConfigEntry> attributes = rack.getPassiveElementConfig().getEntryList();
-      for(RackPassiveElementConfigEntry c : attributes)
+      List<PassiveRackElement> attributes = rack.getPassiveElements().getElements();
+      for(PassiveRackElement c : attributes)
       {
          if ((c.getPosition() < 1) || (c.getPosition() > rack.getHeight()) ||
             (c.getOrientation() != view) && (c.getOrientation() != RackOrientation.FILL))
@@ -257,7 +257,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             case PATCH_PANEL:
                image = imagePatchPanel;
                break;
-            case ORGANISER_PANEL:
+            case ORGANISER:
                image = imageOrganiserPanel;
                break;
             default:

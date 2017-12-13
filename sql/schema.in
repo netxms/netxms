@@ -255,7 +255,7 @@ CREATE TABLE racks
   id integer not null,
   height integer not null,
   top_bottom_num char(1) not null,
-  passive_element_config SQL_TEXT null,
+  passive_elements SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

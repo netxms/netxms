@@ -28,28 +28,28 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Rack attribute config
+ * Group of passive rack elements
  */
-@Root(name="rackPassiveElementConfig")
-public class RackPassiveElementConfig
+@Root(name="passiveElementGroup")
+public class PassiveRackElementGroup
 {
    @ElementList(required=true)
-   private List<RackPassiveElementConfigEntry> entryList;
+   private List<PassiveRackElement> elements;
    
    /**
-    * Create new rack attribute config
+    * Create new group
     */
-   public RackPassiveElementConfig()
+   public PassiveRackElementGroup()
    {
-      entryList = new ArrayList<RackPassiveElementConfigEntry>();
+      elements = new ArrayList<PassiveRackElement>();
    }
    
    /**
-    * Copy constructor for rack attribute config
+    * Copy constructor
     */
-   public RackPassiveElementConfig(RackPassiveElementConfig src)
+   public PassiveRackElementGroup(PassiveRackElementGroup src)
    {
-      entryList = new ArrayList<RackPassiveElementConfigEntry>(src.entryList);
+      elements = new ArrayList<PassiveRackElement>(src.elements);
    }
    
    /**
@@ -59,10 +59,10 @@ public class RackPassiveElementConfig
     * @return RackAttributeconfig
     * @throws Exception
     */
-   public static RackPassiveElementConfig createFromXml(final String xml) throws Exception
+   public static PassiveRackElementGroup createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(RackPassiveElementConfig.class, xml);
+      return serializer.read(PassiveRackElementGroup.class, xml);
    }
    
    /**
@@ -84,9 +84,9 @@ public class RackPassiveElementConfig
     * 
     * @return entryList
     */
-   public List<RackPassiveElementConfigEntry> getEntryList()
+   public List<PassiveRackElement> getElements()
    {
-      return entryList;
+      return elements;
    }
    
    /**
@@ -94,8 +94,8 @@ public class RackPassiveElementConfig
     * 
     * @param attribute to add
     */
-   public void addEntry(RackPassiveElementConfigEntry attribute)
+   public void add(PassiveRackElement attribute)
    {
-      entryList.add(attribute);
+      elements.add(attribute);
    }
 }

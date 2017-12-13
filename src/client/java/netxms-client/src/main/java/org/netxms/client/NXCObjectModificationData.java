@@ -120,7 +120,7 @@ public class NXCObjectModificationData
    public static final int AGENT_COMPRESSION_MODE = 68;
    public static final int URL_LIST               = 69;
    public static final int SEED_OBJECTS           = 70;
-   public static final int PASSIVE_ELEMENT_CONFIG = 80;
+   public static final int PASSIVE_ELEMENTS       = 80;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -216,7 +216,7 @@ public class NXCObjectModificationData
 	private long zoneProxy;
 	private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
-   private String passiveElementsConfig;
+   private String passiveElements;
 
 	/**
 	 * Constructor for creating modification data for given object
@@ -1803,17 +1803,19 @@ public class NXCObjectModificationData
    /**
     * @return the passiveElementsConfig
     */
-   public String getPassiveElementsConfig()
+   public String getPassiveElements()
    {
-      return passiveElementsConfig;
+      return passiveElements;
    }
 
    /**
-    * @param passiveElementsConfig the passiveElementsConfig to set
+    * Set passive rack elements configuration
+    * 
+    * @param passiveElements XMS configuration of passive rack elements
     */
-   public void setPassiveElementsConfig(String passiveElementsConfig)
+   public void setPassiveElements(String passiveElements)
    {
-      this.passiveElementsConfig = passiveElementsConfig;
-      fieldSet.add(PASSIVE_ELEMENT_CONFIG);
+      this.passiveElements = passiveElements;
+      fieldSet.add(PASSIVE_ELEMENTS);
    }
 }

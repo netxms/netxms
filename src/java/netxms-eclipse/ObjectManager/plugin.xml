@@ -389,8 +389,8 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.MapSeedNodes"
-              id="org.netxms.ui.eclipse.objectmanager.MapSeedNodes"
-              name="Map Seed Nodes">
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.MapSeedNodes"
+              name="Seed Nodes">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.NetworkMap">
@@ -400,7 +400,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.RackPassiveElements"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.RackProperties#2"
-              name="Rack Passive Elements">
+              name="Passive Elements">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Rack">

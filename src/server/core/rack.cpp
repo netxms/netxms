@@ -29,7 +29,7 @@ Rack::Rack() : Container()
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
-	m_passiveElementConfig = NULL;
+	m_passiveElements = NULL;
 }
 
 /**
@@ -39,7 +39,7 @@ Rack::Rack(const TCHAR *name, int height) : Container(name, 0)
 {
 	m_height = height;
    m_topBottomNumbering = false;
-   m_passiveElementConfig = NULL;
+   m_passiveElements = NULL;
 }
 
 /**
@@ -47,7 +47,7 @@ Rack::Rack(const TCHAR *name, int height) : Container(name, 0)
  */
 Rack::~Rack()
 {
-   free(m_passiveElementConfig);
+   free(m_passiveElements);
 }
 
 /**
@@ -58,7 +58,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	if (!Container::loadFromDatabase(hdb, id))
 		return false;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num,passive_element_config FROM racks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num,passive_elements FROM racks WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 
@@ -72,7 +72,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		{
 			m_height = DBGetFieldLong(hResult, 0, 0);
 			m_topBottomNumbering = DBGetFieldLong(hResult, 0, 1) ? true : false;
-			m_passiveElementConfig = DBGetField(hResult, 0, 2, NULL, 0);
+			m_passiveElements = DBGetField(hResult, 0, 2, NULL, 0);
 			success = true;
 		}
 		DBFreeResult(hResult);
@@ -92,18 +92,18 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=?,top_bottom_num=?,passive_element_config=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=?,top_bottom_num=?,passive_elements=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,passive_element_config,id) VALUES (?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,passive_elements,id) VALUES (?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_passiveElementConfig, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_passiveElements, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -129,7 +129,7 @@ void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    Container::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
    pMsg->setField(VID_TOP_BOTTOM, (INT16)(m_topBottomNumbering ? 1 : 0));
-   pMsg->setField(VID_PASSIVE_ELEMENT_CONFIG, m_passiveElementConfig);
+   pMsg->setField(VID_PASSIVE_ELEMENTS, m_passiveElements);
 }
 
 /**
@@ -143,10 +143,10 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_TOP_BOTTOM))
       m_topBottomNumbering = (int)pRequest->getFieldAsBoolean(VID_TOP_BOTTOM);
 
-   if(pRequest->isFieldExist(VID_PASSIVE_ELEMENT_CONFIG))
+   if(pRequest->isFieldExist(VID_PASSIVE_ELEMENTS))
    {
-      free(m_passiveElementConfig);
-      m_passiveElementConfig = pRequest->getFieldAsString(VID_PASSIVE_ELEMENT_CONFIG);
+      free(m_passiveElements);
+      m_passiveElements = pRequest->getFieldAsString(VID_PASSIVE_ELEMENTS);
    }
 
    return Container::modifyFromMessageInternal(pRequest);
@@ -160,6 +160,6 @@ json_t *Rack::toJson()
    json_t *root = Container::toJson();
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
-   json_object_set_new(root, "passiveElementConfig", json_string_t(m_passiveElementConfig));
+   json_object_set_new(root, "passiveElements", json_string_t(m_passiveElements));
    return root;
 }

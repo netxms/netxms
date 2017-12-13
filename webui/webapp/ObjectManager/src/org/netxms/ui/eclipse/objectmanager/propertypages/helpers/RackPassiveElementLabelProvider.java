@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.configs.RackPassiveElementConfigEntry;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.objectmanager.propertypages.RackPassiveElements;
 
 public class RackPassiveElementLabelProvider extends LabelProvider implements ITableLabelProvider
@@ -38,7 +38,7 @@ public class RackPassiveElementLabelProvider extends LabelProvider implements IT
       if (element == null)
          return null;
       
-      RackPassiveElementConfigEntry entry = (RackPassiveElementConfigEntry)element;
+      PassiveRackElement entry = (PassiveRackElement)element;
       switch(columnIndex)
       {
          case RackPassiveElements.COLUMN_NAME:
