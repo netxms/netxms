@@ -153,6 +153,7 @@ public class Messages extends NLS
    public static String DciLabelProvider_NotSupported;
 	public static String DciLabelProvider_SourceAgent;
 	public static String DciLabelProvider_SourceCPSNMP;
+   public static String DciLabelProvider_SourceDeviceDriver;
 	public static String DciLabelProvider_SourceInternal;
    public static String DciLabelProvider_SourceMQTT;
 	public static String DciLabelProvider_SourcePush;
@@ -273,6 +274,7 @@ public class Messages extends NLS
 	public static String General_SNMP_DT_uint64;
 	public static String General_SourceAgent;
 	public static String General_SourceCPSNMP;
+   public static String General_SourceDeviceDriver;
 	public static String General_SourceInternal;
    public static String General_SourceMQTT;
 	public static String General_SourcePush;
@@ -311,6 +313,7 @@ public class Messages extends NLS
 	public static String GeneralTable_Select;
 	public static String GeneralTable_SourceAgent;
 	public static String GeneralTable_SourceCPSNMP;
+   public static String GeneralTable_SourceDeviceDriver;
 	public static String GeneralTable_SourceInternal;
 	public static String GeneralTable_SourcePush;
 	public static String GeneralTable_SourceSNMP;

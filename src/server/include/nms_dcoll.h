@@ -693,7 +693,7 @@ public:
  */
 void InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
-void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
+void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &value1, const ItemValue &value2);

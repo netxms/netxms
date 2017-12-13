@@ -77,8 +77,9 @@ Node::Node() : DataCollectionTarget()
    m_sysLocation = NULL;
    m_lldpNodeId = NULL;
    m_lldpLocalPortInfo = NULL;
-   m_paramList = NULL;
-   m_tableList = NULL;
+   m_agentParameters = NULL;
+   m_agentTables = NULL;
+   m_driverParameters = NULL;
    m_pollerNode = 0;
    m_agentProxy = 0;
    m_snmpProxy = 0;
@@ -179,8 +180,9 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_sysLocation = NULL;
    m_lldpNodeId = NULL;
    m_lldpLocalPortInfo = NULL;
-   m_paramList = NULL;
-   m_tableList = NULL;
+   m_agentParameters = NULL;
+   m_agentTables = NULL;
+   m_driverParameters = NULL;
    m_pollerNode = 0;
    m_agentProxy = agentProxy;
    m_snmpProxy = snmpProxy;
@@ -248,8 +250,9 @@ Node::~Node()
          m_proxyConnections[i].get()->decRefCount();
    delete[] m_proxyConnections;
    delete m_smclpConnection;
-   delete m_paramList;
-   delete m_tableList;
+   delete m_agentParameters;
+   delete m_agentTables;
+   delete m_driverParameters;
    free(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
    if (m_linkLayerNeighbors != NULL)
@@ -2739,10 +2742,10 @@ bool Node::confPollAgent(UINT32 dwRqId)
       if (rcc == ERR_SUCCESS)
       {
          lockProperties();
-         delete m_paramList;
-         delete m_tableList;
-         m_paramList = plist;
-         m_tableList = tlist;
+         delete m_agentParameters;
+         delete m_agentTables;
+         m_agentParameters = plist;
+         m_agentTables = tlist;
 
          // Check for 64-bit interface counters
          m_flags &= ~NF_HAS_AGENT_IFXCOUNTERS;
@@ -2916,6 +2919,18 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    }
    m_portRowCount = layout.rows;
    m_portNumberingScheme = layout.numberingScheme;
+
+   if (m_driver->hasMetrics())
+   {
+      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(pTransport, &m_customAttributes, m_driverData);
+      if (metrics != NULL)
+      {
+         lockProperties();
+         delete m_driverParameters;
+         m_driverParameters = metrics;
+         unlockProperties();
+      }
+   }
 
    // Get sysName, sysContact, sysLocation
    if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), dwRqId, &m_sysName))
@@ -4997,6 +5012,10 @@ UINT32 Node::getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam,
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
             rc = getItemFromCheckPointSNMP(pszParam, dwBufSize, pszBuffer);
          break;
+      case DS_DEVICE_DRIVER:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
+            rc = getItemFromDeviceDriver(pszParam, pszBuffer, dwBufSize);
+         break;
       default:
          return RCC_INVALID_ARGUMENT;
    }
@@ -5492,43 +5511,45 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminS
 /**
  * Put list of supported parameters into NXCP message
  */
-void Node::writeParamListToMessage(NXCPMessage *pMsg, WORD flags)
+void Node::writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 {
    lockProperties();
 
-   if ((flags & 0x01) && (m_paramList != NULL))
+   ObjectArray<AgentParameterDefinition> *parameters = ((origin == DS_NATIVE_AGENT) ? m_agentParameters : ((origin == DS_DEVICE_DRIVER) ? m_driverParameters : NULL));
+   if ((flags & 0x01) && (parameters != NULL))
    {
-      pMsg->setField(VID_NUM_PARAMETERS, (UINT32)m_paramList->size());
+      pMsg->setField(VID_NUM_PARAMETERS, (UINT32)parameters->size());
 
       int i;
       UINT32 dwId;
-      for(i = 0, dwId = VID_PARAM_LIST_BASE; i < m_paramList->size(); i++)
+      for(i = 0, dwId = VID_PARAM_LIST_BASE; i < parameters->size(); i++)
       {
-         dwId += m_paramList->get(i)->fillMessage(pMsg, dwId);
+         dwId += parameters->get(i)->fillMessage(pMsg, dwId);
       }
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters"), m_name, m_paramList->size());
+      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters (origin=%d)"), m_name, parameters->size(), origin);
    }
    else
    {
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_paramList == NULL"), m_name);
+      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): parameter list is missing (origin=%d)"), m_name, origin);
       pMsg->setField(VID_NUM_PARAMETERS, (UINT32)0);
    }
 
-   if ((flags & 0x02) && (m_tableList != NULL))
+   ObjectArray<AgentTableDefinition> *tables = ((origin == DS_NATIVE_AGENT) ? m_agentTables : NULL);
+   if ((flags & 0x02) && (tables != NULL))
    {
-      pMsg->setField(VID_NUM_TABLES, (UINT32)m_tableList->size());
+      pMsg->setField(VID_NUM_TABLES, (UINT32)tables->size());
 
       int i;
       UINT32 dwId;
-      for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_tableList->size(); i++)
+      for(i = 0, dwId = VID_TABLE_LIST_BASE; i < tables->size(); i++)
       {
-         dwId += m_tableList->get(i)->fillMessage(pMsg, dwId);
+         dwId += tables->get(i)->fillMessage(pMsg, dwId);
       }
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables"), m_name, m_tableList->size());
+      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables (origin=%d)"), m_name, tables->size(), origin);
    }
    else
    {
-      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_name);
+      DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): table list is missing (origin=%d)"), m_name, origin);
       pMsg->setField(VID_NUM_TABLES, (UINT32)0);
    }
 
@@ -5566,19 +5587,19 @@ void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
 /**
  * Open list of supported parameters for reading
  */
-void Node::openParamList(ObjectArray<AgentParameterDefinition> **paramList)
+ObjectArray<AgentParameterDefinition> *Node::openParamList(int origin)
 {
    lockProperties();
-   *paramList = m_paramList;
+   return (origin == DS_NATIVE_AGENT) ? m_agentParameters : ((origin == DS_DEVICE_DRIVER) ? m_driverParameters : NULL);
 }
 
 /**
  * Open list of supported tables for reading
  */
-void Node::openTableList(ObjectArray<AgentTableDefinition> **tableList)
+ObjectArray<AgentTableDefinition> *Node::openTableList()
 {
    lockProperties();
-   *tableList = m_tableList;
+   return m_agentTables;
 }
 
 /**

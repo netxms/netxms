@@ -47,6 +47,7 @@ public abstract class DataCollectionObject
    public static final int SCRIPT = 7;
    public static final int SSH = 8;
    public static final int MQTT = 9;
+   public static final int DEVICE_DRIVER = 10;
 	
 	// data collection object status
 	public static final int ACTIVE = 0;

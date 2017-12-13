@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2017 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -47,10 +46,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Dialog for selecting parobjects.get(0ameters/tables provided by NetXMS agent
+ * Dialog for selecting parameters/tables provided by NetXMS agent or device driver
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
+   private int origin;
    private Button queryButton;
    private Action actionQuery;
    private AbstractObject queryObject;
@@ -59,9 +59,10 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
     * @param parentShell
     * @param nodeId
     */
-   public SelectAgentParamDlg(Shell parentShell, long nodeId, boolean selectTables)
+   public SelectAgentParamDlg(Shell parentShell, long nodeId, int origin, boolean selectTables)
    {
       super(parentShell, nodeId, selectTables);
+      this.origin = origin;
       queryObject = object;
 
       actionQuery = new Action(Messages.get().SelectAgentParamDlg_Query) {
@@ -154,7 +155,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
             }
             else
             {
-               final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
+               final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId(), origin);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -211,7 +212,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String value = session.queryParameter(queryObject.getObjectId(), DataCollectionItem.AGENT, name);
+            final String value = session.queryParameter(queryObject.getObjectId(), origin, name);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -238,6 +239,6 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
    @Override
    protected String getConfigurationPrefix()
    {
-      return selectTables ? "SelectAgentTableDlg" : "SelectAgentParamDlg"; //$NON-NLS-1$ //$NON-NLS-2$
+      return (selectTables ? "SelectAgentTableDlg." : "SelectAgentParamDlg.") + origin; //$NON-NLS-1$ //$NON-NLS-2$
    }
 }
