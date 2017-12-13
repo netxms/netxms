@@ -886,3 +886,44 @@ ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(
 {
    return NULL;
 }
+
+/**
+ * Register standard host MIB metrics
+ *
+ * @param metrics list of driver's metrics to fill
+ */
+void NetworkDeviceDriver::registerHostMibMetrics(ObjectArray<AgentParameterDefinition> *metrics)
+{
+   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Free"), _T("Free physical memory"), DCI_DT_UINT64));
+   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.FreePerc"), _T("Percentage of free physical memory"), DCI_DT_FLOAT));
+   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Total"), _T("Total physical memory"), DCI_DT_UINT64));
+   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Used"), _T("Used physical memory"), DCI_DT_UINT64));
+   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.UsedPerc"), _T("Percentage of used physical memory"), DCI_DT_FLOAT));
+}
+
+/**
+ * Get value of standard host MIB metric
+ *
+ * @param snmp SNMP transport
+ * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
+ * @param name metric name
+ * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
+ * @param size buffer size
+ * @return data collection error code
+ */
+DataCollectionError NetworkDeviceDriver::getHostMibMetric(SNMP_Transport *snmp, HostMibDriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+{
+   const HostMibStorageEntry *e;
+   const TCHAR *suffix;
+   if (!_tcsnicmp(name, _T("HostMib.Memory.Physical."), 24))
+   {
+      e = driverData->getPhysicalMemory(snmp);
+      suffix = &name[24];
+   }
+   else
+   {
+      return DCE_NOT_SUPPORTED;
+   }
+
+   return ((e != NULL) && e->getMetric(suffix, value, size)) ? DCE_SUCCESS : DCE_NOT_SUPPORTED;
+}

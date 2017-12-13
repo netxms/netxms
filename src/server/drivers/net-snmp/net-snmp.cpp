@@ -111,17 +111,19 @@ bool NetSnmpDriver::hasMetrics()
  */
 DataCollectionError NetSnmpDriver::getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
+   if (driverData == NULL)
+      return DCE_COLLECTION_ERROR;
+
    nxlog_debug_tag(DEBUG_TAG, 7, _T("NetSnmpDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
    NetSnmpDriverData *d = static_cast<NetSnmpDriverData*>(driverData);
 
+   DataCollectionError rc = getHostMibMetric(snmp, d, name, value, size);
+   if (rc != DCE_NOT_SUPPORTED)
+      return rc;
+
    const HostMibStorageEntry *e;
    const TCHAR *suffix;
-   if (!_tcsnicmp(name, _T("HostMib.Memory.Physical."), 24))
-   {
-      e = d->getPhysicalMemory(snmp);
-      suffix = &name[24];
-   }
-   else if (!_tcsnicmp(name, _T("HostMib.Memory.Swap."), 20))
+   if (!_tcsnicmp(name, _T("HostMib.Memory.Swap."), 20))
    {
       e = d->getSwapSpace(snmp);
       suffix = &name[20];
@@ -155,11 +157,7 @@ DataCollectionError NetSnmpDriver::getMetric(SNMP_Transport *snmp, StringMap *at
 ObjectArray<AgentParameterDefinition> *NetSnmpDriver::getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, true);
-   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Free"), _T("Free physical memory"), DCI_DT_UINT64));
-   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.FreePerc"), _T("Percentage of free physical memory"), DCI_DT_FLOAT));
-   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Total"), _T("Total physical memory"), DCI_DT_UINT64));
-   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.Used"), _T("Used physical memory"), DCI_DT_UINT64));
-   metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Physical.UsedPerc"), _T("Percentage of used physical memory"), DCI_DT_FLOAT));
+   registerHostMibMetrics(metrics);
    metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Swap.Free"), _T("Free swap area"), DCI_DT_UINT64));
    metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Swap.FreePerc"), _T("Percentage of free swap area"), DCI_DT_FLOAT));
    metrics->add(new AgentParameterDefinition(_T("HostMib.Memory.Swap.Total"), _T("Total swap area"), DCI_DT_UINT64));

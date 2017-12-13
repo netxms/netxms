@@ -28,6 +28,7 @@
 RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, true)
 {
    m_cacheTimestamp = 0;
+   m_cacheLock = MutexCreate();
 }
 
 /**
@@ -35,6 +36,7 @@ RittalDriverData::RittalDriverData() : HostMibDriverData(), m_devices(32, 32, tr
  */
 RittalDriverData::~RittalDriverData()
 {
+   MutexDestroy(m_cacheLock);
 }
 
 /**
@@ -69,13 +71,8 @@ RittalDevice *RittalDriverData::getDevice(UINT32 index)
  * Get metric information by name
  * Metric name expected in form bus/position/variable
  */
-const RittalMetric *RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp)
+bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, RittalMetric *metric)
 {
-   if ((m_cacheTimestamp == 0) || (time(NULL) - m_cacheTimestamp > 3600))
-   {
-      updateDeviceInfo(snmp);
-   }
-
    const TCHAR *s1 = _tcschr(name, _T('/'));
    if (s1 == NULL)
       return NULL;
@@ -92,18 +89,29 @@ const RittalMetric *RittalDriverData::getMetric(const TCHAR *name, SNMP_Transpor
    _tcslcpy(buffer, name, std::min((size_t)32, (size_t)(s2 - s1) + 1));
    UINT32 position = _tcstoul(buffer, NULL, 10);
 
-   const RittalDevice *dev = getDevice(bus, position);
-   if (dev == NULL)
-      return NULL;
-
-   s2++;
-   for(int i = 0; i < dev->metrics->size(); i++)
+   MutexLock(m_cacheLock);
+   if ((m_cacheTimestamp == 0) || (time(NULL) - m_cacheTimestamp > 3600))
    {
-      RittalMetric *m = dev->metrics->get(i);
-      if (!_tcsicmp(s2, m->name))
-         return m;
+      updateDeviceInfoInternal(snmp);
    }
-   return NULL;
+
+   bool success = false;
+   const RittalDevice *dev = getDevice(bus, position);
+   if (dev != NULL)
+   {
+      s2++;
+      for(int i = 0; i < dev->metrics->size(); i++)
+      {
+         RittalMetric *m = dev->metrics->get(i);
+         if (!_tcsicmp(s2, m->name))
+         {
+            memcpy(metric, m, sizeof(RittalMetric));
+            success = true;
+         }
+      }
+   }
+   MutexUnlock(m_cacheLock);
+   return success;
 }
 
 /**
@@ -148,7 +156,7 @@ UINT32 RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
    RittalDevice *dev = getDevice(oid.getElement(13));
    if (dev == NULL)
    {
-      nxlog_debug_tag(_T("ndd.rittal"), 4, _T("Internal error: missing device entry for variable %s"), (const TCHAR *)oid.toString());
+      nxlog_debug_tag(RITTAL_DEBUG_TAG, 4, _T("Internal error: missing device entry for variable %s"), (const TCHAR *)oid.toString());
       return SNMP_ERR_SUCCESS;
    }
 
@@ -179,7 +187,7 @@ UINT32 RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
 /**
  * Update device information
  */
-void RittalDriverData::updateDeviceInfo(SNMP_Transport *snmp)
+void RittalDriverData::updateDeviceInfoInternal(SNMP_Transport *snmp)
 {
    m_devices.clear();
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2606.7.4.1.2.1.2"), this, &RittalDriverData::deviceInfoWalkCallback) == SNMP_ERR_SUCCESS)
@@ -188,10 +196,40 @@ void RittalDriverData::updateDeviceInfo(SNMP_Transport *snmp)
    }
    m_cacheTimestamp = time(NULL);
 
-   nxlog_debug_tag(_T("ndd.rittal"), 5, _T("Updated device information for node %s [%u]:"), m_nodeName, m_nodeId);
+   nxlog_debug_tag(RITTAL_DEBUG_TAG, 5, _T("Updated device information for node %s [%u]:"), m_nodeName, m_nodeId);
    for(int i = 0; i < m_devices.size(); i++)
    {
       RittalDevice *d = m_devices.get(i);
-      nxlog_debug_tag(_T("ndd.rittal"), 5, _T("   %u/%u: %s (%s)"), d->bus, d->position, d->name, d->alias);
+      nxlog_debug_tag(RITTAL_DEBUG_TAG, 5, _T("   %u/%u: %s (%s)"), d->bus, d->position, d->name, d->alias);
    }
+}
+
+/**
+ * Update device information
+ */
+void RittalDriverData::updateDeviceInfo(SNMP_Transport *snmp)
+{
+   MutexLock(m_cacheLock);
+   updateDeviceInfoInternal(snmp);
+   MutexUnlock(m_cacheLock);
+}
+
+/**
+ * Register driver's metrics
+ */
+void RittalDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *metrics)
+{
+   MutexLock(m_cacheLock);
+   for(int i = 0; i < m_devices.size(); i++)
+   {
+      RittalDevice *d = m_devices.get(i);
+      for(int j = 0; j < d->metrics->size(); j++)
+      {
+         RittalMetric *m = d->metrics->get(j);
+         TCHAR name[256];
+         _sntprintf(name, 256, _T("%u/%u/%s"), d->bus, d->position, m->name);
+         metrics->add(new AgentParameterDefinition(name, m->description, (m->dataType == 2) ? DCI_DT_INT : DCI_DT_STRING));
+      }
+   }
+   MutexUnlock(m_cacheLock);
 }

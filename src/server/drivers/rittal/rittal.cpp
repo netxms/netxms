@@ -110,7 +110,21 @@ bool RittalDriver::hasMetrics()
  */
 DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
-   return DCE_NOT_SUPPORTED;
+   if (driverData == NULL)
+      return DCE_COLLECTION_ERROR;
+
+   nxlog_debug_tag(RITTAL_DEBUG_TAG, 7, _T("RittalDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
+   RittalDriverData *d = static_cast<RittalDriverData*>(driverData);
+
+   DataCollectionError rc = getHostMibMetric(snmp, d, name, value, size);
+   if (rc != DCE_NOT_SUPPORTED)
+      return rc;
+
+   RittalMetric metric;
+   if (!d->getMetric(name, snmp, &metric))
+      return DCE_NOT_SUPPORTED;
+
+   return (SnmpGetEx(snmp, NULL, metric.oid, 15, value, size * sizeof(TCHAR), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
 /**
@@ -123,7 +137,10 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, StringMap *att
  */
 ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
-   return NULL;
+   ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, true);
+   registerHostMibMetrics(metrics);
+   static_cast<RittalDriverData*>(driverData)->registerMetrics(metrics);
+   return metrics;
 }
 
 /**
