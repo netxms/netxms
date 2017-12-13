@@ -21,28 +21,39 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.FontTools;
 
 /**
  * Widget representing object status
  */
 public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 {
+   private static final int OBJECT_TOOLTIP_X_MARGIN = 6;
+   private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
+   private static final int OBJECT_TOOLTIP_SPACING = 6;
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   
 	private AbstractObject object;
 	private int maxLvl;
 	private int objCount;
@@ -54,6 +65,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	private Set<Long> aceptedlist;
 	
 	private List<ObjLocation> objectMap = new ArrayList<ObjLocation>();
+
+   private Point objectToolTipLocation = null;
+   private Rectangle objectTooltipRectangle = null;
+   private Font objectToolTipHeaderFont;
+   private AbstractObject tooltipObject = null;
 	
 	/**
 	 * @param parent
@@ -68,6 +84,8 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 		addPaintListener(this);
 		setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		cCache = new ColorCache();
+		
+      objectToolTipHeaderFont = FontTools.createFont(FONT_NAMES, 1, SWT.BOLD);
 	}
 	
 	/**
@@ -114,7 +132,6 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
             e.gc.setAlpha(255);
             e.gc.fillArc(centerX-(deametr*lvl)/2-3, centerY-(deametr*lvl)/2-3, deametr*lvl+6, deametr*lvl+6,(int)(degree+1),(int)(currObjsize-1));
             
-	         //System.out.println(obj.getObjectName() + " - name, status: "+obj.getStatus());
 	         e.gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
 	         e.gc.setAlpha(255);
 	         e.gc.fillArc(centerX-(deametr*lvl)/2, centerY-(deametr*lvl)/2, deametr*lvl, deametr*lvl,(int)(degree+1),(int)(currObjsize-1)); 
@@ -133,9 +150,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	      e.gc.getTransform(oldTransform);
 	      
          //draw text         
-         String text = (obj instanceof AbstractNode) ?
-               (obj.getObjectName() + "\n" + ((AbstractNode)obj).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
-               obj.getObjectName();
+         String text = obj.getObjectName();
                
          Transform tr = new Transform(getDisplay());
          tr.translate(centerX, centerY);
@@ -161,7 +176,6 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          if(l > deametr/2)
          {
             String name = obj.getObjectName();
-            String ipAddress = (obj instanceof AbstractNode) ? ((AbstractNode)obj).getPrimaryIP().getHostAddress() : "";
             int nameL = e.gc.textExtent(name, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
             if(nameL > deametr/2)
             {
@@ -169,19 +183,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
                name = name.subSequence(0, numOfCharToLeave-4).toString();//make best gues
                name+="...";
             }
-            if(!ipAddress.isEmpty())
-            {   
-               int ipL = e.gc.textExtent(ipAddress, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
-               if(ipL > deametr/2)
-               {
-                  int numOfCharToLeave = (int)(deametr/2/(ipL/ipAddress.length()));
-                  ipAddress = ipAddress.subSequence(0, numOfCharToLeave-4).toString();//make best gues
-                  ipAddress+="...";
-               }
-               text=name+"\n"+ipAddress;
-            }
-            else
-               text=name;
+            text=name;
          }
          
          e.gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
@@ -254,6 +256,159 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       
       return objcoutn;
    }
+   
+   public void removeTooltip()
+   {
+      if (objectTooltipRectangle != null)
+      {
+         objectToolTipLocation = null;
+         objectTooltipRectangle = null;
+         tooltipObject = null;
+         redraw();
+      }
+   }
+   
+
+   /**
+    * Draw tooltip for current object
+    * 
+    * @param gc
+    */
+   private void drawObjectToolTip(GC gc)
+   {
+      gc.setFont(objectToolTipHeaderFont);
+      Point titleSize = gc.textExtent(tooltipObject.getObjectName());
+      gc.setFont(JFaceResources.getDefaultFont());
+      
+      // Calculate width and height
+      int width = Math.max(titleSize.x + 12, 128);
+      int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
+      
+      List<String> texts = new ArrayList<String>();
+      if (tooltipObject instanceof AbstractNode)
+      {
+         texts.add(((AbstractNode)tooltipObject).getPrimaryIP().getHostAddress());
+         texts.add(((AbstractNode)tooltipObject).getPlatformName());
+         String sd = ((AbstractNode)tooltipObject).getSystemDescription();
+         if (sd.length() > 127)
+            sd = sd.substring(0, 127) + "..."; //$NON-NLS-1$
+         texts.add(sd);
+         texts.add(((AbstractNode)tooltipObject).getSnmpSysName());
+         texts.add(((AbstractNode)tooltipObject).getSnmpSysContact());
+      }
+      
+      for(String s : texts)
+      {
+         if ((s == null) || s.isEmpty())
+            continue;
+
+         Point pt = gc.textExtent(s);
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y;
+      }      
+
+      List<DciValue> values = null;
+      if (tooltipObject instanceof AbstractNode)
+      {
+         values = ((DataCollectionTarget)tooltipObject).getTooltipDciData();
+         if (!values.isEmpty())
+         {
+            for(DciValue v : values)
+            {
+               Point pt = gc.textExtent(v.getName() + "  " + v.getValue()); //$NON-NLS-1$
+               if (width < pt.x)
+                  width = pt.x;
+               height += pt.y;
+            }
+            height += OBJECT_TOOLTIP_SPACING * 2 + 1;
+         }
+      }
+      else
+         values = new ArrayList<>();
+      
+      if ((tooltipObject.getComments() != null) && !tooltipObject.getComments().isEmpty())
+      {
+         Point pt = gc.textExtent(tooltipObject.getComments());
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y + OBJECT_TOOLTIP_SPACING * 2 + 1;
+      }
+      
+      width += OBJECT_TOOLTIP_X_MARGIN * 2;
+      
+      Rectangle ca = getClientArea();
+      Rectangle rect = new Rectangle(objectToolTipLocation.x - width / 2, objectToolTipLocation.y - height / 2, width, height);
+      if (rect.x < 0)
+         rect.x = 0;
+      else if (rect.x + rect.width >= ca.width)
+         rect.x = ca.width - rect.width - 1;
+      if (rect.y < 0)
+         rect.y = 0;
+      else if (rect.y + rect.height  >= ca.height)
+         rect.y = ca.height - rect.height - 1;
+      
+      gc.setBackground(cCache.create(239, 225, 160));
+      gc.setAlpha(240);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
+      
+      gc.setForeground(cCache.create(92, 92, 92));
+      gc.setAlpha(255);
+      gc.setLineWidth(3);
+      gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
+      gc.setLineWidth(1);
+      int y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + 2;
+      gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+      
+      gc.setBackground(StatusDisplayInfo.getStatusColor(tooltipObject.getStatus()));
+      gc.fillOval(rect.x + OBJECT_TOOLTIP_X_MARGIN, rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y / 2 - 4, 8, 8);
+      
+      gc.setForeground(cCache.create(0, 0, 0));
+      gc.setFont(objectToolTipHeaderFont);
+      gc.drawText(tooltipObject.getObjectName(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
+      
+      gc.setFont(JFaceResources.getDefaultFont());
+      int textLineHeight = gc.textExtent("M").y; //$NON-NLS-1$
+      y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2 - textLineHeight;
+      for(String s : texts)
+      {
+         if ((s == null) || s.isEmpty())
+            continue;
+         
+         y += textLineHeight;
+         gc.drawText(s, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
+
+      if (!values.isEmpty())
+      {
+         y += textLineHeight + OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(cCache.create(92, 92, 92));
+         gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+         y += OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(cCache.create(0, 0, 0));
+
+         for(DciValue v : values)
+         {
+            gc.drawText(v.getName(), rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+            Point pt = gc.textExtent(v.getValue());
+            gc.drawText(v.getValue(), rect.x + rect.width - OBJECT_TOOLTIP_X_MARGIN - pt.x, y, true);
+            y += textLineHeight;
+         }
+         y -= textLineHeight;
+      }
+      
+      if ((tooltipObject.getComments() != null) && !tooltipObject.getComments().isEmpty())
+      {
+         y += textLineHeight + OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(cCache.create(92, 92, 92));
+         gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+         y += OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(cCache.create(0, 0, 0));
+         gc.drawText(tooltipObject.getComments(), rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
+      
+      objectTooltipRectangle = rect;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
@@ -301,7 +456,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       int l = e.gc.textExtent(text, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
 		e.gc.drawText(text, rect.x+(rectSide/2) - l/2, rect.y+(rectSide/2)-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
-      objectMap.add(new ObjLocation(0, 360, 1, object));      
+      objectMap.add(new ObjLocation(0, 360, 1, object));           
+
+      if (objectToolTipLocation != null)
+         drawObjectToolTip(e.gc);
 	}
 
 	/* (non-Javadoc)
@@ -395,5 +553,12 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       {
          return Float.hashCode(startDegree)+lvl;
       }
+   }
+
+   public void setHoveredObject(AbstractObject hoveredObject, Point point)
+   {
+      objectToolTipLocation = point;
+      tooltipObject = hoveredObject;
+      redraw();
    }
 }
