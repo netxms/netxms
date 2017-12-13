@@ -3,9 +3,11 @@
 * 
 
 - Server command line tools working with agents (nxaction, nxap, nxget, nxupload) use encryption by default
+- "Floor plan" display mode for objects on network map
 - Fixed issues:
-	NX-669 (Fixed regexp for DRBD parsing in Linux subagent)
-	NX-1306 (Added hostname to agent tunnel manager)
+	NX-669 (DRBD monitoring is not working in some configurations)
+	NX-890 (Passive elements in rack)
+	NX-1306 (Show system FQDN in tunnel manager)
 	NX-1366 (Edit option for "group box" decorations on network maps)
 	NX-1372 (PING subagent is not working)
 	NX-1373 (Error message "Error loading RSA keys from ..." in all server-to-agent command line tools)
