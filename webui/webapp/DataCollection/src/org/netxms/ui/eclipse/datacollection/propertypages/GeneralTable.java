@@ -472,9 +472,9 @@ public class GeneralTable extends DCIPropertyPageDialog
 		{
 			case DataCollectionObject.AGENT:
 			   if (sourceNode.getObjectId() != 0)
-               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), true);
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), origin.getSelectionIndex(), true);
             else
-               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
+               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), true);
 				break;
 			case DataCollectionObject.SNMP:
 			case DataCollectionObject.CHECKPOINT_SNMP:

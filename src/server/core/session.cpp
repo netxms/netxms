@@ -6873,34 +6873,31 @@ void ClientSession::RemovePackage(NXCPMessage *pRequest)
 /**
  * Get list of parameters supported by given node
  */
-void ClientSession::getParametersList(NXCPMessage *pRequest)
+void ClientSession::getParametersList(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
-   NetObj *object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
+      int origin = request->isFieldExist(VID_DCI_SOURCE_TYPE) ? request->getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
       switch(object->getObjectClass())
       {
          case OBJECT_NODE:
             msg.setField(VID_RCC, RCC_SUCCESS);
-				((Node *)object)->writeParamListToMessage(&msg, pRequest->getFieldAsUInt16(VID_FLAGS));
+				((Node *)object)->writeParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
             break;
          case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:
             msg.setField(VID_RCC, RCC_SUCCESS);
-            WriteFullParamListToMessage(&msg, pRequest->getFieldAsUInt16(VID_FLAGS));
+            WriteFullParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
             break;
          case OBJECT_CHASSIS:
             if (((Chassis *)object)->getControllerId() != 0)
             {
                Node *controller = (Node *)FindObjectById(((Chassis *)object)->getControllerId(), OBJECT_NODE);
                if (controller != NULL)
-                  controller->writeParamListToMessage(&msg, pRequest->getFieldAsUInt16(VID_FLAGS));
+                  controller->writeParamListToMessage(&msg, origin, request->getFieldAsUInt16(VID_FLAGS));
             }
             break;
          default:

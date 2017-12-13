@@ -572,32 +572,40 @@ void StopDataCollection()
 }
 
 /**
+ * Callback data for WriteFullParamListToMessage
+ */
+struct WriteFullParamListToMessage_CallbackData
+{
+   int origin;
+   ObjectArray<AgentParameterDefinition> *parameters;
+};
+
+/**
  * Update parameter list from node
  */
 static void UpdateParamList(NetObj *object, void *data)
 {
-	ObjectArray<AgentParameterDefinition> *fullList = (ObjectArray<AgentParameterDefinition> *)data;
+   WriteFullParamListToMessage_CallbackData *cd = static_cast<WriteFullParamListToMessage_CallbackData*>(data);
 
-	ObjectArray<AgentParameterDefinition> *paramList;
-	((Node *)object)->openParamList(&paramList);
+	ObjectArray<AgentParameterDefinition> *paramList = static_cast<Node*>(object)->openParamList(cd->origin);
 	if ((paramList != NULL) && (paramList->size() > 0))
 	{
 		for(int i = 0; i < paramList->size(); i++)
 		{
 			int j;
-			for(j = 0; j < fullList->size(); j++)
+			for(j = 0; j < cd->parameters->size(); j++)
 			{
-				if (!_tcsicmp(paramList->get(i)->getName(), fullList->get(j)->getName()))
+				if (!_tcsicmp(paramList->get(i)->getName(), cd->parameters->get(j)->getName()))
 					break;
 			}
 
-			if (j == fullList->size())
+			if (j == cd->parameters->size())
 			{
-            fullList->add(new AgentParameterDefinition(paramList->get(i)));
+			   cd->parameters->add(new AgentParameterDefinition(paramList->get(i)));
 			}
 		}
 	}
-	((Node *)object)->closeParamList();
+	static_cast<Node*>(object)->closeParamList();
 }
 
 /**
@@ -607,8 +615,7 @@ static void UpdateTableList(NetObj *object, void *data)
 {
 	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
 
-   ObjectArray<AgentTableDefinition> *tableList;
-	((Node *)object)->openTableList(&tableList);
+   ObjectArray<AgentTableDefinition> *tableList = static_cast<Node*>(object)->openTableList();
 	if ((tableList != NULL) && (tableList->size() > 0))
 	{
 		for(int i = 0; i < tableList->size(); i++)
@@ -626,19 +633,22 @@ static void UpdateTableList(NetObj *object, void *data)
 			}
 		}
 	}
-	((Node *)object)->closeTableList();
+	static_cast<Node*>(object)->closeTableList();
 }
 
 /**
  * Write full (from all nodes) agent parameters list to NXCP message
  */
-void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags)
+void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 {
    // Gather full parameter list
 	if (flags & 0x01)
 	{
 		ObjectArray<AgentParameterDefinition> fullList(64, 64, true);
-		g_idxNodeById.forEach(UpdateParamList, &fullList);
+		WriteFullParamListToMessage_CallbackData data;
+		data.origin = origin;
+		data.parameters = &fullList;
+		g_idxNodeById.forEach(UpdateParamList, &data);
 
 		// Put list into the message
 		pMsg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());

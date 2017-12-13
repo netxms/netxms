@@ -1704,8 +1704,9 @@ protected:
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
 	DriverData *m_driverData;
-   ObjectArray<AgentParameterDefinition> *m_paramList; // List of supported parameters
-   ObjectArray<AgentTableDefinition> *m_tableList; // List of supported tables
+   ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
+   ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
+   ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
 	time_t m_lastDiscoveryPoll;
 	time_t m_lastTopologyPoll;
    time_t m_lastRTUpdate;
@@ -1999,10 +2000,10 @@ public:
 	virtual NXSL_Array *getTemplatesForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
 
-   void openParamList(ObjectArray<AgentParameterDefinition> **paramList);
+	ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
 
-   void openTableList(ObjectArray<AgentTableDefinition> **tableList);
+   ObjectArray<AgentTableDefinition> *openTableList();
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
@@ -2013,7 +2014,7 @@ public:
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;
 
-   void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
+   void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
 	void writePackageListToMessage(NXCPMessage *msg);
 	void writeWsListToMessage(NXCPMessage *msg);

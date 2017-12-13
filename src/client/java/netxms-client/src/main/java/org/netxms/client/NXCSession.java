@@ -79,6 +79,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciPushData;
@@ -6772,18 +6773,20 @@ public class NXCSession
    }
 
    /**
-    * Get list of parameters supported by agent running on given node.
+    * Get list of parameters supported by entity defined by origin on given node.
     *
     * @param nodeId Node ID
+    * @param origin data origin (agent, driver, etc.)
     * @return List of parameters supported by agent
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AgentParameter> getSupportedParameters(long nodeId) throws IOException, NXCException
+   public List<AgentParameter> getSupportedParameters(long nodeId, int origin) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x01); // Indicates request for parameters list
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -6796,6 +6799,19 @@ public class NXCSession
          baseId += 3;
       }
       return list;
+   }
+   
+   /**
+    * Get list of parameters supported by agent running on given node.
+    *
+    * @param nodeId Node ID
+    * @return List of parameters supported by agent
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AgentParameter> getSupportedParameters(long nodeId) throws IOException, NXCException
+   {
+      return getSupportedParameters(nodeId, DataCollectionObject.AGENT);
    }
 
    /**
@@ -6811,6 +6827,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x02); // Indicates request for table list
+      msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, DataCollectionObject.AGENT);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 

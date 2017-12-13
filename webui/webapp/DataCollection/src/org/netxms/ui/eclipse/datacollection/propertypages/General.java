@@ -189,6 +189,7 @@ public class General extends DCIPropertyPageDialog
       origin.add(Messages.get().General_Script);
       origin.add(Messages.get().General_SourceSSH);
       origin.add(Messages.get().General_SourceMQTT);
+      origin.add(Messages.get().General_SourceDeviceDriver);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -474,6 +475,7 @@ public class General extends DCIPropertyPageDialog
 		      (index == DataCollectionItem.INTERNAL) || 
 		      (index == DataCollectionItem.WINPERF) || 
 		      (index == DataCollectionItem.CHECKPOINT_SNMP) || 
+            (index == DataCollectionItem.DEVICE_DRIVER) || 
 		      (index == DataCollectionItem.SCRIPT));
 	}
 	
@@ -492,10 +494,11 @@ public class General extends DCIPropertyPageDialog
 			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
 				break;
 			case DataCollectionItem.AGENT:
+         case DataCollectionItem.DEVICE_DRIVER:
 			   if (sourceNode.getObjectId() != 0)
-			      dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), false);
+			      dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), origin.getSelectionIndex(), false);
 			   else
-			      dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), false);
+			      dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), origin.getSelectionIndex(), false);
 				break;
 			case DataCollectionItem.SNMP:
 			case DataCollectionItem.CHECKPOINT_SNMP:
