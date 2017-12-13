@@ -18,9 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -48,9 +46,9 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
@@ -59,23 +57,16 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.FilterText;
@@ -101,6 +92,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
 	ObjectStatusRadialWidget widget;
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
 	private Set<Runnable> refreshListeners = new HashSet<Runnable>();
+	private AbstractObject hoveredObject = null;
 	
 	/**
 	 * @param parent
@@ -296,10 +288,48 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
                {
                   setSelection(new StructuredSelection());
                }
+               hoveredObject = null;
+               widget.removeTooltip();
             }
             
             @Override
             public void mouseDoubleClick(MouseEvent e)
+            {
+            }
+         });
+         
+         widget.addMouseMoveListener(new MouseMoveListener() {
+            
+            @Override
+            public void mouseMove(MouseEvent e)
+            {
+               hoveredObject = null;
+               widget.removeTooltip();
+            }
+         });
+         
+         widget.addMouseTrackListener( new MouseTrackListener() {
+            
+            @Override
+            public void mouseHover(MouseEvent e)
+            {
+               AbstractObject curr = widget.getObjectByPoint(e.x, e.y);
+               if (curr == hoveredObject || curr == null) // ignore hover if tooltip already open
+                  return;
+               
+               hoveredObject = curr;
+               widget.setHoveredObject(hoveredObject, new Point(e.x, e.y));
+            }
+            
+            @Override
+            public void mouseExit(MouseEvent e)
+            {
+               hoveredObject = null;
+               widget.removeTooltip();
+            }
+            
+            @Override
+            public void mouseEnter(MouseEvent e)
             {
             }
          });
