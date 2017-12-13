@@ -275,6 +275,10 @@ public:
  */
 class LIBNXSRV_EXPORTABLE NetworkDeviceDriver
 {
+protected:
+   void registerHostMibMetrics(ObjectArray<AgentParameterDefinition> *metrics);
+   DataCollectionError getHostMibMetric(SNMP_Transport *snmp, HostMibDriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
+
 public:
    NetworkDeviceDriver();
    virtual ~NetworkDeviceDriver();

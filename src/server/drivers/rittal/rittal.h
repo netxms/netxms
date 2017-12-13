@@ -25,6 +25,8 @@
 
 #include <nddrv.h>
 
+#define RITTAL_DEBUG_TAG   _T("ndd.rittal")
+
 /**
  * Metric information
  */
@@ -73,9 +75,11 @@ class RittalDriverData : public HostMibDriverData
 private:
    ObjectArray<RittalDevice> m_devices;
    time_t m_cacheTimestamp;
+   MUTEX m_cacheLock;
 
    UINT32 deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
    UINT32 metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
+   void updateDeviceInfoInternal(SNMP_Transport *snmp);
    RittalDevice *getDevice(UINT32 index);
    RittalDevice *getDevice(UINT32 bus, UINT32 position);
 
@@ -84,7 +88,8 @@ public:
    virtual ~RittalDriverData();
 
    void updateDeviceInfo(SNMP_Transport *snmp);
-   const RittalMetric *getMetric(const TCHAR *name, SNMP_Transport *snmp);
+   void registerMetrics(ObjectArray<AgentParameterDefinition> *metrics);
+   bool getMetric(const TCHAR *name, SNMP_Transport *snmp, RittalMetric *metric);
 };
 
 /**
