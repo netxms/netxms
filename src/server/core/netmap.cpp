@@ -424,11 +424,10 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 4);
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 5);
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 6);
-		m_flags = DBGetFieldULong(hResult, 0, 7);
-		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 8);
-		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 9);
-		m_backgroundColor = DBGetFieldLong(hResult, 0, 10);
-		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 11);
+		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 7);
+		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 8);
+		m_backgroundColor = DBGetFieldLong(hResult, 0, 9);
+		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 10);
 
       TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
       setFilter(filter);
