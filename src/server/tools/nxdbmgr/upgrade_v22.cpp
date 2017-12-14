@@ -23,6 +23,19 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.5 to 22.6
+ */
+static bool H_UpgradeFromV5()
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE racks ADD passive_elements $SQL:TEXT\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 22.4 to 22.5
  */
 static bool H_UpgradeFromV4()
@@ -119,6 +132,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 5, 22, 6, H_UpgradeFromV5 },
    { 4, 22, 5, H_UpgradeFromV4 },
    { 3, 22, 4, H_UpgradeFromV3 },
    { 2, 22, 3, H_UpgradeFromV2 },
