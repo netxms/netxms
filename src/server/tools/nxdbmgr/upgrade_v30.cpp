@@ -27,10 +27,14 @@
  */
 static bool H_UpgradeFromV14()
 {
-   static TCHAR batch[] =
-      _T("ALTER TABLE racks ADD passive_elements $SQL:TEXT\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   if (GetSchemaLevelForMajorVersion(22) < 6)
+   {
+      static TCHAR batch[] =
+         _T("ALTER TABLE racks ADD passive_elements $SQL:TEXT\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 6));
+   }
    CHK_EXEC(SetMinorSchemaVersion(15));
    return true;
 }
@@ -54,6 +58,8 @@ static bool H_UpgradeFromV13()
 
       CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
       CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 5));
    }
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
