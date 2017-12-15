@@ -21,13 +21,17 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -35,9 +39,13 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class RackDiagram extends PropertyPage
 {
+   private final static String[] RACK_VIEWS = { "Full", "Front", "Back" };
+   
    private RackDiagramConfig config;
    private ObjectSelector objectSelector;
    private LabeledText title;
+   private Button showTitle;
+   private Combo view;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -72,6 +80,21 @@ public class RackDiagram extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       title.setLayoutData(gd);
+
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      view = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "View", gd);
+      view.setItems(RACK_VIEWS); 
+      view.setText(RACK_VIEWS[config.getView().getValue()]);
+      
+      showTitle = new Button(dialogArea, SWT.CHECK);
+      showTitle.setText("Show title");
+      showTitle.setSelection(config.isShowTitle());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      showTitle.setLayoutData(gd);
       
       return dialogArea;
    }
@@ -84,6 +107,8 @@ public class RackDiagram extends PropertyPage
    {
       config.setObjectId(objectSelector.getObjectId());
       config.setTitle(title.getText());
+      config.setShowTitle(showTitle.getSelection());
+      config.setView(RackView.getByValue(view.getSelectionIndex()));
       return true;
    }
 }
