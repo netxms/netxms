@@ -1,3 +1,0 @@
-[submodule "src/install/files"]
-	path = src/install/files
-	url = git://git.netxms.org/public/netxms-files.git
