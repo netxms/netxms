@@ -209,7 +209,7 @@ public class ObjectFloorPlan extends ObjectFigure
       gc.setAlpha(255);      
       gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setLineWidth(3);
-      gc.setLineStyle(isElementSelected() ? SWT.LINE_DOT : SWT.LINE_SOLID);
+      gc.setLineStyle(isElementSelected() ? Graphics.LINE_DOT : Graphics.LINE_SOLID);
       gc.drawRoundRectangle(rect, 8, 8);
       
       gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
