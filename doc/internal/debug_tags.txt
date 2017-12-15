@@ -17,6 +17,12 @@ obj.*		Object related trace
 obj.dc.*	Data collection related
 obj.locks.*	Locks
 obj.netmap	Network maps
+obj.poll.*	Polling
+obj.poll.conf	Configuration poll
+obj.poll.node	New node poll
+obj.poll.route	Routing table poll
+obj.poll.status	Status poll
+obj.poll.topo	Topology poll
 obj.sync	Object synchronization
 
 sync		Syncer messages
