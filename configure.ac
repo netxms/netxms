@@ -611,7 +611,7 @@ AC_ARG_WITH(jemalloc,
 AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		DISABLE_ICONV="yes"
 	fi
 ])
@@ -619,7 +619,7 @@ AC_ARG_ENABLE(iconv,
 AC_ARG_ENABLE(ipv6,
 [AS_HELP_STRING(--disable-ipv6,disable IPv6 support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		DISABLE_IPV6="yes"
 	fi
 ])
@@ -632,7 +632,7 @@ AC_ARG_ENABLE(iconv-cache,
 AC_ARG_ENABLE(readline,
 [AS_HELP_STRING(--disable-readline,do not use libreadline)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		DISABLE_READLINE="yes"
 	fi
 ])
@@ -640,7 +640,7 @@ AC_ARG_ENABLE(readline,
 AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		DISABLE_ENCRYPTION="yes"
 		XMPP_SUPPORT="no"
 	fi
@@ -649,7 +649,7 @@ AC_ARG_ENABLE(encryption,
 AC_ARG_ENABLE(lmsensors,
 [AS_HELP_STRING(--disable-lmsensors,disable lmsensors support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		DISABLE_LMSENSORS="yes"
 	fi
 ])
@@ -657,7 +657,7 @@ AC_ARG_ENABLE(lmsensors,
 AC_ARG_ENABLE(xmpp,
 [AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		XMPP_SUPPORT="no"
 	fi
 ])
@@ -671,7 +671,7 @@ AC_ARG_WITH(rpi-agent,
 AC_ARG_ENABLE(ldap,
 [AS_HELP_STRING(--disable-ldap,disable LDAP support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		LDAP_SUPPORT="no"
 	fi
 ])
