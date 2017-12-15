@@ -231,7 +231,7 @@ enum HostMibStorageType
 /**
  * Storage entry
  */
-struct HostMibStorageEntry
+struct LIBNXSRV_EXPORTABLE HostMibStorageEntry
 {
    TCHAR name[128];
    UINT32 unitSize;
