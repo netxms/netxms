@@ -24,6 +24,8 @@
 
 #define DEBUG_TAG _T("tunnel")
 
+#ifdef _WITH_ENCRYPTION
+
 /**
  * Check if server address is valid
  */
@@ -1226,11 +1228,14 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
  */
 static ObjectArray<Tunnel> s_tunnels;
 
+#endif	/* _WITH_ENCRYPTION */
+
 /**
  * Parser server connection (tunnel) list
  */
 void ParseTunnelList(TCHAR *list)
 {
+#ifdef _WITH_ENCRYPTION
    TCHAR *curr, *next;
    for(curr = next = list; curr != NULL && *curr != 0; curr = next + 1)
    {
@@ -1250,6 +1255,7 @@ void ParseTunnelList(TCHAR *list)
          nxlog_write(MSG_INVALID_TUNNEL_CONFIG, NXLOG_ERROR, "s", curr);
       }
    }
+#endif
    free(list);
 }
 
@@ -1258,6 +1264,7 @@ void ParseTunnelList(TCHAR *list)
  */
 THREAD_RESULT THREAD_CALL TunnelManager(void *)
 {
+#ifdef _WITH_ENCRYPTION
    if (s_tunnels.size() == 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("No tunnels configured, tunnel manager will not start"));
@@ -1276,5 +1283,8 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
    }
    while(!AgentSleepAndCheckForShutdown(g_tunnelKeepaliveInterval));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Tunnel manager stopped"));
+#else
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Agent built without encryption support, tunnel manager will not start"));
+#endif
    return THREAD_OK;
 }
