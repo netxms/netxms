@@ -295,6 +295,7 @@ public:
 typedef struct
 {
    InetAddress ipAddr;
+   UINT32 zoneUIN;
    UINT32 dwFlags;
    int nSNMPVersion;
    TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
