@@ -113,6 +113,15 @@ NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
       pValue = new NXSL_Value(pData->szPlatform);
    }
+   else if (!_tcscmp(pszAttr, _T("zone")))
+   {
+      Zone *zone = FindZoneByUIN(pData->zoneUIN);
+      pValue = (zone != NULL) ? zone->createNXSLObject() : new NXSL_Value();
+   }
+   else if (!_tcscmp(pszAttr, _T("zoneUIN")))
+   {
+      pValue = new NXSL_Value(pData->zoneUIN);
+   }
    return pValue;
 }
 
@@ -505,6 +514,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneUIN, BYTE *macAddr
    // Initialize new node data
    memset(&data, 0, sizeof(DISCOVERY_FILTER_DATA));
    data.ipAddr = addr;
+   data.zoneUIN = zoneUIN;
 
    // Check for address range if we use simple filter instead of script
 	UINT32 autoFilterFlags;

@@ -19,6 +19,7 @@
 
 - Server command line tools working with agents (nxaction, nxap, nxget, nxupload) use encryption by default
 - "Floor plan" display mode for objects on network map
+- Access to zone data in network discovery filters 
 - Fixed issues:
 	NX-669 (DRBD monitoring is not working in some configurations)
 	NX-890 (Passive elements in rack)
