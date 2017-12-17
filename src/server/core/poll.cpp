@@ -107,7 +107,8 @@ static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *node = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0, 0, 0);
+	NewNodeData newNodeData(addr);
+	Node *node = new Node(&newNodeData, NF_IS_LOCAL_MGMT);
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256));
 

@@ -597,7 +597,11 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	const TCHAR *pname = argv[2]->getValueAsCString();
 	if (*pname == 0)
 		pname = argv[1]->getValueAsCString();
-   Node *node = PollNewNode(InetAddress::resolveHostName(pname), 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, 0, 0, NULL, NULL, NULL, 0, true, false);
+	NewNodeData newNodeData(InetAddress::resolveHostName(pname));
+	_tcslcpy(newNodeData.name, argv[1]->getValueAsCString(), MAX_OBJECT_NAME);
+	newNodeData.doConfPoll = true;
+
+   Node *node = PollNewNode(&newNodeData);
 	if (node != NULL)
 	{
 		node->setPrimaryName(pname);

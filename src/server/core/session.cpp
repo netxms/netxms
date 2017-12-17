@@ -5032,25 +5032,17 @@ void ClientSession::createObject(NXCPMessage *request)
                            NetObjInsert(object, true, false);
                            break;
 							   case OBJECT_NODE:
-                           ipAddr.setMaskBits(request->getFieldAsInt32(VID_IP_NETMASK));
-								   object = PollNewNode(ipAddr,
-															   request->getFieldAsUInt32(VID_CREATION_FLAGS),
-															   request->getFieldAsUInt16(VID_AGENT_PORT),
-															   request->getFieldAsUInt16(VID_SNMP_PORT),
-															   objectName,
-															   request->getFieldAsUInt32(VID_AGENT_PROXY),
-															   request->getFieldAsUInt32(VID_SNMP_PROXY),
-                                                request->getFieldAsUInt32(VID_ICMP_PROXY),
-                                                request->getFieldAsUInt32(VID_SSH_PROXY),
-                                                request->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN),
-                                                request->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN),
-															   (parent != NULL) ? ((parent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)parent : NULL) : NULL,
-															   zoneUIN, false, false);
+							   {
+							      NewNodeData newNodeData(request, ipAddr);
+							      if ((parent != NULL) && (parent->getObjectClass() == OBJECT_CLUSTER))
+							         newNodeData.cluster = ((Cluster *)parent);
+								   object = PollNewNode(&newNodeData);
 								   if (object != NULL)
 								   {
 									   ((Node *)object)->setPrimaryName(nodePrimaryName);
 								   }
 								   break;
+							   }
                         case OBJECT_NODELINK:
                            nodeId = request->getFieldAsUInt32(VID_NODE_ID);
                            if (nodeId > 0)

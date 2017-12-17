@@ -1064,10 +1064,7 @@ bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *la
 
 void CheckForMgmtNode();
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN);
-Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
-                                    UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
-                                    UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,
-                                    Cluster *cluster, UINT32 zoneUIN, bool doConfPoll, bool discoveredNode);
+Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);

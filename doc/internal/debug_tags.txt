@@ -13,6 +13,8 @@ housekeeper	Housekeeper messages
 
 ndd.*		Network device drivers
 
+node.poller	Node poller
+
 obj.*		Object related trace
 obj.dc.*	Data collection related
 obj.locks.*	Locks
