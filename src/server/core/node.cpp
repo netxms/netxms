@@ -130,28 +130,34 @@ Node::Node() : DataCollectionTarget()
 }
 
 /**
- * Constructor for new node object
+ * Create new node from new node data
  */
-Node::Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneUIN) : DataCollectionTarget()
+Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget()
 {
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
-   addr.toString(m_primaryName);
+   newNodeData->ipAddr.toString(m_primaryName);
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
-   m_ipAddress = addr;
-   m_capabilities = capabilities;
+   m_ipAddress = newNodeData->ipAddr;
+   m_capabilities = 0;
    m_flags = flags;
-   m_zoneUIN = zoneUIN;
-   m_agentPort = AGENT_LISTEN_PORT;
+   m_zoneUIN = newNodeData->zoneUIN;
+   m_agentPort = newNodeData->agentPort;
    m_agentAuthMethod = AUTH_NONE;
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
-   m_snmpPort = SNMP_DEFAULT_PORT;
-   m_snmpSecurity = new SNMP_SecurityContext("public");
-   addr.toString(m_name);    // Make default name from IP address
+   m_snmpPort = newNodeData->snmpPort;
+   if (newNodeData->snmpSecurity != NULL)
+      m_snmpSecurity = new SNMP_SecurityContext(newNodeData->snmpSecurity);
+   else
+      m_snmpSecurity = new SNMP_SecurityContext("public");
+   if (newNodeData->name[0] != 0)
+      _tcslcpy(m_name, newNodeData->name, MAX_OBJECT_NAME);
+   else
+      newNodeData->ipAddr.toString(m_name);    // Make default name from IP address
    m_snmpObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
@@ -185,9 +191,9 @@ Node::Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 ag
    m_agentTables = NULL;
    m_driverParameters = NULL;
    m_pollerNode = 0;
-   m_agentProxy = agentProxy;
-   m_snmpProxy = snmpProxy;
-   m_icmpProxy = icmpProxy;
+   m_agentProxy = newNodeData->agentProxyId;
+   m_snmpProxy = newNodeData->snmpProxyId;
+   m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_isHidden = true;
@@ -225,9 +231,9 @@ Node::Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 ag
    m_chassisId = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
-   m_sshLogin[0] = 0;
-   m_sshPassword[0] = 0;
-   m_sshProxy = sshProxy;
+   _tcslcpy(m_sshLogin, newNodeData->sshLogin, MAX_SSH_LOGIN_LEN);
+   _tcslcpy(m_sshPassword, newNodeData->sshPassword, MAX_SSH_PASSWORD_LEN);
+   m_sshProxy = newNodeData->sshProxyId;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;

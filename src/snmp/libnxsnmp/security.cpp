@@ -43,7 +43,7 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 /**
  * Create copy of given security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
+SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src)
 {
 	m_securityModel = src->m_securityModel;
 	m_authName = (src->m_authName != NULL) ? strdup(src->m_authName) : NULL;

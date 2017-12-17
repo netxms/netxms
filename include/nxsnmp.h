@@ -483,7 +483,7 @@ private:
 
 public:
 	SNMP_SecurityContext();
-	SNMP_SecurityContext(SNMP_SecurityContext *src);
+	SNMP_SecurityContext(const SNMP_SecurityContext *src);
 	SNMP_SecurityContext(const char *community);
 	SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod);
 	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,

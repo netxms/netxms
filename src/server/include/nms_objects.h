@@ -36,6 +36,7 @@
 class ClientSession;
 class Queue;
 class DataCollectionTarget;
+class NewNodeData;
 
 /**
  * Global variables used by inline methods
@@ -1834,7 +1835,7 @@ protected:
 
 public:
    Node();
-   Node(const InetAddress& addr, UINT32 flags, UINT32 capabilities, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneUIN);
+   Node(const NewNodeData *newNodeData, UINT32 flags);
    virtual ~Node();
 
    virtual int getObjectClass() const { return OBJECT_NODE; }
@@ -2926,6 +2927,33 @@ public:
 	void applyTemplates();
 
 	UINT32 getNodeId() { return m_nodeId; }
+};
+
+/**
+ * New Node Data struct
+ */
+struct NewNodeData
+{
+   InetAddress ipAddr;
+   UINT32 creationFlags;
+   UINT32 agentPort;
+   UINT32 snmpPort;
+   TCHAR name[MAX_OBJECT_NAME];
+   UINT32 agentProxyId;
+   UINT32 snmpProxyId;
+   UINT32 icmpProxyId;
+   UINT32 sshProxyId;
+   TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
+   TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
+   Cluster *cluster;
+   UINT32 zoneUIN;
+   bool doConfPoll;
+   bool discoveredNode;
+   SNMP_SecurityContext *snmpSecurity;
+
+   NewNodeData(const InetAddress& ipAddr);
+   NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr);
+   ~NewNodeData();
 };
 
 /**
