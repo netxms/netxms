@@ -36,7 +36,7 @@
 class ClientSession;
 class Queue;
 class DataCollectionTarget;
-class NewNodeData;
+class Cluster;
 
 /**
  * Global variables used by inline methods
@@ -388,6 +388,33 @@ public:
 	const TCHAR *getVersion() const { return m_version; }
 
 	static SoftwarePackage *createFromTableRow(const Table *table, int row);
+};
+
+/**
+ * Data for new node creation
+ */
+struct NXCORE_EXPORTABLE NewNodeData
+{
+   InetAddress ipAddr;
+   UINT32 creationFlags;
+   UINT32 agentPort;
+   UINT32 snmpPort;
+   TCHAR name[MAX_OBJECT_NAME];
+   UINT32 agentProxyId;
+   UINT32 snmpProxyId;
+   UINT32 icmpProxyId;
+   UINT32 sshProxyId;
+   TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
+   TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
+   Cluster *cluster;
+   UINT32 zoneUIN;
+   bool doConfPoll;
+   bool discoveredNode;
+   SNMP_SecurityContext *snmpSecurity;
+
+   NewNodeData(const InetAddress& ipAddr);
+   NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr);
+   ~NewNodeData();
 };
 
 /**
@@ -853,8 +880,6 @@ public:
 
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
 };
-
-class Cluster;
 
 /**
  * Interface class
@@ -1647,7 +1672,8 @@ protected:
    virtual void onDataCollectionChange();
 
 public:
-   Node();   Node(const NewNodeData *newNodeData, UINT32 flags);
+   Node();
+   Node(const NewNodeData *newNodeData, UINT32 flags);
    virtual ~Node();
 
    virtual int getObjectClass() const { return OBJECT_NODE; }
@@ -2799,33 +2825,6 @@ public:
 	void applyTemplates();
 
 	UINT32 getNodeId() { return m_nodeId; }
-};
-
-/**
- * New Node Data struct
- */
-struct NewNodeData
-{
-   InetAddress ipAddr;
-   UINT32 creationFlags;
-   UINT32 agentPort;
-   UINT32 snmpPort;
-   TCHAR name[MAX_OBJECT_NAME];
-   UINT32 agentProxyId;
-   UINT32 snmpProxyId;
-   UINT32 icmpProxyId;
-   UINT32 sshProxyId;
-   TCHAR sshLogin[MAX_SSH_LOGIN_LEN];
-   TCHAR sshPassword[MAX_SSH_PASSWORD_LEN];
-   Cluster *cluster;
-   UINT32 zoneUIN;
-   bool doConfPoll;
-   bool discoveredNode;
-   SNMP_SecurityContext *snmpSecurity;
-
-   NewNodeData(const InetAddress& ipAddr);
-   NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr);
-   ~NewNodeData();
 };
 
 /**
