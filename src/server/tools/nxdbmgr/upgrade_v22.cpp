@@ -31,7 +31,7 @@ static bool H_UpgradeFromV6()
       _T("UPDATE config SET default_value='2' WHERE var_name='DefaultEncryptionPolicy'\n")
       _T("UPDATE config SET var_value='2' WHERE var_name='DefaultEncryptionPolicy' AND var_value!='3'\n")
       _T("<END>");
-   CHK_EXEC(SQLQuery(batch));
+   CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;
 }
