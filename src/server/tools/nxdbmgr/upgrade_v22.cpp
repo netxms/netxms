@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.6 to 22.7
+ */
+static bool H_UpgradeFromV6()
+{
+   static TCHAR batch[] =
+      _T("UPDATE config SET default_value='2' WHERE var_name='DefaultEncryptionPolicy'\n")
+      _T("UPDATE config SET var_value='2' WHERE var_name='DefaultEncryptionPolicy' AND var_value!='3'\n")
+      _T("<END>");
+   CHK_EXEC(SQLQuery(batch));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 22.5 to 22.6
  */
 static bool H_UpgradeFromV5()
@@ -132,6 +146,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 6, 22, 7, H_UpgradeFromV6 },
    { 5, 22, 6, H_UpgradeFromV5 },
    { 4, 22, 5, H_UpgradeFromV4 },
    { 3, 22, 4, H_UpgradeFromV3 },
