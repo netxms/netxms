@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.15 to 30.16
+ */
+static bool H_UpgradeFromV15()
+{
+   static TCHAR batch[] =
+      _T("UPDATE config SET default_value='2' WHERE var_name='DefaultEncryptionPolicy'\n")
+      _T("UPDATE config SET var_value='2' WHERE var_name='DefaultEncryptionPolicy' AND var_value!='3'\n")
+      _T("<END>");
+   CHK_EXEC(SQLQuery(batch));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 30.14 to 30.15
  */
 static bool H_UpgradeFromV14()
@@ -629,6 +643,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 15, 30, 16, H_UpgradeFromV15 },
    { 14, 30, 15, H_UpgradeFromV14 },
    { 13, 30, 14, H_UpgradeFromV13 },
    { 12, 30, 13, H_UpgradeFromV12 },
