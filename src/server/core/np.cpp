@@ -262,7 +262,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    {
       PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
       p->startExecution();
-		pNode->configurationPoll(NULL, 0, p, ipAddr.getMaskBits());
+		pNode->configurationPoll(NULL, 0, p, newNodeData->ipAddr.getMaskBits());
       delete p;
    }
 
