@@ -522,112 +522,106 @@ static BOOL Delete(const TCHAR *name)
  */
 static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 {
-   if (_trename(oldName, newName) == 0)
-   {
-      return TRUE;
-   }
-   else
-   {
-      return FALSE;
-   }
+   return _trename(oldName, newName) == 0;
 }
 
-#ifndef _WIN32
+/**
+ * Copy file
+ */
+static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode)
+{
+#ifdef _WIN32
+   return CopyFile(src, dst, FALSE);
+#else
+   int oldFile = _topen(src, O_RDONLY | O_BINARY);
+   if (oldFile == -1)
+      return FALSE;
+
+   int newFile = _topen(dst, O_CREAT | O_WRONLY | O_BINARY, mode); // should be copied with the same access rights
+   if (newFile == -1)
+   {
+      _close(oldFile);
+      return FALSE;
+   }
+
+   int in, out;
+   BYTE buffer[16384];
+   while((in = _read(oldFile, buffer, sizeof(buffer))) > 0)
+   {
+      out = _write(newFile, buffer, in);
+      if (out != in)
+      {
+         _close(oldFile);
+         _close(newFile);
+         return FALSE;
+      }
+   }
+
+   _close(oldFile);
+   _close(newFile);
+   return TRUE;
+#endif
+}
 
 /**
- * Copy files or Folders
+ * Copy file/folder
  */
-static bool CopyFiles(const TCHAR *oldName, const TCHAR *newName)
+static BOOL CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
 {
    NX_STAT_STRUCT st;
    if (CALL_STAT(oldName, &st) != 0)
       return FALSE;
 
-   if (S_ISDIR(st.st_mode))
-   {
-      _tmkdir(newName, st.st_mode);
-      _TDIR *dir = _topendir(oldName);
-      if (dir != NULL)
-      {
-         struct _tdirent *d;
-         while((d = _treaddir(dir)) != NULL)
-         {
-            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-               continue;
+   if (!S_ISDIR(st.st_mode))
+      return CopyFileInternal(oldName, newName, st.st_mode);
 
-            TCHAR nextNewName[MAX_PATH];
-            _tcscpy(nextNewName, newName);
-            _tcscat(nextNewName, _T("/"));
-            _tcscat(nextNewName, d->d_name);
-
-            TCHAR nextOldaName[MAX_PATH];
-            _tcscpy(nextOldaName, oldName);
-            _tcscat(nextOldaName, _T("/"));
-            _tcscat(nextOldaName, d->d_name);
-
-            CopyFiles(nextOldaName, nextNewName);
-         }
-         _tclosedir(dir);
-      }
-      else
-         return false;
-
-      return true;
-   }
-
-   int oldFile = _topen(oldName, O_RDONLY | O_BINARY);
-   if (oldFile == -1)
+#ifdef _WIN32
+   if (!CreateDirectory(newName, NULL))
+      return FALSE;
+#else
+   if (_tmkdir(newName, st.st_mode) != 0)
+      return FALSE;
+#endif
+   _TDIR *dir = _topendir(oldName);
+   if (dir == NULL)
       return FALSE;
 
-   int newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st.st_mode); // should be copied with the same access rights
-   if (newFile == -1)
+   struct _tdirent *d;
+   while((d = _treaddir(dir)) != NULL)
    {
-      close(oldFile);
-      return FALSE;
+      if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         continue;
+
+      TCHAR nextNewName[MAX_PATH];
+      _tcscpy(nextNewName, newName);
+      _tcscat(nextNewName, FS_PATH_SEPARATOR);
+      _tcscat(nextNewName, d->d_name);
+
+      TCHAR nextOldaName[MAX_PATH];
+      _tcscpy(nextOldaName, oldName);
+      _tcscat(nextOldaName, FS_PATH_SEPARATOR);
+      _tcscat(nextOldaName, d->d_name);
+
+      CopyFileOrDirectory(nextOldaName, nextNewName);
    }
-
-   int size = 16384, in, out;
-   BYTE *bytes = (BYTE *)malloc(size);
-
-   while((in = read(oldFile, bytes, size)) > 0)
-   {
-      out = write(newFile, bytes, (ssize_t)in);
-      if (out != in)
-      {
-         close(oldFile);
-         close(newFile);
-         free(bytes);
-         return FALSE;
-      }
-   }
-
-   close(oldFile);
-   close(newFile);
-   free(bytes);
+   _tclosedir(dir);
    return TRUE;
 }
-
-#endif
 
 /**
  * Move file/folder
  */
-static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
+static BOOL MoveFileOrDirectory(TCHAR* oldName, TCHAR* newName)
 {
 #ifdef _WIN32
    return MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED);
 #else
    if (Rename(oldName, newName))
-   {
       return TRUE;
-   }
 
    NX_STAT_STRUCT st;
-
    if (CALL_STAT(oldName, &st) != 0)
-   {
       return FALSE;
-   }
 
    if (S_ISDIR(st.st_mode))
    {
@@ -644,15 +638,15 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
             }
             TCHAR nextNewName[MAX_PATH];
             _tcscpy(nextNewName, newName);
-            _tcscat(nextNewName, _T("/"));
+            _tcscat(nextNewName, FS_PATH_SEPARATOR);
             _tcscat(nextNewName, d->d_name);
 
             TCHAR nextOldaName[MAX_PATH];
             _tcscpy(nextOldaName, oldName);
-            _tcscat(nextOldaName, _T("/"));
+            _tcscat(nextOldaName, FS_PATH_SEPARATOR);
             _tcscat(nextOldaName, d->d_name);
 
-            MoveFile(nextOldaName, nextNewName);
+            MoveFieOrDirectory(nextOldaName, nextNewName);
          }
          _tclosedir(dir);
       }
@@ -660,8 +654,9 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    }
    else
    {
-      if (!CopyFiles(oldName, newName))
+      if (!CopyFileInternal(oldName, newName, st.st_mode))
          return FALSE;
+      _remove(oldName);
    }
    return TRUE;
 #endif /* _WIN32 */
@@ -881,9 +876,9 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if(VerifyFileOperation(newName, allowOverwirite, response))
+            if (VerifyFileOperation(newName, allowOverwirite, response))
             {
-               if(MoveFile(oldName, newName))
+               if (MoveFileOrDirectory(oldName, newName))
                {
                   response->setField(VID_RCC, ERR_SUCCESS);
                }
@@ -1071,9 +1066,9 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
 
          if (CheckFullPath(oldName, false, true) && CheckFullPath(newName, false) && session->isMasterServer())
          {
-            if(VerifyFileOperation(newName, allowOverwrite, response))
+            if (VerifyFileOperation(newName, allowOverwrite, response))
             {
-               if (!CopyFiles(oldName, newName))
+               if (!CopyFileOrDirectory(oldName, newName))
                   response->setField(VID_RCC, ERR_IO_FAILURE);
             }
          }
