@@ -60,7 +60,8 @@ public class DashboardNavigator extends ViewPart
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		final Set<Integer> classFilter = new HashSet<Integer>(2);
+		final Set<Integer> classFilter = new HashSet<Integer>(3);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
 		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
 		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, getRootObjects(classFilter), classFilter, false, true);
 		objectTree.enableFilter(false);
@@ -197,7 +198,8 @@ public class DashboardNavigator extends ViewPart
 	private void refresh()
 	{
 		final Set<Integer> classFilter = new HashSet<Integer>(2);
-		classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARD);
 		objectTree.setRootObjects(getRootObjects(classFilter));
 		objectTree.getTreeViewer().expandToLevel(2);
 	}
