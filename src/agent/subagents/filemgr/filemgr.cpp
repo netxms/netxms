@@ -646,7 +646,7 @@ static BOOL MoveFileOrDirectory(TCHAR* oldName, TCHAR* newName)
             _tcscat(nextOldaName, FS_PATH_SEPARATOR);
             _tcscat(nextOldaName, d->d_name);
 
-            MoveFieOrDirectory(nextOldaName, nextNewName);
+            MoveFileOrDirectory(nextOldaName, nextNewName);
          }
          _tclosedir(dir);
       }
@@ -656,7 +656,7 @@ static BOOL MoveFileOrDirectory(TCHAR* oldName, TCHAR* newName)
    {
       if (!CopyFileInternal(oldName, newName, st.st_mode))
          return FALSE;
-      _remove(oldName);
+      _tremove(oldName);
    }
    return TRUE;
 #endif /* _WIN32 */
