@@ -131,15 +131,15 @@ DCTable::DCTable() : DCObject()
 /**
  * Copy constructor
  */
-DCTable::DCTable(const DCTable *src) : DCObject(src)
+DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy)
 {
 	m_columns = new ObjectArray<DCTableColumn>(src->m_columns->size(), 8, true);
 	for(int i = 0; i < src->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(src->m_columns->get(i)));
    m_thresholds = new ObjectArray<DCTableThreshold>(src->m_thresholds->size(), 4, true);
 	for(int i = 0; i < src->m_thresholds->size(); i++)
-		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i)));
-	m_lastValue = NULL;
+		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
+	m_lastValue = (shadowCopy && (src->m_lastValue != NULL)) ? new Table(src->m_lastValue) : NULL;
 }
 
 /**
@@ -981,7 +981,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 
    m_thresholds->clear();
 	for(int i = 0; i < table->m_thresholds->size(); i++)
-		m_thresholds->add(new DCTableThreshold(table->m_thresholds->get(i)));
+		m_thresholds->add(new DCTableThreshold(table->m_thresholds->get(i), false));
 
    unlock();
 }
@@ -1132,9 +1132,9 @@ void DCTable::getEventList(IntegerArray<UINT32> *eventList)
 /*
  * Clone DCTable
  */
-DCObject *DCTable::clone()
+DCObject *DCTable::clone() const
 {
-   return new DCTable(this);
+   return new DCTable(this, false);
 }
 
 /**

@@ -71,9 +71,9 @@ Threshold::Threshold()
 /**
  * Create from another threshold object
  */
-Threshold::Threshold(Threshold *src)
+Threshold::Threshold(Threshold *src, bool shadowCopy)
 {
-   m_id = src->m_id;
+   m_id = shadowCopy ? src->m_id : CreateUniqueId(IDG_THRESHOLD);
    m_itemId = src->m_itemId;
    m_targetId = src->m_targetId;
    m_eventCode = src->m_eventCode;
@@ -86,11 +86,11 @@ Threshold::Threshold(Threshold *src)
    m_scriptSource = NULL;
    m_script = NULL;
    setScript((src->m_scriptSource != NULL) ? _tcsdup(src->m_scriptSource) : NULL);
-   m_isReached = FALSE;
-	m_currentSeverity = SEVERITY_NORMAL;
+   m_isReached = shadowCopy ? src->m_isReached : FALSE;
+	m_currentSeverity = shadowCopy ? src->m_currentSeverity : SEVERITY_NORMAL;
 	m_repeatInterval = src->m_repeatInterval;
-	m_lastEventTimestamp = 0;
-	m_numMatches = 0;
+	m_lastEventTimestamp = shadowCopy ? src->m_lastEventTimestamp : 0;
+	m_numMatches = shadowCopy ? src->m_numMatches : 0;
 }
 
 /**
@@ -890,4 +890,13 @@ void Threshold::setScript(TCHAR *script)
       m_scriptSource = NULL;
       m_script = NULL;
    }
+}
+
+/**
+ * Reconcile changes in threshold copy
+ */
+void Threshold::reconcile(const Threshold *src)
+{
+   m_numMatches = src->m_numMatches;
+   m_isReached = src->m_isReached;
 }

@@ -78,49 +78,49 @@ DCObject::DCObject()
 /**
  * Create DCObject from another DCObject
  */
-DCObject::DCObject(const DCObject *pSrc)
+DCObject::DCObject(const DCObject *src, bool shadowCopy)
 {
-   m_id = pSrc->m_id;
-   m_guid = pSrc->m_guid;
-   m_dwTemplateId = pSrc->m_dwTemplateId;
-   m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
-   m_busy = 0;
+   m_id = src->m_id;
+   m_guid = src->m_guid;
+   m_dwTemplateId = src->m_dwTemplateId;
+   m_dwTemplateItemId = src->m_dwTemplateItemId;
+   m_busy = shadowCopy ? src->m_busy : 0;
 	m_scheduledForDeletion = 0;
-   m_iPollingInterval = pSrc->m_iPollingInterval;
-   m_iRetentionTime = pSrc->m_iRetentionTime;
-   m_source = pSrc->m_source;
-   m_status = pSrc->m_status;
-   m_tLastPoll = 0;
-	_tcscpy(m_name, pSrc->m_name);
-	_tcscpy(m_description, pSrc->m_description);
-	_tcscpy(m_systemTag, pSrc->m_systemTag);
-   m_owner = NULL;
+   m_iPollingInterval = src->m_iPollingInterval;
+   m_iRetentionTime = src->m_iRetentionTime;
+   m_source = src->m_source;
+   m_status = src->m_status;
+   m_tLastPoll = shadowCopy ? src->m_tLastPoll : 0;
+	_tcscpy(m_name, src->m_name);
+	_tcscpy(m_description, src->m_description);
+	_tcscpy(m_systemTag, src->m_systemTag);
+   m_owner = src->m_owner;
    m_hMutex = MutexCreateRecursive();
-   m_tLastCheck = 0;
-   m_dwErrorCount = 0;
-	m_flags = pSrc->m_flags;
-	m_dwResourceId = pSrc->m_dwResourceId;
-	m_sourceNode = pSrc->m_sourceNode;
-	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
-	m_snmpPort = pSrc->m_snmpPort;
-	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
-	m_pollingSession = pSrc->m_pollingSession;
+   m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
+   m_dwErrorCount = shadowCopy ? src->m_dwErrorCount : 0;
+	m_flags = src->m_flags;
+	m_dwResourceId = src->m_dwResourceId;
+	m_sourceNode = src->m_sourceNode;
+	m_pszPerfTabSettings = (src->m_pszPerfTabSettings != NULL) ? _tcsdup(src->m_pszPerfTabSettings) : NULL;
+	m_snmpPort = src->m_snmpPort;
+	m_comments = (src->m_comments != NULL) ? _tcsdup(src->m_comments) : NULL;
+	m_pollingSession = src->m_pollingSession;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
-   setTransformationScript(pSrc->m_transformationScriptSource);
+   setTransformationScript(src->m_transformationScriptSource);
 
-   m_schedules = (pSrc->m_schedules != NULL) ? new StringList(pSrc->m_schedules) : NULL;
+   m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
 
-   m_instanceDiscoveryMethod = pSrc->m_instanceDiscoveryMethod;
-   m_instanceDiscoveryData = (pSrc->m_instanceDiscoveryData != NULL) ? _tcsdup(pSrc->m_instanceDiscoveryData) : NULL;
+   m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
+   m_instanceDiscoveryData = (src->m_instanceDiscoveryData != NULL) ? _tcsdup(src->m_instanceDiscoveryData) : NULL;
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
-   setInstanceFilter(pSrc->m_instanceFilterSource);
-   _tcscpy(m_instance, pSrc->m_instance);
-   m_accessList = new IntegerArray<UINT32>(pSrc->m_accessList);
-   m_instanceRetentionTime = pSrc->m_instanceRetentionTime;
-   m_instanceGracePeriodStart = pSrc->m_instanceGracePeriodStart;
+   setInstanceFilter(src->m_instanceFilterSource);
+   _tcscpy(m_instance, src->m_instance);
+   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
+   m_instanceRetentionTime = src->m_instanceRetentionTime;
+   m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
 }
 
 /**
