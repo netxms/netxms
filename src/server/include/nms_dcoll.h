@@ -118,7 +118,7 @@ private:
 public:
 	Threshold();
    Threshold(DCItem *pRelatedItem);
-   Threshold(Threshold *pSrc);
+   Threshold(Threshold *src, bool shadowCopy);
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
 	Threshold(ConfigEntry *config, DCItem *parentItem);
    ~Threshold();
@@ -155,13 +155,9 @@ public:
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
-	void setFunction(int nFunc) { m_function = nFunc; }
-	void setOperation(int nOp) { m_operation = nOp; }
-	void setEvent(UINT32 dwEvent) { m_eventCode = dwEvent; }
-	void setRearmEvent(UINT32 dwEvent) { m_rearmEventCode = dwEvent; }
-	void setSampleCount(int nVal) { m_sampleCount = nVal; }
-	void setValue(const TCHAR *value) { m_value = value; }
 	void setDataType(BYTE type) { m_dataType = type; }
+
+	void reconcile(const Threshold *src);
 };
 
 class Template;
@@ -226,13 +222,13 @@ protected:
    DCObject(UINT32 dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, Template *pNode,
             const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
 	DCObject(ConfigEntry *config, Template *owner);
-   DCObject(const DCObject *src);
+   DCObject(const DCObject *src, bool shadowCopy);
 
 public:
 
 	virtual ~DCObject();
 
-   virtual DCObject *clone() = 0;
+   virtual DCObject *clone() const = 0;
 
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
@@ -359,13 +355,16 @@ protected:
    void updateCacheSizeInternal(bool allowLoad, UINT32 conditionId = 0);
    void clearCache();
 
+   bool hasScriptThresholds() const;
+   Threshold *getThresholdById(UINT32 id) const;
+
 	virtual bool isCacheLoaded();
 
    using DCObject::updateFromMessage;
 
 public:
    DCItem();
-   DCItem(const DCItem *pItem);
+   DCItem(const DCItem *src, bool shadowCopy);
    DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, Template *pNode,
@@ -373,7 +372,7 @@ public:
 	DCItem(ConfigEntry *config, Template *owner);
    virtual ~DCItem();
 
-   virtual DCObject *clone();
+   virtual DCObject *clone() const;
 
 	virtual int getType() const { return DCO_TYPE_ITEM; }
 
@@ -562,7 +561,7 @@ public:
    DCTableThreshold();
    DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row);
    DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
-   DCTableThreshold(DCTableThreshold *src);
+   DCTableThreshold(DCTableThreshold *src, bool shadowCopy);
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
 
@@ -604,14 +603,14 @@ protected:
 
 public:
 	DCTable();
-   DCTable(const DCTable *src);
+   DCTable(const DCTable *src, bool shadowCopy);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
    DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCTable(ConfigEntry *config, Template *owner);
 	virtual ~DCTable();
 
-	virtual DCObject *clone();
+	virtual DCObject *clone() const;
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 

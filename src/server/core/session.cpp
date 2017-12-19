@@ -3757,45 +3757,26 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
                      pSrcItem = ((Template *)pSource)->getDCObjectById(pdwItemList[i], m_dwUserId);
                      if (pSrcItem != NULL)
                      {
-								switch(pSrcItem->getType())
-								{
-									case DCO_TYPE_ITEM:
-		                        pDstItem = new DCItem((DCItem *)pSrcItem);
-										break;
-									case DCO_TYPE_TABLE:
-		                        pDstItem = new DCTable((DCTable *)pSrcItem);
-										break;
-									default:
-										pDstItem = NULL;
-										break;
-								}
-								if (pDstItem != NULL)
-								{
-									pDstItem->setTemplateId(0, 0);
-									pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
-																	(Template *)pDestination, FALSE);
-									if (((Template *)pDestination)->addDCObject(pDstItem))
-									{
-										if (bMove)
-										{
-											// Delete original item
-											if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], true, m_dwUserId))
-											{
-												iErrors++;
-											}
-										}
-									}
-									else
-									{
-										delete pDstItem;
-										iErrors++;
-									}
-								}
-								else
-								{
-									DbgPrintf(2, _T("INTERNAL ERROR: ClientSession::CopyDCI(): unknown DCO type %d"), pSrcItem->getType());
-									iErrors++;
-								}
+                        pDstItem = pSrcItem->clone();
+                        pDstItem->setTemplateId(0, 0);
+                        pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
+                                                (Template *)pDestination, FALSE);
+                        if (((Template *)pDestination)->addDCObject(pDstItem))
+                        {
+                           if (bMove)
+                           {
+                              // Delete original item
+                              if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], true, m_dwUserId))
+                              {
+                                 iErrors++;
+                              }
+                           }
+                        }
+                        else
+                        {
+                           delete pDstItem;
+                           iErrors++;
+                        }
                      }
                      else
                      {

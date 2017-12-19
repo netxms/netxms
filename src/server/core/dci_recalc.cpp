@@ -30,7 +30,7 @@ DCIRecalculationJob::DCIRecalculationJob(DataCollectionTarget *object, DCItem *d
 {
    m_object = object;
    m_object->incRefCount();
-   m_dci = new DCItem(dci);
+   m_dci = new DCItem(dci, true);
    m_cancelled = false;
 
    TCHAR buffer[1024];

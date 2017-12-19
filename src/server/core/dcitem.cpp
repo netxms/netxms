@@ -61,30 +61,38 @@ DCItem::DCItem() : DCObject()
 /**
  * Create DCItem from another DCItem
  */
-DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
+DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 {
-   m_dataType = pSrc->m_dataType;
-   m_deltaCalculation = pSrc->m_deltaCalculation;
-	m_sampleCount = pSrc->m_sampleCount;
-   m_cacheSize = 0;
-   m_requiredCacheSize = 0;
-   m_ppValueCache = NULL;
-   m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = false;
-	m_nBaseUnits = pSrc->m_nBaseUnits;
-	m_nMultiplier = pSrc->m_nMultiplier;
-	m_customUnitName = (pSrc->m_customUnitName != NULL) ? _tcsdup(pSrc->m_customUnitName) : NULL;
-	m_snmpRawValueType = pSrc->m_snmpRawValueType;
-   _tcscpy(m_predictionEngine, pSrc->m_predictionEngine);
+   m_dataType = src->m_dataType;
+   m_deltaCalculation = src->m_deltaCalculation;
+	m_sampleCount = src->m_sampleCount;
+   m_cacheSize = shadowCopy ? src->m_cacheSize : 0;
+   m_requiredCacheSize = shadowCopy ? src->m_requiredCacheSize : 0;
+   if (m_cacheSize > 0)
+   {
+      m_ppValueCache = (ItemValue **)calloc(m_cacheSize, sizeof(ItemValue*));
+      for(int i = 0; i < m_cacheSize; i++)
+         m_ppValueCache[i] = new ItemValue(src->m_ppValueCache[i]);
+   }
+   else
+   {
+      m_ppValueCache = NULL;
+   }
+   m_tPrevValueTimeStamp = shadowCopy ? src->m_tPrevValueTimeStamp : 0;
+   m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
+	m_nBaseUnits = src->m_nBaseUnits;
+	m_nMultiplier = src->m_nMultiplier;
+	m_customUnitName = (src->m_customUnitName != NULL) ? _tcsdup(src->m_customUnitName) : NULL;
+	m_snmpRawValueType = src->m_snmpRawValueType;
+   _tcscpy(m_predictionEngine, src->m_predictionEngine);
 
    // Copy thresholds
-	if (pSrc->getThresholdCount() > 0)
+	if (src->getThresholdCount() > 0)
 	{
-		m_thresholds = new ObjectArray<Threshold>(pSrc->m_thresholds->size(), 8, true);
-		for(int i = 0; i < pSrc->m_thresholds->size(); i++)
+		m_thresholds = new ObjectArray<Threshold>(src->m_thresholds->size(), 8, true);
+		for(int i = 0; i < src->m_thresholds->size(); i++)
 		{
-			Threshold *t = new Threshold(pSrc->m_thresholds->get(i));
-			t->createId();
+			Threshold *t = new Threshold(src->m_thresholds->get(i), shadowCopy);
 			m_thresholds->add(t);
 		}
 	}
@@ -728,7 +736,30 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) &&
        ((g_offlineDataRelevanceTime <= 0) || (tmTimeStamp > (time(NULL) - g_offlineDataRelevanceTime))))
    {
-      checkThresholds(*pValue);
+      if (hasScriptThresholds())
+      {
+         // Run threshold check with DCI unlocked if there are script thresholds
+         // to avoid possible server deadlock if script causes agent reconnect
+         DCItem *shadowCopy = new DCItem(this, true);
+         unlock();
+         shadowCopy->checkThresholds(*pValue);
+         lock();
+
+         // Reconcile threshold updates
+         for(int i = 0; i < shadowCopy->m_thresholds->size(); i++)
+         {
+            Threshold *src = shadowCopy->m_thresholds->get(i);
+            Threshold *dst = getThresholdById(src->getId());
+            if (dst != NULL)
+            {
+               dst->reconcile(src);
+            }
+         }
+      }
+      else
+      {
+         checkThresholds(*pValue);
+      }
    }
 
    if ((m_cacheSize > 0) && (tmTimeStamp >= m_tPrevValueTimeStamp))
@@ -1457,8 +1488,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, true);
 	for(i = count; i < item->getThresholdCount(); i++)
    {
-      Threshold *t = new Threshold(item->m_thresholds->get(i));
-      t->createId();
+      Threshold *t = new Threshold(item->m_thresholds->get(i), false);
       t->bindToItem(m_id, m_owner->getId());
 		m_thresholds->add(t);
    }
@@ -1766,9 +1796,9 @@ void DCItem::updateFromImport(ConfigEntry *config)
 /*
  * Clone DCI
  */
-DCObject *DCItem::clone()
+DCObject *DCItem::clone() const
 {
-   return new DCItem(this);
+   return new DCItem(this, false);
 }
 
 /**
@@ -1834,4 +1864,34 @@ void DCItem::recalculateValue(ItemValue &value)
    }
 
    m_tLastPoll = value.getTimeStamp();
+}
+
+/**
+ * Check if this DCI has script thresholds
+ */
+bool DCItem::hasScriptThresholds() const
+{
+   if (m_thresholds == NULL)
+      return false;
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+      if (m_thresholds->get(i)->getFunction() == F_SCRIPT)
+         return true;
+
+   return false;
+}
+
+/**
+ * Get threshold object by it's ID
+ */
+Threshold *DCItem::getThresholdById(UINT32 id) const
+{
+   if (m_thresholds == NULL)
+      return NULL;
+
+   for(int i = 0; i < m_thresholds->size(); i++)
+      if (m_thresholds->get(i)->getId() == id)
+         return m_thresholds->get(i);
+
+   return NULL;
 }

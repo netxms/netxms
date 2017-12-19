@@ -366,7 +366,7 @@ DCTableThreshold::DCTableThreshold()
 /**
  * Table threshold copy constructor
  */
-DCTableThreshold::DCTableThreshold(DCTableThreshold *src)
+DCTableThreshold::DCTableThreshold(DCTableThreshold *src, bool shadowCopy)
 {
    m_id = CreateUniqueId(IDG_THRESHOLD);
    m_groups = new ObjectArray<DCTableConditionGroup>(src->m_groups->size(), 4, true);
@@ -376,6 +376,15 @@ DCTableThreshold::DCTableThreshold(DCTableThreshold *src)
    m_deactivationEvent = src->m_deactivationEvent;
    m_sampleCount = src->m_sampleCount;
    m_instances = new StringObjectMap<DCTableThresholdInstance>(true);
+   if (shadowCopy)
+   {
+      StringList *keys = src->m_instances->keys();
+      for(int i = 0; i < keys->size(); i++)
+      {
+         const TCHAR *k = keys->get(i);
+         m_instances->set(k, new DCTableThresholdInstance(src->m_instances->get(k)));
+      }
+   }
 }
 
 /**

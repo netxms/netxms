@@ -334,25 +334,10 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    if (i == m_dcObjects->size())
    {
       // New item from template, just add it
-		DCObject *newObject;
-		switch(dcObject->getType())
-		{
-			case DCO_TYPE_ITEM:
-				newObject = new DCItem((DCItem *)dcObject);
-				break;
-			case DCO_TYPE_TABLE:
-				newObject = new DCTable((DCTable *)dcObject);
-				break;
-			default:
-				newObject = NULL;
-				break;
-		}
-		if (newObject != NULL)
-		{
-			newObject->setTemplateId(dwTemplateId, dcObject->getId());
-			newObject->changeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
-			bResult = addDCObject(newObject, true);
-		}
+		DCObject *newObject = dcObject->clone();
+      newObject->setTemplateId(dwTemplateId, dcObject->getId());
+      newObject->changeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
+      bResult = addDCObject(newObject, true);
    }
    else
    {
