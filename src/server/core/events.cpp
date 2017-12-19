@@ -1201,33 +1201,36 @@ void CreateNXMPEventRecord(String &str, UINT32 eventCode)
    EventObject *o = m_eventObjects.get(eventCode);
    if (o != NULL)
    {
-      str.appendFormattedString(_T("\t\t<event id=\"%d\">\n")
-                                      _T("\t\t\t<name>%s</name>\n")
-                                      _T("\t\t\t<code>%d</code>\n")
-                                      _T("\t\t\t<description>%s</description>\n"),
-                                      o->getCode(), (const TCHAR *)EscapeStringForXML2(o->getName()),
-                                     (const TCHAR *)EscapeStringForXML2(o->getDescription()));
+      str.append(_T("\t\t<event id=\""));
+      str.append(o->getCode());
+      str.append(_T("\">\n\t\t\t<guid>"));
+      str.append(o->getGuid().toString());
+      str.append(_T("</guid>\n\t\t\t<name>"));
+      str.append(EscapeStringForXML2(o->getName()));
+      str.append(_T("</name>\n\t\t\t<code>"));
+      str.append(o->getCode());
+      str.append(_T("</code>\n\t\t\t<description>"));
+      str.append(EscapeStringForXML2(o->getDescription()));
+      str.append(_T("</description>\n"));
+
       if (eventCode & GROUP_FLAG_BIT)
       {
          str.appendFormattedString(_T("\t\t\t<members>\n"));
-         for(int i = 0; i < ((EventGroup *) o)->getMemberCount(); i++)
+         for(int i = 0; i < static_cast<EventGroup*>(o)->getMemberCount(); i++)
          {
-            str.appendFormattedString(_T("\t\t\t\t<code>%d</code>\n"),
-                                     ((EventGroup *) o)->getMember(i));
+            str.appendFormattedString(_T("\t\t\t\t<code>%d</code>\n"), static_cast<EventGroup*>(o)->getMember(i));
          }
          str.appendFormattedString(_T("\t\t\t</members>\n"));
       }
       else
       {
-         str.appendFormattedString(_T("\t\t\t<guid>%s</guid>\n")
-                                _T("\t\t\t<severity>%d</severity>\n")
-                                _T("\t\t\t<flags>%d</flags>\n")
-                                _T("\t\t\t<message>%s</message>\n")
-                                _T("\t\t</event>\n"),
-                                (const TCHAR *)((EventTemplate *)o)->getGuid().toString(), o->getCode(),
-                                ((EventTemplate *)o)->getSeverity(), ((EventTemplate *)o)->getFlags(),
-                                (const TCHAR *)EscapeStringForXML2(((EventTemplate *)o)->getMessageTemplate()),
-                                (const TCHAR *)EscapeStringForXML2(((EventTemplate *)o)->getDescription()));
+         str.appendFormattedString(
+                  _T("\t\t\t<severity>%d</severity>\n")
+                  _T("\t\t\t<flags>%d</flags>\n")
+                  _T("\t\t\t<message>%s</message>\n")
+                  _T("\t\t</event>\n"),
+                  static_cast<EventTemplate*>(o)->getSeverity(), static_cast<EventTemplate*>(o)->getFlags(),
+                  (const TCHAR *)EscapeStringForXML2(static_cast<EventTemplate*>(o)->getMessageTemplate()));
       }
       o->decRefCount();
    }

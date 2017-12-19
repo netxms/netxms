@@ -40,10 +40,10 @@
 class EventObject : public RefCountObject
 {
 protected:
+   uuid m_guid;
    UINT32 m_code;
    TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_description;
-   uuid m_guid;
 
    EventObject(DB_RESULT hResult, int row);
    EventObject(NXCPMessage *msg);
@@ -51,10 +51,10 @@ protected:
 
 
 public:
+   const uuid& getGuid() const { return m_guid; }
    UINT32 getCode() const { return m_code; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
-   const uuid& getGuid() const { return m_guid; }
    bool isGroup() const { return (m_code & GROUP_FLAG) != 0; }
 
    virtual void modifyFromMessage(NXCPMessage *msg);
