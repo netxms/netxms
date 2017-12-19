@@ -32,8 +32,8 @@ public class NXCPMsgWaitQueue
 	private int messageLifeTime;
 	private boolean isActive = true;
 	private HousekeeperThread housekeeperThread = null;
-	
-	/**
+
+   /**
 	 * Housekeeper thread - deletes expired messages from queue.
 	 */
 	private class HousekeeperThread extends Thread
@@ -206,4 +206,15 @@ public class NXCPMsgWaitQueue
 	{
 		return defaultTimeout;
 	}
+	
+	  /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "NXCPMsgWaitQueue [messageList=" + messageList.toString()
+            + " defaultTimeout=" + defaultTimeout + " messageLifeTime="
+            + messageLifeTime + " isActive=" + isActive;
+   }
 }

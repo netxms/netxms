@@ -52,7 +52,16 @@ public final class EncryptionContext
 	private Cipher decryptor;
 	private SecretKey key;
 	private IvParameterSpec iv;
-	
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "EncryptionContext [cipher=" + CIPHERS[cipher] + " keyLength=" + KEY_LENGTHS[cipher] + "]";
+   }
+   
 	static
 	{
 	   cipherTests = new boolean[CIPHERS.length];
@@ -366,4 +375,5 @@ public final class EncryptionContext
 	{
 		return iv.getIV().length;
 	}
+
 }
