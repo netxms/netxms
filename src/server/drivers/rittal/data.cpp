@@ -142,6 +142,7 @@ UINT32 RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
       RittalDevice *dev =
                new RittalDevice(oid.getElement(13), response->getVariable(0)->getValueAsUInt(),
                         response->getVariable(1)->getValueAsUInt(), v, response->getVariable(2));
+      m_devices.add(dev);
    }
    return SNMP_ERR_SUCCESS;
 }
