@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.perfview.views;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Date;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -30,6 +31,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -41,6 +43,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -82,6 +85,7 @@ public class HistoricalDataView extends ViewPart
 	private Action actionSelectRange;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+	private Action actionDeleteDciEntry;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -170,6 +174,14 @@ public class HistoricalDataView extends ViewPart
 			}
 		};
 		
+		actionDeleteDciEntry = new Action("Delete entry") {
+		   @Override
+		   public void run ()
+		   {
+		      deleteDciEntry();
+		   }
+		};
+		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -239,6 +251,7 @@ public class HistoricalDataView extends ViewPart
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
+      manager.add(actionDeleteDciEntry);
 		manager.add(actionSelectRange);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
@@ -304,5 +317,44 @@ public class HistoricalDataView extends ViewPart
 			timeTo = dlg.getTimeTo();
 			refreshData();
 		}
+	}
+	
+	private void deleteDciEntry()
+	{
+	   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+	   if (selection.size() == 0)
+	      return;
+	   
+	   new ConsoleJob("Delete DCI entry", null, Activator.PLUGIN_ID, null) {
+         @SuppressWarnings("unchecked")
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            List<DciDataRow> list = selection.toList();
+            for(DciDataRow r : list)
+               session.deleteDciEntry(nodeId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
+            
+            final DciData data;
+            if (subparts != null)
+               data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
+            else
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(data.getValues());
+                  updateInProgress = false;
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot delete DCI entry";
+         }
+      }.start();
 	}
 }

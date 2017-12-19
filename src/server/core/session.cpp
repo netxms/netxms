@@ -138,6 +138,7 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 DEFINE_THREAD_STARTER(cancelFileMonitoring)
 DEFINE_THREAD_STARTER(clearDCIData)
 DEFINE_THREAD_STARTER(createObject)
+DEFINE_THREAD_STARTER(deleteDCIEntry)
 DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(executeScript)
 DEFINE_THREAD_STARTER(executeLibraryScript)
@@ -765,6 +766,9 @@ void ClientSession::processingThread()
 			case CMD_CLEAR_DCI_DATA:
 				CALL_IN_NEW_THREAD(clearDCIData, pMsg);
 				break;
+			case CMD_DELETE_DCI_ENTRY:
+			   CALL_IN_NEW_THREAD(deleteDCIEntry, pMsg);
+			   break;
 			case CMD_FORCE_DCI_POLL:
 				CALL_IN_NEW_THREAD(forceDCIPoll, pMsg);
 				break;
@@ -3684,7 +3688,7 @@ void ClientSession::clearDCIData(NXCPMessage *request)
    {
       if (object->isDataCollectionTarget())
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
 				dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, object->getId());
@@ -3702,6 +3706,54 @@ void ClientSession::clearDCIData(NXCPMessage *request)
          }
          else  // User doesn't have DELETE rights on object
          {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+void ClientSession::deleteDCIEntry(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   // Get node id and check object class and access rights
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->isDataCollectionTarget())
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+            UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+            debugPrintf(4, _T("DeleteDCIEntry: request for DCI %d at node %d"), dciId, object->getId());
+            DCObject *dci = ((Template *)object)->getDCObjectById(dciId, m_dwUserId);
+            if (dci != NULL)
+            {
+               msg.setField(VID_RCC, dci->deleteEntry(request->getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+               debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d"), dciId, object->getId());
+               writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Collected data entry for DCI \"%s\" [%d] on object \"%s\" [%d] was deleted"),
+                        dci->getDescription(), dci->getId(), object->getName(), object->getId());
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+               debugPrintf(4, _T("DeleteDCIEntry: DCI %d at node %d not found"), dciId, object->getId());
+            }
+         }
+         else  // User doesn't have DELETE rights on object
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on clear DCI data"));
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }

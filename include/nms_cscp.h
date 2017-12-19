@@ -594,6 +594,7 @@ typedef struct
 #define CMD_HOST_BY_IP                    0x0167
 #define CMD_CANCEL_FILE_DOWNLOAD          0x0168
 #define CMD_FILEMGR_COPY_FILE             0x0169
+#define CMD_DELETE_DCI_ENTRY              0x0170
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

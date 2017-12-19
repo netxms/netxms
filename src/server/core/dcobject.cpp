@@ -427,6 +427,14 @@ bool DCObject::deleteAllData()
 }
 
 /**
+ * Delete single DCI entry
+ */
+bool DCObject::deleteEntry(time_t timestamp)
+{
+   return false;
+}
+
+/**
  * Add schedule
  */
 void DCObject::addSchedule(const TCHAR *pszSchedule)

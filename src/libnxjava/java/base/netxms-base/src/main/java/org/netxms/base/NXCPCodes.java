@@ -378,6 +378,7 @@ public class NXCPCodes
    public static final int CMD_HOST_BY_IP = 0x0167;
    public static final int CMD_CANCEL_FILE_DOWNLOAD = 0x0168;
    public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
+   public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

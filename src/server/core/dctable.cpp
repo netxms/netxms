@@ -290,6 +290,22 @@ bool DCTable::deleteAllData()
 }
 
 /**
+ * Delete single DCI entry
+ */
+bool DCTable::deleteEntry(time_t timestamp)
+{
+   TCHAR szQuery[256];
+   lock();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE item_id=%d AND tdata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+   bool success = DBQuery(hdb, szQuery);
+   DBConnectionPoolReleaseConnection(hdb);
+   unlock();
+
+   return success;
+}
+
+/**
  * Process new collected value. Should return true on success.
  * If returns false, current poll result will be converted into data collection error.
  *

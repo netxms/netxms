@@ -4237,6 +4237,25 @@ public class NXCSession
    }
    
    /**
+    * Delete collected data entry for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId  DCI ID
+    * @param timestamp timestamp of entry
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteDciEntry(long nodeId, long dciId, long timestamp) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_DCI_ENTRY);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_TIMESTAMP, (int)timestamp);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Force DCI poll for given DCI
     *
     * @param nodeId Node object ID
