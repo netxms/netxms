@@ -1501,7 +1501,7 @@ void DCItem::createExportRecord(String &str)
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
-                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n"),
+                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
                           _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
