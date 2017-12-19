@@ -32,7 +32,18 @@ public class NXCPMessageReceiver
 	private byte[] recvBuffer;
 	private int bufferPos = 0;
 
-	/**
+	/* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "NXCPMessageReceiver [defaultBufferSize=" + defaultBufferSize
+            + " maxBufferSize=" + maxBufferSize + " recvBuffer=" + recvBuffer
+            + " bufferPos=" + bufferPos;
+   }
+
+   /**
 	 * Constructor
 	 * @param defaultBufferSize default receiving buffer size (in bytes)
 	 * @param maxBufferSize maximum receiving buffer size (in bytes)

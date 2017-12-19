@@ -13,6 +13,16 @@ public class PostalAddress
    public String streetAddress;
    public String postcode;
    
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "PostalAddress [country=" + country + " city=" + city
+            + " streetAddress=" + streetAddress + " postcode=" + postcode;
+   }
+
    /**
     * Create empty postal address
     */
