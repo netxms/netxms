@@ -289,6 +289,7 @@ public:
    virtual void changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExpansion);
 
 	virtual bool deleteAllData();
+	virtual bool deleteEntry(time_t timestamp);
 
    virtual void getEventList(IntegerArray<UINT32> *eventList) = 0;
    virtual void createExportRecord(String &str) = 0;
@@ -412,6 +413,7 @@ public:
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
 	virtual bool deleteAllData();
+   virtual bool deleteEntry(time_t timestamp);
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);
@@ -627,6 +629,7 @@ public:
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
 	virtual bool deleteAllData();
+   virtual bool deleteEntry(time_t timestamp);
 
    virtual void getEventList(IntegerArray<UINT32> *eventList);
    virtual void createExportRecord(String &str);

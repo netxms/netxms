@@ -1444,6 +1444,40 @@ bool DCItem::deleteAllData()
 }
 
 /**
+ * Delete single collected data entry
+ */
+bool DCItem::deleteEntry(time_t timestamp)
+{
+   TCHAR szQuery[256];
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   lock();
+   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+   unlock();
+   bool success = DBQuery(hdb, szQuery);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (!success)
+      return false;
+
+   lock();
+   for(int i = 0; i < m_cacheSize; i++)
+   {
+      if (m_ppValueCache[i]->getTimeStamp() == timestamp)
+      {
+         delete m_ppValueCache[i];
+         memmove(&m_ppValueCache[i], &m_ppValueCache[i + 1], sizeof(ItemValue *) * (m_cacheSize - (i + 1)));
+         m_cacheSize -= 1;
+         updateCacheSizeInternal(true);
+         break;
+      }
+   }
+   unlock();
+
+   return success;
+}
+
+/**
  * Update from template item
  */
 void DCItem::updateFromTemplate(DCObject *src)

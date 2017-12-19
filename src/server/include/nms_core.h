@@ -471,6 +471,7 @@ private:
    DECLARE_THREAD_STARTER(cancelFileMonitoring)
    DECLARE_THREAD_STARTER(clearDCIData)
    DECLARE_THREAD_STARTER(createObject)
+   DECLARE_THREAD_STARTER(deleteDCIEntry)
    DECLARE_THREAD_STARTER(executeAction)
    DECLARE_THREAD_STARTER(executeScript)
    DECLARE_THREAD_STARTER(executeLibraryScript)
@@ -555,6 +556,7 @@ private:
    void getTableCollectedData(NXCPMessage *pRequest);
 	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues);
 	void clearDCIData(NXCPMessage *pRequest);
+	void deleteDCIEntry(NXCPMessage *request);
 	void forceDCIPoll(NXCPMessage *pRequest);
    void recalculateDCIValues(NXCPMessage *request);
    void changeDCIStatus(NXCPMessage *pRequest);
