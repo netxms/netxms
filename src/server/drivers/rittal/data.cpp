@@ -176,7 +176,7 @@ UINT32 RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
       m->index = oid.getElement(14);
       v->getValueAsString(m->name, MAX_OBJECT_NAME);
       m->dataType = response->getVariable(0)->getValueAsInt();
-      memcpy(m->oid, oid.value(), 15);
+      memcpy(m->oid, oid.value(), 15 * sizeof(UINT32));
       m->oid[12] = (m->dataType == 2) ? 11 : 10; // Use cmcIIIVarValueInt for integer variables and cmcIIIVarValueStr for the rest
       _sntprintf(m->description, 256, _T("%s: %s"), dev->alias, m->name);
       dev->metrics->add(m);
