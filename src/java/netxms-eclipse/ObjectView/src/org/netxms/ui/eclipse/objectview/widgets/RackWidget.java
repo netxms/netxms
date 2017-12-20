@@ -303,7 +303,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          
          if ((n.getRackImage() != null) && !n.getRackImage().equals(NXCommon.EMPTY_GUID))
          {
-            Image image = ImageProvider.getInstance().getImage(n.getRackImage());
+            Image image = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : ImageProvider.getInstance().getImage(n.getRackImage());
             Rectangle r = image.getBounds();
             gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
          }
