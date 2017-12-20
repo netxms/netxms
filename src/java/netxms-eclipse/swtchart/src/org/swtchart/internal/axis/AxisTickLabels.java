@@ -623,7 +623,10 @@ public class AxisTickLabels implements PaintListener
 				}
 				return new SimpleDateFormat(dateFormat).format(obj);
 			}
-			return DataFormatter.roundDecimalValue((Double)obj, tickStep, 5);
+			if (axis.isUseMultipliers())
+			   return DataFormatter.roundDecimalValue((Double)obj, tickStep, 5);
+			else
+			   return Double.toString((Double)obj);
 		}
 		return format.format(obj);
 	}

@@ -198,7 +198,7 @@ public class LineChart extends Chart implements HistoricalDataChart
    					getPlotArea().setToolTipText(
    					      series.getName() + "\n" + //$NON-NLS-1$
    					      RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + //$NON-NLS-1$ 
-   					      DataFormatter.roundDecimalValue(value, cachedTickStep, 5));
+   					      (useMultipliers ? DataFormatter.roundDecimalValue(value, cachedTickStep, 5) : Double.toString(value)));
    					tooltipShown = true;
 				   }
 				}

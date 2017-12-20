@@ -57,6 +57,9 @@ public class Chart extends Composite implements Listener
 	/** the state indicating if compressing series is enabled */
 	private boolean compressEnabled;
 	
+	/** set show multipliers */
+   protected boolean useMultipliers = true;
+	
 	/**
 	 * Constructor.
 	 * 
@@ -360,5 +363,26 @@ public class Chart extends Composite implements Listener
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+   
+
+   /**
+    * @return are multipliers used
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers set to use multipliers
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
+      
+      IAxisSet axisSet = getAxisSet();
+      IAxis yAxis = axisSet.getYAxis(0);
+      yAxis.setUseMultipliers(useMultipliers);
    }
 }

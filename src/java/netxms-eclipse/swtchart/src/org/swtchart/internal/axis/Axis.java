@@ -101,8 +101,11 @@ public class Axis implements IAxis
 
 	/** the list of dispose listeners */
 	private List<IDisposeListener> listeners;
+	
+	/** enable or disable multipliers */
+	private boolean useMultipliers = true;
 
-	/**
+   /**
 	 * Constructor.
 	 * 
 	 * @param id
@@ -932,4 +935,20 @@ public class Axis implements IAxis
 		}
 		return false;
 	}
+	
+	/**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
+   }
 }
