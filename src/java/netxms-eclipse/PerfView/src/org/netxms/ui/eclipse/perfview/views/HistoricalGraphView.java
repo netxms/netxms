@@ -331,6 +331,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setStacked(settings.isStacked());
       chart.setTranslucent(settings.isTranslucent());
       chart.setLineWidth(settings.getLineWidth());
+      chart.setUseMultipliers(settings.isUseMultipliers());
       if(!settings.isAutoScale())
          chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       else

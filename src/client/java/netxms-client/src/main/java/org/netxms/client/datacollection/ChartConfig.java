@@ -112,6 +112,9 @@ public class ChartConfig
 	
    @Element(required = false)
    private boolean modifyYBase = false;
+   
+   @Element(required = false)
+   private boolean useMultipliers = true;
 
    private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
 	
@@ -624,5 +627,22 @@ public class ChartConfig
       timeFrom = config.timeFrom; 
       timeTo = config.timeTo; 
       modifyYBase = config.modifyYBase;
+      useMultipliers = config.useMultipliers;
+   }
+   
+   /**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
    }
 }

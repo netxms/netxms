@@ -62,6 +62,7 @@ public class General extends PropertyPage
 	private Button checkExtendedLegend;
    private Button checkTranslucent;
    private Button checkAreaChart;
+   private Button checkUseMultipliers;
    private LabeledSpinner lineWidth;
 	private Combo legendLocation;
 	private Scale refreshIntervalScale;
@@ -177,6 +178,10 @@ public class General extends PropertyPage
       checkAreaChart = new Button(optionsGroup, SWT.CHECK);
       checkAreaChart.setText("Area chart");
       checkAreaChart.setSelection(config.isArea());         
+      
+      checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
+      checkUseMultipliers.setText("Use multipliers");
+      checkUseMultipliers.setSelection(config.isUseMultipliers());
       
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
@@ -305,6 +310,7 @@ public class General extends PropertyPage
 		checkStacked.setSelection(false);
 		checkExtendedLegend.setSelection(false);
 		checkAreaChart.setSelection(false);
+		checkUseMultipliers.setSelection(true);
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
 		
@@ -342,6 +348,7 @@ public class General extends PropertyPage
 		config.setTimeRange(timeSelector.getTimeRangeValue());
 		config.setTimeFrom(timeSelector.getTimeFrom());
 		config.setTimeTo(timeSelector.getTimeTo());
+		config.setUseMultipliers(checkUseMultipliers.getSelection());
 		
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());

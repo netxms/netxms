@@ -168,4 +168,14 @@ public interface HistoricalDataChart extends DataChart
     * @return the plot area
     */
    public Canvas getPlotArea();
+
+   /**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers();
+   
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers);
 }

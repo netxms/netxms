@@ -55,6 +55,9 @@ public class Chart extends Canvas implements Listener
 	/** the state indicating if compressing series is enabled */
 	private boolean compressEnabled;
 	
+	/** set show multipliers */
+   protected boolean useMultipliers = true;
+	
 	/**
 	 * Constructor.
 	 * 
@@ -364,5 +367,19 @@ public class Chart extends Canvas implements Listener
          js.append("');"); //$NON-NLS-1$
          executor.execute(js.toString());
       }
+   }
+
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
+      
+      IAxisSet axisSet = getAxisSet();
+      IAxis yAxis = axisSet.getYAxis(0);
+      yAxis.setUseMultipliers(useMultipliers);
    }
 }

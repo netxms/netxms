@@ -446,16 +446,16 @@ public class Legend extends Canvas implements ILegend, PaintListener
       int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
       
-      gc.drawText(DataFormatter.roundDecimalValue(series.getCurY(), 0.005, 3), x, r.y, true);
+      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getCurY(), 0.005, 3) : Double.toString(series.getCurY()), x, r.y, true);
       x += shift;
 
-      gc.drawText(DataFormatter.roundDecimalValue(series.getMinY(), 0.005, 3), x, r.y, true);
+      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getMinY(), 0.005, 3) : Double.toString(series.getMinY()), x, r.y, true);
       x += shift;
 
-      gc.drawText(DataFormatter.roundDecimalValue(series.getAvgY(), 0.005, 3), x, r.y, true);
+      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getAvgY(), 0.005, 3) : Double.toString(series.getAvgY()), x, r.y, true);
       x += shift;
 
-      gc.drawText(DataFormatter.roundDecimalValue(series.getMaxY(), 0.005, 3), x, r.y, true);
+      gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getMaxY(), 0.005, 3) : Double.toString(series.getMaxY()), x, r.y, true);
    }
 
    /*

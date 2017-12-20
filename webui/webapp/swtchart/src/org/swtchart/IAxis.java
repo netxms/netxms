@@ -224,4 +224,14 @@ public interface IAxis {
      *            the dispose listener
      */
     void addDisposeListener(IDisposeListener listener);
+    
+    /**
+     * @return the useMultipliers
+     */
+    public boolean isUseMultipliers();
+    
+    /**
+     * @param useMultipliers the useMultipliers to set
+     */
+    public void setUseMultipliers(boolean useMultipliers);
 }
