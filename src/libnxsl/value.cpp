@@ -543,8 +543,14 @@ bool NXSL_Value::convert(int nDataType)
          m_value.uInt64 = uInt64;
          break;
       case NXSL_DT_REAL:
-         if (m_nDataType == NXSL_DT_UINT64)
+         if ((m_nDataType == NXSL_DT_UINT64) && (m_value.uInt64 > _ULL(9007199254740992)))
          {
+            // forbid automatic conversion if 64 bit number may not be represented exactly as floating point number
+            bRet = false;
+         }
+         else if ((m_nDataType == NXSL_DT_INT64) && ((m_value.nInt64 > _LL(9007199254740992)) || (m_value.nInt64 < _LL(-9007199254740992))))
+         {
+            // forbid automatic conversion if 64 bit number may not be represented exactly as floating point number
             bRet = false;
          }
          else
