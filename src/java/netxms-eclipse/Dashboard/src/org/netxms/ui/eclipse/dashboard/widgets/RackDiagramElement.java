@@ -74,6 +74,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
    private IViewPart viewPart;
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+   
    /**
     * Create new rack diagram element
     * 

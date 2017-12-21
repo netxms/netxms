@@ -70,12 +70,9 @@ public class EditPaneWidget extends Canvas implements PaintListener
 	{
 		final GC gc = e.gc;
 		final Point size = getSize();
-
-		getParent().getChildren()[1].print(gc);
-		
-		//gc.setBackground(BACKGROUND_COLOR);
-		//gc.setAlpha(20);
-		//gc.fillRectangle(0, 0, size.x, size.y);
+		gc.setBackground(BACKGROUND_COLOR);
+		gc.setAlpha(20);
+		gc.fillRectangle(0, 0, size.x, size.y);
 	}
 	
 	/**

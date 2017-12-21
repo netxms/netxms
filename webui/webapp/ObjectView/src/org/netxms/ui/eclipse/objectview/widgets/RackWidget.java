@@ -662,7 +662,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          return;
       
       AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
-      if (object != selectedObject)
+      if (object != tooltipObject)
       {
          objectToolTipLocation = (object != null) ? new Point(e.x, e.y) : null;
          tooltipObject = object;
