@@ -65,7 +65,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.VPNConnector;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -133,7 +132,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
       
-      setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+      setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
       // Create filter area
       filterTextControl = new FilterText(this, SWT.NONE, null, allowFilterClose);
@@ -236,20 +235,24 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
 		refresh();
 	}
 	
-	public Set<Long> createFilteredList(AbstractObject root)
-	{
-	   Set<Long> aceptedlist = new HashSet<Long>();
-	   for(AbstractObject obj : root.getAllChilds(-1))
-	   {
-	      if(obj instanceof Interface || obj instanceof NetworkService || obj instanceof VPNConnector)
-	         continue;
-	      if(obj.getObjectName().contains(textFilter))
-	      {
-	         aceptedlist.add(obj.getObjectId());
-	      }
-	   }
-	   return aceptedlist;
-	}
+   public Set<Long> createFilteredList(AbstractObject root, boolean flterByTest)
+   {
+      Set<Long> aceptedlist = new HashSet<Long>();
+      for(AbstractObject obj : root.getAllChilds(-1))
+      {
+         if(obj instanceof Interface || obj instanceof NetworkService || obj instanceof VPNConnector)
+            continue;
+         if(flterByTest)
+         {
+            if(obj.getObjectName().toLowerCase().contains(textFilter))
+               aceptedlist.add(obj.getObjectId());
+         }
+         else
+            if(((1 << obj.getStatus().getValue()) & severityFilter) != 0)
+               aceptedlist.add(obj.getObjectId());
+      }
+      return aceptedlist;
+   }
 	
 	/**
 	 * Refresh form
@@ -260,9 +263,10 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
       Set<Long> aceptedlist = null;
       
       if(!textFilter.isEmpty())
-      {
-         aceptedlist = createFilteredList(root);
-      }
+         aceptedlist = createFilteredList(root, true);
+      
+      if(severityFilter != 0xFF)
+         aceptedlist = createFilteredList(root, false);
       
       if (widget == null)
       {

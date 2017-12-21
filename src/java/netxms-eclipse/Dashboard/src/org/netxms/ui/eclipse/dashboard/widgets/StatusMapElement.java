@@ -23,18 +23,21 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
+import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapInterface;
+import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
 
 /**
  * Status map element for dashboard
  */
 public class StatusMapElement extends ElementWidget
 {
-	private ObjectStatusMap map;
+	private ObjectStatusMapInterface map;
 	private StatusMapConfig config;
 	
 	/**
@@ -58,7 +61,10 @@ public class StatusMapElement extends ElementWidget
 		if (config.getTitle().trim().isEmpty())
 		{
 			setLayout(new FillLayout());
-			map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
+			if(config.isShowRadial())
+            map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);			   
+			else
+			   map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
 		}
 		else
 		{
@@ -71,12 +77,16 @@ public class StatusMapElement extends ElementWidget
 			title.setText(config.getTitle().trim());
 			title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			title.setFont(JFaceResources.getBannerFont());
-			title.setBackground(getBackground());
-			
-			map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
-			map.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			title.setBackground(getBackground());			
+
+         if(config.isShowRadial())
+            map = new ObjectStatusMapRadial(viewPart, this, SWT.NONE, false);          
+         else
+            map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
+			((Composite)map).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
-		map.setGroupObjects(config.isGroupObjects());
+		if(!config.isShowRadial())
+		   ((ObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
 		map.setSeverityFilter(config.getSeverityFilter());
 		map.enableFilter(config.isShowTextFilter());
 		map.setRootObject(config.getObjectId());
