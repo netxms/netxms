@@ -28,6 +28,14 @@
             name="%view.name.SoftwareInventory"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectview.views.RackView"
+            icon="icons/rack.gif"
+            id="org.netxms.ui.eclipse.objectview.views.RackView"
+            name="Rack"
+            restorable="true">
+      </view>
    </extension>
 
    <extension

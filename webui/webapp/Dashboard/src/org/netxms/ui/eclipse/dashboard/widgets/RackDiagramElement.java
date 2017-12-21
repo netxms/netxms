@@ -62,7 +62,7 @@ import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
 public class RackDiagramElement extends ElementWidget implements ISelectionProvider
 {
    private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-	   
+   
    private RackWidget rackFrontWidget = null;
    private RackWidget rackRearWidget = null;
    private NXCSession session;
@@ -74,6 +74,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
    private IViewPart viewPart;
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
+   
    /**
     * Create new rack diagram element
     * 

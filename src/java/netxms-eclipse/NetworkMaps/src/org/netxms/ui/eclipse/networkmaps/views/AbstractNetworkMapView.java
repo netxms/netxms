@@ -121,6 +121,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.objectview.views.RackView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
