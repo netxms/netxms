@@ -419,6 +419,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	   objectMap.clear();
       //find number of layers
 	   objCount = calculateMaxLVLAndObjCount(object, 1);
+	   setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
       
 		Rectangle rect = getClientArea();
 		rect.width--;
