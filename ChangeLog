@@ -19,6 +19,7 @@
 	NX-1374 (Element DashboardGroup not displayed in Dashboard perspective)
 	NX-1373 (Error message "Error loading RSA keys from ..." in all server-to-agent command line tools)
 	NX-1376 (Windows agent reports incorrect OS version on Windows 10)
+	NX-1381 (Unjustified NXSL errors "cannot do automatic type cast")
 
 
 *
