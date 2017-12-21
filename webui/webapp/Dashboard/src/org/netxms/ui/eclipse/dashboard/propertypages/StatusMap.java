@@ -44,6 +44,7 @@ public class StatusMap extends PropertyPage
 	private Button[] checkSeverity;
    private Button checkGroupObjects;
 	private Button checkShowFilter;
+   private Button checkRadial;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -114,6 +115,10 @@ public class StatusMap extends PropertyPage
 		checkShowFilter = new Button(optionsGroup, SWT.CHECK);
 		checkShowFilter.setText(Messages.get().StatusMap_ShowFilter);
 		checkShowFilter.setSelection(config.isShowTextFilter());
+		
+		checkRadial = new Button(optionsGroup, SWT.CHECK);
+		checkRadial.setText("Show in radial form");
+		checkRadial.setSelection(config.isShowRadial());
 
 		return dialogArea;
 	}
@@ -134,6 +139,7 @@ public class StatusMap extends PropertyPage
 		config.setSeverityFilter(severityFilter);
 		config.setGroupObjects(checkGroupObjects.getSelection());
 		config.setShowTextFilter(checkShowFilter.getSelection());
+      config.setShowRadial(checkRadial.getSelection());
 		
 		return true;
 	}

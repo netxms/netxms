@@ -23,6 +23,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -37,6 +38,8 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
+import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapInterface;
+import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -47,12 +50,14 @@ public class ObjectStatusMapView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"; //$NON-NLS-1$
 
 	private long rootObjectId;
-	private ObjectStatusMap map;
+	private ObjectStatusMapInterface map;
 	private boolean initialGroupFlag = true;
    private boolean initialShowFilter = true;
+   private boolean initialShowRadial = false;
 	private Action actionRefresh;
 	private Action actionGroupNodes;
 	private Action actionShowFilter;
+   private Action actionShowRadial;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -75,14 +80,18 @@ public class ObjectStatusMapView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initialGroupFlag = (settings.get("GroupObjects") != null) ? settings.getBoolean("GroupObjects") : true;
-      initialShowFilter = (settings.get("ShowFilter") != null) ? settings.getBoolean("ShowFilter") : true;
+      initialGroupFlag = (settings.get(ID+"GroupObjects") != null) ? settings.getBoolean(ID+"GroupObjects") : true;
+      initialShowFilter = (settings.get(ID+"ShowFilter") != null) ? settings.getBoolean(ID+"ShowFilter") : true;
+      initialShowRadial = (settings.get(ID+"ShowRadial") != null) ? settings.getBoolean(ID+"ShowRadial") : false;
 	   
-	   map = new ObjectStatusMap(this, parent, SWT.NONE, true);
-		map.setGroupObjects(initialGroupFlag);
+      if(initialShowRadial)
+         map = new ObjectStatusMapRadial(this, parent, SWT.NONE, true);
+      else
+         map = new ObjectStatusMap(this, parent, SWT.NONE, true);
+      
 		map.setRootObject(rootObjectId);
 		map.enableFilter(initialShowFilter);
-		
+				
 		map.setFilterCloseAction(new Action() {
          @Override
          public void run()
@@ -92,19 +101,20 @@ public class ObjectStatusMapView extends ViewPart
          }
       });
 		
-		map.addDisposeListener(new DisposeListener() {
+		((Composite)map).addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put("GroupObjects", map.isGroupObjects());
-            settings.put("ShowFilter", map.isFilterEnabled());
+            settings.put(ID+"ShowFilter", map.isFilterEnabled());
+            settings.put(ID+"GroupObjects", actionGroupNodes.isChecked());
+            settings.put(ID+"ShowRadial", actionShowRadial.isChecked());
          }
       });
 
 		createActions();
 		contributeToActionBars();
 		
-		getSite().setSelectionProvider(map);
+		getSite().setSelectionProvider((ISelectionProvider)map);
 	}
 
 	/**
@@ -124,7 +134,6 @@ public class ObjectStatusMapView extends ViewPart
 			@Override
 			public void run()
 			{
-				map.setGroupObjects(actionGroupNodes.isChecked());
 				map.refresh();
 			}
 		};
@@ -138,7 +147,46 @@ public class ObjectStatusMapView extends ViewPart
          }
       };
       actionShowFilter.setChecked(initialShowFilter);
+      
+      actionShowRadial = new Action("Show radial objects", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            redraw(actionShowRadial.isChecked());
+         }
+      };
+      actionShowRadial.setChecked(initialShowRadial);
 	}
+
+	/**
+	 * Redraw status view 
+	 * 
+	 * @param radial true if should be redrawn in radial way
+	 */
+   private void redraw(boolean radial)
+   {
+      ObjectStatusMapInterface oldMap = map;
+      if(radial)
+         map = new ObjectStatusMapRadial(this, ((Composite)map).getParent(), SWT.NONE, true);
+      else
+         map = new ObjectStatusMap(this, ((Composite)map).getParent(), SWT.NONE, true);      
+
+      map.setRootObject(rootObjectId);
+      map.enableFilter(initialShowFilter);
+            
+      map.setFilterCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            actionShowFilter.setChecked(false);
+            map.enableFilter(false);
+         }
+      });
+
+      ((Composite)oldMap).dispose();
+      ((Composite)map).layout();
+      ((Composite)map).getParent().layout();
+   }
 	
 	/**
 	 * Contribute actions to action bar
@@ -160,6 +208,7 @@ public class ObjectStatusMapView extends ViewPart
 	{
 		manager.add(actionGroupNodes);
       manager.add(actionShowFilter);
+      manager.add(actionShowRadial);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -181,6 +230,6 @@ public class ObjectStatusMapView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		map.setFocus();
+	   ((Composite)map).setFocus();
 	}
 }

@@ -47,6 +47,9 @@ public class StatusMapConfig extends DashboardElementConfig
    @Element(required=false)
    private boolean showTextFilter = false;
 
+   @Element(required=false)
+   private boolean showRadial = false;
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -167,5 +170,21 @@ public class StatusMapConfig extends DashboardElementConfig
    public void setShowTextFilter(boolean showTextFilter)
    {
       this.showTextFilter = showTextFilter;
+   }
+
+   /**
+    * @return the showRadial
+    */
+   public boolean isShowRadial()
+   {
+      return showRadial;
+   }
+
+   /**
+    * @param showRadial the showRadial to set
+    */
+   public void setShowRadial(boolean showRadial)
+   {
+      this.showRadial = showRadial;
    }
 }
