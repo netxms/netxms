@@ -407,7 +407,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_sysContact = DBGetField(hResult, 0, 31, NULL, 0);
    m_sysLocation = DBGetField(hResult, 0, 32, NULL, 0);
    m_rackId = DBGetFieldULong(hResult, 0, 33);
-   m_rackImage = DBGetFieldGUID(hResult, 0, 34);
+   m_rackImageFront = DBGetFieldGUID(hResult, 0, 34);
    m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 35);
    m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 36);
    m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 37);
