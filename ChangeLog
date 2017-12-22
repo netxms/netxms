@@ -21,6 +21,7 @@
 - "Floor plan" display mode for objects on network map
 - Access to zone data in network discovery filters 
 - Fixed issues:
+	NX-513 (toString() methods added to netxms-base data objects)
 	NX-669 (DRBD monitoring is not working in some configurations)
 	NX-689 (Pass found SNMP configuration while discovery for new node creation)
 	NX-890 (Passive elements in rack)
