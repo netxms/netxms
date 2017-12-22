@@ -130,7 +130,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected Date bootTime;
 	protected Date lastAgentCommTime;
 	protected long rackId;
-	protected UUID rackImage;
+	protected UUID rackImageFront;
+   protected UUID rackImageRear;
 	protected short rackPosition;
 	protected short rackHeight;
    protected RackOrientation rackOrientation;
@@ -202,7 +203,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
 		rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
-		rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
+		rackImageFront = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_FRONT);
+      rackImageRear = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_REAR);
 		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
       chassisId = msg.getFieldAsInt64(NXCPCodes.VID_CHASSIS_ID);
@@ -683,12 +685,21 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    }
 
    /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackImage()
+    * @see org.netxms.client.objects.RackElement#getFrontRackImage()
     */
    @Override
-   public UUID getRackImage()
+   public UUID getFrontRackImage()
    {
-      return rackImage;
+      return rackImageFront;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRearRackImage()
+    */
+   @Override
+   public UUID getRearRackImage()
+   {
+      return rackImageRear;
    }
 
    /* (non-Javadoc)

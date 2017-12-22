@@ -910,7 +910,7 @@ public class NXCPCodes
    public static final long VID_SYS_CONTACT = 515;
    public static final long VID_SYS_LOCATION = 516;
    public static final long VID_RACK_ID = 517;
-   public static final long VID_RACK_IMAGE = 518;
+   public static final long VID_RACK_IMAGE_FRONT = 518;
    public static final long VID_RACK_POSITION = 519;
    public static final long VID_RACK_HEIGHT = 520;
    public static final long VID_SCHEDULE_COUNT = 521;
@@ -1005,6 +1005,7 @@ public class NXCPCodes
    public static final long VID_INSTANCE_RETENTION = 610;
    public static final long VID_RACK_ORIENTATION = 611;
    public static final long VID_PASSIVE_ELEMENTS = 612;
+   public static final long VID_RACK_IMAGE_REAR = 613;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

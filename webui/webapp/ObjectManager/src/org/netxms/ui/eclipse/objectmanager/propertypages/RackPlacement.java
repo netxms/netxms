@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -50,7 +52,8 @@ public class RackPlacement extends PropertyPage
    
 	private RackElement object;
 	private ObjectSelector rackSelector;
-	private ImageSelector rackImageSelector;
+	private ImageSelector rackImageFrontSelector;
+   private ImageSelector rackImageRearSelector;
 	private LabeledSpinner rackHeight;
 	private LabeledSpinner rackPosition;
 	private Combo rackOrientation;
@@ -82,14 +85,27 @@ public class RackPlacement extends PropertyPage
 		gd.horizontalSpan = 3;
 		rackSelector.setLayoutData(gd);
 		
-		rackImageSelector = new ImageSelector(dialogArea, SWT.NONE);
-		rackImageSelector.setLabel(Messages.get().RackPlacement_RackImage);
-		rackImageSelector.setImageGuid(object.getRackImage(), false);
+		rackImageFrontSelector = new ImageSelector(dialogArea, SWT.NONE);
+		rackImageFrontSelector.setLabel("Rack front image");
+		rackImageFrontSelector.setImageGuid(object.getFrontRackImage(), false);
+		rackImageFrontSelector.setEnabled(object.getRackOrientation() == RackOrientation.FRONT ||
+		                                  object.getRackOrientation() == RackOrientation.FILL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
-      rackImageSelector.setLayoutData(gd);
+      rackImageFrontSelector.setLayoutData(gd);
+      
+      rackImageRearSelector = new ImageSelector(dialogArea, SWT.NONE);
+      rackImageRearSelector.setLabel("Rack rear image");
+      rackImageRearSelector.setImageGuid(object.getRearRackImage(), false);
+      rackImageRearSelector.setEnabled(object.getRackOrientation() == RackOrientation.REAR ||
+                                       object.getRackOrientation() == RackOrientation.FILL);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 3;
+      rackImageRearSelector.setLayoutData(gd);
       
       rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
       rackPosition.setLabel(Messages.get().RackPlacement_Position);
@@ -115,6 +131,32 @@ public class RackPlacement extends PropertyPage
       rackOrientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
       rackOrientation.setItems(ORIENTATION);
       rackOrientation.setText(ORIENTATION[object.getRackOrientation().getValue()]);
+      rackOrientation.addSelectionListener(new SelectionListener() {         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            if (RackOrientation.getByValue(rackOrientation.getSelectionIndex()) == RackOrientation.FRONT)
+            {
+               rackImageRearSelector.setEnabled(false);
+               rackImageFrontSelector.setEnabled(true);
+            }
+            else if (RackOrientation.getByValue(rackOrientation.getSelectionIndex()) == RackOrientation.REAR)
+            {
+               rackImageRearSelector.setEnabled(true);
+               rackImageFrontSelector.setEnabled(false);
+            }
+            else
+            {
+               rackImageRearSelector.setEnabled(true);
+               rackImageFrontSelector.setEnabled(true);
+            }
+         }         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
       
 		return dialogArea;
 	}
@@ -130,7 +172,7 @@ public class RackPlacement extends PropertyPage
 			setValid(false);
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
+		md.setRackPlacement(rackSelector.getObjectId(), rackImageFrontSelector.getImageGuid(), rackImageRearSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection(),
 		                    RackOrientation.getByValue(rackOrientation.getSelectionIndex()));
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -191,7 +233,8 @@ public class RackPlacement extends PropertyPage
 	{
 		super.performDefaults();
 		rackSelector.setObjectId(0);
-		rackImageSelector.setImageGuid(NXCommon.EMPTY_GUID, true);
+		rackImageFrontSelector.setImageGuid(NXCommon.EMPTY_GUID, true);
+      rackImageRearSelector.setImageGuid(NXCommon.EMPTY_GUID, true);
 		rackPosition.setSelection(1);
 		rackHeight.setSelection(1);
 		rackOrientation.select(0);

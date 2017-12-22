@@ -23,6 +23,28 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.16 to 30.17 (changes also included into 22.8)
+ */
+static bool H_UpgradeFromV16()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 8)
+   {
+      static TCHAR batch[] =
+         _T("ALTER TABLE nodes ADD rack_image_rear varchar(36)\n")
+         _T("ALTER TABLE chassis ADD rack_image_rear varchar(36)\n")
+         _T("UPDATE nodes SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
+         _T("UPDATE chassis SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
+      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 8));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 30.15 to 30.16
  */
 static bool H_UpgradeFromV15()
@@ -643,6 +665,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 16, 30, 17, H_UpgradeFromV16 },
    { 15, 30, 16, H_UpgradeFromV15 },
    { 14, 30, 15, H_UpgradeFromV14 },
    { 13, 30, 14, H_UpgradeFromV13 },

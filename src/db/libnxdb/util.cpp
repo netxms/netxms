@@ -788,3 +788,52 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
 
    return success;
 }
+
+/**
+ * Rename column
+ */
+bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, const TCHAR *oldName, const TCHAR *newName)
+{
+   bool success;
+   TCHAR query[1024], type[128];
+
+   switch(DBGetSyntax(hdb))
+   {
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME COLUMN %s TO %s"), tableName, oldName, newName);
+         success = DBQuery(hdb, query);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), tableName);
+            success = DBQuery(hdb, query);
+         }
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("EXEC sp_rename '%s.%s', '%s', 'COLUMN'"), tableName, oldName, newName);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_MYSQL:
+         success = GetColumnDataType_MYSQL(hdb, tableName, oldName, type, 128);
+         if (success)
+         {
+            _sntprintf(query, 1024, _T("ALTER TABLE %s CHANGE %s %s %s"), tableName, oldName, newName, type);
+            success = DBQuery(hdb, query);
+         }
+         break;
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME COLUMN %s TO %s"), tableName, oldName, newName);
+         success = DBQuery(hdb, query);
+         break;
+      case DB_SYNTAX_SQLITE:
+         success = false;
+         // TODO add SQLite support
+         break;
+      default:
+         _tprintf(_T("Unable to rename column.\n"));
+         success = false;
+         break;
+   }
+
+   return success;
+}

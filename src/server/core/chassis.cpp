@@ -161,7 +161,8 @@ void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    DataCollectionTarget::fillMessageInternal(msg, userId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_RACK_ID, m_rackId);
-   msg->setField(VID_RACK_IMAGE, m_rackImage);
+   msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
+   msg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
    msg->setField(VID_RACK_POSITION, m_rackPosition);
    msg->setField(VID_RACK_HEIGHT, m_rackHeight);
    msg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
@@ -179,8 +180,10 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
       m_rackId = request->getFieldAsUInt32(VID_RACK_ID);
       updateRackBinding();
    }
-   if (request->isFieldExist(VID_RACK_IMAGE))
-      m_rackImage = request->getFieldAsGUID(VID_RACK_IMAGE);
+   if (request->isFieldExist(VID_RACK_IMAGE_FRONT))
+      m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
+   if (request->isFieldExist(VID_RACK_IMAGE_REAR))
+      m_rackImageFront = request->getFieldAsGUID(VID_RACK_IMAGE_REAR);
    if (request->isFieldExist(VID_RACK_POSITION))
       m_rackPosition = request->getFieldAsInt16(VID_RACK_POSITION);
    if (request->isFieldExist(VID_RACK_HEIGHT))
@@ -202,18 +205,23 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=?,rack_orientation=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,")
+                                _T("rack_image_front=?,rack_position=?,rack_height=?,")
+                                _T("rack_orientation=?,rack_image_rear=? WHERE id=?"));
       else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,rack_orientation,id) VALUES (?,?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image_front,")
+                                _T("rack_position,rack_height,rack_orientation,rack_image_rear,id)")
+                                _T("VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_rackId);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImage);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImageFront);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_rackPosition);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackHeight);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -264,7 +272,9 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height,rack_orientation FROM chassis WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image_front,")
+                                       _T("rack_position,rack_height,rack_orientation,")
+                                       _T("rack_image_rear FROM chassis WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -278,10 +288,11 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    m_controllerId = DBGetFieldULong(hResult, 0, 0);
    m_rackId = DBGetFieldULong(hResult, 0, 1);
-   m_rackImage = DBGetFieldGUID(hResult, 0, 2);
+   m_rackImageFront = DBGetFieldGUID(hResult, 0, 2);
    m_rackPosition = DBGetFieldULong(hResult, 0, 3);
    m_rackHeight = DBGetFieldULong(hResult, 0, 4);
    m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 5));
+   m_rackImageRear = DBGetFieldGUID(hResult, 0, 6);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -408,6 +419,7 @@ json_t *Chassis::toJson()
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
    json_object_set_new(root, "rackOrientation", json_integer(m_rackPosition));
    json_object_set_new(root, "rackId", json_integer(m_rackId));
-   json_object_set_new(root, "rackImage", m_rackImage.toJson());
+   json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
+   json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
    return root;
 }
