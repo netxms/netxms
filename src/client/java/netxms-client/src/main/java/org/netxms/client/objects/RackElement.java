@@ -56,11 +56,18 @@ public interface RackElement
    public long getRackId();
 
    /**
-    * Get rack image
+    * Get front rack image
     * 
-    * @return rack image
+    * @return front rack image
     */
-   public UUID getRackImage();
+   public UUID getFrontRackImage();
+   
+   /**
+    * Get rear rack image
+    * 
+    * @return rear rack image
+    */
+   public UUID getRearRackImage();
 
    /**
     * Get position in rack

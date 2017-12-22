@@ -301,12 +301,18 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          gc.setBackground(StatusDisplayInfo.getStatusColor(n.getStatus()));
          gc.fillRectangle(unitRect.x - borderWidth + borderWidth / 4 + 1, unitRect.y + 1, borderWidth / 2 - 1, Math.min(borderWidth, (int)unitHeight - 2));
          
-         if ((n.getRackImage() != null) && !n.getRackImage().equals(NXCommon.EMPTY_GUID))
+         if ((n.getRearRackImage() != null) && !n.getRearRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.REAR)
          {
-            Image image = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : ImageProvider.getInstance().getImage(n.getRackImage());
+            Image image = ImageProvider.getInstance().getImage(n.getRearRackImage());
             Rectangle r = image.getBounds();
             gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
          }
+         else if ((n.getFrontRackImage() != null) && !n.getFrontRackImage().equals(NXCommon.EMPTY_GUID) && view == RackOrientation.FRONT)
+         {
+            Image image = ImageProvider.getInstance().getImage(n.getFrontRackImage());
+            Rectangle r = image.getBounds();
+            gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+         }         
          else // Draw default representation
          {
             Image imageTop = (view == RackOrientation.REAR && n.getRackOrientation() == RackOrientation.FILL) ? imageDefaultRear : imageDefaultTop;
@@ -561,7 +567,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       List<RackElement> units = rack.getUnits();
       for(RackElement e : units)
       {
-         if (guid.equals(e.getRackImage()))
+         if (guid.equals(e.getFrontRackImage()) || guid.equals(e.getRearRackImage()))
          {
             found = true;
             break;

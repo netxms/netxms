@@ -311,11 +311,12 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
-      _T("rack_id,rack_image,rack_position,rack_height,")
+      _T("rack_id,rack_image_front,rack_position,rack_height,")
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
-      _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,rack_orientation")
+      _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,")
+      _T("rack_orientation,rack_image_rear")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -405,7 +406,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_sysContact = DBGetField(hResult, 0, 31, NULL, 0);
    m_sysLocation = DBGetField(hResult, 0, 32, NULL, 0);
-
    m_rackId = DBGetFieldULong(hResult, 0, 33);
    m_rackImage = DBGetFieldGUID(hResult, 0, 34);
    m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 35);
@@ -428,6 +428,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 50);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 51);
    m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 52));
+   m_rackImageRear = DBGetFieldGUID(hResult, 0, 53);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -519,11 +520,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
             _T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
             _T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-            _T("down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
+            _T("down_since=?,driver_name=?,rack_image_front=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
             _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
             _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
             _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
-            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=?,runtime_flags=?,rack_orientation=? WHERE id=?"));
+            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=?,runtime_flags=?,rack_orientation=?,rack_image_rear=? WHERE id=?"));
       }
       else
       {
@@ -531,11 +532,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
            _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
            _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
            _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-           _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
+           _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image_front,rack_position,rack_height,rack_id,boot_time,")
            _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
            _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
-           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,runtime_flags,rack_orientation,id) ")
-           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,runtime_flags,rack_orientation,rack_image_rear,id) ")
+           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
       }
       if (hStmt != NULL)
       {
@@ -578,7 +579,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
          DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_rackImage);   // rack image
+         DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_rackImageFront);   // rack image front
          DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
          DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackId);   // rack ID
@@ -604,7 +605,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
          DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
          DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 55, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 56, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -5089,7 +5091,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
       pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
    }
    pMsg->setField(VID_RACK_ID, m_rackId);
-   pMsg->setField(VID_RACK_IMAGE, m_rackImage);
+   pMsg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
+   pMsg->setField(VID_RACK_IMAGE_REAR, m_rackImageRear);
    pMsg->setField(VID_RACK_POSITION, m_rackPosition);
    pMsg->setField(VID_RACK_HEIGHT, m_rackHeight);
    pMsg->setField(VID_SSH_PROXY, m_sshProxy);
@@ -5334,8 +5337,10 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_rackId = pRequest->getFieldAsUInt32(VID_RACK_ID);
       updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
    }
-   if (pRequest->isFieldExist(VID_RACK_IMAGE))
-      m_rackImage = pRequest->getFieldAsGUID(VID_RACK_IMAGE);
+   if (pRequest->isFieldExist(VID_RACK_IMAGE_FRONT))
+      m_rackImageFront = pRequest->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
+   if (pRequest->isFieldExist(VID_RACK_IMAGE_REAR))
+      m_rackImageRear = pRequest->getFieldAsGUID(VID_RACK_IMAGE_REAR);
    if (pRequest->isFieldExist(VID_RACK_POSITION))
       m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
    if (pRequest->isFieldExist(VID_RACK_HEIGHT))
@@ -8397,7 +8402,8 @@ json_t *Node::toJson()
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
    json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));
    json_object_set_new(root, "rackId", json_integer(m_rackId));
-   json_object_set_new(root, "rackImage", m_rackImage.toJson());
+   json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
+   json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
    json_object_set_new(root, "chassisId", json_integer(m_chassisId));
    json_object_set_new(root, "syslogMessageCount", json_integer(m_syslogMessageCount));
    json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));

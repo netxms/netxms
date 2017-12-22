@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.7 to 22.8
+ */
+static bool H_UpgradeFromV7()
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD rack_image_rear varchar(36)\n")
+      _T("ALTER TABLE chassis ADD rack_image_rear varchar(36)\n")
+      _T("UPDATE nodes SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
+      _T("UPDATE chassis SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
+   CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 22.6 to 22.7
  */
 static bool H_UpgradeFromV6()
@@ -146,6 +164,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 7, 22, 8, H_UpgradeFromV7 },
    { 6, 22, 7, H_UpgradeFromV6 },
    { 5, 22, 6, H_UpgradeFromV5 },
    { 4, 22, 5, H_UpgradeFromV4 },

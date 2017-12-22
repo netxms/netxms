@@ -1393,7 +1393,8 @@ protected:
    INT16 m_rackHeight;
    INT16 m_rackPosition;
    UINT32 m_rackId;
-   uuid m_rackImage;
+   uuid m_rackImageFront;
+   uuid m_rackImageRear;
    RackOrientation m_rackOrientation;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
@@ -1595,7 +1596,8 @@ protected:
 	INT16 m_rackHeight;
 	INT16 m_rackPosition;
 	UINT32 m_rackId;
-	uuid m_rackImage;
+	uuid m_rackImageFront;
+   uuid m_rackImageRear;
 	UINT32 m_chassisId;
 	INT64 m_syslogMessageCount;
 	INT64 m_snmpTrapCount;

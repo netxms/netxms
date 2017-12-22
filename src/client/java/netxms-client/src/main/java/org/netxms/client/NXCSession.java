@@ -5040,7 +5040,8 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.RACK_PLACEMENT))
       {
          msg.setFieldInt32(NXCPCodes.VID_RACK_ID, (int)data.getRackId());
-         msg.setField(NXCPCodes.VID_RACK_IMAGE, data.getRackImage());
+         msg.setField(NXCPCodes.VID_RACK_IMAGE_FRONT, data.getFrontRackImage());
+         msg.setField(NXCPCodes.VID_RACK_IMAGE_REAR, data.getRearRackImage());
          msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
          msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
          msg.setFieldInt16(NXCPCodes.VID_RACK_ORIENTATION, data.getRackOrientation().getValue());

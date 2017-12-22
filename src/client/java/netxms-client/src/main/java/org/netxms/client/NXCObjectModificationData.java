@@ -202,7 +202,8 @@ public class NXCObjectModificationData
    private AgentCompressionMode agentCompressionMode;
 	private MapObjectDisplayMode mapObjectDisplayMode;
 	private long rackId;
-	private UUID rackImage;
+	private UUID rackImageFront;
+   private UUID rackImageRear;
 	private short rackPosition;
 	private short rackHeight;
    private RackOrientation rackOrientation;
@@ -1578,11 +1579,19 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the rackImage
+    * @return the front rackImage
     */
-   public UUID getRackImage()
+   public UUID getFrontRackImage()
    {
-      return rackImage;
+      return rackImageFront;
+   }
+   
+   /**
+    * @return the rear rackImage
+    */
+   public UUID getRearRackImage()
+   {
+      return rackImageRear;
    }
 
    /**
@@ -1614,14 +1623,16 @@ public class NXCObjectModificationData
     * Set rack placement data
     * 
     * @param rackId The rack ID to set
-    * @param rackImage The rack image to set
+    * @param rackImageFront The front rack image to set
+    * @param rackImageRear The rear rack image to set
     * @param rackPosition The rack position to set
     * @param rackHeight the rack height to set
     */
-   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight, RackOrientation rackOrientation)
+   public void setRackPlacement(long rackId, UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight, RackOrientation rackOrientation)
    {
       this.rackId = rackId;
-      this.rackImage = rackImage;
+      this.rackImageFront = rackImageFront;
+      this.rackImageRear = rackImageRear;
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
       this.rackOrientation = rackOrientation;

@@ -1127,7 +1127,7 @@ typedef struct
 #define VID_SYS_CONTACT             ((UINT32)515)
 #define VID_SYS_LOCATION            ((UINT32)516)
 #define VID_RACK_ID                 ((UINT32)517)
-#define VID_RACK_IMAGE              ((UINT32)518)
+#define VID_RACK_IMAGE_FRONT        ((UINT32)518)
 #define VID_RACK_POSITION           ((UINT32)519)
 #define VID_RACK_HEIGHT             ((UINT32)520)
 #define VID_SCHEDULE_COUNT          ((UINT32)521)
@@ -1222,6 +1222,7 @@ typedef struct
 #define VID_INSTANCE_RETENTION      ((UINT32)610)
 #define VID_RACK_ORIENTATION        ((UINT32)611)
 #define VID_PASSIVE_ELEMENTS        ((UINT32)612)
+#define VID_RACK_IMAGE_REAR         ((UINT32)613)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

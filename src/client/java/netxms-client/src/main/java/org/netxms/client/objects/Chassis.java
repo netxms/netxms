@@ -31,7 +31,8 @@ public class Chassis extends DataCollectionTarget implements RackElement
 {
    protected long controllerId;
    protected long rackId;
-   protected UUID rackImage;
+   protected UUID rackImageFront;
+   protected UUID rackImageRear;
    protected short rackPosition;
    protected short rackHeight;
    protected RackOrientation rackOrientation;
@@ -45,7 +46,8 @@ public class Chassis extends DataCollectionTarget implements RackElement
       super(msg, session);
       controllerId = msg.getFieldAsInt64(NXCPCodes.VID_CONTROLLER_ID);
       rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
-      rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
+      rackImageFront = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_FRONT);
+      rackImageRear = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE_REAR);
       rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
       rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
@@ -87,12 +89,21 @@ public class Chassis extends DataCollectionTarget implements RackElement
    }
 
    /* (non-Javadoc)
-    * @see org.netxms.client.objects.RackElement#getRackImage()
+    * @see org.netxms.client.objects.RackElement#getFrontRackImage()
     */
    @Override
-   public UUID getRackImage()
+   public UUID getFrontRackImage()
    {
-      return rackImage;
+      return rackImageFront;
+   }
+   
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRearRackImage()
+    */
+   @Override
+   public UUID getRearRackImage()
+   {
+      return rackImageRear;
    }
 
    /* (non-Javadoc)
