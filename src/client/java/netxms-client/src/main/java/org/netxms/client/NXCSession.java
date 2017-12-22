@@ -1821,7 +1821,7 @@ public class NXCSession
                 ((componentVersions != null) && !validateProtocolVersions(componentVersions)))
             {
                Logger.warning("NXCSession.connect", "connection failed (" + protocolVersion.toString() + ")");
-               throw new NXCException(RCC.BAD_PROTOCOL);
+               throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
             }
          }
          else

@@ -93,7 +93,7 @@ static int StartApp(int argc, char *argv[])
 #define cp s_optClassPath
 #endif
    JNIEnv *env;
-   static const TCHAR *syslibs[] = { _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.7.1.jar"), NULL };
+   static const TCHAR *syslibs[] = { _T("netxms-base.jar"), _T("netxms-client.jar"), _T("simple-xml-2.6.4.jar"), NULL };
    JavaBridgeError err = CreateJavaVM(jre, _T("nxshell.jar"), syslibs, cp, &vmOptions, &env);
    if (err == NXJAVA_SUCCESS)
    {
