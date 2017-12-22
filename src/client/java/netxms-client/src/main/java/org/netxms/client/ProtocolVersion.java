@@ -85,13 +85,13 @@ public final class ProtocolVersion
          return false;
       return getVersion(index) == CURRENT_VERSION[index];
    }
-
+   
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "ProtocolVersion [versions=" + Arrays.toString(versions) + "]";
+      return "server=" + Arrays.toString(versions) + " client=" + Arrays.toString(CURRENT_VERSION);
    }
 }
