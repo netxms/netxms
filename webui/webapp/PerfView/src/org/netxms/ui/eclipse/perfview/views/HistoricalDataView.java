@@ -338,7 +338,7 @@ public class HistoricalDataView extends ViewPart
             if (subparts != null)
                data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit);
             
             runInUIThread(new Runnable() {
                @Override
