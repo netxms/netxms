@@ -106,16 +106,16 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	         
 	         numOfObj += (parentSize == 0) ? 1 : parentSize;
             currObjsize = (parentSize == 0) ? 1 : parentSize;
-            currObjsize*=360/(float)objCount; 	 
+            currObjsize*=360/(float)objCount; 
             //white circle before each level
             e.gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
             e.gc.setAlpha(255);
-            e.gc.fillArc(centerX-(deametr*lvl)/2-3, centerY-(deametr*lvl)/2-3, deametr*lvl+6, deametr*lvl+6,(int)(degree+1),(int)(currObjsize-1));
+            e.gc.fillArc(centerX-(deametr*lvl)/2-3, centerY-(deametr*lvl)/2-3, deametr*lvl+6, deametr*lvl+6,(int)(degree),(int)(currObjsize));
             
             //draw 
             e.gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
             e.gc.setAlpha(255);
-            e.gc.fillArc(centerX-(deametr*lvl)/2, centerY-(deametr*lvl)/2, deametr*lvl, deametr*lvl,(int)(degree+1),(int)(currObjsize -1));   
+            e.gc.fillArc(centerX-(deametr*lvl)/2, centerY-(deametr*lvl)/2, deametr*lvl, deametr*lvl,(int)(degree),(int)(currObjsize -1));   
             
             objectMap.add(new ObjLocation(degree, degree+currObjsize, lvl, obj));  
 	      }
@@ -130,11 +130,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
             //white circle before each level
             e.gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
             e.gc.setAlpha(255);
-            e.gc.fillArc(centerX-(deametr*lvl)/2-3, centerY-(deametr*lvl)/2-3, deametr*lvl+6, deametr*lvl+6,(int)(degree+1),(int)(currObjsize-1));
+            e.gc.fillArc(centerX-(deametr*lvl)/2-3, centerY-(deametr*lvl)/2-3, deametr*lvl+6, deametr*lvl+6,(int)(degree),(int)(currObjsize));
             
 	         e.gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
 	         e.gc.setAlpha(255);
-	         e.gc.fillArc(centerX-(deametr*lvl)/2, centerY-(deametr*lvl)/2, deametr*lvl, deametr*lvl,(int)(degree+1),(int)(currObjsize-1)); 
+	         e.gc.fillArc(centerX-(deametr*lvl)/2, centerY-(deametr*lvl)/2, deametr*lvl, deametr*lvl,(int)(degree),(int)(currObjsize-1)); 
            
 	         objectMap.add(new ObjLocation(degree, degree+currObjsize, lvl, obj));
 	      }
@@ -243,7 +243,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          }
       }
       
-      if(aceptedlist == null && (object.getChildIdList().length - contFound) == 0)            
+      if(aceptedlist == null && object instanceof Container  && objcoutn == 0)            
       {
          objcoutn++;
       }
@@ -552,7 +552,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       @Override
       public int hashCode()
       {
-         return Float.hashCode(startDegree)+lvl;
+         return Float.floatToIntBits(startDegree)+lvl;
       }
    }
 
