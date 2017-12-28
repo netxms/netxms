@@ -23,6 +23,20 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.17 to 30.18 (changes also included into 22.9)
+ */
+static bool H_UpgradeFromV17()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 9)
+   {
+      CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("lldp_id"), 255, true));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 9));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 30.16 to 30.17 (changes also included into 22.8)
  */
 static bool H_UpgradeFromV16()
@@ -665,6 +679,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 17, 30, 18, H_UpgradeFromV17 },
    { 16, 30, 17, H_UpgradeFromV16 },
    { 15, 30, 16, H_UpgradeFromV15 },
    { 14, 30, 15, H_UpgradeFromV14 },
