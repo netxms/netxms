@@ -110,18 +110,12 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       colorCache = new ColorCache(this);
       
-      objectToolTipHeaderFont = FontTools.createFont(FONT_NAMES, 1, SWT.BOLD);
+      objectToolTipHeaderFont = FontTools.getFont(FONT_NAMES, 1, SWT.BOLD);
       
       setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
       
-      final String fontName = FontTools.findFirstAvailableFont(FONT_NAMES);
-      labelFonts = new Font[16];
-      titleFonts = new Font[16];
-      for(int i = 0; i < labelFonts.length; i++)
-      {
-         labelFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
-         titleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.BOLD);
-      }
+      labelFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.NORMAL, 16);
+      titleFonts = FontTools.getFonts(FONT_NAMES, 6, SWT.BOLD, 16);
       
       imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
       imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
@@ -538,14 +532,6 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    @Override
    public void widgetDisposed(DisposeEvent e)
    {
-      for(int i = 0; i < labelFonts.length; i++)
-      {
-         labelFonts[i].dispose();
-         titleFonts[i].dispose();
-      }
-      
-      objectToolTipHeaderFont.dispose();
-      
       imageDefaultTop.dispose();
       imageDefaultMiddle.dispose();
       imageDefaultBottom.dispose();

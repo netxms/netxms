@@ -18,6 +18,10 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -28,6 +32,9 @@ import org.eclipse.swt.widgets.Display;
  */
 public class FontTools
 {
+   private static Set<String> availableFonts = null;
+   private static Map<String, Font> fontCache = new HashMap<String, Font>();  
+   
    /**
     * Find first available font from given list
     * 
@@ -36,25 +43,88 @@ public class FontTools
     */
    public static String findFirstAvailableFont(String[] names)
    {
-      FontData[] fonts = Display.getCurrent().getFontList(null, true);
-      for(String name : names)
+      if (availableFonts == null)
       {
+         availableFonts = new HashSet<String>();
+         FontData[] fonts = Display.getCurrent().getFontList(null, true);
          for(FontData fd : fonts)
          {
-            if (fd.getName().equalsIgnoreCase(name))
-               return name;
+            availableFonts.add(fd.getName().toUpperCase());
          }
       }
+
+      for(String name : names)
+      {
+         if (availableFonts.contains(name.toUpperCase()))
+            return name;
+      }
       return null;
+   }
+
+   /**
+    * Get first available font from given list with adjusted height. Fonts will be created as needed
+    * and cached within font tools class.
+    * 
+    * @param names possible font names
+    * @param heightAdjustment height adjustment
+    * @param style font style
+    * @return font object
+    */
+   public static Font getFont(String[] names, int heightAdjustment, int style)
+   {
+      String name = findFirstAvailableFont(names);
+      if (name == null)
+         return null;
+      
+      String key = name + "/A=" + heightAdjustment + "/" + style;
+      Font f = fontCache.get(key);
+      if (f != null)
+         return f;
+
+      f = new Font(Display.getCurrent(), name, JFaceResources.getDefaultFont().getFontData()[0].getHeight() + heightAdjustment, style);
+      fontCache.put(key, f);
+      return f;
+   }
+   
+   /**
+    * Get array of font objects with first available font name from given list with increasing height. 
+    * Fonts will be created as needed and cached within font tools class.
+    * 
+    * @param names possible font names
+    * @param baseHeight base font height
+    * @param style font style
+    * @param count number of fonts to be created
+    * @return array of font objects
+    */
+   public static Font[] getFonts(String[] names, int baseHeight, int style, int count)
+   {
+      String name = findFirstAvailableFont(names);
+      if (name == null)
+         return null;
+   
+      Font[] fonts = new Font[count];
+      for(int i = 0; i < count; i++)
+      {
+         int height = baseHeight + i;
+         String key = name + "/H=" + height + "/" + style;
+         Font f = fontCache.get(key);
+         if (f == null)
+         {
+            f = new Font(Display.getCurrent(), name, height, style);
+            fontCache.put(key, f);
+         }
+         fonts[i] = f;
+      }
+      return fonts;
    }
    
    /**
     * Create first available font from given list with adjusted height
     * 
-    * @param names
-    * @param height
-    * @param style
-    * @return
+    * @param names possible font names
+    * @param heightAdjustment height adjustment
+    * @param style font style
+    * @return font object
     */
    public static Font createFont(String[] names, int heightAdjustment, int style)
    {
@@ -67,9 +137,9 @@ public class FontTools
    /**
     * Create first available font from given list with same height as default system font
     * 
-    * @param names
-    * @param style
-    * @return
+    * @param names possible font names
+    * @param style font style
+    * @return font object
     */
    public static Font createFont(String[] names, int style)
    {

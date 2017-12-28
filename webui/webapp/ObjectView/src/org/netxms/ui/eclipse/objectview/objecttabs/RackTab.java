@@ -81,18 +81,14 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          {
             if ((rackFrontWidget == null) || (rackRearWidget == null))
                return;
-            
-            int height = content.getSize().y;
-            Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
-            rackFrontWidget.setSize(size);
-            rackRearWidget.setSize(size);
-            rackRearWidget.setLocation(size.x, 0);
+            updateRackWidgetsSize();
          }
       });
 	   
 	   scroller.setContent(content);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
+      scroller.getHorizontalBar().setIncrement(20);
       scroller.addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
@@ -101,6 +97,18 @@ public class RackTab extends ObjectTab implements ISelectionProvider
       });
 	}
 	
+   /**
+    * Update size and position of rack widgets 
+    */
+   protected void updateRackWidgetsSize()
+   {
+      int height = content.getSize().y;
+      Point size = rackFrontWidget.computeSize(SWT.DEFAULT, height, true);
+      rackFrontWidget.setSize(size);
+      rackRearWidget.setSize(size);
+      rackRearWidget.setLocation(size.x, 0);
+   }
+
    /**
     * Create pop-up menu
     */
@@ -190,6 +198,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
          rackRearWidget.addSelectionListener(listener);
          
          scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));
+         updateRackWidgetsSize();
          createPopupMenu();
 	   }
 	}
