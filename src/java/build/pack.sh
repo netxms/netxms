@@ -2,7 +2,7 @@
 
 . ./set_build_number.sh
 #version=2.0-RC2-$build_number
-version=2.2.1-51
+version=2.2.1-66
 
 cd win32.win32.x86
 zip -r nxmc-$version-win32-x86.zip nxmc
@@ -31,3 +31,5 @@ tar cvf nxmc-$version-macosx-cocoa-x64.tar nxmc
 gzip nxmc-$version-macosx-cocoa-x64.tar
 mv nxmc-$version-macosx-cocoa-x64.tar.gz ..
 cd ..
+
+rm -f logs.zip
