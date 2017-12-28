@@ -325,7 +325,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          }
       }
       else
-         values = new ArrayList<>();
+         values = new ArrayList<DciValue>();
       
       if ((tooltipObject.getComments() != null) && !tooltipObject.getComments().isEmpty())
       {
