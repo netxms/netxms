@@ -26,14 +26,15 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Font tools
  */
 public class FontTools
 {
-   private static Set<String> availableFonts = null;
-   private static Map<String, Font> fontCache = new HashMap<String, Font>();  
+   //private static Set<String> availableFonts = null;
+   //private static Map<String, Font> fontCache = new HashMap<String, Font>();  
    
    /**
     * Find first available font from given list
@@ -41,8 +42,10 @@ public class FontTools
     * @param names
     * @return
     */
+   @SuppressWarnings("unchecked")
    public static String findFirstAvailableFont(String[] names)
    {
+      Set<String> availableFonts = (Set<String>)ConsoleSharedData.getProperty("FontTools.availableFonts");
       if (availableFonts == null)
       {
          availableFonts = new HashSet<String>();
@@ -51,6 +54,7 @@ public class FontTools
          {
             availableFonts.add(fd.getName().toUpperCase());
          }
+         ConsoleSharedData.setProperty("FontTools.availableFonts", availableFonts);
       }
 
       for(String name : names)
@@ -59,6 +63,23 @@ public class FontTools
             return name;
       }
       return null;
+   }
+   
+   /**
+    * Get font cache for current session
+    * 
+    * @return font cache
+    */
+   @SuppressWarnings("unchecked")
+   private static Map<String, Font> getFontCache()
+   {
+      Map<String, Font> fontCache = (Map<String, Font>)ConsoleSharedData.getProperty("FontTools.fontCache");
+      if (fontCache == null)
+      {
+         fontCache = new HashMap<String, Font>();
+         ConsoleSharedData.setProperty("FontTools.fontCache", fontCache);
+      }
+      return fontCache;
    }
 
    /**
@@ -75,6 +96,8 @@ public class FontTools
       String name = findFirstAvailableFont(names);
       if (name == null)
          return null;
+      
+      Map<String, Font> fontCache = getFontCache();
       
       String key = name + "/A=" + heightAdjustment + "/" + style;
       Font f = fontCache.get(key);
@@ -102,6 +125,8 @@ public class FontTools
       if (name == null)
          return null;
    
+      Map<String, Font> fontCache = getFontCache();
+      
       Font[] fonts = new Font[count];
       for(int i = 0; i < count; i++)
       {
