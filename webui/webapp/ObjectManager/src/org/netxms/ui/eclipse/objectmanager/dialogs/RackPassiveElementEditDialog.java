@@ -43,10 +43,11 @@ public class RackPassiveElementEditDialog extends Dialog
    private final static String[] TYPE = { "Patch panel", "Filler panel", "Organiser" };
    
    private PassiveRackElement element;
-   private LabeledText rackPassiveElementName;
-   private Combo rackPassiveElementType;
-   private Combo rackOrientation;
-   private LabeledSpinner rackPosition;
+   private LabeledText name;
+   private Combo type;
+   private Combo orientation;
+   private LabeledSpinner position;
+   private String title;
    
    /**
     * @param parentShell
@@ -54,7 +55,8 @@ public class RackPassiveElementEditDialog extends Dialog
    public RackPassiveElementEditDialog(Shell parentShell, PassiveRackElement element)
    {
       super(parentShell);
-      this.element = element;
+      this.element = (element != null) ? element : new PassiveRackElement();
+      title = (element == null) ? "Add Element" : "Edit Element";
    }
 
    /* (non-Javadoc)
@@ -64,7 +66,7 @@ public class RackPassiveElementEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((element == null) ? "Add Element" : "Edit Element");
+      newShell.setText(title);
    }
 
    /* (non-Javadoc)
@@ -73,9 +75,6 @@ public class RackPassiveElementEditDialog extends Dialog
    @Override
    protected Control createDialogArea(Composite parent)
    {
-      if (element == null)
-         element = new PassiveRackElement();
-      
       Composite dialogArea = new Composite(parent, SWT.NONE);
       
       GridLayout layout = new GridLayout();
@@ -88,34 +87,34 @@ public class RackPassiveElementEditDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
       gd.widthHint = 400;
-      rackPassiveElementName = new LabeledText(dialogArea, SWT.NONE);
-      rackPassiveElementName.setLabel("Name");
-      rackPassiveElementName.setText(element.getName());
-      rackPassiveElementName.setLayoutData(gd);
+      name = new LabeledText(dialogArea, SWT.NONE);
+      name.setLabel("Name");
+      name.setText(element.getName());
+      name.setLayoutData(gd);
       
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      rackPassiveElementType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Type", gd);
-      rackPassiveElementType.setItems(TYPE);
-      rackPassiveElementType.setText(TYPE[element.getType().getValue()]);
+      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Type", gd);
+      type.setItems(TYPE);
+      type.setText(TYPE[element.getType().getValue()]);
       
-      rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
-      rackPosition.setLabel(Messages.get().RackPlacement_Position);
-      rackPosition.setRange(1, 50);
-      rackPosition.setSelection(element.getPosition());
-      
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      rackPosition.setLayoutData(gd);
+      position = new LabeledSpinner(dialogArea, SWT.NONE);
+      position.setLabel(Messages.get().RackPlacement_Position);
+      position.setRange(1, 50);
+      position.setSelection(element.getPosition());
       
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      rackOrientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
-      rackOrientation.setItems(ORIENTATION);
-      rackOrientation.setText(ORIENTATION[element.getOrientation().getValue()]);
+      position.setLayoutData(gd);
+      
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      orientation = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Orientation", gd);
+      orientation.setItems(ORIENTATION);
+      orientation.setText(ORIENTATION[element.getOrientation().getValue()]);
       
       return dialogArea;
    }
@@ -126,10 +125,10 @@ public class RackPassiveElementEditDialog extends Dialog
    @Override
    protected void okPressed()
    {      
-      element.setPosition(rackPosition.getSelection());
-      element.setOrientation(RackOrientation.getByValue(rackOrientation.getSelectionIndex()));
-      element.setName(rackPassiveElementType.getText());
-      element.setType(RackElementType.getByValue(rackPassiveElementType.getSelectionIndex()));
+      element.setPosition(position.getSelection());
+      element.setOrientation(RackOrientation.getByValue(orientation.getSelectionIndex()));
+      element.setName(name.getText());
+      element.setType(RackElementType.getByValue(type.getSelectionIndex()));
       super.okPressed();
    }
    
