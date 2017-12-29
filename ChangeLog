@@ -17,10 +17,12 @@
 	NX-1350 (Invert Values option for performance tab DCIs; Performance tab graph configuration is maintained on double-click)
 	NX-1366 (Edit option for "group box" decorations on network maps)
 	NX-1369 (Title not displayed for dashboard element "Rack")
+	NX-1370 (Rack page not displayed correctly when switch between rack objects)
 	NX-1372 (PING subagent is not working)
 	NX-1374 (Element DashboardGroup not displayed in Dashboard perspective)
 	NX-1373 (Error message "Error loading RSA keys from ..." in all server-to-agent command line tools)
 	NX-1376 (Windows agent reports incorrect OS version on Windows 10)
+	NX-1379 (Rack width calculated incorrectly if only front/back selected)
 	NX-1380 (Database error when node has LLDP ID longer than 63 characters)
 	NX-1381 (Unjustified NXSL errors "cannot do automatic type cast")
 
