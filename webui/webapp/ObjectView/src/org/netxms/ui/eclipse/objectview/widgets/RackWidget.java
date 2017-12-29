@@ -565,7 +565,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             @Override
             public void run()
             {
-               redraw();
+               if (!isDisposed())
+                  redraw();
             }
          });
       }

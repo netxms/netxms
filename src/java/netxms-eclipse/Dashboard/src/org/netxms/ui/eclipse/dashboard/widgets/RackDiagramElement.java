@@ -125,15 +125,20 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
             @Override
             public Point computeSize(int wHint, int hHint, boolean changed)
             {
-               if (rackFrontWidget != null)
+               if ((rackFrontWidget != null) && (rackRearWidget != null))
                {
                   Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
                   return new Point(s.x * 2, s.y);
                }
-               if (rackRearWidget != null)
+               else if (rackFrontWidget != null)
+               {
+                  Point s = rackFrontWidget.computeSize(wHint, hHint, changed);
+                  return new Point(s.x, s.y);
+               }
+               else if (rackRearWidget != null)
                {
                   Point s = rackRearWidget.computeSize(wHint, hHint, changed);
-                  return new Point(s.x * 2, s.y);
+                  return new Point(s.x, s.y);
                }
 
                return super.computeSize(wHint, hHint, changed);    
@@ -202,10 +207,10 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          }
       };
       
+      if (rackFrontWidget != null)
+         rackFrontWidget.addSelectionListener(listener);
       if (rackRearWidget != null)
          rackRearWidget.addSelectionListener(listener);
-      if (rackFrontWidget != null)
-      rackFrontWidget.addSelectionListener(listener);
       
       createPopupMenu();
    }
