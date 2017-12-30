@@ -391,7 +391,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->maxThreads = p->maxThreads;
    info->curThreads = p->threads->size();
    info->activeRequests = p->activeRequests;
-   info->load = info->activeRequests * 100 / info->curThreads;
+   info->load = (info->curThreads > 0) ? info->activeRequests * 100 / info->curThreads : 0;
    info->usage = info->curThreads * 100 / info->maxThreads;
    info->loadAvg[0] = (double)p->loadAverage[0] / FP_1;
    info->loadAvg[1] = (double)p->loadAverage[1] / FP_1;
