@@ -23,6 +23,32 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.18 to 30.19 (changes also included into 22.10)
+ */
+static bool H_UpgradeFromV18()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 10)
+   {
+      static TCHAR batch[] =
+         _T("UPDATE config SET var_name='ThreadPool.DataCollector.BaseSize' WHERE var_name='DataCollector.ThreadPool.BaseSize'\n")
+         _T("UPDATE config SET var_name='ThreadPool.DataCollector.MaxSize' WHERE var_name='DataCollector.ThreadPool.MaxSize'\n")
+         _T("UPDATE config SET var_name='ThreadPool.Poller.BaseSize',description='Base size for poller thread pool' WHERE var_name='PollerThreadPoolBaseSize'\n")
+         _T("UPDATE config SET var_name='ThreadPool.Poller.MaxSize',description='Maximum size for poller thread pool' WHERE var_name='PollerThreadPoolMaxSize'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.BaseSize"), _T("4"), _T("Base size for agent connector thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.MaxSize"), _T("256"), _T("Maximum size for agent connector thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.BaseSize"), _T("8"), _T("Base size for main server thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.MaxSize"), _T("256"), _T("Maximum size for main server thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.BaseSize"), _T("1"), _T("Base size for scheduler thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.MaxSize"), _T("64"), _T("Maximum size for scheduler thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 10));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 30.17 to 30.18 (changes also included into 22.9)
  */
 static bool H_UpgradeFromV17()
@@ -679,6 +705,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 18, 30, 19, H_UpgradeFromV18 },
    { 17, 30, 18, H_UpgradeFromV17 },
    { 16, 30, 17, H_UpgradeFromV16 },
    { 15, 30, 16, H_UpgradeFromV15 },

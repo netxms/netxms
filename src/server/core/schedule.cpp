@@ -840,8 +840,11 @@ static THREAD s_cronSchedulerThread = INVALID_THREAD_HANDLE;
  */
 void InitializeTaskScheduler()
 {
-   g_schedulerThreadPool = ThreadPoolCreate(1, 64, _T("SCHEDULER"));
-   //read from DB configuration
+   g_schedulerThreadPool = ThreadPoolCreate(
+            ConfigReadInt(_T("ThreadPool.Scheduler.BaseSize"), 1),
+            ConfigReadInt(_T("ThreadPool.Scheduler.MaxSize"), 64),
+            _T("SCHEDULER"));
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments FROM scheduled_tasks"));
    if (hResult != NULL)

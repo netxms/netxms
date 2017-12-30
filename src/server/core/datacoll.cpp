@@ -551,8 +551,8 @@ static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
 void InitDataCollector()
 {
    g_dataCollectorThreadPool = ThreadPoolCreate(
-            ConfigReadInt(_T("DataCollector.ThreadPool.BaseSize"), 10),
-            ConfigReadInt(_T("DataCollector.ThreadPool.MaxSize"), 250),
+            ConfigReadInt(_T("ThreadPool.DataCollector.BaseSize"), 10),
+            ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
             _T("DATACOLL"));
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
