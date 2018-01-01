@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -4919,7 +4919,7 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       }
       else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, FALSE))
       {
-         rc = GetThreadPoolStat(THREAD_POOL_REQUESTS, param, buffer);
+         rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, param, buffer);
       }
       else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), param, FALSE))
       {
@@ -4948,6 +4948,10 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), param, FALSE))
       {
          rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_SCHEDULED_REQUESTS, param, buffer);
       }
       else if (MatchString(_T("Server.ThreadPool.Usage(*)"), param, FALSE))
       {

@@ -293,6 +293,7 @@
 #define DCIDESC_AGENT_THREADPOOL_LOADAVG_15       _T("Agent thread pool {instance}: load average (15 minutes)")
 #define DCIDESC_AGENT_THREADPOOL_MAXSIZE          _T("Agent thread pool {instance}: max size")
 #define DCIDESC_AGENT_THREADPOOL_MINSIZE          _T("Agent thread pool {instance}: min size")
+#define DCIDESC_AGENT_THREADPOOL_SCHEDULEDREQUESTS _T("Agent thread pool {instance}: scheduled requests")
 #define DCIDESC_AGENT_THREADPOOL_USAGE            _T("Agent thread pool {instance}: usage")
 #define DCIDESC_AGENT_TIMEDOUTREQUESTS            _T("Number of timed out requests to agent")
 #define DCIDESC_AGENT_UNSUPPORTEDREQUESTS         _T("Number of requests for unsupported parameters")

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -202,14 +202,15 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
    ThreadPoolInfo info;
    ThreadPoolGetInfo(p, &info);
    ConsolePrintf(console, _T("\x1b[1m%s\x1b[0m\n")
-                          _T("   Threads:      %d (%d/%d)\n")
-                          _T("   Load average: %0.2f %0.2f %0.2f\n")
-                          _T("   Current load: %d%%\n")
-                          _T("   Usage:        %d%%\n")
-                          _T("   Requests:     %d\n\n"),
+                          _T("   Threads:            %d (%d/%d)\n")
+                          _T("   Load average:       %0.2f %0.2f %0.2f\n")
+                          _T("   Current load:       %d%%\n")
+                          _T("   Usage:              %d%%\n")
+                          _T("   Active requests:    %d\n\n")
+                          _T("   Scheduled requests: %d\n\n"),
                  info.name, info.curThreads, info.minThreads, info.maxThreads, 
                  info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
-                 info.load, info.usage, info.activeRequests);
+                 info.load, info.usage, info.activeRequests, info.scheduledRequests);
 }
 
 /**
@@ -258,8 +259,11 @@ DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, T
       case THREAD_POOL_MIN_SIZE:
          ret_int(value, info.minThreads);
          break;
-      case THREAD_POOL_REQUESTS:
+      case THREAD_POOL_ACTIVE_REQUESTS:
          ret_int(value, info.activeRequests);
+         break;
+      case THREAD_POOL_SCHEDULED_REQUESTS:
+         ret_int(value, info.scheduledRequests);
          break;
       case THREAD_POOL_USAGE:
          ret_int(value, info.usage);

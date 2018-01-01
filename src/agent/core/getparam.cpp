@@ -277,8 +277,7 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
    return SYSINFO_RC_SUCCESS;
 }
 
-#endif
-
+#endif /* HAVE_GET_CPUID || _WIN32 */
 
 /**
  * Standard agent's parameters
@@ -357,7 +356,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.SyslogProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SYSLOG_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_ISENABLED },
    { _T("Agent.SyslogProxy.ReceivedMessages"), H_SyslogStats, _T("R"), DCI_DT_UINT64, DCIDESC_AGENT_SYSLOGPROXY_RECEIVEDMSGS },
    { _T("Agent.SyslogProxy.QueueSize"), H_SyslogStats, _T("Q"), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_QUEUESIZE },
-   { _T("Agent.ThreadPool.ActiveRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS },
+   { _T("Agent.ThreadPool.ActiveRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_ACTIVE_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS },
    { _T("Agent.ThreadPool.CurrSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_CURR_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_CURRSIZE },
    { _T("Agent.ThreadPool.Load(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_LOAD, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_LOAD },
    { _T("Agent.ThreadPool.LoadAverage(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_LOADAVG_1, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_LOADAVG },
@@ -365,6 +364,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.ThreadPool.LoadAverage15(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_LOADAVG_15, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_LOADAVG_15 },
    { _T("Agent.ThreadPool.MaxSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_MAX_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_MAXSIZE },
    { _T("Agent.ThreadPool.MinSize(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_MIN_SIZE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_MINSIZE },
+   { _T("Agent.ThreadPool.ScheduledRequests(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_SCHEDULED_REQUESTS, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_SCHEDULEDREQUESTS },
    { _T("Agent.ThreadPool.Usage(*)"), H_ThreadPoolInfo, (TCHAR *)THREAD_POOL_USAGE, DCI_DT_UINT, DCIDESC_AGENT_THREADPOOL_USAGE },
    { _T("Agent.TimedOutRequests"), H_UIntPtr, (TCHAR *)&m_dwTimedOutRequests, DCI_DT_UINT, DCIDESC_AGENT_TIMEDOUTREQUESTS },
    { _T("Agent.UnsupportedRequests"), H_UIntPtr, (TCHAR *)&m_dwUnsupportedRequests, DCI_DT_UINT, DCIDESC_AGENT_UNSUPPORTEDREQUESTS },

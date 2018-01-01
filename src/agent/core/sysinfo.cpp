@@ -479,6 +479,9 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 
    switch(CAST_FROM_POINTER(arg, int))
    {
+      case THREAD_POOL_ACTIVE_REQUESTS:
+         ret_int(value, info.activeRequests);
+         break;
       case THREAD_POOL_CURR_SIZE:
          ret_int(value, info.curThreads);
          break;
@@ -509,8 +512,8 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       case THREAD_POOL_MIN_SIZE:
          ret_int(value, info.minThreads);
          break;
-      case THREAD_POOL_REQUESTS:
-         ret_int(value, info.activeRequests);
+      case THREAD_POOL_SCHEDULED_REQUESTS:
+         ret_int(value, info.scheduledRequests);
          break;
       case THREAD_POOL_USAGE:
          ret_int(value, info.usage);
