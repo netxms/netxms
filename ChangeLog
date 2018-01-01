@@ -20,6 +20,7 @@
 - Server command line tools working with agents (nxaction, nxap, nxget, nxupload) use encryption by default
 - "Floor plan" display mode for objects on network map
 - Access to zone data in network discovery filters 
+- Automatic target configuration in PING subagent
 - Fixed issues:
 	NX-513 (add toString() to all data objects in netxms-base)
 	NX-599 (Delete single collected value from a DCI)
@@ -40,6 +41,7 @@
 	NX-1379 (Rack width calculated incorrectly if only front/back selected)
 	NX-1380 (Database error when node has LLDP ID longer than 63 characters)
 	NX-1381 (Unjustified NXSL errors "cannot do automatic type cast")
+	NX-1384 (Automatic ping target configuration on first data request)
 
 
 *
