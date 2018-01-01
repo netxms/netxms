@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,10 @@
  */
 #define MAX_POLLS_PER_MINUTE     60
 
+#define PING_OPT_ALLOW_AUTOCONFIGURE   0x0001
+
+#define DEBUG_TAG _T("sa.ping")
+
 /**
  * Target information structure
  */
@@ -49,7 +53,8 @@ struct PING_TARGET
    UINT32 history[MAX_POLLS_PER_MINUTE];
    int bufPos;
 	int ipAddrAge;
-   THREAD hThread;
+	bool automatic;
+	time_t lastDataRead;
 };
 
 #endif

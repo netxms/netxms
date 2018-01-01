@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,100 +25,117 @@
 /**
  * Static data
  */
-#ifdef _NETWARE
-static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
-#endif
-static BOOL m_bShutdown = FALSE;
+static ThreadPool *s_pollers = NULL;
 static ObjectArray<PING_TARGET> s_targets(16, 16, true);
-static UINT32 m_dwTimeout = 3000;    // Default timeout is 3 seconds
-static UINT32 m_dwDefPacketSize = 46;
-static UINT32 m_dwPollsPerMinute = 4;
+static Mutex s_targetLock;
+static UINT32 m_timeout = 3000;    // Default timeout is 3 seconds
+static UINT32 m_defaultPacketSize = 46;
+static UINT32 m_pollsPerMinute = 4;
+static UINT32 s_maxTargetInactivityTime = 86400;
+static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 
 /**
- * Poller thread
+ * Housekeeper
  */
-static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
+static void Housekeeper(void *arg)
 {
-	QWORD qwStartTime;
-	UINT32 i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime, dwStdDev;
-	BOOL bUnreachable;
-	PING_TARGET *target = (PING_TARGET *)arg;
-	while(!m_bShutdown)
-	{
-		bUnreachable = FALSE;
-		qwStartTime = GetCurrentTimeMs();
+   time_t now = time(NULL);
+   s_targetLock.lock();
+   for(int i = 0; i < s_targets.size(); i++)
+   {
+       PING_TARGET *t = s_targets.get(i);
+       if (t->automatic && (now - t->lastDataRead > s_maxTargetInactivityTime))
+       {
+          nxlog_debug_tag(DEBUG_TAG, 3, _T("Target %s (%s) removed because of inactivity"), t->name, (const TCHAR *)t->ipAddr.toString());
+          s_targets.remove(i);
+          i--;
+       }
+   }
+   s_targetLock.unlock();
+
+   ThreadPoolScheduleRelative(s_pollers, 600000, Housekeeper, NULL);
+}
+
+/**
+ * Poller
+ */
+static void Poller(void *arg)
+{
+   PING_TARGET *target = (PING_TARGET *)arg;
+
+	bool unreachable = false;
+	INT32 startTime = GetCurrentTimeMs();
+
 retry:
-		if (IcmpPing(target->ipAddr, 1, m_dwTimeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
-		{
+   if (IcmpPing(target->ipAddr, 1, m_timeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
+   {
+      InetAddress ip = InetAddress::resolveHostName(target->dnsName);
+      if (!ip.equals(target->ipAddr))
+      {
+         TCHAR ip1[64], ip2[64];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
+                         target->ipAddr.toString(ip1), ip.toString(ip2));
+         target->ipAddr = ip;
+         goto retry;
+      }
+      target->lastRTT = 10000;
+      unreachable = TRUE;
+   }
+
+   target->history[target->bufPos++] = target->lastRTT;
+   if (target->bufPos == (int)m_pollsPerMinute)
+   {
+      target->bufPos = 0;
+
+      // recheck IP every 5 minutes
+      target->ipAddrAge++;
+      if (target->ipAddrAge >= 1)
+      {
          InetAddress ip = InetAddress::resolveHostName(target->dnsName);
          if (!ip.equals(target->ipAddr))
-			{
-				TCHAR ip1[64], ip2[64];
-				AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
-                               target->ipAddr.toString(ip1), ip.toString(ip2));
-				target->ipAddr = ip;
-				goto retry;
-			}
-			target->lastRTT = 10000;
-			bUnreachable = TRUE;
-		}
+         {
+            TCHAR ip1[64], ip2[64];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
+                            target->ipAddr.toString(ip1), ip.toString(ip2));
+            target->ipAddr = ip;
+         }
+         target->ipAddrAge = 0;
+      }
+   }
 
-		target->history[target->bufPos++] = target->lastRTT;
-		if (target->bufPos == (int)m_dwPollsPerMinute)
-		{
-			target->bufPos = 0;
+   UINT32 sum = 0, count = 0, lost = 0, stdDev = 0;
+   for(UINT32 i = 0; i < m_pollsPerMinute; i++)
+   {
+      if (target->history[i] < 10000)
+      {
+         sum += target->history[i];
+         if (target->history[i] > 0)
+         {
+            stdDev += (target->avgRTT - target->history[i]) * (target->avgRTT - target->history[i]);
+         }
+         count++;
+      }
+      else
+      {
+         lost++;
+      }
+   }
+   target->avgRTT = unreachable ? 10000 : (sum / count);
+   target->packetLoss = lost * 100 / m_pollsPerMinute;
 
-			// recheck IP every 5 minutes
-			target->ipAddrAge++;
-			if (target->ipAddrAge >= 1)
-			{
-            InetAddress ip = InetAddress::resolveHostName(target->dnsName);
-            if (!ip.equals(target->ipAddr))
-				{
-					TCHAR ip1[64], ip2[64];
-					AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
-											 target->ipAddr.toString(ip1), ip.toString(ip2));
-					target->ipAddr = ip;
-				}
-				target->ipAddrAge = 0;
-			}
-		}
+   if (count > 0)
+   {
+      target->stdDevRTT = (UINT32)sqrt((double)stdDev / (double)count);
+   }
+   else
+   {
+      target->stdDevRTT = 0;
+   }
 
-		for(i = 0, dwSum = 0, dwLost = 0, dwCount = 0, dwStdDev = 0; i < m_dwPollsPerMinute; i++)
-		{
-			if (target->history[i] < 10000)
-			{
-				dwSum += target->history[i];
-				if (target->history[i] > 0)
-				{
-					dwStdDev += (target->avgRTT - target->history[i]) * (target->avgRTT - target->history[i]);
-				}
-				dwCount++;
-			}
-			else
-			{
-				dwLost++;
-			}
-		}
-		target->avgRTT = bUnreachable ? 10000 : (dwSum / dwCount);
-		target->packetLoss = dwLost * 100 / m_dwPollsPerMinute;
+   UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+   UINT32 interval = 60000 / m_pollsPerMinute;
 
-		if (dwCount > 0)
-		{
-			target->stdDevRTT = (UINT32)sqrt((double)dwStdDev / (double)dwCount);
-		}
-		else
-		{
-			target->stdDevRTT = 0;
-		}
-
-		dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
-		dwInterval = 60000 / m_dwPollsPerMinute;
-
-		if (AgentSleepAndCheckForShutdown((dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
-			break;
-	}
-	return THREAD_OK;
+   ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime + 1000) ? interval - elapsedTime : 1, Poller, arg);
 }
 
 /**
@@ -127,17 +144,17 @@ retry:
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
-	UINT32 dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwTimeOut = m_timeout, dwRTT, dwPacketSize = m_defaultPacketSize;
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
-	StrStrip(szHostName);
+	Trim(szHostName);
 	if (!AgentGetParameterArg(pszParam, 2, szTimeOut, 256))
 		return SYSINFO_RC_UNSUPPORTED;
-	StrStrip(szTimeOut);
+	Trim(szTimeOut);
 	if (!AgentGetParameterArg(pszParam, 3, szPacketSize, 256))
 		return SYSINFO_RC_UNSUPPORTED;
-	StrStrip(szPacketSize);
+	Trim(szPacketSize);
 
    InetAddress addr = InetAddress::resolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
@@ -177,6 +194,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 
    int i;
    PING_TARGET *t = NULL;
+   s_targetLock.lock();
    for(i = 0; i < s_targets.size(); i++)
 	{
       t = s_targets.get(i);
@@ -193,8 +211,36 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 	}
 
    if (i == s_targets.size())
-		return SYSINFO_RC_UNSUPPORTED;   // No such target
+   {
+      if (s_options & PING_OPT_ALLOW_AUTOCONFIGURE)
+      {
+         InetAddress addr = bUseName ? InetAddress::resolveHostName(szTarget) : ipAddr;
+         if (!addr.isValid())
+         {
+            s_targetLock.unlock();
+            return SYSINFO_RC_UNSUPPORTED;   // Invalid hostname
+         }
 
+         t = new PING_TARGET;
+         memset(t, 0, sizeof(PING_TARGET));
+         t->ipAddr = addr;
+         nx_strncpy(t->dnsName, szTarget, MAX_DB_STRING);
+         nx_strncpy(t->name, szTarget, MAX_DB_STRING);
+         t->packetSize = m_defaultPacketSize;
+         t->automatic = true;
+         s_targets.add(t);
+
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("New ping target %s (%s) created from request"), t->name, (const TCHAR *)t->ipAddr.toString());
+      }
+      else
+      {
+         s_targetLock.unlock();
+         return SYSINFO_RC_UNSUPPORTED;   // No such target
+      }
+   }
+   s_targetLock.unlock();
+
+   t->lastDataRead = time(NULL);
 	switch(*pArg)
 	{
 		case _T('A'):
@@ -223,12 +269,14 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 {
 	TCHAR szBuffer[MAX_DB_STRING + 128];
 
+   s_targetLock.lock();
 	for(int i = 0; i < s_targets.size(); i++)
 	{
       PING_TARGET *t = s_targets.get(i);
       _sntprintf(szBuffer, MAX_DB_STRING + 128, _T("%s"), t->name);
 		value->add(szBuffer);
 	}
+   s_targetLock.unlock();
 
 	return SYSINFO_RC_SUCCESS;
 }
@@ -244,7 +292,10 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
     value->addColumn(_T("PACKET_LOSS"), DCI_DT_UINT, _T("Packet loss"));
     value->addColumn(_T("PACKET_SIZE"), DCI_DT_UINT, _T("Packet size"));
     value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+    value->addColumn(_T("DNS_NAME"), DCI_DT_STRING, _T("DNS name"));
+    value->addColumn(_T("IS_AUTO"), DCI_DT_INT, _T("Automatic"));
 
+    s_targetLock.lock();
     for(int i = 0; i < s_targets.size(); i++)
     {
         value->addRow();
@@ -255,7 +306,10 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
         value->set(3, t->packetLoss);
         value->set(4, t->packetSize);
         value->set(5, t->name);
+        value->set(6, t->dnsName);
+        value->set(7, t->automatic);
     }
+    s_targetLock.unlock();
     return SYSINFO_RC_SUCCESS;
 }
 
@@ -264,15 +318,8 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
  */
 static void SubagentShutdown()
 {
-	m_bShutdown = TRUE;
-   for(int i = 0; i < s_targets.size(); i++)
-      ThreadJoin(s_targets.get(i)->hThread);
-   AgentWriteDebugLog(2, _T("PING: all poller threads stopped"));
-
-#ifdef _NETWARE
-	// Notify main thread that NLM can exit
-	ConditionSet(m_hCondTerminate);
-#endif
+   ThreadPoolDestroy(s_pollers);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Poller thread pool destroyed"));
 }
 
 /**
@@ -283,7 +330,7 @@ static void SubagentShutdown()
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
-	UINT32 dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwPacketSize = m_defaultPacketSize;
 	BOOL bResult = FALSE;
 
 	pszLine = _tcsdup(pszCfg);
@@ -349,10 +396,12 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 static TCHAR *m_pszTargetList = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_dwDefPacketSize },
-	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_dwPollsPerMinute },
+   { _T("AutoConfigureTargets"), CT_BOOLEAN, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options },
+	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_defaultPacketSize },
+   { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime },
+	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_pollsPerMinute },
 	{ _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList },
-	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_dwTimeout },
+	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_timeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -361,49 +410,49 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static BOOL SubagentInit(Config *config)
 {
-	bool success;
-
 	// Parse configuration
-	success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
-	if (success)
+	bool success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
+	if (!success)
 	{
-		if (m_dwPollsPerMinute == 0)
-			m_dwPollsPerMinute = 1;
-		if (m_dwPollsPerMinute > MAX_POLLS_PER_MINUTE)
-			m_dwPollsPerMinute = MAX_POLLS_PER_MINUTE;
+	   free(m_pszTargetList);
+	   return false;
+	}
 
-		// Parse target list
-		if (m_pszTargetList != NULL)
-		{
-		   TCHAR *pItem = m_pszTargetList;
-		   TCHAR *pEnd = _tcschr(pItem, _T('\n'));
-			while(pEnd != NULL)
-			{
-				*pEnd = 0;
-				StrStrip(pItem);
-				if (!AddTargetFromConfig(pItem))
-					AgentWriteLog(NXLOG_WARNING,
-							_T("Unable to add ICMP ping target from configuration file. ")
-							_T("Original configuration record: %s"), pItem);
-            pItem = pEnd + 1;
-				pEnd = _tcschr(pItem, _T('\n'));
-			}
-			free(m_pszTargetList);
-		}
+	s_pollers = ThreadPoolCreate(1, 1024, _T("PING"));
 
-		// Start poller threads
-      for(int i = 0; i < s_targets.size(); i++)
+   if (m_pollsPerMinute == 0)
+      m_pollsPerMinute = 1;
+   else if (m_pollsPerMinute > MAX_POLLS_PER_MINUTE)
+      m_pollsPerMinute = MAX_POLLS_PER_MINUTE;
+
+   // Parse target list
+   if (m_pszTargetList != NULL)
+   {
+      TCHAR *pItem = m_pszTargetList;
+      TCHAR *pEnd = _tcschr(pItem, _T('\n'));
+      while(pEnd != NULL)
       {
-         PING_TARGET *t = s_targets.get(i);
-         t->hThread = ThreadCreateEx(PollerThread, 0, t);
+         *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddTargetFromConfig(pItem))
+            AgentWriteLog(NXLOG_WARNING,
+                  _T("Unable to add ICMP ping target from configuration file. ")
+                  _T("Original configuration record: %s"), pItem);
+         pItem = pEnd +1;
+         pEnd = _tcschr(pItem, _T('\n'));
       }
-	}
-	else
-	{
-		safe_free(m_pszTargetList);
-	}
+      free(m_pszTargetList);
+   }
 
-	return success;
+   // First poll
+   for(int i = 0; i < s_targets.size(); i++)
+   {
+      PING_TARGET *t = s_targets.get(i);
+      ThreadPoolExecute(s_pollers, Poller, t);
+   }
+
+   ThreadPoolScheduleRelative(s_pollers, 600000, Housekeeper, NULL);
+	return true;
 }
 
 /**

@@ -27,6 +27,9 @@ obj.poll.status	Status poll
 obj.poll.topo	Topology poll
 obj.sync	Object synchronization
 
+sa.*		Sub-agent related messages
+sa.ping		Ping subagent
+
 sync		Syncer messages
 
 threads.*	Thread related
