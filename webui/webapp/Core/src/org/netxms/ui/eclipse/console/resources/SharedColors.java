@@ -173,6 +173,36 @@ public class SharedColors
 		});
 	}
 	
+   /**
+    * Get color definition
+    * 
+    * @param name shared color name
+    * @return color definition
+    */
+   public static RGB getColorDefinition(String name)
+   {
+      RGB rgb = ColorManager.getInstance().getColor(name);
+      if (rgb == null)
+      {
+         rgb = defaultColors.get(name);
+         if (rgb == null)
+            rgb = DEFAULT_COLOR;
+      }
+      return rgb;
+   }
+   
+   /**
+    * Get color definition in text form (as string in format "red,green,blue")
+    * 
+    * @param name shared color name
+    * @return color definition
+    */
+   public static String getColorDefinitionAsText(String name)
+   {
+      RGB rgb = getColorDefinition(name);
+      return rgb.red + "," + rgb.green + "," + rgb.blue;
+   }
+   
 	/**
 	 * @param name
 	 * @param defaultValue
@@ -181,13 +211,6 @@ public class SharedColors
 	 */
 	public static Color getColor(String name, Display display)
 	{
-		RGB rgb = ColorManager.getInstance().getColor(name);
-		if (rgb == null)
-		{
-			rgb = defaultColors.get(name);
-			if (rgb == null)
-				rgb = DEFAULT_COLOR;
-		}
-		return getInstance(display).colors.create(rgb);
+		return getInstance(display).colors.create(getColorDefinition(name));
 	}
 }

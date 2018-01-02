@@ -1,24 +1,30 @@
 package org.netxms.ui.eclipse.objects;
 
 import java.util.Map;
-import org.netxms.base.NXCommon;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.ui.eclipse.console.Messages;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Class to hold information about selected node
  */
 public class ObjectContext extends ObjectContextBase
 {   
+   /**
+    * @param object
+    * @param alarm
+    */
    public ObjectContext(AbstractNode object, Alarm alarm)
    {
       super(object, alarm);
    }
 
+   /**
+    * @param s
+    * @param inputValues
+    * @return
+    */
    public String substituteMacrosForMultiNodes(String s, Map<String, String> inputValues)
    {
       StringBuilder sb = new StringBuilder();

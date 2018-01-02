@@ -11,11 +11,20 @@ import org.netxms.ui.eclipse.console.Messages;
  */
 public class ObjectContext extends ObjectContextBase
 {   
+   /**
+    * @param object
+    * @param alarm
+    */
    public ObjectContext(AbstractNode object, Alarm alarm)
    {
       super(object, alarm);
    }
 
+   /**
+    * @param s
+    * @param inputValues
+    * @return
+    */
    public String substituteMacrosForMultiNodes(String s, Map<String, String> inputValues)
    {
       StringBuilder sb = new StringBuilder();

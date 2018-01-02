@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.console.resources;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -27,31 +29,19 @@ import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorCache;
 
 /**
  * Status display information
  */
 public final class StatusDisplayInfo
 {
-   private static String[] statusColor = new String[9];
-   
    private String[] statusText = new String[9];
    private ImageDescriptor[] statusImageDesc = new ImageDescriptor[9];
    private Image[] statusImage = new Image[9];
+   private ColorCache colorCache;
+   private Color statusColor[] = new Color[9]; 
    
-   static
-   {
-		statusColor[ObjectStatus.NORMAL.getValue()] = SharedColors.STATUS_NORMAL;
-		statusColor[ObjectStatus.WARNING.getValue()] = SharedColors.STATUS_WARNING;
-		statusColor[ObjectStatus.MINOR.getValue()] = SharedColors.STATUS_MINOR;
-		statusColor[ObjectStatus.MAJOR.getValue()] = SharedColors.STATUS_MAJOR;
-		statusColor[ObjectStatus.CRITICAL.getValue()] = SharedColors.STATUS_CRITICAL;
-		statusColor[ObjectStatus.UNKNOWN.getValue()] = SharedColors.STATUS_UNKNOWN;
-		statusColor[ObjectStatus.UNMANAGED.getValue()] = SharedColors.STATUS_UNMANAGED;
-		statusColor[ObjectStatus.DISABLED.getValue()] = SharedColors.STATUS_DISABLED;
-		statusColor[ObjectStatus.TESTING.getValue()] = SharedColors.STATUS_TESTING;
-   }
-      
    /**
     * Get status display instance for current display
     * 
@@ -97,6 +87,9 @@ public final class StatusDisplayInfo
 		
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage(display);
+
+      colorCache = new ColorCache(display);
+      updateStatusColorsInternal();
 		
 		display.disposeExec(new Runnable() {
          @Override
@@ -104,9 +97,35 @@ public final class StatusDisplayInfo
          {
             for(int i = 0; i < statusImageDesc.length; i++)
                statusImage[i].dispose();
+            colorCache.dispose();
          }
       });
 	}
+
+   /**
+    * Update status colors
+    */
+   public static void updateStatusColors()
+   {
+      getInstance().updateStatusColorsInternal();
+   }
+   
+   /**
+    * Update status colors
+    */
+   private void updateStatusColorsInternal()
+   {
+      final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+      statusColor[0] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Normal"));
+      statusColor[1] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Warning"));
+      statusColor[2] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Minor"));
+      statusColor[3] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Major"));
+      statusColor[4] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Critical"));
+      statusColor[5] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Unknown"));
+      statusColor[6] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Unmanaged"));
+      statusColor[7] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Disabled"));
+      statusColor[8] = colorCache.create(PreferenceConverter.getColor(ps, "Status.Colors.Testing"));
+   }
 	
    /**
     * Get text for given status/severity code.
@@ -210,16 +229,17 @@ public final class StatusDisplayInfo
       return getInstance().statusImage[severity.getValue()];
    }
    
-   /**
-    * Get color for given status/severity code.
-    * 
-    * @param status Status code
-    * @return Color for given code
-    */
-   public static Color getStatusColor(ObjectStatus status)
-   {
-      return SharedColors.getColor(statusColor[status.getValue()], Display.getCurrent());
-   }
+	/**
+	 * Get color for given status/severity code.
+	 * 
+	 * @param status Status code
+	 * @return Color for given code
+	 */
+	public static Color getStatusColor(ObjectStatus status)
+	{
+	   
+		return getInstance().statusColor[status.getValue()];
+	}
    
    /**
     * Get color for given status/severity code.
@@ -229,7 +249,7 @@ public final class StatusDisplayInfo
     */
    public static Color getStatusColor(Severity severity)
    {
-      return SharedColors.getColor(statusColor[severity.getValue()], Display.getCurrent());
+      return getInstance().statusColor[severity.getValue()];
    }
    
    /**

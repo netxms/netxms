@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
  * Preference initializer for console
@@ -44,5 +45,15 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultTimeFormat); //$NON-NLS-1$
       ps.setDefault("SHORT_TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultShortTimeFormat); //$NON-NLS-1$
       ps.setDefault("USE_SERVER_TIMEZONE", false); //$NON-NLS-1$
+      
+      ps.setDefault("Status.Colors.Normal", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_NORMAL)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Warning", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_WARNING)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Minor", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_MINOR)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Major", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_MAJOR)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Critical", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_CRITICAL)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Unknown", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_UNKNOWN)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Unmanaged", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_UNMANAGED)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Disabled", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_DISABLED)); //$NON-NLS-1$
+      ps.setDefault("Status.Colors.Testing", SharedColors.getColorDefinitionAsText(SharedColors.STATUS_TESTING)); //$NON-NLS-1$
 	}
 }
