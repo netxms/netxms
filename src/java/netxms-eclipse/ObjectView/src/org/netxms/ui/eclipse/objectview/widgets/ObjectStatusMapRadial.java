@@ -54,6 +54,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -271,6 +272,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
       if (widget == null)
       {
          widget = new ObjectStatusRadialWidget(dataArea, root, aceptedlist);
+         widget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
          widget.addMouseListener(new MouseListener() {
             @Override
@@ -281,7 +283,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             @Override
             public void mouseDown(MouseEvent e)
             {
-               AbstractObject curr = widget.getObjectByPoint(e.x, e.y);
+               AbstractObject curr = widget.getObjectFromPoint(e.x, e.y);
                if (curr != null)
                {
                   setSelection(new StructuredSelection(curr));
@@ -317,7 +319,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             @Override
             public void mouseHover(MouseEvent e)
             {
-               AbstractObject curr = widget.getObjectByPoint(e.x, e.y);
+               AbstractObject curr = widget.getObjectFromPoint(e.x, e.y);
                if (curr == hoveredObject || curr == null) // ignore hover if tooltip already open
                   return;
                
