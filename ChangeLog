@@ -6,6 +6,7 @@
 - "Floor plan" display mode for objects on network map
 - Access to zone data in network discovery filters 
 - Automatic target configuration in PING subagent
+- Implemented option to display object status map in radial form
 - Fixed issues:
 	NX-513 (add toString() to all data objects in netxms-base)
 	NX-599 (Delete single collected value from a DCI)
