@@ -971,7 +971,9 @@ retry_db_lock:
 	ThreadCreate(NodePoller, 0, NULL);
 	ThreadCreate(JobManagerThread, 0, NULL);
 	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
-	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
+
+	CONDITION pollManagerInitialized = ConditionCreate(true);
+	m_thPollManager = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
 
    StartHouseKeeper();
 
@@ -1000,9 +1002,14 @@ retry_db_lock:
 	if (ConfigReadInt(_T("EnableReportingServer"), 0))
 		ThreadCreate(ReportingServerConnector, 0, NULL);
 
-   //Start ldap synchronization
+   // Start LDAP synchronization
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
+
+   // Wait for initialization of critical threads
+   ConditionWait(pollManagerInitialized, INFINITE);
+   ConditionDestroy(pollManagerInitialized);
+   nxlog_debug(2, _T("Poll manager initialized"));
 
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
