@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -48,16 +46,20 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class ObjectStatusMapView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.ObjectStatusMapView"; //$NON-NLS-1$
+	
+	private static final String SETTINGS_DISPLAY_MODE = ID + ".DisplayMode"; 
+   private static final String SETTINGS_SHOW_FILTER = ID + ".ShowFilter"; 
 
 	private long rootObjectId;
 	private ObjectStatusMapInterface map;
+	private Composite clientArea;
 	private int displayOption = 1;
-   private boolean initialShowFilter = true;
+   private boolean showFilter = true;
 	private Action actionRefresh;
-	private Action actionGroupNodes;
-   private Action actionNotGroupNodes;
+   private Action actionFlatView;
+   private Action actionGroupView;
+   private Action actionRadialView;
 	private Action actionShowFilter;
-   private Action actionShowRadial;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -79,12 +81,16 @@ public class ObjectStatusMapView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+	   clientArea = parent;
+	   
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      displayOption = (settings.get(ID+"DisplayOption") != null) ? settings.getInt(ID+"SisplayOption") : 1;
-      initialShowFilter = (settings.get(ID+"ShowFilter") != null) ? settings.getBoolean(ID+"ShowFilter") : true;
+      displayOption = (settings.get(SETTINGS_DISPLAY_MODE) != null) ? settings.getInt(SETTINGS_DISPLAY_MODE) : 1;
+      showFilter = (settings.get(SETTINGS_SHOW_FILTER) != null) ? settings.getBoolean(SETTINGS_SHOW_FILTER) : true;
       
-      if(displayOption == 2)
+      if (displayOption == 2)
+      {
          map = new ObjectStatusMapRadial(this, parent, SWT.NONE, true);
+      }
       else
       {
          map = new ObjectStatusMap(this, parent, SWT.NONE, true);
@@ -92,12 +98,13 @@ public class ObjectStatusMapView extends ViewPart
       }
       
 		map.setRootObject(rootObjectId);
-		map.enableFilter(initialShowFilter);
+		map.enableFilter(showFilter);
 				
 		map.setFilterCloseAction(new Action() {
          @Override
          public void run()
          {
+            showFilter = false;
             actionShowFilter.setChecked(false);
             map.enableFilter(false);
          }
@@ -119,12 +126,15 @@ public class ObjectStatusMapView extends ViewPart
    {
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       
-      if(actionNotGroupNodes.isChecked())
-         settings.put(ID+"DisplayOption", 0);
-      if(actionGroupNodes.isChecked())
-         settings.put(ID+"DisplayOption", 1);
-      if(actionShowRadial.isChecked())
-         settings.put(ID+"DisplayOption", 2);
+      if (actionFlatView.isChecked())
+         settings.put(SETTINGS_DISPLAY_MODE, 0);
+      else if (actionGroupView.isChecked())
+         settings.put(SETTINGS_DISPLAY_MODE, 1);
+      else if (actionRadialView.isChecked())
+         settings.put(SETTINGS_DISPLAY_MODE, 2);
+      
+      settings.put(SETTINGS_SHOW_FILTER, showFilter);
+      
       super.dispose();
    }
 
@@ -141,7 +151,7 @@ public class ObjectStatusMapView extends ViewPart
 			}
 		};
       
-		actionNotGroupNodes = new Action("Show ungrouped", Action.AS_RADIO_BUTTON) {
+		actionFlatView = new Action("&Flat view", Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
@@ -149,10 +159,10 @@ public class ObjectStatusMapView extends ViewPart
             map.refresh();
          }
       };
-      actionNotGroupNodes.setChecked(displayOption == 0);
-      actionNotGroupNodes.setImageDescriptor(Activator.getImageDescriptor("icons/not_grouped_nodes.png"));
+      actionFlatView.setChecked(displayOption == 0);
+      actionFlatView.setImageDescriptor(Activator.getImageDescriptor("icons/not_grouped_nodes.png"));
 		
-		actionGroupNodes = new Action(Messages.get().ObjectStatusMapView_ActionGroupNodes, Action.AS_RADIO_BUTTON) {
+		actionGroupView = new Action("&Group view", Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
@@ -160,27 +170,28 @@ public class ObjectStatusMapView extends ViewPart
 				map.refresh();
 			}
 		};
-		actionGroupNodes.setChecked(displayOption == 1);
-		actionGroupNodes.setImageDescriptor(Activator.getImageDescriptor("icons/grouped_nodes.png"));
+		actionGroupView.setChecked(displayOption == 1);
+		actionGroupView.setImageDescriptor(Activator.getImageDescriptor("icons/grouped_nodes.png"));
       
-      actionShowRadial = new Action("Show radial objects", Action.AS_RADIO_BUTTON) {
+      actionRadialView = new Action("&Radial view", Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            redraw(actionShowRadial.isChecked());
+            redraw(actionRadialView.isChecked());
          }
       };
-      actionShowRadial.setChecked(displayOption == 2);
-      actionShowRadial.setImageDescriptor(Activator.getImageDescriptor("icons/radial.png"));
+      actionRadialView.setChecked(displayOption == 2);
+      actionRadialView.setImageDescriptor(Activator.getImageDescriptor("icons/radial.png"));
       
       actionShowFilter = new Action(Messages.get().ObjectStatusMapView_ActionShowFilter, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            map.enableFilter(actionShowFilter.isChecked());
+            showFilter = actionShowFilter.isChecked();
+            map.enableFilter(showFilter);
          }
       };
-      actionShowFilter.setChecked(initialShowFilter);
+      actionShowFilter.setChecked(showFilter);
 	}
 
 	/**
@@ -190,25 +201,26 @@ public class ObjectStatusMapView extends ViewPart
 	 */
    private void redraw(boolean radial)
    {
-      ObjectStatusMapInterface oldMap = map;
-      if(radial)
-         map = new ObjectStatusMapRadial(this, ((Composite)map).getParent(), SWT.NONE, true);
+      ((Composite)map).dispose();
+      
+      if (radial)
+         map = new ObjectStatusMapRadial(this, clientArea, SWT.NONE, true);
       else
-         map = new ObjectStatusMap(this, ((Composite)map).getParent(), SWT.NONE, true);  
+         map = new ObjectStatusMap(this, clientArea, SWT.NONE, true);  
 
       map.setRootObject(rootObjectId);
-      map.enableFilter(initialShowFilter);
+      map.enableFilter(showFilter);
             
       map.setFilterCloseAction(new Action() {
          @Override
          public void run()
          {
+            showFilter = false;
             actionShowFilter.setChecked(false);
             map.enableFilter(false);
          }
       });
 
-      ((Composite)oldMap).dispose();
       ((Composite)map).layout();
       ((Composite)map).getParent().layout();
    }
@@ -233,9 +245,9 @@ public class ObjectStatusMapView extends ViewPart
 	{
       manager.add(actionShowFilter);
       manager.add(new Separator());
-      manager.add(actionNotGroupNodes);
-		manager.add(actionGroupNodes);
-      manager.add(actionShowRadial);
+      manager.add(actionFlatView);
+		manager.add(actionGroupView);
+      manager.add(actionRadialView);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -248,10 +260,11 @@ public class ObjectStatusMapView extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionRefresh);
-      manager.add(actionNotGroupNodes);
-      manager.add(actionGroupNodes);
-      manager.add(actionShowRadial);
+      manager.add(actionFlatView);
+      manager.add(actionGroupView);
+      manager.add(actionRadialView);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
 	}
 
 	/* (non-Javadoc)
