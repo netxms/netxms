@@ -677,8 +677,13 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
          break;
       case DB_SYNTAX_MSSQL:
-      case DB_SYNTAX_MYSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
+         break;
+      case DB_SYNTAX_MYSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
          break;
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
@@ -688,7 +693,7 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
          query[0] = 0;
          break;
       default:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
+         query[0] = 0;
          break;
    }
 
