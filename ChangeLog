@@ -28,6 +28,7 @@
 	NX-1380 (Database error when node has LLDP ID longer than 63 characters)
 	NX-1381 (Unjustified NXSL errors "cannot do automatic type cast")
 	NX-1384 (Automatic ping target configuration on first data request)
+	NX-1385 (Configurable status colors in UI)
 
 
 *

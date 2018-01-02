@@ -131,6 +131,11 @@
            id="org.netxms.ui.eclipse.preferencePages.RegionalSettings"
            name="%page.regionalSettings">
      </page>
+     <page
+           class="org.netxms.ui.eclipse.console.preferencepages.StatusColors"
+           id="org.netxms.ui.eclipse.console.preferencepages.StatusColors"
+           name="Status Colors">
+     </page>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

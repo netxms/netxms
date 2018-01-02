@@ -33,14 +33,24 @@ import org.eclipse.swt.widgets.Display;
 public class ColorCache implements DisposeListener
 {
 	private Map<RGB, Color> cache = new HashMap<RGB, Color>();
+	private Display display;
 
 	/**
 	 * Create unassociated color cache. It must be disposed explicitly by calling dispose().
 	 */
 	public ColorCache()
 	{
+	   display = Display.getCurrent();
 	}
 	
+   /**
+    * Create unassociated color cache. It must be disposed explicitly by calling dispose().
+    */
+   public ColorCache(Display display)
+   {
+      this.display = display;
+   }
+   
 	/**
 	 * Create color cache associated with given control. All colors in a cache will be disposed when
 	 * associated control gets disposed.
@@ -49,6 +59,7 @@ public class ColorCache implements DisposeListener
 	 */
 	public ColorCache(Control control)
 	{
+	   display = control.getDisplay();
 		control.addDisposeListener(this);
 	}
 	
@@ -63,7 +74,7 @@ public class ColorCache implements DisposeListener
 		Color color = cache.get(rgb);
 		if (color == null)
 		{
-			color = new Color(Display.getCurrent(), rgb);
+			color = new Color(display, rgb);
 			cache.put(rgb, color);
 		}
 		return color;
