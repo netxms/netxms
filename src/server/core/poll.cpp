@@ -633,7 +633,7 @@ static void QueueForPolling(NetObj *object, void *data)
 /**
  * Node and condition queuing thread
  */
-THREAD_RESULT THREAD_CALL PollManager(void *pArg)
+THREAD_RESULT THREAD_CALL PollManager(void *arg)
 {
    ThreadSetName("PollManager");
    g_pollerThreadPool = ThreadPoolCreate(ConfigReadInt(_T("ThreadPool.Poller.BaseSize"), 10), ConfigReadInt(_T("ThreadPool.Poller.MaxSize"), 250), _T("POLLERS"));
@@ -643,6 +643,8 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
    UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
    int counter = 0;
+
+   ConditionSet(static_cast<CONDITION>(arg));
 
    WatchdogStartSleep(watchdogId);
    while(!SleepAndCheckForShutdown(5))
