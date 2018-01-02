@@ -6,15 +6,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpUsmCredential;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.snmp.Activator;
 
 public class SnmpConfig
 {
