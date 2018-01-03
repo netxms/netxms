@@ -30,6 +30,7 @@
 	NX-890 (Passive elements in rack)
 	NX-1169 (Encryption is not set by default between agent and server)
 	NX-1297 (Copying Files inside File Manager using CTRL and Drag&Drop is not working)
+   NX-1299 (Add username filter to CountEx(*) and Process.XXX(*) parameters in Linux subagent)
 	NX-1306 (Show system FQDN in tunnel manager)
 	NX-1350 (Invert Values option for performance tab DCIs; Performance tab graph configuration is maintained on double-click)
 	NX-1366 (Edit option for "group box" decorations on network maps)
