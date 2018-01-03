@@ -37,6 +37,7 @@
 #include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <pwd.h>
 
 /**
  * Attributes for H_ProcInfo
