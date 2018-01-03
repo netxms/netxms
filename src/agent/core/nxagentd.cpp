@@ -2049,6 +2049,10 @@ int main(int argc, char *argv[])
                   }
                }
             }
+            else
+            {
+               ConsolePrintf(_T("Error loading configuration from \"%s\" section ") DEFAULT_CONFIG_SECTION _T("\n"), g_szConfigFile);
+            }
 
             if (validConfig)
             {
