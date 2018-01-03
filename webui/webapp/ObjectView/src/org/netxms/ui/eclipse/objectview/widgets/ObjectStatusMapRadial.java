@@ -86,9 +86,11 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
 	private boolean filterEnabled = true;
 	private int severityFilter = 0xFF;
 	private String textFilter = "";
-	ObjectStatusRadialWidget widget;
+	private ObjectStatusRadialWidget widget;
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
 	private Set<Runnable> refreshListeners = new HashSet<Runnable>();
+	private AbstractObject tooltipObject = null;
+   private ObjectPopupDialog tooltipDialog = null;
 	
 	/**
 	 * @param parent
@@ -231,6 +233,11 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
 		refresh();
 	}
 	
+   /**
+    * @param root
+    * @param flterByTest
+    * @return
+    */
    public Set<Long> createFilteredList(AbstractObject root, boolean flterByTest)
    {
       Set<Long> aceptedlist = new HashSet<Long>();
@@ -278,6 +285,13 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             @Override
             public void mouseDown(MouseEvent e)
             {
+               if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
+               {
+                  tooltipDialog.close();
+                  tooltipDialog = null;
+               }
+               tooltipObject = null;
+               
                AbstractObject curr = widget.getObjectFromPoint(e.x, e.y);
                if (curr != null)
                {
@@ -289,7 +303,6 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
                {
                   setSelection(new StructuredSelection());
                }
-               widget.removeTooltip();
             }
             
             @Override
@@ -298,35 +311,36 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             }
          });
          
-         /*
-         widget.addMouseMoveListener(new MouseMoveListener() {
-            
-            @Override
-            public void mouseMove(MouseEvent e)
-            {
-               hoveredObject = null;
-               widget.removeTooltip();
-            }
-         });
-         
          widget.addMouseTrackListener( new MouseTrackListener() {
-            
             @Override
             public void mouseHover(MouseEvent e)
             {
-               AbstractObject curr = widget.getObjectFromPoint(e.x, e.y);
-               if (curr == hoveredObject || curr == null) // ignore hover if tooltip already open
-                  return;
+               AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
+               if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
+               {
+                  if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+                     tooltipDialog.close();
                
-               hoveredObject = curr;
-               widget.setHoveredObject(hoveredObject, new Point(e.x, e.y));
+                  tooltipObject = object;
+                  tooltipDialog = new ObjectPopupDialog(getShell(), object);
+                  tooltipDialog.open();
+               }
+               else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+               {
+                  tooltipDialog.close();
+                  tooltipDialog = null;
+               }
             }
             
             @Override
             public void mouseExit(MouseEvent e)
             {
-               hoveredObject = null;
-               widget.removeTooltip();
+               if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
+               {
+                  tooltipDialog.close();
+                  tooltipDialog = null;
+               }
+               tooltipObject = null;
             }
             
             @Override
@@ -334,7 +348,6 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             {
             }
          });
-         */
 
          // Create popup menu
          Menu menu = menuManager.createContextMenu(widget);
