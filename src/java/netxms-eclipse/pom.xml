@@ -7,7 +7,8 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>../client</module>
+        <module>../../libnxjava/java/base/</module>
+        <module>../../client/java</module>
         <module>../nebula/org.netxms.nebula.widgets.gallery</module>
         <module>ActionManager</module>
         <module>AgentManager</module>
@@ -21,6 +22,7 @@
         <module>FileManager</module>
         <module>ImageLibrary</module>
         <module>LogViewer</module>
+        <module>Market</module>
         <module>NXSL</module>
         <module>NetworkMaps</module>
         <module>OSM</module>
@@ -34,6 +36,7 @@
         <module>Reporter</module>
         <module>SLM</module>
         <module>SNMP</module>
+       <!-- <module>Scripting</module> -->
         <module>ServerConfig</module>
         <module>ServerConsole</module>
         <module>ServerJobManager</module>
@@ -42,7 +45,7 @@
         <module>Topology</module>
         <module>UserManager</module>
         <module>swtchart</module>
-        <module>Product</module>
+        <module>Product</module> 
     </modules>
 
     <properties>
@@ -56,7 +59,7 @@
     <repositories>
         <repository>
             <id>eclipse-Draw2D</id>
-            <url>http://download.eclipse.org/tools/gef/updates/releases</url>
+            <url>http://download.eclipse.org/tools/gef/updates/legacy/releases/</url>
             <layout>p2</layout>
         </repository>
         <repository>
