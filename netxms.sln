@@ -309,6 +309,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net-snmp", "src\server\driv
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rittal", "src\server\drivers\rittal\rittal.vcxproj", "{46E1FE1F-09BD-1E41-9593-5A9D244E13EB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqtt", "src\agent\subagents\mqtt\mqtt.vcxproj", "{6414C040-9B7E-C742-A9AC-00F1D2981E14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1381,6 +1383,14 @@ Global
 		{46E1FE1F-09BD-1E41-9593-5A9D244E13EB}.Release|Win32.Build.0 = Release|Win32
 		{46E1FE1F-09BD-1E41-9593-5A9D244E13EB}.Release|x64.ActiveCfg = Release|x64
 		{46E1FE1F-09BD-1E41-9593-5A9D244E13EB}.Release|x64.Build.0 = Release|x64
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Debug|Win32.Build.0 = Debug|Win32
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Debug|x64.ActiveCfg = Debug|x64
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Debug|x64.Build.0 = Debug|x64
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Release|Win32.ActiveCfg = Release|Win32
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Release|Win32.Build.0 = Release|Win32
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Release|x64.ActiveCfg = Release|x64
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1528,6 +1538,7 @@ Global
 		{6D5E7620-AA4B-7144-94DC-1907C970A3FD} = {71683564-472B-4216-BA74-0F34BC843D92}
 		{D082726A-AB36-B54C-B1F0-7B798C2BAC96} = {53997B2A-D94C-428C-816D-938C297A1866}
 		{46E1FE1F-09BD-1E41-9593-5A9D244E13EB} = {53997B2A-D94C-428C-816D-938C297A1866}
+		{6414C040-9B7E-C742-A9AC-00F1D2981E14} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}
