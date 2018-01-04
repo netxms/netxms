@@ -432,6 +432,10 @@
             class="org.netxms.ui.eclipse.console.DownloadHandlerScript"
             id="org.netxms.ui.eclipse.console.DownloadHandlerScript">
       </resource>
+      <resource
+            class="org.netxms.ui.eclipse.console.MsgProxyWidgetScript"
+            id="org.netxms.ui.eclipse.console.MsgProxyWidgetScript">
+      </resource>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

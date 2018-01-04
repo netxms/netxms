@@ -30,6 +30,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -842,5 +843,16 @@ public class WidgetHelper
       }
       
       return index;
+   }
+
+   /**
+    * Attach mouse track listener to composite (compatibility layer for RAP).
+    * 
+    * @param control control to attach listener to
+    * @param listener mouse track listener
+    */
+   public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
+   {
+      control.addMouseTrackListener(listener);
    }
 }

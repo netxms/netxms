@@ -111,7 +111,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       addPaintListener(this);
       addMouseListener(this);
-      addMouseTrackListener(this);
+      WidgetHelper.attachMouseTrackListener(this, this);
       addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
    }
@@ -499,7 +499,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             tooltipDialog.close();
       
          tooltipObject = object;
-         tooltipDialog = new ObjectPopupDialog(getShell(), object);
+         tooltipDialog = new ObjectPopupDialog(getShell(), object, toDisplay(e.x, e.y));
          tooltipDialog.open();
       }
       else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())

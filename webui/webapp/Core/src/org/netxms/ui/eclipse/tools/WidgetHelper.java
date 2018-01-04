@@ -18,12 +18,19 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.scripting.ClientListener;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -42,11 +49,14 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
+import org.netxms.ui.eclipse.widgets.helpers.MsgProxyWidget;
 
 /**
  * Utility class for simplified creation of widgets
@@ -753,5 +763,84 @@ public class WidgetHelper
 			}
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * Attach mouse track listener to composite. This listener is only suitable for hover detection.
+	 * Only one listener can be attached.
+	 * 
+	 * @param control control to attach listener to
+	 * @param listener mouse track listener
+	 */
+	public static void attachMouseTrackListener(Composite control, MouseTrackListener listener)
+	{
+	   WidgetUtil.registerDataKeys("msgProxyWidget");
+	   
+      MsgProxyWidget proxy = (MsgProxyWidget)control.getData("msgProxyWidgetInternal");
+      if (proxy == null)
+      {
+         proxy = new MsgProxyWidget(control);
+         control.setData("msgProxyWidgetInternal", proxy);
+         control.setData("msgProxyWidget", proxy.getRemoteObjectId());
+      }
+      proxy.setMouseTrackListener(listener);
+      
+	   ClientListener clientListener = (ClientListener)ConsoleSharedData.getProperty("MouseHoverListener");
+	   if (clientListener == null)
+	   {
+	      String script = loadResourceAsText("js/hover.js");
+	      if (script == null)
+	         return;
+	      clientListener = new ClientListener(script);
+	      ConsoleSharedData.setProperty("MouseHoverListener", clientListener);
+	   }
+      control.addListener(SWT.MouseEnter, clientListener);
+      control.addListener(SWT.MouseMove, clientListener);
+      control.addListener(SWT.MouseExit, clientListener);
+	}
+	
+	/**
+	 * Load resource file as text
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	private static String loadResourceAsText(String resource)
+	{
+	   InputStream input = WidgetHelper.class.getClassLoader().getResourceAsStream(resource);
+	   if (input == null)
+	   {
+         Activator.logError("Resource " + resource + " not found");
+	      return null;
+	   }
+	   
+	   try
+	   {
+   	   BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+   	   StringBuilder builder = new StringBuilder();
+   	   String line = reader.readLine();
+   	   while(line != null)
+   	   {
+   	      builder.append(line);
+   	      builder.append('\n');
+   	      line = reader.readLine();
+   	   }
+   	   return builder.toString();
+	   }
+	   catch(Exception e)
+	   {
+	      Activator.logError("Exception while loading resource " + resource, e);
+	      return null;
+	   }
+	   finally
+	   {
+	      try
+         {
+            input.close();
+         }
+         catch(IOException e)
+         {
+         }
+      }
 	}
 }
