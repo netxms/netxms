@@ -1,9 +1,13 @@
 package org.netxms.ui.eclipse.objects;
 
 import java.util.Map;
+
+import org.netxms.base.NXCommon;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Class to hold information about selected node
