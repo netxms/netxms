@@ -46,6 +46,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
@@ -66,6 +67,7 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
@@ -292,12 +294,12 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
                }
                tooltipObject = null;
                
-               AbstractObject curr = widget.getObjectFromPoint(e.x, e.y);
-               if (curr != null)
+               AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
+               if (object != null)
                {
-                  setSelection(new StructuredSelection(curr));
+                  setSelection(new StructuredSelection(object));
                   if (e.button == 1)
-                     callDetailsProvider(curr);
+                     callDetailsProvider(object);
                }
                else
                {
@@ -311,7 +313,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
             }
          });
          
-         widget.addMouseTrackListener( new MouseTrackListener() {
+         WidgetHelper.attachMouseTrackListener(widget, new MouseTrackListener() {
             @Override
             public void mouseHover(MouseEvent e)
             {
@@ -322,7 +324,7 @@ public class ObjectStatusMapRadial extends Composite implements ISelectionProvid
                      tooltipDialog.close();
                
                   tooltipObject = object;
-                  tooltipDialog = new ObjectPopupDialog(getShell(), object);
+                  tooltipDialog = new ObjectPopupDialog(getShell(), object, widget.toDisplay(e.x, e.y));
                   tooltipDialog.open();
                }
                else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())

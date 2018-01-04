@@ -43,7 +43,7 @@ Display {
   rwt-lightshadow-color: #dcdfe4;
   rwt-thinborder-color: #aca899;
   rwt-selectionmarker-color: #fec83c;
-  rwt-infobackground-color: #ffffff;
+  rwt-infobackground-color: #fbeaa0;
 
   rwt-error-image: url( theme/classic.resources/dialog/error.png );
   rwt-information-image: url( theme/classic.resources/dialog/information.png );
@@ -621,6 +621,10 @@ Shell {
   background-image: none;
   opacity: 1;
   box-shadow: none;
+}
+
+Shell.PopupWindow {
+  border: 1px solid black;
 }
 
 Shell[TITLE], Shell[BORDER] {
