@@ -1192,6 +1192,8 @@ public class AgentFileManager extends ViewPart
                long total = 0;
                for(AgentFile f : files)
                {
+                  if(isCanceled())
+                     break;
                   if (f.isDirectory() && (f.getSize() < 0))
                   {
                      try
@@ -1211,6 +1213,8 @@ public class AgentFileManager extends ViewPart
                monitor.beginTask("Downloading files", (int)total);
                for(AgentFile f : files)
                {
+                  if(isCanceled())
+                     break;
                   if (f.isDirectory())
                   {
                      downloadDir(f, target + "/" + f.getName(), monitor, this);
