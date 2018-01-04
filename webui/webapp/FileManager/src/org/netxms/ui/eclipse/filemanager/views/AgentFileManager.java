@@ -990,16 +990,17 @@ public class AgentFileManager extends ViewPart
                downloadDir(sf, sf.getName(), zos, monitor, this);
                zos.close();
                fos.close();
-               
-               DownloadServiceHandler.addDownload(zipFile.getName(), sf.getName() + ".zip", zipFile, "application/octet-stream");
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     DownloadServiceHandler.startDownload(zipFile.getName());
-                  }
-               });
-               
+               if(!isCanceled())
+               {
+	               DownloadServiceHandler.addDownload(zipFile.getName(), sf.getName() + ".zip", zipFile, "application/octet-stream");
+	               runInUIThread(new Runnable() {
+	                  @Override
+	                  public void run()
+	                  {
+	                     DownloadServiceHandler.startDownload(zipFile.getName());
+	                  }
+	               });
+               }
                monitor.done();
             }
    
@@ -1031,6 +1032,8 @@ public class AgentFileManager extends ViewPart
       }
       for(AgentFile f : files)
       {
+    	 if(job.isCanceled())
+    		 break;
          if (f.isDirectory())
          {
             downloadDir(f, localFileName + "/" + f.getName(), zos, monitor, job);
@@ -1050,17 +1053,20 @@ public class AgentFileManager extends ViewPart
                }
             }, job);
             
-       		FileInputStream fis = new FileInputStream(file.getFile());
-       		ZipEntry zipEntry = new ZipEntry(localFileName + "/" + f.getName());
-       		zos.putNextEntry(zipEntry);
-       		byte[] bytes = new byte[1024];
-       		int length;
-       		while ((length = fis.read(bytes)) >= 0) 
-       		{
-       			zos.write(bytes, 0, length);
-       		}
-       		zos.closeEntry();
-       		fis.close();
+            if(file != null && file.getFile() != null)
+            {
+	       		FileInputStream fis = new FileInputStream(file.getFile());
+	       		ZipEntry zipEntry = new ZipEntry(localFileName + "/" + f.getName());
+	       		zos.putNextEntry(zipEntry);
+	       		byte[] bytes = new byte[1024];
+	       		int length;
+	       		while ((length = fis.read(bytes)) >= 0) 
+	       		{
+	       			zos.write(bytes, 0, length);
+	       		}
+	       		zos.closeEntry();
+	       		fis.close();
+            }
          }
       }
    }
@@ -1090,14 +1096,17 @@ public class AgentFileManager extends ViewPart
                }
             }, this);
             
-            DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  DownloadServiceHandler.startDownload(file.getFile().getName());
-               }
-            });
+            if(file != null && file.getFile() != null)
+            {
+	            DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
+	            runInUIThread(new Runnable() {
+	               @Override
+	               public void run()
+	               {
+	                  DownloadServiceHandler.startDownload(file.getFile().getName());
+	               }
+	            });
+            }
          }
 
          @Override
