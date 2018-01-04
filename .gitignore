@@ -155,6 +155,7 @@ target
 /src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
+/src/install/files
 /src/install/windows/Output
 /src/java/build/*.gz
 /src/java/build/*.zip
