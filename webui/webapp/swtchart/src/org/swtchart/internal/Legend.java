@@ -39,7 +39,7 @@ import org.swtchart.internal.series.Series;
 public class Legend extends Canvas implements ILegend, PaintListener
 {
    private static final String HEADER_ID = "$$header$$";
-   private static final String VALUE_PLACEHOLDER = "000.0000";
+   private static final String VALUE_PLACEHOLDER = "000.000 M";
    
    /** the plot chart */
    private Chart chart;
@@ -52,6 +52,9 @@ public class Legend extends Canvas implements ILegend, PaintListener
 
    /** the margin */
    private static final int MARGIN = 4;
+
+   /** the margin for extended info columns */
+   private static final int EXT_COL_MARGIN = 6;
 
    /** the width of area to draw symbol */
    private static final int SYMBOL_WIDTH = 20;
@@ -335,7 +338,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
       Rectangle r = chart.getClientArea();
       final int titleHeight = ((Composite)chart.getTitle()).getSize().y;
       final int cellHeight = Util.getExtentInGC(getFont(), "fgdl0").y;
-      final int cellExtraWidth = extended ? (Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + MARGIN) * 4 : 0;
+      final int cellExtraWidth = extended ? (Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + EXT_COL_MARGIN) * 4 : 0;
       
       if (position == SWT.RIGHT || position == SWT.LEFT)
       {
@@ -348,8 +351,10 @@ public class Legend extends Canvas implements ILegend, PaintListener
             int textWidth = Util.getExtentInGC(getFont(), series.getName()).x;
             int cellWidth = textWidth + SYMBOL_WIDTH + MARGIN * 3;
             maxCellWidth = Math.max(maxCellWidth, cellWidth);
-            if (extendedInfoOffset < cellWidth)
-               extendedInfoOffset = cellWidth;
+            if (extendedInfoOffset < cellWidth + EXT_COL_MARGIN)
+            {
+               extendedInfoOffset = cellWidth + EXT_COL_MARGIN;
+            }
             if (yPosition + cellHeight < r.height - titleHeight || yPosition == MARGIN)
             {
                yPosition += cellHeight + MARGIN;
@@ -387,8 +392,10 @@ public class Legend extends Canvas implements ILegend, PaintListener
             cellBounds.put(series.getId(), new Rectangle(xPosition - cellWidth, (cellHeight + MARGIN) * (rows - 1) + topOffset, 
                   cellWidth + cellExtraWidth, cellHeight));
             width = Math.max(xPosition, width);
-            if (extendedInfoOffset < cellWidth)
-               extendedInfoOffset = cellWidth;
+            if (extendedInfoOffset < cellWidth + EXT_COL_MARGIN)
+            {
+               extendedInfoOffset = cellWidth + EXT_COL_MARGIN;
+            }
          }
          height = (cellHeight + MARGIN) * rows + MARGIN;
       }
@@ -398,6 +405,15 @@ public class Legend extends Canvas implements ILegend, PaintListener
          width += cellExtraWidth;
          height += cellHeight + MARGIN; 
          cellBounds.put(HEADER_ID, new Rectangle(0, MARGIN, cellExtraWidth, cellHeight));
+         
+         // Update all cells because right border could be set incorrectly if
+         // extendedInfoOffset was updated multiple times during calculation
+         for(Entry<String, Rectangle> e : cellBounds.entrySet())
+         {
+            if (e.getKey().equals(HEADER_ID))
+               continue;
+            e.getValue().width = width;
+         }
       }
       
       setLayoutData(new ChartLayoutData(width, height));
@@ -443,7 +459,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
     */
    private void drawExtendedInfo(GC gc, Series series, Rectangle r)
    {
-      int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
+      int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + EXT_COL_MARGIN;
       int x = r.x + extendedInfoOffset + MARGIN * 2;
       
       gc.drawText(chart.isUseMultipliers() ? DataFormatter.roundDecimalValue(series.getCurY(), 0.005, 3) : Double.toString(series.getCurY()), x, r.y, true);
@@ -483,7 +499,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
          gc.setForeground(getForeground());
          gc.setFont(headerFont);
          
-         final int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x;
+         final int shift = Util.getExtentInGC(getFont(), VALUE_PLACEHOLDER).x + EXT_COL_MARGIN;
          
          Rectangle r = cellBounds.get(HEADER_ID);
          int x = r.x + extendedInfoOffset + MARGIN * 2;

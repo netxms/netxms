@@ -429,6 +429,9 @@ public class LineChart extends Chart implements HistoricalDataChart
 		   Activator.logError("Exception while addig chart series", e); //$NON-NLS-1$
 		}
 		
+		if (updateChart)
+		   updateLayout();
+		
 		return series;
 	}
 	
@@ -666,6 +669,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void refresh()
 	{
+	   updateLayout();
 	   updateStackAndRiserData();
 	   if (adjustYAxis)
 	      adjustYAxis(true);
