@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objectview.messages"; //$NON-NLS-1$
+   
    public String AvailabilityChart_Down;
    public String AvailabilityChart_Downtime;
    public String AvailabilityChart_ThisMonth;

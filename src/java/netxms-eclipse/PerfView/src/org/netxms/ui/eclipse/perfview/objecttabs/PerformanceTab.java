@@ -197,9 +197,9 @@ public class PerformanceTab extends ObjectTab
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
 			{
-				int result = o1.getGroupName().compareToIgnoreCase(o2.getGroupName());
+            int result = Integer.signum(o1.getOrder() - o2.getOrder());
 				if (result == 0)
-					result = Integer.signum(o1.getOrder() - o2.getOrder());
+	            result = o1.getGroupName().compareToIgnoreCase(o2.getGroupName());
 				if (result == 0)
 				{
 					// Sort top-level DCI's by chart title, and attached DCIs by legend name  

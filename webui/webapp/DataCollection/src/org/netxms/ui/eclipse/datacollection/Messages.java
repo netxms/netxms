@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.datacollection.messages"; //$NON-NLS-1$
+	
 	public String AbstractSelectParamDlg_AvailableParameters;
 	public String AbstractSelectParamDlg_AvailTables;
 	public String AbstractSelectParamDlg_Description;
@@ -156,7 +157,7 @@ public class Messages extends NLS
 	public String DciLabelProvider_NotSupported;
 	public String DciLabelProvider_SourceAgent;
 	public String DciLabelProvider_SourceCPSNMP;
-	public static String DciLabelProvider_SourceDeviceDriver;
+	public String DciLabelProvider_SourceDeviceDriver;
 	public String DciLabelProvider_SourceInternal;
 	public String DciLabelProvider_SourceMQTT;
 	public String DciLabelProvider_SourcePush;
@@ -277,7 +278,7 @@ public class Messages extends NLS
 	public String General_SNMP_DT_uint64;
 	public String General_SourceAgent;
 	public String General_SourceCPSNMP;
-	public static String General_SourceDeviceDriver;
+	public String General_SourceDeviceDriver;
 	public String General_SourceInternal;
 	public String General_SourceMQTT;
 	public String General_SourcePush;
@@ -316,7 +317,7 @@ public class Messages extends NLS
 	public String GeneralTable_Select;
 	public String GeneralTable_SourceAgent;
 	public String GeneralTable_SourceCPSNMP;
-	public static String GeneralTable_SourceDeviceDriver;
+	public String GeneralTable_SourceDeviceDriver;
 	public String GeneralTable_SourceInternal;
 	public String GeneralTable_SourcePush;
 	public String GeneralTable_SourceSNMP;

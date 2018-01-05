@@ -64,22 +64,6 @@
       </view>
       <view
             allowMultiple="true"
-            class="org.netxms.ui.eclipse.objecttools.views.BrowserView"
-            icon="icons/browser.png"
-            id="org.netxms.ui.eclipse.objecttools.views.BrowserView"
-            name="%view.name.WebBrowser"
-            restorable="true">
-      </view>
-      <view
-            allowMultiple="true"
-            class="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
-            icon="icons/console.png"
-            id="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
-            name="%view.name.LocalCommand"
-            restorable="false">
-      </view>
-      <view
-            allowMultiple="true"
             class="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
             icon="icons/console.png"
             id="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
