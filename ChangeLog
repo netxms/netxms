@@ -46,6 +46,7 @@
 	NX-1381 (Unjustified NXSL errors "cannot do automatic type cast")
 	NX-1384 (Automatic ping target configuration on first data request)
 	NX-1385 (Configurable status colors in UI)
+	NX-1387 (Performance tab graph sorting in not working with groups)
 
 
 *
