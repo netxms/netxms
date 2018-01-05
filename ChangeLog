@@ -24,6 +24,7 @@
 	NX-1372 (PING subagent is not working)
 	NX-1374 (Element DashboardGroup not displayed in Dashboard perspective)
 	NX-1373 (Error message "Error loading RSA keys from ..." in all server-to-agent command line tools)
+	NX-1375 (Add functionality to switch off multipliers for graphs)
 	NX-1376 (Windows agent reports incorrect OS version on Windows 10)
 	NX-1379 (Rack width calculated incorrectly if only front/back selected)
 	NX-1380 (Database error when node has LLDP ID longer than 63 characters)
