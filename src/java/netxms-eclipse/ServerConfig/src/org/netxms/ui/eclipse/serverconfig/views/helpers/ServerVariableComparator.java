@@ -15,7 +15,7 @@ public class ServerVariableComparator extends ViewerComparator
 	/**
 	 * Compare two booleans and return -1, 0, or 1
 	 */
-	private int compareBooleans(boolean b1, boolean b2)
+	private static int compareBooleans(boolean b1, boolean b2)
 	{
 		return (!b1 && b2) ? -1 : ((b1 && !b2) ? 1 : 0);
 	}
@@ -34,13 +34,10 @@ public class ServerVariableComparator extends ViewerComparator
 				result = ((ServerVariable)e1).getName().compareToIgnoreCase(((ServerVariable)e2).getName());
 				break;
 			case ServerConfigurationEditor.COLUMN_VALUE:
-			   if (((ServerVariable)e1).getDataType().equals("C") && ((ServerVariable)e2).getDataType().equals("C"))
-			      result = ((ServerVariable)e1).getValueDescription().compareToIgnoreCase(((ServerVariable)e2).getValueDescription());
-			   else
-			      result = ((ServerVariable)e1).getValue().compareToIgnoreCase(((ServerVariable)e2).getValue());
+		      result = ((ServerVariable)e1).getValueForDisplay().compareToIgnoreCase(((ServerVariable)e2).getValueForDisplay());
 				break;
 			case ServerConfigurationEditor.COLUMN_DEFAULT_VALUE:
-            result = ((ServerVariable)e1).getDefaultValue().compareToIgnoreCase(((ServerVariable)e2).getDefaultValue());
+            result = ((ServerVariable)e1).getDefaultValueForDisplay().compareToIgnoreCase(((ServerVariable)e2).getDefaultValueForDisplay());
             break;
 			case ServerConfigurationEditor.COLUMN_NEED_RESTART:
 				result = compareBooleans(((ServerVariable)e1).isServerRestartNeeded(), ((ServerVariable)e2).isServerRestartNeeded());

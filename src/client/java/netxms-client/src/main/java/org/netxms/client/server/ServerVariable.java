@@ -92,12 +92,19 @@ public final class ServerVariable
 		return name;
 	}
 
-	  /**
-    * @return Variable's value description
+	/**
+	 * Get variable's value for display. Will replace numeric value with textual description when possible.
+	 * 
+    * @return Variable's value prepared for display
     */
-   public String getValueDescription()
+   public String getValueForDisplay()
    {
-      return values.get(value);
+      if (value == null)
+         return "";
+      if (dataType != ServerVariableDataType.CHOICE)
+         return value;
+      String s = values.get(value);
+      return (s != null) ? s : value;
    }
 
 	/**
@@ -182,6 +189,21 @@ public final class ServerVariable
 	   return defaultValue;
 	}
 	
+   /**
+    * Get default value prepared for display.
+    * 
+    * @return Variable`s default value prepared for display
+    */
+   public String getDefaultValueForDisplay()
+   {
+      if (defaultValue == null)
+         return "";
+      if (dataType != ServerVariableDataType.CHOICE)
+         return defaultValue;
+      String s = values.get(defaultValue);
+      return (s != null) ? s : defaultValue;
+   }
+   
 	/**
 	 * @return true if variable`s value is the default value
 	 */
