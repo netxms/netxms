@@ -936,7 +936,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       if (vm->load(m_transformationScript))
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
-         nxslValue->convert(getNXSLDataType()); // make sure that input NXSL variable type is the same as DCI type
+         if (nxslValue->isNumeric() && (m_dataType != DCI_DT_STRING))
+            nxslValue->convert(getNXSLDataType()); // make sure that input NXSL variable type is the same as DCI type
          vm->setGlobalVariable(_T("$object"), m_owner->createNXSLObject());
          if (m_owner->getObjectClass() == OBJECT_NODE)
          {
