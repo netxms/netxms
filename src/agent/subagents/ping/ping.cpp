@@ -35,28 +35,6 @@ static UINT32 s_maxTargetInactivityTime = 86400;
 static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 
 /**
- * Housekeeper
- */
-static void Housekeeper(void *arg)
-{
-   time_t now = time(NULL);
-   s_targetLock.lock();
-   for(int i = 0; i < s_targets.size(); i++)
-   {
-       PING_TARGET *t = s_targets.get(i);
-       if (t->automatic && (now - t->lastDataRead > s_maxTargetInactivityTime))
-       {
-          nxlog_debug_tag(DEBUG_TAG, 3, _T("Target %s (%s) removed because of inactivity"), t->name, (const TCHAR *)t->ipAddr.toString());
-          s_targets.remove(i);
-          i--;
-       }
-   }
-   s_targetLock.unlock();
-
-   ThreadPoolScheduleRelative(s_pollers, 600000, Housekeeper, NULL);
-}
-
-/**
  * Poller
  */
 static void Poller(void *arg)
@@ -64,7 +42,16 @@ static void Poller(void *arg)
    PING_TARGET *target = (PING_TARGET *)arg;
 
 	bool unreachable = false;
-	INT32 startTime = GetCurrentTimeMs();
+	INT64 startTime = GetCurrentTimeMs();
+
+   if (target->automatic && (startTime / 1000 - target->lastDataRead > s_maxTargetInactivityTime))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Target %s (%s) removed because of inactivity"), target->name, (const TCHAR *)target->ipAddr.toString());
+      s_targetLock.lock();
+      s_targets.remove(target);
+      s_targetLock.unlock();
+      return;
+   }
 
 retry:
    if (IcmpPing(target->ipAddr, 1, m_timeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
@@ -231,6 +218,8 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          s_targets.add(t);
 
          nxlog_debug_tag(DEBUG_TAG, 3, _T("New ping target %s (%s) created from request"), t->name, (const TCHAR *)t->ipAddr.toString());
+
+         ThreadPoolExecute(s_pollers, Poller, t);
       }
       else
       {
@@ -451,7 +440,6 @@ static BOOL SubagentInit(Config *config)
       ThreadPoolExecute(s_pollers, Poller, t);
    }
 
-   ThreadPoolScheduleRelative(s_pollers, 600000, Housekeeper, NULL);
 	return true;
 }
 
