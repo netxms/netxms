@@ -31,8 +31,11 @@ public class ReportResultDAOImpl implements ReportResultDAO {
 
     @Override
     public List<ReportResult> listResults(UUID reportId, int userId) {
-        String strQuery = "from ReportResult result where result.reportId = :reportId order by executionTime desc";
-        final Query query = sessionFactory.getCurrentSession().createQuery(strQuery).setParameter("reportId", reportId);
+        String strQuery = "from ReportResult result where result.reportId = :reportId and userId = :userId order by executionTime desc";
+        final Query query = sessionFactory.getCurrentSession()
+                .createQuery(strQuery)
+                .setParameter("reportId", reportId)
+                .setParameter("userId", userId);
         return checkedList(query.list(), ReportResult.class);
     }
 
