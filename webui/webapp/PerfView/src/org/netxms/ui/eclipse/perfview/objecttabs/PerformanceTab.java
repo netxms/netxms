@@ -45,6 +45,8 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Sensor;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
@@ -197,9 +199,9 @@ public class PerformanceTab extends ObjectTab
 			@Override
 			public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
 			{
-				int result = o1.getGroupName().compareToIgnoreCase(o2.getGroupName());
+            int result = Integer.signum(o1.getOrder() - o2.getOrder());
 				if (result == 0)
-					result = Integer.signum(o1.getOrder() - o2.getOrder());
+	            result = o1.getGroupName().compareToIgnoreCase(o2.getGroupName());
 				if (result == 0)
 				{
 					// Sort top-level DCI's by chart title, and attached DCIs by legend name  
@@ -261,7 +263,7 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof AbstractNode || object instanceof Cluster);
+		return (object instanceof AbstractNode || object instanceof Cluster || object instanceof MobileDevice || object instanceof Sensor);
 	}
 
    /* (non-Javadoc)

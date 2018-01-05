@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objectview.messages"; //$NON-NLS-1$
+   
    public String AvailabilityChart_Down;
    public String AvailabilityChart_Downtime;
    public String AvailabilityChart_ThisMonth;
@@ -198,18 +199,18 @@ public class Messages extends NLS
    public String ObjectStatusMapView_ActionGroupNodes;
    public String ObjectStatusMapView_ActionShowFilter;
    public String ObjectStatusMapView_PartName;
-   public static String SensorStatus_DeviceAddress;
-   public static String SensorStatus_MacAddress;
-   public static String SensorStatus_Vendor;
-   public static String SensorStatus_DeviceClass;
-   public static String SensorStatus_CommProtocol;
-   public static String SensorStatus_SerialNumber;
-   public static String SensorStatus_MetaType;
-   public static String SensorStatus_Description;
-   public static String SensorStatus_FrameCount;
-   public static String SensorStatus_RSSI;
-   public static String SensorStatus_SNR;
-   public static String SensorStatus_Frequency;
+   public String SensorStatus_DeviceAddress;
+   public String SensorStatus_MacAddress;
+   public String SensorStatus_Vendor;
+   public String SensorStatus_DeviceClass;
+   public String SensorStatus_CommProtocol;
+   public String SensorStatus_SerialNumber;
+   public String SensorStatus_MetaType;
+   public String SensorStatus_Description;
+   public String SensorStatus_FrameCount;
+   public String SensorStatus_RSSI;
+   public String SensorStatus_SNR;
+   public String SensorStatus_Frequency;
    public String ShowObjectDetailsView_Error;
    public String ShowObjectDetailsView_ErrorOpeningView;
    public String ShowSoftwareInventory_Error;
