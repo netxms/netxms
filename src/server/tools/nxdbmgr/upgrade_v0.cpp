@@ -10458,7 +10458,7 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 
    if (!CreateTable(_T("CREATE TABLE user_profiles (")
 	                    _T("user_id integer not null,")
-	                    _T("var_name varchar(255) not null,")
+	                    _T("var_name varchar(63) not null,")
 	                    _T("var_value $SQL:TEXT,")
 	                    _T("PRIMARY KEY(user_id,var_name))")))
       if (!g_bIgnoreErrors)

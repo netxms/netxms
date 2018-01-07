@@ -7271,7 +7271,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
 void ClientSession::setUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME];
+   TCHAR szVarName[MAX_USERVAR_NAME_LENGTH];
    DB_RESULT hResult;
    BOOL bExist = FALSE;
    UINT32 dwUserId;
@@ -7284,7 +7284,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Check variable name
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       if (IsValidObjectName(szVarName))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7294,7 +7294,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
             hResult = DBSelectPrepared(hStmt);
             if (hResult != NULL)
             {
@@ -7316,7 +7316,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
 
             if (DBExecute(hStmt))
@@ -7346,7 +7346,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
 void ClientSession::enumUserVariables(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szPattern[MAX_VARIABLE_NAME], szQuery[256], szName[MAX_DB_STRING];
+   TCHAR szPattern[MAX_USERVAR_NAME_LENGTH], szQuery[256], szName[MAX_DB_STRING];
    UINT32 i, dwNumRows, dwNumVars, dwId, dwUserId;
    DB_RESULT hResult;
 
@@ -7357,7 +7357,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      pRequest->getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
+      pRequest->getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_USERVAR_NAME_LENGTH);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), dwUserId);
       hResult = DBSelect(hdb, szQuery);
@@ -7398,7 +7398,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
 void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME];
+   TCHAR szVarName[MAX_USERVAR_NAME_LENGTH];
    UINT32 dwUserId;
 
    // Prepare response message
@@ -7411,13 +7411,13 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Try to delete variable from database
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       TranslateStr(szVarName, _T("*"), _T("%"));
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
 
          if (DBExecute(hStmt))
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7443,7 +7443,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
 void ClientSession::copyUserVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME];
+   TCHAR szVarName[MAX_USERVAR_NAME_LENGTH], szCurrVar[MAX_USERVAR_NAME_LENGTH];
    UINT32 dwSrcUserId, dwDstUserId;
    int i, nRows;
    BOOL bMove, bExist;
@@ -7460,13 +7460,13 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
       dwSrcUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
       dwDstUserId = pRequest->getFieldAsUInt32(VID_DST_USER_ID);
       bMove = (BOOL)pRequest->getFieldAsUInt16(VID_MOVE_FLAG);
-      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      pRequest->getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
       TranslateStr(szVarName, _T("*"), _T("%"));
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
 
          hResult = DBSelectPrepared(hStmt);
          DBFreeStatement(hStmt);
@@ -7475,14 +7475,14 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
             nRows = DBGetNumRows(hResult);
             for(i = 0; i < nRows; i++)
             {
-               DBGetField(hResult, i, 0, szCurrVar, MAX_VARIABLE_NAME);
+               DBGetField(hResult, i, 0, szCurrVar, MAX_USERVAR_NAME_LENGTH);
 
                // Check if variable already exist in database
                hStmt = DBPrepare(hdb, _T("SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?"));
                if (hStmt != NULL)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
 
                   hResult2 = DBSelectPrepared(hStmt);
                   if (hResult2 != NULL)
@@ -7511,7 +7511,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, 1, NULL, 0), DB_BIND_DYNAMIC);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
 
                   DBExecute(hStmt);
                   DBFreeStatement(hStmt);
@@ -7528,7 +7528,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                   if (hStmt != NULL)
                   {
                      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_VARIABLE_NAME);
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
 
                      DBExecute(hStmt);
                      DBFreeStatement(hStmt);
