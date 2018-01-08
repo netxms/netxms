@@ -173,6 +173,7 @@ static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelListenerThread = INVALID_THREAD_HANDLE;
+static THREAD s_eventProcessorThread = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 static StringSet s_components;
 
@@ -978,7 +979,7 @@ retry_db_lock:
    StartHouseKeeper();
 
 	// Start event processor
-	ThreadCreate(EventProcessor, 0, NULL);
+   s_eventProcessorThread = ThreadCreateEx(EventProcessor, 0, NULL);
 
 	// Start SNMP trapper
 	InitTraps();
@@ -1073,10 +1074,37 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
-   CloseTaskScheduler();
+   // Call shutdown functions for the modules
+   // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   {
+      if (g_pModuleList[i].pfShutdown != NULL)
+         g_pModuleList[i].pfShutdown();
+   }
+
+   StopHouseKeeper();
+   ShutdownTaskScheduler();
 
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
+
+   StopDataCollection();
+   StopObjectMaintenanceThreads();
+
+   // Wait for critical threads
+   ThreadJoin(m_thPollManager);
+   ThreadJoin(m_thSyncer);
+   ThreadJoin(s_tunnelListenerThread);
+
+   CloseAgentTunnels();
+   StopSyslogServer();
+
+   nxlog_debug(2, _T("Waiting for event processor to stop"));
+	g_pEventQueue->put(INVALID_POINTER_VALUE);
+	ThreadJoin(s_eventProcessorThread);
+
+	ShutdownMailer();
+	ShutdownSMSSender();
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();
@@ -1086,35 +1114,8 @@ void NXCORE_EXPORTABLE Shutdown()
    StopZMQConnector();
 #endif
 
-	g_pEventQueue->clear();
-	g_pEventQueue->put(INVALID_POINTER_VALUE);
-
-	ShutdownMailer();
-	ShutdownSMSSender();
-
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
 	nxlog_debug(2, _T("All threads was notified, continue with shutdown"));
-
-	StopSyslogServer();
-	StopHouseKeeper();
-
-	// Wait for critical threads
-	ThreadJoin(m_thPollManager);
-	ThreadJoin(m_thSyncer);
-	ThreadJoin(s_tunnelListenerThread);
-
-	CloseAgentTunnels();
-
-	// Call shutdown functions for the modules
-   // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfShutdown != NULL)
-			g_pModuleList[i].pfShutdown();
-	}
-
-   StopDataCollection();
-   StopObjectMaintenanceThreads();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);

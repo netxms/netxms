@@ -105,6 +105,9 @@ void AgentConnectionEx::setProxy(AgentTunnel *tunnel, int authMethod, const TCHA
  */
 void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 {
+   if (IsShutdownInProgress())
+      return;
+
    UINT32 dwEventCode;
    int i, iNumArgs;
    Node *pNode = NULL;
@@ -185,6 +188,9 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
  */
 void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
 {
+   if (IsShutdownInProgress())
+      return;
+
    TCHAR buffer[64];
    debugPrintf(3, _T("AgentConnectionEx::onSyslogMessage(): Received message from agent at %s, node ID %d"), getIpAddr().toString(buffer), m_nodeId);
 
@@ -232,7 +238,7 @@ void AgentConnectionEx::onSyslogMessage(NXCPMessage *msg)
  */
 void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 {
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return;
 
 	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
@@ -342,6 +348,9 @@ static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
  */
 void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 {
+   if (IsShutdownInProgress())
+      return;
+
 	Node *object = NULL;
 	if (m_nodeId != 0)
 		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
@@ -385,6 +394,9 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
  */
 bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
 {
+   if (IsShutdownInProgress())
+      return false;
+
    TCHAR buffer[128];
    DbgPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %d"),
       NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
@@ -416,6 +428,9 @@ static SNMP_ProxyTransport *CreateSNMPProxyTransport(AgentConnectionEx *conn, No
  */
 void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 {
+   if (IsShutdownInProgress())
+      return;
+
    Node *proxyNode = NULL;
    TCHAR ipStringBuffer[4096];
 
@@ -586,7 +601,7 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
  */
 UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return ERR_INTERNAL_ERROR;
 
    if (m_nodeId == 0)
@@ -730,7 +745,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
  */
 UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return ERR_INTERNAL_ERROR;
 
    if (m_nodeId == 0)

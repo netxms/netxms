@@ -121,7 +121,7 @@ public:
  * Scheduler public API
  */
 void InitializeTaskScheduler();
-void CloseTaskScheduler();
+void ShutdownTaskScheduler();
 void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight);
 UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, const TCHAR *comments = _T(""), UINT32 flags = 0);
 UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, const TCHAR *comments = _T(""), UINT32 flags = 0);
