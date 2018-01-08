@@ -99,7 +99,6 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**

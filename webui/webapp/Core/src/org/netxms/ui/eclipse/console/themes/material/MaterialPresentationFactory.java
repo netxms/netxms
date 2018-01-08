@@ -33,6 +33,7 @@ import org.netxms.ui.eclipse.console.themes.material.managers.MenuBarManager;
 /**
  * Presentation factory for "Material" theme
  */
+@SuppressWarnings("restriction")
 public class MaterialPresentationFactory extends PresentationFactory
 {
    /* (non-Javadoc)

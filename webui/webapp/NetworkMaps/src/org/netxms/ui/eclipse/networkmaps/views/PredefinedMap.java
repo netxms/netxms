@@ -51,7 +51,6 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.maps.MapLayoutAlgorithm;
-import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;

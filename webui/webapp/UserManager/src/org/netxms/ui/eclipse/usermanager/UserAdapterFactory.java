@@ -43,9 +43,8 @@ public class UserAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class[] getAdapterList()
+	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}
@@ -53,7 +52,7 @@ public class UserAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
