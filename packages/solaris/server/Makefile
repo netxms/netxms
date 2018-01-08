@@ -18,8 +18,8 @@ package:
 	sed 's,@version@,$(NX_VERSION),' < pkginfo.in > pkginfo
 	rm -rf /tmp/RADnetxms
 	pkgmk -o -r / -d /tmp -f Prototype
-	pkgtrans /tmp /tmp/RADnetxms.$(NX_VERSION).$(_SUFFIX)$(PLATFORM).pkg RADnetxms
-	gzip -f9 /tmp/RADnetxms.$(NX_VERSION).$(_SUFFIX)$(PLATFORM).pkg
+	pkgtrans /tmp /tmp/RADnetxms-$(NX_VERSION)-$(_SUFFIX)$(PLATFORM).pkg RADnetxms
+	gzip -f9 /tmp/RADnetxms-$(NX_VERSION)-$(_SUFFIX)$(PLATFORM).pkg
 	rm -rf /tmp/RADnetxms
 	rm pkginfo
 	rm -f /var/svc/manifest/application/management/nxagentd.xml
