@@ -710,9 +710,9 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
       rcc = UpdateOneTimeScheduledTask(id, taskId, nextExecutionTime, params, comments, owner, objectId, systemAccessRights, flags);
    }
-   safe_free(taskId);
-   safe_free(schedule);
-   safe_free(params);
+   free(taskId);
+   free(schedule);
+   free(params);
    return rcc;
 }
 
@@ -876,8 +876,11 @@ void InitializeTaskScheduler()
 /**
  * Stop all scheduler threads and free all memory
  */
-void CloseTaskScheduler()
+void ShutdownTaskScheduler()
 {
+   if (g_schedulerThreadPool == NULL)
+      return;
+
    s_wakeupCondition.set();
    ThreadJoin(s_oneTimeEventThread);
    ThreadJoin(s_cronSchedulerThread);
