@@ -708,7 +708,7 @@ public:
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
 
-   BOOL addScript(NXSL_LibraryScript *script);
+   bool addScript(NXSL_LibraryScript *script);
    void deleteScript(const TCHAR *name);
    void deleteScript(UINT32 id);
    NXSL_Program *findNxslProgram(const TCHAR *name);

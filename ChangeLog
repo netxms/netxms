@@ -14,6 +14,14 @@
 
 
 *
+* 2.2.3
+*
+
+- Fixed issues:
+	NX-1389 (If library script saved with compilation errors it disappears from script list)
+
+
+*
 * 2.2.2
 *
 
