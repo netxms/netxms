@@ -40,6 +40,7 @@ public class LinkEditor
 	private int routingAlgorithm;
 	private boolean modified = false;
 	private List<SingleDciConfig> dciList;
+	private boolean useActiveThresholds;
 	
 	/**
 	 * @param link
@@ -57,6 +58,7 @@ public class LinkEditor
 		statusObject = link.getStatusObject();
 		routingAlgorithm = link.getRouting();
 		dciList = link.getDciAsList();
+		useActiveThresholds = link.getConfig().isUseActiveThresholds();
 	}
 	
 	/**
@@ -71,6 +73,7 @@ public class LinkEditor
 		link.setStatusObject(statusObject);
 		link.setRouting(routingAlgorithm);
 		link.setBendPoints(bp);
+		link.getConfig().setUseActiveThresholds(useActiveThresholds);
 		mapPage.addLink(link);
 		modified = true;
 	}
@@ -251,5 +254,21 @@ public class LinkEditor
    public void setDciList(List<SingleDciConfig> dciList)
    {
       this.dciList = dciList;
+   }
+   
+   /**
+    * @return are active thresholds used
+    */
+   public boolean isUseActiveThresholds()
+   {
+      return useActiveThresholds;
+   }
+   
+   /**
+    * @param useActiveThresholds set to use active thresholds
+    */
+   public void setUseActiveThresholds(boolean useActiveThresholds)
+   {
+      this.useActiveThresholds = useActiveThresholds;
    }
 }

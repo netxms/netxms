@@ -553,6 +553,7 @@ private:
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);
    void getTableLastValues(NXCPMessage *pRequest);
+   void getActiveThresholds(NXCPMessage *pRequest);
 	void getThresholdSummary(NXCPMessage *request);
    void openEPP(NXCPMessage *request);
    void closeEPP(UINT32 dwRqId);

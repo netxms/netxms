@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,9 +48,12 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.NXCommon;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -485,7 +489,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       }
 
 		if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
-		{
+		{		   
 		   ObjectStatus status = ObjectStatus.UNKNOWN;
 		   for(Long id : link.getStatusObject())
 		   {
@@ -501,7 +505,36 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    			   }
             } 
          }
-		   connection.setLineColor(StatusDisplayInfo.getStatusColor(status));   			
+		   
+         if (!link.getDciAsList().isEmpty() && link.getConfig().isUseActiveThresholds())
+         {
+            Severity severity = Severity.UNKNOWN;
+            try
+            {
+               List<Threshold> thresholds = session.getActiveThresholds(link.getDciAsList());
+               for(Threshold t : thresholds)
+               {
+                  Severity s = t.getCurrentSeverity();
+                  if ((s.compareTo(Severity.UNKNOWN) < 0) && ((severity.compareTo(s) < 0) || (severity == Severity.UNKNOWN)))
+                  {
+                     severity = s;
+                     if (severity == Severity.CRITICAL)
+                        break;
+                  }
+               }
+            }
+            catch(IOException | NXCException e)
+            {
+               e.printStackTrace();
+            }            
+
+            if (status.getValue() > severity.getValue())
+               connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
+            else
+               connection.setLineColor(StatusDisplayInfo.getStatusColor(severity));
+         }
+         else
+            connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
 		}
 		else if (link.getColor() >= 0)
 		{

@@ -3952,6 +3952,39 @@ public class NXCSession
 
       return list;
    }
+   
+   /**
+    * Get active thresholds
+    * 
+    * @param dciConfig Dci config
+    * @return list of active thresholds
+    * @throws IOException
+    * @throws NXCException
+    */
+   public List<Threshold> getActiveThresholds(List<SingleDciConfig> dciConfig) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ACTIVE_THRESHOLDS);
+      long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
+      for(SingleDciConfig c : dciConfig)
+      {
+         c.fillMessage(msg, base);
+         base += 10;
+      }
+
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
+      List<Threshold> list = new ArrayList<Threshold>(count);
+      base = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+      for(int i = 0; i < count; i++, base += 20)
+      {
+         list.add(new Threshold(response, base));
+      }
+
+      return list;
+   }
 
    /**
     * Get last values for given table DCI on given node

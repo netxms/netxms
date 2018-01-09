@@ -410,7 +410,7 @@ public:
 
    virtual void createMessage(NXCPMessage *pMsg);
    void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
-   void fillMessageWithThresholds(NXCPMessage *msg);
+   void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 

@@ -49,6 +49,8 @@ public class LinkConfig
    @Element(required=false)
    private long[] bendPoints;
    
+   @Element(required=false)
+   private boolean useActiveThresholds;   
 
    /**
     * Default constructor
@@ -59,13 +61,14 @@ public class LinkConfig
       routing = NetworkMapLink.ROUTING_DEFAULT;
       bendPoints = null;
       dciList = null;
+      useActiveThresholds = false;
    }
    
    /**
     * Constructor for creating XML
     */
    public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int color, int routing,
-         long[] bendPoints)
+         long[] bendPoints, boolean useActiveThresholds)
    {
       super();
       this.dciList = dciList;
@@ -73,6 +76,7 @@ public class LinkConfig
       this.color = color;
       this.routing = routing;
       this.bendPoints = bendPoints;
+      this.useActiveThresholds = useActiveThresholds;
    }   
    
    /**
@@ -180,6 +184,22 @@ public class LinkConfig
    public void setBendPoints(long[] bendPoints)
    {
       this.bendPoints = bendPoints;
+   }
+   
+   /**
+    * @param useActiveThresholds set use active thresholds
+    */
+   public void setUseActiveThresholds(boolean useActiveThresholds)
+   {
+      this.useActiveThresholds = useActiveThresholds;
+   }
+   
+   /**
+    * @return are active thresholds used
+    */
+   public boolean isUseActiveThresholds()
+   {
+      return useActiveThresholds;
    }
 
    /* (non-Javadoc)

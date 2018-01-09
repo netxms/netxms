@@ -921,6 +921,9 @@ void ClientSession::processingThread()
          case CMD_GET_TABLE_LAST_VALUES:
             getTableLastValues(pMsg);
             break;
+         case CMD_GET_ACTIVE_THRESHOLDS:
+            getActiveThresholds(pMsg);
+            break;
 			case CMD_GET_THRESHOLD_SUMMARY:
 				getThresholdSummary(pMsg);
 				break;
@@ -3964,7 +3967,7 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
 				DCObject *dci = ((Template *)object)->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 				{
-					((DCItem *)dci)->fillMessageWithThresholds(&msg);
+					((DCItem *)dci)->fillMessageWithThresholds(&msg, false);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 				}
 				else
@@ -4133,7 +4136,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
       // Send CMD_REQUEST_COMPLETED message
       response->setField(VID_RCC, RCC_SUCCESS);
       if (dciType == DCO_TYPE_ITEM)
-         ((DCItem *)dci)->fillMessageWithThresholds(response);
+         ((DCItem *)dci)->fillMessageWithThresholds(response, false);
       sendMessage(response);
 
       int dataType;
@@ -4237,7 +4240,7 @@ read_from_db:
 			// Send CMD_REQUEST_COMPLETED message
 			response->setField(VID_RCC, RCC_SUCCESS);
 			if (dciType == DCO_TYPE_ITEM)
-				((DCItem *)dci)->fillMessageWithThresholds(response);
+				((DCItem *)dci)->fillMessageWithThresholds(response, false);
 			sendMessage(response);
 
 			int dataType;
@@ -4648,6 +4651,36 @@ void ClientSession::getTableLastValues(NXCPMessage *pRequest)
    }
 
    // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Send only active DCI thresholds for given DCI config
+ */
+void ClientSession::getActiveThresholds(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   UINT32 base = VID_DCI_VALUES_BASE;
+   UINT32 numItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
+
+   for(int i = 0; i < numItems; i++, base+=2)
+   {
+      NetObj *object = FindObjectById(pRequest->getFieldAsUInt32(base));
+      if (object != NULL && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+         {
+            DCObject *dcObject = static_cast<DataCollectionTarget *>(object)->getDCObjectById(pRequest->getFieldAsUInt32(base+1), m_dwUserId);
+            if (dcObject != NULL)
+               static_cast<DCItem *>(dcObject)->fillMessageWithThresholds(&msg, true);
+         }
+      }
+   }
+
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 
