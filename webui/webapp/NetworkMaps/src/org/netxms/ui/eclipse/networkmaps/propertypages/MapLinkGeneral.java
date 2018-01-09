@@ -44,6 +44,7 @@ public class MapLinkGeneral extends PropertyPage
 	private Button add;
 	private Button remove;
 	private Combo routingAlgorithm;
+	private Button checkUseThresholds;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -104,6 +105,7 @@ public class MapLinkGeneral extends PropertyPage
 				list.setEnabled(radioColorObject.getSelection()); 
 				add.setEnabled(radioColorObject.getSelection());
 				remove.setEnabled(radioColorObject.getSelection());
+				checkUseThresholds.setEnabled(radioColorObject.getSelection());
 			}
 			
 			@Override
@@ -191,6 +193,14 @@ public class MapLinkGeneral extends PropertyPage
          }
       });
       remove.setEnabled(radioColorObject.getSelection());
+      
+      checkUseThresholds = new Button(nodeSelectionGroup, SWT.CHECK);
+      checkUseThresholds.setText("Use active thresholds");
+      checkUseThresholds.setEnabled(radioColorObject.getSelection());
+      checkUseThresholds.setSelection(object.isUseActiveThresholds());
+      gd = new GridData();
+      gd.horizontalIndent = 17;
+      checkUseThresholds.setLayoutData(gd);
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
 		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
@@ -275,6 +285,7 @@ public class MapLinkGeneral extends PropertyPage
 			object.setColor(-1);
 			object.setStatusObject(null);
 		}
+      object.setUseActiveThresholds(checkUseThresholds.getEnabled());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.update();
 		return true;

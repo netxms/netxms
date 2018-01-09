@@ -1742,7 +1742,7 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
 /**
  * Fill NXCP message with thresholds
  */
-void DCItem::fillMessageWithThresholds(NXCPMessage *msg)
+void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
 {
 	lock();
 
@@ -1750,7 +1750,11 @@ void DCItem::fillMessageWithThresholds(NXCPMessage *msg)
 	UINT32 id = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < getThresholdCount(); i++, id += 20)
 	{
-		m_thresholds->get(i)->createMessage(msg, id);
+	   Threshold *threshold = m_thresholds->get(i);
+	   if (activeOnly && threshold->isReached())
+         threshold->createMessage(msg, id);
+	   else
+	      threshold->createMessage(msg, id);
 	}
 
 	unlock();

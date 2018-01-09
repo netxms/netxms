@@ -227,7 +227,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 
    // Send CMD_REQUEST_COMPLETED message
    response->setField(VID_RCC, RCC_SUCCESS);
-   ((DCItem *)dci)->fillMessageWithThresholds(response);
+   ((DCItem *)dci)->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
 
    int dataType = ((DCItem *)dci)->getDataType();

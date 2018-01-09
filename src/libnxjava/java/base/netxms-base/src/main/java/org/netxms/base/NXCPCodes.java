@@ -379,6 +379,7 @@ public class NXCPCodes
    public static final int CMD_CANCEL_FILE_DOWNLOAD = 0x0168;
    public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
    public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
+   public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1006,6 +1007,7 @@ public class NXCPCodes
    public static final long VID_RACK_ORIENTATION = 611;
    public static final long VID_PASSIVE_ELEMENTS = 612;
    public static final long VID_RACK_IMAGE_REAR = 613;
+   public static final long VID_INCLUDE_THRESHOLDS = 614;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

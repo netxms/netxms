@@ -441,6 +441,14 @@ public class NetworkMapLink
    {
       this.connectorName2 = connectorName2;
    }
+   
+   /**
+    * @return link config
+    */
+   public LinkConfig getConfig()
+   {
+      return config;
+   }
 
    /* (non-Javadoc)
     * @see java.lang.Object#toString()

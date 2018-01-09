@@ -595,6 +595,7 @@ typedef struct
 #define CMD_CANCEL_FILE_DOWNLOAD          0x0168
 #define CMD_FILEMGR_COPY_FILE             0x0169
 #define CMD_DELETE_DCI_ENTRY              0x0170
+#define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1223,6 +1224,7 @@ typedef struct
 #define VID_RACK_ORIENTATION        ((UINT32)611)
 #define VID_PASSIVE_ELEMENTS        ((UINT32)612)
 #define VID_RACK_IMAGE_REAR         ((UINT32)613)
+#define VID_INCLUDE_THRESHOLDS      ((UINT32)614)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
