@@ -44,10 +44,10 @@ NXSL_Library::~NXSL_Library()
 /**
  * Add script to library
  */
-BOOL NXSL_Library::addScript(NXSL_LibraryScript *script)
+bool NXSL_Library::addScript(NXSL_LibraryScript *script)
 {
    m_scriptList->add(script);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -82,10 +82,13 @@ void NXSL_Library::deleteScript(UINT32 dwId)
 NXSL_Program *NXSL_Library::findNxslProgram(const TCHAR *name)
 {
    for(int i = 0; i < m_scriptList->size(); i++)
-      if (!_tcsicmp(m_scriptList->get(i)->getName(), name))
+   {
+      NXSL_LibraryScript *script = m_scriptList->get(i);
+      if (!_tcsicmp(script->getName(), name))
       {
-         return m_scriptList->get(i)->getProgram();
+         return script->isValid() ? script->getProgram() : NULL;
       }
+   }
    return NULL;
 }
 
@@ -95,10 +98,13 @@ NXSL_Program *NXSL_Library::findNxslProgram(const TCHAR *name)
 NXSL_LibraryScript *NXSL_Library::findScript(UINT32 id)
 {
    for(int i = 0; i < m_scriptList->size(); i++)
-      if (m_scriptList->get(i)->getId() == id)
+   {
+      NXSL_LibraryScript *script = m_scriptList->get(i);
+      if (script->getId() == id)
       {
-         return m_scriptList->get(i);
+         return script;
       }
+   }
    return NULL;
 }
 

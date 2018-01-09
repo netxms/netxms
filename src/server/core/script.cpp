@@ -120,17 +120,14 @@ void ReloadScript(UINT32 id)
       return;
    }
 
-   s_scriptLibrary.lock();
-   s_scriptLibrary.deleteScript(id);
-   if (script->isValid())
-   {
-      s_scriptLibrary.addScript(script);
-   }
-   else
+   if (!script->isValid())
    {
       nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", id, script->getName(), script->getError());
-      delete script;
    }
+
+   s_scriptLibrary.lock();
+   s_scriptLibrary.deleteScript(id);
+   s_scriptLibrary.addScript(script);
    s_scriptLibrary.unlock();
 }
 
@@ -227,7 +224,9 @@ UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId)
          hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id,guid) VALUES (?,?,?,?)"));
       }
       else // Update existing script
+      {
          hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+      }
 
       if (hStmt != NULL)
       {
@@ -248,10 +247,11 @@ UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId)
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
+   {
       rcc = RCC_INVALID_SCRIPT_NAME;
+   }
 
    free(scriptSource);
-
    return rcc;
 }
 
