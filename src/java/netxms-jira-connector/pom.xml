@@ -15,8 +15,10 @@
     </organization>
 
     <properties>
-        <jira.version>6.4.9</jira.version>
-        <amps.version>5.1.6</amps.version>
+        <jira.version>7.6.1</jira.version>
+        <amps.version>6.3.13</amps.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <name>netxms-connector</name>
