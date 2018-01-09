@@ -10,11 +10,11 @@
   </parent> -->
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.clientlibrary</artifactId>
-  <version>2.2.0</version>
+  <version>2.2.2</version>
   <packaging>eclipse-plugin</packaging>
 
     <properties>
-        <tycho.version>0.23.0</tycho.version>
+        <tycho.version>0.23.1</tycho.version>
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
     </properties>
 
