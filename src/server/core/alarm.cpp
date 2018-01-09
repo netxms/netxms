@@ -1736,6 +1736,33 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 }
 
 /**
+ * NXSL extension: Find alarm by key using regular expression
+ */
+int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *key = argv[0]->getValueAsCString();
+   Alarm *alarm = NULL;
+
+   MutexLock(m_mutex);
+   for(int i = 0; i < m_alarmList->size(); i++)
+   {
+      Alarm *a = m_alarmList->get(i);
+      if (RegexpMatch(a->getKey(), key, TRUE))
+      {
+         alarm = new Alarm(a, false);
+         break;
+      }
+   }
+   MutexUnlock(m_mutex);
+
+   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   return 0;
+}
+
+/**
  * Initialize alarm manager at system startup
  */
 bool InitAlarmManager()
