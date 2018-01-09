@@ -49,7 +49,7 @@
     </modules>
 
     <properties>
-        <tycho.version>0.23.0</tycho.version>
+        <tycho.version>0.23.1</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
          <maven.compiler.source>1.7</maven.compiler.source>
