@@ -23,6 +23,22 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 30.19 to 30.20 (changes also included into 22.11)
+ */
+static bool H_UpgradeFromV19()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 11)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Housekeeper.StartTime' WHERE var_name='HousekeeperStartTime'")));
+      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.HighWatermark"), _T("250000"), _T("High watermark for housekeeper throttling"), 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.LowWatermark"), _T("50000"), _T("Low watermark for housekeeper throttling"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 11));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 30.18 to 30.19 (changes also included into 22.10)
  */
 static bool H_UpgradeFromV18()
@@ -705,6 +721,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 19, 30, 20, H_UpgradeFromV19 },
    { 18, 30, 19, H_UpgradeFromV18 },
    { 17, 30, 18, H_UpgradeFromV17 },
    { 16, 30, 17, H_UpgradeFromV16 },
@@ -714,17 +731,17 @@ static struct
    { 12, 30, 13, H_UpgradeFromV12 },
    { 11, 30, 12, H_UpgradeFromV11 },
    { 10, 30, 11, H_UpgradeFromV10 },
-   { 9, 30, 10, H_UpgradeFromV9 },
-   { 8, 30, 9, H_UpgradeFromV8 },
-   { 7, 30, 8, H_UpgradeFromV7 },
-   { 6, 30, 7, H_UpgradeFromV6 },
-   { 5, 30, 6, H_UpgradeFromV5 },
-   { 4, 30, 5, H_UpgradeFromV4 },
-   { 3, 30, 4, H_UpgradeFromV3 },
-   { 2, 30, 3, H_UpgradeFromV2 },
-   { 1, 30, 2, H_UpgradeFromV1 },
-   { 0, 30, 1, H_UpgradeFromV0 },
-   { 0, 0, 0, NULL }
+   { 9,  30, 10, H_UpgradeFromV9 },
+   { 8,  30, 9,  H_UpgradeFromV8 },
+   { 7,  30, 8,  H_UpgradeFromV7 },
+   { 6,  30, 7,  H_UpgradeFromV6 },
+   { 5,  30, 6,  H_UpgradeFromV5 },
+   { 4,  30, 5,  H_UpgradeFromV4 },
+   { 3,  30, 4,  H_UpgradeFromV3 },
+   { 2,  30, 3,  H_UpgradeFromV2 },
+   { 1,  30, 2,  H_UpgradeFromV1 },
+   { 0,  30, 1,  H_UpgradeFromV0 },
+   { 0,  0,  0, NULL }
 };
 
 /**

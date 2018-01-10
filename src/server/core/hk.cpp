@@ -25,6 +25,41 @@
 #define DEBUG_TAG _T("housekeeper")
 
 /**
+ * Housekeeper wakeup condition
+ */
+static CONDITION s_wakeupCondition = INVALID_CONDITION_HANDLE;
+
+/**
+ * Housekeeper shutdown flag
+ */
+static bool s_shutdown = false;
+
+/**
+ * Throttling parameters
+ */
+static int s_throttlingHighWatermark = 250000;
+static int s_throttlingLowWatermark = 50000;
+
+/**
+ * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
+ */
+bool ThrottleHousekeeper()
+{
+   int qsize = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+   if (qsize < s_throttlingHighWatermark)
+      return true;
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper paused (queue size %d, high watermark %d, low watermark %d)"), qsize, s_throttlingHighWatermark, s_throttlingLowWatermark);
+   while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
+   {
+      ConditionWait(s_wakeupCondition, 30000);
+      qsize = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+   }
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), qsize);
+   return !s_shutdown;
+}
+
+/**
  * Delete empty subnets from given list
  */
 static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
@@ -123,19 +158,27 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
          {
             UINT32 alarmId = DBGetFieldULong(hResult, i, 0);
 				DeleteAlarmNotes(hdb, alarmId);
+            if (!ThrottleHousekeeper())
+               break;
             DeleteAlarmEvents(hdb, alarmId);
+            if (!ThrottleHousekeeper())
+               break;
          }
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
-	if (hStmt != NULL)
+	if (!s_shutdown)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
-		DBExecute(hStmt);
-		DBFreeStatement(hStmt);
+      hStmt = DBPrepare(hdb, _T("DELETE FROM alarms WHERE alarm_state=3 AND last_change_time<?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)ts);
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      ThrottleHousekeeper();
 	}
 }
 
@@ -144,7 +187,10 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 static void CleanDciData(NetObj *object, void *data)
 {
+   if (s_shutdown)
+      return;
 	static_cast<DataCollectionTarget*>(object)->cleanDCIData((DB_HANDLE)data);
+	ThrottleHousekeeper();
 }
 
 /**
@@ -152,20 +198,10 @@ static void CleanDciData(NetObj *object, void *data)
  */
 static void QueuePredictionEngineTraining(NetObj *object, void *arg)
 {
-   if (!object->isDataCollectionTarget())
+   if (s_shutdown || !object->isDataCollectionTarget())
       return;
    static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
 }
-
-/**
- * Housekeeper wakeup condition
- */
-static CONDITION s_wakeupCondition = INVALID_CONDITION_HANDLE;
-
-/**
- * Housekeeper shutdown flag
- */
-static bool s_shutdown = false;
 
 /**
  * Housekeeper thread
@@ -179,7 +215,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    int minute;
 
    TCHAR buffer[64];
-   ConfigReadStr(_T("HousekeeperStartTime"), buffer, 64, _T("02:00"));
+   ConfigReadStr(_T("Housekeeper.StartTime"), buffer, 64, _T("02:00"));
    TCHAR *p = _tcschr(buffer, _T(':'));
    if (p != NULL)
    {
@@ -215,6 +251,10 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
 
+      s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
+      s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Throttling high watermark = %d, low watermark= %d"), s_throttlingHighWatermark, s_throttlingLowWatermark);
+
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
 
@@ -229,6 +269,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, query);
+			if (!ThrottleHousekeeper())
+			   break;
 		}
 
 		// Remove outdated syslog records
@@ -240,6 +282,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
 		}
 
 		// Remove outdated audit log records
@@ -251,6 +295,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
 		}
 
 		// Remove outdated SNMP trap log records
@@ -262,6 +308,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          TCHAR query[256];
 			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
 			DBQuery(hdb, query);
+         if (!ThrottleHousekeeper())
+            break;
 		}
 
 		// Delete empty subnets if needed

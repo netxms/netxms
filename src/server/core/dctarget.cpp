@@ -33,6 +33,11 @@ extern ThreadPool *g_dataCollectorThreadPool;
 void DataCollector(void *arg);
 
 /**
+ * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
+ */
+bool ThrottleHousekeeper();
+
+/**
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget() : Template()
@@ -232,13 +237,15 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 
    if (itemCount > 0)
    {
-      nxlog_debug(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
       DBQuery(hdb, queryItems);
+      if (!ThrottleHousekeeper())
+         return;
    }
 
    if (tableCount > 0)
    {
-      nxlog_debug(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
+      nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
       DBQuery(hdb, queryTables);
    }
 }
