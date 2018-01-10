@@ -23,6 +23,18 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 22.10 to 22.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Housekeeper.StartTime' WHERE var_name='HousekeeperStartTime'")));
+   CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.HighWatermark"), _T("250000"), _T("High watermark for housekeeper throttling"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.LowWatermark"), _T("50000"), _T("Low watermark for housekeeper throttling"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 22.9 to 22.10
  */
 static bool H_UpgradeFromV9()
@@ -196,17 +208,18 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 9, 22, 10, H_UpgradeFromV9 },
-   { 8, 22, 9, H_UpgradeFromV8 },
-   { 7, 22, 8, H_UpgradeFromV7 },
-   { 6, 22, 7, H_UpgradeFromV6 },
-   { 5, 22, 6, H_UpgradeFromV5 },
-   { 4, 22, 5, H_UpgradeFromV4 },
-   { 3, 22, 4, H_UpgradeFromV3 },
-   { 2, 22, 3, H_UpgradeFromV2 },
-   { 1, 22, 2, H_UpgradeFromV1 },
-   { 0, 22, 1, H_UpgradeFromV0 },
-   { 0, 0, 0, NULL }
+   { 10, 22, 11, H_UpgradeFromV10 },
+   { 9,  22, 10, H_UpgradeFromV9 },
+   { 8,  22, 9,  H_UpgradeFromV8 },
+   { 7,  22, 8,  H_UpgradeFromV7 },
+   { 6,  22, 7,  H_UpgradeFromV6 },
+   { 5,  22, 6,  H_UpgradeFromV5 },
+   { 4,  22, 5,  H_UpgradeFromV4 },
+   { 3,  22, 4,  H_UpgradeFromV3 },
+   { 2,  22, 3,  H_UpgradeFromV2 },
+   { 1,  22, 2,  H_UpgradeFromV1 },
+   { 0,  22, 1,  H_UpgradeFromV0 },
+   { 0,  0,  0,  NULL }
 };
 
 /**
