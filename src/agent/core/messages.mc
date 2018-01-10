@@ -356,4 +356,22 @@ Language=English
 Core agent version %1
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_TAG
+Language=English
+[%1] %2
+.
+
+MessageId=
+SymbolicName=MSG_TUNNEL_ESTABLISHED
+Language=English
+Tunnel with %1 established
+.
+
+MessageId=
+SymbolicName=MSG_TUNNEL_CLOSED
+Language=English
+Tunnel with %1 closed
+.
+
 ;#endif

@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -286,6 +286,7 @@ void Tunnel::recvThread()
          break;
       }
    }
+   nxlog_write(MSG_TUNNEL_CLOSED, NXLOG_WARNING, "s", m_hostname);
 }
 
 /**
@@ -595,6 +596,7 @@ bool Tunnel::connectToServer()
       return false;
    }
 
+   nxlog_write(MSG_TUNNEL_ESTABLISHED, NXLOG_INFO, "s", m_hostname);
    return true;
 }
 
