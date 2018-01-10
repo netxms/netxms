@@ -24,6 +24,33 @@
 #include "libnxdb.h"
 
 /**
+ * Utility query tracer
+ */
+static void (*s_queryTracer)(const TCHAR *query, bool failure, const TCHAR *errorMessage);
+
+/**
+ * Set tracer callback for utility functions
+ */
+void LIBNXDB_EXPORTABLE DBSetUtilityQueryTracer(void (*queryTracer)(const TCHAR *, bool, const TCHAR *))
+{
+   s_queryTracer = queryTracer;
+}
+
+/**
+ * Execute utility query
+ */
+static bool ExecuteQuery(DB_HANDLE hdb, const TCHAR *query)
+{
+   if (s_queryTracer != NULL)
+      s_queryTracer(query, false, NULL);
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   bool success = DBQueryEx(hdb, query, errorText);
+   if (!success && (s_queryTracer != NULL))
+      s_queryTracer(query, true, errorText);
+   return success;
+}
+
+/**
  * Check if given record exists in database
  */
 bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id)
@@ -348,7 +375,7 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
       default:    // Unsupported DB engine
          return false;
    }
-   return DBQuery(hdb, query);
+   return ExecuteQuery(hdb, query);
 }
 
 /**
@@ -474,11 +501,11 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_MSSQL:
          success = FALSE;
@@ -492,7 +519,7 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
 
                DBGetField(hResult, 0, 0, objName, 512);
                _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s"), table, objName);
-               success = DBQuery(hdb, query);
+               success = ExecuteQuery(hdb, query);
             }
             else
             {
@@ -509,7 +536,7 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
    if ((syntax == DB_SYNTAX_DB2) && success)
    {
       _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
-      success = DBQuery(hdb, query);
+      success = ExecuteQuery(hdb, query);
    }
    return success;
 }
@@ -527,18 +554,18 @@ bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const
    {
       case DB_SYNTAX_INFORMIX:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ADD CONSTRAINT PRIMARY KEY (%s)"), table, columns);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_DB2:
       case DB_SYNTAX_MSSQL:
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ADD CONSTRAINT pk_%s PRIMARY KEY (%s)"), table, table, columns);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, columns);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       default:    // Unsupported DB engine
          success = false;
@@ -697,7 +724,12 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
          break;
    }
 
-   return (query[0] != 0) ? DBQuery(hdb, query) : true;
+   if (query[0] == 0)
+      return true;
+
+
+
+   return (query[0] != 0) ? ExecuteQuery(hdb, query) : true;
 }
 
 /**
@@ -712,11 +744,11 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
    if (syntax != DB_SYNTAX_SQLITE)
    {
       _sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
-      success = DBQuery(hdb, query);
+      success = ExecuteQuery(hdb, query);
       if (syntax == DB_SYNTAX_DB2)
       {
          _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
       }
    }
    else
@@ -767,22 +799,22 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
                columnList[cllen - 1] = _T('\0');
             // TODO: figure out if SQLite transactions will work here
             _sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
-            success = DBQuery(hdb, buffer);
+            success = ExecuteQuery(hdb, buffer);
             if (success)
             {
                _sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
                   table, columnList, columnList, table);
-               success = DBQuery(hdb, buffer);
+               success = ExecuteQuery(hdb, buffer);
             }
             if (success)
             {
                _sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
-               success = DBQuery(hdb, buffer);
+               success = ExecuteQuery(hdb, buffer);
             }
             if (success)
             {
                _sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME TO %s"), table, table);
-               success = DBQuery(hdb, buffer);
+               success = ExecuteQuery(hdb, buffer);
             }
          }
          free(columnList);
@@ -806,29 +838,29 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
    {
       case DB_SYNTAX_DB2:
          _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME COLUMN %s TO %s"), tableName, oldName, newName);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          if (success)
          {
             _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), tableName);
-            success = DBQuery(hdb, query);
+            success = ExecuteQuery(hdb, query);
          }
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(query, 1024, _T("EXEC sp_rename '%s.%s', '%s', 'COLUMN'"), tableName, oldName, newName);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_MYSQL:
          success = GetColumnDataType_MYSQL(hdb, tableName, oldName, type, 128);
          if (success)
          {
             _sntprintf(query, 1024, _T("ALTER TABLE %s CHANGE %s %s %s"), tableName, oldName, newName, type);
-            success = DBQuery(hdb, query);
+            success = ExecuteQuery(hdb, query);
          }
          break;
       case DB_SYNTAX_ORACLE:
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME COLUMN %s TO %s"), tableName, oldName, newName);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_SQLITE:
          success = false;

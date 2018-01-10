@@ -227,6 +227,17 @@ void ResetBulkYesNo()
 }
 
 /**
+ * Query tracer callback
+ */
+static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *errorText)
+{
+   if (failure)
+      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
+   else if (g_bTrace)
+      ShowQuery(query);
+}
+
+/**
  * Execute SQL SELECT query and print error message on screen if query failed
  */
 DB_RESULT SQLSelect(const TCHAR *pszQuery)
@@ -858,6 +869,8 @@ stop_search:
          DBUnloadDriver(s_driver);
          return 5;
       }
+
+		DBSetUtilityQueryTracer(QueryTracerCallback);
 
       // Do requested operation
       if (!strcmp(argv[optind], "batch"))
