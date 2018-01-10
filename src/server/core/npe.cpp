@@ -61,6 +61,55 @@ void PredictionEngine::train(UINT32 nodeId, UINT32 dciId)
 }
 
 /**
+ * Helper method to read last N values of given DCI
+ */
+StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciId, int maxRows)
+{
+   TCHAR query[1024];
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC"), maxRows, nodeId, dciId);
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"), nodeId, dciId, maxRows);
+         break;
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+         _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
+         break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+         break;
+      default:
+         nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
+         return NULL;   // Unsupported database
+   }
+
+   StructArray<DciValue> *values = NULL;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      values = new StructArray<DciValue>(count);
+      for(int i = 0; i < count; i++)
+      {
+         DciValue v;
+         v.timestamp = DBGetFieldULong(hResult, i, 0);
+         v.value = DBGetFieldDouble(hResult, i, 1);
+         values->add(&v);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return values;
+}
+
+/**
  * Prediction engine registry
  */
 static StringObjectMap<PredictionEngine> s_engines(true);
@@ -105,7 +154,7 @@ void RegisterPredictionEngines()
 static EnumerationCallbackResult ShowEngineDetails(const TCHAR *key, const void *value, void *data)
 {
    const PredictionEngine *p = (const PredictionEngine *)value;
-   ConsolePrintf((CONSOLE_CTX)data, _T("%-16s | %-12s | %s\n"), key, p->getVersion(), p->getVendor());
+   ConsolePrintf((CONSOLE_CTX)data, _T("%-16s | %-24s | %s\n"), key, p->getVersion(), p->getVendor());
    return _CONTINUE;
 }
 
@@ -120,8 +169,8 @@ void ShowPredictionEngines(CONSOLE_CTX console)
       return;
    }
 
-   ConsolePrintf(console, _T("Name             | Version      | Vendor\n"));
-   ConsolePrintf(console, _T("-----------------+--------------+------------------------------\n"));
+   ConsolePrintf(console, _T("Name             | Version                  | Vendor\n"));
+   ConsolePrintf(console, _T("-----------------+--------------------------+------------------------------\n"));
    s_engines.forEach(ShowEngineDetails, console);
 }
 
@@ -207,7 +256,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
       rows++;
 
       double value = engine->getPredictedValue(dci->getOwner()->getId(), dci->getId(), timestamp);
-      pCurr->timeStamp = (UINT32)timestamp;
+      pCurr->timeStamp = htonl((UINT32)timestamp);
       switch(dataType)
       {
          case DCI_DT_INT:

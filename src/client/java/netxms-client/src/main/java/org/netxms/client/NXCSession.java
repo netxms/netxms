@@ -336,6 +336,9 @@ public class NXCSession
    // Message of the day
    private String messageOfTheDay;
    
+   // Cached list of prediction engines
+   private List<PredictionEngine> predictionEngines = null;
+   
    /**
     * Message subscription class
     */
@@ -10042,8 +10045,11 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return List of PredictionEngine objects
     */
-   public List<PredictionEngine> getPredictionEngines() throws IOException, NXCException
+   public synchronized List<PredictionEngine> getPredictionEngines() throws IOException, NXCException
    {
+      if (predictionEngines != null)
+         return predictionEngines;
+      
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PREDICTION_ENGINES);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -10055,6 +10061,7 @@ public class NXCSession
          engines.add(new PredictionEngine(response, fieldId));
          fieldId += 10;
       }
+      predictionEngines = engines;  // cache received list
       return engines;
    }
 

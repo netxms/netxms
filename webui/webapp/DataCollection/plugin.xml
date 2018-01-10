@@ -273,7 +273,7 @@
         </page>
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns#20"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.TableColumns#16"
               name="%page.name.Columns">
            <enabledWhen>
               <instanceof
@@ -378,6 +378,16 @@
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.Analytics"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.Analytics#40"
+              name="Analytics">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionItem">
               </instanceof>
            </enabledWhen>
         </page>

@@ -34,10 +34,22 @@
 #define MAX_NPE_NAME_LEN            16
 
 /**
+ * DCI value
+ */
+struct DciValue
+{
+   time_t timestamp;
+   double value;
+};
+
+/**
  * Prediction engine interface
  */
 class NXCORE_EXPORTABLE PredictionEngine
 {
+protected:
+   StructArray<DciValue> *getDciValues(UINT32 nodeId, UINT32 dciId, int maxRows);
+
 public:
    PredictionEngine();
    virtual ~PredictionEngine();

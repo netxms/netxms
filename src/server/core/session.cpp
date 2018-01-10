@@ -3959,7 +3959,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
 		            tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 		   break;
 		default:
-			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareDataSelect"));
+			DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
 			return NULL;	// Unsupported database
 	}
 	return DBPrepare(hdb, query);

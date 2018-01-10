@@ -3835,6 +3835,7 @@ AC_CONFIG_FILES([
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
+	src/server/spe/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile

@@ -35,5 +35,13 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(NXCSession session, Display display)
 	{
 		SummaryTablesCache.attachSession(display, session);
+		try
+      {
+		   // will cause session to cache list of prediction engines
+         session.getPredictionEngines();
+      }
+      catch(Exception e)
+      {
+      }
 	}
 }
