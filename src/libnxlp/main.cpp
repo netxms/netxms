@@ -29,38 +29,11 @@
 static VolatileCounter s_referenceCount = 0;
 
 /**
- * Trace callback
- */
-void (* s_traceCallback)(int, const TCHAR *, va_list) = NULL;
-
-/**
  * Event log reading mode
  */
 #ifdef _WIN32
 bool s_eventLogV6 = false;
 #endif
-
-/**
- * Set trace callback for log parser library
- */
-void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list))
-{
-   s_traceCallback = traceCallback;
-}
-
-/**
- * Trace messages for log parser
- */
-void LogParserTrace(int level, const TCHAR *format, ...)
-{
-   if (s_traceCallback == NULL)
-      return;
-
-   va_list args;
-   va_start(args, format);
-   s_traceCallback(level, format, args);
-   va_end(args);
-}
 
 /**
  * Init log parser library

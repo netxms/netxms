@@ -76,7 +76,6 @@ struct XML_PARSER_STATE
 	String ruleName;
 	int contextAction;
 	String ruleContext;
-	int numEventParams;
 	String errorText;
 	String macroName;
 	String macro;
@@ -94,7 +93,6 @@ struct XML_PARSER_STATE
 	   invertedRule = false;
 	   breakFlag = false;
 	   contextAction = CONTEXT_SET_AUTOMATIC;
-	   numEventParams = 0;
 	   repeatCount = 0;
 	   repeatInterval = 0;
 	   resetRepeat = true;
@@ -121,7 +119,6 @@ LogParser::LogParser()
 	m_processAllRules = false;
    m_suspended = false;
 	m_traceLevel = 0;
-	m_traceCallback = NULL;
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = NULL;
@@ -167,7 +164,6 @@ LogParser::LogParser(const LogParser *src)
 	m_processAllRules = src->m_processAllRules;
    m_suspended = src->m_suspended;
 	m_traceLevel = src->m_traceLevel;
-	m_traceCallback = src->m_traceCallback;
 	m_status = LPS_INIT;
 #ifdef _WIN32
    m_marker = _tcsdup_ex(src->m_marker);
@@ -192,13 +188,12 @@ LogParser::~LogParser()
  */
 void LogParser::trace(int level, const TCHAR *format, ...)
 {
-	va_list args;
-
-	if ((m_traceCallback == NULL) || (level > m_traceLevel))
+	if (level > m_traceLevel)
 		return;
 
-	va_start(args, format);
-	m_traceCallback(level, format, args);
+   va_list args;
+   va_start(args, format);
+	nxlog_debug_tag2(DEBUG_TAG _T(".parser"), level, format, args);
 	va_end(args);
 }
 
@@ -222,9 +217,9 @@ bool LogParser::addRule(LogParserRule *rule)
 /**
  * Create and add rule
  */
-bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int numParams, int repeatInterval, int repeatCount, bool resetRepeat)
+bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int repeatInterval, int repeatCount, bool resetRepeat)
 {
-	return addRule(new LogParserRule(this, NULL, regexp, eventCode, eventName, numParams, repeatInterval, repeatCount, resetRepeat));
+	return addRule(new LogParserRule(this, NULL, regexp, eventCode, eventName, repeatInterval, repeatCount, resetRepeat));
 }
 
 /**
@@ -263,7 +258,7 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
  * Match log record
  */
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
-										 UINT32 level, const TCHAR *line, UINT32 objectId)
+										 UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId)
 {
 	const TCHAR *state;
 	bool matched = false;
@@ -282,8 +277,8 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) :
-				rule->match(line, m_cb, objectId, m_userArg);
+			   rule->matchEx(source, eventId, level, line, variables, objectId, m_cb, m_userArg) :
+				rule->match(line, objectId, m_cb, m_userArg);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
@@ -324,15 +319,15 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
  */
 bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 {
-	return matchLogRecord(false, NULL, 0, 0, line, objectId);
+	return matchLogRecord(false, NULL, 0, 0, line, NULL, objectId);
 }
 
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
-bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId)
+bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId)
 {
-	return matchLogRecord(true, source, eventId, level, line, objectId);
+	return matchLogRecord(true, source, eventId, level, line, variables, objectId);
 }
 
 /**
@@ -501,7 +496,6 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 #endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
-		ps->numEventParams = 0;
 	}
 	else if (!strcmp(name, "match"))
 	{
@@ -525,7 +519,6 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "event"))
 	{
-		ps->numEventParams = XMLGetAttrUINT32(attrs, "params", 0);
 		ps->state = XML_STATE_EVENT;
 	}
 	else if (!strcmp(name, "context"))
@@ -643,7 +636,7 @@ static void EndElement(void *userData, const char *name)
 
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->ruleName, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
+		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->ruleName, (const TCHAR *)ps->regexp, eventCode, eventName, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())

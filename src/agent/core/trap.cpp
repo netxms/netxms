@@ -97,7 +97,7 @@ void ShutdownTrapSender()
 /**
  * Send trap to server
  */
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TCHAR **ppArgList)
 {
    if (nxlog_get_debug_level() >= 5)
    {
@@ -194,18 +194,19 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
       }
    }
 
-   SendTrap(dwEventCode, eventName, iNumArgs, ppArgList);
+   SendTrap(dwEventCode, eventName, iNumArgs, const_cast<const TCHAR**>(ppArgList));
 
    for(i = 0; i < iNumArgs; i++)
       if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
-          (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
-          (pszFormat[i] == 'i') || (pszFormat[i] == 'a')
+         (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
+         (pszFormat[i] == 'i') || (pszFormat[i] == 'a')
 #ifdef UNICODE
-          || (pszFormat[i] == 'm')
+         || (pszFormat[i] == 'm')
 #endif
          )
+      {
          free(ppArgList[i]);
-
+      }
 }
 
 /**

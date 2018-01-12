@@ -11,6 +11,8 @@ db.cpool	DB connection pool
 
 housekeeper	Housekeeper messages
 
+logwatch.*	Messages from log monitoring library
+
 ndd.*		Network device drivers
 
 node.poller	Node poller
