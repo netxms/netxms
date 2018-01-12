@@ -55,7 +55,7 @@ public class TableThreshold
 	 */
 	public TableThreshold(TableThreshold src)
 	{
-		id = src.id;
+		id = 0;
 		activationEvent = src.activationEvent;
 		deactivationEvent = src.deactivationEvent;
 		sampleCount = src.sampleCount;
