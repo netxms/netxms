@@ -100,13 +100,13 @@ public class Threshold
 	}
 	
 	/**
-	 * Copy constructor
+	 * Copy constructor (does not copy ID!)
 	 * 
 	 * @param src source object
 	 */
 	public Threshold(Threshold src)
 	{
-		id = src.id;
+		id = 0;
 		fireEvent = src.fireEvent;
 		rearmEvent = src.rearmEvent;
 		sampleCount = src.sampleCount;
