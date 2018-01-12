@@ -23,11 +23,13 @@
 
 #include "libnxlp.h"
 
+#define MAX_PARAM_COUNT 127
+
 /**
  * Constructor
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName,
-									  int numParams, int repeatInterval, int repeatCount, bool resetRepeat, const TCHAR *source,
+									  int repeatInterval, int repeatCount, bool resetRepeat, const TCHAR *source,
 									  UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	String expandedRegexp;
@@ -39,8 +41,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
 	m_eventName = (eventName != NULL) ? _tcsdup(eventName) : NULL;
-	m_numParams = numParams;
-	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
+	m_pmatch = (regmatch_t *)malloc(sizeof(regmatch_t) * MAX_PARAM_COUNT);
 	m_source = (source != NULL) ? _tcsdup(source) : NULL;
 	m_level = level;
 	m_idStart = idStart;
@@ -71,9 +72,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = src->m_eventCode;
 	m_eventName = (src->m_eventName != NULL) ? _tcsdup(src->m_eventName) : NULL;
-	m_numParams = src->m_numParams;
-	m_pmatch = (m_numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (m_numParams + 1)) : NULL;
-	m_source = (src->m_source != NULL) ? _tcsdup(src->m_source) : NULL;
+   m_pmatch = (regmatch_t *)malloc(sizeof(regmatch_t) * MAX_PARAM_COUNT);
+   m_source = (src->m_source != NULL) ? _tcsdup(src->m_source) : NULL;
 	m_level = src->m_level;
 	m_idStart = src->m_idStart;
 	m_idEnd = src->m_idEnd;
@@ -123,7 +123,7 @@ LogParserRule::~LogParserRule()
  * Match line
  */
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
-								          const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
+								          const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg)
 {
    incCheckCount(objectId);
    if (extMode)
@@ -164,7 +164,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, 
+				cb(m_eventCode, m_eventName, line, source, eventId, level, NULL, variables, objectId, 
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
 			incMatchCount(objectId);
 			return true;
@@ -173,47 +173,28 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		if ((_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0) && matchRepeatCount())
+		if ((_tregexec(&m_preg, line, MAX_PARAM_COUNT, m_pmatch, 0) == 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 			{
-				TCHAR **params = NULL;
-				int i, len;
-
-				if (m_numParams > 0)
+            StringList captureGroups;
+				for(int i = 0; i < MAX_PARAM_COUNT; i++)
 				{
-#if HAVE_ALLOCA
-					params = (TCHAR **)alloca(sizeof(TCHAR *) * m_numParams);
-#else
-					params = (TCHAR **)malloc(sizeof(TCHAR *) * m_numParams);
-#endif
-					for(i = 0; i < m_numParams; i++)
-					{
-						if (m_pmatch[i + 1].rm_so != -1)
-						{
-							len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
-							params[i] = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
-							memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len * sizeof(TCHAR));
-							params[i][len] = 0;
-						}
-						else
-						{
-							params[i] = _tcsdup(_T(""));
-						}
-					}
+               if (m_pmatch[i + 1].rm_so == -1)
+                  break;
+
+					int len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
+					TCHAR *s = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+					memcpy(s, &line[m_pmatch[i + 1].rm_so], len * sizeof(TCHAR));
+					s[len] = 0;
+               captureGroups.addPreallocated(s);
 				}
 
-				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, 
+				cb(m_eventCode, m_eventName, line, source, eventId, level, &captureGroups, variables, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
-
-				for(i = 0; i < m_numParams; i++)
-					free(params[i]);
-#if !HAVE_ALLOCA
-            free(params);
-#endif
-
-			}
+            m_parser->trace(8, _T("  callback completed"));
+         }
          incMatchCount(objectId);
 			return true;
 		}
@@ -226,18 +207,18 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 /**
  * Match line
  */
-bool LogParserRule::match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
+bool LogParserRule::match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg)
 {
-   return matchInternal(false, NULL, 0, 0, line, cb, objectId, userArg);
+   return matchInternal(false, NULL, 0, 0, line, NULL, objectId, cb, userArg);
 }
 
 /**
  * Match event
  */
 bool LogParserRule::matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
-								    const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
+								    const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg)
 {
-   return matchInternal(true, source, eventId, level, line, cb, objectId, userArg);
+   return matchInternal(true, source, eventId, level, line, variables, objectId, cb, userArg);
 }
 
 /**

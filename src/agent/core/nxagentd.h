@@ -607,7 +607,7 @@ bool WaitForProcess(const TCHAR *name);
 
 UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
+void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TCHAR **ppArgList);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
 void ForwardTrap(NXCPMessage *msg);

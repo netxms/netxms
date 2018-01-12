@@ -24,8 +24,6 @@
 #include "libnxlp.h"
 #include <nxstat.h>
 
-#define DEBUG_TAG    _T("logwatch")
-
 #ifdef _WIN32
 #include <share.h>
 #include <comdef.h>
@@ -387,7 +385,7 @@ static void SeekToZero(int fh, int chsize)
          if ((*p == 0) && ((chsize == 1) || !memcmp(p, "\x00\x00\x00\x00", chsize)))
          {
             off_t pos = lseek(fh, i - bytes, SEEK_CUR);
-            LogParserTrace(6, _T("LogParser: beginning of zero block found at %ld"), (long)pos);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Beginning of zero block found at %ld"), (long)pos);
             return;
          }
       }
@@ -409,19 +407,19 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 
 	if (m_fileName == NULL)
 	{
-		LogParserTrace(0, _T("LogParser: parser thread will not start, file name not set"));
+		nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread will not start, file name not set"));
 		return false;
 	}
 
 #ifdef _WIN32
    if (m_useSnapshot)
    {
-	   LogParserTrace(0, _T("LogParser: using VSS snapshots for file \"%s\""), m_fileName);
+	   nxlog_debug_tag(DEBUG_TAG, 0, _T("Using VSS snapshots for file \"%s\""), m_fileName);
       return monitorFileWithSnapshot(stopCondition, readFromCurrPos);
    }
 #endif
 
-	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
+	nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started"), m_fileName);
 	bool exclusionPeriod = false;
 	while(true)
 	{
@@ -430,7 +428,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	      if (!exclusionPeriod)
 	      {
 	         exclusionPeriod = true;
-            LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
 	      }
          if (ConditionWait(stopCondition, 30000))
@@ -441,7 +439,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	   if (exclusionPeriod)
 	   {
 	      exclusionPeriod = false;
-         LogParserTrace(6, _T("LogParser: exclusion period for file \"%s\" ended"), getFileName());
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Exclusion period for file \"%s\" ended"), getFileName());
 	   }
 
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
@@ -467,7 +465,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
       }
 
 		setStatus(LPS_RUNNING);
-		LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
       if (m_fileEncoding == -1)
       {
@@ -478,7 +476,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 		size = (size_t)st.st_size;
 		if (readFromStart)
 		{
-			LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
 			off_t resetPos = ParseNewRecords(this, fh);
          lseek(fh, resetPos, SEEK_SET);
 		}
@@ -500,21 +498,21 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 			ExpandFileName(getFileName(), temp, MAX_PATH, true);
 			if (_tcscmp(temp, fname))
 			{
-				LogParserTrace(5, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"), m_fileName, fname, temp);
+				nxlog_debug_tag(DEBUG_TAG, 5, _T("File name change for \"%s\" (\"%s\" -> \"%s\")"), m_fileName, fname, temp);
 				readFromStart = true;
 				break;
 			}
 
 			if (NX_FSTAT(fh, &st) < 0)
 			{
-				LogParserTrace(1, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
+				nxlog_debug_tag(DEBUG_TAG, 1, _T("fstat(%d) failed, errno=%d"), fh, errno);
 				readFromStart = true;
 				break;
 			}
 
 			if (CALL_STAT(fname, &stn) < 0)
 			{
-				LogParserTrace(1, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
+				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
 				readFromStart = true;
 				break;
 			}
@@ -522,14 +520,14 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 #ifdef _WIN32
 			if (st.st_ctime != stn.st_ctime)
 			{
-				LogParserTrace(3, _T("LogParser: creation time for fstat(%d) is not equal to creation time for stat(%s), assume file rename"), fh, fname);
+				nxlog_debug_tag(DEBUG_TAG, 3, _T("Creation time for fstat(%d) is not equal to creation time for stat(%s), assume file rename"), fh, fname);
 				readFromStart = true;
 				break;
 			}
 #else
 			if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
 			{
-				LogParserTrace(3, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+				nxlog_debug_tag(DEBUG_TAG, 3, _T("File device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
 				readFromStart = true;
 				break;
 			}
@@ -541,10 +539,10 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 				{
 					// File was cleared, start from the beginning
 					lseek(fh, 0, SEEK_SET);
-					LogParserTrace(3, _T("LogParser: file \"%s\" st_size != size"), fname);
+					nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size != size"), fname);
 				}
 				size = (size_t)st.st_size;
-				LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 				off_t resetPos = ParseNewRecords(this, fh);
 				lseek(fh, resetPos, SEEK_SET);
 			}
@@ -555,7 +553,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 				if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
 				{
                lseek(fh, -4, SEEK_CUR);
-	            LogParserTrace(6, _T("LogParser: new data available in file \"%s\""), fname);
+	            nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 	            off_t resetPos = ParseNewRecords(this, fh);
 	            lseek(fh, resetPos, SEEK_SET);
 				}
@@ -569,7 +567,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
                   int bytes = _read(fh, buffer, readSize);
                   if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
                   {
-                     LogParserTrace(6, _T("LogParser: detected reset of preallocated file \"%s\""), fname);
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
                      lseek(fh, 0, SEEK_SET);
                      off_t resetPos = ParseNewRecords(this, fh);
                      lseek(fh, resetPos, SEEK_SET);
@@ -580,7 +578,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 
 			if (isExclusionPeriod())
 			{
-            LogParserTrace(6, _T("LogParser: closing file \"%s\" because of exclusion period"), fname);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Closing file \"%s\" because of exclusion period"), fname);
             exclusionPeriod = true;
             setStatus(LPS_SUSPENDED);
 				break;
@@ -590,7 +588,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 	}
 
 stop_parser:
-   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" stopped"), m_fileName);
 	return true;
 }
 
@@ -605,7 +603,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
    if (FAILED(hr))
    {
       _com_error err(hr);
-      LogParserTrace(0, _T("LogParser: parser thread will not start, COM initialization failed (%s)"), err.ErrorMessage());
+      nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread will not start, COM initialization failed (%s)"), err.ErrorMessage());
       return false;
    }
 
@@ -616,7 +614,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
    bool readFromStart = !readFromCurrPos;
    bool firstRead = true;
 
-   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started (using VSS snapshots)"), m_fileName);
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (using VSS snapshots)"), m_fileName);
    bool exclusionPeriod = false;
    while(true)
    {
@@ -625,7 +623,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
          if (!exclusionPeriod)
          {
             exclusionPeriod = true;
-            LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
          }
          if (ConditionWait(stopCondition, 30000))
@@ -636,7 +634,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       if (exclusionPeriod)
       {
          exclusionPeriod = false;
-         LogParserTrace(6, _T("LogParser: exclusion period for file \"%s\" ended"), getFileName());
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Exclusion period for file \"%s\" ended"), getFileName());
       }
 
       TCHAR fname[MAX_PATH];
@@ -681,11 +679,11 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       }
 
       setStatus(LPS_RUNNING);
-      LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
 
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
             static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
          readFromStart = true;   // Assume file rotation
          ctime = st.st_ctime;
@@ -724,7 +722,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
    }
 
    CoUninitialize();
-   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" stopped"), m_fileName);
    return true;
 }
 

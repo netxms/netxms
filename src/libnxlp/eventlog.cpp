@@ -38,8 +38,8 @@ public:
 	EventSource(const TCHAR *logName, const TCHAR *name);
 	~EventSource();
 
-	BOOL load();
-	BOOL formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize);
+	bool load();
+	bool formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize, StringList *variables);
 
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getLogName() { return m_logName; }
@@ -73,13 +73,13 @@ EventSource::~EventSource()
 /**
  * Load event source
  */
-BOOL EventSource::load()
+bool EventSource::load()
 {
    HKEY hKey;
    TCHAR buffer[MAX_PATH], path[MAX_PATH], *curr, *next;
    HMODULE hModule;
    DWORD size = MAX_PATH * sizeof(TCHAR);
-   BOOL isLoaded = FALSE;
+   bool isLoaded = false;
 
    _sntprintf(buffer, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\%s\\%s"), m_logName, m_name);
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
@@ -101,12 +101,12 @@ BOOL EventSource::load()
 					m_numModules++;
 					m_modules = (HMODULE *)realloc(m_modules, sizeof(HMODULE) * m_numModules);
 					m_modules[m_numModules - 1] = hModule;
-               LogParserTrace(4, _T("LogWatch: Message file \"%s\" loaded"), curr);
-					isLoaded = TRUE;
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Message file \"%s\" loaded"), curr);
+					isLoaded = true;
             }
             else
             {
-               LogParserTrace(0, _T("LogWatch: Unable to load message file \"%s\": %s"), 
+               nxlog_debug_tag(DEBUG_TAG, 0, _T("Unable to load message file \"%s\": %s"), 
 					                curr, GetSystemErrorText(GetLastError(), buffer, MAX_PATH));
             }
          }
@@ -120,16 +120,17 @@ BOOL EventSource::load()
 /**
  * Format message
  */
-BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
+bool EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize, StringList *variables)
 {
    TCHAR *strings[256], *str;
    int i;
-	BOOL success = FALSE;
+	bool success = false;
 
    memset(strings, 0, sizeof(TCHAR *) * 256);
    for(i = 0, str = (TCHAR *)((BYTE *)rec + rec->StringOffset); i < rec->NumStrings; i++)
    {
       strings[i] = str;
+      variables->add(str);
       str += _tcslen(str) + 1;
    }
 
@@ -141,16 +142,16 @@ BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
                           m_modules[i], rec->EventID, 0, msg, (DWORD)msgSize,
                           (va_list *)strings) > 0)
 		{
-			success = TRUE;
+			success = true;
          break;
 		}
    }
    if (!success)
    {
-      LogParserTrace(4, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Event log %s source %s FormatMessage(%d) error: %s"),
 		                m_logName, m_name, rec->EventID, 
 							 GetSystemErrorText(GetLastError(), msg, msgSize));
-      nx_strncpy(msg, _T("**** LogWatch: cannot format message ****"), msgSize);
+      nx_strncpy(msg, _T("**** cannot format message ****"), msgSize);
    }
 	return success;
 }
@@ -241,12 +242,13 @@ void LogParser::parseEvent(EVENTLOGRECORD *rec)
 	es = LoadEventSource(&m_fileName[1], eventSourceName);
 	if (es != NULL)
 	{
-		es->formatMessage(rec, msg, 8192);
-		matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg);
+      StringList variables;
+		es->formatMessage(rec, msg, 8192, &variables);
+		matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg, &variables);
 	}
 	else
 	{
-		LogParserTrace(4, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &m_fileName[1]);
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("unable to load event source \"%s\" for log \"%s\""), eventSourceName, &m_fileName[1]);
 	}
 }
 
@@ -277,10 +279,10 @@ reopen_log:
       // Initial read (skip on reopen)
 		if (!reopen)
 		{
-			LogParserTrace(7, _T("LogWatch: Initial read of event log \"%s\""), &m_fileName[1]);
+			nxlog_debug_tag(DEBUG_TAG, 7, _T("Initial read of event log \"%s\""), &m_fileName[1]);
          if (m_marker != NULL)
          {
-	         LogParserTrace(1, _T("LogWatch: reading old events between %I64d and %I64d"), (INT64)startTime, (INT64)time(NULL));
+	         nxlog_debug_tag(DEBUG_TAG, 1, _T("reading old events between %I64d and %I64d"), (INT64)startTime, (INT64)time(NULL));
          }
 			do
 			{
@@ -303,7 +305,7 @@ reopen_log:
 					bufferSize = bytesNeeded;
 					buffer = (BYTE *)realloc(buffer, bufferSize);
 					success = TRUE;
-					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"), &m_fileName[1], bufferSize);
+					nxlog_debug_tag(DEBUG_TAG, 9, _T("Increasing buffer for event log \"%s\" to %u bytes on initial read"), &m_fileName[1], bufferSize);
 				}
 			} while(success);
 		}
@@ -316,8 +318,8 @@ reopen_log:
          NotifyChangeEventLog(hLog, nd.hLogEvent);
 			handles[0] = nd.hWakeupEvent;
 			handles[1] = stopCondition;
-			LogParserTrace(1, _T("LogWatch: Start watching event log \"%s\""), &m_fileName[1]);
-			LogParserTrace(7, _T("LogWatch: Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+			nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\""), &m_fileName[1]);
+			nxlog_debug_tag(DEBUG_TAG, 7, _T("Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 			setStatus(LPS_RUNNING);
 
          while(1)
@@ -335,7 +337,7 @@ retry_read:
 					{
 						bufferSize = bytesNeeded;
 						buffer = (BYTE *)realloc(buffer, bufferSize);
-						LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes"), &m_fileName[1], bufferSize);
+						nxlog_debug_tag(DEBUG_TAG, 9, _T("Increasing buffer for event log \"%s\" to %u bytes"), &m_fileName[1], bufferSize);
 						goto retry_read;
 					}
                if (success)
@@ -348,13 +350,13 @@ retry_read:
 
 				if (error == ERROR_EVENTLOG_FILE_CHANGED)
 				{
-					LogParserTrace(4, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""), &m_fileName[1]);
+					nxlog_debug_tag(DEBUG_TAG, 4, _T("Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""), &m_fileName[1]);
 					break;
 				}
 
             if (error != ERROR_HANDLE_EOF)
 				{
-					LogParserTrace(0, _T("LogWatch: Unable to read event log \"%s\": %s"),
+					nxlog_debug_tag(DEBUG_TAG, 0, _T("Unable to read event log \"%s\": %s"),
 										&m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
 					setStatus(LPS_EVT_READ_ERROR);
 				}
@@ -362,11 +364,11 @@ retry_read:
 
 			SetEvent(nd.hStopEvent);
 			ThreadJoin(nt);
-			LogParserTrace(1, _T("LogWatch: Stop watching event log \"%s\""), &m_fileName[1]);
+			nxlog_debug_tag(DEBUG_TAG, 1, _T("Stop watching event log \"%s\""), &m_fileName[1]);
       }
       else
       {
-			LogParserTrace(0, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
+			nxlog_debug_tag(DEBUG_TAG, 0, _T("Unable to read event log (initial read) \"%s\": %s"),
 			               &m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
       }
 
@@ -385,7 +387,7 @@ retry_read:
    }
    else
    {
-		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\": %s"),
+		nxlog_debug_tag(DEBUG_TAG, 0, _T("Unable to open event log \"%s\": %s"),
 		               &m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
 		setStatus(LPS_EVT_OPEN_ERROR);
       result = false;

@@ -27,7 +27,7 @@
  */
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
-static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
+static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, const TCHAR **) = NULL;
 static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = NULL;
@@ -41,7 +41,7 @@ static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
  */
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                            void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+                                           void (* sendTrap2)(UINT32, const TCHAR *, int, const TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
@@ -145,7 +145,7 @@ void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName,
 /**
  * Send trap from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
+void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, const TCHAR **ppszArgList)
 {
    if (s_fpSendTrap2 != NULL)
       s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);

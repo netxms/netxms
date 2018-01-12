@@ -22,6 +22,8 @@
 
 #include "logwatch.h"
 
+#define DEBUG_TAG _T("logwatch")
+
 /**
  * Shutdown condition
  */
@@ -134,10 +136,10 @@ static void SubagentShutdown()
  */
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text,
                            const TCHAR *source, UINT32 eventId, UINT32 severity,
-                           int cgCount, TCHAR **cgList, UINT32 objectId, int repeatCount,
+                           StringList *cgs, StringList *variables, UINT32 objectId, int repeatCount,
                            void *userArg)
 {
-   int count = cgCount + 1;
+   int count = cgs->size() + 1 + ((variables != NULL) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    if (source != NULL)
@@ -147,18 +149,24 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       count += 3;
    }
 
-   TCHAR **list = (TCHAR **)malloc(sizeof(TCHAR *) * count);
+   const TCHAR **list = (const TCHAR **)malloc(sizeof(const TCHAR *) * count);
    int i;
-   for(i = 0; i < cgCount; i++)
-      list[i] = cgList[i];
+   for(i = 0; i < cgs->size(); i++)
+      list[i] = cgs->get(i);
 
    if (source != NULL)
    {
-      list[i++] = (TCHAR *)source;
+      list[i++] = source;
       list[i++] = eventIdText;
       list[i++] = severityText;
    }
    list[i++] = repeatCountText;
+
+   if (variables != NULL)
+   {
+      for(int j = 0; j < variables->size(); j++)
+         list[i++] = variables->get(j);
+   }
 
    AgentSendTrap2(eventCode, eventName, count, list);
    free(list);
@@ -185,12 +193,11 @@ static void AddParserFromConfig(const TCHAR *file)
 				if (parser->getFileName() != NULL)
 				{
 					parser->setCallback(LogParserMatch);
-					parser->setTraceCallback(AgentWriteDebugLog2);
                s_parsers.add(parser);
 					AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
 						parser->getFileName(), parser->getTraceLevel());
 #ifdef _WIN32
-					AgentWriteDebugLog(7, _T("LogWatch: Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+					nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
 				}
 				else
@@ -225,7 +232,7 @@ static void AddLogwatchPolicyFiles()
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
 
-   AgentWriteDebugLog(1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
 
    _TDIR *dir = _topendir(policyFolder);
    if (dir != NULL)
@@ -273,7 +280,7 @@ static BOOL SubagentInit(Config *config)
    AddLogwatchPolicyFiles();
 
 	// Create shutdown condition and start parsing threads
-	s_shutdownCondition = ConditionCreate(TRUE);
+	s_shutdownCondition = ConditionCreate(true);
    for(int i = 0; i < s_parsers.size(); i++)
 	{
       LogParser *p = s_parsers.get(i);
@@ -337,7 +344,6 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
-   SetLogParserTraceCallback(AgentWriteDebugLog2);
 	*ppInfo = &m_info;
 	return TRUE;
 }

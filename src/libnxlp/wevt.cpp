@@ -52,19 +52,59 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
       switch(p->Type)
       {
          case EvtVarTypeNull:
-      	   LogParserTrace(5, _T("LogWatch: publisher %s: NULL"), name);
+      	   nxlog_debug_tag(DEBUG_TAG, 5, _T("Publisher %s: NULL"), name);
             break;
          case EvtVarTypeString:
-      	   LogParserTrace(5, _T("LogWatch: publisher %s: %ls"), name, p->StringVal);
+      	   nxlog_debug_tag(DEBUG_TAG, 5, _T("Publisher %s: %ls"), name, p->StringVal);
             break;
          case EvtVarTypeAnsiString:
-      	   LogParserTrace(5, _T("LogWatch: publisher %s: %hs"), name, p->AnsiStringVal);
+      	   nxlog_debug_tag(DEBUG_TAG, 5, _T("Publisher %s: %hs"), name, p->AnsiStringVal);
             break;
          default:
-      	   LogParserTrace(5, _T("LogWatch: publisher %s: (variant type %d)"), name, (int)p->Type);
+      	   nxlog_debug_tag(DEBUG_TAG, 5, _T("Publisher %s: (variant type %d)"), name, (int)p->Type);
             break;
       }
    }
+}
+
+/**
+ * Extract variables from event
+ */
+static StringList *ExtractVariables(EVT_HANDLE event)
+{
+   TCHAR buffer[8192];
+
+   static PCWSTR eventProperties[] = { L"Event/EventData/Data[1]" };
+   EVT_HANDLE renderContext = _EvtCreateRenderContext(0, NULL, EvtRenderContextUser);
+   if (renderContext == NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExtractVariables: Call to EvtCreateRenderContext failed: %s"),
+         GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+      return NULL;
+   }
+
+   StringList *variables = NULL;
+
+   // Get event values
+   DWORD reqSize, propCount = 0;
+   if (!_EvtRender(renderContext, event, EvtRenderEventValues, 8192, buffer, &reqSize, &propCount))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ExtractVariables: Call to EvtRender failed: %s"),
+         GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+      goto cleanup;
+   }
+
+   if (propCount > 0)
+   {
+      variables = new StringList();
+      PEVT_VARIANT values = PEVT_VARIANT(buffer);
+      for (DWORD i = 0; i < propCount; i++)
+         variables->add(values[i].StringVal);
+   }
+
+cleanup:
+   _EvtClose(renderContext);
+   return variables;
 }
 
 /**
@@ -84,7 +124,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	EVT_HANDLE renderContext = _EvtCreateRenderContext(4, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
-		LogParserTrace(5, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"),
 							    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		return 0;
 	}
@@ -92,7 +132,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	// Get event values
 	if (!_EvtRender(renderContext, event, EvtRenderEventValues, 4096, buffer, &reqSize, &propCount))
 	{
-		LogParserTrace(5, _T("LogWatch: Call to EvtRender failed: %s"),
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtRender failed: %s"),
 		                   GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
@@ -106,11 +146,11 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
-		LogParserTrace(6, _T("LogWatch: publisher name is %s"), publisherName);
-	}
+      static_cast<LogParser*>(userContext)->trace(7, _T("Publisher name is %s"), publisherName);
+   }
 	else
 	{
-		LogParserTrace(6, _T("LogWatch: unable to get publisher name from event"));
+      static_cast<LogParser*>(userContext)->trace(7, _T("Unable to get publisher name from event"));
 	}
 
 	// Event id
@@ -153,7 +193,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
 	{
-		LogParserTrace(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtOpenPublisherMetadata failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
 
@@ -164,7 +204,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       DWORD error = GetLastError();
 		if ((error != ERROR_INSUFFICIENT_BUFFER) && (error != ERROR_EVT_UNRESOLVED_VALUE_INSERT))
 		{
-			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
@@ -179,7 +219,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
             error = GetLastError();
             if (error != ERROR_EVT_UNRESOLVED_VALUE_INSERT)
             {
-			      LogParserTrace(5, _T("LogWatch: Retry call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
+			      nxlog_debug_tag(DEBUG_TAG, 5, _T("Retry call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
 			      LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
@@ -189,15 +229,17 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
       }
 	}
 
+   StringList *variables = ExtractVariables(event);
 #ifdef UNICODE
-	((LogParser *)userContext)->matchEvent(publisherName, eventId, level, msg);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables);
 #else
 	char *mbmsg = MBStringFromWideString(msg);
-	((LogParser *)userContext)->matchEvent(publisherName, eventId, level, mbmsg);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables);
 	free(mbmsg);
 #endif
+   delete variables;
 
-   ((LogParser *)userContext)->saveLastProcessedRecordTimestamp(time(NULL));
+   static_cast<LogParser*>(userContext)->saveLastProcessedRecordTimestamp(time(NULL));
 
 cleanup:
 	if (pubMetadata != NULL)
@@ -222,11 +264,11 @@ bool LogParser::monitorEventLogV6(CONDITION stopCondition)
       time_t now = time(NULL);
       if (startTime < now)
       {
-		   LogParserTrace(1, _T("LogWatch: reading old events between %I64d and %I64d from %s"), (INT64)startTime, (INT64)now, &m_fileName[1]);
+		   nxlog_debug_tag(DEBUG_TAG, 1, _T("Reading old events between %I64d and %I64d from %s"), (INT64)startTime, (INT64)now, &m_fileName[1]);
 
          WCHAR query[256];
          _snwprintf(query, 256, L"*[System/TimeCreated[timediff(@SystemTime) < %I64d]]", (INT64)(now - startTime) * 1000LL);
-         LogParserTrace(2, _T("LogWatch: event log query: \"%s\""), query);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Event log query: \"%s\""), query);
          EVT_HANDLE handle = _EvtQuery(NULL, &m_fileName[1], query, EvtQueryChannelPath | EvtQueryForwardDirection);
          if (handle != NULL)
          {
@@ -245,7 +287,7 @@ bool LogParser::monitorEventLogV6(CONDITION stopCondition)
          else
          {
             TCHAR buffer[1024];
-   		   LogParserTrace(1, _T("LogWatch: EvtQuery failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+   		   nxlog_debug_tag(DEBUG_TAG, 1, _T("EvtQuery failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
          }
       }
    }
@@ -260,17 +302,17 @@ bool LogParser::monitorEventLogV6(CONDITION stopCondition)
 #endif
 	if (handle != NULL)
 	{
-		LogParserTrace(1, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
 		setStatus(LPS_RUNNING);
 		WaitForSingleObject(stopCondition, INFINITE);
-		LogParserTrace(1, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Stop watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
 		_EvtClose(handle);
       success = true;
 	}
 	else
 	{
 		TCHAR buffer[1024];
-		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
+		nxlog_debug_tag(DEBUG_TAG, 0, _T("Unable to open event log \"%s\" with EvtSubscribe(): %s"),
 		               &m_fileName[1], GetSystemErrorText(GetLastError(), buffer, 1024));
 		setStatus(LPS_EVT_SUBSCRIBE_ERROR);
       success = false;
@@ -287,7 +329,7 @@ bool InitEventLogParsersV6()
 	if (module == NULL)
 	{
 		TCHAR buffer[1024];
-		LogParserTrace(1, _T("LogWatch: cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		return false;
 	}
 

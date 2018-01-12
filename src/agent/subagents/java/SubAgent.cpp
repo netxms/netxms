@@ -100,11 +100,11 @@ static void JNICALL J_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jn
          arrayOfString[i] = CStringFromJavaString(jenv, resString);
          jenv->DeleteLocalRef(resString);
       }
-      AgentSendTrap2((UINT32)event, name, numArgs, arrayOfString);
+      AgentSendTrap2((UINT32)event, name, numArgs, const_cast<const TCHAR**>(arrayOfString));
       free(name);
       for(jsize i = 0; i < numArgs; i++)
-         safe_free(arrayOfString[i]);
-      safe_free(arrayOfString);
+         free(arrayOfString[i]);
+      free(arrayOfString);
    }
 }
 

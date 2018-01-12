@@ -57,24 +57,10 @@ static TCHAR m_helpText[] =
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *message)
 {
-   _tprintf(_T("[%s] %s\n"), tag, message);
-}
-
-/**
- * Trace callback
- */
-static void TraceCallback(int level, const TCHAR *format, va_list args)
-{
-	_vtprintf(format, args);
-	_puttc(_T('\n'), stdout);
-}
-
-/**
- * Logger callback
- */
-static void LoggerCallback(int level, const TCHAR *format, va_list args)
-{
-	TraceCallback(level, format, args);
+   if (tag != NULL)
+      _tprintf(_T("[%s] %s\n"), tag, message);
+   else
+      _tprintf(_T("%s\n"), message);
 }
 
 /**
@@ -159,7 +145,6 @@ int main(int argc, char *argv[])
    nxlog_set_debug_writer(DebugWriter);
 
    InitLogParserLibrary();
-   SetLogParserTraceCallback(LoggerCallback);
 
 #ifdef UNICODE
 	WCHAR *wname = WideStringFromMBString(argv[optind]);
@@ -177,7 +162,6 @@ int main(int argc, char *argv[])
 		if ((parsers != NULL) && (parsers->size() > 0))
 		{
          LogParser *parser = parsers->get(0);
-			parser->setTraceCallback(TraceCallback);
 			if (traceLevel != -1)
 				parser->setTraceLevel(traceLevel);
 			if (inputFile != NULL)

@@ -477,9 +477,9 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
-			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, record.dwSourceObject);
+			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, NULL, record.dwSourceObject);
 #else
-			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, record.dwSourceObject);
+			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, NULL, record.dwSourceObject);
 #endif
 		}
 		MutexUnlock(s_parserLock);
@@ -535,17 +535,17 @@ void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 n
  */
 static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line,
                                  const TCHAR *source, UINT32 facility, UINT32 severity,
-                                 int paramCount, TCHAR **params, UINT32 objectId, int repeatCount,
+                                 StringList *captureGroups, StringList *variables, UINT32 objectId, int repeatCount,
                                  void *userArg)
 {
 	char format[] = "sssssssssssssssssssssssssssssssss";
-	TCHAR *plist[33];
+	const TCHAR *plist[33];
 	TCHAR repeatCountText[16];
 
-	int count = std::min(paramCount, 32);
+	int count = std::min(captureGroups->size(), 32);
 	format[count + 1] = 0;
 	for(int i = 0; i < count; i++)
-		plist[i] = params[i];
+		plist[i] = captureGroups->get(i);
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    plist[count] = repeatCountText;
 	PostEvent(eventCode, objectId, format,
@@ -949,7 +949,6 @@ void StartSyslogServer()
    }
    DBConnectionPoolReleaseConnection(hdb);
 
-   SetLogParserTraceCallback(nxlog_debug2);
    InitLogParserLibrary();
 
    // Create message parser

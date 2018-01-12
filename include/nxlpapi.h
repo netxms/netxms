@@ -84,10 +84,9 @@ enum LogParserFileEncoding
  * Parameters:
  *    NetXMS event code, NetXMS event name, original text, source,
  *    original event ID (facility), original severity,
- *    number of capture groups, list of capture groups,
- *    object id, user arg
+ *    capture groups, variables, object id, repeat count, user arg
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, int, void *);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT32, int, void *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -127,7 +126,6 @@ private:
 	UINT32 m_eventCode;
 	TCHAR *m_eventName;
 	bool m_isValid;
-	int m_numParams;
 	regmatch_t *m_pmatch;
 	TCHAR *m_regexp;
 	TCHAR *m_source;
@@ -149,7 +147,7 @@ private:
 	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
-	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+	                   const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, String &out);
    void incCheckCount(UINT32 objectId);
@@ -158,7 +156,7 @@ private:
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
-					  int numParams = 0, int repeatInterval = 0, int repeatCount = 0,
+					  int repeatInterval = 0, int repeatCount = 0,
 					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
@@ -167,9 +165,9 @@ public:
 	const TCHAR *getName() const { return m_name; }
 	bool isValid() const { return m_isValid; }
 
-	bool match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
-	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+	             const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg);
 
 	void setContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
 	void setContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
@@ -219,8 +217,6 @@ public:
  */
 class LIBNXLP_EXPORTABLE LogParser
 {
-	friend bool LogParserRule::matchInternal(bool, const TCHAR *, UINT32, UINT32, const TCHAR *, LogParserCallback, UINT32, void *);
-
 private:
 	ObjectArray<LogParserRule> *m_rules;
 	StringMap m_contexts;
@@ -240,7 +236,6 @@ private:
 	bool m_processAllRules;
    bool m_suspended;
 	int m_traceLevel;
-	void (*m_traceCallback)(int, const TCHAR *, va_list);
 	LogParserStatus m_status;
 #ifdef _WIN32
    TCHAR *m_marker;
@@ -248,8 +243,7 @@ private:
 #endif
 
 	const TCHAR *checkContext(LogParserRule *rule);
-	void trace(int level, const TCHAR *format, ...);
-	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
+	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId);
 
 	bool isExclusionPeriod();
 
@@ -298,7 +292,7 @@ public:
    bool isSnapshotMode() const { return m_useSnapshot;  }
 #endif
 
-	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0, int repeatInterval = 0, int repeatCount = 0, bool resetRepeat = true);
+	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int repeatInterval = 0, int repeatCount = 0, bool resetRepeat = true);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }
@@ -312,14 +306,13 @@ public:
 	const TCHAR *getMacro(const TCHAR *name);
 
 	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
-	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId = 0);
+	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId = 0);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
 
 	int getTraceLevel() const { return m_traceLevel; }
 	void setTraceLevel(int level) { m_traceLevel = level; }
-	void setTraceCallback(void (*cb)(int, const TCHAR *, va_list)) { m_traceCallback = cb; }
 
 	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
 #ifdef _WIN32
@@ -334,6 +327,8 @@ public:
 
    void suspend();
    void resume();
+
+   void trace(int level, const TCHAR *format, ...);
 };
 
 /**
@@ -345,11 +340,6 @@ void LIBNXLP_EXPORTABLE InitLogParserLibrary();
  * Cleanup event log parsig library
  */
 void LIBNXLP_EXPORTABLE CleanupLogParserLibrary();
-
-/**
- * Set trace callback for log parser library
- */
-void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list));
 
 #ifdef _WIN32
 

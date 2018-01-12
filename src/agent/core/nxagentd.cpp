@@ -101,7 +101,7 @@ extern TCHAR g_windowsServiceDisplayName[];
 
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                            void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+                                           void (* sendTrap2)(UINT32, const TCHAR *, int, const TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),

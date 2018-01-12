@@ -2,7 +2,9 @@
 * 2.2.3
 *
 
+- Additional information about captured Windows Event Log event passed to the server
 - Fixed issues:
+	NX-1258 (Option to pass event data from Windows event log to NetXMS event)
 	NX-1389 (If library script saved with compilation errors it disappears from script list)
 
 
