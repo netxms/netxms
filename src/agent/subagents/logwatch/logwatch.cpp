@@ -134,19 +134,18 @@ static void SubagentShutdown()
 /**
  * Callback for matched log records
  */
-static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text,
-                           const TCHAR *source, UINT32 eventId, UINT32 severity,
-                           StringList *cgs, StringList *variables, UINT32 objectId, int repeatCount,
-                           void *userArg)
+static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text, const TCHAR *source, UINT32 eventId,
+                           UINT32 severity, StringList *cgs, StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg)
 {
    int count = cgs->size() + 1 + ((variables != NULL) ? variables->size() : 0);
-   TCHAR eventIdText[16], severityText[16], repeatCountText[16];
+   TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    if (source != NULL)
    {
       _sntprintf(eventIdText, 16, _T("%u"), eventId);
       _sntprintf(severityText, 16, _T("%u"), severity);
-      count += 3;
+      _sntprintf(recordIdText, 32, UINT64_FMT, recordId);
+      count += 4;
    }
 
    const TCHAR **list = (const TCHAR **)malloc(sizeof(const TCHAR *) * count);
@@ -159,6 +158,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       list[i++] = source;
       list[i++] = eventIdText;
       list[i++] = severityText;
+      list[i++] = recordIdText;
    }
    list[i++] = repeatCountText;
 

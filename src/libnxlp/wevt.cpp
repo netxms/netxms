@@ -120,8 +120,8 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
 	// Create render context for event values - we need provider name,
 	// event id, and severity level
-	static PCWSTR eventProperties[] = { L"Event/System/Provider/@Name", L"Event/System/EventID", L"Event/System/Level", L"Event/System/Keywords" };
-	EVT_HANDLE renderContext = _EvtCreateRenderContext(4, eventProperties, EvtRenderContextValues);
+	static PCWSTR eventProperties[] = { L"Event/System/Provider/@Name", L"Event/System/EventID", L"Event/System/Level", L"Event/System/Keywords", L"Event/System/EventRecordID" };
+	EVT_HANDLE renderContext = _EvtCreateRenderContext(5, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"),
@@ -189,6 +189,13 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	else if (values[3].UInt64Val & WINEVENT_KEYWORD_AUDIT_FAILURE)
 		level = EVENTLOG_AUDIT_FAILURE;
 
+   // Record ID
+   UINT64 recordId = 0;
+   if ((values[4].Type == EvtVarTypeUInt64) || (values[4].Type == EvtVarTypeInt64))
+      recordId = values[4].UInt64Val;
+   else if ((values[4].Type == EvtVarTypeUInt32) || (values[4].Type == EvtVarTypeInt32))
+      recordId = values[4].UInt32Val;
+
 	// Open publisher metadata
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
@@ -231,10 +238,10 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
    StringList *variables = ExtractVariables(event);
 #ifdef UNICODE
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables, recordId);
 #else
 	char *mbmsg = MBStringFromWideString(msg);
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables, recordId);
 	free(mbmsg);
 #endif
    delete variables;
