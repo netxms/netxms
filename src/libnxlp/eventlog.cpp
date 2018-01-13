@@ -244,7 +244,7 @@ void LogParser::parseEvent(EVENTLOGRECORD *rec)
 	{
       StringList variables;
 		es->formatMessage(rec, msg, 8192, &variables);
-		matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg, &variables);
+		matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg, &variables, rec->RecordNumber);
 	}
 	else
 	{

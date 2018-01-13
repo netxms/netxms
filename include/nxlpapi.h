@@ -84,9 +84,9 @@ enum LogParserFileEncoding
  * Parameters:
  *    NetXMS event code, NetXMS event name, original text, source,
  *    original event ID (facility), original severity,
- *    capture groups, variables, object id, repeat count, user arg
+ *    capture groups, variables, record id, object id, repeat count, user arg
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT32, int, void *);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT64, UINT32, int, void *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -146,8 +146,8 @@ private:
 	int m_matchCount;
 	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
 
-	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
-	                   const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg);
+	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, 
+                      StringList *variables, UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, String &out);
    void incCheckCount(UINT32 objectId);
@@ -166,8 +166,8 @@ public:
 	bool isValid() const { return m_isValid; }
 
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg);
-	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
-	             const TCHAR *line, StringList *variables, UINT32 objectId, LogParserCallback cb, void *userArg);
+	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
+                UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
 
 	void setContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
 	void setContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
@@ -243,7 +243,7 @@ private:
 #endif
 
 	const TCHAR *checkContext(LogParserRule *rule);
-	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId);
+	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId);
 
 	bool isExclusionPeriod();
 
@@ -306,7 +306,7 @@ public:
 	const TCHAR *getMacro(const TCHAR *name);
 
 	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
-	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId = 0);
+	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId = 0);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }

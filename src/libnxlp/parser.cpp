@@ -258,13 +258,14 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
  * Match log record
  */
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
-										 UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId)
+										 UINT32 level, const TCHAR *line, StringList *variables, 
+                               UINT64 recordId, UINT32 objectId)
 {
 	const TCHAR *state;
 	bool matched = false;
 
 	if (hasAttributes)
-		trace(5, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\""), source, eventId, level, line);
+		trace(5, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\" recordId=") UINT64_FMT, source, eventId, level, line, recordId);
 	else
 		trace(5, _T("Match line: \"%s\""), line);
 
@@ -277,7 +278,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, objectId, m_cb, m_userArg) :
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, m_cb, m_userArg) :
 				rule->match(line, objectId, m_cb, m_userArg);
 			if (ruleMatched)
 			{
@@ -319,15 +320,15 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
  */
 bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 {
-	return matchLogRecord(false, NULL, 0, 0, line, NULL, objectId);
+	return matchLogRecord(false, NULL, 0, 0, line, NULL, 0, objectId);
 }
 
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
-bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT32 objectId)
+bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId)
 {
-	return matchLogRecord(true, source, eventId, level, line, variables, objectId);
+	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId);
 }
 
 /**
