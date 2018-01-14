@@ -127,7 +127,7 @@ Template::~Template()
 {
 	delete m_dcObjects;
 	delete m_applyFilter;
-	safe_free(m_applyFilterSource);
+	free(m_applyFilterSource);
 	RWLockDestroy(m_dciAccessLock);
 }
 
@@ -204,7 +204,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
    m_applyFilterSource = DBGetField(hResult, 0, 1, NULL, 0);
-   if (m_applyFilterSource != NULL)
+   if ((m_applyFilterSource != NULL) && (*m_applyFilterSource != 0))
    {
       TCHAR error[256];
       m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
@@ -1017,7 +1017,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 		free(m_applyFilterSource);
 		delete m_applyFilter;
 		m_applyFilterSource = pRequest->getFieldAsString(VID_AUTOBIND_FILTER);
-		if (m_applyFilterSource != NULL)
+		if ((m_applyFilterSource != NULL) && (*m_applyFilterSource != 0))
 		{
 			TCHAR error[256];
 

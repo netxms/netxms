@@ -423,6 +423,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoDeploy"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoDeploy"
+              name="Automatic Deployment Rules">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AgentPolicy">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

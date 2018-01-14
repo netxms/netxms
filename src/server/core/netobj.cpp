@@ -2003,6 +2003,14 @@ bool NetObj::isDataCollectionTarget()
 }
 
 /**
+ * Must return true if object is an agent policy (derived from AgentPolicy class)
+ */
+bool NetObj::isAgentPolicy()
+{
+   return false;
+}
+
+/**
  * Get module data
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)

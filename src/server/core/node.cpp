@@ -2503,9 +2503,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
+      updateSoftwarePackages(poller, rqId);
+
       applyUserTemplates();
       updateContainerMembership();
-      updateSoftwarePackages(poller, rqId);
+      deployAgentPolicies();
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -7870,6 +7872,66 @@ void Node::setTunnelId(const uuid& tunnelId)
 
    TCHAR buffer[128];
    nxlog_debug(4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
+}
+
+/**
+ * Filter for selecting agent policies from objects
+ */
+static bool PolicySelectionFilter(NetObj *object, void *userData)
+{
+   return object->isAgentPolicy() && !object->isDeleted() && static_cast<AgentPolicy*>(object)->isAutoDeployEnabled();
+}
+
+/**
+ * Apply user templates
+ */
+void Node::deployAgentPolicies()
+{
+   if (IsShutdownInProgress())
+      return;
+
+   ObjectArray<NetObj> *policies = g_idxObjectById.getObjects(true, PolicySelectionFilter);
+   for(int i = 0; i < policies->size(); i++)
+   {
+      AgentPolicy *policy = static_cast<AgentPolicy*>(policies->get(i));
+      AutoBindDecision decision = policy->isApplicable(this);
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!policy->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::deployAgentPolicies(): deploying policy %d \"%s\" to node %d \"%s\""),
+                      policy->getId(), policy->getName(), m_id, m_name);
+            PolicyInstallJob *job = new PolicyInstallJob(this, policy, 0);
+            if (AddJob(job))
+            {
+               PostEvent(EVENT_POLICY_AUTODEPLOY, g_dwMgmtNode, "isis", m_id, m_name, policy->getId(), policy->getName());
+            }
+            else
+            {
+               delete job;
+            }
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (policy->isAutoUninstallEnabled() && policy->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::deployAgentPolicies(): uninstalling policy %d \"%s\" from node %d \"%s\""),
+                      policy->getId(), policy->getName(), m_id, m_name);
+            PolicyUninstallJob *job = new PolicyUninstallJob(this, policy, 0);
+            if (AddJob(job))
+            {
+               PostEvent(EVENT_POLICY_AUTOUNINSTALL, g_dwMgmtNode, "isis", m_id, m_name, policy->getId(), policy->getName());
+            }
+            else
+            {
+               delete job;
+            }
+         }
+      }
+      policy->decRefCount();
+   }
+   delete policies;
 }
 
 /**

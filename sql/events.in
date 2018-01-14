@@ -1053,6 +1053,32 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) Last known package version'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_POLICY_AUTODEPLOY, 'SYS_POLICY_AUTODEPLOY', 'f26d70b3-d48d-472c-b2ec-bfa7c20958ea',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Agent policy %4 automatically deployed to node %2',
+		'Generated when agent policy deployed to node by autodeploy rule.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Node ID' CONCAT CRLF CONCAT
+		'   2) Node name' CONCAT CRLF CONCAT
+		'   3) Policy ID' CONCAT CRLF CONCAT
+		'   4) Policy name'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_POLICY_AUTOUNINSTALL, 'SYS_POLICY_AUTOUNINSTALL', '2fbac886-2cfa-489f-bef1-364a38fa7062',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Agent policy %4 automatically uninstalled from node %2',
+		'Generated when agent policy uninstalled from node by autodeploy rule.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Node ID' CONCAT CRLF CONCAT
+		'   2) Node name' CONCAT CRLF CONCAT
+		'   3) Policy ID' CONCAT CRLF CONCAT
+		'   4) Policy name'
+	);
+
 /*
 ** SNMP traps
 */

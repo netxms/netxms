@@ -21,6 +21,42 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 30.20 to 30.21 (changes also included into 22.12)
+ */
+static bool H_UpgradeFromV20()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 12)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_common ADD deploy_filter $SQL:TEXT")));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_POLICY_AUTODEPLOY, _T("SYS_POLICY_AUTODEPLOY"), SEVERITY_NORMAL, EF_LOG, _T("f26d70b3-d48d-472c-b2ec-bfa7c20958ea"),
+               _T("Agent policy %4 automatically deployed to node %2"),
+               _T("Generated when agent policy deployed to node by autodeploy rule.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Node ID\r\n")
+               _T("   2) Node name\r\n")
+               _T("   3) Policy ID\r\n")
+               _T("   4) Policy name")
+               ));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_POLICY_AUTOUNINSTALL, _T("SYS_POLICY_AUTOUNINSTALL"), SEVERITY_NORMAL, EF_LOG, _T("2fbac886-2cfa-489f-bef1-364a38fa7062"),
+               _T("Agent policy %4 automatically uninstalled from node %2"),
+               _T("Generated when agent policy uninstalled from node by autodeploy rule.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Node ID\r\n")
+               _T("   2) Node name\r\n")
+               _T("   3) Policy ID\r\n")
+               _T("   4) Policy name")
+               ));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 12));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
 
 /**
  * Upgrade from 30.19 to 30.20 (changes also included into 22.11)
@@ -721,6 +757,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 20, 30, 21, H_UpgradeFromV20 },
    { 19, 30, 20, H_UpgradeFromV19 },
    { 18, 30, 19, H_UpgradeFromV18 },
    { 17, 30, 18, H_UpgradeFromV17 },

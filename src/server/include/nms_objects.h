@@ -717,6 +717,7 @@ public:
 	virtual bool showThresholdSummary();
    virtual bool isEventSource();
    virtual bool isDataCollectionTarget();
+   virtual bool isAgentPolicy();
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1832,6 +1833,8 @@ protected:
 
    UINT32 getInterfaceCount(Interface **ppInterface);
 
+   void deployAgentPolicies();
+
    void checkInterfaceNames(InterfaceList *pIfList);
    bool filterInterface(InterfaceInfo *info);
    Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
@@ -2488,6 +2491,8 @@ class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 protected:
 	UINT32 m_version;
 	int m_policyType;
+   TCHAR *m_deployFilterSource;
+   NXSL_Program *m_deployFilter;
 
 	bool savePolicyCommonProperties(DB_HANDLE hdb);
 
@@ -2497,6 +2502,7 @@ protected:
 public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
+   virtual ~AgentPolicy();
 
    virtual int getObjectClass() const { return OBJECT_AGENTPOLICY; }
 
@@ -2504,10 +2510,16 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual bool isAgentPolicy();
+
    virtual json_t *toJson();
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
+
+	AutoBindDecision isApplicable(Node *node);
+   bool isAutoDeployEnabled() { return (m_flags & PF_AUTO_DEPLOY) ? true : false; }
+   bool isAutoUninstallEnabled() { return ((m_flags & (PF_AUTO_DEPLOY | PF_AUTO_UNINSTALL)) == (PF_AUTO_DEPLOY | PF_AUTO_UNINSTALL)) ? true : false; }
 
 	void linkNode(Node *node) { addChild(node); node->addParent(this); }
 	void unlinkNode(Node *node) { deleteChild(node); node->deleteParent(this); }
