@@ -1260,7 +1260,7 @@ UINT32 DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
  */
 static bool TemplateSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && ((Template *)object)->isAutoApplyEnabled();
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isAutoApplyEnabled();
 }
 
 /**

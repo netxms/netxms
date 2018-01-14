@@ -1094,4 +1094,16 @@ Language=English
 Your database has format version %1.%2, but server is compiled for version %3.%4
 .
 
+MessageId=
+SymbolicName=MSG_POLICY_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile filter script for policy object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_POLICY_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute filter script for policy object %1 "%2": %3
+.
+
 ;#endif

@@ -235,6 +235,12 @@
 #define CHF_BIND_UNDER_CONTROLLER   0x00000001
 
 /**
+ * Policy flags
+ */
+#define PF_AUTO_DEPLOY           0x00000001
+#define PF_AUTO_UNINSTALL        0x00000002
+
+/**
  * Interface flags
  */
 #define IF_SYNTHETIC_MASK        0x00000001

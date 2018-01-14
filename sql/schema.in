@@ -1320,6 +1320,7 @@ CREATE TABLE ap_common
   id integer not null,
   policy_type integer not null,
   version integer not null,
+  deploy_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
