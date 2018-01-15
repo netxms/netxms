@@ -4,7 +4,7 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveDiscoveryInterval','7200','7200',1,1,'I','Interval in seconds between active network discovery polls.','seconds','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveDiscoveryInterval','7200','7200',1,1,'I','Interval in seconds between active network discovery polls.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveNetworkDiscovery','0','0',1,1,'B','Enable/disable active network discovery. This setting is change by Network Discovery GUI','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentCommandTimeout','4000','4000',1,1,'I','Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentDefaultSharedSecret','netxms','netxms',1,0,'S','String that will be used as a shared secret in case if agent will required authentication.','');
