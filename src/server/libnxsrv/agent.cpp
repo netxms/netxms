@@ -953,7 +953,11 @@ ARP_CACHE *AgentConnection::getArpCache()
       TCHAR *line = _tcsdup(data->get(i));
       pBuf = line;
       if (_tcslen(pBuf) < 20)     // Invalid line
+      {
+         debugPrintf(7, _T("AgentConnection::getArpCache(): invalid line received from agent (\"%s\")"), line);
+         free(line);
          continue;
+      }
 
       // MAC address
       for(int j = 0; j < 6; j++)
