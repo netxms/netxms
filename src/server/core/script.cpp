@@ -61,16 +61,13 @@ void LoadScripts()
       {
          pScript = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
                   DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, NULL, 0));
-         if (pScript->isValid())
-         {
-            s_scriptLibrary.addScript(pScript);
-            DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
-         }
-         else
+         if (!pScript->isValid())
          {
             nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss",
                         pScript->getId(), pScript->getName(), pScript->getError());
          }
+         s_scriptLibrary.addScript(pScript);
+         DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
       }
       DBFreeResult(hResult);
    }

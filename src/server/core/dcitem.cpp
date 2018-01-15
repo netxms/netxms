@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -755,6 +755,8 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
                dst->reconcile(src);
             }
          }
+
+         delete shadowCopy;
       }
       else
       {
