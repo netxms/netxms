@@ -546,6 +546,11 @@ static bool H_UpgradeFromV3()
    CHK_EXEC(MoveFlagsFromOldTables(_T("chassis")));
    CHK_EXEC(MoveFlagsFromOldTables(_T("object_containers")));
    CHK_EXEC(MoveFlagsFromOldTables(_T("network_maps")));
+   if (GetSchemaLevelForMajorVersion(22) >= 12)
+   {
+      CHK_EXEC(MoveFlagsFromOldTables(_T("ap_common")));
+   }
+
    //create special behavior for node and sensor, cluster
    //node
    DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id,runtime_flags FROM nodes"));
