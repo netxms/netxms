@@ -30,20 +30,22 @@ static ObjectArray<MqttBroker> s_brokers(8, 8, true);
 static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
 {
    ObjectArray<ConfigEntry> *brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
-   for(int i = 0; i < brokers->size(); i++)
+   if (brokers != NULL)
    {
-      MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters);
-      if (b != NULL)
+      for(int i = 0; i < brokers->size(); i++)
       {
-         s_brokers.add(b);
+         MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters);
+         if (b != NULL)
+         {
+            s_brokers.add(b);
+         }
+         else
+         {
+            AgentWriteLog(NXLOG_WARNING, _T("MQTT: cannot add broker %s definition from config"), brokers->get(i)->getName());
+         }
       }
-      else
-      {
-         AgentWriteLog(NXLOG_WARNING, _T("MQTT: cannot add broker %s definition from config"), brokers->get(i)->getName());
-      }
+      delete brokers;
    }
-   delete brokers;
-
    nxlog_debug(3, _T("MQTT: %d parameters added from configuration"), parameters->size());
 }
 
