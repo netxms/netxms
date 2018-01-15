@@ -832,10 +832,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-<<<<<<< HEAD
+   { 21, 30, 22, H_UpgradeFromV21 },
    { 20, 30, 21, H_UpgradeFromV20 },
-=======
->>>>>>> 999fcf534... Implemented units for Server Variables
    { 19, 30, 20, H_UpgradeFromV19 },
    { 18, 30, 19, H_UpgradeFromV18 },
    { 17, 30, 18, H_UpgradeFromV17 },
