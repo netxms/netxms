@@ -45,6 +45,7 @@ AgentPolicy::AgentPolicy(int type) : NetObj()
 {
 	m_version = 0x00010000;
 	m_policyType = type;
+	m_flags = 0;
    m_deployFilter = NULL;
    m_deployFilterSource = NULL;
 }
@@ -57,6 +58,7 @@ AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj()
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_version = 0x00010000;
 	m_policyType = type;
+   m_flags = 0;
    m_deployFilter = NULL;
    m_deployFilterSource = NULL;
 }
@@ -88,16 +90,17 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 
    DB_STATEMENT hStmt;
    if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id))
-      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,version,deploy_filter,id) VALUES (?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,version,flags,deploy_filter,id) VALUES (?,?,?,?,?)"));
    else
-      hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_type=?,version=?,deploy_filter=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_type=?,version=?,flags=?,deploy_filter=? WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_policyType);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_version);
-   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_deployFilterSource, DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
+   DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_deployFilterSource, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
@@ -184,13 +187,14 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    loadACLFromDB(hdb);
 
-   _sntprintf(query, 256, _T("SELECT version,deploy_filter FROM ap_common WHERE id=%d"), dwId);
+   _sntprintf(query, 256, _T("SELECT version,flags,deploy_filter FROM ap_common WHERE id=%d"), dwId);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == NULL)
       return false;
 
    m_version = DBGetFieldULong(hResult, 0, 0);
-   m_deployFilterSource = DBGetField(hResult, 0, 1, NULL, 0);
+   m_flags = DBGetFieldULong(hResult, 0, 1);
+   m_deployFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
    if ((m_deployFilterSource != NULL) && (*m_deployFilterSource != 0))
    {
       TCHAR error[256];
@@ -245,6 +249,7 @@ void AgentPolicy::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 	NetObj::fillMessageInternal(msg, userId);
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->setField(VID_VERSION, m_version);
+   msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_deployFilterSource));
 }
 

@@ -2363,6 +2363,7 @@ class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 protected:
 	UINT32 m_version;
 	int m_policyType;
+	UINT32 m_flags;
    TCHAR *m_deployFilterSource;
    NXSL_Program *m_deployFilter;
 

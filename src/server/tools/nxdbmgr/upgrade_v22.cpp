@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,44 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 22.11 to 22.12
+ */
+static bool H_UpgradeFromV11()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE ap_common ADD flags integer\n")
+      _T("UPDATE ap_common SET flags=0\n")
+      _T("ALTER TABLE ap_common ADD deploy_filter $SQL:TEXT\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("ap_common"), _T("flags")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_POLICY_AUTODEPLOY, _T("SYS_POLICY_AUTODEPLOY"), SEVERITY_NORMAL, EF_LOG, _T("f26d70b3-d48d-472c-b2ec-bfa7c20958ea"),
+            _T("Agent policy %4 automatically deployed to node %2"),
+            _T("Generated when agent policy deployed to node by autodeploy rule.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Node ID\r\n")
+            _T("   2) Node name\r\n")
+            _T("   3) Policy ID\r\n")
+            _T("   4) Policy name")
+            ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_POLICY_AUTOUNINSTALL, _T("SYS_POLICY_AUTOUNINSTALL"), SEVERITY_NORMAL, EF_LOG, _T("2fbac886-2cfa-489f-bef1-364a38fa7062"),
+            _T("Agent policy %4 automatically uninstalled from node %2"),
+            _T("Generated when agent policy uninstalled from node by autodeploy rule.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Node ID\r\n")
+            _T("   2) Node name\r\n")
+            _T("   3) Policy ID\r\n")
+            _T("   4) Policy name")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
 
 /**
  * Upgrade from 22.10 to 22.11
@@ -208,6 +246,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 11, 22, 12, H_UpgradeFromV11 },
    { 10, 22, 11, H_UpgradeFromV10 },
    { 9,  22, 10, H_UpgradeFromV9 },
    { 8,  22, 9,  H_UpgradeFromV8 },

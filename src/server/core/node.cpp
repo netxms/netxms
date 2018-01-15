@@ -2524,7 +2524,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
          }
       }
 
-      updateSoftwarePackages(poller, rqId);
+      updateSoftwarePackages(poller, dwRqId);
 
       applyUserTemplates();
       updateContainerMembership();
