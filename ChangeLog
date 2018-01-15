@@ -6,6 +6,7 @@
 - Fixed issues:
 	NX-1149 (Pass EventRecordID with matched Windows event log record)
 	NX-1258 (Option to pass event data from Windows event log to NetXMS event)
+	NX-1259 (Added NXSL function - FindAlarmByKeyRegex)
 	NX-1363 (Automatic deployment of agent policies)
 	NX-1389 (If library script saved with compilation errors it disappears from script list)
 
