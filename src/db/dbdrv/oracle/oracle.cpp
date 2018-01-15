@@ -246,6 +246,10 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 								  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
 				}
 
+            // LOB prefetch
+            ub4 lobPrefetchSize = 16384;  // 16K
+            OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, &lobPrefetchSize, 0, OCI_ATTR_DEFAULT_LOBPREFETCH_SIZE, pConn->handleError);
+
             // Setup session
             DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 
