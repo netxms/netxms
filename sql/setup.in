@@ -22,7 +22,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('BeaconHosts','','',1,1,'S','Comma-separated list of hosts to be used as beacons for checking NetXMS server network connectivity. Either DNS names \nor IP addresses can be used. This list is pinged by NetXMS server and if none of the hosts have responded, server considers that connection \nwith network is lost and generates specific event.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('BeaconPollingInterval','1000','1000',1,1,'I','Interval in milliseconds between beacon hosts polls.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('BeaconTimeout','1000','1000',1,1,'I','Timeout in milliseconds to consider beacon host unreachable.','milliseconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('BlockInactiveUserAccounts','0','0',1,0,'B','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('BlockInactiveUserAccounts','0','0',1,0,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('CapabilityExpirationTime','604800','604800',1,0,'I','','seconds');  /* in seconds */
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('CaseInsensitiveLoginNames','0','0',1,1,'B','Enable/disable case insensitive login names','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('CheckTrustedNodes','0','0',1,1,'B','Enable/disable trusted nodes check','');
@@ -206,7 +206,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('XMPPPassword','netxms','netxms',1,1,'S','Password that will be used to authentication on XMPP server.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('XMPPPort','5222','5222',1,1,'I','XMPP connection port.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('XMPPServer','localhost','localhost',1,1,'S','XMPP connection server.','');
->>>>>>> 999fcf534... Implemented units for Server Variables
 
 /*
 ** Config possible values
