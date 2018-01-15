@@ -76,45 +76,46 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone_guid,proxy_node,snmp_ports FROM zones WHERE id=?"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) == 0)
-         {
-            DBFreeResult(hResult);
-            if (dwId == BUILTIN_OID_ZONE0)
-            {
-               m_uin = 0;
-               return true;
-            }
-            else
-            {
-               DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
-               return false;
-            }
-         }
+   if (hStmt == NULL)
+      return false;
 
+   bool success = false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) == 0)
+      {
+         if (dwId == BUILTIN_OID_ZONE0)
+         {
+            m_uin = 0;
+            success = true;
+         }
+         else
+         {
+            DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
+         }
+      }
+      else
+      {
          m_uin = DBGetFieldULong(hResult, 0, 0);
          m_proxyNodeId = DBGetFieldULong(hResult, 0, 1);
          TCHAR buffer[MAX_DB_STRING];
          DBGetField(hResult, 0, 2, buffer, MAX_DB_STRING);
          if (buffer[0] != 0)
             m_snmpPorts.splitAndAdd(buffer, _T(","));
-
-         DBFreeResult(hResult);
-
-         // Load access list
-         loadACLFromDB(hdb);
-
-         return true;
+         success = true;
       }
-      DBFreeStatement(hStmt);
+      DBFreeResult(hResult);
    }
+   DBFreeStatement(hStmt);
 
-   return false;
+   // Load access list
+   if (success)
+      success = loadACLFromDB(hdb);
+
+   return success;
 }
 
 /**
