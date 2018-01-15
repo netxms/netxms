@@ -35,6 +35,7 @@ CREATE TABLE config
 #endif
   description varchar(450) null,
   possible_values SQL_TEXT null,
+  units varchar(36),
   PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 

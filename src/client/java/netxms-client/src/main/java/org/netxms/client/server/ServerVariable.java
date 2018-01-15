@@ -34,6 +34,7 @@ public final class ServerVariable
 	private ServerVariableDataType dataType;
 	private HashMap<String, String> values = new HashMap<String, String>();
 	private boolean isServerRestartNeeded;
+	private String unit;
 
 	/**
 	 * Default constructor for NXCServerVariable.
@@ -43,10 +44,11 @@ public final class ServerVariable
 	 * @param isServerRestartNeeded Server restart flag (server has to be restarted after variable change if this flag is set)
 	 * @param dataType Data type for server configuration variable
 	 * @param description Description
+	 * @param unit Unit
 	 * 
 	 * @see ServerVariableDataType
 	 */
-	public ServerVariable(String name, String value, boolean isServerRestartNeeded, ServerVariableDataType dataType, String description)
+	public ServerVariable(String name, String value, boolean isServerRestartNeeded, ServerVariableDataType dataType, String description, String unit)
 	{
 		this.name = name;
 		this.value = value;
@@ -54,6 +56,7 @@ public final class ServerVariable
 		this.description = description;
 		this.dataType = dataType;
 		this.isServerRestartNeeded = isServerRestartNeeded;
+		this.unit = unit;
 	}
 	
 	/**
@@ -71,6 +74,7 @@ public final class ServerVariable
       dataType = ServerVariableDataType.getByCode(((code != null) && !code.isEmpty()) ? code.charAt(0) : 'S');
       description = msg.getFieldAsString(baseId + 4);
       defaultValue = msg.getFieldAsString(baseId + 5);
+      unit = msg.getFieldAsString(baseId + 6);
 	}
 
    /** 
@@ -210,5 +214,13 @@ public final class ServerVariable
 	public boolean isDefault()
 	{
 	   return value.equals(defaultValue);
+	}
+	
+	/**
+	 * @return get variable unit
+	 */
+	public String getUnit()
+	{
+	   return unit;
 	}
 }

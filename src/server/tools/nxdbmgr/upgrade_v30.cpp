@@ -24,6 +24,76 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.21 to 30.22
+ */
+static bool H_UpgradeFromV21()
+{
+   static TCHAR batch[] =
+            _T("ALTER TABLE config ADD units varchar(36)\n")
+            _T("UPDATE config SET units='milliseconds' WHERE var_name='AgentCommandTimeout'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='AgentUpgradeWaitTime'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='AlarmHistoryRetentionTime'\n")
+            _T("UPDATE config SET units='alarms' WHERE var_name='AlarmListDisplayLimit'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='AuditLogRetentionTime'\n")
+            _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconPollingInterval'\n")
+            _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconTimeout'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='CapabilityExpirationTime'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='ConditionPollingInterval'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='ConfigurationPollingInterval'\n")
+            _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolBaseSize'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolCooldownTime'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolMaxLifetime'\n")
+            _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolMaxSize'\n")
+            _T("UPDATE config SET units='records/transaction' WHERE var_name='DBWriter.MaxRecordsPerTransaction'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='DefaultDCIPollingInterval'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='DefaultDCIRetentionTime'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='DeleteUnreachableNodesPeriod'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='DiscoveryPollingInterval'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='EventLogRetentionTime'\n")
+            _T("UPDATE config SET units='events/second' WHERE var_name='EventStormEventsPerSecond'\n")
+            _T("UPDATE config SET units='logins' WHERE var_name='GraceLoginCount'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='IcmpPingSize'\n")
+            _T("UPDATE config SET units='milliseconds' WHERE var_name='IcmpPingTimeout'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='InstancePollingInterval'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='InstanceRetentionTime'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='IntruderLockoutTime'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='JobHistoryRetentionTime'\n")
+            _T("UPDATE config SET units='retries' WHERE var_name='JobRetryCount'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='KeepAliveInterval'\n")
+            _T("UPDATE config SET units='milliseconds' WHERE var_name='LongRunningQueryThreshold'\n")
+            _T("UPDATE config SET units='characters' WHERE var_name='MinPasswordLength'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='MinViewRefreshInterval'\n")
+            _T("UPDATE config SET units='threads' WHERE var_name='NumberOfUpgradeThreads'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='OfflineDataRelevanceTime'\n")
+            _T("UPDATE config SET units='polls' WHERE var_name='PollCountForStatusChange'\n")
+            _T("UPDATE config SET units='retries' WHERE var_name='RADIUSNumRetries'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='RADIUSTimeout'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='RoutingTableUpdateInterval'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='ServerCommandOutputTimeout'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='StatusPollingInterval'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='SyncInterval'\n")
+            _T("UPDATE config SET units='days' WHERE var_name='SyslogRetentionTime'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.BaseSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.MaxSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.BaseSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.MaxSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.BaseSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.MaxSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.BaseSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.MaxSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.BaseSize'\n")
+            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.MaxSize'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='ThresholdRepeatInterval'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='TopologyExpirationTime'\n")
+            _T("UPDATE config SET units='seconds' WHERE var_name='TopologyPollingInterval'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 30.20 to 30.21 (changes also included into 22.12)
  */
 static bool H_UpgradeFromV20()
@@ -762,7 +832,10 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+<<<<<<< HEAD
    { 20, 30, 21, H_UpgradeFromV20 },
+=======
+>>>>>>> 999fcf534... Implemented units for Server Variables
    { 19, 30, 20, H_UpgradeFromV19 },
    { 18, 30, 19, H_UpgradeFromV18 },
    { 17, 30, 18, H_UpgradeFromV17 },

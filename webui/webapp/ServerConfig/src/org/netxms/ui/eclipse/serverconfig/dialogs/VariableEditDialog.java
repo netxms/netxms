@@ -93,6 +93,12 @@ public class VariableEditDialog extends Dialog
       gd.widthHint = 300;
       textName.setLayoutData(gd);
       
+      if (!variable.getUnit().isEmpty())
+      {
+        layout.numColumns = 2;
+        gd.horizontalSpan = 2;
+      }
+
       switch(variable.getDataType())
       {
          case BOOLEAN:
@@ -135,6 +141,17 @@ public class VariableEditDialog extends Dialog
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             spinnerValue.setLayoutData(gd);
+
+            if (!variable.getUnit().isEmpty())
+            {
+               Label unit = new Label(dialogArea, SWT.NONE);
+               unit.setText(variable.getUnit());
+               gd = new GridData();
+                gd.grabExcessHorizontalSpace = true;
+               gd.verticalIndent = 15;
+               gd.horizontalAlignment = SWT.FILL;
+               unit.setLayoutData(gd);
+            }
             
             if (variable.getName() != null)
                spinnerValue.setFocus();

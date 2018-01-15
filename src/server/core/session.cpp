@@ -2249,7 +2249,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Retrieve configuration variables from database
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart,data_type,description,default_value FROM config WHERE is_visible=1"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart,data_type,description,default_value,units FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -2263,6 +2263,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
             msg.setField(dwId + 3, DBGetField(hResult, i, 3, szBuffer, MAX_CONFIG_VALUE));
             msg.setField(dwId + 4, DBGetField(hResult, i, 4, szBuffer, MAX_CONFIG_VALUE));
             msg.setField(dwId + 5, DBGetField(hResult, i, 5, szBuffer, MAX_CONFIG_VALUE));
+            msg.setField(dwId + 6, DBGetField(hResult, i, 6, szBuffer, MAX_CONFIG_VALUE));
          }
          DBFreeResult(hResult);
 

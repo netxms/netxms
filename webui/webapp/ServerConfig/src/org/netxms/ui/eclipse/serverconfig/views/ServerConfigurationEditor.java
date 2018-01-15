@@ -448,7 +448,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		final VariableEditDialog dlg = 
 		      new VariableEditDialog(getSite().getShell(), 
-		            new ServerVariable(null, "", false, ServerVariableDataType.STRING, ""));
+		            new ServerVariable(null, "", false, ServerVariableDataType.STRING, "", ""));
 		if (dlg.open() == Window.OK)
 		{
 			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
