@@ -26,6 +26,8 @@
 
 #include <nms_util.h>
 
+#define UNBOUND_TUNNEL_PROCESSOR_TASK_ID _T("AgentTunnels.ProcessUnbound")
+
 class AgentTunnel;
 
 /**
@@ -92,6 +94,7 @@ protected:
    UINT32 m_nodeId;
    UINT32 m_zoneUIN;
    AgentTunnelState m_state;
+   time_t m_startTime;
    TCHAR *m_systemName;
    TCHAR m_hostname[MAX_DNS_NAME];
    TCHAR *m_platformName;
@@ -125,6 +128,7 @@ public:
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    int sendChannelData(UINT32 id, const void *data, size_t len);
+   void resetStartTime() { m_startTime = time(NULL); }
 
    UINT32 getId() const { return m_id; }
    const InetAddress& getAddress() const { return m_address; }
@@ -137,6 +141,7 @@ public:
    bool isBound() const { return m_nodeId != 0; }
    UINT32 getNodeId() const { return m_nodeId; }
    UINT32 getState() const { return m_state; }
+   time_t getStartTime() const { return m_startTime; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 

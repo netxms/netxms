@@ -1079,6 +1079,23 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) Policy name'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_UNBOUND_TUNNEL, 'SYS_UNBOUND_TUNNEL', '7f781ec2-a8f5-4c02-ad7f-9e5b0a223b87',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Unbound agent tunnel from %<systemName> (%<ipAddress>) is idle for more than %<idleTimeout> seconds',
+		'Generated when unbound agent tunnel is not bound or closed for more than configured threshold.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
+		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
+		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
+		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
+		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
+		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
+		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
+		'   8) Configured idle timeout (idleTimeout)'
+	);
+
 /*
 ** SNMP traps
 */

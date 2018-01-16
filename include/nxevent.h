@@ -146,6 +146,7 @@
 #define EVENT_PACKAGE_REMOVED              89
 #define EVENT_POLICY_AUTODEPLOY            90
 #define EVENT_POLICY_AUTOUNINSTALL         91
+#define EVENT_UNBOUND_TUNNEL               92
 
 #define EVENT_SNMP_UNMATCHED_TRAP          500
 #define EVENT_SNMP_COLD_START              501

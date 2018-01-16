@@ -225,7 +225,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 	{
       TCHAR dnsName[MAX_DNS_NAME];
       TCHAR *tmp;
-	   if(IsZoningEnabled() && newNodeData->zoneUIN != 0)
+	   if (IsZoningEnabled() && (newNodeData->zoneUIN != 0))
 	   {
 	      AgentConnectionEx *conn = pNode->getConnectionToZoneNodeProxy();
 	      tmp = conn != NULL ? conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) : NULL;
@@ -235,9 +235,9 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 	      tmp = newNodeData->ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME);
 		}
 
-      if(tmp != NULL)
+      if (tmp != NULL)
       {
-         if(ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
+         if (ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
          {
             // We have valid DNS name which resolves back to node's IP address, use it as primary name
             pNode->setPrimaryName(dnsName);

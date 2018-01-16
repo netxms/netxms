@@ -24,6 +24,41 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.12 to 22.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_UNBOUND_TUNNEL, _T("SYS_UNBOUND_TUNNEL"), SEVERITY_NORMAL, EF_LOG, _T("7f781ec2-a8f5-4c02-ad7f-9e5b0a223b87"),
+            _T("Unbound agent tunnel from %<systemName> (%<ipAddress>) is idle for more than %<idleTimeout> seconds"),
+            _T("Generated when unbound agent tunnel is not bound or closed for more than configured threshold.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Tunnel ID (tunnelId)\r\n")
+            _T("   2) Remote system IP address (ipAddress)\r\n")
+            _T("   3) Remote system name (systemName)\r\n")
+            _T("   4) Remote system FQDN (hostName)\r\n")
+            _T("   5) Remote system platform (platformName)\r\n")
+            _T("   6) Remote system information (systemInfo)\r\n")
+            _T("   7) Agent version (agentVersion)\r\n")
+            _T("   8) Configured idle timeout (idleTimeout)")
+            ));
+
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.NewNodesContainer"), _T(""), _T("Name of the container where nodes created automatically for unbound tunnels will be placed. If empty or missing, such nodes will be created in infrastructure services root."), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.UnboundTunnelTimeout"), _T("3600"), _T("Unbound agent tunnels inactivity timeout. If tunnel is not bound or closed after timeout, action defined by AgentTunnels.UnboundTunnelTimeoutAction parameter will be taken."), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.UnboundTunnelTimeoutAction"), _T("0"), _T("Action to be taken when unbound agent tunnel idle timeout expires."), 'C', true, false, false, false));
+
+   static TCHAR batch[] =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','Reset tunnel')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','1','Generate event')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','2','Bind tunnel to existing node')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','3','Bind tunnel to existing node or create new node')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 22.11 to 22.12
  */
 static bool H_UpgradeFromV11()
@@ -246,6 +281,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 12, 22, 13, H_UpgradeFromV12 },
    { 11, 22, 12, H_UpgradeFromV11 },
    { 10, 22, 11, H_UpgradeFromV10 },
    { 9,  22, 10, H_UpgradeFromV9 },
