@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <netxmsdb.h>
 #include <netxms_mt.h>
 #include <hdlink.h>
+#include <agent_tunnel.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -85,6 +86,7 @@ void StopObjectMaintenanceThreads();
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
 void MaintenanceModeLeave(const ScheduledTaskParameters *params);
+void ProcessUnboundTunnels(const ScheduledTaskParameters *p);
 void ScheduleDeployPolicy(const ScheduledTaskParameters *params);
 void ScheduleUninstallPolicy(const ScheduledTaskParameters * params);
 
@@ -1015,10 +1017,17 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
-	RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right beacause it will be used only by server
-	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right beacause it will be used only by server
-   RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right beacause it will be used only by server
+	RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right because it will be used only by server
+	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
+
+   // Schedule unbound agent tunnel processing
+   if (FindScheduledTaskByHandlerId(UNBOUND_TUNNEL_PROCESSOR_TASK_ID) == NULL)
+   {
+      AddScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), 0);
+   }
 
    // Send summary emails
    if (ConfigReadInt(_T("EnableAlarmSummaryEmails"), 0))

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -437,7 +437,7 @@ static BOOL H_UpgradeFromV458(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV457(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',need_server_restart=0 WHERE var_name='DeleteUnreachableNodesPeriod'")));
-   CHK_EXEC(CreateConfigParam(_T("LongRunningQueryThreshold"), _T("0"), _T("Threshold in milliseconds to report long running SQL queries (0 to disable)"), 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("LongRunningQueryThreshold"), _T("0"), _T("Threshold in milliseconds to report long running SQL queries (0 to disable)"), NULL, 'I', true, true, false, false));
    CHK_EXEC(SetSchemaVersion(458));
    return TRUE;
 }
@@ -780,7 +780,7 @@ static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV448(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("SMTPPort"), _T("25"), _T("Port used by SMTP server"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SMTPPort"), _T("25"), _T("Port used by SMTP server"), NULL, 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(449));
    return TRUE;
 }
@@ -871,7 +871,7 @@ static BOOL H_UpgradeFromV444(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV443(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("GraceLoginCount"), _T("5"), _T("User's grace login count"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("GraceLoginCount"), _T("5"), _T("User's grace login count"), NULL, 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(444));
    return TRUE;
 }
@@ -915,7 +915,7 @@ static BOOL H_UpgradeFromV441(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV440(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("TopologyPollingInterval"), _T("1800"), _T("Interval in seconds between topology polls"), 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("TopologyPollingInterval"), _T("1800"), _T("Interval in seconds between topology polls"), NULL, 'I', true, true, false, false));
    CHK_EXEC(SetSchemaVersion(441));
    return TRUE;
 }
@@ -1082,7 +1082,7 @@ static BOOL H_UpgradeFromV435(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV434(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("DefaultAgentProtocolCompressionMode"), _T("1"), _T("Default agent protocol compression mode"), 'C', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultAgentProtocolCompressionMode"), _T("1"), _T("Default agent protocol compression mode"), NULL, 'C', true, false, false, false));
    static const TCHAR *batch =
             _T("UPDATE config SET data_type='C',description='Default agent cache mode' WHERE var_name='DefaultAgentCacheMode'\n")
             _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentCacheMode','1','On')\n")
@@ -1147,7 +1147,7 @@ static BOOL H_UpgradeFromV433(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV432(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("UseSyslogForDiscovery"), _T("0"), _T("Use syslog messages for new node discovery."), 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("UseSyslogForDiscovery"), _T("0"), _T("Use syslog messages for new node discovery."), NULL, 'B', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(433));
    return TRUE;
 }
@@ -1498,8 +1498,8 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV427(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("ClusterContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for clusters"), 'B', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("ClusterTemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for clusters"), 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ClusterContainerAutoBind"), _T("0"), _T("Enable/disable container auto binding for clusters"), NULL, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ClusterTemplateAutoApply"), _T("0"), _T("Enable/disable template auto apply for clusters"), NULL, 'B', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(428));
    return TRUE;
 }
@@ -1520,9 +1520,9 @@ static BOOL H_UpgradeFromV426(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV425(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("EnableAlarmSummaryEmails"), _T(""), _T("Enable alarm summary e-mails"), 'I', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailSchedule"), _T(""), _T("Schedule for sending alarm summary e-mails in cron format"), 'S', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailRecipients"), _T(""), _T("A semicolon separated list of alarm summary e-mail recipient addresses"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("EnableAlarmSummaryEmails"), _T(""), _T("Enable alarm summary e-mails"), NULL, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailSchedule"), _T(""), _T("Schedule for sending alarm summary e-mails in cron format"), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("AlarmSummaryEmailRecipients"), _T(""), _T("A semicolon separated list of alarm summary e-mail recipient addresses"), NULL, 'S', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(426));
    return TRUE;
 }
@@ -1542,7 +1542,7 @@ static BOOL H_UpgradeFromV424(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("MessageOfTheDay"), _T(""), _T("Message to be shown when a user logs into the console"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("MessageOfTheDay"), _T(""), _T("Message to be shown when a user logs into the console"), NULL, 'S', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(424));
    return TRUE;
 }
@@ -1552,7 +1552,7 @@ static BOOL H_UpgradeFromV423(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV422(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("RADIUSAuthMethod"), _T("PAP"), _T("RADIUS authentication method to be used (PAP, CHAP, MS-CHAPv1, MS-CHAPv2)"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("RADIUSAuthMethod"), _T("PAP"), _T("RADIUS authentication method to be used (PAP, CHAP, MS-CHAPv1, MS-CHAPv2)"), NULL, 'S', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(423));
    return TRUE;
 }
@@ -1562,8 +1562,8 @@ static BOOL H_UpgradeFromV422(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV421(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("ServerColor"), _T(""), _T("Identification color for this server"), 'S', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("ServerName"), _T(""), _T("Name of this server"), 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ServerColor"), _T(""), _T("Identification color for this server"), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ServerName"), _T(""), _T("Name of this server"), NULL, 'S', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(422));
    return TRUE;
 }
@@ -2189,7 +2189,7 @@ static BOOL H_UpgradeFromV403(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("SyslogIgnoreMessageTimestamp"), _T("0"),
             _T("Ignore timestamp received in syslog messages and always use server time"),
-            'B', true, false, false, false));
+            NULL, 'B', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(404));
    return TRUE;
 }
@@ -2252,7 +2252,7 @@ static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV399(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("JobRetryCount"), _T("5"), _T("Maximum mumber of job execution retrys"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("JobRetryCount"), _T("5"), _T("Maximum mumber of job execution retrys"), NULL, 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(400));
    return TRUE;
 }
@@ -2866,7 +2866,7 @@ static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("OfflineDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("OfflineDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), NULL, 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(394));
    return TRUE;
 }
@@ -2876,7 +2876,7 @@ static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("DefaultInterfaceExpectedState"), _T("0"), _T("Default expected state for new interface objects"), 'C', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultInterfaceExpectedState"), _T("0"), _T("Default expected state for new interface objects"), NULL, 'C', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(393));
    return TRUE;
 }
@@ -2886,7 +2886,7 @@ static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("ImportConfigurationOnStartup"), _T("0"), _T("Import configuration from local files on server startup"), 'B', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ImportConfigurationOnStartup"), _T("0"), _T("Import configuration from local files on server startup"), NULL, 'B', true, true, false, false));
    CHK_EXEC(SetSchemaVersion(392));
    return TRUE;
 }
@@ -3213,8 +3213,8 @@ static BOOL H_UpgradeFromV377(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV376(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv4"), _T("24"), _T("Default mask for synthetic IPv4 subnets"), 'I', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv6"), _T("64"), _T("Default mask for synthetic IPv6 subnets"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv4"), _T("24"), _T("Default mask for synthetic IPv4 subnets"), NULL, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv6"), _T("64"), _T("Default mask for synthetic IPv6 subnets"), NULL, 'I', true, false, false, false));
    CHK_EXEC(SetSchemaVersion(377));
    return TRUE;
 }
@@ -3374,7 +3374,7 @@ static BOOL H_UpgradeFromV367(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV366(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("TrapSourcesInAllZones"), _T("0"), _T("Search all zones to match trap/syslog source address to node"), 'B', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("TrapSourcesInAllZones"), _T("0"), _T("Search all zones to match trap/syslog source address to node"), NULL, 'B', true, true, false, false));
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_contact varchar(127)")));
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_location varchar(127)")));
@@ -3435,7 +3435,7 @@ static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV361(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("CaseInsensitiveLoginNames"), _T("0"), _T("Enable/disable case insensitive login names"), 'B', true, true, false));
+   CHK_EXEC(CreateConfigParam(_T("CaseInsensitiveLoginNames"), _T("0"), _T("Enable/disable case insensitive login names"), NULL, 'B', true, true, false));
    CHK_EXEC(SetSchemaVersion(362));
    return TRUE;
 }
@@ -3534,7 +3534,7 @@ static BOOL H_UpgradeFromV357(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch((g_dbSyntax == DB_SYNTAX_ORACLE) ? batchOracle : batch));
 
-   CHK_EXEC(CreateConfigParam(_T("DashboardDataExportEnableInterpolation"), _T("1"), _T("Enable/disable data interpolation in dashboard data export"), 'B', true, false, true));
+   CHK_EXEC(CreateConfigParam(_T("DashboardDataExportEnableInterpolation"), _T("1"), _T("Enable/disable data interpolation in dashboard data export"), NULL, 'B', true, false, true));
 
    CHK_EXEC(SetSchemaVersion(358));
    return TRUE;

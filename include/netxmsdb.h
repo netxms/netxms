@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 #define DB_LEGACY_SCHEMA_VERSION       700
 #define DB_SCHEMA_VERSION_MAJOR        30
-#define DB_SCHEMA_VERSION_MINOR        22
+#define DB_SCHEMA_VERSION_MINOR        23
 
 #define DB_SCHEMA_VERSION_V30_MINOR    DB_SCHEMA_VERSION_MINOR
 

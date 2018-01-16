@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2444,6 +2444,9 @@ json_t *NetObj::toJson()
    return root;
 }
 
+/**
+ * Expand text
+ */
 TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields)
 {
    const TCHAR *pCurr;
@@ -2807,7 +2810,7 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                         int index = names->indexOfIgnoreCase(scriptName);
                         if (index != -1)
                         {
-                           const TCHAR *temp = (TCHAR *)names->get(index);
+                           const TCHAR *temp = event->getParameter(index);
                            if (temp != NULL)
                            {
                               dwSize += (UINT32)_tcslen(temp);

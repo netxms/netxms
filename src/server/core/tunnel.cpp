@@ -228,6 +228,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_bindRequestId = 0;
    m_channelLock = MutexCreate();
    m_hostname[0] = 0;
+   m_startTime = time(NULL);
 }
 
 /**
@@ -1172,4 +1173,207 @@ void CloseAgentTunnels()
    }
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("All agent tunnels unregistered"));
+}
+
+/**
+ * Find matching node for tunnel
+ */
+static bool MatchTunnelToNode(NetObj *object, void *data)
+{
+   Node *node = static_cast<Node*>(object);
+   AgentTunnel *tunnel = static_cast<AgentTunnel*>(data);
+
+   if (!node->getTunnelId().isNull())
+      return false;  // Already have bound tunnel
+
+   if (IsZoningEnabled() && (tunnel->getZoneUIN() != node->getZoneUIN()))
+      return false;  // Wrong zone
+
+   if (node->getIpAddress().equals(tunnel->getAddress()) ||
+       !_tcsicmp(tunnel->getHostname(), node->getPrimaryName()) ||
+       !_tcsicmp(tunnel->getHostname(), node->getName()) ||
+       !_tcsicmp(tunnel->getSystemName(), node->getPrimaryName()) ||
+       !_tcsicmp(tunnel->getHostname(), node->getName()))
+   {
+      if (node->isNativeAgent())
+      {
+         // Additional checks if agent already reachable on that node
+         AgentConnectionEx *conn = node->getAgentConnection();
+         if (conn != NULL)
+         {
+            TCHAR agentVersion[MAX_RESULT_LENGTH] = _T(""), hostName[MAX_RESULT_LENGTH] = _T(""), fqdn[MAX_RESULT_LENGTH] = _T("");
+            conn->getParameter(_T("Agent.Version"), MAX_RESULT_LENGTH, agentVersion);
+            conn->getParameter(_T("System.Hostname"), MAX_RESULT_LENGTH, hostName);
+            conn->getParameter(_T("System.FQDN"), MAX_RESULT_LENGTH, fqdn);
+            conn->decRefCount();
+
+            if (_tcscmp(agentVersion, tunnel->getAgentVersion()))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent version mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
+                        agentVersion, tunnel->getAgentVersion(), node->getName(), node->getId(),
+                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+               return false;
+            }
+            if (_tcscmp(hostName, tunnel->getSystemName()))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("System name mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
+                        hostName, tunnel->getSystemName(), node->getName(), node->getId(),
+                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+               return false;
+            }
+            if (_tcscmp(fqdn, tunnel->getHostname()))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Host name mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
+                        fqdn, tunnel->getHostname(), node->getName(), node->getId(),
+                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+               return false;
+            }
+         }
+      }
+
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
+               node->getName(), node->getId(), tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+      return true;   // Match by IP address or name
+   }
+
+   return false;
+}
+
+/**
+ * Finish automatic node creation
+ */
+static void FinishNodeCreation(void *arg)
+{
+   Node *node = static_cast<Node*>(arg);
+
+   int retryCount = 36;
+   while(node->getTunnelId().isNull() && (retryCount-- > 0))
+      ThreadSleep(5);
+
+   if (!node->getTunnelId().isNull())
+   {
+      node->setMgmtStatus(TRUE);
+      node->forceConfigurationPoll();
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Node creation completed (%s [%d])"), node->getName(), node->getId());
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Tunnel was not re-established after binding for new node %s [%d]"), node->getName(), node->getId());
+   }
+
+   node->decRefCount();
+}
+
+/**
+ * Timeout action for unbound tunnels
+ */
+enum TimeoutAction
+{
+   RESET = 0,
+   GENERATE_EVENT = 1,
+   BIND_NODE = 2,
+   BIND_OR_CREATE_NODE = 3
+};
+
+/**
+ * Event parameter names for SYS_UNBOUND_TUNNEL event
+ */
+static const TCHAR *s_eventParamNames[] =
+   {
+      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
+      _T("platformName"), _T("systemInfo"), _T("agentVersion"), _T("idleTimeout")
+   };
+
+/**
+ * Scheduled task for automatic binding of unbound tunnels
+ */
+void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
+{
+   int timeout = ConfigReadInt(_T("AgentTunnels.UnboundTunnelTimeout"), 3600);
+   if (timeout < 0)
+      return;  // Auto bind disabled
+
+   ObjectRefArray<AgentTunnel> processingList(16, 16);
+
+   s_tunnelListLock.lock();
+   time_t now = time(NULL);
+   for(int i = 0; i < s_unboundTunnels.size(); i++)
+   {
+      AgentTunnel *t = s_unboundTunnels.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 9, _T("Checking tunnel from %s (%s): state=%d, startTime=%ld"),
+               t->getHostname(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
+      if ((t->getState() == AGENT_TUNNEL_UNBOUND) && (t->getStartTime() + timeout <= now))
+      {
+         t->incRefCount();
+         processingList.add(t);
+      }
+   }
+   s_tunnelListLock.unlock();
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("%d unbound tunnels with expired idle timeout"), processingList.size());
+
+   TimeoutAction action = static_cast<TimeoutAction>(ConfigReadInt(_T("AgentTunnels.UnboundTunnelTimeoutAction"), RESET));
+   for(int i = 0; i < processingList.size(); i++)
+   {
+      AgentTunnel *t = processingList.get(i);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"), t->getHostname(), (const TCHAR *)t->getAddress().toString(), action);
+      switch(action)
+      {
+         case RESET:
+            t->shutdown();
+            break;
+         case GENERATE_EVENT:
+            PostEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssd", s_eventParamNames,
+                     t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getSystemInfo(), t->getAgentVersion(), timeout);
+            t->resetStartTime();
+            break;
+         case BIND_NODE:
+         case BIND_OR_CREATE_NODE:
+            Node *node = static_cast<Node*>(g_idxNodeById.find(MatchTunnelToNode, t));
+            if (node != NULL)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
+                        t->getHostname(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
+               BindAgentTunnel(t->getId(), node->getId());
+            }
+            else if (action == BIND_OR_CREATE_NODE)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new node for tunnel from %s (%s)"),
+                        t->getHostname(), (const TCHAR *)t->getAddress().toString());
+
+               NewNodeData nd(t->getAddress());
+               _tcslcpy(nd.name, t->getSystemName(), MAX_OBJECT_NAME);
+               nd.zoneUIN = t->getZoneUIN();
+               nd.creationFlags = NXC_NCF_CREATE_UNMANAGED;
+               node = PollNewNode(&nd);
+               if (node != NULL)
+               {
+                  TCHAR containerName[MAX_OBJECT_NAME];
+                  ConfigReadStr(_T("AgentTunnels.NewNodesContainer"), containerName, MAX_OBJECT_NAME, _T("New Tunnel Nodes"));
+                  Container *c = static_cast<Container*>(FindObjectByName(containerName, OBJECT_CONTAINER));
+                  if (c != NULL)
+                  {
+                     c->addChild(node);
+                     node->addParent(c);
+                  }
+                  else
+                  {
+                     NetObj *root = FindObjectById(2, -1);
+                     if (root != NULL)
+                     {
+                        root->addChild(node);
+                        node->addParent(root);
+                     }
+                  }
+
+                  if (BindAgentTunnel(t->getId(), node->getId()) == RCC_SUCCESS)
+                  {
+                     node->incRefCount();
+                     ThreadPoolScheduleRelative(g_mainThreadPool, 60000, FinishNodeCreation, node);
+                  }
+               }
+            }
+            break;
+      }
+      t->decRefCount();
+   }
 }

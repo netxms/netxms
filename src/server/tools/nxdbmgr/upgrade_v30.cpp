@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,69 +24,109 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.22 to 30.23 (changes also included into 22.13)
+ */
+static bool H_UpgradeFromV22()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 13)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_UNBOUND_TUNNEL, _T("SYS_UNBOUND_TUNNEL"), SEVERITY_NORMAL, EF_LOG, _T("7f781ec2-a8f5-4c02-ad7f-9e5b0a223b87"),
+               _T("Unbound agent tunnel from %<systemName> (%<ipAddress>) is idle for more than %<idleTimeout> seconds"),
+               _T("Generated when unbound agent tunnel is not bound or closed for more than configured threshold.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)\r\n")
+               _T("   8) Configured idle timeout (idleTimeout)")
+               ));
+
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.NewNodesContainer"), _T(""), _T("Name of the container where nodes created automatically for unbound tunnels will be placed. If empty or missing, such nodes will be created in infrastructure services root."), NULL, 'S', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.UnboundTunnelTimeout"), _T("3600"), _T("Unbound agent tunnels inactivity timeout. If tunnel is not bound or closed after timeout, action defined by AgentTunnels.UnboundTunnelTimeoutAction parameter will be taken."), _T("seconds"), 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.UnboundTunnelTimeoutAction"), _T("0"), _T("Action to be taken when unbound agent tunnel idle timeout expires."), NULL, 'C', true, false, false, false));
+
+      static TCHAR batch[] =
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','Reset tunnel')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','1','Generate event')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','2','Bind tunnel to existing node')\n")
+         _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','3','Bind tunnel to existing node or create new node')\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 13));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 30.21 to 30.22
  */
 static bool H_UpgradeFromV21()
 {
    static TCHAR batch[] =
-            _T("ALTER TABLE config ADD units varchar(36)\n")
-            _T("UPDATE config SET units='milliseconds' WHERE var_name='AgentCommandTimeout'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='AgentUpgradeWaitTime'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='AlarmHistoryRetentionTime'\n")
-            _T("UPDATE config SET units='alarms' WHERE var_name='AlarmListDisplayLimit'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='AuditLogRetentionTime'\n")
-            _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconPollingInterval'\n")
-            _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconTimeout'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='CapabilityExpirationTime'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='ConditionPollingInterval'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='ConfigurationPollingInterval'\n")
-            _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolBaseSize'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolCooldownTime'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolMaxLifetime'\n")
-            _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolMaxSize'\n")
-            _T("UPDATE config SET units='records/transaction' WHERE var_name='DBWriter.MaxRecordsPerTransaction'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='DefaultDCIPollingInterval'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='DefaultDCIRetentionTime'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='DeleteUnreachableNodesPeriod'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='DiscoveryPollingInterval'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='EventLogRetentionTime'\n")
-            _T("UPDATE config SET units='events/second' WHERE var_name='EventStormEventsPerSecond'\n")
-            _T("UPDATE config SET units='logins' WHERE var_name='GraceLoginCount'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='IcmpPingSize'\n")
-            _T("UPDATE config SET units='milliseconds' WHERE var_name='IcmpPingTimeout'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='InstancePollingInterval'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='InstanceRetentionTime'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='IntruderLockoutTime'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='JobHistoryRetentionTime'\n")
-            _T("UPDATE config SET units='retries' WHERE var_name='JobRetryCount'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='KeepAliveInterval'\n")
-            _T("UPDATE config SET units='milliseconds' WHERE var_name='LongRunningQueryThreshold'\n")
-            _T("UPDATE config SET units='characters' WHERE var_name='MinPasswordLength'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='MinViewRefreshInterval'\n")
-            _T("UPDATE config SET units='threads' WHERE var_name='NumberOfUpgradeThreads'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='OfflineDataRelevanceTime'\n")
-            _T("UPDATE config SET units='polls' WHERE var_name='PollCountForStatusChange'\n")
-            _T("UPDATE config SET units='retries' WHERE var_name='RADIUSNumRetries'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='RADIUSTimeout'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='RoutingTableUpdateInterval'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='ServerCommandOutputTimeout'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='StatusPollingInterval'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='SyncInterval'\n")
-            _T("UPDATE config SET units='days' WHERE var_name='SyslogRetentionTime'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.BaseSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.MaxSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.BaseSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.MaxSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.BaseSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.MaxSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.BaseSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.MaxSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.BaseSize'\n")
-            _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.MaxSize'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='ThresholdRepeatInterval'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='TopologyExpirationTime'\n")
-            _T("UPDATE config SET units='seconds' WHERE var_name='TopologyPollingInterval'\n")
-            _T("<END>");
+      _T("ALTER TABLE config ADD units varchar(36)\n")
+      _T("UPDATE config SET units='milliseconds' WHERE var_name='AgentCommandTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='AgentTunnels.UnboundTunnelTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='AgentUpgradeWaitTime'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='AlarmHistoryRetentionTime'\n")
+      _T("UPDATE config SET units='alarms' WHERE var_name='AlarmListDisplayLimit'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='AuditLogRetentionTime'\n")
+      _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconPollingInterval'\n")
+      _T("UPDATE config SET units='milliseconds' WHERE var_name='BeaconTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='CapabilityExpirationTime'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='ConditionPollingInterval'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='ConfigurationPollingInterval'\n")
+      _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolBaseSize'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolCooldownTime'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='DBConnectionPoolMaxLifetime'\n")
+      _T("UPDATE config SET units='connections' WHERE var_name='DBConnectionPoolMaxSize'\n")
+      _T("UPDATE config SET units='records/transaction' WHERE var_name='DBWriter.MaxRecordsPerTransaction'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='DefaultDCIPollingInterval'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='DefaultDCIRetentionTime'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='DeleteUnreachableNodesPeriod'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='DiscoveryPollingInterval'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='EventLogRetentionTime'\n")
+      _T("UPDATE config SET units='events/second' WHERE var_name='EventStormEventsPerSecond'\n")
+      _T("UPDATE config SET units='logins' WHERE var_name='GraceLoginCount'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='IcmpPingSize'\n")
+      _T("UPDATE config SET units='milliseconds' WHERE var_name='IcmpPingTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='InstancePollingInterval'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='InstanceRetentionTime'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='IntruderLockoutTime'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='JobHistoryRetentionTime'\n")
+      _T("UPDATE config SET units='retries' WHERE var_name='JobRetryCount'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='KeepAliveInterval'\n")
+      _T("UPDATE config SET units='milliseconds' WHERE var_name='LongRunningQueryThreshold'\n")
+      _T("UPDATE config SET units='characters' WHERE var_name='MinPasswordLength'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='MinViewRefreshInterval'\n")
+      _T("UPDATE config SET units='threads' WHERE var_name='NumberOfUpgradeThreads'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='OfflineDataRelevanceTime'\n")
+      _T("UPDATE config SET units='polls' WHERE var_name='PollCountForStatusChange'\n")
+      _T("UPDATE config SET units='retries' WHERE var_name='RADIUSNumRetries'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='RADIUSTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='RoutingTableUpdateInterval'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='ServerCommandOutputTimeout'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='StatusPollingInterval'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='SyncInterval'\n")
+      _T("UPDATE config SET units='days' WHERE var_name='SyslogRetentionTime'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.BaseSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Agent.MaxSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.BaseSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.DataCollector.MaxSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.BaseSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Main.MaxSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.BaseSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Poller.MaxSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.BaseSize'\n")
+      _T("UPDATE config SET units='size' WHERE var_name='ThreadPool.Scheduler.MaxSize'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='ThresholdRepeatInterval'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='TopologyExpirationTime'\n")
+      _T("UPDATE config SET units='seconds' WHERE var_name='TopologyPollingInterval'\n")
+      _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
    CHK_EXEC(SetMinorSchemaVersion(22));
@@ -136,8 +176,8 @@ static bool H_UpgradeFromV19()
    if (GetSchemaLevelForMajorVersion(22) < 11)
    {
       CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Housekeeper.StartTime' WHERE var_name='HousekeeperStartTime'")));
-      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.HighWatermark"), _T("250000"), _T("High watermark for housekeeper throttling"), 'I', true, false, false, false));
-      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.LowWatermark"), _T("50000"), _T("Low watermark for housekeeper throttling"), 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.HighWatermark"), _T("250000"), _T("High watermark for housekeeper throttling"), NULL, 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Housekeeper.Throttle.LowWatermark"), _T("50000"), _T("Low watermark for housekeeper throttling"), NULL, 'I', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 11));
    }
    CHK_EXEC(SetMinorSchemaVersion(20));
@@ -158,12 +198,12 @@ static bool H_UpgradeFromV18()
          _T("UPDATE config SET var_name='ThreadPool.Poller.MaxSize',description='Maximum size for poller thread pool' WHERE var_name='PollerThreadPoolMaxSize'\n")
          _T("<END>");
       CHK_EXEC(SQLBatch(batch));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.BaseSize"), _T("4"), _T("Base size for agent connector thread pool"), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.MaxSize"), _T("256"), _T("Maximum size for agent connector thread pool"), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.BaseSize"), _T("8"), _T("Base size for main server thread pool"), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.MaxSize"), _T("256"), _T("Maximum size for main server thread pool"), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.BaseSize"), _T("1"), _T("Base size for scheduler thread pool"), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.MaxSize"), _T("64"), _T("Maximum size for scheduler thread pool"), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.BaseSize"), _T("4"), _T("Base size for agent connector thread pool"), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Agent.MaxSize"), _T("256"), _T("Maximum size for agent connector thread pool"), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.BaseSize"), _T("8"), _T("Base size for main server thread pool"), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Main.MaxSize"), _T("256"), _T("Maximum size for main server thread pool"), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.BaseSize"), _T("1"), _T("Base size for scheduler thread pool"), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("ThreadPool.Scheduler.MaxSize"), _T("64"), _T("Maximum size for scheduler thread pool"), NULL, 'I', true, true, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 10));
    }
    CHK_EXEC(SetMinorSchemaVersion(19));
@@ -356,7 +396,7 @@ static bool H_UpgradeFromV8()
 {
    if (GetSchemaLevelForMajorVersion(22) < 2)
    {
-      CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxRecordsPerTransaction"), _T("1000"), _T("Maximum number of records per one transaction for delayed database writes."), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxRecordsPerTransaction"), _T("1000"), _T("Maximum number of records per one transaction for delayed database writes."), NULL, 'I', true, true, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 2));
    }
    CHK_EXEC(SetMinorSchemaVersion(9));
@@ -373,8 +413,8 @@ static bool H_UpgradeFromV7()
       int count = ConfigReadInt(_T("NumberOfDataCollectors"), 250);
       TCHAR value[64];
       _sntprintf(value, 64,_T("%d"), std::max(250, count));
-      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), 'I', true, true, false, false));
-      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), value, _T("Maximum size for data collector thread pool."), 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.MaxSize"), value, _T("Maximum size for data collector thread pool."), NULL, 'I', true, true, false, false));
       CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='250' WHERE var_name='DataCollector.ThreadPool.MaxSize'")));
       CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfDataCollectors'")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 1));
@@ -832,6 +872,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 22, 30, 23, H_UpgradeFromV22 },
    { 21, 30, 22, H_UpgradeFromV21 },
    { 20, 30, 21, H_UpgradeFromV20 },
    { 19, 30, 20, H_UpgradeFromV19 },

@@ -83,7 +83,7 @@ BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TC
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
-bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, const TCHAR *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
 BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *idColumn2, const TCHAR *column, bool isStringId);
 BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column);
 BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description);

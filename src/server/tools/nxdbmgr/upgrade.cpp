@@ -110,7 +110,7 @@ static bool IsConfigurationVariableExist(const TCHAR *name)
 /**
  * Create configuration parameter if it doesn't exist (unless forceUpdate set to true)
  */
-bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, const TCHAR *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
    bool success = true;
    TCHAR szQuery[3024];
@@ -119,7 +119,15 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *descr
       INT32 major, minor;
       if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
          return false;
-      if ((major > 0) || (minor >= 454))
+      if ((major > 30) || ((major == 30) && (minor >= 22)))
+         _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description,units) VALUES (%s,%s,%s,%d,%d,'%c','%c',%s,%s)"),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),
+                    isVisible ? 1 : 0, needRestart ? 1 : 0,
+                    isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255),
+                    (const TCHAR *)DBPrepareString(g_hCoreDB, units, 36));
+      else if ((major > 0) || (minor >= 454))
          _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%s,%d,%d,'%c','%c',%s)"),
                     (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
                     (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000),

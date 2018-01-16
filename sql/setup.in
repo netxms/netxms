@@ -6,8 +6,11 @@
 
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveDiscoveryInterval','7200','7200',1,1,'I','Interval in seconds between active network discovery polls.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveNetworkDiscovery','0','0',1,1,'B','Enable/disable active network discovery. This setting is change by Network Discovery GUI','');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentCommandTimeout','4000','4000',1,1,'I','Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.','milliseconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentCommandTimeout','4000','4000',1,1,'I','Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, command considered as failed.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentDefaultSharedSecret','netxms','netxms',1,0,'S','String that will be used as a shared secret in case if agent will required authentication.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.NewNodesContainer','','',1,0,'S','Name of the container where nodes created automatically for unbound tunnels will be placed. If empty or missing, such nodes will be created in infrastructure services root.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.UnboundTunnelTimeout','3600','3600',1,0,'I','Unbound agent tunnels inactivity timeout. If tunnel is not bound or closed after timeout, action defined by AgentTunnels.UnboundTunnelTimeoutAction parameter will be taken.','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','0',1,0,'C','Action to be taken when unbound agent tunnel idle timeout expires.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentUpgradeWaitTime','600','600',1,0,'I','Maximum wait time in seconds for agent restart after upgrade. If agent cannot be contacted after this time period, \nupgrade process is considered as failed.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AlarmHistoryRetentionTime','180','180',1,0,'I','A number of days the server keeps an alarm history in the database.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AlarmListDisplayLimit','4096','4096',1,0,'I','Maximum alarm count that will be displayed on Alarm Browser page. Alarms that exceed this count will not be shown.','alarms');
@@ -221,6 +224,10 @@ INSERT INTO config_values (var_name,var_value) VALUES ('SNMPTrapPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('SyslogListenPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('XMPPPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('AllowedCiphers','63');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','0','Reset tunnel');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','1','Generate event');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','2','Bind tunnel to existing node');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.UnboundTunnelTimeoutAction','3','Bind tunnel to existing node or create new node');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentCacheMode','1','On');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentCacheMode','2','Off');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentProtocolCompressionMode','1','Enabled');

@@ -1679,7 +1679,7 @@ restart_agent_check:
          if (!(m_state & NSF_SNMP_UNREACHABLE))
             allDown = false;
 
-      DbgPrintf(2, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
+      DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
       {
          if (!(m_state & DCSF_UNREACHABLE))
