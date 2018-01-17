@@ -1233,6 +1233,17 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_MSG_RESULT(no)
 		])
 
+	AC_MSG_CHECKING(whether C compiler accepts -Wno-invalid-pp-token)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$SQLFLAGS -Wno-invalid-pp-token"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[
+         SQLFLAGS="$SQLFLAGS -Wno-invalid-pp-token"
+         AC_MSG_RESULT(yes)
+      ],
+		[ AC_MSG_RESULT(no) ])
+   CPPFLAGS="$OLD_CPPFLAGS"
+
 	AC_LANG_PUSH([C++])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
