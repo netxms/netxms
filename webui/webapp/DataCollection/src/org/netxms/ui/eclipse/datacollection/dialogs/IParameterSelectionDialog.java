@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import org.netxms.client.constants.DataType;
+
 /**
  * Generic interface for parameter selection dialogs
  *
@@ -43,7 +45,7 @@ public interface IParameterSelectionDialog
 	 * 
 	 * @return data type for selected parameter
 	 */
-	public int getParameterDataType();
+	public DataType getParameterDataType();
 
 	/**
 	 * Get instance column name. Relevant only for table selection.

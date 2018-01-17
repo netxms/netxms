@@ -40,6 +40,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ASN;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -186,21 +187,22 @@ public class CreateSnmpDci implements IObjectActionDelegate
 	 * @param type ASN.1 identifier type
 	 * @return DCI data type
 	 */
-	private static int dciTypeFromAsnType(int type)
+	private static DataType dciTypeFromAsnType(int type)
 	{
 		switch(type)
 		{
 			case ASN.COUNTER32:
+            return DataType.COUNTER32;
+         case ASN.COUNTER64:
+            return DataType.COUNTER64;
 			case ASN.GAUGE32:
          case ASN.TIMETICKS:
 			case ASN.UINTEGER32:
-				return DataCollectionItem.DT_UINT;
-			case ASN.COUNTER64:
-				return DataCollectionItem.DT_UINT64;
+				return DataType.UINT32;
 			case ASN.INTEGER:
-				return DataCollectionItem.DT_INT;
+				return DataType.INT32;
 			default:
-				return DataCollectionItem.DT_STRING;
+				return DataType.STRING;
 		}
 	}
 

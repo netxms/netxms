@@ -37,6 +37,7 @@ import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
@@ -53,7 +54,6 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 	private NXCSession session;
 	private Image statusImages[];
 	private HashMap<Integer, String> originTexts = new HashMap<Integer, String>();
-	private HashMap<Integer, String> dtTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> statusTexts = new HashMap<Integer, String>();
 	
 	/**
@@ -83,13 +83,6 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);
 		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, Messages.get().DciLabelProvider_NotSupported);
-
-		dtTexts.put(DataCollectionItem.DT_INT, Messages.get().DciLabelProvider_DT_int32);
-		dtTexts.put(DataCollectionItem.DT_UINT, Messages.get().DciLabelProvider_DT_uint32);
-		dtTexts.put(DataCollectionItem.DT_INT64, Messages.get().DciLabelProvider_DT_int64);
-		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.get().DciLabelProvider_DT_uint64);
-		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.get().DciLabelProvider_DT_float);
-		dtTexts.put(DataCollectionItem.DT_STRING, Messages.get().DciLabelProvider_DT_string);
 	}
 	
 	/* (non-Javadoc)
@@ -123,7 +116,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				return dci.getName();
 			case DataCollectionEditor.COLUMN_DATATYPE:
 				if (dci instanceof DataCollectionItem)
-					return dtTexts.get(((DataCollectionItem)dci).getDataType());
+					return DataCollectionDisplayInfo.getDataTypeName(((DataCollectionItem)dci).getDataType());
 				return Messages.get().DciLabelProvider_Table;
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())

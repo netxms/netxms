@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 public class SummaryTableItemComparator extends ViewerComparator
 {
    private Table table;
-	private int[] formats;
+	private DataType[] formats;
 	
 	/**
 	 * 
@@ -50,7 +50,7 @@ public class SummaryTableItemComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		final int column = (Integer)((SortableTreeViewer) viewer).getTree().getSortColumn().getData("ID"); //$NON-NLS-1$
-		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
+		final DataType format = (column < formats.length) ? formats[column] : DataType.STRING;
 
       final String value1 = getCellValue((TableRow)e1, column);
       final String value2 = getCellValue((TableRow)e2, column);
@@ -58,15 +58,17 @@ public class SummaryTableItemComparator extends ViewerComparator
       int result;
 		switch(format)
 		{
-			case DataCollectionItem.DT_INT:
-			case DataCollectionItem.DT_UINT:
+			case INT32:
 				result = safeParseInt(value1) - safeParseInt(value2);
 				break;
-			case DataCollectionItem.DT_INT64:
-			case DataCollectionItem.DT_UINT64:
+			case UINT32:
+         case COUNTER32:
+			case INT64:
+			case UINT64:
+			case COUNTER64:
 				result = Long.signum(safeParseLong(value1) - safeParseLong(value2));
 				break;
-			case DataCollectionItem.DT_FLOAT:
+			case FLOAT:
 				result = (int)Math.signum(safeParseDouble(value1) - safeParseDouble(value2));
 				break;
 			default:

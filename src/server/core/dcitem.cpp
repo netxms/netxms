@@ -854,22 +854,30 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = (INT32)value - (INT32)m_prevRawValue;
+               value = value.getInt32() - m_prevRawValue.getInt32();
                break;
             case DCI_DT_UINT:
-               value = (UINT32)value - (UINT32)m_prevRawValue;
+               value = value.getUInt32() - m_prevRawValue.getUInt32();
+               break;
+            case DCI_DT_COUNTER32:
+               // assume counter reset if new value is less then previous
+               value = (value.getUInt32() > m_prevRawValue.getUInt32()) ? value.getUInt32() - m_prevRawValue.getUInt32() : 0;
                break;
             case DCI_DT_INT64:
-               value = (INT64)value - (INT64)m_prevRawValue;
+               value = value.getInt64() - m_prevRawValue.getInt64();
                break;
             case DCI_DT_UINT64:
-               value = (UINT64)value - (UINT64)m_prevRawValue;
+               value = value.getUInt64() - m_prevRawValue.getUInt64();
+               break;
+            case DCI_DT_COUNTER64:
+               // assume counter reset if new value is less then previous
+               value = (value.getUInt64() > m_prevRawValue.getUInt64()) ? value.getUInt64() - m_prevRawValue.getUInt64() : 0;
                break;
             case DCI_DT_FLOAT:
-               value = (double)value - (double)m_prevRawValue;
+               value = value.getDouble() - m_prevRawValue.getDouble();
                break;
             case DCI_DT_STRING:
-               value = (INT32)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (INT32)((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -887,25 +895,31 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          switch(m_dataType)
          {
             case DCI_DT_INT:
-               value = ((INT32)value - (INT32)m_prevRawValue) / (INT32)nElapsedTime;
+               value = (value.getInt32() - m_prevRawValue.getInt32()) / (INT32)nElapsedTime;
                break;
             case DCI_DT_UINT:
-               value = ((UINT32)value - (UINT32)m_prevRawValue) / (UINT32)nElapsedTime;
+               value = (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime;
+               break;
+            case DCI_DT_COUNTER32:
+               value = (value.getUInt32() > m_prevRawValue.getUInt32()) ? (value.getUInt32() - m_prevRawValue.getUInt32()) / (UINT32)nElapsedTime : 0;
                break;
             case DCI_DT_INT64:
-               value = ((INT64)value - (INT64)m_prevRawValue) / (INT64)nElapsedTime;
+               value = (value.getInt64() - m_prevRawValue.getInt64()) / (INT64)nElapsedTime;
                break;
             case DCI_DT_UINT64:
-               value = ((UINT64)value - (UINT64)m_prevRawValue) / (UINT64)nElapsedTime;
+               value = (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime;
+               break;
+            case DCI_DT_COUNTER64:
+               value = (value.getUInt64() > m_prevRawValue.getUInt64()) ? (value.getUInt64() - m_prevRawValue.getUInt64()) / (UINT64)nElapsedTime : 0;
                break;
             case DCI_DT_FLOAT:
-               value = ((double)value - (double)m_prevRawValue) / (double)nElapsedTime;
+               value = (value.getDouble() - m_prevRawValue.getDouble()) / (double)nElapsedTime;
                break;
             case DCI_DT_STRING:
                // I don't see any meaning in _T("average delta per second (minute)") for string
                // values, so result will be 0 if there are no difference between
                // current and previous values, and 1 otherwise
-               value = (INT32)((_tcscmp((const TCHAR *)value, (const TCHAR *)m_prevRawValue) == 0) ? 0 : 1);
+               value = (INT32)((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -940,12 +954,14 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                      value = nxslValue->getValueAsInt32();
                      break;
                   case DCI_DT_UINT:
+                  case DCI_DT_COUNTER32:
                      value = nxslValue->getValueAsUInt32();
                      break;
                   case DCI_DT_INT64:
                      value = nxslValue->getValueAsInt64();
                      break;
                   case DCI_DT_UINT64:
+                  case DCI_DT_COUNTER64:
                      value = nxslValue->getValueAsUInt64();
                      break;
                   case DCI_DT_FLOAT:
@@ -1002,7 +1018,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
  */
 int DCItem::getNXSLDataType() const
 {
-   static int nxslTypes[] = { NXSL_DT_INT32, NXSL_DT_UINT32, NXSL_DT_INT64, NXSL_DT_UINT64, NXSL_DT_STRING, NXSL_DT_REAL, NXSL_DT_NULL };
+   static int nxslTypes[] = { NXSL_DT_INT32, NXSL_DT_UINT32, NXSL_DT_INT64, NXSL_DT_UINT64, NXSL_DT_STRING, NXSL_DT_REAL, NXSL_DT_NULL, NXSL_DT_UINT32, NXSL_DT_UINT64 };
    return (m_dataType < sizeof(nxslTypes) / sizeof(int)) ? nxslTypes[m_dataType] : NXSL_DT_STRING;
 }
 

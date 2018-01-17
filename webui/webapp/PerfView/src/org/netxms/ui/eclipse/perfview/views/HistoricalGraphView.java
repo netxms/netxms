@@ -47,6 +47,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -337,7 +338,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       {
          nodeId |= dci.nodeId; //Check that all DCI's are form one node
          final String name = settings.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
+         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, DataType.INT32, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
          int color = dci.getColorAsInt();
          if (color == -1)
             color = ChartColor.getDefaultColor(index).getRGB();

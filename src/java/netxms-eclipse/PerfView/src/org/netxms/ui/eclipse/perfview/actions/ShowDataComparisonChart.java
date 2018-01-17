@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -65,7 +66,8 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 			for(int i = 0; i < currentSelection.length; i++)
 			{
 				long dciId = 0, nodeId = 0;
-				int source = 0, dataType = 0;
+				int source = 0;
+				DataType dataType = DataType.INT32;
 				String name = null, description = null;
 
 				try
@@ -95,7 +97,7 @@ public abstract class ShowDataComparisonChart implements IObjectActionDelegate
 				}
 
 				id += "&" + Long.toString(nodeId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-						+ Integer.toString(dataType) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$
+						+ Integer.toString(dataType.getValue()) + "@" + name + "@" + description; //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
 			try

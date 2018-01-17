@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
@@ -67,7 +68,7 @@ public class BarChartElement extends ComparisonChartElement
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName(), dci.getDisplayFormat()), 0.0);
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, DataType.INT32, Long.toString(dci.dciId), dci.getName(), dci.getDisplayFormat()), 0.0);
 			int color = dci.getColorAsInt();
 			if (color != -1)
 				chart.setPaletteEntry(index, new ChartColor(color));

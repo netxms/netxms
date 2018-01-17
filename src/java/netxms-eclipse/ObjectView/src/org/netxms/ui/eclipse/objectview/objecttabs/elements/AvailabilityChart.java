@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceContainer;
@@ -137,8 +138,8 @@ public class AvailabilityChart extends OverviewPageElement
 		chart.setLabelsVisible(false);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up, "%s"), 100); //$NON-NLS-1$
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down, "%s"), 0); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up, "%s"), 100); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down, "%s"), 0); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();

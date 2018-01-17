@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.datacollection.api;
 
+import org.netxms.client.constants.DataType;
+
 /**
  * Listener for data collection object editor
  */
@@ -31,7 +33,7 @@ public interface DataCollectionObjectListener
 	 * @param description
 	 * @param dataType
 	 */
-	public void onSelectItem(int origin, String name, String description, int dataType);
+	public void onSelectItem(int origin, String name, String description, DataType dataType);
 
 	/**
 	 * Called by editor after user choose new table parameter using "Select" button

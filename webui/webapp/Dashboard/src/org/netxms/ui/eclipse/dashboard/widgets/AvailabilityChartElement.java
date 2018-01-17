@@ -26,6 +26,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.ServiceContainer;
@@ -73,8 +74,8 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 		chart.setTranslucent(config.isTranslucent());
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChartElement_Up, Messages.get().AvailabilityChartElement_Uptime, "%s"), 100); //$NON-NLS-1$
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChartElement_Down, Messages.get().AvailabilityChartElement_Downtime, "%s"), 0); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().AvailabilityChartElement_Up, Messages.get().AvailabilityChartElement_Uptime, "%s"), 100); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().AvailabilityChartElement_Down, Messages.get().AvailabilityChartElement_Downtime, "%s"), 0); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();

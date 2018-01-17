@@ -27,9 +27,11 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -94,13 +96,15 @@ public class EditColumnDialog extends Dialog
 		displayName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		
 		dataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditColumnDialog_DataType, new GridData(SWT.FILL, SWT.CENTER, true, false));
-		dataType.add(Messages.get().TableColumnLabelProvider_in32);
-		dataType.add(Messages.get().TableColumnLabelProvider_uint32);
-		dataType.add(Messages.get().TableColumnLabelProvider_int64);
-		dataType.add(Messages.get().TableColumnLabelProvider_uint64);
-		dataType.add(Messages.get().TableColumnLabelProvider_string);
-		dataType.add(Messages.get().TableColumnLabelProvider_float);
-		dataType.select(column.getDataType());
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
+		dataType.select(getDataTypePosition(column.getDataType()));
 		
 		aggregationFunction = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditColumnDialog_AggFunc, new GridData(SWT.FILL, SWT.CENTER, true, false));
 		aggregationFunction.add(Messages.get().TableColumnLabelProvider_SUM);
@@ -156,9 +160,59 @@ public class EditColumnDialog extends Dialog
 		column.setDisplayName(displayName.getText().trim());
 		column.setInstanceColumn(checkInstanceColumn.getSelection());
 		column.setInstanceLabelColumn(checkInstanceLabelColumn.getSelection());
-		column.setDataType(dataType.getSelectionIndex());
+		column.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
 		column.setAggregationFunction(aggregationFunction.getSelectionIndex());
 		
 		super.okPressed();
 	}
+
+   /**
+    * Get selector position for given data type
+    * 
+    * @param type data type
+    * @return corresponding selector's position
+    */
+   private static int getDataTypePosition(DataType type)
+   {
+      switch(type)
+      {
+         case COUNTER32:
+            return 2;
+         case COUNTER64:
+            return 5;
+         case FLOAT:
+            return 6;
+         case INT32:
+            return 0;
+         case INT64:
+            return 3;
+         case STRING:
+            return 7;
+         case UINT32:
+            return 1;
+         case UINT64:
+            return 4;
+         default:
+            return 0;  // fallback to int32
+      }
+   }
+   
+   /**
+    * Data type positions in selector
+    */
+   private static final DataType[] TYPES = { 
+      DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
+      DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
+      };
+   
+   /**
+    * Get data type by selector position
+    *  
+    * @param position selector position
+    * @return corresponding data type
+    */
+   private static DataType getDataTypeByPosition(int position)
+   {
+      return TYPES[position];
+   }
 }

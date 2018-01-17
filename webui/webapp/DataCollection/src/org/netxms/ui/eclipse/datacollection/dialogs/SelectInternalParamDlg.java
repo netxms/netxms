@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 import java.util.ArrayList;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentParameter;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
@@ -45,77 +45,77 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 
 		// Internal parameters common for all nodes
-		list.add(new AgentParameter("ChildStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ChildObjectStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("ConditionStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ConditionStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("Dummy", Messages.get().SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime", Messages.get().SelectInternalParamDlg_PingTime_PrimaryIP, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime(*)", Messages.get().SelectInternalParamDlg_PingTime_Instance, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+		list.add(new AgentParameter("ChildStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ChildObjectStatus, DataType.INT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("ConditionStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ConditionStatus, DataType.INT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("Dummy", Messages.get().SelectInternalParamDlg_DCI_Dummy, DataType.INT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataType.INT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime", Messages.get().SelectInternalParamDlg_PingTime_PrimaryIP, DataType.UINT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime(*)", Messages.get().SelectInternalParamDlg_PingTime_Instance, DataType.UINT32)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
-			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-         list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
-         list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataType.STRING)); //$NON-NLS-1$
+         list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataType.UINT64)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))
 		{
-			list.add(new AgentParameter("AgentStatus", Messages.get().SelectInternalParamDlg_DCI_AgentStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("AgentStatus", Messages.get().SelectInternalParamDlg_DCI_AgentStatus, DataType.INT32)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
-			list.add(new AgentParameter("Server.AverageDBWriterQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.IData", "Database writer's request queue (DCI data) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.Other", "Database writer's request queue (other queries) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.RawData", "Database writer's request queue (raw DCI data) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
-			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.LongRunning", "Long running DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.NonSelect", "Non-SELECT DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Select", "SELECT DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DB.Queries.Total", "Total DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.LoadAverage(*)", "Thread pool {instance}: load average (1 minute)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.LoadAverage5(*)", "Thread pool {instance}: load average (5 minutes)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.LoadAverage15(*)", "Thread pool {instance}: load average (15 minutes)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.MaxSize(*)", "Thread pool {instance}: maximum size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.MinSize(*)", "Thread pool {instance}: minimum size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.ScheduledRequests(*)", "Thread pool {instance}: scheduled requests", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.ThreadPool.Usage(*)", "Thread pool {instance}: usage", DataCollectionItem.DT_INT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDBWriterQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.IData", "Database writer's request queue (DCI data) for last minute", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.Other", "Database writer's request queue (other queries) for last minute", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.RawData", "Database writer's request queue (raw DCI data) for last minute", DataType.FLOAT)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataType.UINT32)); //$NON-NLS-1$
+			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.LongRunning", "Long running DB queries", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.NonSelect", "Non-SELECT DB queries", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Select", "SELECT DB queries", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Total", "Total DB queries", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage(*)", "Thread pool {instance}: load average (1 minute)", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage5(*)", "Thread pool {instance}: load average (5 minutes)", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage15(*)", "Thread pool {instance}: load average (15 minutes)", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.MaxSize(*)", "Thread pool {instance}: maximum size", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.MinSize(*)", "Thread pool {instance}: minimum size", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.ScheduledRequests(*)", "Thread pool {instance}: scheduled requests", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.Usage(*)", "Thread pool {instance}: usage", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataType.UINT32)); //$NON-NLS-1$
 		}
 
 		if ((object instanceof Template) || (object instanceof MobileDevice))
 		{
-			list.add(new AgentParameter("MobileDevice.BatteryLevel", Messages.get().SelectInternalParamDlg_DCI_BatteryLevel, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.DeviceId", Messages.get().SelectInternalParamDlg_DCI_DeviceID, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.LastReportTime", Messages.get().SelectInternalParamDlg_DCI_LastReportTime, DataCollectionItem.DT_INT64)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.Model", Messages.get().SelectInternalParamDlg_DCI_Model, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.OS.Name", Messages.get().SelectInternalParamDlg_DCI_OSName, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.OS.Version", Messages.get().SelectInternalParamDlg_DCI_OSVersion, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.SerialNumber", Messages.get().SelectInternalParamDlg_DCI_SerialNumber, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.Vendor", Messages.get().SelectInternalParamDlg_DCI_Vendor, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
-			list.add(new AgentParameter("MobileDevice.UserId", Messages.get().SelectInternalParamDlg_DCI_UserID, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.BatteryLevel", Messages.get().SelectInternalParamDlg_DCI_BatteryLevel, DataType.INT32)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.DeviceId", Messages.get().SelectInternalParamDlg_DCI_DeviceID, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.LastReportTime", Messages.get().SelectInternalParamDlg_DCI_LastReportTime, DataType.INT64)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.Model", Messages.get().SelectInternalParamDlg_DCI_Model, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.OS.Name", Messages.get().SelectInternalParamDlg_DCI_OSName, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.OS.Version", Messages.get().SelectInternalParamDlg_DCI_OSVersion, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.SerialNumber", Messages.get().SelectInternalParamDlg_DCI_SerialNumber, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.Vendor", Messages.get().SelectInternalParamDlg_DCI_Vendor, DataType.STRING)); //$NON-NLS-1$
+			list.add(new AgentParameter("MobileDevice.UserId", Messages.get().SelectInternalParamDlg_DCI_UserID, DataType.STRING)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isWirelessController()))
 		{
-			list.add(new AgentParameter("WirelessController.AdoptedAPCount", Messages.get().SelectInternalParamDlg_AdoptedAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.TotalAPCount", Messages.get().SelectInternalParamDlg_TotalAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", Messages.get().SelectInternalParamDlg_UnadoptedAPs, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.AdoptedAPCount", Messages.get().SelectInternalParamDlg_AdoptedAPs, DataType.INT32)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.TotalAPCount", Messages.get().SelectInternalParamDlg_TotalAPs, DataType.INT32)); //$NON-NLS-1$
+			list.add(new AgentParameter("WirelessController.UnadoptedAPCount", Messages.get().SelectInternalParamDlg_UnadoptedAPs, DataType.INT32)); //$NON-NLS-1$
 		}
 
 		viewer.setInput(list.toArray());

@@ -18,29 +18,30 @@
  */
 package org.netxms.ui.eclipse.console.resources;
 
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.ui.eclipse.console.Messages;
 
 /**
  * Data collection display information
- *
  */
 public class DataCollectionDisplayInfo
 {
-	private static String dciDataTypes[] = new String[7];
+	private static String dciDataTypes[] = new String[9];
 	
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
 	public static void init()
 	{
-		dciDataTypes[DataCollectionItem.DT_INT] = Messages.get().DataCollectionDisplayInfo_Integer;
-		dciDataTypes[DataCollectionItem.DT_UINT] = Messages.get().DataCollectionDisplayInfo_UInteger;
-		dciDataTypes[DataCollectionItem.DT_INT64] = Messages.get().DataCollectionDisplayInfo_Integer64;
-		dciDataTypes[DataCollectionItem.DT_UINT64] = Messages.get().DataCollectionDisplayInfo_UInteger64;
-		dciDataTypes[DataCollectionItem.DT_FLOAT] = Messages.get().DataCollectionDisplayInfo_Float;
-		dciDataTypes[DataCollectionItem.DT_STRING] = Messages.get().DataCollectionDisplayInfo_String;
-		dciDataTypes[DataCollectionItem.DT_NULL] = Messages.get().DataCollectionDisplayInfo_Null;
+      dciDataTypes[DataType.COUNTER32.getValue()] = Messages.get().DataCollectionDisplayInfo_Counter32;
+      dciDataTypes[DataType.COUNTER64.getValue()] = Messages.get().DataCollectionDisplayInfo_Counter64;
+		dciDataTypes[DataType.INT32.getValue()] = Messages.get().DataCollectionDisplayInfo_Integer;
+		dciDataTypes[DataType.UINT32.getValue()] = Messages.get().DataCollectionDisplayInfo_UInteger;
+		dciDataTypes[DataType.INT64.getValue()] = Messages.get().DataCollectionDisplayInfo_Integer64;
+		dciDataTypes[DataType.UINT64.getValue()] = Messages.get().DataCollectionDisplayInfo_UInteger64;
+		dciDataTypes[DataType.FLOAT.getValue()] = Messages.get().DataCollectionDisplayInfo_Float;
+		dciDataTypes[DataType.STRING.getValue()] = Messages.get().DataCollectionDisplayInfo_String;
+		dciDataTypes[DataType.NULL.getValue()] = Messages.get().DataCollectionDisplayInfo_Null;
 	}
 
 	/**
@@ -48,11 +49,11 @@ public class DataCollectionDisplayInfo
 	 * @param dt Data type ID
 	 * @return data type name
 	 */
-	public static String getDataTypeName(int dt)
+	public static String getDataTypeName(DataType dt)
 	{
 		try
 		{
-			return dciDataTypes[dt];
+			return dciDataTypes[dt.getValue()];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{

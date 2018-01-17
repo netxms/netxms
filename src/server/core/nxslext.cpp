@@ -1630,8 +1630,10 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    // Add DCI data types
    vm->addConstant("DCI::INT32", vm->createValue(DCI_DT_INT));
    vm->addConstant("DCI::UINT32", vm->createValue(DCI_DT_UINT));
+   vm->addConstant("DCI::COUNTER32", vm->createValue(DCI_DT_COUNTER32));
    vm->addConstant("DCI::INT64", vm->createValue(DCI_DT_INT64));
    vm->addConstant("DCI::UINT64", vm->createValue(DCI_DT_UINT64));
+   vm->addConstant("DCI::COUNTER64", vm->createValue(DCI_DT_COUNTER64));
    vm->addConstant("DCI::FLOAT", vm->createValue(DCI_DT_FLOAT));
    vm->addConstant("DCI::STRING", vm->createValue(DCI_DT_STRING));
    vm->addConstant("DCI::NULL", vm->createValue(DCI_DT_NULL));

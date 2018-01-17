@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.snmp.SnmpObjectId;
 
 /**
@@ -47,7 +48,7 @@ public class ColumnDefinition
 		this.name = name;
 		this.displayName = displayName;
 		flags = 0;
-		setDataType(DataCollectionObject.DT_STRING);
+		setDataType(DataType.STRING);
 		snmpObjectId = null;
 	}
 	
@@ -99,17 +100,17 @@ public class ColumnDefinition
 	/**
 	 * @return the dataType
 	 */
-	public int getDataType()
+	public DataType getDataType()
 	{
-		return flags & TCF_DATA_TYPE_MASK;
+		return DataType.getByValue(flags & TCF_DATA_TYPE_MASK);
 	}
 
 	/**
 	 * @param dataType the dataType to set
 	 */
-	public void setDataType(int dataType)
+	public void setDataType(DataType dataType)
 	{
-		flags = (flags & ~TCF_DATA_TYPE_MASK) | (dataType & TCF_DATA_TYPE_MASK);
+		flags = (flags & ~TCF_DATA_TYPE_MASK) | (dataType.getValue() & TCF_DATA_TYPE_MASK);
 	}
 
 	/**

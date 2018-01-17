@@ -143,12 +143,6 @@ public class Messages extends NLS
 	public static String DciLabelProvider_Days;
    public static String DciLabelProvider_Default;
 	public static String DciLabelProvider_Disabled;
-	public static String DciLabelProvider_DT_float;
-	public static String DciLabelProvider_DT_int32;
-	public static String DciLabelProvider_DT_int64;
-	public static String DciLabelProvider_DT_string;
-	public static String DciLabelProvider_DT_uint32;
-	public static String DciLabelProvider_DT_uint64;
 	public static String DciLabelProvider_None;
    public static String DciLabelProvider_NotSupported;
 	public static String DciLabelProvider_SourceAgent;
@@ -238,12 +232,6 @@ public class Messages extends NLS
 	public static String General_Default;
    public static String General_Description;
 	public static String General_Disabled;
-	public static String General_DT_float;
-	public static String General_DT_int32;
-	public static String General_DT_int64;
-	public static String General_DT_string;
-	public static String General_DT_uint32;
-	public static String General_DT_uint64;
 	public static String General_FixedIntervalsCustom;
    public static String General_FixedIntervalsDefault;
 	public static String General_InterpretRawValue;

@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataChart;
@@ -214,7 +215,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 				if ((instanceMap.size() >= DataChart.MAX_CHART_ITEMS) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-				index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), 0, 0, Long.toString(config.getDciId()), instance, "%s"), 0.0); //$NON-NLS-1$
+				index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), 0, DataType.INT32, Long.toString(config.getDciId()), instance, "%s"), 0.0); //$NON-NLS-1$
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}

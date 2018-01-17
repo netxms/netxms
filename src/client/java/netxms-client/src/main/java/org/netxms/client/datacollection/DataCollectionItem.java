@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataType;
 
 /**
  * Data Collection Item representation
@@ -58,7 +59,7 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int SNMP_RAWTYPE_IP_ADDR = 6;
 	public static final int SNMP_RAWTYPE_MAC_ADDR = 7;
 	
-	private int dataType;
+	private DataType dataType;
 	private int deltaCalculation;
 	private int sampleCount;
 	private int baseUnits;
@@ -78,7 +79,7 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		super(owner, msg);
 		
-		dataType = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DATA_TYPE);
+		dataType = DataType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_DCI_DATA_TYPE));
 		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
 		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
 		baseUnits = msg.getFieldAsInt32(NXCPCodes.VID_BASE_UNITS);
@@ -106,7 +107,7 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		super(owner, id);
 		
-		dataType = DT_INT;
+		dataType = DataType.INT32;
 		deltaCalculation = DELTA_NONE;
 		sampleCount = 0;
 		baseUnits = 0;
@@ -127,7 +128,7 @@ public class DataCollectionItem extends DataCollectionObject
 		super.fillMessage(msg);
 		
 		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
-		msg.setFieldInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType.getValue());
 		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
 		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
@@ -148,7 +149,7 @@ public class DataCollectionItem extends DataCollectionObject
 	/**
 	 * @return the dataType
 	 */
-	public int getDataType()
+	public DataType getDataType()
 	{
 		return dataType;
 	}
@@ -156,7 +157,7 @@ public class DataCollectionItem extends DataCollectionObject
 	/**
 	 * @param dataType the dataType to set
 	 */
-	public void setDataType(int dataType)
+	public void setDataType(DataType dataType)
 	{
 		this.dataType = dataType;
 	}

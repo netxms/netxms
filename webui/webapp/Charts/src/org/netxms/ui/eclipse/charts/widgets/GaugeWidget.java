@@ -34,6 +34,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -229,7 +230,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
     * int, boolean)
     */
    @Override
-   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
    {
       try
       {

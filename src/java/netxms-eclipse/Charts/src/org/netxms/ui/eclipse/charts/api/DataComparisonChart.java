@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -65,7 +66,7 @@ public interface DataComparisonChart extends DataChart
     * @param dataType DCI data type
     * @param updateChart if true, chart will be updated (repainted)
     */
-   public abstract void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart);
+   public abstract void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart);
 	
 	/**
 	 * Update thresholds for parameter

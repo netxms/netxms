@@ -29,6 +29,7 @@ import org.eclipse.draw2d.text.TextFlow;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.netxms.base.MacAddress;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
@@ -187,7 +188,7 @@ public class ObjectTooltip extends Figure
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s"), //$NON-NLS-1$
+			chart.addParameter(new GraphItem(0, 0, 0, DataType.INT32, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s"), //$NON-NLS-1$
 					objectCount[i]);
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}

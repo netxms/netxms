@@ -22,6 +22,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IllegalFormatException;
+import org.netxms.client.constants.DataType;
 
 /**
  * Data formatter
@@ -30,14 +31,14 @@ public class DataFormatter
 {
    private String formatString;
    private boolean useBinaryMultipliers;
-   private int dataType;
+   private DataType dataType;
    
    /**
     * @param formatString The format
     * @param dataType The data type
     * @param useBinaryMultipliers true if multipliers should be used
     */
-   public DataFormatter(String formatString, int dataType, boolean useBinaryMultipliers)
+   public DataFormatter(String formatString, DataType dataType, boolean useBinaryMultipliers)
    {
       this.formatString = formatString;
       this.dataType = dataType;
@@ -48,7 +49,7 @@ public class DataFormatter
     * @param formatString The format
     * @param dataType The data type
     */
-   public DataFormatter(String formatString, int dataType)
+   public DataFormatter(String formatString, DataType dataType)
    {
       this(formatString, dataType, false);
    }
@@ -58,7 +59,7 @@ public class DataFormatter
     */
    public DataFormatter(int precision, String formatString)
    {
-      this(formatString, DataCollectionObject.DT_STRING, false);
+      this(formatString, DataType.STRING, false);
    }
    
    /**
@@ -132,11 +133,13 @@ public class DataFormatter
    {
       Value v = new Value();
       
-      if ((dataType != DataCollectionObject.DT_INT) && 
-          (dataType != DataCollectionObject.DT_UINT) &&
-          (dataType != DataCollectionObject.DT_INT64) &&
-          (dataType != DataCollectionObject.DT_UINT64) &&
-          (dataType != DataCollectionObject.DT_FLOAT))
+      if ((dataType != DataType.INT32) && 
+          (dataType != DataType.UINT32) &&
+          (dataType != DataType.COUNTER32) &&
+          (dataType != DataType.INT64) &&
+          (dataType != DataType.UINT64) &&
+          (dataType != DataType.COUNTER64) &&
+          (dataType != DataType.FLOAT))
       {
          v.value = value;
          return v;
@@ -174,7 +177,7 @@ public class DataFormatter
             }
             else
             {
-               if (dataType == DataCollectionObject.DT_FLOAT)
+               if (dataType == DataType.FLOAT)
                   v.value = Double.parseDouble(value);
                else
                   v.value = Long.parseLong(value);
@@ -186,7 +189,7 @@ public class DataFormatter
          }
          else
          {
-            if (dataType == DataCollectionObject.DT_FLOAT)
+            if (dataType == DataType.FLOAT)
                v.value = Double.parseDouble(value);
             else
                v.value = Long.parseLong(value);

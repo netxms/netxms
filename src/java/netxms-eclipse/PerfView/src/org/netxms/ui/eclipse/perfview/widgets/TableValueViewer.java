@@ -247,7 +247,7 @@ public class TableValueViewer extends BaseTableValueViewer
          int source = currentData.getSource();
 
          id += "&" + Long.toString(objectId) + "@" + Long.toString(dciId) + "@" + Integer.toString(source) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-               + Integer.toString(column.getDataType()) + "@" + safeEncode(currentData.getTitle()) + "@" //$NON-NLS-1$ //$NON-NLS-2$
+               + Integer.toString(column.getDataType().getValue()) + "@" + safeEncode(currentData.getTitle()) + "@" //$NON-NLS-1$ //$NON-NLS-2$
                + safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + "@" + safeEncode(instance) + "@" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
                + safeEncode(column.getName());
       }

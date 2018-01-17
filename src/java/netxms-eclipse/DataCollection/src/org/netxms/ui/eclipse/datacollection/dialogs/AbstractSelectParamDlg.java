@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -219,9 +220,9 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
 	 */
 	@Override
-	public int getParameterDataType()
+	public DataType getParameterDataType()
 	{
-		return selectTables ? 0 : ((AgentParameter)selection).getDataType();
+		return selectTables ? DataType.NULL : ((AgentParameter)selection).getDataType();
 	}
 
 	/* (non-Javadoc)

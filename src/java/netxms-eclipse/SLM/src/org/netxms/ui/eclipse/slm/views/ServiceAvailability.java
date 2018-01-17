@@ -20,6 +20,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -143,8 +144,8 @@ public class ServiceAvailability extends ViewPart
 		chart.setLabelsVisible(true);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().ServiceAvailability_Up, Messages.get().ServiceAvailability_Up, "%s"), 100); //$NON-NLS-1$
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().ServiceAvailability_Down, Messages.get().ServiceAvailability_Down, "%s"), 0); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().ServiceAvailability_Up, Messages.get().ServiceAvailability_Up, "%s"), 100); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, DataType.FLOAT, Messages.get().ServiceAvailability_Down, Messages.get().ServiceAvailability_Down, "%s"), 0); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();

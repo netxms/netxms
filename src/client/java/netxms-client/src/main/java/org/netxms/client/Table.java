@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 
 /**
@@ -225,19 +225,6 @@ public class Table
 	}
 
 	/**
-	 * Get column format
-	 *
-	 * @param column Column index (zero-based)
-	 * @return Column format
-	 * @throws IndexOutOfBoundsException if column index is out of range (column &lt; 0 || column &gt;= getColumnCount())
-	 */
-	@Deprecated
-	public int getColumnFormat(final int column) throws IndexOutOfBoundsException
-	{
-		return columns.get(column).getDataType();
-	}
-
-	/**
 	 * Get column index by name
 	 *
 	 * @param name Column name
@@ -406,9 +393,9 @@ public class Table
 	 *
 	 * @return int array with all column data types
 	 */
-	public int[] getColumnDataTypes()
+	public DataType[] getColumnDataTypes()
 	{
-		int[] types = new int[columns.size()];
+	   DataType[] types = new DataType[columns.size()];
 		for(int i = 0; i < types.length; i++)
 			types[i] = columns.get(i).getDataType();
 		return types;

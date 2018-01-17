@@ -52,6 +52,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -374,7 +375,7 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
     * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, org.netxms.client.datacollection.DciDataRow, int, boolean)
     */
    @Override
-   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
    {
       updateParameter(index, value.getValueAsDouble(), updateChart);
    }

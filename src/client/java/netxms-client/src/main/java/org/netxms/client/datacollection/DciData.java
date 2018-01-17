@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import org.netxms.client.constants.DataType;
 
 /**
  * Class to hold series of collected DCI data
@@ -27,7 +28,7 @@ public class DciData
 {
 	private long nodeId;
 	private long dciId;
-	private int dataType;
+	private DataType dataType;
 	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
 		
 	/**
@@ -38,6 +39,7 @@ public class DciData
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
+		this.dataType = DataType.INT32;
 	}
 
 	/**
@@ -87,7 +89,7 @@ public class DciData
 	/**
 	 * @return the dataType
 	 */
-	public int getDataType()
+	public DataType getDataType()
 	{
 		return dataType;
 	}
@@ -95,7 +97,7 @@ public class DciData
 	/**
 	 * @param dataType the dataType to set
 	 */
-	public void setDataType(int dataType)
+	public void setDataType(DataType dataType)
 	{
 		this.dataType = dataType;
 	}

@@ -19,6 +19,7 @@
 package org.netxms.client.datacollection;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataType;
 
 /**
  * DCI value for simple (single-valued) DCI
@@ -48,7 +49,7 @@ public class SimpleDciValue extends DciValue
       super();
       this.id = msg.getFieldAsInt64(base + 1);
       this.value = msg.getFieldAsString(base + 2);
-      this.dataType = msg.getFieldAsInt32(base + 3);
+      this.dataType = DataType.getByValue(msg.getFieldAsInt32(base + 3));
       this.status = msg.getFieldAsInt32(base + 4);
       this.nodeId = msg.getFieldAsInt64(base + 5);
       this.source = msg.getFieldAsInt32(base + 6);

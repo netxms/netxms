@@ -3976,7 +3976,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
  */
 bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType, bool withRawValues)
 {
-   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16 };
+   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
 	// Find DCI object
 	DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), 0);
@@ -4057,12 +4057,14 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
                value = (row != -1) ? t->getAsInt(row, column) : (INT32)0;
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                value = (row != -1) ? t->getAsUInt(row, column) : (UINT32)0;
                break;
             case DCI_DT_INT64:
                value = (row != -1) ? t->getAsInt64(row, column) : (INT64)0;
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                value = (row != -1) ? t->getAsUInt64(row, column) : (UINT64)0;
                break;
             case DCI_DT_FLOAT:
@@ -4107,10 +4109,12 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
       {
          case DCI_DT_INT:
          case DCI_DT_UINT:
+         case DCI_DT_COUNTER32:
             pCurr->value.int32 = htonl(value.getUInt32());
             break;
          case DCI_DT_INT64:
          case DCI_DT_UINT64:
+         case DCI_DT_COUNTER64:
             pCurr->value.ext.v64.int64 = htonq(value.getUInt64());
             break;
          case DCI_DT_FLOAT:
@@ -4225,10 +4229,12 @@ read_from_db:
                {
                   case DCI_DT_INT:
                   case DCI_DT_UINT:
+                  case DCI_DT_COUNTER32:
                      pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 1));
                      break;
                   case DCI_DT_INT64:
                   case DCI_DT_UINT64:
+                  case DCI_DT_COUNTER64:
                      pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 1));
                      break;
                   case DCI_DT_FLOAT:
@@ -4266,10 +4272,12 @@ read_from_db:
                   {
                      case DCI_DT_INT:
                      case DCI_DT_UINT:
+                     case DCI_DT_COUNTER32:
                         pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 2));
                         break;
                      case DCI_DT_INT64:
                      case DCI_DT_UINT64:
+                     case DCI_DT_COUNTER64:
                         pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 2));
                         break;
                      case DCI_DT_FLOAT:
@@ -4308,12 +4316,14 @@ read_from_db:
                            pCurr->value.int32 = htonl((UINT32)table->getAsInt(row, col));
                            break;
 		                  case DCI_DT_UINT:
+		                  case DCI_DT_COUNTER32:
 		                     pCurr->value.int32 = htonl(table->getAsUInt(row, col));
 		                     break;
 		                  case DCI_DT_INT64:
                            pCurr->value.ext.v64.int64 = htonq((UINT64)table->getAsInt64(row, col));
                            break;
 		                  case DCI_DT_UINT64:
+		                  case DCI_DT_COUNTER64:
 		                     pCurr->value.ext.v64.int64 = htonq(table->getAsUInt64(row, col));
 		                     break;
 		                  case DCI_DT_FLOAT:

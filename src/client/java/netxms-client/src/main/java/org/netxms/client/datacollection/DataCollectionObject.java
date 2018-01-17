@@ -54,15 +54,6 @@ public abstract class DataCollectionObject
 	public static final int DISABLED = 1;
 	public static final int NOT_SUPPORTED = 2;
 	
-	// Data types
-	public static final int DT_INT = 0;
-	public static final int DT_UINT = 1;
-	public static final int DT_INT64 = 2;
-	public static final int DT_UINT64 = 3;
-	public static final int DT_STRING = 4;
-	public static final int DT_FLOAT = 5;
-	public static final int DT_NULL = 6;
-	
 	// common data collection flags
 	public static final int DCF_ADVANCED_SCHEDULE     = 0x0001;
 	public static final int DCF_AGGREGATE_ON_CLUSTER  = 0x0080;

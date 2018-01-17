@@ -177,13 +177,15 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &c
          result = curr.getInt32() - prev.getInt32();
          break;
       case DCI_DT_UINT:
-         result = diff_uint32(curr, prev);
+      case DCI_DT_COUNTER32:
+         result = diff_uint32(curr.getUInt32(), prev.getUInt32());
          break;
       case DCI_DT_INT64:
          result = curr.getInt64() - prev.getInt64();
          break;
       case DCI_DT_UINT64:
-         result = diff_uint64(curr, prev);
+      case DCI_DT_COUNTER64:
+         result = diff_uint64(curr.getUInt64(), prev.getUInt64());
          break;
       case DCI_DT_FLOAT:
          result = curr.getDouble() - prev.getDouble();
@@ -227,12 +229,14 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues,
          CALC_AVG_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_AVG_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_AVG_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_AVG_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
@@ -273,12 +277,14 @@ void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, I
          CALC_TOTAL_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_TOTAL_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_TOTAL_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_TOTAL_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
@@ -337,11 +343,13 @@ void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, Item
          CALC_MD_VALUE(double);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
 #undef ABS
 #define ABS(x) (x)
          CALC_MD_VALUE(UINT32);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_MD_VALUE(UINT64);
          break;
       case DCI_DT_STRING:
@@ -380,12 +388,14 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, Ite
          CALC_MIN_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_MIN_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_MIN_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_MIN_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
@@ -428,12 +438,14 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
          CALC_MAX_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_MAX_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_MAX_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_MAX_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:

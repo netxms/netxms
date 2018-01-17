@@ -72,13 +72,13 @@ import org.netxms.client.agent.config.ConfigContent;
 import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.NodePollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -4111,7 +4111,7 @@ public class NXCSession
       {
          inputStream.skipBytes(4); // DCI ID
          rows = inputStream.readInt();
-         final int dataType = inputStream.readInt();
+         final DataType dataType = DataType.getByValue(inputStream.readInt());
          data.setDataType(dataType);
          inputStream.skipBytes(4); // padding
 
@@ -4121,22 +4121,24 @@ public class NXCSession
             Object value;
             switch(dataType)
             {
-               case DataCollectionItem.DT_INT:
+               case INT32:
                   value = new Long(inputStream.readInt());
                   break;
-               case DataCollectionItem.DT_UINT:
+               case UINT32:
+               case COUNTER32:
                   value = new Long(inputStream.readUnsignedInt());
                   break;
-               case DataCollectionItem.DT_INT64:
-               case DataCollectionItem.DT_UINT64:
+               case INT64:
+               case UINT64:
+               case COUNTER64:
                   inputStream.skipBytes(4); // padding
                   value = new Long(inputStream.readLong());
                   break;
-               case DataCollectionItem.DT_FLOAT:
+               case FLOAT:
                   inputStream.skipBytes(4); // padding
                   value = new Double(inputStream.readDouble());
                   break;
-               case DataCollectionItem.DT_STRING:
+               case STRING:
                   StringBuilder sb = new StringBuilder(256);
                   int count;
                   for(count = MAX_DCI_STRING_VALUE_LENGTH; count > 0; count--)

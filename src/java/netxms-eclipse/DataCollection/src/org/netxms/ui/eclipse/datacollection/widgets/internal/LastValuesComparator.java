@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -75,17 +76,17 @@ public class LastValuesComparator extends ViewerComparator
 	 */
 	private int compareValue(DciValue dci1, DciValue dci2)
 	{
-	   int dt1, dt2;
+	   DataType dt1, dt2;
 	   String v1, v2;
 
 	   if (showErrors && (dci1.getErrorCount() > 0))
 	   {
-	      dt1 = DataCollectionObject.DT_STRING;
+	      dt1 = DataType.STRING;
 	      v1 = Messages.get().LastValuesLabelProvider_Error;
 	   }
 	   else if (dci1.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
 	   {
-         dt1 = DataCollectionObject.DT_STRING;
+         dt1 = DataType.STRING;
          v1 = Messages.get().LastValuesLabelProvider_Table;
 	   }
 	   else
@@ -96,12 +97,12 @@ public class LastValuesComparator extends ViewerComparator
 	   
       if (showErrors && (dci2.getErrorCount() > 0))
       {
-         dt2 = DataCollectionObject.DT_STRING;
+         dt2 = DataType.STRING;
          v2 = Messages.get().LastValuesLabelProvider_Error;
       }
       else if (dci2.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
       {
-         dt2 = DataCollectionObject.DT_STRING;
+         dt2 = DataType.STRING;
          v2 = Messages.get().LastValuesLabelProvider_Table;
       }
       else
@@ -110,21 +111,20 @@ public class LastValuesComparator extends ViewerComparator
          v2 = dci2.getValue();
       }
       
-	   int dataType = Math.max(dt1, dt2);
+	   DataType dataType = DataType.getTypeForCompare(dt1, dt2);
 	   try
 	   {
    	   switch(dataType)
    	   {
-   	      case DataCollectionObject.DT_INT:
+   	      case INT32:
    	         return Integer.signum(Integer.parseInt(v1) - Integer.parseInt(v2));
-            case DataCollectionObject.DT_UINT:
-            case DataCollectionObject.DT_INT64:
-            case DataCollectionObject.DT_UINT64:
+            case UINT32:
+            case INT64:
+            case UINT64:
+            case COUNTER32:
+            case COUNTER64:
                return Long.signum(Long.parseLong(v1) - Long.parseLong(v2));
-            case DataCollectionObject.DT_FLOAT:
-               // Maybe combination of String/Float because DT_FLOAT > DT_STRING
-               if ((dt1 == DataCollectionObject.DT_STRING) || (dt2 == DataCollectionObject.DT_STRING))
-                  return v1.compareToIgnoreCase(v2);
+            case FLOAT:
                return (int)Math.signum(Double.parseDouble(v1) - Double.parseDouble(v2));
    	      default:
    	         return v1.compareToIgnoreCase(v2);

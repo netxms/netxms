@@ -911,7 +911,7 @@ TableColumnDefinition::TableColumnDefinition(const NXCPMessage *msg, UINT32 base
    m_name = msg->getFieldAsString(baseId);
    if (m_name == NULL)
       m_name = _tcsdup(_T("(null)"));
-   m_dataType = msg->getFieldAsUInt32(baseId + 1);
+   m_dataType = msg->getFieldAsInt32(baseId + 1);
    m_displayName = msg->getFieldAsString(baseId + 2);
    if (m_displayName == NULL)
       m_displayName = _tcsdup(m_name);

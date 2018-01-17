@@ -1185,6 +1185,8 @@ inline void nx_free(void *p)
 #define DCI_DT_STRING      4
 #define DCI_DT_FLOAT       5
 #define DCI_DT_NULL        6
+#define DCI_DT_COUNTER32   7
+#define DCI_DT_COUNTER64   8
 #define DCI_DT_DEPRECATED  255	/* used internally by agent */
 
 /**

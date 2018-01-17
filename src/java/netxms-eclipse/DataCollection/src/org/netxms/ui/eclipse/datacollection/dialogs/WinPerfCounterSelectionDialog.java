@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.WinPerfCounter;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -247,9 +247,9 @@ public class WinPerfCounterSelectionDialog extends Dialog implements IParameterS
 	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
 	 */
 	@Override
-	public int getParameterDataType()
+	public DataType getParameterDataType()
 	{
-		return DataCollectionItem.DT_INT64;
+		return DataType.INT64;
 	}
 
 	/* (non-Javadoc)

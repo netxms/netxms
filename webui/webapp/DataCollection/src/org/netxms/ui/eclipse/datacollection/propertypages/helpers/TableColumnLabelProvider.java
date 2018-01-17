@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Messages;
 
 /**
@@ -32,7 +33,6 @@ import org.netxms.ui.eclipse.datacollection.Messages;
  */
 public class TableColumnLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private HashMap<Integer, String> dtTexts = new HashMap<Integer, String>();
 	private HashMap<Integer, String> afTexts = new HashMap<Integer, String>();
 	
 	/**
@@ -40,13 +40,6 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 	 */
 	public TableColumnLabelProvider()
 	{
-		dtTexts.put(DataCollectionItem.DT_INT, Messages.get().TableColumnLabelProvider_in32);
-		dtTexts.put(DataCollectionItem.DT_UINT, Messages.get().TableColumnLabelProvider_uint32);
-		dtTexts.put(DataCollectionItem.DT_INT64, Messages.get().TableColumnLabelProvider_int64);
-		dtTexts.put(DataCollectionItem.DT_UINT64, Messages.get().TableColumnLabelProvider_uint64);
-		dtTexts.put(DataCollectionItem.DT_FLOAT, Messages.get().TableColumnLabelProvider_float);
-		dtTexts.put(DataCollectionItem.DT_STRING, Messages.get().TableColumnLabelProvider_string);
-		
 		afTexts.put(DataCollectionItem.DCF_FUNCTION_AVG, Messages.get().TableColumnLabelProvider_AVG);
 		afTexts.put(DataCollectionItem.DCF_FUNCTION_MAX, Messages.get().TableColumnLabelProvider_MAX);
 		afTexts.put(DataCollectionItem.DCF_FUNCTION_MIN, Messages.get().TableColumnLabelProvider_MIN);
@@ -75,7 +68,7 @@ public class TableColumnLabelProvider extends LabelProvider implements ITableLab
 			case 1:
 				return ((ColumnDefinition)element).getDisplayName();
 			case 2:
-				return dtTexts.get(((ColumnDefinition)element).getDataType());
+				return DataCollectionDisplayInfo.getDataTypeName(((ColumnDefinition)element).getDataType());
 			case 3:
 				return ((ColumnDefinition)element).isInstanceColumn() ? Messages.get().TableColumnLabelProvider_Yes : Messages.get().TableColumnLabelProvider_No;
 			case 4:

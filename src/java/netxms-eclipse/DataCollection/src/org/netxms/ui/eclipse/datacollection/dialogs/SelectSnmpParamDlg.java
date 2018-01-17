@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.ui.eclipse.snmp.dialogs.MibSelectionDialog;
 
 /**
  * SNMP OID selection dialog
- *
  */
 public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameterSelectionDialog
 {
@@ -44,25 +43,26 @@ public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameter
 	 * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
 	 */
 	@Override
-	public int getParameterDataType()
+	public DataType getParameterDataType()
 	{
 		switch(getSelectedObject().getType())
 		{
 	      case MibObject.MIB_TYPE_INTEGER:
 	      case MibObject.MIB_TYPE_INTEGER32:
-				return DataCollectionItem.DT_INT;
+				return DataType.INT32;
 			case MibObject.MIB_TYPE_COUNTER:
 			case MibObject.MIB_TYPE_COUNTER32:
+            return DataType.COUNTER32;
 			case MibObject.MIB_TYPE_GAUGE:
 			case MibObject.MIB_TYPE_GAUGE32:
 	      case MibObject.MIB_TYPE_TIMETICKS:
 	      case MibObject.MIB_TYPE_UINTEGER:
 	      case MibObject.MIB_TYPE_UNSIGNED32:
-				return DataCollectionItem.DT_UINT;
+				return DataType.UINT32;
 			case MibObject.MIB_TYPE_COUNTER64:
-				return DataCollectionItem.DT_UINT64;
+            return DataType.COUNTER64;
 		}
-		return DataCollectionItem.DT_STRING;
+      return DataType.STRING;
 	}
 
 	/* (non-Javadoc)

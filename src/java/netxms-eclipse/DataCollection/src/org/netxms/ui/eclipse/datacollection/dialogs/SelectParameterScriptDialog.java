@@ -19,7 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.ui.eclipse.nxsl.dialogs.SelectScriptDialog;
 
 /**
@@ -57,9 +57,9 @@ public class SelectParameterScriptDialog extends SelectScriptDialog implements I
     * @see org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog#getParameterDataType()
     */
    @Override
-   public int getParameterDataType()
+   public DataType getParameterDataType()
    {
-      return DataCollectionItem.DT_STRING;
+      return DataType.STRING;
    }
 
    /* (non-Javadoc)

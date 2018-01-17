@@ -24,13 +24,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
@@ -39,11 +39,12 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateInterfaceDciDialog;
@@ -170,17 +171,17 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		{
 			dci.setOrigin(DataCollectionItem.AGENT);
 			if (node.isAgentIfXCountersSupported())
-				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataCollectionItem.DT_UINT64 : DataCollectionItem.DT_UINT);
+				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataType.COUNTER64 : DataType.COUNTER32);
 			else
-				dci.setDataType(DataCollectionItem.DT_UINT);
+				dci.setDataType(DataType.COUNTER32);
 		}
 		else
 		{
 			dci.setOrigin(DataCollectionItem.SNMP);
 			if (node.isIfXTableSupported())
-				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataCollectionItem.DT_UINT64 : DataCollectionItem.DT_UINT);
+				dci.setDataType(((dciType != IFDCI_IN_ERRORS) && (dciType != IFDCI_OUT_ERRORS)) ? DataType.COUNTER64 : DataType.COUNTER32);
 			else
-				dci.setDataType(DataCollectionItem.DT_UINT);
+				dci.setDataType(DataType.COUNTER32);
 		}
 		dci.setStatus(DataCollectionItem.ACTIVE);
 		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$

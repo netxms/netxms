@@ -207,7 +207,7 @@ void GetPredictionEngines(NXCPMessage *msg)
  */
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget)
 {
-   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16 };
+   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
    // Find DCI object
    DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
@@ -263,12 +263,14 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
             pCurr->value.int32 = htonl((UINT32)((INT32)value));
             break;
          case DCI_DT_UINT:
+         case DCI_DT_COUNTER32:
             pCurr->value.int32 = htonl((UINT32)value);
             break;
          case DCI_DT_INT64:
             pCurr->value.ext.v64.int64 = htonq((UINT64)((INT64)value));
             break;
          case DCI_DT_UINT64:
+         case DCI_DT_COUNTER64:
             pCurr->value.ext.v64.int64 = htonq((UINT64)value);
             break;
          case DCI_DT_FLOAT:

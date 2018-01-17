@@ -98,12 +98,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) < (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) < (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) < (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) < (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:
@@ -118,12 +120,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) <= (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) <= (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) <= (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) <= (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:
@@ -138,12 +142,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) == (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) == (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) == (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) == (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:
@@ -161,12 +167,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) >= (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) >= (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) >= (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) >= (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:
@@ -181,12 +189,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) > (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) > (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) > (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) > (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:
@@ -201,12 +211,14 @@ bool DCTableCondition::check(Table *value, int row)
                result = (value->getAsInt(row, col) != (INT32)m_value);
                break;
             case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
                result = (value->getAsUInt(row, col) != (UINT32)m_value);
                break;
             case DCI_DT_INT64:
                result = (value->getAsInt64(row, col) != (INT64)m_value);
                break;
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                result = (value->getAsUInt64(row, col) != (UINT64)m_value);
                break;
             case DCI_DT_FLOAT:

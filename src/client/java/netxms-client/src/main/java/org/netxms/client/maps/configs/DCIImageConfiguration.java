@@ -24,8 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.netxms.base.Glob;
-import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.xml.XMLTools;
 import org.simpleframework.xml.Element;
@@ -221,22 +220,22 @@ public class DCIImageConfiguration
     * @param dataType type to witch both values will be converted
     * @return returns the result of T.compareTo(T) function 
     */
-   private int compareValues(String value1, String value2, int dataType)
+   private int compareValues(String value1, String value2, DataType dataType)
    {
       int result = 0;
       try
       {
          switch(dataType)
          {
-            case DataCollectionObject.DT_INT:
-            case DataCollectionObject.DT_UINT:
+            case INT32:
+            case UINT32:
                result = (new Integer(value1)).compareTo(new Integer(value2));
                break;
-            case DataCollectionObject.DT_FLOAT:
+            case FLOAT:
                result = (new Float(value1).compareTo(new Float(value2)));
                break;
-            case DataCollectionItem.DT_INT64:
-            case DataCollectionItem.DT_UINT64:
+            case INT64:
+            case UINT64:
                result = (new Long(value1).compareTo(new Long(value2)));
                break;
             default:

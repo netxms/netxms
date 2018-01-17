@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
@@ -40,7 +41,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
    
    private boolean useMultipliers = false;
-   private int[] columnDataTypes = null;
+   private DataType[] columnDataTypes = null;
 
    /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -106,7 +107,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    /**
     * @param columnDataTypes
     */
-   public void setColumnDataTypes(int[] columnDataTypes)
+   public void setColumnDataTypes(DataType[] columnDataTypes)
    {
       this.columnDataTypes = columnDataTypes;
    }

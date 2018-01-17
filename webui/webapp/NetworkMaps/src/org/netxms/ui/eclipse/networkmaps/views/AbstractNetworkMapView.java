@@ -84,7 +84,9 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
@@ -260,7 +262,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		try
 		{
 			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout"); //$NON-NLS-1$
-			labelProvider.setObjectFigureType(MapObjectDisplayMode.getByValue(settings.getInt(viewId + ".objectFigureType"))); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -1416,14 +1417,14 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	}
 	
 	/**
-    * Handler for opening network map dci on double click
-    */
-   private void openLinkDci()
-   {
-      final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();     
-      if (!link.hasDciData())
-         return;
-      new ConsoleJob("Open link dci job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {         
+	 * Handler for opening network map dci on double click
+	 */
+	private void openLinkDci()
+	{
+	   final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();	   
+	   if (!link.hasDciData())
+	      return;
+	   new ConsoleJob("Open link dci job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {         
          /* (non-Javadoc)
           * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
           */
@@ -1435,17 +1436,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             for(DciValue v : values)
             {
                sb.append("&");
+               sb.append(Integer.toString(v instanceof SimpleDciValue ? ChartDciConfig.ITEM : ChartDciConfig.TABLE));
+               sb.append("@");
                sb.append(Long.toString(v.getNodeId()));
                sb.append("@");
                sb.append(Long.toString(v.getId()));
                sb.append("@");
-               sb.append(Integer.toString(v.getSource()));
-               sb.append("@");
-               sb.append(Integer.toString(v.getDataType()));
+               sb.append(URLEncoder.encode(v.getDescription(), "UTF-8"));
                sb.append("@");
                sb.append(URLEncoder.encode(v.getName(), "UTF-8"));
-               sb.append("@");
-               sb.append(URLEncoder.encode(v.getDescription(), "UTF-8"));
             }
             
             runInUIThread(new Runnable() {               

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,21 +22,20 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.TableRow;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.constants.DataType;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for table items
- *
  */
 public class TableItemComparator extends ViewerComparator
 {
-	private int[] formats;
+	private DataType[] formats;
 	
 	/**
 	 * 
 	 */
-	public TableItemComparator(int[] formats)
+	public TableItemComparator(DataType[] formats)
 	{
 		this.formats = formats;
 	}
@@ -48,7 +47,7 @@ public class TableItemComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
-		final int format = (column < formats.length) ? formats[column] : DataCollectionItem.DT_STRING;
+		final DataType format = (column < formats.length) ? formats[column] : DataType.STRING;
 		
 		final String value1 = ((TableRow)e1).get(column).getValue();
 		final String value2 = ((TableRow)e2).get(column).getValue();
@@ -56,10 +55,10 @@ public class TableItemComparator extends ViewerComparator
 		int result;
 		switch(format)
 		{
-			case DataCollectionItem.DT_STRING:
+			case STRING:
 				result = value1.compareToIgnoreCase(value2);
 				break;
-			case DataCollectionItem.DT_INT:
+			case INT32:
 				try
 				{
 					result = Integer.parseInt(value1) - Integer.parseInt(value2);
@@ -69,9 +68,11 @@ public class TableItemComparator extends ViewerComparator
 					result = 0;
 				}
 				break;
-			case DataCollectionItem.DT_UINT:
-			case DataCollectionItem.DT_INT64:
-			case DataCollectionItem.DT_UINT64:
+			case UINT32:
+			case INT64:
+			case UINT64:
+			case COUNTER32:
+			case COUNTER64:
 				try
 				{
 					result = Long.signum(Long.parseLong(value1) - Long.parseLong(value2));
@@ -81,7 +82,7 @@ public class TableItemComparator extends ViewerComparator
 					result = 0;
 				}
 				break;
-			case DataCollectionItem.DT_FLOAT:
+			case FLOAT:
 				try
 				{
 					result = (int)Math.signum(Double.parseDouble(value1) - Double.parseDouble(value2));

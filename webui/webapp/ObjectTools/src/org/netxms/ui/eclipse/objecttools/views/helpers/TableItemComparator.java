@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.TableRow;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.objecttools.ObjectToolTableColumn;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -33,12 +34,12 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TableItemComparator extends ViewerComparator
 {
-	private int[] dataTypes;
+	private DataType[] dataTypes;
 	
 	/**
 	 * 
 	 */
-	public TableItemComparator(int[] dataTypes)
+	public TableItemComparator(DataType[] dataTypes)
 	{
 		this.dataTypes = dataTypes;
 	}
@@ -50,7 +51,7 @@ public class TableItemComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
-		final int format = (column < dataTypes.length) ? dataTypes[column] : ObjectToolTableColumn.FORMAT_STRING;
+		final int format = (column < dataTypes.length) ? dataTypes[column].getValue() : ObjectToolTableColumn.FORMAT_STRING;
 		
 		final String value1 = ((TableRow)e1).get(column).getValue();
 		final String value2 = ((TableRow)e2).get(column).getValue();

@@ -38,6 +38,8 @@ public class Messages extends NLS
 	public static String WidgetHelper_Action_SelectAll;
 	public static String WidgetHelper_InputValidationError;
 	public static String Activator_TrayTooltip;
+   public static String DataCollectionDisplayInfo_Counter32;
+   public static String DataCollectionDisplayInfo_Counter64;
 	public static String DataCollectionDisplayInfo_Float;
 	public static String DataCollectionDisplayInfo_Integer;
 	public static String DataCollectionDisplayInfo_Integer64;

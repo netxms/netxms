@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.net.URLEncoder;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
@@ -46,7 +47,7 @@ public class ShowLineChart implements DciOpenHandler
 	public boolean open(DciValue dci)
 	{
 		if ((dci.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM) ||
-		    (dci.getDataType() == DataCollectionObject.DT_STRING))
+		    (dci.getDataType() == DataType.STRING))
 			return false;
 
       final StringBuilder sb = new StringBuilder();
@@ -73,7 +74,9 @@ public class ShowLineChart implements DciOpenHandler
       }
       catch(UnsupportedEncodingException e1)
       {
-         sb.append("<name unavailable>");
+         sb.append("[");
+         sb.append(dci.getId());
+         sb.append("]");
       }
 		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();

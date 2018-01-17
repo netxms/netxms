@@ -280,6 +280,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                break;
             case DCI_DT_UINT:
             case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
                dataType = DCI_DT_INT64;  // diff() always signed
                break;
          }
@@ -360,12 +361,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue < (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue < (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue < (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue < (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -380,12 +383,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue <= (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue <= (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue <= (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue <= (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -400,12 +405,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue == (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue == (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue == (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue == (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -423,12 +430,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue >= (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue >= (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue >= (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue >= (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -443,12 +452,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue > (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue > (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue > (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue > (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -463,12 +474,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   bMatch = ((INT32)fvalue != (INT32)m_value);
                   break;
                case DCI_DT_UINT:
+               case DCI_DT_COUNTER32:
                   bMatch = ((UINT32)fvalue != (UINT32)m_value);
                   break;
                case DCI_DT_INT64:
                   bMatch = ((INT64)fvalue != (INT64)m_value);
                   break;
                case DCI_DT_UINT64:
+               case DCI_DT_COUNTER64:
                   bMatch = ((UINT64)fvalue != (UINT64)m_value);
                   break;
                case DCI_DT_FLOAT:
@@ -620,12 +633,14 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
          CALC_AVG_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_AVG_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_AVG_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_AVG_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
@@ -664,12 +679,14 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
          CALC_SUM_VALUE(INT32);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
          CALC_SUM_VALUE(UINT32);
          break;
       case DCI_DT_INT64:
          CALC_SUM_VALUE(INT64);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_SUM_VALUE(UINT64);
          break;
       case DCI_DT_FLOAT:
@@ -723,11 +740,13 @@ void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemV
          CALC_MD_VALUE(double);
          break;
       case DCI_DT_UINT:
+      case DCI_DT_COUNTER32:
 #undef ABS
 #define ABS(x) (x)
          CALC_MD_VALUE(UINT32);
          break;
       case DCI_DT_UINT64:
+      case DCI_DT_COUNTER64:
          CALC_MD_VALUE(UINT64);
          break;
       case DCI_DT_STRING:
@@ -768,12 +787,14 @@ BOOL Threshold::compare(Threshold *pThr)
             bMatch = ((INT32)pThr->m_value == (INT32)m_value);
             break;
          case DCI_DT_UINT:
+         case DCI_DT_COUNTER32:
             bMatch = ((UINT32)pThr->m_value == (UINT32)m_value);
             break;
          case DCI_DT_INT64:
             bMatch = ((INT64)pThr->m_value == (INT64)m_value);
             break;
          case DCI_DT_UINT64:
+         case DCI_DT_COUNTER64:
             bMatch = ((UINT64)pThr->m_value == (UINT64)m_value);
             break;
          case DCI_DT_FLOAT:

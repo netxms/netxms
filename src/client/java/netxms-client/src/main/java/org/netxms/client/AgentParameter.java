@@ -19,6 +19,7 @@
 package org.netxms.client;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataType;
 
 /**
  * Represents NetXMS agent's parameter
@@ -27,7 +28,7 @@ public class AgentParameter
 {
 	private String name;
 	private String description;
-	private int dataType;
+	private DataType dataType;
 	
 	/**
 	 * Create agent parameter from NXCP message
@@ -39,7 +40,7 @@ public class AgentParameter
 	{
 		name = msg.getFieldAsString(baseId);
 		description = msg.getFieldAsString(baseId + 1);
-		dataType = msg.getFieldAsInt32(baseId + 2);
+		dataType = DataType.getByValue(msg.getFieldAsInt32(baseId + 2));
 	}
 	
 	/**
@@ -49,7 +50,7 @@ public class AgentParameter
 	 * @param description parameter description
 	 * @param dataType parameter data type
 	 */
-	public AgentParameter(String name, String description, int dataType)
+	public AgentParameter(String name, String description, DataType dataType)
 	{
 		this.name = name;
 		this.description = description;
@@ -75,7 +76,7 @@ public class AgentParameter
 	/**
 	 * @return the dataType
 	 */
-	public int getDataType()
+	public DataType getDataType()
 	{
 		return dataType;
 	}

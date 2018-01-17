@@ -56,6 +56,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
@@ -659,7 +660,7 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, org.netxms.client.datacollection.DciDataRow, int, boolean)
 	 */
 	@Override
-   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
    {
       updateParameter(index, value.getValueAsDouble(), updateChart);
    }

@@ -18,6 +18,8 @@
  */
 package org.netxms.client.datacollection;
 
+import org.netxms.client.constants.DataType;
+
 /**
  * This class represents single graph item (DCI)
  */
@@ -27,7 +29,7 @@ public class GraphItem
 	private long dciId;
 	private int type;
 	private int source;
-	private int dataType;
+	private DataType dataType;
 	private String name;
 	private String description;
    private String displayFormat;
@@ -43,7 +45,7 @@ public class GraphItem
 		dciId = 0;
 		type = DataCollectionObject.DCO_TYPE_ITEM;
 		source = DataCollectionObject.AGENT;
-		dataType = DataCollectionItem.DT_STRING;
+		dataType = DataType.STRING;
 		name = "<noname>";
 		description = "<noname>";
       displayFormat = "%s";
@@ -62,7 +64,7 @@ public class GraphItem
 	 * @param description The description
 	 * @param displayFormat The display format
 	 */
-	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat)
+	public GraphItem(long nodeId, long dciId, int source, DataType dataType, String name, String description, String displayFormat)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -89,7 +91,7 @@ public class GraphItem
     * @param instance The instance
     * @param dataColumn The data column
 	 */
-	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat, String instance, String dataColumn)
+	public GraphItem(long nodeId, long dciId, int source, DataType dataType, String name, String description, String displayFormat, String instance, String dataColumn)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -154,7 +156,7 @@ public class GraphItem
 	/**
 	 * @return the dataType
 	 */
-	public int getDataType()
+	public DataType getDataType()
 	{
 		return dataType;
 	}
@@ -162,7 +164,7 @@ public class GraphItem
 	/**
 	 * @param dataType the dataType to set
 	 */
-	public void setDataType(int dataType)
+	public void setDataType(DataType dataType)
 	{
 		this.dataType = dataType;
 	}

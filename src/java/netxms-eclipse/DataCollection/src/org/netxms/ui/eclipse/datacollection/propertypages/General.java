@@ -39,11 +39,13 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
@@ -210,13 +212,15 @@ public class General extends DCIPropertyPageDialog
       fd.top = new FormAttachment(parameter, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       dataType = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().General_DataType, fd);
-      dataType.add(Messages.get().General_DT_int32);
-      dataType.add(Messages.get().General_DT_uint32);
-      dataType.add(Messages.get().General_DT_int64);
-      dataType.add(Messages.get().General_DT_uint64);
-      dataType.add(Messages.get().General_DT_string);
-      dataType.add(Messages.get().General_DT_float);
-      dataType.select(dci.getDataType());
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER32));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.INT64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.UINT64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.COUNTER64));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
+      dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
+      dataType.select(getDataTypePosition(dci.getDataType()));
 
       checkInterpretRawSnmpValue = new Button(groupData, SWT.CHECK);
       checkInterpretRawSnmpValue.setText(Messages.get().General_InterpretRawValue);
@@ -535,7 +539,7 @@ public class General extends DCIPropertyPageDialog
 			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
 			description.setText(pd.getParameterDescription());
 			parameter.setText(pd.getParameterName());
-			dataType.select(pd.getParameterDataType());
+			dataType.select(getDataTypePosition(pd.getParameterDataType()));
 			editor.fireOnSelectItemListeners(origin.getSelectionIndex(), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
 		}
 	}
@@ -550,7 +554,7 @@ public class General extends DCIPropertyPageDialog
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
-		dci.setDataType(dataType.getSelectionIndex());
+		dci.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
 		dci.setSampleCount(sampleCount.getSelection());
 		dci.setSourceNode(sourceNode.getObjectId());
 		dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
@@ -621,5 +625,55 @@ public class General extends DCIPropertyPageDialog
 		checkInterpretRawSnmpValue.setSelection(false);
 		checkUseCustomSnmpPort.setSelection(false);
 		customSnmpPort.setSelection(161);
+	}
+
+	/**
+	 * Get selector position for given data type
+	 * 
+	 * @param type data type
+	 * @return corresponding selector's position
+	 */
+	private static int getDataTypePosition(DataType type)
+	{
+	   switch(type)
+	   {
+	      case COUNTER32:
+	         return 2;
+	      case COUNTER64:
+	         return 5;
+	      case FLOAT:
+	         return 6;
+	      case INT32:
+	         return 0;
+	      case INT64:
+	         return 3;
+	      case STRING:
+	         return 7;
+	      case UINT32:
+	         return 1;
+	      case UINT64:
+	         return 4;
+         default:
+            return 0;  // fallback to int32
+	   }
+	}
+	
+   /**
+    * Data type positions in selector
+    */
+   private static final DataType[] TYPES = { 
+      DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
+      DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
+      };
+   
+	/**
+	 * Get data type by selector position
+	 *  
+	 * @param position selector position
+	 * @return corresponding data type
+	 */
+	private static DataType getDataTypeByPosition(int position)
+	{
+      return TYPES[position];
 	}
 }
