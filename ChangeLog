@@ -9,6 +9,7 @@
 	NX-1259 (Added NXSL function - FindAlarmByKeyRegex)
 	NX-1363 (Automatic deployment of agent policies)
 	NX-1389 (If library script saved with compilation errors it disappears from script list)
+	NX-1393 (PostgreSQL deadlock on updating raw_dci_data table)
 
 
 *
