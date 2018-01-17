@@ -8,7 +8,7 @@
 
 	<parent>
 		<groupId>com.netxms.nxmc</groupId>
-		<artifactId>webapp</artifactId>
+		<artifactId>netxms-eclipse</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
@@ -24,33 +24,83 @@
 	<build>
 		<plugins>
 
-			<!-- Configure the p2 director -->
-			<plugin>
+            
+			<!--<plugin>
 				<groupId>${tycho.groupid}</groupId>
-				<artifactId>tycho-p2-director-plugin</artifactId>
+				<artifactId>tycho-packaging-plugin</artifactId>
 				<version>${tycho.version}</version>
-				<executions>
-					<execution>
-						<id>materialize-products</id>
-						<goals>
-							<goal>materialize-products</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>archive-products</id>
-						<goals>
-							<goal>archive-products</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+				<configuration>
+					<deployableFeature>true</deployableFeature>
+				</configuration>
+            </plugin>-->
+            
+            <!-- Configure the p2 director -->
+			<plugin>
+                <groupId>${tycho.groupid}</groupId>
+                <artifactId>tycho-p2-director-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <executions>
+                    <execution>
+                        <id>create-product-distributions</id>
+                        <goals>
+                            <goal>materialize-products</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+
+      <!-- Remove javax.servlet and osgi.frameworkadd and add servletbridge extensionbundle to config.ini-->
+        <plugin>
+          <groupId>com.google.code.maven-replacer-plugin</groupId>
+          <artifactId>maven-replacer-plugin</artifactId>
+          <version>1.4.1</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>replace</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <!-- The bundles.info is not used at the moment, but leave it here since it doesn't hurt anyone-->
+            <includes>
+              <include>target/products/org.netxms.nxmc/linux/gtk/x86_64/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info</include>
+              <include>target/products/org.netxms.nxmc/linux/gtk/x86_64/configuration/config.ini</include>
+            </includes>
+            <replacements>
+              <replacement>
+                <token>javax\.servlet.*false</token>
+                <value></value>
+              </replacement>
+              <replacement>
+                <token>reference\\:file\\:javax\.servlet[^@]*@.,</token>
+                <value></value>
+              </replacement>
+              <replacement>
+                <token>osgi.bundles=</token>
+                <value>osgi.bundles=org.eclipse.equinox.servletbridge.extensionbundle@start,</value>
+              </replacement>
+              <replacement>
+                <token>osgi\.framework=.*jar</token>
+                <value></value>
+              </replacement>
+            </replacements>
+            <regexFlags>
+              <regexFlag>CASE_INSENSITIVE</regexFlag>
+              <regexFlag>UNIX_LINES</regexFlag>
+            </regexFlags>
+          </configuration>
+        </plugin>
 
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>2.4.3</version>
 				<executions>
 					<execution>
-						<id>copy-lib</id>
+						<id>copy-web-inf</id>
 						<phase>package</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -68,7 +118,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>copy-web-inf</id>
+						<id>copy-plugins</id>
 						<phase>package</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -89,7 +139,7 @@
 			</plugin>
 
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2-beta-5</version>
 				<configuration>
@@ -97,11 +147,12 @@
 						<descriptor>assembly.xml</descriptor>
 					</descriptors>
 					<finalName>nxmc</finalName>
+               <appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 				<executions>
 					<execution>
 						<id>make-assembly</id>
-						<phase>verify</phase>
+                  <phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>

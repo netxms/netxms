@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.netxms.nxmc</groupId>
-    <artifactId>webapp</artifactId>
+    <artifactId>netxms-eclipse</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.swtchart</artifactId>
-  <version>0.7.14</version>
+  <version>0.7.15</version>
   <packaging>eclipse-plugin</packaging>
 </project>
