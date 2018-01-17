@@ -1,5 +1,4 @@
 <assembly>
-  <id/>
   <formats>
     <format>war</format>
   </formats>
@@ -17,6 +16,13 @@
    <fileSet>
       <directory>${basedir}/target/WEB-INF</directory>
       <outputDirectory>/WEB-INF</outputDirectory>
+    </fileSet> 
+   <fileSet>
+      <directory>${basedir}/target/products/org.netxms.nxmc/linux/gtk/x86_64/plugins</directory>
+      <outputDirectory>/WEB-INF/lib</outputDirectory>
+      <includes>
+        <include>org.eclipse.equinox.servletbridge_*.jar</include>
+      </includes>
     </fileSet> 
   </fileSets>
 </assembly>

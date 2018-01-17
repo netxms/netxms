@@ -3,15 +3,17 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.netxms.nxmc</groupId>
-  <artifactId>webapp</artifactId>
+  <artifactId>netxms-eclipse</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
-    <module>../../src/java/client</module>
+    <module>Branding</module>
+    <module>Product</module>
+    <module>../../src/libnxjava/java/base/</module>
+    <module>../../src/client/java</module>
     <module>ActionManager</module>
     <module>AgentManager</module>
     <module>AlarmViewer</module>
-    <module>Branding</module> 
     <module>Charts</module>
     <module>Core</module>
     <module>Dashboard</module>
@@ -45,55 +47,40 @@
   </modules>
 
     <properties>
-        <tycho.version>0.23.0</tycho.version>
+        <tycho.version>0.23.1</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <war.filename>nxmc</war.filename>
         <assembly.version>2.4</assembly.version>
         <replacer.version>1.4.1</replacer.version>
     </properties>
 
-  <repositories>
-        
+  <repositories>        
         <repository>
-          <id>orbit1</id>
+          <id>orbit latest</id>
           <layout>p2</layout>
-          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20150519210750/repository/</url>
+          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20170919201930/repository/</url>
         </repository>
         <repository>
             <id>Babel Language Pack</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna</url>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.15.0/oxygen</url>
             <layout>p2</layout>
         </repository> 
         <repository>
-            <id>emf</id>
-            <url>http://download.eclipse.org/releases/luna</url>
-            <layout>p2</layout>
-        </repository>
-        <repository>
-            <id>Birt</id>
-            <url>http://download.eclipse.org/releases/indigo/</url>
+            <id>eclipse</id>
+            <url>http://download.eclipse.org/releases/oxygen</url>
             <layout>p2</layout>
         </repository>
         <repository>  
-            <id>rap-2.3</id>
-            <url>http://download.eclipse.org/rt/rap/2.3</url>
-            <layout>p2</layout>
-        </repository>
-        <repository>
-            <id>Rap-ClientScripting-RichText</id>
-            <url>http://download.eclipse.org/rt/rap/incubator/nightly</url>
+            <id>rap-3.4</id>
+            <url>http://download.eclipse.org/rt/rap/3.4</url>
             <layout>p2</layout>
         </repository>
         <repository>
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
-            <layout>p2</layout>
-        </repository> 
-        
-        <repository>
-            <id>additionalPackage</id>
-            <url>http://download.eclipse.org/rt/rap/tools/2.3</url>
             <layout>p2</layout>
         </repository> 
         <repository>
@@ -103,10 +90,8 @@
         </repository> 
     </repositories> 
 
-
   <build>
     <plugins>
-
     <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-versions-plugin</artifactId>
@@ -120,7 +105,7 @@
                 </goals>
             </execution>
         </executions>
-    </plugin>
+        </plugin>
 
       <plugin>
         <groupId>${tycho.groupid}</groupId>
@@ -143,7 +128,14 @@
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <resolver>p2</resolver> 
+         <filters>
+            <!-- example 3: work around Equinox bug 348045 -->
+            <filter>
+               <type>p2-installable-unit</type>
+               <id>org.eclipse.equinox.servletbridge.extensionbundle</id>
+               <removeAll />
+            </filter>
+         </filters>
        </configuration>
       </plugin> 
 

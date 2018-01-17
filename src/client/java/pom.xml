@@ -2,39 +2,29 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
- <!-- <parent>
+  <parent>
     <groupId>com.netxms.nxmc</groupId>
-    <artifactId>webapp</artifactId>
+    <artifactId>netxms-eclipse</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <relativePath>../../../webui/webapp/</relativePath>
-  </parent> -->
+    <relativePath>${parent.relativePath}</relativePath>
+  </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.eclipse.clientlibrary</artifactId>
   <version>2.2.2</version>
   <packaging>eclipse-plugin</packaging>
 
     <properties>
-        <tycho.version>0.23.1</tycho.version>
-	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+        <parent.relativePath>../../java/netxms-eclipse</parent.relativePath>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>eclipse-3.8</id>
-            <url>http://download.eclipse.org/eclipse/updates/3.8</url>
-            <layout>p2</layout>
-        </repository> 
-    </repositories>
-
-<build>
-  <plugins>
-    <plugin>
-      <groupId>${tycho.groupid}</groupId>
-      <artifactId>tycho-maven-plugin</artifactId>
-      <version>${tycho.version}</version>
-      <extensions>true</extensions>
-    </plugin>
-  </plugins>
-</build>
-
+    <profiles>
+        <profile>
+            <id>web-build</id>
+            <properties>
+                <parent.artifactId>webapp</parent.artifactId>
+                <parent.relativePath>../../../webui/webapp/</parent.relativePath>
+            </properties>
+        </profile>
+    </profiles>
+    
 </project>

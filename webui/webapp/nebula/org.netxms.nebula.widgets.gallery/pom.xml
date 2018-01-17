@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.netxms.nxmc</groupId>
-    <artifactId>webapp</artifactId>
+    <artifactId>netxms-eclipse</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>../../</relativePath>
   </parent>
