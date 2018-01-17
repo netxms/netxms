@@ -30,6 +30,7 @@ Copyright (c) 2003-2018 Raden Solutions
       startupMessageRect="7,300,490,18"
       startupForegroundColor="F18515" />
    <launcher name="nxmc">
+      <linux icon="/Core/icons/launcher/nxmc.xpm"/>
       <macosx icon="/Core/icons/launcher/nxmc.icns"/>
       <solaris/>
       <win useIco="true">
@@ -37,7 +38,6 @@ Copyright (c) 2003-2018 Raden Solutions
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
