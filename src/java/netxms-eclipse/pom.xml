@@ -7,6 +7,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>Product</module> 
         <module>../../libnxjava/java/base/</module>
         <module>../../client/java</module>
         <module>../nebula/org.netxms.nebula.widgets.gallery</module>
@@ -45,7 +46,6 @@
         <module>Topology</module>
         <module>UserManager</module>
         <module>swtchart</module>
-        <module>Product</module> 
     </modules>
 
     <properties>
