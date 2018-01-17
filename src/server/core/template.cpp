@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -381,6 +381,7 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
             if (!listItems.isEmpty())
                listItems.append(_T(','));
             listItems.append(o->getId());
+            QueueRawDciDataDelete(o->getId());
          }
          else if (o->getType() == DCO_TYPE_TABLE)
          {
@@ -404,11 +405,6 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
       {
          _sntprintf(query, 8192, _T("DELETE FROM thresholds WHERE item_id IN (%s)"), (const TCHAR *)listItems);
          success = DBQuery(hdb, query);
-         if (success)
-         {
-            _sntprintf(query, 8192, _T("DELETE FROM raw_dci_values WHERE item_id IN (%s)"), (const TCHAR *)listItems);
-            success = DBQuery(hdb, query);
-         }
       }
 
       if (!listTables.isEmpty())

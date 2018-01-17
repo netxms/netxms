@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,12 +46,13 @@ struct DELAYED_IDATA_INSERT
 };
 
 /**
- * Delayed request for raw_dci_values UPDATE
+ * Delayed request for raw_dci_values UPDATE or DELETE
  */
 struct DELAYED_RAW_DATA_UPDATE
 {
    time_t timestamp;
    UINT32 dciId;
+   bool deleteFlag;
    TCHAR rawValue[MAX_RESULT_LENGTH];
    TCHAR transformedValue[MAX_RESULT_LENGTH];
 };
@@ -173,8 +174,21 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 	rq->dciId = dciId;
 	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+	rq->deleteFlag = false;
 	g_dciRawDataWriterQueue->put(rq);
 	g_rawDataWriteRequests++;
+}
+
+/**
+ * Queue DELETE request for raw_dci_values table
+ */
+void QueueRawDciDataDelete(UINT32 dciId)
+{
+   DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+   rq->dciId = dciId;
+   rq->deleteFlag = true;
+   g_dciRawDataWriterQueue->put(rq);
+   g_rawDataWriteRequests++;
 }
 
 /**
@@ -311,15 +325,29 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"));
          if (hStmt != NULL)
          {
+            DB_STATEMENT hDeleteStmt = NULL;
             int count = 0;
             while(true)
             {
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
-               bool success = DBExecute(hStmt);
-
+               bool success = false;
+               if (rq->deleteFlag)
+               {
+                  if (hDeleteStmt == NULL)
+                     hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"));
+                  if (hDeleteStmt != NULL)
+                  {
+                     DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
+                     success = DBExecute(hDeleteStmt);
+                  }
+               }
+               else
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+                  DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
+                  success = DBExecute(hStmt);
+               }
                free(rq);
 
                count++;
@@ -331,6 +359,8 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
                   break;
             }
             DBFreeStatement(hStmt);
+            if (hDeleteStmt != NULL)
+               DBFreeStatement(hDeleteStmt);
          }
 			DBCommit(hdb);
 		}

@@ -551,8 +551,7 @@ void DCItem::deleteFromDatabase()
    QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM raw_dci_values WHERE item_id=%d"), m_id);
-   QueueSQLRequest(szQuery);
+   QueueRawDciDataDelete(m_id);
 
    if (m_owner->isDataCollectionTarget())
       static_cast<DataCollectionTarget*>(m_owner)->scheduleItemDataCleanup(m_id);
@@ -572,7 +571,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	m_sampleCount = (int)pMsg->getFieldAsUInt16(VID_SAMPLE_COUNT);
 	m_nBaseUnits = pMsg->getFieldAsUInt16(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->getFieldAsUInt32(VID_MULTIPLIER);
-	safe_free(m_customUnitName);
+	free(m_customUnitName);
 	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
    pMsg->getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
