@@ -64,6 +64,7 @@ NXCSession::NXCSession()
    m_systemRights = 0;
    m_commandTimeout = 60000;  // 60 seconds
    m_protocolVersions = new IntegerArray<UINT32>(8, 8);
+   m_passwordChangeNeeded = false;
 }
 
 /**
