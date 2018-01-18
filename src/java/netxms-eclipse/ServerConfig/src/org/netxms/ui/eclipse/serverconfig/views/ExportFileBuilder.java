@@ -71,6 +71,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.market.Repository;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.actionmanager.dialogs.ActionSelectionDialog;
@@ -1191,10 +1192,22 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		if (dlg.open() == Window.OK)
 		{
 			final Set<Long> idList = new HashSet<Long>();
-			for(AbstractObject o : dlg.getSelectedObjects(Template.class))
+			for(AbstractObject o : dlg.getSelectedObjects())
 			{
-				templates.put(((Template)o).getObjectId(), (Template)o);
-				idList.add(o.getObjectId());
+			   if (o instanceof TemplateGroup)
+			   {
+			      Set<AbstractObject> children = ((TemplateGroup)o).getAllChilds(AbstractObject.OBJECT_TEMPLATE);
+			      for(AbstractObject child : children)
+			      {
+		            templates.put(((Template)child).getObjectId(), (Template)child);
+		            idList.add(child.getObjectId());
+			      }
+			   }
+			   else if (o instanceof Template)
+			   {
+   				templates.put(((Template)o).getObjectId(), (Template)o);
+   				idList.add(o.getObjectId());
+			   }
 			}
 			templateViewer.setInput(templates.values().toArray());
 			setModified();
