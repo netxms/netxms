@@ -70,7 +70,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NC_IS_WIFI_CONTROLLER     = 0x00080000;
 	public static final int NC_IS_SMCLP               = 0x00100000;
 
-	//Node flags
+	// Node flags
    public static final int NF_REMOTE_AGENT           = 0x00010000;
 	public static final int NF_DISABLE_DISCOVERY_POLL = 0x00020000;
 	public static final int NF_DISABLE_TOPOLOGY_POLL  = 0x00040000;
@@ -80,7 +80,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
    public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
 	
-	// Node status flags
+	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
 	public static final int NSF_SNMP_UNREACHABLE   = 0x00020000;
 	public static final int NSF_CPSNMP_UNREACHABLE = 0x00040000;
@@ -809,5 +809,25 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public RackOrientation getRackOrientation()
    {
       return rackOrientation;
+   }
+   
+   /**
+    * Check node state flags for "agent unreachable" flag.
+    * 
+    * @return true if agent is reachable (flag is cleared)
+    */
+   public boolean isAgentReachable()
+   {
+      return (stateFlags & NSF_AGENT_UNREACHABLE) == 0;
+   }
+
+   /**
+    * Check node state flags for "SNMP unreachable" flag.
+    * 
+    * @return true if SNMP is reachable (flag is cleared)
+    */
+   public boolean isSnmpReachable()
+   {
+      return (stateFlags & NSF_SNMP_UNREACHABLE) == 0;
    }
 }
