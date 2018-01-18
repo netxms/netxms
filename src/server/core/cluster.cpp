@@ -319,7 +319,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		}
    }
 
-   if (success)
+   if (success && (m_modified & MODIFY_CLUSTER_RESOURCES))
    {
 		// Save resource list
       hStmt = DBPrepare(hdb, _T("DELETE FROM cluster_resources WHERE cluster_id=?"));
@@ -672,7 +672,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 												 node->getId(), node->getName());
 								}
 								m_pResourceList[k].dwCurrOwner = node->getId();
-								modified |= MODIFIED_CLUSTER_RESOURCES;
+								modified |= MODIFY_CLUSTER_RESOURCES;
 							}
 							resourceFound[k] = 1;
 						}
@@ -701,7 +701,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 							 m_pResourceList[i].dwCurrOwner,
 							 (pObject != NULL) ? pObject->getName() : _T("<unknown>"));
 				m_pResourceList[i].dwCurrOwner = 0;
-            modified |= MODIFIED_CLUSTER_RESOURCES;
+            modified |= MODIFY_CLUSTER_RESOURCES;
 			}
 		}
 		unlockProperties();
