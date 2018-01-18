@@ -6,23 +6,10 @@
     <groupId>com.netxms.nxmc</groupId>
     <artifactId>netxms-eclipse</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <relativePath>${parent.relativePath}</relativePath>
+    <relativePath>../../../java/netxms-eclipse</relativePath>
   </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.base</artifactId>
   <version>2.2.2</version>
   <packaging>eclipse-plugin</packaging>
-
-    <properties>
-        <parent.relativePath>../../../java/netxms-eclipse</parent.relativePath>
-    </properties>
-
-    <profiles>
-        <profile>
-            <id>web-build</id>
-            <properties>
-                <parent.relativePath>../../../../webui/webapp/</parent.relativePath>
-            </properties>
-        </profile>
-    </profiles>
 </project>
