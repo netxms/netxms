@@ -803,4 +803,24 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    {
       return rackOrientation;
    }
+   
+   /**
+    * Check node state flags for "agent unreachable" flag.
+    * 
+    * @return true if agent is reachable (flag is cleared)
+    */
+   public boolean isAgentReachable()
+   {
+      return (runtimeFlags & NDF_AGENT_UNREACHABLE) == 0;
+   }
+
+   /**
+    * Check node state flags for "SNMP unreachable" flag.
+    * 
+    * @return true if SNMP is reachable (flag is cleared)
+    */
+   public boolean isSnmpReachable()
+   {
+      return (runtimeFlags & NDF_SNMP_UNREACHABLE) == 0;
+   }
 }
