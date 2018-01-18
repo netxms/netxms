@@ -176,8 +176,7 @@ static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NX
 	int fh;
 	UINT32 rcc;
 
-	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
-               ,guid.toString(name));
+	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
 
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
