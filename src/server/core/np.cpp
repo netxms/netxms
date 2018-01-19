@@ -48,7 +48,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddr)
    cluster = NULL;
    zoneUIN = 0;
    doConfPoll = false;
-   discoveredNode = false;
+   origin = NODE_ORIGIN_MANUAL;
    snmpSecurity = NULL;
 }
 
@@ -72,7 +72,7 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
    cluster = NULL;
    zoneUIN = msg->getFieldAsUInt32(VID_ZONE_UIN);
    doConfPoll = false;
-   discoveredNode = false;
+   origin = NODE_ORIGIN_MANUAL;
    snmpSecurity = NULL;
 }
 
@@ -221,7 +221,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    NetObjInsert(pNode, true, false);
 
 	// Use DNS name as primary name if required
-	if (newNodeData->discoveredNode && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
+	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
 	{
       TCHAR dnsName[MAX_DNS_NAME];
       TCHAR *tmp;
@@ -267,7 +267,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    }
 
    pNode->unhide();
-   PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", (int)(newNodeData->discoveredNode ? 1 : 0));
+   PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", static_cast<int>(newNodeData->origin));
 
    return pNode;
 }
@@ -740,7 +740,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
 		NewNodeData newNodeData(pInfo->ipAddr);
 		newNodeData.zoneUIN = pInfo->zoneUIN;
-		newNodeData.discoveredNode = true;
+		newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
 		newNodeData.doConfPoll = true;
 
       if (pInfo->ignoreFilter || AcceptNewNode(&newNodeData, pInfo->bMacAddr))

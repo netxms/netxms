@@ -1340,10 +1340,11 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new node for tunnel from %s (%s)"),
                         t->getHostname(), (const TCHAR *)t->getAddress().toString());
 
-               NewNodeData nd(t->getAddress());
+               NewNodeData nd(InetAddress::NONE);  // use 0.0.0.0 to avoid direct communications by default
                _tcslcpy(nd.name, t->getSystemName(), MAX_OBJECT_NAME);
                nd.zoneUIN = t->getZoneUIN();
                nd.creationFlags = NXC_NCF_CREATE_UNMANAGED;
+               nd.origin = NODE_ORIGIN_TUNNEL_AUTOBIND;
                node = PollNewNode(&nd);
                if (node != NULL)
                {
