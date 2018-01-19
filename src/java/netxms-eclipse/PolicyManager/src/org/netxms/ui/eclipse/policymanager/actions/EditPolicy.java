@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.AgentPolicyLogParser;
+import org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor;
 import org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor;
 import org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -55,32 +57,22 @@ public class EditPolicy implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-	   if(currentSelection != null)
+	   if ((currentSelection != null) && (currentSelection instanceof AgentPolicy)) 
 	   {
-   	   if(currentSelection instanceof AgentPolicyConfig)
-   	   {
-   	      try
-   	      {
-   	         ConfigPolicyEditor view = (ConfigPolicyEditor)window.getActivePage().showView(ConfigPolicyEditor.ID);
-   	         view.setPolicy(currentSelection);
-   	      }
-   	      catch(PartInitException e)
-   	      {
-   	         MessageDialogHelper.openError(window.getShell(), "", "");
-   	      }   	         	      
-   	   }
-   	   else if(currentSelection instanceof AgentPolicyLogParser)
-   	   {
-            try
-            {
-               LogParserPolicyEditor view = (LogParserPolicyEditor)window.getActivePage().showView(LogParserPolicyEditor.ID);
-               view.setPolicy(currentSelection);
-            }
-            catch(PartInitException e)
-            {
-               MessageDialogHelper.openError(window.getShell(), "", "");
-            }      	      
-   	   }
+	      try
+	      {
+	         AbstractPolicyEditor view = null;
+	         if (currentSelection instanceof AgentPolicyConfig)
+	            view = (AbstractPolicyEditor)window.getActivePage().showView(ConfigPolicyEditor.ID);
+	         else if (currentSelection instanceof AgentPolicyLogParser)
+               view = (AbstractPolicyEditor)window.getActivePage().showView(LogParserPolicyEditor.ID);
+	         if (view != null)
+   	         view.setPolicy((AgentPolicy)currentSelection);
+	      }
+	      catch(PartInitException e)
+	      {
+	         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open policy editor: %s", e.getLocalizedMessage()));
+	      }   	         	      
 	   }
 	}
 
@@ -94,7 +86,7 @@ public class EditPolicy implements IObjectActionDelegate
 		if (selection instanceof TreeSelection)
 		{
 		   currentSelection = (AbstractObject)((TreeSelection)selection).getFirstElement();
-			action.setEnabled((currentSelection instanceof AgentPolicyConfig) || (currentSelection instanceof AgentPolicyLogParser));
+			action.setEnabled(currentSelection instanceof AgentPolicy);
 		}
 	}
 }

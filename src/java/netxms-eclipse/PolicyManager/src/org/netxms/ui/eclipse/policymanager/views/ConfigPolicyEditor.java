@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSoutions
+ * Copyright (C) 2016-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,42 +19,30 @@
 package org.netxms.ui.eclipse.policymanager.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISaveablePart2;
-import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCObjectModificationData;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AgentPolicyConfig;
-import org.netxms.ui.eclipse.agentmanager.dialogs.SaveStoredConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 
-public class ConfigPolicyEditor extends ViewPart implements ISaveablePart2
+public class ConfigPolicyEditor extends AbstractPolicyEditor
 {
    public static final String ID = "org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor";
    
    private AgentConfigEditor editor;
-   private boolean modified = false;
-   private boolean dirty = false;
-   private AgentPolicyConfig configPolicy;
-   
-   private Action actionSave;
    private FindReplaceAction actionFindReplace;
+   private String content;
    
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    public void createPartControl(Composite parent)
    {
@@ -65,92 +53,38 @@ public class ConfigPolicyEditor extends ViewPart implements ISaveablePart2
          @Override
          public void modifyText(ModifyEvent e)
          {
-            if (!dirty)
-            {
-               modified = true;
-               dirty = true;
-               firePropertyChange(PROP_DIRTY);
-               actionSave.setEnabled(true);
-               actionFindReplace.update();
-            }
+            setModified();
          }
       });
-      
-      createActions();
-      contributeToActionBars();
-      actionSave.setEnabled(false);
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
    @Override
    public void setFocus()
    {
       editor.setFocus();      
    }
-   
-   /**
-    * Set configuration file content
-    * 
-    * @param config
+  
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor#createActions()
     */
-   public void setPolicy(final AbstractObject policy)
+   @Override
+   protected void createActions()
    {
-      configPolicy = (AgentPolicyConfig)policy;
-      editor.setText(configPolicy.getFileContent());
-      setPartName("Edit Policy \""+ configPolicy.getObjectName() +"\"");
-   }
-   
-   /**
-    * Create actions
-    */
-   private void createActions()
-   {
+      super.createActions();
       actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
-      
-      actionSave = new Action() {
-         @Override
-         public void run()
-         {
-            doSave(null);
-            actionSave.setEnabled(false);
-            dirty=false;
-         }
-      };
-      actionSave.setText("Save");
-      actionSave.setImageDescriptor(SharedIcons.SAVE);
-   }
-   
-   /**
-    * Contribute actions to action bar
-    */
-   private void contributeToActionBars()
-   {
-      IActionBars bars = getViewSite().getActionBars();
-      fillLocalPullDown(bars.getMenuManager());
-      fillLocalToolBar(bars.getToolBarManager());
    }
 
-   /**
-    * Fill local pull-down menu
-    * 
-    * @param manager
-    *           Menu manager for pull-down menu
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
     */
-   private void fillLocalPullDown(IMenuManager manager)
+   @Override
+   protected void fillLocalPullDown(IMenuManager manager)
    {
       manager.add(actionFindReplace);
-      manager.add(actionSave);
-      manager.add(new Separator());
-   }
-
-   /**
-    * Fill local tool bar
-    * 
-    * @param manager
-    *           Menu manager for local toolbar
-    */
-   private void fillLocalToolBar(IToolBarManager manager)
-   {
-      manager.add(actionSave);
+      super.fillLocalPullDown(manager);
    }
 
    /* (non-Javadoc)
@@ -159,55 +93,31 @@ public class ConfigPolicyEditor extends ViewPart implements ISaveablePart2
    @Override
    public void doSave(IProgressMonitor monitor)
    {
+      editor.getDisplay().syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            content = editor.getText();
+         }
+      });
       try
       {
-         NXCObjectModificationData md = new NXCObjectModificationData(configPolicy.getObjectId());
-         md.setConfigFileContent(editor.getText());
-         ((NXCSession)ConsoleSharedData.getSession()).modifyObject(md);
+         NXCObjectModificationData md = new NXCObjectModificationData(policy.getObjectId());
+         md.setConfigFileContent(content);
+         session.modifyObject(md);
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getViewSite().getShell(), "Error updating configuration agent policy object", "Error: " + e.getMessage());
+         MessageDialogHelper.openError(getViewSite().getShell(), "Error", String.format("Error updating agent policy object: %s", e.getMessage()));
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor#doRefresh()
+    */
    @Override
-   public void doSaveAs()
-   {      
-   }
-
-   @Override
-   public boolean isDirty()
+   protected void doRefresh()
    {
-      return dirty || modified;
-   }
-
-   @Override
-   public boolean isSaveAsAllowed()
-   {
-      return false;
-   }
-
-   @Override
-   public boolean isSaveOnCloseNeeded()
-   {
-      return modified;
-   }
-
-   @Override
-   public int promptToSaveOnClose()
-   {
-      SaveStoredConfigDialog dlg = new SaveStoredConfigDialog(getSite().getShell());
-      int rc = dlg.open();
-      if (rc == SaveStoredConfigDialog.SAVE_ID)
-      {
-         modified = false;
-         return YES;
-      }
-      if (rc == SaveStoredConfigDialog.CANCEL)
-      {
-         return CANCEL;
-      }
-      return NO;
+      editor.setText(((AgentPolicyConfig)policy).getFileContent());
    }
 }
