@@ -252,7 +252,7 @@ static void AddLogwatchPolicyFiles()
          NX_STAT_STRUCT st;
          if (CALL_STAT(fullName, &st) == 0)
          {
-            if(S_ISREG(st.st_mode))
+            if (S_ISREG(st.st_mode))
             {
                AddParserFromConfig(fullName);
             }

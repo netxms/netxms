@@ -494,9 +494,11 @@ class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
    int m_numFunctions;
+   int m_functionsAllocated;
    NXSL_ExtFunction *m_functions;
 
    int m_numSelectors;
+   int m_selectorsAllocated;
    NXSL_ExtSelector *m_selectors;
 
    NXSL_Library *m_library;
