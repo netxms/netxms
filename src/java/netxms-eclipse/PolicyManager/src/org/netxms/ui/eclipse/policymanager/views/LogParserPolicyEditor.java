@@ -25,7 +25,6 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.AgentPolicyLogParser;
 import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Editor for log parser policy
@@ -65,10 +64,10 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    }
 
    /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    * @see org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor#doSaveInternal(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
-   public void doSave(IProgressMonitor monitor)
+   public void doSaveInternal(IProgressMonitor monitor) throws Exception
    {
       editor.getDisplay().syncExec(new Runnable() {
          @Override
@@ -77,17 +76,9 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
             content = editor.getParserXml();
          }
       });
-      try
-      {
-         NXCObjectModificationData md = new NXCObjectModificationData(policy.getObjectId());
-         md.setConfigFileContent(content);
-         session.modifyObject(md);
-      }
-      catch(Exception e)
-      {
-         MessageDialogHelper.openError(getSite().getShell(), "Error saving log parser", 
-               String.format("Error saving log parser: %s", e.getLocalizedMessage()));
-      }
+      NXCObjectModificationData md = new NXCObjectModificationData(policy.getObjectId());
+      md.setConfigFileContent(content);
+      session.modifyObject(md);
    }
 
    /**

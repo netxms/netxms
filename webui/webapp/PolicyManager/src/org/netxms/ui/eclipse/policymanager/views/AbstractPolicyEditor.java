@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
@@ -32,9 +33,9 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.policymanager.dialogs.SavePolicyOnCloseDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -49,7 +50,10 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
    protected Action actionRefresh;
    protected Action actionSave;
 
+   private Display display;
    private boolean modified = false;
+   private boolean throwExceptionOnSave = false;
+   private Exception saveException = null;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -58,6 +62,7 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
    public void init(IViewSite site) throws PartInitException
    {
       super.init(site);
+      display = Display.getCurrent();
       session = ConsoleSharedData.getSession();
    }
    
@@ -129,6 +134,41 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
       manager.add(actionRefresh);
    }
    
+   /**
+    * Internal save implementation
+    * 
+    * @param monitor
+    */
+   protected abstract void doSaveInternal(IProgressMonitor monitor) throws Exception;
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
+   @Override
+   public final void doSave(IProgressMonitor monitor)
+   {
+      try
+      {
+         doSaveInternal(monitor);
+         display.asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               if (MessageDialogHelper.openQuestion(getSite().getShell(), "Install Policy", "Policy successfully saved. Install new version on all nodes where this policy is already installed?"))
+                  deployPolicyOnExistingNodes();
+            }
+         });
+      }
+      catch(Exception e)
+      {
+         saveException = e;
+         if (!throwExceptionOnSave)
+         {
+            MessageDialogHelper.openError(getViewSite().getShell(), "Error", String.format("Cannot save policy object: %s", e.getLocalizedMessage()));
+         }
+      }
+   }
+   
    /* (non-Javadoc)
     * @see org.eclipse.ui.ISaveablePart#doSaveAs()
     */
@@ -189,11 +229,15 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
     */
    protected void save()
    {
+      throwExceptionOnSave = true;
       new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            saveException = null;
             doSave(monitor);
+            if (saveException != null)
+               throw saveException;
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -210,7 +254,16 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
          {
             return "Cannot save agent policy";
          }
-      };
+
+         /* (non-Javadoc)
+          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
+            throwExceptionOnSave = false;
+         }
+      }.start();
    }
    
    /**
@@ -268,4 +321,37 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
     * Actual implementation for view refresh
     */
    protected abstract void doRefresh();
+   
+   /**
+    * Deploy policy on nodes where it is already installed
+    */
+   private void deployPolicyOnExistingNodes()
+   {
+      ConsoleJob job = new ConsoleJob("Deploy policy", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(long nodeId : policy.getChildIdList())
+            {
+               try
+               {
+                  session.deployAgentPolicy(policy.getObjectId(), nodeId);
+               }
+               catch(Exception e)
+               {
+                  Activator.logError("Exception in deployPolicyOnExistingNodes", e);
+               }
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setSystem(true);
+      job.setUser(false);
+      job.start();
+   }
 }

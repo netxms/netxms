@@ -96,8 +96,8 @@ public class InstallPolicy implements IObjectActionDelegate
 						   }
 						   catch(NXCException e)
 						   {
-						      if(e.getErrorCode() == CommonRCC.INCOMPATIBLE_OPERATION || e.getErrorCode() == CommonRCC.INTERNAL_ERROR ||
-						            e.getErrorCode() == CommonRCC.ACCESS_DENIED || e.getErrorCode() == CommonRCC.INVALID_OBJECT_ID)
+						      if (e.getErrorCode() == CommonRCC.INCOMPATIBLE_OPERATION || e.getErrorCode() == CommonRCC.INTERNAL_ERROR ||
+						          e.getErrorCode() == CommonRCC.ACCESS_DENIED || e.getErrorCode() == CommonRCC.INVALID_OBJECT_ID)
 						      {
 						         if(sb.length() == 0)
 						            sb.append("Could not apply policy to the node(s):\n");

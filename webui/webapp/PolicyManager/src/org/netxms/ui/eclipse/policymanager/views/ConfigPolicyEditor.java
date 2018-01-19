@@ -29,7 +29,6 @@ import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 
 public class ConfigPolicyEditor extends AbstractPolicyEditor
@@ -90,10 +89,10 @@ public class ConfigPolicyEditor extends AbstractPolicyEditor
    }
 
    /* (non-Javadoc)
-    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    * @see org.netxms.ui.eclipse.policymanager.views.AbstractPolicyEditor#doSaveInternal(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
-   public void doSave(IProgressMonitor monitor)
+   public void doSaveInternal(IProgressMonitor monitor) throws Exception
    {
       editor.getDisplay().syncExec(new Runnable() {
          @Override
@@ -102,16 +101,9 @@ public class ConfigPolicyEditor extends AbstractPolicyEditor
             content = editor.getText();
          }
       });
-      try
-      {
-         NXCObjectModificationData md = new NXCObjectModificationData(policy.getObjectId());
-         md.setConfigFileContent(content);
-         session.modifyObject(md);
-      }
-      catch(Exception e)
-      {
-         MessageDialogHelper.openError(getViewSite().getShell(), "Error", String.format("Error updating agent policy object: %s", e.getMessage()));
-      }
+      NXCObjectModificationData md = new NXCObjectModificationData(policy.getObjectId());
+      md.setConfigFileContent(content);
+      session.modifyObject(md);
    }
 
    /* (non-Javadoc)
