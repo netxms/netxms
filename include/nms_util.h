@@ -1742,6 +1742,7 @@ public:
 
    static const InetAddress INVALID;
    static const InetAddress LOOPBACK;
+   static const InetAddress NONE;
 };
 
 /**

@@ -35,6 +35,11 @@ const InetAddress InetAddress::INVALID = InetAddress();
 const InetAddress InetAddress::LOOPBACK = InetAddress(0x7F000001);
 
 /**
+ * No address indicator (IPv4 0.0.0.0)
+ */
+const InetAddress InetAddress::NONE = InetAddress((UINT32)0);
+
+/**
  * IPv4 link local subnet
  */
 static const InetAddress IPV4_LINK_LOCAL = InetAddress(0xA9FE0000, 0xFFFF0000);

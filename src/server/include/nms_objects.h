@@ -357,6 +357,16 @@ public:
 };
 
 /**
+ * New node origin
+ */
+enum NodeOrigin
+{
+   NODE_ORIGIN_MANUAL = 0,
+   NODE_ORIGIN_NETWORK_DISCOVERY = 1,
+   NODE_ORIGIN_TUNNEL_AUTOBIND = 2
+};
+
+/**
  * Data for new node creation
  */
 struct NXCORE_EXPORTABLE NewNodeData
@@ -375,7 +385,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    Cluster *cluster;
    UINT32 zoneUIN;
    bool doConfPoll;
-   bool discoveredNode;
+   NodeOrigin origin;
    SNMP_SecurityContext *snmpSecurity;
 
    NewNodeData(const InetAddress& ipAddr);

@@ -63,6 +63,8 @@ static bool H_UpgradeFromV12()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description='Generated when new node object added to the database.\r\nParameters:\r\n   1) Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)' WHERE event_code=1")));
+
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
