@@ -32,10 +32,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.agentmanager.dialogs.SaveStoredConfigDialog;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.policymanager.dialogs.SavePolicyOnCloseDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -170,14 +170,14 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
    @Override
    public int promptToSaveOnClose()
    {
-      SaveStoredConfigDialog dlg = new SaveStoredConfigDialog(getSite().getShell());
+      SavePolicyOnCloseDialog dlg = new SavePolicyOnCloseDialog(getSite().getShell());
       int rc = dlg.open();
-      if (rc == SaveStoredConfigDialog.SAVE_ID)
+      if (rc == SavePolicyOnCloseDialog.SAVE_ID)
       {
          modified = false;
          return YES;
       }
-      if (rc == SaveStoredConfigDialog.CANCEL)
+      if (rc == SavePolicyOnCloseDialog.CANCEL)
       {
          return CANCEL;
       }
