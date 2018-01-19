@@ -46,6 +46,8 @@ public class ConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public void createPartControl(Composite parent)
    {
+      super.createPartControl(parent);
+      
       parent.setLayout(new FillLayout());
       
       editor = new AgentConfigEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
