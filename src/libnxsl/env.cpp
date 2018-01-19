@@ -164,11 +164,14 @@ static NXSL_ExtSelector m_builtinSelectors[] =
 NXSL_Environment::NXSL_Environment()
 {
    m_numFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
-   m_functions = (NXSL_ExtFunction *)nx_memdup(m_builtinFunctions, sizeof(m_builtinFunctions));
+   m_functionsAllocated = std::max(m_numFunctions, 256);
+   m_functions = (NXSL_ExtFunction *)malloc(m_functionsAllocated * sizeof(m_builtinFunctions));
+   memcpy(m_functions, m_builtinFunctions, sizeof(m_builtinFunctions));
    m_numSelectors = sizeof(m_builtinSelectors) / sizeof(NXSL_ExtSelector);
-   m_selectors = (NXSL_ExtSelector *)nx_memdup(m_builtinSelectors, sizeof(m_builtinSelectors));
+   m_selectorsAllocated = std::max(m_numSelectors, 16);
+   m_selectors = (NXSL_ExtSelector *)malloc(m_selectorsAllocated * sizeof(m_builtinSelectors));
+   memcpy(m_selectors, m_builtinSelectors, sizeof(m_builtinSelectors));
    m_library = NULL;
-
 }
 
 /**
@@ -196,7 +199,11 @@ NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
  */
 void NXSL_Environment::registerFunctionSet(int count, NXSL_ExtFunction *list)
 {
-   m_functions = (NXSL_ExtFunction *)realloc(m_functions, sizeof(NXSL_ExtFunction) * (m_numFunctions + count));
+   if (m_numFunctions + count > m_functionsAllocated)
+   {
+      m_functionsAllocated += std::max(count, 256);
+      m_functions = (NXSL_ExtFunction *)realloc(m_functions, sizeof(NXSL_ExtFunction) * m_functionsAllocated);
+   }
    memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
    m_numFunctions += count;
 }
@@ -217,7 +224,11 @@ NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
  */
 void NXSL_Environment::registerSelectorSet(int count, NXSL_ExtSelector *list)
 {
-   m_selectors = (NXSL_ExtSelector *)realloc(m_selectors, sizeof(NXSL_ExtSelector) * (m_numSelectors + count));
+   if (m_numSelectors + count > m_selectorsAllocated)
+   {
+      m_selectorsAllocated += std::max(count, 256);
+      m_selectors = (NXSL_ExtSelector *)realloc(m_selectors, sizeof(NXSL_ExtSelector) * m_selectorsAllocated);
+   }
    memcpy(&m_selectors[m_numSelectors], list, sizeof(NXSL_ExtSelector) * count);
    m_numSelectors += count;
 }
