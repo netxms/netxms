@@ -843,7 +843,7 @@ private:
 
 public:
 	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
-	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const StructArray<T> *src) : Array(src) { }
 	virtual ~StructArray() { }
 
