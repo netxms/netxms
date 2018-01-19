@@ -25,18 +25,15 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
-import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 
 public class ConfigPolicyEditor extends AbstractPolicyEditor
 {
    public static final String ID = "org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor";
    
    private AgentConfigEditor editor;
-   private FindReplaceAction actionFindReplace;
    private String content;
    
    /* (non-Javadoc)
@@ -75,7 +72,6 @@ public class ConfigPolicyEditor extends AbstractPolicyEditor
    protected void createActions()
    {
       super.createActions();
-      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
    }
 
    /* (non-Javadoc)
@@ -84,7 +80,6 @@ public class ConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    protected void fillLocalPullDown(IMenuManager manager)
    {
-      manager.add(actionFindReplace);
       super.fillLocalPullDown(manager);
    }
 
