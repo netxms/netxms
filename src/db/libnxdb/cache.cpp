@@ -106,7 +106,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
    }
    else
    {
-      createStatement.append(_T(") WITHOUT ROWID"));
+      createStatement.append(_T(')'));
    }
 
    if (!DBQueryEx(cacheDB, createStatement, errorText))
