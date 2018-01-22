@@ -71,6 +71,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CreateCrashDumps"), CT_BOOLEAN64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, NULL },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, NULL },
+   { _T("DBCacheConfigurationTables"), CT_BOOLEAN64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, &g_flags, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, NULL },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, NULL },
@@ -390,6 +391,28 @@ bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *name, INT32 value)
  */
 static StringMap s_configCache;
 static RWLOCK s_configCacheLock = RWLockCreate();
+
+/**
+ * Pre-load configuration
+ */
+void ConfigPreLoad()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM config"));
+   if (hResult != NULL)
+   {
+      RWLockWriteLock(s_configCacheLock, INFINITE);
+      s_configCache.clear();
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         s_configCache.setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
+      }
+      RWLockUnlock(s_configCacheLock);
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
 
 /**
  * Callback for configuration variables change

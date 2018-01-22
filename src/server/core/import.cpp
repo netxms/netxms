@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -348,13 +348,9 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
 	}
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt;
-	if (id == 0)
-	{
-	   hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,trap_id,guid) VALUES (?,?,?,?,?,?)"));
-	}
-	else
-	   hStmt = DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=? WHERE trap_id=?"));
+	DB_STATEMENT hStmt = (id == 0) ?
+	   DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,trap_id,guid) VALUES (?,?,?,?,?,?)")) :
+	   DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=? WHERE trap_id=?"));
 
 	if (hStmt != NULL)
 	{

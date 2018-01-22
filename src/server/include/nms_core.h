@@ -952,6 +952,7 @@ enum WatchdogState
 /**
  * Functions
  */
+void ConfigPreLoad();
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE

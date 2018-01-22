@@ -24,7 +24,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.2065209677" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${MARIADB_INCLUDE_DIR}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../${MARIADB_INCLUDE_DIR}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.548937322" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
@@ -84,4 +84,10 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/mariadb.ddr"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

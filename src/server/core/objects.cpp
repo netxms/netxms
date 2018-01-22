@@ -1217,7 +1217,70 @@ BOOL LoadObjects()
    // Prevent objects to change it's modification flag
    g_bModificationsLocked = TRUE;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_HANDLE mainDB = DBConnectionPoolAcquireConnection();
+   DB_HANDLE hdb = mainDB;
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
+   if (cachedb != NULL)
+   {
+      nxlog_debug(1, _T("Caching object configuration tables"));
+      bool success =
+               DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_custom_attributes"), _T("object_id,attr_name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_urls"), _T("object_id,url_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("zones"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("conditions"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("cond_dci_map"), _T("condition_id,sequence_number"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("subnets"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("nsmap"), _T("subnet_id,node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("racks"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("chassis"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("mobile_devices"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("access_points"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("interface_address_list"), _T("iface_id,ip_addr"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_services"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("vpn_connectors"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("vpn_connector_networks"), _T("vpn_id,ip_addr"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("clusters"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("cluster_members"), _T("cluster_id,node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("cluster_sync_subnets"), _T("cluster_id,subnet_addr"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("cluster_resources"), _T("cluster_id,resource_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("templates"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("items"), _T("item_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("thresholds"), _T("threshold_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("raw_dci_values"), _T("item_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dc_tables"), _T("item_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dc_table_columns"), _T("table_id,column_name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_column_names"), _T("column_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_thresholds"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_threshold_conditions"), _T("threshold_id,group_id,sequence_number"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_threshold_instances"), _T("threshold_id,instance"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_node_map"), _T("template_id,node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dci_schedules"), _T("item_id,schedule_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_bindings"), _T("policy_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_config_files"), _T("policy_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_log_parser"), _T("policy_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_maps"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_elements"), _T("map_id,element_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_links"), NULL, _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("slm_checks"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("business_services"), _T("service_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("node_links"), _T("nodelink_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*"));
+
+      if (success)
+         hdb = cachedb;
+   }
 
    // Load built-in object properties
    DbgPrintf(2, _T("Loading built-in object properties..."));
@@ -1877,6 +1940,9 @@ BOOL LoadObjects()
 
    // Start template update applying thread
    s_applyTemplateThread = ThreadCreateEx(ApplyTemplateThread, 0, NULL);
+
+   if (cachedb != NULL)
+      DBCloseInMemoryDatabase(cachedb);
 
    return TRUE;
 }

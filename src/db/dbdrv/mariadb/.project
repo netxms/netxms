@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>mariadb</name>
+	<name>mariadb.ddr</name>
 	<comment></comment>
 	<projects>
 		<project>libnetxms</project>
@@ -27,7 +27,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1498414392455</id>
+			<id>0</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -36,7 +36,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1498414392456</id>
+			<id>0</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -45,7 +45,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1498414392458</id>
+			<id>0</id>
 			<name></name>
 			<type>6</type>
 			<matcher>

@@ -219,7 +219,6 @@ BOOL LoadUsers()
    DB_RESULT hResult;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
    // Load users
    hResult = DBSelect(hdb,
 	                   _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,")
@@ -233,10 +232,22 @@ BOOL LoadUsers()
       return false;
    }
 
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
+   if (cachedb != NULL)
+   {
+      nxlog_debug(2, _T("Caching user configuration tables"));
+      if (!DBCacheTable(cachedb, hdb, _T("userdb_custom_attributes"), _T("object_id,attr_name"), _T("*")) ||
+          !DBCacheTable(cachedb, hdb, _T("user_group_members"), _T("group_id,user_id"), _T("*")))
+      {
+         DBCloseInMemoryDatabase(cachedb);
+         cachedb = NULL;
+      }
+   }
+
    int count = DBGetNumRows(hResult);
    for(i = 0; i < count; i++)
    {
-		User *user = new User(hdb, hResult, i);
+		User *user = new User((cachedb != NULL) ? cachedb : hdb, hResult, i);
 		AddDatabaseObject(user);
    }
 
@@ -255,13 +266,15 @@ BOOL LoadUsers()
    if (hResult == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
+      if (cachedb != NULL)
+         DBCloseInMemoryDatabase(cachedb);
       return FALSE;
    }
 
    count = DBGetNumRows(hResult);
    for(i = 0; i < count; i++)
    {
-		Group *group = new Group(hdb, hResult, i);
+		Group *group = new Group((cachedb != NULL) ? cachedb : hdb, hResult, i);
 		AddDatabaseObject(group);
    }
 
@@ -277,6 +290,8 @@ BOOL LoadUsers()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+   if (cachedb != NULL)
+      DBCloseInMemoryDatabase(cachedb);
    return TRUE;
 }
 

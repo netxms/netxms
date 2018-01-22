@@ -398,9 +398,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const char *name;
-
-	name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
+	const char *name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE

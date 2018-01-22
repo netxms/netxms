@@ -638,8 +638,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 {
 	s_components.add(_T("CORE"));
 
-	g_serverStartTime = time(NULL);
-	srand((unsigned int)g_serverStartTime);
+	INT64 initStartTime = GetCurrentTimeMs();
+	g_serverStartTime = static_cast<time_t>(initStartTime / 1000);
+	srand(static_cast<unsigned int>(g_serverStartTime));
 
 	if (!(g_flags & AF_USE_SYSLOG))
 	{
@@ -841,6 +842,7 @@ retry_db_lock:
 	g_flags |= AF_DB_LOCKED;
 
 	// Load global configuration parameters
+   ConfigPreLoad();
 	LoadGlobalConfig();
    CASReadSettings();
    nxlog_debug(1, _T("Global configuration loaded"));
@@ -1067,7 +1069,7 @@ retry_db_lock:
    ExecuteStartupScripts();
 
 	g_flags |= AF_SERVER_INITIALIZED;
-	nxlog_debug(1, _T("Server initialization completed"));
+	nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
 	return TRUE;
 }
 

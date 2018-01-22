@@ -783,12 +783,10 @@ extern "C" int EXPORT DrvGetColumnCount(MYSQL_RESULT *hResult)
  */
 extern "C" const char EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column)
 {
-	MYSQL_FIELD *field;
-
 	if (hResult == NULL)
 		return NULL;
 
-	field = mysql_fetch_field_direct(hResult->resultSet, column);
+	MYSQL_FIELD *field = mysql_fetch_field_direct(hResult->resultSet, column);
 	return (field != NULL) ? field->name : NULL;
 }
 
@@ -1123,7 +1121,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult,
 }
 
 /**
- * Get field from current row in async query result
+ * Get field from current row in unbuffered query result
  */
 extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, char *pBuffer, int iBufSize)
 {
@@ -1131,7 +1129,7 @@ extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResu
 }
 
 /**
- * Get column count in async query result
+ * Get column count in unbuffered query result
  */
 extern "C" int EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult)
 {
@@ -1139,21 +1137,19 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResu
 }
 
 /**
- * Get column name in async query result
+ * Get column name in unbuffered query result
  */
 extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int column)
 {
-	MYSQL_FIELD *field;
-
 	if ((hResult == NULL) || (hResult->resultSet == NULL))
 		return NULL;
 
-	field = mysql_fetch_field_direct(hResult->resultSet, column);
+	MYSQL_FIELD *field = mysql_fetch_field_direct(hResult->resultSet, column);
 	return (field != NULL) ? field->name : NULL;
 }
 
 /**
- * Destroy result of async query
+ * Destroy result of unbuffered query
  */
 extern "C" void EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResult)
 {
