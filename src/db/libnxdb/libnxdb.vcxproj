@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cache.cpp" />
     <ClCompile Include="dbcp.cpp" />
     <ClCompile Include="drivers.cpp" />
     <ClCompile Include="main.cpp" />
