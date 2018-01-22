@@ -681,11 +681,11 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
 	if (session == NULL)
 		return false;
-	return ((CommSession *)session)->sendFile(requestId, file, offset, allowCompression, cancelationFlag);
+	return ((CommSession *)session)->sendFile(requestId, file, offset, allowCompression, cancellationFlag);
 }
 
 /**
