@@ -718,10 +718,11 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(UINT16 code, UINT32 id, 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
                                            void (* progressCallback)(INT64, void *), void *cbArg,
-                                           MUTEX mutex, NXCPStreamCompressionMethod compressionMethod)
+                                           MUTEX mutex, NXCPStreamCompressionMethod compressionMethod,
+                                           VolatileCounter *cancellationFlag)
 {
    SocketCommChannel *ch = new SocketCommChannel(hSocket, false);
-   bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod, NULL);
+   bool result = SendFileOverNXCP(ch, id, pszFile, pCtx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
    ch->decRefCount();
    return result;
 }
@@ -733,7 +734,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod,
-														 VolatileCounter *cancelationFlag)
+														 VolatileCounter *cancellationFlag)
 {
    int hFile, iBytes;
 	INT64 bytesTransferred = 0;
@@ -765,7 +766,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 
 			while(true)
 			{
-			   if(cancelationFlag != NULL && (*cancelationFlag) > 0)
+			   if ((cancellationFlag != NULL) && (*cancellationFlag > 0))
 			      break;
 
             if (compressor != NULL)

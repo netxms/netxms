@@ -165,11 +165,12 @@ bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* c
 /**
  * Send file to server
  */
-bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelFlag)
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, 
+                                                 bool allowCompression, VolatileCounter *cancellationFlag)
 {
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
-	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancelFlag);
+	return s_fpSendFile(session, requestId, file, offset, allowCompression, cancellationFlag);
 }
 
 /**
