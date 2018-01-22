@@ -61,7 +61,6 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Sensor;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
@@ -493,6 +492,6 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected static boolean isLeafObject(AbstractObject object)
    {
-      return (object instanceof Node) || (object instanceof MobileDevice) || (object instanceof Sensor);
+      return (object instanceof Node) || (object instanceof MobileDevice);
    }
 }
