@@ -35,8 +35,8 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapInterface;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -51,7 +51,7 @@ public class ObjectStatusMapView extends ViewPart
    private static final String SETTINGS_SHOW_FILTER = ID + ".ShowFilter"; 
 
 	private long rootObjectId;
-	private ObjectStatusMapInterface map;
+	private AbstractObjectStatusMap map;
 	private Composite clientArea;
 	private int displayOption = 1;
    private boolean showFilter = true;

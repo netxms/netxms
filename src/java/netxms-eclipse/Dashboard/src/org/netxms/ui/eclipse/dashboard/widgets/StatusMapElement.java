@@ -28,8 +28,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
+import org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMap;
-import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapInterface;
 import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
 
 /**
@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.objectview.widgets.ObjectStatusMapRadial;
  */
 public class StatusMapElement extends ElementWidget
 {
-	private ObjectStatusMapInterface map;
+	private AbstractObjectStatusMap map;
 	private StatusMapConfig config;
 	
 	/**

@@ -282,7 +282,8 @@ public class PerfTabGraph extends DashboardComposite
 					@Override
 					public void run()
 					{
-						chart.addError(getErrorMessage());
+					   if (!((Widget)chart).isDisposed())
+					      chart.addError(getErrorMessage());
 					}
 				});
 				return Status.OK_STATUS;
