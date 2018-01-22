@@ -944,12 +944,12 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 /**
  * Send file to server
  */
-bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag)
+bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag)
 {
    if (m_disconnected)
       return false;
-	return SendFileOverNXCP(m_channel, requestId, file, m_pCtx, offset,
-	         SendFileProgressCallback, this, m_socketWriteMutex, allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancelationFlag);
+	return SendFileOverNXCP(m_channel, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex, 
+            allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
 }
 
 /**
