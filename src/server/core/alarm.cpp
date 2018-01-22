@@ -1785,17 +1785,32 @@ bool InitAlarmManager()
    if (hResult == NULL)
       return false;
 
+   DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
+   if (cachedb != NULL)
+   {
+      nxlog_debug(2, _T("Caching alarm data tables"));
+      if (!DBCacheTable(cachedb, hdb, _T("alarm_events"), _T("alarm_id,event_id"), _T("*")) ||
+          !DBCacheTable(cachedb, hdb, _T("alarm_notes"), _T("note_id"), _T("note_id,alarm_id")))
+      {
+         DBCloseInMemoryDatabase(cachedb);
+         cachedb = NULL;
+      }
+   }
+
    int count = DBGetNumRows(hResult);
    if (count > 0)
    {
       for(int i = 0; i < count; i++)
       {
-         m_alarmList->add(new Alarm(hdb, hResult, i));
+         m_alarmList->add(new Alarm((cachedb != NULL) ? cachedb : hdb, hResult, i));
       }
    }
 
    DBFreeResult(hResult);
    DBConnectionPoolReleaseConnection(hdb);
+
+   if (cachedb != NULL)
+      DBCloseInMemoryDatabase(cachedb);
 
 	m_hWatchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
    return true;

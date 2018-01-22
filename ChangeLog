@@ -19,6 +19,7 @@
 *
 
 - Additional information about captured Windows Event Log event passed to the server
+- Improved server startup time
 - Fixed issues:
 	NX-1149 (Pass EventRecordID with matched Windows event log record)
 	NX-1258 (Option to pass event data from Windows event log to NetXMS event)
