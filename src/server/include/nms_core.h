@@ -961,31 +961,32 @@ enum WatchdogState
  * Functions
  */
 void ConfigPreLoad();
-bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
-bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t size, const TCHAR *defaultValue);
 #ifdef UNICODE
-bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_t size, const char *defaultValue);
 #else
 #define ConfigReadStrA ConfigReadStr
 #endif
-bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
-int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
-int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *szVar, int iDefault);
-UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
-bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault);
-bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, bool bCreate, bool isVisible = true, bool needRestart = false);
-bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, bool bCreate, bool isVisible = true, bool needRestart = false);
-bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, bool bCreate, bool isVisible = true, bool needRestart = false);
-bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, bool bCreate, bool isVisible = true, bool needRestart = false);
-TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
-bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, bool bCreate);
-bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
+bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *variable, char *buffer, size_t size, const char *defaultValue);
+int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *variable, int defaultValue);
+int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *variable, int defaultValue);
+UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *variable, UINT32 defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadBoolean(const TCHAR *variable, bool defaultValue);
+bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *variable, int *buffer, size_t size, int defaultElementValue);
+bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, UINT32 value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
+TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
+bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create);
+bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *variable);
 
 void MetaDataPreLoad();
-bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
-INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *var, INT32 defaultValue);
-bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
-bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *name, INT32 value);
+bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *variable, TCHAR *buffer, int size, const TCHAR *defaultValue);
+INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *variable, INT32 defaultValue);
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, INT32 value);
 
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
@@ -1055,7 +1056,7 @@ bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
 void CloseOtherSessions(UINT32 userId, UINT32 thisSession);
 
-void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
+void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 

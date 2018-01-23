@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.23 to 30.24 (changes also included into 22.14)
+ */
+static bool H_UpgradeFromV23()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 14)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DataCollection.OnDCIDelete.TerminateRelatedAlarms"), _T("1"), _T("Enable/disable automatic termination of related alarms when data collection item is deleted."), NULL, 'B', true, false, false, false));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I' WHERE var_name='BlockInactiveUserAccounts'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 14));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+
+/**
  * Upgrade from 30.22 to 30.23 (changes also included into 22.13)
  */
 static bool H_UpgradeFromV22()
@@ -874,6 +890,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 23, 30, 24, H_UpgradeFromV23 },
    { 22, 30, 23, H_UpgradeFromV22 },
    { 21, 30, 22, H_UpgradeFromV21 },
    { 20, 30, 21, H_UpgradeFromV20 },

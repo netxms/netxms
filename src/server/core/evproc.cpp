@@ -57,7 +57,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	INT64 numEvents, prevEvents, eventsPerSecond;
 	int duration, actualDuration = 0;
 	
-	if (!ConfigReadInt(_T("EnableEventStormDetection"), 0))
+	if (!ConfigReadBoolean(_T("EnableEventStormDetection"), false))
 	{
 		// Event storm detection is off
 	   DbgPrintf(1, _T("Event storm detector thread stopped because event storm detection is off"));

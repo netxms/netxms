@@ -40,7 +40,7 @@ UINT64 g_snmpTrapsReceived = 0;
  */
 static Mutex s_trapCfgLock;
 static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, true);
-static BOOL m_bLogAllTraps = FALSE;
+static bool s_logAllTraps = false;
 static Mutex s_trapCountersLock;
 static INT64 s_trapId = 1; // Next free trap ID
 static bool s_allowVarbindConversion = true;
@@ -342,8 +342,8 @@ void LoadTrapCfg()
 void InitTraps()
 {
 	LoadTrapCfg();
-	m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
-	s_allowVarbindConversion = ConfigReadInt(_T("AllowTrapVarbindsConversion"), 1) ? true : false;
+	s_logAllTraps = ConfigReadBoolean(_T("LogAllSNMPTraps"), false);
+	s_allowVarbindConversion = ConfigReadBoolean(_T("AllowTrapVarbindsConversion"), true);
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
@@ -484,7 +484,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
    Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, srcAddr);
 
    // Write trap to log if required
-   if (m_bLogAllTraps || (node != NULL))
+   if (s_logAllTraps || (node != NULL))
    {
       NXCPMessage msg;
       TCHAR szQuery[8192], oidText[1024];

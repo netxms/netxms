@@ -873,6 +873,14 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Terminate alarms related to DCI
+ */
+static void TerminateRelatedAlarms(void *arg)
+{
+   ResolveAlarmByDCObjectId(CAST_FROM_POINTER(arg, UINT32), true);
+}
+
+/**
  * Delete object and collected data from database
  */
 void DCObject::deleteFromDatabase()
@@ -883,6 +891,9 @@ void DCObject::deleteFromDatabase()
 
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_access WHERE dci_id=%d"), (int)m_id);
    QueueSQLRequest(query);
+
+   if (ConfigReadBoolean(_T("DataCollection.OnDCIDelete.TerminateRelatedAlarms"), true))
+      ThreadPoolExecuteSerialized(g_mainThreadPool, _T("TerminateDataCollectionAlarms"), TerminateRelatedAlarms, CAST_TO_POINTER(m_id, void*));
 }
 
 /**

@@ -137,7 +137,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 						if (m_serviceList[i].id != 0)
 						{
 							// Check if service is enabled
-							if (ConfigReadInt(m_serviceList[i].enableParameter, 0) != 0)
+							if (ConfigReadBoolean(m_serviceList[i].enableParameter, false))
 							{
 								if (m_serviceList[i].setupSession(session, pRequest))
 								{

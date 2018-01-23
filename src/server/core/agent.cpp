@@ -466,7 +466,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          const BYTE *pduBytes = msg->getBinaryFieldPtr(VID_PDU, &pduLenght);
          UINT32 zoneUIN = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_UIN) : 0;
          Node *originNode = FindNodeByIP(zoneUIN, originSenderIP);
-         if ((originNode != NULL) || ConfigReadInt(_T("LogAllSNMPTraps"), FALSE))
+         if ((originNode != NULL) || ConfigReadBoolean(_T("LogAllSNMPTraps"), false))
          {
             SNMP_PDU *pdu = new SNMP_PDU;
             SNMP_SecurityContext *sctx = (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL;
