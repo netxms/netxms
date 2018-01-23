@@ -47,6 +47,21 @@ public class DashboardLayout extends Layout
    private Point cachedSize = null;
    
    /**
+    * Get number of empty cells in given row
+    * 
+    * @param cellUsed
+    * @param row
+    * @return
+    */
+   private int freeSpaceInRow(boolean[][] cellUsed, int row)
+   {
+      int i = numColumns - 1;
+      while((i >= 0) && !cellUsed[row][i])
+         i--;
+      return numColumns - i - 1;
+   }
+   
+   /**
     * Create logical grid
     */
    private void createGrid(Composite parent)
@@ -71,7 +86,7 @@ public class DashboardLayout extends Layout
          }
 
          int freeSpace = 0;
-         for (int j = currentColumn; j < numColumns && freeSpace < columnSpan; j++)
+         for(int j = currentColumn; (j < numColumns) && (freeSpace < columnSpan); j++)
          {
             if (!cellUsed[currentRow][j])
             {
@@ -86,7 +101,8 @@ public class DashboardLayout extends Layout
 
          if (freeSpace < columnSpan)
          {
-            currentRow++;
+            while(freeSpaceInRow(cellUsed, currentRow) < layoutData.horizontalSpan)
+               currentRow++;
             currentColumn = 0;
          }
          for(int _c = 0; _c < columnSpan; _c++)
