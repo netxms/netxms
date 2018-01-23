@@ -38,7 +38,7 @@ static bool H_UpgradeFromV14()
 static bool H_UpgradeFromV13()
 {
    CHK_EXEC(CreateConfigParam(_T("DataCollection.OnDCIDelete.TerminateRelatedAlarms"), _T("1"), _T("Enable/disable automatic termination of related alarms when data collection item is deleted."), NULL, 'B', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I' WHERE var_name='BlockInactiveUserAccounts'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Inactivity time after which user account will be blocked (0 to disable blocking).' WHERE var_name='BlockInactiveUserAccounts'")));
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
 }
