@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
-import org.netxms.ui.eclipse.perfview.widgets.TableValue;
+import org.netxms.ui.eclipse.perfview.widgets.TableValueViewer;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 public class TableValueElement extends ElementWidget
 {
 	private TableValueConfig config;
-	private TableValue viewer;
+	private TableValueViewer viewer;
 	
 	/**
 	 * @param parent
@@ -62,7 +62,7 @@ public class TableValueElement extends ElementWidget
 		if (config.getTitle().trim().isEmpty())
 		{
 			setLayout(new FillLayout());
-			viewer = new TableValue(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
+			viewer = new TableValueViewer(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
 		}
 		else
 		{
@@ -76,7 +76,7 @@ public class TableValueElement extends ElementWidget
 			title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			title.setFont(JFaceResources.getBannerFont());
 			
-			viewer = new TableValue(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
+			viewer = new TableValueViewer(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
 			viewer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
 

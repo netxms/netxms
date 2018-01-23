@@ -38,7 +38,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.widgets.TableValue;
+import org.netxms.ui.eclipse.perfview.widgets.TableValueViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -50,9 +50,9 @@ public class TableLastValuesView extends ViewPart
 	
 	private long objectId;
 	private long dciId;
-	private TableValue viewer;
-	private Action actionRefresh;
-	private Action actionExportAllToCsv;
+   private TableValueViewer viewer;
+   private Action actionRefresh;
+   private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -85,7 +85,7 @@ public class TableLastValuesView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new TableValue(parent, SWT.NONE, this, null);
+		viewer = new TableValueViewer(parent, SWT.NONE, this, null);
 
 		createActions();
 		contributeToActionBars();
