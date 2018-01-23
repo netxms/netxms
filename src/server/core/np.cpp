@@ -221,7 +221,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    NetObjInsert(pNode, true, false);
 
 	// Use DNS name as primary name if required
-	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
+	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))
 	{
       TCHAR dnsName[MAX_DNS_NAME];
       TCHAR *tmp;

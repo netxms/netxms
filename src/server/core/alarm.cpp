@@ -874,6 +874,49 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
 }
 
 /**
+ * Resolve and possibly terminate all alarms related to given data collection obejct
+ */
+void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
+{
+   UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_alarmList->size());
+
+   MutexLock(m_mutex);
+   int numObjects = 0;
+   for(int i = 0; i < m_alarmList->size(); i++)
+   {
+      Alarm *alarm = m_alarmList->get(i);
+      if ((alarm->getDciId() == dciId) && (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
+      {
+         // Add alarm's source object to update list
+         int j;
+         for(j = 0; j < numObjects; j++)
+         {
+            if (pdwObjectList[j] == alarm->getSourceObject())
+               break;
+         }
+         if (j == numObjects)
+         {
+            pdwObjectList[numObjects++] = alarm->getSourceObject();
+         }
+
+         // Resolve or terminate alarm
+         alarm->resolve(0, NULL, terminate, true);
+         if (terminate)
+         {
+            m_alarmList->remove(i);
+            i--;
+         }
+      }
+   }
+   MutexUnlock(m_mutex);
+
+   // Update status of objects
+   for(int i = 0; i < numObjects; i++)
+      UpdateObjectStatus(pdwObjectList[i]);
+   free(pdwObjectList);
+}
+
+/**
  * Resolve and possibly terminate alarm with given helpdesk reference.
  * Automatically change alarm's helpdesk state to "closed"
  */

@@ -932,7 +932,7 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
 void StartSyslogServer()
 {
    s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
-   s_alwaysUseServerTime = ConfigReadInt(_T("SyslogIgnoreMessageTimestamp"), 0) ? true : false;
+   s_alwaysUseServerTime = ConfigReadBoolean(_T("SyslogIgnoreMessageTimestamp"), false);
 
    // Determine first available message id
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -957,7 +957,7 @@ void StartSyslogServer()
    s_processingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
    s_writerThread = ThreadCreateEx(SyslogWriterThread, 0, NULL);
 
-   if (ConfigReadInt(_T("EnableSyslogReceiver"), 0))
+   if (ConfigReadBoolean(_T("EnableSyslogReceiver"), false))
       s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
 }
 

@@ -264,7 +264,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
  */
 static void RunCommand(void *arg)
 {
-   if (ConfigReadInt(_T("EscapeLocalCommands"), 0))
+   if (ConfigReadBoolean(_T("EscapeLocalCommands"), false))
    {
       String s = (TCHAR *)arg;
 #ifdef _WIN32

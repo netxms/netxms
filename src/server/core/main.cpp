@@ -325,41 +325,41 @@ static void LoadGlobalConfig()
       ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
-	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
+	if (ConfigReadBoolean(_T("DeleteEmptySubnets"), true))
 		g_flags |= AF_DELETE_EMPTY_SUBNETS;
-	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
+	if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
 		g_flags |= AF_ENABLE_SNMP_TRAPD;
-	if (ConfigReadInt(_T("ProcessTrapsFromUnmanagedNodes"), 0))
+	if (ConfigReadBoolean(_T("ProcessTrapsFromUnmanagedNodes"), false))
 		g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
-	if (ConfigReadInt(_T("EnableZoning"), 0))
+	if (ConfigReadBoolean(_T("EnableZoning"), false))
 		g_flags |= AF_ENABLE_ZONING;
-	if (ConfigReadInt(_T("EnableObjectTransactions"), 0))
+	if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
 		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
-	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
+	if (ConfigReadBoolean(_T("RunNetworkDiscovery"), false))
 		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
-	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
+	if (ConfigReadBoolean(_T("ActiveNetworkDiscovery"), false))
 		g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
-   if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
+   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
-   if (ConfigReadInt(_T("UseSyslogForDiscovery"), 0))
+   if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
-	if (ConfigReadInt(_T("ResolveNodeNames"), 1))
+	if (ConfigReadBoolean(_T("ResolveNodeNames"), true))
 		g_flags |= AF_RESOLVE_NODE_NAMES;
-	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))
+	if (ConfigReadBoolean(_T("SyncNodeNamesWithDNS"), false))
 		g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
-	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
+	if (ConfigReadBoolean(_T("CheckTrustedNodes"), true))
 		g_flags |= AF_CHECK_TRUSTED_NODES;
-	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
+	if (ConfigReadBoolean(_T("EnableNXSLContainerFunctions"), true))
 		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
-   if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
+   if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
-   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 1))
+   if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
-   if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPoll"), 0))
+   if (ConfigReadBoolean(_T("ResolveDNSToIPOnStatusPoll"), false))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
-   if (ConfigReadInt(_T("CaseInsensitiveLoginNames"), 0))
+   if (ConfigReadBoolean(_T("CaseInsensitiveLoginNames"), false))
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
-   if (ConfigReadInt(_T("TrapSourcesInAllZones"), 0))
+   if (ConfigReadBoolean(_T("TrapSourcesInAllZones"), false))
       g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
 
    if (g_netxmsdDataDir[0] == 0)
@@ -960,7 +960,7 @@ retry_db_lock:
 	InitMappingTables();
 
    InitClientListeners();
-	if (ConfigReadInt(_T("ImportConfigurationOnStartup"), 1))
+	if (ConfigReadBoolean(_T("ImportConfigurationOnStartup"), false))
 	   ImportLocalConfiguration();
 
 	// Check if management node object presented in database
@@ -987,7 +987,7 @@ retry_db_lock:
 
 	// Start SNMP trapper
 	InitTraps();
-	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
+	if (ConfigReadBoolean(_T("EnableSNMPTraps"), true))
 		ThreadCreate(SNMPTrapReceiver, 0, NULL);
 
 	// Start built-in syslog daemon
@@ -1000,11 +1000,11 @@ retry_db_lock:
 	ThreadCreate(BeaconPoller, 0, NULL);
 
 	// Start inter-server communication listener
-	if (ConfigReadInt(_T("EnableISCListener"), 0))
+	if (ConfigReadBoolean(_T("EnableISCListener"), false))
 		ThreadCreate(ISCListener, 0, NULL);
 
 	// Start reporting server connector
-	if (ConfigReadInt(_T("EnableReportingServer"), 0))
+	if (ConfigReadBoolean(_T("EnableReportingServer"), false))
 		ThreadCreate(ReportingServerConnector, 0, NULL);
 
    // Start LDAP synchronization
@@ -1032,7 +1032,7 @@ retry_db_lock:
    }
 
    // Send summary emails
-   if (ConfigReadInt(_T("EnableAlarmSummaryEmails"), 0))
+   if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
       EnableAlarmSummaryEmails();
    else
       RemoveScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
@@ -1056,7 +1056,7 @@ retry_db_lock:
    CALL_ALL_MODULES(pfServerStarted, ());
 
 #if XMPP_SUPPORTED
-   if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
+   if (ConfigReadBoolean(_T("EnableXMPPConnector"), true))
    {
       StartXMPPConnector();
    }

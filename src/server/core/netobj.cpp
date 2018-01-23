@@ -216,13 +216,13 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_urls WHERE object_id=?"));
 
    // Delete events
-   if (success && ConfigReadInt(_T("DeleteEventsOfDeletedObject"), 1))
+   if (success && ConfigReadBoolean(_T("DeleteEventsOfDeletedObject"), true))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM event_log WHERE event_source=?"));
    }
 
    // Delete alarms
-   if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1))
+   if (success && ConfigReadBoolean(_T("DeleteAlarmsOfDeletedObject"), true))
    {
       success = DeleteObjectAlarms(m_id, hdb);
    }

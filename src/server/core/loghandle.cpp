@@ -246,7 +246,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 		}
 	}
 
-	if ((userId != 0) && (m_log->relatedObjectIdColumn != NULL) && ConfigReadInt(_T("ExtendedLogQueryAccessControl"), 0))
+	if ((userId != 0) && (m_log->relatedObjectIdColumn != NULL) && ConfigReadBoolean(_T("ExtendedLogQueryAccessControl"), false))
    {
 		String constraint = buildObjectAccessConstraint(userId);
 		if (!constraint.isEmpty()) 

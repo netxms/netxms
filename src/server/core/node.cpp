@@ -743,14 +743,14 @@ InterfaceList *Node::getInterfaceList()
          bool useIfXTable;
          if (m_nUseIfXTable == IFXTABLE_DEFAULT)
          {
-            useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0) ? true : false;
+            useIfXTable = (ConfigReadBoolean(_T("UseIfXTable"), true) != 0) ? true : false;
          }
          else
          {
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
          }
 
-         int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
+         int useAliases = ConfigReadBoolean(_T("UseInterfaceAliases"), false);
          pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != NULL) && (m_flags & NF_IS_BRIDGE))
@@ -2450,7 +2450,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
          modified |= MODIFY_NODE_PROPERTIES;
 
       // Check for CheckPoint SNMP agent on port 260
-      if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
+      if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
       {
          nxlog_debug(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
          if (!((m_flags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && m_ipAddress.isValidUnicast())
@@ -3186,7 +3186,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
       unlockProperties();
    }
 
-   if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
+   if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
    {
       // Check for CheckPoint SNMP agent on port 161
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);

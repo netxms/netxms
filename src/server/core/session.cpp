@@ -1828,8 +1828,8 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_ZONING_ENABLED, (UINT16)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.setField(VID_POLLING_INTERVAL, (INT32)DCObject::m_defaultPollingInterval);
 			msg.setField(VID_RETENTION_TIME, (INT32)DCObject::m_defaultRetentionTime);
-			msg.setField(VID_ALARM_STATUS_FLOW_STATE, (UINT16)ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
-			msg.setField(VID_TIMED_ALARM_ACK_ENABLED, (UINT16)ConfigReadInt(_T("EnableTimedAlarmAck"), 0));
+			msg.setField(VID_ALARM_STATUS_FLOW_STATE, ConfigReadBoolean(_T("StrictAlarmStatusFlow"), false));
+			msg.setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
 			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
@@ -10202,7 +10202,7 @@ void ClientSession::sendSMS(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_SMS) && ConfigReadInt(_T("AllowDirectSMS"), 0))
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_SMS) && ConfigReadBoolean(_T("AllowDirectSMS"), false))
 	{
 		pRequest->getFieldAsString(VID_RCPT_ADDR, phone, 256);
 		pRequest->getFieldAsString(VID_MESSAGE, message, 256);
@@ -10400,7 +10400,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-	if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
+	if (ConfigReadBoolean(_T("EnableAgentRegistration"), false))
 	{
       node = FindNodeByIP(0, m_clientAddr);
       if (node != NULL)

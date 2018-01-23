@@ -704,22 +704,22 @@ void ResetDiscoveryPoller()
 
    // Reload discovery parameters
    g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
-   if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
+   if (ConfigReadBoolean(_T("RunNetworkDiscovery"), false))
       g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
    else
       g_flags &= ~AF_ENABLE_NETWORK_DISCOVERY;
 
-   if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
+   if (ConfigReadBoolean(_T("ActiveNetworkDiscovery"), false))
       g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
    else
       g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
 
-   if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
+   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    else
       g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
 
-   if (ConfigReadInt(_T("UseSyslogForDiscovery"), 0))
+   if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
    else
       g_flags &= ~AF_SYSLOG_DISCOVERY;
