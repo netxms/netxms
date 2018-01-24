@@ -948,6 +948,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WC
    {
       free(result);
       result = NULL;
+      MutexUnlock(pConn->mutexQueryLock);
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
 }
@@ -1048,6 +1049,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(PG_CONN *p
    {
       free(result);
       result = NULL;
+      MutexUnlock(pConn->mutexQueryLock);
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
 }
