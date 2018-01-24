@@ -206,7 +206,7 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
                           _T("   Load average:       %0.2f %0.2f %0.2f\n")
                           _T("   Current load:       %d%%\n")
                           _T("   Usage:              %d%%\n")
-                          _T("   Active requests:    %d\n\n")
+                          _T("   Active requests:    %d\n")
                           _T("   Scheduled requests: %d\n\n"),
                  info.name, info.curThreads, info.minThreads, info.maxThreads, 
                  info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
