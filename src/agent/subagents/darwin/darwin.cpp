@@ -27,22 +27,18 @@
 #include "disk.h"
 #include "cpu.h"
 
-
-//
-// Initalization callback
-//
-
-static BOOL SubAgentInit(Config *config)
+/**
+ * Initalization callback
+ */
+static bool SubAgentInit(Config *config)
 {
    StartCpuUsageCollector();
-   return TRUE;
+   return true;
 }
 
-
-//
-// Shutdown callback
-//
-
+/**
+ * Shutdown callback
+ */
 static void SubAgentShutdown()
 {
    ShutdownCpuUsageCollector();
@@ -164,6 +160,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, // init handler
    SubAgentShutdown, // shutdown handler
    NULL, // command handler
+   NULL, // notification handler
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -181,7 +178,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(DARWIN)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 

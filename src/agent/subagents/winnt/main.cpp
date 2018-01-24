@@ -162,7 +162,7 @@ static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TC
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    StartCPUStatCollector();
    return true;
@@ -331,7 +331,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinNT"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -358,7 +358,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
       if (ver.dwMajorVersion < 6)
          g_isWin5 = true;
    }
-	return TRUE;
+	return true;
 }
 
 /**

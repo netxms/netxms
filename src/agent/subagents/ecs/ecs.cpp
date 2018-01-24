@@ -226,11 +226,9 @@ static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 	return ret;
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Supported parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("ECS.HttpSHA1(*)"),				H_DoHttp,					(TCHAR *)1,
@@ -241,11 +239,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_STRING, _T("Measure load time for URL *") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ECS"), NETXMS_BUILD_TAG,
-	NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,		// lists
@@ -260,7 +261,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(ECS)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

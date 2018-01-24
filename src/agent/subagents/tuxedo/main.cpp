@@ -48,16 +48,16 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    const char *tc = getenv("TUXCONFIG");
    if (tc == NULL)
    {
       AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: TUXCONFIG environment variable not set"));
-      return FALSE;
+      return false;
    }
    AgentWriteDebugLog(2, _T("Tuxedo: using configuration file %hs"), tc);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -167,7 +167,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("TUXEDO"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -184,7 +184,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(TUXEDO)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

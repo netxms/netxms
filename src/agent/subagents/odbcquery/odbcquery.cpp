@@ -1,6 +1,6 @@
 /*
 ** NetXMS ODBCQUERY subagent
-** Copyright (C) 2006 Alex Kalimulin
+** Copyright (C) 2006-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -263,7 +263,7 @@ finish_add_query:
 // Subagent initialization
 //
 
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    int i;
 	ConfigEntry *ql;
@@ -288,7 +288,7 @@ static BOOL SubAgentInit(Config *config)
    for(i = 0; i < (int)m_dwNumQueries; i++)
       m_pQueryList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pQueryList[i]);
 
-   return TRUE;
+   return true;
 }
 
 
@@ -325,7 +325,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ODBCQUERY"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,	// lists
@@ -342,7 +342,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(ODBCQUERY)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 //

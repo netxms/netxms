@@ -48,7 +48,7 @@ static StringMap *s_values = new StringMap();
 static MUTEX s_valuesMutex = MutexCreate();
 static bool s_shutdown = false;
 
-static BOOL SubagentInit(Config *config);
+static bool SubagentInit(Config *config);
 static void SubagentShutdown();
 
 
@@ -81,7 +81,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("DEVEMU"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL,
+   SubagentInit, SubagentShutdown, NULL, NULL,
    0, NULL, // parameters
    sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,
@@ -121,9 +121,9 @@ static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue, Abst
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
-   return TRUE;
+   return true;
 }
 
 /**
@@ -309,7 +309,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(DEVEMU)
       ThreadCreateEx(MonitorChanges, 0, NULL);
 
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 #ifdef _WIN32

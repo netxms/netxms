@@ -158,7 +158,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("OpenBSD"),
 	NETXMS_VERSION_STRING,
-	NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -174,7 +174,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 /**

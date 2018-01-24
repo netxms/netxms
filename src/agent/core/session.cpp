@@ -706,7 +706,7 @@ void CommSession::processingThread()
                break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(command, request, &response, this))
+               if (!ProcessCommandBySubAgent(command, request, &response, this))
                   response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }

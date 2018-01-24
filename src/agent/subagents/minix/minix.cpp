@@ -158,9 +158,9 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	"NetBSD",
+	"MINIX",
 	NETXMS_VERSION_STRING,
-	NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -177,7 +177,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(NETBSD)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 

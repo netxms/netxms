@@ -125,11 +125,11 @@ void InitLibvirt()
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
 	// Parse configuration
    if (!config->parseTemplate(_T("VMGR"), m_cfgTemplate))
-      return FALSE;
+      return false;
 
    if (s_hostList != NULL)
 	{
@@ -148,14 +148,14 @@ static BOOL SubagentInit(Config *config)
    {
       AgentWriteLog(NXLOG_ERROR, _T("VMGR: No connection URL found. Vmgr subagent will not be started."));
       free(s_hostList);
-      return FALSE;
+      return false;
    }
 
 	free(s_hostList);
 	InitLibvirt();
 
    AgentWriteDebugLog(2, _T("VMGR: subagent initialized"));
-   return TRUE;
+   return true;
 }
 
 /**
@@ -164,18 +164,6 @@ static BOOL SubagentInit(Config *config)
 static void SubagentShutdown()
 {
    //Preparations for shutdown
-}
-
-/**
- * Process commands like VM up/down
- */
-static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
-{
-   switch(command)
-   {
-      default:
-         return FALSE;
-   }
 }
 
 /**
@@ -229,7 +217,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("VMGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, ProcessCommands,
+   SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -246,7 +234,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(VMGR)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 #ifdef _WIN32

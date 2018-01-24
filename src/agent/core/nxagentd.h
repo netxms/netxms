@@ -564,12 +564,10 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
-BOOL LoadSubAgent(TCHAR *szModuleName);
+bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
-BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
-                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
-                  const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session);
+bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+void NotifySubAgents(UINT32 code, void *data);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *session),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);

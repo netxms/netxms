@@ -397,7 +397,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
 	// Parse configuration
 	bool success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
@@ -478,7 +478,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PING"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL,
+	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -495,7 +495,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(PING)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

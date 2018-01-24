@@ -93,7 +93,7 @@ static void ConvertPathToNetwork(TCHAR *path)
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    g_rootFileManagerFolders = new ObjectArray<RootFolder>(16, 16, true);
    g_downloadFileStopMarkers = new HashMap<UINT32, VolatileCounter>();
@@ -108,7 +108,7 @@ static BOOL SubagentInit(Config *config)
       }
    }
    AgentWriteDebugLog(2, _T("FILEMGR: subagent initialized"));
-   return TRUE;
+   return true;
 }
 
 /**
@@ -730,7 +730,7 @@ static void GetFolderInfo(const TCHAR *folder, UINT64 *fileCount, UINT64 *folder
 /**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
-static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    switch(command)
    {
@@ -743,7 +743,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_SIZE): File name should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(directory);
 
@@ -761,7 +761,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
 
-         return TRUE;
+         return true;
    	}
       case CMD_GET_FOLDER_CONTENT:
       {
@@ -772,7 +772,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): File name should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(directory);
 
@@ -786,7 +786,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FOLDER_CONTENT): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_DELETE_FILE:
       {
@@ -797,7 +797,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): File name should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(file);
 
@@ -817,7 +817,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_RENAME_FILE:
       {
@@ -831,7 +831,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): File names should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
@@ -855,7 +855,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_RENAME_FILE): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_MOVE_FILE:
       {
@@ -893,7 +893,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_MOVE_FILE): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_UPLOAD:
       {
@@ -919,7 +919,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_UPLOAD): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_GET_FILE_DETAILS:
       {
@@ -949,7 +949,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_GET_FILE_DETAILS): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_GET_AGENT_FILE:
       {
@@ -981,7 +981,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_CANCEL_FILE_DOWNLOAD:
       {
@@ -993,7 +993,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          else
             response->setField(VID_RCC, ERR_INTERNAL_ERROR);
-         return TRUE;
+         return true;
       }
       case CMD_CANCEL_FILE_MONITORING:
       {
@@ -1008,7 +1008,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_CREATE_FOLDER:
       {
@@ -1019,7 +1019,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): File name should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(directory);
 
@@ -1043,7 +1043,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_CREATE_FOLDER): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       case CMD_FILEMGR_COPY_FILE:
       {
@@ -1059,7 +1059,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): File names should be set."));
-            return TRUE;
+            return true;
          }
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
@@ -1077,10 +1077,10 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_COPY_FILE): Access denied"));
             response->setField(VID_RCC, ERR_ACCESS_DENIED);
          }
-         return TRUE;
+         return true;
       }
       default:
-         return FALSE;
+         return false;
    }
 }
 
@@ -1091,7 +1091,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("FILEMGR"), NETXMS_BUILD_TAG,
-   SubagentInit, SubagentShutdown, ProcessCommands,
+   SubagentInit, SubagentShutdown, ProcessCommands, NULL,
    0, NULL, // parameters
    0, NULL, // lists
    0, NULL, // tables
@@ -1105,7 +1105,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(FILEMGR)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 #ifdef _WIN32

@@ -44,14 +44,14 @@
  * Initialization function declaration macro
  */
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
 #ifdef _WIN32
 #define DECLSPEC_EXPORT __declspec(dllexport) __cdecl
 #else
 #define DECLSPEC_EXPORT
 #endif
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #endif
 
 /**
@@ -75,8 +75,8 @@
 /**
  * Agent log parser policy folder
  */
-#define LOGPARSER_AP_FOLDER _T("logparser_ap")
-#define CONFIG_AP_FOLDER _T("config_ap")
+#define LOGPARSER_AP_FOLDER   _T("logparser_ap")
+#define CONFIG_AP_FOLDER      _T("config_ap")
 
 /**
  * Error codes
@@ -156,6 +156,11 @@
 #define USER_SESSION_DISCONNECTED   2
 #define USER_SESSION_IDLE           3
 #define USER_SESSION_OTHER          4
+
+/**
+ * Internal notification codes
+ */
+#define AGENT_NOTIFY_POLICY_INSTALLED  1
 
 /**
  * Descriptions for common parameters
@@ -480,9 +485,7 @@
 #define DCIDESC_SYSTEM_IO_BYTEWRITES_EX_MAX       _T("Maximum number of bytes written on device {instance} for last minute")
 #define DCIDESC_SYSTEM_IO_OPENFILES               _T("Number of open files")
 
-
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
-
 
 #define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
@@ -657,7 +660,7 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20161127)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20180124)
 
 class NXCPMessage;
 
@@ -669,9 +672,10 @@ typedef struct
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR name[MAX_SUBAGENT_NAME];
    TCHAR version[32];
-	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
+	bool (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+   bool (* commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+   void ( *notify)(UINT32 code, void *data);  // Generic notification interface
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;

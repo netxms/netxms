@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
- ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2014 Raden Solutions
+ ** Subagent for MongoDB monitoring
+ ** Copyright (C) 2009-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -26,7 +26,7 @@
 ObjectArray<DatabaseInstance> *g_instances;
 static NETXMS_SUBAGENT_PARAM *s_parameters;
 
-static BOOL SubAgentInit(Config *config);
+static bool SubAgentInit(Config *config);
 static void SubAgentShutdown();
 static LONG H_Databases(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -63,7 +63,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("MONGODB"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	0,	NULL, //parameters
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	0,	NULL, //tables
@@ -102,9 +102,9 @@ void MongoLogging(mongoc_log_level_t  log_level, const char *log_domain, const c
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
-	return TRUE;
+	return true;
 }
 
 /**
@@ -230,7 +230,7 @@ static LONG H_GetOtherParam(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
 DECLARE_SUBAGENT_ENTRY_POINT(MONGODB)
 {
    if (s_info.parameters != NULL)
-      return FALSE;  // Most likely another instance of MONGODB subagent already loaded
+      return false;  // Most likely another instance of MONGODB subagent already loaded
 
    *ppInfo = &s_info;
    return LoadConfiguration(config);

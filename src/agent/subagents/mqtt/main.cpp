@@ -52,7 +52,7 @@ static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Conf
 /**
  * Initialize subagent
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    mosquitto_lib_init();
 
@@ -64,7 +64,7 @@ static BOOL SubAgentInit(Config *config)
    for(int i = 0; i < s_brokers.size(); i++)
       s_brokers.get(i)->startNetworkLoop();
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -87,7 +87,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("MQTT"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	0, NULL,    // parameters
 	0, NULL,		// lists
 	0, NULL,		// tables
@@ -110,7 +110,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(MQTT)
    delete parameters;
 
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32
