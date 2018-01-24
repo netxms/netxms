@@ -36,6 +36,7 @@
 
 #include <netxms-regex.h>
 #include <nms_util.h>
+#include <uuid.h>
 
 /**
  * Parser status
@@ -231,7 +232,8 @@ private:
 	CODE_TO_TEXT *m_eventNameList;
 	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
 	THREAD m_thread;	// Associated thread
-	int m_recordsProcessed;
+   CONDITION m_stopCondition;
+   int m_recordsProcessed;
 	int m_recordsMatched;
 	bool m_processAllRules;
    bool m_suspended;
@@ -241,6 +243,7 @@ private:
    TCHAR *m_marker;
    bool m_useSnapshot;
 #endif
+   uuid m_guid;
 
 	const TCHAR *checkContext(LogParserRule *rule);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId);
@@ -256,9 +259,9 @@ private:
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
 
-   bool monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCurrPos);
-   bool monitorEventLogV6(CONDITION stopCondition);
-	bool monitorEventLogV4(CONDITION stopCondition);
+   bool monitorFileWithSnapshot(bool readFromCurrPos);
+   bool monitorEventLogV6();
+	bool monitorEventLogV4();
 
    time_t readLastProcessedRecordTimestamp();
 #endif
@@ -272,6 +275,7 @@ public:
 		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, UINT32 *) = NULL);
 
    const TCHAR *getName() const { return m_name; }
+   const uuid& getGuid() const { return m_guid;  }
 	const TCHAR *getFileName() const { return m_fileName; }
 	int getFileEncoding() const { return m_fileEncoding; }
    LogParserStatus getStatus() const { return m_status; }
@@ -280,9 +284,13 @@ public:
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
+   void setGuid(const uuid& guid);
 
 	void setThread(THREAD th) { m_thread = th; }
 	THREAD getThread() { return m_thread; }
+
+   void setStopCondition(CONDITION c) { m_stopCondition = c;  }
+   CONDITION getStopCondition() { return m_stopCondition; }
 
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() { return m_processAllRules; }
@@ -314,9 +322,9 @@ public:
 	int getTraceLevel() const { return m_traceLevel; }
 	void setTraceLevel(int level) { m_traceLevel = level; }
 
-	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
+	bool monitorFile(bool readFromCurrPos = true);
 #ifdef _WIN32
-   bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
+   bool monitorEventLog(const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
 
