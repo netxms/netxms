@@ -25,14 +25,10 @@
 #define DEBUG_TAG _T("logwatch")
 
 /**
- * Shutdown condition
- */
-static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
-
-/**
  * Configured parsers
  */
 static ObjectArray<LogParser> s_parsers(16, 16, true);
+static Mutex s_parserLock;
 
 /**
  * Offline (missed during agent's downtime) events processing flag
@@ -44,7 +40,7 @@ static bool s_processOfflineEvents;
  */
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
-	((LogParser *)arg)->monitorFile(s_shutdownCondition);
+   static_cast<LogParser*>(arg)->monitorFile();
 	return THREAD_OK;
 }
 
@@ -55,7 +51,7 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
  */
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 {
-   ((LogParser *)arg)->monitorEventLog(s_shutdownCondition, s_processOfflineEvents ? _T("LogWatch") : NULL);
+   static_cast<LogParser*>(arg)->monitorEventLog(s_processOfflineEvents ? _T("LogWatch") : NULL);
 	return THREAD_OK;
 }
 
@@ -71,6 +67,8 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 	if (!AgentGetParameterArg(cmd, 1, name, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
+   s_parserLock.lock();
+
 	LogParser *parser = NULL;
 	for(int i = 0; i < s_parsers.size(); i++)
    {
@@ -82,27 +80,33 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 		}
    }
 
-	if (parser == NULL)
-	{
-		AgentWriteDebugLog(8, _T("LogWatch: H_ParserStats: parser with name \"%s\" cannot be found"), name);
-		return SYSINFO_RC_UNSUPPORTED;
-	}
+   LONG rc = SYSINFO_RC_SUCCESS;
+   if (parser != NULL)
+   {
+      switch (*arg)
+      {
+         case 'S':	// Status
+            ret_string(value, parser->getStatusText());
+            break;
+         case 'M':	// Matched records
+            ret_int(value, parser->getMatchedRecordsCount());
+            break;
+         case 'P':	// Processed records
+            ret_int(value, parser->getProcessedRecordsCount());
+            break;
+         default:
+            rc = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("H_ParserStats: parser with name \"%s\" cannot be found"), name);
+      rc = SYSINFO_RC_UNSUPPORTED;
+   }
 
-	switch(*arg)
-	{
-		case 'S':	// Status
-			ret_string(value, parser->getStatusText());
-			break;
-		case 'M':	// Matched records
-			ret_int(value, parser->getMatchedRecordsCount());
-			break;
-		case 'P':	// Processed records
-			ret_int(value, parser->getProcessedRecordsCount());
-			break;
-		default:
-			return SYSINFO_RC_UNSUPPORTED;
-	}
-	return SYSINFO_RC_SUCCESS;
+   s_parserLock.unlock();
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -110,9 +114,11 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
  */
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	for(int i = 0; i < s_parsers.size(); i++)
+   s_parserLock.lock();
+   for(int i = 0; i < s_parsers.size(); i++)
 		value->add(s_parsers.get(i)->getName());
-	return SYSINFO_RC_SUCCESS;
+   s_parserLock.unlock();
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -120,12 +126,14 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
  */
 static void SubagentShutdown()
 {
-	if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
-		ConditionSet(s_shutdownCondition);
+   for(int i = 0; i < s_parsers.size(); i++)
+      ConditionSet(s_parsers.get(i)->getStopCondition());
 
-	for(int i = 0; i < s_parsers.size(); i++)
+   for(int i = 0; i < s_parsers.size(); i++)
 	{
-		ThreadJoin(s_parsers.get(i)->getThread());
+      LogParser *p = s_parsers.get(i);
+      ThreadJoin(p->getThread());
+      ConditionDestroy(p->getStopCondition());
 	}
 
    CleanupLogParserLibrary();
@@ -175,7 +183,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
 /**
  * Add parser from config parameter
  */
-static void AddParserFromConfig(const TCHAR *file)
+static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 {
 	BYTE *xml;
 	UINT32 size;
@@ -193,9 +201,11 @@ static void AddParserFromConfig(const TCHAR *file)
 				if (parser->getFileName() != NULL)
 				{
 					parser->setCallback(LogParserMatch);
+               parser->setGuid(guid);
+               parser->setStopCondition(ConditionCreate(true));
                s_parsers.add(parser);
-					AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
-						parser->getFileName(), parser->getTraceLevel());
+               nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),
+						parser->getFileName(), (const TCHAR *)guid.toString(), parser->getTraceLevel());
 #ifdef _WIN32
 					nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
@@ -226,9 +236,10 @@ static void AddParserFromConfig(const TCHAR *file)
 static void AddLogwatchPolicyFiles()
 {
    const TCHAR *dataDir = AgentGetDataDirectory();
-   TCHAR policyFolder[MAX_PATH];
    TCHAR tail = dataDir[_tcslen(dataDir) - 1];
-	_sntprintf(policyFolder, MAX_PATH, _T("%s%s%s"), dataDir,
+   
+   TCHAR policyFolder[MAX_PATH];
+   _sntprintf(policyFolder, MAX_PATH, _T("%s%s%s"), dataDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
 
@@ -246,15 +257,30 @@ static void AddLogwatchPolicyFiles()
          }
 
          TCHAR fullName[MAX_PATH];
-         _tcscpy(fullName, policyFolder);
-         _tcscat(fullName, d->d_name);
+         _tcslcpy(fullName, policyFolder, MAX_PATH);
+         _tcslcat(fullName, d->d_name, MAX_PATH);
 
          NX_STAT_STRUCT st;
          if (CALL_STAT(fullName, &st) == 0)
          {
             if (S_ISREG(st.st_mode))
             {
-               AddParserFromConfig(fullName);
+               TCHAR buffer[128];
+               TCHAR *p = _tcschr(d->d_name, _T('.'));
+               if (p != NULL)
+               {
+                  size_t len = p - d->d_name;
+                  if (len > 127)
+                     len = 127;
+                  memcpy(buffer, d->d_name, len * sizeof(TCHAR));
+                  buffer[len] = 0;
+               }
+               else
+               {
+                  _tcslcpy(buffer, d->d_name, 128);
+               }
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing log parser policy %s"), buffer);
+               AddParserFromConfig(fullName, uuid::parse(buffer));
             }
          }
       }
@@ -275,12 +301,11 @@ static bool SubagentInit(Config *config)
 	if (parsers != NULL)
 	{
 		for(int i = 0; i < parsers->getValueCount(); i++)
-			AddParserFromConfig(parsers->getValue(i));
+			AddParserFromConfig(parsers->getValue(i), uuid::NULL_UUID);
 	}
    AddLogwatchPolicyFiles();
 
-	// Create shutdown condition and start parsing threads
-	s_shutdownCondition = ConditionCreate(true);
+	// Start parsing threads
    for(int i = 0; i < s_parsers.size(); i++)
 	{
       LogParser *p = s_parsers.get(i);
@@ -302,6 +327,67 @@ static bool SubagentInit(Config *config)
 	}
 
 	return true;
+}
+
+/**
+ * Agent notification handler
+ */
+static void OnAgentNotify(UINT32 code, void *data)
+{
+   if (code != AGENT_NOTIFY_POLICY_INSTALLED)
+      return;
+
+   // data points to uuid object
+   uuid policyId = *static_cast<uuid*>(data);
+
+   s_parserLock.lock();
+   for (int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+      if (!p->getGuid().equals(policyId))
+         continue;
+
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
+      ConditionSet(p->getStopCondition());
+      ThreadJoin(p->getThread());
+      s_parsers.remove(i);
+      i--;
+   }
+
+   const TCHAR *dataDir = AgentGetDataDirectory();
+   TCHAR tail = dataDir[_tcslen(dataDir) - 1];
+
+   TCHAR policyFile[MAX_PATH];
+   _sntprintf(policyFile, MAX_PATH, _T("%s%s%s%s.xml"), dataDir,
+      ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+      LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR, (const TCHAR *)policyId.toString());
+   AddParserFromConfig(policyFile, policyId);
+
+   // Start parsing threads
+   for (int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+      if (!p->getGuid().equals(policyId))
+         continue;
+
+#ifdef _WIN32
+      if (p->getFileName()[0] == _T('*'))	// event log
+      {
+         p->setThread(ThreadCreateEx(ParserThreadEventLog, 0, p));
+         // Seems that simultaneous calls to OpenEventLog() from two or more threads may
+         // cause entire process to hang
+         ThreadSleepMs(200);
+      }
+      else	// regular file
+      {
+         p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+      }
+#else
+      p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+#endif
+   }
+
+   s_parserLock.unlock();
 }
 
 /**
@@ -329,7 +415,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL, NULL,
+	SubagentInit, SubagentShutdown, NULL, OnAgentNotify,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),

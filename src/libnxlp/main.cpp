@@ -78,7 +78,7 @@ void LIBNXLP_EXPORTABLE CleanupLogParserLibrary()
 /**
  * Event log parsing wrapper. Calls appropriate implementation.
  */
-bool LogParser::monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix)
+bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
 {
    if (markerPrefix != NULL)
    {
@@ -86,7 +86,7 @@ bool LogParser::monitorEventLog(CONDITION stopCondition, const TCHAR *markerPref
       m_marker = (TCHAR *)malloc(len * sizeof(TCHAR));
       _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
    }
-   return s_eventLogV6 ? monitorEventLogV6(stopCondition) : monitorEventLogV4(stopCondition);
+   return s_eventLogV6 ? monitorEventLogV6() : monitorEventLogV4();
 }
 
 /**

@@ -114,6 +114,7 @@ LogParser::LogParser()
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
 	m_thread = INVALID_THREAD_HANDLE;
+   m_stopCondition = INVALID_CONDITION_HANDLE;
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = false;
@@ -159,7 +160,8 @@ LogParser::LogParser(const LogParser *src)
 
 	m_eventResolver = src->m_eventResolver;
 	m_thread = INVALID_THREAD_HANDLE;
-	m_recordsProcessed = 0;
+   m_stopCondition = INVALID_CONDITION_HANDLE;
+   m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = src->m_processAllRules;
    m_suspended = src->m_suspended;
@@ -168,6 +170,7 @@ LogParser::LogParser(const LogParser *src)
 #ifdef _WIN32
    m_marker = _tcsdup_ex(src->m_marker);
 #endif
+   m_stopCondition = ConditionCreate(true);
 }
 
 /**
@@ -347,8 +350,16 @@ void LogParser::setFileName(const TCHAR *name)
  */
 void LogParser::setName(const TCHAR *name)
 {
-	safe_free(m_name);
+	free(m_name);
 	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
+}
+
+/**
+ * Set parser GUID
+ */
+void LogParser::setGuid(const uuid& guid)
+{
+   m_guid = guid;
 }
 
 /**

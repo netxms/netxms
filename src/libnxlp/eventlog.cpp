@@ -255,7 +255,7 @@ void LogParser::parseEvent(EVENTLOGRECORD *rec)
 /**
  * Event log parser thread
  */
-bool LogParser::monitorEventLogV4(CONDITION stopCondition)
+bool LogParser::monitorEventLogV4()
 {
    HANDLE hLog, handles[2];
    DWORD bytes, bytesNeeded, bufferSize = 32768, error = 0;
@@ -317,7 +317,7 @@ reopen_log:
          nt = ThreadCreateEx(NotificationThread, 0, &nd);
          NotifyChangeEventLog(hLog, nd.hLogEvent);
 			handles[0] = nd.hWakeupEvent;
-			handles[1] = stopCondition;
+			handles[1] = m_stopCondition;
 			nxlog_debug_tag(DEBUG_TAG, 1, _T("Start watching event log \"%s\""), &m_fileName[1]);
 			nxlog_debug_tag(DEBUG_TAG, 7, _T("Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 			setStatus(LPS_RUNNING);

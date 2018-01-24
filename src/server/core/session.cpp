@@ -4958,7 +4958,7 @@ void ClientSession::createObject(NXCPMessage *request)
 						   // Create new object
                      NetObj *object = NULL;
                      UINT32 nodeId;
-                     TCHAR deviceId[MAX_OBJECT_NAME], sshLogin[MAX_SSH_LOGIN_LEN], sshPassword[MAX_SSH_PASSWORD_LEN];
+                     TCHAR deviceId[MAX_OBJECT_NAME];
 						   switch(objectClass)
 						   {
                         case OBJECT_AGENTPOLICY_CONFIG:

@@ -397,7 +397,7 @@ static void SeekToZero(int fh, int chsize)
 /**
  * File parser thread
  */
-bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
+bool LogParser::monitorFile(bool readFromCurrPos)
 {
 	TCHAR fname[MAX_PATH], temp[MAX_PATH];
 	NX_STAT_STRUCT st, stn;
@@ -415,7 +415,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
    if (m_useSnapshot)
    {
 	   nxlog_debug_tag(DEBUG_TAG, 0, _T("Using VSS snapshots for file \"%s\""), m_fileName);
-      return monitorFileWithSnapshot(stopCondition, readFromCurrPos);
+      return monitorFileWithSnapshot(readFromCurrPos);
    }
 #endif
 
@@ -431,7 +431,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
 	      }
-         if (ConditionWait(stopCondition, 30000))
+         if (ConditionWait(m_stopCondition, 30000))
             break;
          continue;
 	   }
@@ -446,7 +446,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 		if (CALL_STAT(fname, &st) != 0)
       {
          setStatus(LPS_NO_FILE);
-         if (ConditionWait(stopCondition, 10000))
+         if (ConditionWait(m_stopCondition, 10000))
             break;
          continue;
       }
@@ -459,7 +459,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 		if (fh == -1)
       {
          setStatus(LPS_OPEN_ERROR);
-         if (ConditionWait(stopCondition, 10000))
+         if (ConditionWait(m_stopCondition, 10000))
             break;
          continue;
       }
@@ -491,7 +491,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 
 		while(true)
 		{
-			if (ConditionWait(stopCondition, 5000))
+			if (ConditionWait(m_stopCondition, 5000))
 				goto stop_parser;
 
 			// Check if file name was changed
@@ -597,7 +597,7 @@ stop_parser:
 /**
  * File parser thread (using VSS snapshots)
  */
-bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCurrPos)
+bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
 {
    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
    if (FAILED(hr))
@@ -626,7 +626,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
             setStatus(LPS_SUSPENDED);
          }
-         if (ConditionWait(stopCondition, 30000))
+         if (ConditionWait(m_stopCondition, 30000))
             break;
          continue;
       }
@@ -644,7 +644,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       if (CALL_STAT(fname, &st) != 0)
       {
          setStatus(LPS_NO_FILE);
-         if (ConditionWait(stopCondition, 10000))
+         if (ConditionWait(m_stopCondition, 10000))
             break;
          continue;
       }
@@ -654,7 +654,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
 
       if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
       {
-         if (ConditionWait(stopCondition, 10000))
+         if (ConditionWait(m_stopCondition, 10000))
             break;
          continue;
       }
@@ -663,7 +663,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       if (snapshot == NULL)
       {
          setStatus(LPS_VSS_FAILURE);
-         if (ConditionWait(stopCondition, 30000))  // retry in 30 seconds
+         if (ConditionWait(m_stopCondition, 30000))  // retry in 30 seconds
             break;
          continue;
       }
@@ -673,7 +673,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       {
          DestroyFileSnapshot(snapshot);
          setStatus(LPS_OPEN_ERROR);
-         if (ConditionWait(stopCondition, 10000))  // retry in 10 seconds
+         if (ConditionWait(m_stopCondition, 10000))  // retry in 10 seconds
             break;
          continue;
       }
@@ -717,7 +717,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       mtime = st.st_mtime;
 
       DestroyFileSnapshot(snapshot);
-      if (ConditionWait(stopCondition, 10000))
+      if (ConditionWait(m_stopCondition, 10000))
          break;
    }
 
