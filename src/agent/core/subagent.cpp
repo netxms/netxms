@@ -59,7 +59,7 @@ static bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAg
 					s_subAgents.add(&s);
 
 					// Add parameters provided by this subagent to common list
-					for(i = 0; i < pInfo->numParameters; i++)
+					for(i = 0; i < (int)pInfo->numParameters; i++)
 						AddParameter(pInfo->parameters[i].name,
 										 pInfo->parameters[i].handler,
 										 pInfo->parameters[i].arg,
@@ -67,19 +67,19 @@ static bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAg
 										 pInfo->parameters[i].description);
 
 					// Add push parameters provided by this subagent to common list
-					for(i = 0; i < pInfo->numPushParameters; i++)
+					for(i = 0; i < (int)pInfo->numPushParameters; i++)
 						AddPushParameter(pInfo->pushParameters[i].name,
 						                 pInfo->pushParameters[i].dataType,
 					                    pInfo->pushParameters[i].description);
 
 					// Add lists provided by this subagent to common list
-					for(i = 0; i < pInfo->numLists; i++)
+					for(i = 0; i < (int)pInfo->numLists; i++)
 						AddList(pInfo->lists[i].name,
 								  pInfo->lists[i].handler,
 								  pInfo->lists[i].arg);
 
 					// Add tables provided by this subagent to common list
-					for(i = 0; i < pInfo->numTables; i++)
+					for(i = 0; i < (int)pInfo->numTables; i++)
 						AddTable(pInfo->tables[i].name,
 								   pInfo->tables[i].handler,
 								   pInfo->tables[i].arg,
@@ -89,7 +89,7 @@ static bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAg
                            pInfo->tables[i].columns);
 
 					// Add actions provided by this subagent to common list
-					for(i = 0; i < pInfo->numActions; i++)
+					for(i = 0; i < (int)pInfo->numActions; i++)
 						AddAction(pInfo->actions[i].name,
 									 AGENT_ACTION_SUBAGENT,
 									 pInfo->actions[i].arg,
@@ -137,7 +137,7 @@ bool LoadSubAgent(const TCHAR *moduleName)
 
    TCHAR errorText[256];
 #ifdef _WIN32
-   HMODULE hModule = DLOpen(szModuleName, errorText);
+   HMODULE hModule = DLOpen(moduleName, errorText);
 #else
    TCHAR fullName[MAX_PATH];
    if (_tcschr(moduleName, _T('/')) == NULL)
@@ -198,20 +198,18 @@ void UnloadAllSubAgents()
  */
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   UINT32 i;
-   TCHAR szBuffer[MAX_PATH + 32];
-
+   TCHAR buffer[MAX_PATH + 32];
    for(int i = 0; i < s_subAgents.size(); i++)
    {
       SUBAGENT *s = s_subAgents.get(i);
 #ifdef __64BIT__
-      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"),
+      _sntprintf(buffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"),
                  s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, QWORD), s->szName);
 #else
-      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"),
+      _sntprintf(buffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"),
                  s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, UINT32), s->szName);
 #endif
-      value->add(szBuffer);
+      value->add(buffer);
    }
    return SYSINFO_RC_SUCCESS;
 }

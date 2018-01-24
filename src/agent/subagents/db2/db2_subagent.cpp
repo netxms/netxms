@@ -413,7 +413,7 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
    NETXMS_SUBAGENT_INFO_MAGIC,
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
-   DB2Init, DB2Shutdown, NULL, NULL.
+   DB2Init, DB2Shutdown, NULL, NULL,
    (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
    0, NULL,
    0, NULL,
