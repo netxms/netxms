@@ -103,7 +103,7 @@ static NX_CFG_TEMPLATE s_cfgTemplate[] =
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
 	// Parse configuration
 	bool success = config->parseTemplate(_T("DS18X20"), s_cfgTemplate);
@@ -132,7 +132,7 @@ static BOOL SubagentInit(Config *config)
 	}
 	else
 	{
-		safe_free(s_sensorList);
+		free(s_sensorList);
 	}
 
 	return success;
@@ -153,7 +153,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DS18X20"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, NULL,
+	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL, // lists
@@ -168,7 +168,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 DECLARE_SUBAGENT_ENTRY_POINT(DS18X20)
 {
 	*ppInfo = &s_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

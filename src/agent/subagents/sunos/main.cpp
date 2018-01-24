@@ -106,10 +106,10 @@ static NX_CFG_TEMPLATE s_cfgTemplate[] =
 /**
  * Initalization callback
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
-      return FALSE;
+      return false;
 
    // try to determine if we are running in global zone
    if (access("/dev/dump", F_OK) == 0)
@@ -127,7 +127,7 @@ static BOOL SubAgentInit(Config *config)
    s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
    s_kstatLock = MutexCreate();
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -288,6 +288,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    SubAgentInit, // init handler
    SubAgentShutdown, // unload handler
    NULL, // command handler
+   NULL, // notification handler
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -304,7 +305,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 /**

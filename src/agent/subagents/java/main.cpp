@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2017 Raden Solutions SIA
+ ** Copyright (c) 2015-2018 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ static LONG TableHandler(const TCHAR *cmd, const TCHAR *id, Table *value, Abstra
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    return s_subAgent->init();
 }
@@ -143,7 +143,8 @@ static NETXMS_SUBAGENT_INFO s_subagentInfo =
    NETXMS_BUILD_TAG,
    SubAgentInit,
    SubAgentShutdown,
-   NULL,                         // BOOL (*commandHandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)
+   NULL,                         // bool (*commandHandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)
+   NULL,                         // bool (*notify)(UINT32 code, void *data)
    0,                            // numParamaters
    NULL,                         // parameters
    0,                            // numLists
@@ -275,7 +276,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    if (!config->parseTemplate(_T("Java"), s_configTemplate))
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: error parsing configuration"));
-      return FALSE;
+      return false;
    }
 
    nxlog_debug(1, _T("JAVA: using JVM %s"), s_jvmPath);
@@ -285,10 +286,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    if (err != NXJAVA_SUCCESS)
    {
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
-      return FALSE;
+      return false;
    }
 
-   BOOL success = FALSE;
+   bool success = false;
    if (SubAgent::initialize(env))
    {
       // create an instance of org.netxms.agent.Config
@@ -300,7 +301,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
          if (s_subAgent != NULL)
          {
             AddContributionItems();
-            success = TRUE;
+            success = true;
          }
          else
          {
@@ -317,9 +318,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    if (!success)
    {
       DestroyJavaVM();
-      return FALSE;
+      return false;
    }
 
    *ppInfo = &s_subagentInfo;
-   return TRUE;
+   return true;
 }

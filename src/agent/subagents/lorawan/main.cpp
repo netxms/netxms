@@ -131,27 +131,25 @@ static void LoadDevices()
 /**
  * Process commands regarding LoraWAN devices
  */
-static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
+static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
    switch(command)
    {
       case CMD_REGISTER_LORAWAN_SENSOR:
          response->setField(VID_RCC, s_link->registerDevice(request));
-         return TRUE;
-         break;
+         return true;
       case CMD_UNREGISTER_LORAWAN_SENSOR:
          response->setField(VID_RCC, s_link->deleteDevice(request->getFieldAsGUID(VID_GUID)));
-         return TRUE;
-         break;
+         return true;
       default:
-         return FALSE;
+         return false;
    }
 }
 
 /**
  * Startup handler
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    g_deviceMapMutex = MutexCreate();
 
@@ -163,7 +161,7 @@ static BOOL SubagentInit(Config *config)
    s_link = new LoraWanServerLink(config->getEntry(_T("/LORAWAN")));
    s_link->connect();
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -188,6 +186,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentInit,
 	SubagentShutdown,
 	ProcessCommands, // command handler
+	NULL,	// notification handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,		// lists
@@ -202,5 +201,5 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(LORAWAN)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }

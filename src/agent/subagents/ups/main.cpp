@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -255,7 +255,7 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
 	int i;
 	TCHAR *entry;
@@ -288,7 +288,7 @@ static BOOL SubAgentInit(Config *config)
 			m_deviceInfo[i]->startCommunication();
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -402,7 +402,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("UPS"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -418,7 +418,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -334,10 +334,10 @@ static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 /**
  * Initialize subagent
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    StartCollectorThreads();
-	return TRUE;
+   return true;
 }
 
 /**
@@ -377,7 +377,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinPerf"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL,      // handlers
+   SubAgentInit, SubAgentShutdown, NULL, NULL,     // handlers
    0, NULL,             // parameters
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_lists,
@@ -448,7 +448,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 {
 	if (m_info.parameters != NULL)
-		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
+		return false;	// Most likely another instance of WINPERF subagent already loaded
 
 	// Read performance counter indexes
 	TCHAR *counters = NULL;
@@ -542,7 +542,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    else
    {
       AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is not supported"));
-      safe_free(newName);
+      free(newName);
    }
 
    // Load configuration
@@ -573,7 +573,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    }
    else
    {
-      safe_free(m_pszCounterList);
+      free(m_pszCounterList);
    }
    *ppInfo = &m_info;
    return success;

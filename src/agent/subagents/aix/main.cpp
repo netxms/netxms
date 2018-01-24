@@ -84,11 +84,11 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 /**
  * Initalization callback
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	StartIOStatCollector();
-	return TRUE;
+	return true;
 }
 
 /**
@@ -322,7 +322,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("AIX"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -339,7 +339,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 /**

@@ -96,12 +96,12 @@ static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const T
 /**
  * Initalization callback
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	StartIoStatCollector();
 	InitDrbdCollector();
-	return TRUE;
+	return true;
 }
 
 /**
@@ -498,6 +498,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubAgentInit,     /* initialization handler */
 	SubAgentShutdown, /* unload handler */
 	NULL,             /* command handler */
+	NULL,             /* notification handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -515,7 +516,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 /**

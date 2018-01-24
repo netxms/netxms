@@ -413,7 +413,7 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
    NETXMS_SUBAGENT_INFO_MAGIC,
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
-   DB2Init, DB2Shutdown, NULL,
+   DB2Init, DB2Shutdown, NULL, NULL.
    (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
    0, NULL,
    0, NULL,
@@ -519,7 +519,7 @@ static QUERY g_queries[] =
 /**
  * Subagent initialization
  */
-static BOOL DB2Init(Config *config)
+static bool DB2Init(Config *config)
 {
    AgentWriteDebugLog(5, _T("%s: initializing"), SUBAGENT_NAME);
 
@@ -527,7 +527,7 @@ static BOOL DB2Init(Config *config)
    if (s_driver == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load the database driver"), SUBAGENT_NAME);
-      return FALSE;
+      return false;
    }
 
    AgentWriteDebugLog(5, _T("%s: loaded the database driver"), SUBAGENT_NAME);
@@ -537,7 +537,7 @@ static BOOL DB2Init(Config *config)
    if (db2IniEntry == NULL)
    {
       AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no entries found in the configuration file"), SUBAGENT_NAME);
-      return FALSE;
+      return false;
    }
 
    PDB2_INFO* arrDb2Info;
@@ -551,7 +551,7 @@ static BOOL DB2Init(Config *config)
       const PDB2_INFO db2Info = GetConfigs(config, db2IniEntry, _T("db2"));
       if (db2Info == NULL)
       {
-         return FALSE;
+         return false;
       }
 
       db2Info->db2Id = 1;
@@ -568,14 +568,14 @@ static BOOL DB2Init(Config *config)
       if (!config->loadXmlConfig(pathToXml))
       {
         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' is not a valid configuration file"), SUBAGENT_NAME, pathToXml);
-        return FALSE;
+        return false;
       }
 
       ConfigEntry* db2SubXmlEntry = config->getEntry(_T("/db2sub"));
       if (db2SubXmlEntry == NULL)
       {
          AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: '%s' doesn't contain the db2 configuration entry"), SUBAGENT_NAME, pathToXml);
-         return FALSE;
+         return false;
       }
 
       ObjectArray<ConfigEntry> *db2SubXmlSubEntries = db2SubXmlEntry->getSubEntries(_T("db2#*"));
@@ -622,10 +622,10 @@ static BOOL DB2Init(Config *config)
    if (s_threadCount > 0)
    {
       AgentWriteDebugLog(3, _T("%s: starting with %d query thread(s)"), SUBAGENT_NAME, s_threadCount);
-      return TRUE;
+      return true;
    }
 
-   return FALSE;
+   return false;
 }
 
 /**
@@ -898,9 +898,8 @@ static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, cons
  */
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
 {
-   AgentWriteDebugLog(7, _T("%s: started"), SUBAGENT_NAME);
    *ppInfo = &m_agentInfo;
-   return TRUE;
+   return true;
 }
 
 #ifdef _WIN32

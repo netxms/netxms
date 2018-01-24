@@ -236,7 +236,10 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	}
 
 	if (rcc == RCC_SUCCESS)
+	{
 		RegisterPolicy(session, type, guid);
+		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &guid);
+	}
 
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;

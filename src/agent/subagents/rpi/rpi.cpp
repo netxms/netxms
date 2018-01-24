@@ -25,7 +25,7 @@
 /**
  * 
  */
-BOOL StartSensorCollector();
+bool StartSensorCollector();
 void StopSensorCollector();
 
 /**
@@ -163,12 +163,12 @@ static void ConfigureGPIO(TCHAR *str, uint8_t mode)
 /**
  * Startup handler
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    if (bcm2835_init() != 1)
    {    
       AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
-      return FALSE;
+      return false;
    }
 
 	// Parse configuration
@@ -179,7 +179,7 @@ static BOOL SubagentInit(Config *config)
       ConfigureGPIO(m_outputPins, BCM2835_GPIO_FSEL_OUTP);
    }
 
-	BOOL ret = TRUE;
+	bool ret = true;
    if (!m_disableDHT22)
    {
       ret = StartSensorCollector();
@@ -225,6 +225,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentInit,
 	SubagentShutdown,
 	NULL, // command handler
+	NULL, // notification handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,		// lists
@@ -240,5 +241,5 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(RPI)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }

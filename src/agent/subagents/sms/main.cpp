@@ -64,7 +64,7 @@ static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pD
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
 	// Parse configuration
 	const TCHAR *value = config->getValue(_T("/SMS/Device"));
@@ -72,7 +72,7 @@ static BOOL SubAgentInit(Config *config)
 	{
 		nx_strncpy(m_szDevice, value, MAX_PATH);
 		if (!InitSender(m_szDevice))
-			return FALSE;
+			return false;
 	}
 	else
 	{
@@ -113,7 +113,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SMS"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,	// lists
@@ -129,7 +129,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(SMS)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

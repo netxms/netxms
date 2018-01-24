@@ -98,10 +98,10 @@ static NX_CFG_TEMPLATE s_cfgTemplate[] =
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    if (!config->parseTemplate(_T("SSH"), s_cfgTemplate))
-      return FALSE;
+      return false;
 
 #if !defined(_WIN32) && !_USE_GNU_PTH
    ssh_threads_set_callbacks(ssh_threads_get_noop());
@@ -111,7 +111,7 @@ static BOOL SubagentInit(Config *config)
    ssh_init();
    nxlog_debug(2, _T("SSH: using libssh version %hs"), ssh_version(0));
    InitializeSessionPool();
-	return TRUE;
+	return true;
 }
 
 /**
@@ -146,7 +146,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SSH"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL,
+	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
    sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -162,7 +162,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(SSH)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

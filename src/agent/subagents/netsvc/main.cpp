@@ -179,7 +179,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config) 
+static bool SubagentInit(Config *config)
 {
    bool ret = false;
 
@@ -229,7 +229,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("NETSVC"), NETXMS_BUILD_TAG,
-   SubagentInit, SubagentShutdown, NULL,
+   SubagentInit, SubagentShutdown, NULL, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    0, NULL, // enums
@@ -244,7 +244,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(NETSVC)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 #ifdef _WIN32

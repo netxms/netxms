@@ -265,7 +265,7 @@ static void AddLogwatchPolicyFiles()
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    InitLogParserLibrary();
 
@@ -301,7 +301,7 @@ static BOOL SubagentInit(Config *config)
 #endif
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -329,7 +329,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL,
+	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -345,7 +345,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

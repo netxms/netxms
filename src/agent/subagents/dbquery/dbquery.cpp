@@ -31,12 +31,12 @@ CONDITION g_condShutdown;
 /**
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
 	// Create shutdown condition and start poller threads
    g_condShutdown = ConditionCreate(TRUE);
    StartPollingThreads();
-   return TRUE;
+   return true;
 }
 
 /**
@@ -71,12 +71,10 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("DBQUERY"), NETXMS_BUILD_TAG,
-   SubAgentInit, SubAgentShutdown, NULL,
-	0,
-	NULL,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
+	0,	NULL, // parameters
 	0, NULL,	// lists
-	0,
-	NULL,
+	0,	NULL, // tables
    0, NULL,	// actions
 	0, NULL	// push parameters
 };
@@ -226,7 +224,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(DBQUERY)
    delete parametersTable;
 
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 /**

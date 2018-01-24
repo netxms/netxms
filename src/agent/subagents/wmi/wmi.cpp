@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2013 Victor Kirhenshtein
+** Copyright (C) 2008-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -338,21 +338,6 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 }
 
 /**
- * Initialize subagent
- */
-static BOOL SubAgentInit(Config *config)
-{
-	return TRUE;
-}
-
-/**
- * Handler for subagent unload
- */
-static void SubAgentShutdown()
-{
-}
-
-/**
  * Provided parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
@@ -388,7 +373,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WMI"), NETXMS_VERSION_STRING,
-   SubAgentInit, SubAgentShutdown, NULL,      // handlers
+   NULL, NULL, NULL, NULL,     // handlers
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -404,7 +389,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(WMI)
 {
    *ppInfo = &m_info;
-   return TRUE;
+   return true;
 }
 
 /**

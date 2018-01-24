@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,55 +22,41 @@
 
 #include "nxagentd.h"
 
-#ifdef _NETWARE
-#include <fsio.h>
-#include <library.h>
-#endif
-
 /**
  * Subagent list
  */
-static UINT32 m_dwNumSubAgents = 0;
-static SUBAGENT *m_pSubAgentList = NULL;
+static StructArray<SUBAGENT> s_subAgents(8, 8);
 
 /**
  * Initialize subagent
- * Note: pszEntryPoint ignored on all pltforms except NetWare
  */
-BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
-                  BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *),
-                  const TCHAR *pszEntryPoint)
+static bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *))
 {
-   NETXMS_SUBAGENT_INFO *pInfo;
-   BOOL bSuccess = FALSE, bInitOK;
+   bool success = false;
 
+   NETXMS_SUBAGENT_INFO *pInfo;
    if (SubAgentRegister(&pInfo, g_config))
    {
       // Check if information structure is valid
       if (pInfo->magic == NETXMS_SUBAGENT_INFO_MAGIC)
       {
-         UINT32 i;
-
-         // Check if subagent with given name alreay loaded
-         for(i = 0; i < m_dwNumSubAgents; i++)
-            if (!_tcsicmp(m_pSubAgentList[i].pInfo->name, pInfo->name))
+         // Check if subagent with given name already loaded
+         int i;
+         for(i = 0; i < s_subAgents.size(); i++)
+            if (!_tcsicmp(s_subAgents.get(i)->pInfo->name, pInfo->name))
                break;
-         if (i == m_dwNumSubAgents)
+         if (i == s_subAgents.size())
          {
 				// Initialize subagent
-				bInitOK = (pInfo->init != NULL) ? pInfo->init(g_config) : TRUE;
-				if (bInitOK)
+				bool initOK = (pInfo->init != NULL) ? pInfo->init(g_config) : true;
+				if (initOK)
 				{
 					// Add subagent to subagent's list
-					m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList,
-													sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
-					m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-					nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH);
-					m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
-#ifdef _NETWARE
-	            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
-#endif
-					m_dwNumSubAgents++;
+				   SUBAGENT s;
+					s.hModule = hModule;
+					_tcslcpy(s.szName, moduleName, MAX_PATH);
+					s.pInfo = pInfo;
+					s_subAgents.add(&s);
 
 					// Add parameters provided by this subagent to common list
 					for(i = 0; i < pInfo->numParameters; i++)
@@ -111,118 +97,84 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 									 pInfo->name,
 									 pInfo->actions[i].description);
 
-					nxlog_write(MSG_SUBAGENT_LOADED, NXLOG_INFO, "sss", pInfo->name, pszModuleName, pInfo->version);
-					bSuccess = TRUE;
+					nxlog_write(MSG_SUBAGENT_LOADED, NXLOG_INFO, "sss", pInfo->name, moduleName, pInfo->version);
+					success = true;
 				}
 				else
 				{
-					nxlog_write(MSG_SUBAGENT_INIT_FAILED, NXLOG_ERROR, "ss", pInfo->name, pszModuleName);
+					nxlog_write(MSG_SUBAGENT_INIT_FAILED, NXLOG_ERROR, "ss", pInfo->name, moduleName);
 					DLClose(hModule);
 				}
          }
          else
          {
             nxlog_write(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
-                        "ss", pInfo->name, m_pSubAgentList[i].szName);
-            // On NetWare, DLClose will unload module, and if first instance
-            // was loaded from the same module, it will be killed, so
-            // we don't call DLClose on NetWare
-#ifndef _NETWARE
+                        "ss", pInfo->name, s_subAgents.get(i)->szName);
             DLClose(hModule);
-#endif
          }
       }
       else
       {
-         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, NXLOG_ERROR, "s", pszModuleName);
+         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, NXLOG_ERROR, "s", moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, NXLOG_ERROR, "s", pszModuleName);
+      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, NXLOG_ERROR, "s", moduleName);
       DLClose(hModule);
    }
 
-   return bSuccess;
+   return success;
 }
 
 /**
  * Load subagent
  */
-BOOL LoadSubAgent(TCHAR *szModuleName)
+bool LoadSubAgent(const TCHAR *moduleName)
 {
-   HMODULE hModule;
-   BOOL bSuccess = FALSE;
-   TCHAR szErrorText[256];
+   bool success = FALSE;
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+   TCHAR errorText[256];
+#ifdef _WIN32
+   HMODULE hModule = DLOpen(szModuleName, errorText);
+#else
    TCHAR fullName[MAX_PATH];
-
-   if (_tcschr(szModuleName, _T('/')) == NULL)
+   if (_tcschr(moduleName, _T('/')) == NULL)
    {
       // Assume that subagent name without path given
       // Try to load it from pkglibdir
       TCHAR libDir[MAX_PATH];
       GetNetXMSDirectory(nxDirLib, libDir);
-      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libDir, szModuleName);
+      _sntprintf(fullName, MAX_PATH, _T("%s/%s"), libDir, moduleName);
    }
    else
    {
-      nx_strncpy(fullName, szModuleName, MAX_PATH);
+      _tcslcpy(fullName, moduleName, MAX_PATH);
    }
-   hModule = DLOpen(fullName, szErrorText);
-#else
-   hModule = DLOpen(szModuleName, szErrorText);
+   HMODULE hModule = DLOpen(fullName, errorText);
 #endif
+
    if (hModule != NULL)
    {
-      BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *);
-
-      // Under NetWare, we have slightly different subagent
-      // initialization procedure. Because normally two NLMs
-      // cannot export symbols with identical names, we cannot
-      // simply export NxSubAgentRegister in each subagent. Instead,
-      // agent expect to find symbol called NxSubAgentRegister_<module_file_name>
-      // in every subagent. Note that module file name should
-      // be in capital letters.
-#ifdef _NETWARE
-      char *pExt, szFileName[MAX_PATH], szEntryPoint[MAX_PATH];
-      int iElem, iFlags;
-
-      deconstruct(szModuleName, NULL, NULL, NULL, szFileName, NULL, &iElem, &iFlags);
-      pExt = strrchr(szFileName, '.');
-      if (pExt != NULL)
-         *pExt = 0;
-      strupr(szFileName);
-      sprintf(szEntryPoint, "NxSubAgentRegister_%s", szFileName);
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
-#else
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
-#endif
-
+      bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *);
+      SubAgentRegister = (bool (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", errorText);
       if (SubAgentRegister != NULL)
       {
-#ifdef _NETWARE
-         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentRegister, szEntryPoint);
-         if (bSuccess)
-            setdontunloadflag(hModule);
-#else
-         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentRegister, NULL);
-#endif
+         success = InitSubAgent(hModule, moduleName, SubAgentRegister);
       }
       else
       {
-         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", szModuleName);
+         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", szModuleName, szErrorText);
+      nxlog_write(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", moduleName, errorText);
    }
 
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -232,19 +184,12 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
  */
 void UnloadAllSubAgents()
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumSubAgents; i++)
+   for(int i = 0; i < s_subAgents.size(); i++)
    {
-#ifdef _NETWARE
-      UnImportPublicObject(m_pSubAgentList[i].hModule, m_pSubAgentList[i].szEntryPoint);
-      cleardontunloadflag(m_pSubAgentList[i].hModule);
-#endif
-      if (m_pSubAgentList[i].pInfo->shutdown != NULL)
-         m_pSubAgentList[i].pInfo->shutdown();
-#ifndef _NETWARE
-      DLClose(m_pSubAgentList[i].hModule);
-#endif
+      SUBAGENT *s = s_subAgents.get(i);
+      if (s->pInfo->shutdown != NULL)
+         s->pInfo->shutdown();
+      DLClose(s->hModule);
    }
 }
 
@@ -256,16 +201,15 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
    UINT32 i;
    TCHAR szBuffer[MAX_PATH + 32];
 
-   for(i = 0; i < m_dwNumSubAgents; i++)
+   for(int i = 0; i < s_subAgents.size(); i++)
    {
+      SUBAGENT *s = s_subAgents.get(i);
 #ifdef __64BIT__
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"),
-                 m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
-                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, QWORD), m_pSubAgentList[i].szName);
+                 s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, QWORD), s->szName);
 #else
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"),
-                 m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
-                 CAST_FROM_POINTER(m_pSubAgentList[i].hModule, UINT32), m_pSubAgentList[i].szName);
+                 s->pInfo->name, s->pInfo->version, CAST_FROM_POINTER(s->hModule, UINT32), s->szName);
 #endif
       value->add(szBuffer);
    }
@@ -281,12 +225,12 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("VERSION"));
    value->addColumn(_T("FILE"));
 
-   for(UINT32 i = 0; i < m_dwNumSubAgents; i++)
+   for(int i = 0; i < s_subAgents.size(); i++)
    {
       value->addRow();
-      value->set(0, m_pSubAgentList[i].pInfo->name);
-      value->set(1, m_pSubAgentList[i].pInfo->version);
-      value->set(2, m_pSubAgentList[i].szName);
+      value->set(0, s_subAgents.get(i)->pInfo->name);
+      value->set(1, s_subAgents.get(i)->pInfo->version);
+      value->set(2, s_subAgents.get(i)->szName);
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -300,9 +244,9 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
 
 	AgentGetParameterArg(pszCmd, 1, name, 256);
 	int rc = 0;
-   for(UINT32 i = 0; i < m_dwNumSubAgents; i++)
+   for(int i = 0; i < s_subAgents.size(); i++)
    {
-		if (!_tcsicmp(name, m_pSubAgentList[i].pInfo->name))
+		if (!_tcsicmp(name, s_subAgents.get(i)->pInfo->name))
 		{
 			rc = 1;
 			break;
@@ -315,17 +259,33 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, A
 /**
  * Process unknown command by subagents
  */
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
+bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
-   BOOL processed = FALSE;
-   for(UINT32 i = 0; (i < m_dwNumSubAgents) && (!processed); i++)
+   bool processed = false;
+   for(int i = 0; (i < s_subAgents.size()) && (!processed); i++)
    {
-      if (m_pSubAgentList[i].pInfo->commandHandler != NULL)
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;
+      if (s->commandHandler != NULL)
       {
-         processed = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
+         processed = s->commandHandler(command, request, response, session);
          session->debugPrintf(7, _T("Command %sprocessed by sub-agent %s"), 
-            processed ? _T("") : _T("not "), m_pSubAgentList[i].pInfo->name);
+            processed ? _T("") : _T("not "), s->name);
       }
    }
    return processed;
+}
+
+/**
+ * Notify all sub-agents
+ */
+void NotifySubAgents(UINT32 code, void *data)
+{
+   for(int i = 0; i < s_subAgents.size(); i++)
+   {
+      NETXMS_SUBAGENT_INFO *s = s_subAgents.get(i)->pInfo;
+      if (s->notify != NULL)
+      {
+         s->notify(code, data);
+      }
+   }
 }

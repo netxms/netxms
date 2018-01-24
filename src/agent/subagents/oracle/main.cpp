@@ -341,7 +341,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
 /*
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    int i;
 
@@ -350,7 +350,7 @@ static BOOL SubAgentInit(Config *config)
 	if (g_oracleDriver == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
-		return FALSE;
+		return false;
 	}
 
    s_instances = new ObjectArray<DatabaseInstance>(8, 8, true);
@@ -398,14 +398,14 @@ static BOOL SubAgentInit(Config *config)
 	{
       AgentWriteLog(NXLOG_WARNING, _T("ORACLE: no databases to monitor, exiting"));
       delete s_instances;
-      return FALSE;
+      return false;
 	}
 
 	// Run query thread for each configured database
    for(i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->run();
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -526,7 +526,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ORACLE"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
@@ -540,7 +540,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 DECLARE_SUBAGENT_ENTRY_POINT(ORACLE)
 {
 	*ppInfo = &s_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

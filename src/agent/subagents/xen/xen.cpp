@@ -98,10 +98,10 @@ static void SubagentShutdown()
 /**
  * Subagent initialization
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
    XenStartCPUCollector();
-   return TRUE;
+   return true;
 }
 
 /**
@@ -166,7 +166,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("XEN"), NETXMS_BUILD_TAG,
-	SubagentInit, SubagentShutdown, NULL,
+	SubagentInit, SubagentShutdown, NULL, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
@@ -183,7 +183,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(XEN)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

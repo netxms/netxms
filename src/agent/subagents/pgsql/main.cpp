@@ -26,7 +26,7 @@ DB_DRIVER g_driverHandle = NULL;
 /*
  * Subagent initialization
  */
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
    int i;
 
@@ -35,10 +35,10 @@ static BOOL SubAgentInit(Config *config)
 	if (g_driverHandle == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -77,7 +77,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PGSQL"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
 	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
@@ -91,7 +91,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 DECLARE_SUBAGENT_ENTRY_POINT(PGSQL)
 {
 	*ppInfo = &s_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

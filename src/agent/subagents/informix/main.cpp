@@ -108,9 +108,9 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 // Subagent initialization
 //
 
-static BOOL SubAgentInit(Config *config)
+static bool SubAgentInit(Config *config)
 {
-	BOOL result = TRUE;
+	bool result = true;
 	static DatabaseInfo info;
 	int i;
 	TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
@@ -129,7 +129,7 @@ static BOOL SubAgentInit(Config *config)
 	if (g_driverHandle == NULL)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load db driver"), MYNAMESTR);
-		result = FALSE;
+		result = false;
 	}
 
 	if (result)
@@ -164,7 +164,7 @@ static BOOL SubAgentInit(Config *config)
 		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
-			return FALSE;
+			return false;
 		}
 		if (info.dsn[0] == 0)
 			continue;
@@ -176,7 +176,7 @@ static BOOL SubAgentInit(Config *config)
 		if (info.username[0] == '\0')
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
-			result = FALSE;
+			result = false;
 		}
 
       DecryptPassword(info.username, info.password, info.password, MAX_PASSWORD);
@@ -184,12 +184,12 @@ static BOOL SubAgentInit(Config *config)
       if (info.password[0] == '\0')
       {
          AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
-         result = FALSE;
+         result = false;
       }
 		if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
 		{
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
-			result = FALSE;
+			result = false;
 		}
 	}
 
@@ -197,7 +197,7 @@ static BOOL SubAgentInit(Config *config)
 	if (result && g_dbCount < 0)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no databases to monitor"), MYNAMESTR);
-		result = FALSE;
+		result = false;
 	}
 
 	// Run query thread for each database configured
@@ -384,7 +384,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("INFORMIX"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), m_parameters,
 	0,	NULL,
 	/*sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
@@ -402,7 +402,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(INFORMIX)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 

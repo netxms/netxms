@@ -24,9 +24,9 @@ UINT32 g_serviceCheckFlags = 0;
 /**
  * Command handler
  */
-BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
+bool CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
 {
-	BOOL bHandled = TRUE;
+	bool bHandled = true;
 	WORD wType, wPort;
 	char szRequest[1024 * 10];
 	char szResponse[1024 * 10];
@@ -34,7 +34,7 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 
 	if (dwCommand != CMD_CHECK_NETWORK_SERVICE)
 	{
-		return FALSE;
+		return false;
 	}
 
 	wType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
@@ -131,7 +131,7 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 			}
 			break;
 		default:
-			bHandled = FALSE;
+			bHandled = false;
 			break;
 	}
 
@@ -163,10 +163,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 /**
  * Subagent initialization callback
  */
-static BOOL SubagentInit(Config *config)
+static bool SubagentInit(Config *config)
 {
 	config->parseTemplate(_T("portCheck"), m_cfgTemplate);
-	return TRUE;
+	return true;
 }
 
 /**
@@ -200,6 +200,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_BUILD_TAG,
 	SubagentInit, NULL, // init and shutdown routines
 	CommandHandler,
+	NULL,    // notification handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, NULL,	// lists
@@ -214,7 +215,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 {
 	*ppInfo = &m_info;
-	return TRUE;
+	return true;
 }
 
 #ifdef _WIN32

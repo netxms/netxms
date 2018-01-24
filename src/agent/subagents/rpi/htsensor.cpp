@@ -154,10 +154,10 @@ THREAD_RESULT THREAD_CALL SensorPollingThread(void *)
 	return THREAD_OK;
 }
 
-BOOL StartSensorCollector()
+bool StartSensorCollector()
 {
 	m_collector = ThreadCreateEx(SensorPollingThread, 0, NULL);
-	return TRUE;
+	return true;
 }
 
 void StopSensorCollector()
