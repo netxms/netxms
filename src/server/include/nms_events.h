@@ -111,7 +111,7 @@ public:
    virtual void fillMessage(NXCPMessage *msg, UINT32 base) const;
    virtual bool saveToDatabase() const;
 
-   UINT32 getMemberCount() { return m_eventCodeList->size(); }
+   int getMemberCount() { return m_eventCodeList->size(); }
    UINT32 getMember(int index) { return m_eventCodeList->get(index); }
    bool isMember(UINT32 eventCode);
 
