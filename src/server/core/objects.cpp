@@ -1941,7 +1941,7 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   DBConnectionPoolReleaseConnection(hdb);
+   DBConnectionPoolReleaseConnection(mainDB);
 
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
