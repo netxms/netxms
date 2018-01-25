@@ -107,8 +107,13 @@ bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Rittal
          {
             memcpy(metric, m, sizeof(RittalMetric));
             success = true;
+            break;
          }
       }
+   }
+   else
+   {
+      nxlog_debug_tag(RITTAL_DEBUG_TAG, 6, _T("getMetric(%s): cannot find device at bus:%d position:%d"), name, bus, position);
    }
    MutexUnlock(m_cacheLock);
    return success;
@@ -144,6 +149,7 @@ UINT32 RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
                         response->getVariable(1)->getValueAsUInt(), v, response->getVariable(2));
       m_devices.add(dev);
    }
+   delete response;
    return SNMP_ERR_SUCCESS;
 }
 
@@ -181,7 +187,7 @@ UINT32 RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport
       _sntprintf(m->description, 256, _T("%s: %s"), dev->alias, m->name);
       dev->metrics->add(m);
    }
-
+   delete response;
    return SNMP_ERR_SUCCESS;
 }
 
