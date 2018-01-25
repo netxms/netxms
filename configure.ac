@@ -1242,6 +1242,16 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		[ 
 			CXXFLAGS="$OLD_CXXFLAGS"
 			AC_MSG_RESULT(no)
+
+			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
+			OLD_CXXFLAGS="$CXXFLAGS"
+			CXXFLAGS="$CXXFLAGS -std=c++0x"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ AC_MSG_RESULT(yes) ], 
+				[ 
+					CXXFLAGS="$OLD_CXXFLAGS"
+					AC_MSG_RESULT(no)
+				])
 		])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
