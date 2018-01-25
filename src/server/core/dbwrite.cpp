@@ -245,7 +245,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 		if (DBBegin(hdb))
 		{
 			int count = 0;
-			while(1)
+			while(true)
 			{
 				bool success;
 
@@ -346,7 +346,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
                free(rq);
 
                count++;
-               if (!success || (maxRecords > 1000))
+               if (!success || (count > maxRecords))
                   break;
 
                rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->get();
