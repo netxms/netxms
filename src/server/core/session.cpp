@@ -14144,7 +14144,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
 
       TCHAR *result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &strMap);
       msg.setField(outFieldId, result);
-      debugPrintf(7, _T("ClientSession::expandMacros(): String for expansion: '%s', result: '%s'"), textToExpand);
+      debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, result);
       free(textToExpand);
       free(result);
       obj->decRefCount();
