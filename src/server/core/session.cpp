@@ -54,6 +54,8 @@
 
 #define MAX_MSG_SIZE    4194304
 
+#define DEBUG_TAG _T("client.session")
+
 /**
  * Externals
  */
@@ -322,16 +324,10 @@ void ClientSession::run()
  */
 void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= nxlog_get_debug_level())
-   {
-      va_list args;
-		TCHAR buffer[8192];
-
-      va_start(args, format);
-      _vsntprintf(buffer, 8192, format, args);
-      va_end(args);
-		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
-   }
+   va_list args;
+   va_start(args, format);
+   nxlog_debug_tag_object2(DEBUG_TAG, m_id, level, format, args);
+   va_end(args);
 }
 
 /**
@@ -410,7 +406,7 @@ void ClientSession::readThread()
          break;
       }
 
-      if (nxlog_get_debug_level() >= 8)
+      if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
       {
          String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1437,12 +1433,12 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
 
 	NXCP_MESSAGE *rawMsg = msg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0);
 
-   if ((nxlog_get_debug_level() >= 6) && (msg->getCode() != CMD_ADM_MESSAGE))
+   if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6) && (msg->getCode() != CMD_ADM_MESSAGE))
    {
       TCHAR buffer[128];
       debugPrintf(6, _T("Sending%s message %s (%d bytes)"),
                (ntohs(rawMsg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(msg->getCode(), buffer), ntohl(rawMsg->size));
-      if (nxlog_get_debug_level() >= 8)
+      if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
       {
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1486,12 +1482,12 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
       return;
 
    UINT16 code = htons(msg->code);
-   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level() >= 6))
+   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6))
    {
       TCHAR buffer[128];
 	   debugPrintf(6, _T("Sending%s message %s (%d bytes)"),
 	            (ntohs(msg->flags) & MF_COMPRESSED) ? _T(" compressed") : _T(""), NXCPMessageCodeName(ntohs(msg->code), buffer), ntohl(msg->size));
-      if (nxlog_get_debug_level() >= 8)
+      if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
       {
          String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -2712,6 +2708,8 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdate(NetObj *object)
 {
+   debugPrintf(5, _T("Sending update for object %s [%d]"), object->getName(), object->getId());
+
    NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
    if (!object->isDeleted())
    {
