@@ -699,6 +699,8 @@ public:
 
 	int add(void *element);
    void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   void *first() const { return get(0); }
+   void *last() const { return get(m_size - 1); }
    int indexOf(void *element) const;
 	void set(int index, void *element);
 	void replace(int index, void *element);
