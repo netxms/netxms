@@ -1,6 +1,8 @@
 agent.conn  Agent connections
 agent.tunnel    Agent tunnels
 
+client.session	Client sessions
+
 crypto.*	Encryption functions
 crypto.cert	Certificate related messages
 
