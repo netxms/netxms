@@ -539,7 +539,7 @@ bool LogParser::monitorFile(bool readFromCurrPos)
 				{
 					// File was cleared, start from the beginning
 					lseek(fh, 0, SEEK_SET);
-					nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size != size"), fname);
+					nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size < size, assume file rotation"), fname);
 				}
 				size = (size_t)st.st_size;
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
