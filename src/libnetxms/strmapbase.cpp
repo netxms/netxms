@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -71,7 +71,7 @@ void StringMapBase::clear()
 /**
  * Find entry index by key
  */
-StringMapEntry *StringMapBase::find(const TCHAR *key, int keyLen) const
+StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
 {
 	if (key == NULL)
 		return NULL;
@@ -84,7 +84,8 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, int keyLen) const
 #else
       TCHAR *ukey = (TCHAR *)malloc(keyLen + sizeof(TCHAR));
 #endif
-      memcpy(ukey, key, keyLen + sizeof(TCHAR));
+      memcpy(ukey, key, keyLen);
+      *((TCHAR *)((BYTE *)ukey + keyLen)) = 0;
       _tcsupr(ukey);
       HASH_FIND(hh, m_data, ukey, keyLen, entry);
 #if !HAVE_ALLOCA
@@ -106,7 +107,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
    if (key == NULL)
       return;
 
-	StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
+	StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
 	if (entry != NULL)
 	{
 		if (keyPreAllocated)
@@ -156,7 +157,7 @@ void *StringMapBase::getObject(const TCHAR *key) const
 {
    if (key == NULL)
       return NULL;
-	StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
+	StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
    return (entry != NULL) ? entry->value : NULL;
 }
 
@@ -167,7 +168,7 @@ void *StringMapBase::getObject(const TCHAR *key, size_t len) const
 {
    if (key == NULL)
       return NULL;
-   StringMapEntry *entry = find(key, (int)len * sizeof(TCHAR));
+   StringMapEntry *entry = find(key, len * sizeof(TCHAR));
    return (entry != NULL) ? entry->value : NULL;
 }
 
@@ -176,7 +177,7 @@ void *StringMapBase::getObject(const TCHAR *key, size_t len) const
  */
 void StringMapBase::remove(const TCHAR *key)
 {
-   StringMapEntry *entry = find(key, (int)_tcslen(key) * sizeof(TCHAR));
+   StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);

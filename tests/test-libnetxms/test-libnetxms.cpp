@@ -284,6 +284,18 @@ static void TestStringFunctionsW()
    AssertTrue(!wcscmp(buffer, _T("part1part2long text: 1234567890")));
 
    EndTest();
+
+   StartTest(_T("wcsupr"));
+   WCHAR textToUpper[64] = L"TeXt 123 abCD";
+   wcsupr(textToUpper);
+   AssertTrue(!wcscmp(textToUpper, L"TEXT 123 ABCD"));
+   EndTest();
+
+   StartTest(_T("wcslwr"));
+   WCHAR textToLower[64] = L"TeXt 123 abCD";
+   wcslwr(textToLower);
+   AssertTrue(!wcscmp(textToLower, L"text 123 abcd"));
+   EndTest();
 }
 
 /**
