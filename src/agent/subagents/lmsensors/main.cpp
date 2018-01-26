@@ -172,7 +172,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] = {
 // Subagent initialization
 //
 
-static BOOL SubagentInit(Config *config) {
+static bool SubagentInit(Config *config) {
    bool ret;
 
    ret = config->parseTemplate(_T("lmsensors"), m_cfgTemplate);
@@ -227,7 +227,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("LMSENSORS"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, NULL,
+   SubagentInit, SubagentShutdown, NULL, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    0, NULL, // enums
