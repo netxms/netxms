@@ -109,18 +109,15 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
 
 /**
- * wcsupr() implementation for non-windows platforms
+ * wcsupr() implementation for non-Windows platforms
  */
 void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 {
-	WCHAR *p = in;
-
 	if (in == NULL) 
-   { 
 		return;
-	}
 	
-	for (; *p != 0; p++) 
+   WCHAR *p = in;
+	for(; *p != 0; p++)
    {
 		// TODO: check/set locale
 #if HAVE_TOWUPPER

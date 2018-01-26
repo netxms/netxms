@@ -888,7 +888,7 @@ protected:
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	StringMapEntry *find(const TCHAR *key, int keyLen) const;
+	StringMapEntry *find(const TCHAR *key, size_t keyLen) const;
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key) const;
    void *getObject(const TCHAR *key, size_t len) const;
@@ -906,8 +906,8 @@ public:
    void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
 	int size() const;
-   bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, (int)_tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
-   bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, (int)len * sizeof(TCHAR)) != NULL) : false; }
+   bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
+   bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, len * sizeof(TCHAR)) != NULL) : false; }
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
