@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -132,7 +132,7 @@ String MacAddress::toString(MacAddressNotation notation) const
    switch(notation)
    {
       case MAC_ADDR_FLAT_STRING:
-         stringSize = m_length * 2;
+         stringSize = m_length * 2 + 1;
          break;
       case MAC_ADDR_COLON_SEPARATED:
       case MAC_ADDR_HYPHEN_SEPARATED:
