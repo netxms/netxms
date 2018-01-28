@@ -180,7 +180,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
 /**
  * Entry point for server - interface list
  */
-extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *pValue)
 {
        return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
@@ -188,7 +188,7 @@ extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 /**
  * Entry point for server - ARP cache
  */
-extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetArpCache(StringList *pValue)
 {
        return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }

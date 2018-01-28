@@ -37,10 +37,11 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#define EXPORT __declspec(dllexport)
+
 #else
+
 #include <string.h>
-#define EXPORT
+
 #endif   /* _WIN32 */
 
 #include <dbdrv.h>

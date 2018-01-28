@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -78,6 +78,8 @@
 #if HAVE_WIDEC_H
 #include <widec.h>
 #endif /* HAVE_WIDEC */
+
+#include <symbol_visibility.h>
 
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++

@@ -194,12 +194,12 @@ DECLARE_SUBAGENT_ENTRY_POINT(NETBSD)
 // Entry points for server
 //
 
-extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetIfList(StringList *pValue)
 {
         return H_NetIfList("Net.InterfaceList", NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
 
-extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
+extern "C" BOOL __EXPORT __NxSubAgentGetArpCache(StringList *pValue)
 {
         return H_NetArpCache("Net.ArpCache", NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }

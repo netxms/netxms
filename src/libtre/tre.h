@@ -16,6 +16,13 @@
 #include "tre-config.h"
 #endif
 
+#include <symbol_visibility.h>
+#ifdef LIBTRE_EXPORTS
+#define LIBTRE_API __EXPORT
+#else
+#define LIBTRE_API __IMPORT
+#endif
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif /* HAVE_SYS_TYPES_H */
@@ -134,17 +141,21 @@ typedef enum {
 
 /* The POSIX.2 regexp functions */
 extern int
+LIBTRE_API
 tre_regcomp(regex_t *preg, const char *regex, int cflags);
 
 extern int
+LIBTRE_API
 tre_regexec(const regex_t *preg, const char *string, size_t nmatch,
 	regmatch_t pmatch[], int eflags);
 
 extern size_t
+LIBTRE_API
 tre_regerror(int errcode, const regex_t *preg, char *errbuf,
 	 size_t errbuf_size);
 
 extern void
+LIBTRE_API
 tre_regfree(regex_t *preg);
 
 #ifdef TRE_WCHAR
@@ -154,9 +165,11 @@ tre_regfree(regex_t *preg);
 
 /* Wide character versions (not in POSIX.2). */
 extern int
+LIBTRE_API
 tre_regwcomp(regex_t *preg, const wchar_t *regex, int cflags);
 
 extern int
+LIBTRE_API
 tre_regwexec(const regex_t *preg, const wchar_t *string,
 	 size_t nmatch, regmatch_t pmatch[], int eflags);
 #endif /* TRE_WCHAR */
@@ -164,17 +177,21 @@ tre_regwexec(const regex_t *preg, const wchar_t *string,
 /* Versions with a maximum length argument and therefore the capability to
    handle null characters in the middle of the strings (not in POSIX.2). */
 extern int
+LIBTRE_API
 tre_regncomp(regex_t *preg, const char *regex, size_t len, int cflags);
 
 extern int
+LIBTRE_API
 tre_regnexec(const regex_t *preg, const char *string, size_t len,
 	 size_t nmatch, regmatch_t pmatch[], int eflags);
 
 #ifdef TRE_WCHAR
 extern int
+LIBTRE_API
 tre_regwncomp(regex_t *preg, const wchar_t *regex, size_t len, int cflags);
 
 extern int
+LIBTRE_API
 tre_regwnexec(const regex_t *preg, const wchar_t *string, size_t len,
 	  size_t nmatch, regmatch_t pmatch[], int eflags);
 #endif /* TRE_WCHAR */
@@ -207,25 +224,30 @@ typedef struct {
 
 /* Approximate matching functions. */
 extern int
+LIBTRE_API
 tre_regaexec(const regex_t *preg, const char *string,
 	 regamatch_t *match, regaparams_t params, int eflags);
 
 extern int
+LIBTRE_API
 tre_reganexec(const regex_t *preg, const char *string, size_t len,
 	  regamatch_t *match, regaparams_t params, int eflags);
 #ifdef TRE_WCHAR
 /* Wide character approximate matching. */
 extern int
+LIBTRE_API
 tre_regawexec(const regex_t *preg, const wchar_t *string,
 	  regamatch_t *match, regaparams_t params, int eflags);
 
 extern int
+LIBTRE_API
 tre_regawnexec(const regex_t *preg, const wchar_t *string, size_t len,
 	   regamatch_t *match, regaparams_t params, int eflags);
 #endif /* TRE_WCHAR */
 
 /* Sets the parameters to default values. */
 extern void
+LIBTRE_API
 tre_regaparams_default(regaparams_t *params);
 #endif /* TRE_APPROX */
 
@@ -243,17 +265,18 @@ typedef struct {
 } tre_str_source;
 
 extern int
+LIBTRE_API
 tre_reguexec(const regex_t *preg, const tre_str_source *string,
 	 size_t nmatch, regmatch_t pmatch[], int eflags);
 
 /* Returns the version string.	The returned string is static. */
-extern char *
-tre_version(void);
+extern char LIBTRE_API *tre_version(void);
 
 /* Returns the value for a config parameter.  The type to which `result'
    must point to depends of the value of `query', see documentation for
    more details. */
-extern int
+extern int 
+LIBTRE_API
 tre_config(int query, void *result);
 
 enum {
@@ -266,11 +289,13 @@ enum {
 
 /* Returns 1 if the compiled pattern has back references, 0 if not. */
 extern int
+LIBTRE_API
 tre_have_backrefs(const regex_t *preg);
 
 /* Returns 1 if the compiled pattern uses approximate matching features,
    0 if not. */
 extern int
+LIBTRE_API
 tre_have_approx(const regex_t *preg);
 
 #ifdef __cplusplus

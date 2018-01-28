@@ -39,7 +39,7 @@ static int s_ociVersionMajor = 0;
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -75,7 +75,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -111,7 +111,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
    sword major, minor, update, patch, pupdate;
    OCIClientVersion(&major, &minor, &update, &patch, &pupdate);
@@ -130,7 +130,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
    if (s_handleEnv != NULL)
       OCIHandleFree(s_handleEnv, OCI_HTYPE_ENV);
@@ -196,7 +196,7 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password, 
                                               const char *database, const char *schema, WCHAR *errorText)
 {
 	ORACLE_CONN *pConn;
@@ -303,7 +303,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 {
 	if (pConn == NULL)
 	   return;
@@ -321,7 +321,7 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 /**
  * Set prefetch limit
  */
-extern "C" void EXPORT DrvSetPrefetchLimit(ORACLE_CONN *pConn, int limit)
+extern "C" void __EXPORT DrvSetPrefetchLimit(ORACLE_CONN *pConn, int limit)
 {
 	if (pConn != NULL)
       pConn->prefetchLimit = limit;
@@ -404,7 +404,7 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 /**
  * Prepare statement
  */
-extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_STATEMENT *stmt = NULL;
 	OCIStmt *handleStmt;
@@ -446,7 +446,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 /**
  * Open batch
  */
-extern "C" bool EXPORT DrvOpenBatch(ORACLE_STATEMENT *stmt)
+extern "C" bool __EXPORT DrvOpenBatch(ORACLE_STATEMENT *stmt)
 {
    stmt->buffers->clear();
    if (stmt->batchBindings != NULL)
@@ -461,7 +461,7 @@ extern "C" bool EXPORT DrvOpenBatch(ORACLE_STATEMENT *stmt)
 /**
  * Start next batch row
  */
-extern "C" void EXPORT DrvNextBatchRow(ORACLE_STATEMENT *stmt)
+extern "C" void __EXPORT DrvNextBatchRow(ORACLE_STATEMENT *stmt)
 {
    if (!stmt->batchMode)
       return;
@@ -784,7 +784,7 @@ static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, v
 /**
  * Bind parameter to statement
  */
-extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
    if (stmt->batchMode)
       BindBatch(stmt, pos, sqlType, cType, buffer, allocType);
@@ -795,7 +795,7 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 /**
  * Execute prepared non-select statement
  */
-extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -852,7 +852,7 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 /**
  * Destroy prepared statement
  */
-extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
+extern "C" void __EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 {
 	if (stmt == NULL)
 		return;
@@ -918,7 +918,7 @@ static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR 
 /**
  * Perform non-SELECT query - entry point
  */
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *conn, const WCHAR *query, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(ORACLE_CONN *conn, const WCHAR *query, WCHAR *errorText)
 {
    return DrvQueryInternal(conn, query, errorText);
 }
@@ -1114,7 +1114,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 	OCIStmt *handleStmt;
@@ -1163,7 +1163,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 
@@ -1193,7 +1193,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int nColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int nColumn)
 {
 	if (pResult == NULL)
 		return -1;
@@ -1208,7 +1208,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int n
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColumn,
+extern "C" WCHAR __EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColumn,
                                      WCHAR *pBuffer, int nBufLen)
 {
    WCHAR *pValue = NULL;
@@ -1233,7 +1233,7 @@ extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColu
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
+extern "C" int __EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nRows : 0;
 }
@@ -1241,7 +1241,7 @@ extern "C" int EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nCols : 0;
 }
@@ -1249,7 +1249,7 @@ extern "C" int EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->nCols)) ? pResult->columnNames[column] : NULL;
 }
@@ -1257,7 +1257,7 @@ extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int colum
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 {
 	if (pResult != NULL)
 		DestroyQueryResult(pResult);
@@ -1380,7 +1380,7 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    ORACLE_UNBUFFERED_RESULT *result = NULL;
 
@@ -1435,7 +1435,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(ORACLE_CONN *pConn
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    ORACLE_UNBUFFERED_RESULT *result = NULL;
 
@@ -1469,7 +1469,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ORACLE_CON
 /**
  * Fetch next result line from unbuffered SELECT results
  */
-extern "C" bool EXPORT DrvFetch(ORACLE_UNBUFFERED_RESULT *result)
+extern "C" bool __EXPORT DrvFetch(ORACLE_UNBUFFERED_RESULT *result)
 {
 	bool success;
 
@@ -1492,7 +1492,7 @@ extern "C" bool EXPORT DrvFetch(ORACLE_UNBUFFERED_RESULT *result)
 /**
  * Get field length from current row in unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int nColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int nColumn)
 {
 	if (result == NULL)
 		return 0;
@@ -1516,7 +1516,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(ORACLE_UNBUFFERED_RESULT *res
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int nColumn, WCHAR *pBuffer, int nBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int nColumn, WCHAR *pBuffer, int nBufSize)
 {
 	int nLen;
 
@@ -1566,7 +1566,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(ORACLE_UNBUFFERED_RESULT *result,
 /**
  * Get column count in unbuffered query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(ORACLE_UNBUFFERED_RESULT *result)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(ORACLE_UNBUFFERED_RESULT *result)
 {
 	return (result != NULL) ? result->nCols : 0;
 }
@@ -1574,7 +1574,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(ORACLE_UNBUFFERED_RESULT *resu
 /**
  * Get column name in unbuffered query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(ORACLE_UNBUFFERED_RESULT *result, int column)
 {
 	return ((result != NULL) && (column >= 0) && (column < result->nCols)) ? result->columnNames[column] : NULL;
 }
@@ -1582,7 +1582,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(ORACLE_UNBUFFERED_RESUL
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
 {
 	if (result == NULL)
 		return;
@@ -1595,7 +1595,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(ORACLE_CONN *pConn)
 {
 	if (pConn == NULL)
 		return DBERR_INVALID_HANDLE;
@@ -1609,7 +1609,7 @@ extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;
 
@@ -1641,7 +1641,7 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;
 
@@ -1673,7 +1673,7 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%ls')", name);

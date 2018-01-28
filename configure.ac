@@ -1274,7 +1274,31 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_MSG_RESULT(no)
 		])
 
+	AC_MSG_CHECKING(whether C compiler accepts -fvisibility-inlines-hidden)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ 
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
 	AC_LANG_POP([C++])
+
+	AC_MSG_CHECKING(whether C compiler accepts -fvisibility=hidden)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -fvisibility=hidden"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ 
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 
 	MACHINE=`uname -m`
 	if test "x$MACHINE" = "xi686" -o "x$MACHINE" = "xi586"; then
@@ -1456,6 +1480,20 @@ if test "x$CXX" = "xaCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	fi
+
+	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -Bhidden_def"
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __declspec(dllexport) z = 0; ]], [[ ]])],
+		[ 
+			AC_DEFINE(DLL_DECLSPEC_SUPPORTED, 1, Define to 1 if compiler supports MSVC compatible __declspec dllexport/dllimport attributes)
+			LDFLAGS="$LDFLAGS -Wl,-ashared_archive"
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
@@ -1489,6 +1527,19 @@ if test "x$CXX" = "xxlC_r" ; then
                                 AC_MSG_RESULT(no)
                         ])
         fi
+
+	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -qvisibility=hidden"
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __attribute__ ((visibility ("default"))) z = 0; ]], [[ ]])],
+		[ 
+			AC_DEFINE(VISIBILITY_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports visibility attribute)
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 fi
 
 if test "x$CXX" = "xCC" ; then
@@ -1538,6 +1589,19 @@ if test "x$CXX" = "xCC" ; then
 				])
 		fi
 	fi
+
+	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -xldscope=hidden"
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __global z = 0; ]], [[ ]])],
+		[ 
+			AC_DEFINE(GLOBAL_SPECIFIER_SUPPORTED, 1, Define to 1 if compiler supports scoping specifier __global)
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
 fi
 
 

@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2009 Victor Kirhenshtein
+** Copyright (C) 2005-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,10 +35,11 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#define EXPORT __declspec(dllexport)
+
 #else
+
 #include <string.h>
-#define EXPORT
+
 #endif   /* _WIN32 */
 
 #include <dbdrv.h>

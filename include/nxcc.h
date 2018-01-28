@@ -1,14 +1,10 @@
 #ifndef _nxcc_h_
 #define _nxcc_h_
 
-#ifdef _WIN32
 #ifdef LIBNXCC_EXPORTS
-#define LIBNXCC_EXPORTABLE __declspec(dllexport)
+#define LIBNXCC_EXPORTABLE __EXPORT
 #else
-#define LIBNXCC_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXCC_EXPORTABLE
+#define LIBNXCC_EXPORTABLE __IMPORT
 #endif
 
 #include <nms_common.h>

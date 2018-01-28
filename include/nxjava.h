@@ -23,14 +23,10 @@
 #ifndef _nxjava_h_
 #define _nxjava_h_
 
-#ifdef _WIN32
 #ifdef LIBNXJAVA_EXPORTS
-#define LIBNXJAVA_EXPORTABLE __declspec(dllexport)
+#define LIBNXJAVA_EXPORTABLE __EXPORT
 #else
-#define LIBNXJAVA_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXJAVA_EXPORTABLE
+#define LIBNXJAVA_EXPORTABLE __IMPORT
 #endif
 
 #include <nms_common.h>

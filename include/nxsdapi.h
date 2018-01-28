@@ -30,7 +30,11 @@
 #define LIBNXSD_EXPORTABLE __declspec(dllimport)
 #endif
 #else    /* _WIN32 */
+#if __GNUC__ >= 4
+#define LIBNXSD_EXPORTABLE __attribute__ ((visibility ("default")))
+#else
 #define LIBNXSD_EXPORTABLE
+#endif
 #endif
 
 

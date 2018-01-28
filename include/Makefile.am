@@ -55,6 +55,7 @@ include_HEADERS = \
 	rwlock.h \
 	socket_listener.h \
 	strophe.h \
+	symbol_visibility.h \
 	unicode.h \
 	uthash.h \
 	uuid.h

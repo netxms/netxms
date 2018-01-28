@@ -5,6 +5,8 @@
 #ifndef Expat_External_INCLUDED
 #define Expat_External_INCLUDED 1
 
+#include <symbol_visibility.h>
+
 /* External API definitions */
 
 #if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
@@ -64,13 +66,11 @@
 
 
 #if !defined(XML_STATIC) && !defined(XMLIMPORT)
-#ifndef XML_BUILDING_EXPAT
+#ifdef XML_BUILDING_EXPAT
+#define XMLIMPORT __EXPORT
+#else
 /* using Expat from an application */
-
-#ifdef XML_USE_MSC_EXTENSIONS
-#define XMLIMPORT __declspec(dllimport)
-#endif
-
+#define XMLIMPORT __IMPORT
 #endif
 #endif  /* not defined XML_STATIC */
 

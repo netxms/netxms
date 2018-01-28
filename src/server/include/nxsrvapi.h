@@ -24,14 +24,10 @@
 #ifndef _nxsrvapi_h_
 #define _nxsrvapi_h_
 
-#ifdef _WIN32
 #ifdef LIBNXSRV_EXPORTS
-#define LIBNXSRV_EXPORTABLE __declspec(dllexport)
+#define LIBNXSRV_EXPORTABLE __EXPORT
 #else
-#define LIBNXSRV_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXSRV_EXPORTABLE
+#define LIBNXSRV_EXPORTABLE __IMPORT
 #endif
 
 #include <nxcpapi.h>

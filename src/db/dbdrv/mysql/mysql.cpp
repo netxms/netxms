@@ -52,7 +52,7 @@ static void UpdateErrorMessage(const char *source, WCHAR *errorText)
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  * (wide string version)
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -127,7 +127,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  * (multibyte string version)
  */
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -190,7 +190,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
 	return mysql_library_init(0, NULL, NULL) == 0;
 }
@@ -198,7 +198,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 	mysql_library_end();
 }
@@ -206,7 +206,7 @@ extern "C" void EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
 															 const char *szDatabase, const char *schema, WCHAR *errorText)
 {
 	MYSQL *pMySQL;
@@ -257,7 +257,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost, const char *sz
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 {
 	if (pConn != NULL)
 	{
@@ -270,7 +270,7 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_STATEMENT *result = NULL;
 
@@ -321,7 +321,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
 /**
  * Bind parameter to prepared statement
  */
-extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static size_t bufferSize[] = { 0, sizeof(INT32), sizeof(UINT32), sizeof(INT64), sizeof(UINT64), sizeof(double), 0 };
 
@@ -392,7 +392,7 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -431,7 +431,7 @@ extern "C" DWORD EXPORT DrvExecute(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, WC
 /**
  * Destroy prepared statement
  */
-extern "C" void EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
+extern "C" void __EXPORT DrvFreeStatement(MYSQL_STATEMENT *hStmt)
 {
 	if (hStmt == NULL)
 		return;
@@ -480,7 +480,7 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *er
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwRet;
    char *pszQueryUTF8;
@@ -494,7 +494,7 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *err
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_RESULT *result = NULL;
 	char *pszQueryUTF8;
@@ -539,7 +539,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DW
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_RESULT *result = NULL;
 
@@ -629,7 +629,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STATEM
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(MYSQL_RESULT *hResult, int iRow, int iColumn)
 {
 	if (hResult->isPreparedStatement)
 	{
@@ -749,7 +749,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
+extern "C" WCHAR __EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
 {
    return (WCHAR *)GetFieldInternal(hResult, iRow, iColumn, pBuffer, nBufSize, false);
 }
@@ -757,7 +757,7 @@ extern "C" WCHAR EXPORT *DrvGetField(MYSQL_RESULT *hResult, int iRow, int iColum
 /**
  * Get field value from result as UTF8 string
  */
-extern "C" char EXPORT *DrvGetFieldUTF8(MYSQL_RESULT *hResult, int iRow, int iColumn, char *pBuffer, int nBufSize)
+extern "C" char __EXPORT *DrvGetFieldUTF8(MYSQL_RESULT *hResult, int iRow, int iColumn, char *pBuffer, int nBufSize)
 {
    return (char *)GetFieldInternal(hResult, iRow, iColumn, pBuffer, nBufSize, true);
 }
@@ -765,7 +765,7 @@ extern "C" char EXPORT *DrvGetFieldUTF8(MYSQL_RESULT *hResult, int iRow, int iCo
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(MYSQL_RESULT *hResult)
+extern "C" int __EXPORT DrvGetNumRows(MYSQL_RESULT *hResult)
 {
    return (hResult != NULL) ? (int)(hResult->isPreparedStatement ? hResult->numRows : mysql_num_rows(hResult->resultSet)) : 0;
 }
@@ -773,7 +773,7 @@ extern "C" int EXPORT DrvGetNumRows(MYSQL_RESULT *hResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(MYSQL_RESULT *hResult)
+extern "C" int __EXPORT DrvGetColumnCount(MYSQL_RESULT *hResult)
 {
 	return (hResult != NULL) ? (int)mysql_num_fields(hResult->resultSet) : 0;
 }
@@ -781,7 +781,7 @@ extern "C" int EXPORT DrvGetColumnCount(MYSQL_RESULT *hResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column)
 {
 	if (hResult == NULL)
 		return NULL;
@@ -793,7 +793,7 @@ extern "C" const char EXPORT *DrvGetColumnName(MYSQL_RESULT *hResult, int column
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
+extern "C" void __EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 {
 	if (hResult == NULL)
 		return;
@@ -811,7 +811,7 @@ extern "C" void EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	MYSQL_UNBUFFERED_RESULT *pResult = NULL;
 	char *pszQueryUTF8;
@@ -880,7 +880,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn,
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, MYSQL_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
    MYSQL_UNBUFFERED_RESULT *result = NULL;
 
@@ -953,7 +953,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, MY
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
+extern "C" bool __EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
 {
    if ((result == NULL) || (result->noMoreRows))
       return false;
@@ -1002,7 +1002,7 @@ extern "C" bool EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *result)
 /**
  * Get field length from async query result result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn)
 {
 	// Check if we have valid result handle
 	if (hResult == NULL)
@@ -1115,7 +1115,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
 /**
  * Get field from current row in async query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	return (WCHAR *)GetFieldUnbufferedInternal(hResult, iColumn, pBuffer, iBufSize, false);
 }
@@ -1123,7 +1123,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult,
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, char *pBuffer, int iBufSize)
+extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, char *pBuffer, int iBufSize)
 {
    return (char *)GetFieldUnbufferedInternal(hResult, iColumn, pBuffer, iBufSize, true);
 }
@@ -1131,7 +1131,7 @@ extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResu
 /**
  * Get column count in unbuffered query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult)
 {
 	return (hResult != NULL) ? hResult->numColumns : 0;
 }
@@ -1139,7 +1139,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResu
 /**
  * Get column name in unbuffered query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int column)
 {
 	if ((hResult == NULL) || (hResult->resultSet == NULL))
 		return NULL;
@@ -1151,7 +1151,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MYSQL_UNBUFFERED_RESULT
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResult)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResult)
 {
 	if (hResult == NULL)
 	   return;
@@ -1179,7 +1179,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResult)
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(MYSQL_CONN *pConn)
 {
 	return DrvQueryInternal(pConn, "BEGIN", NULL);
 }
@@ -1187,7 +1187,7 @@ extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(MYSQL_CONN *pConn)
 {
 	return DrvQueryInternal(pConn, "COMMIT", NULL);
 }
@@ -1195,7 +1195,7 @@ extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
 	return DrvQueryInternal(pConn, "ROLLBACK", NULL);
 }
@@ -1203,7 +1203,7 @@ extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(MYSQL_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(MYSQL_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256], lname[256];
    wcsncpy(lname, name, 256);

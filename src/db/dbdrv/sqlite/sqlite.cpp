@@ -44,7 +44,7 @@ static void GetErrorMessage(sqlite3 *hdb, WCHAR *errorText)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -80,7 +80,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -116,7 +116,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
    if (!sqlite3_threadsafe() ||	// Fail if SQLite compiled without threading support
 		 (sqlite3_initialize() != SQLITE_OK))
@@ -129,7 +129,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 	sqlite3_shutdown();
 }
@@ -137,7 +137,7 @@ extern "C" void EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login,
                                               const char *password, const char *database, const char *schema,  WCHAR *errorText)
 {
    SQLITE_CONN *pConn;
@@ -167,7 +167,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
+extern "C" void __EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 {
    if (hConn == NULL)
 		return;
@@ -180,7 +180,7 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
@@ -208,7 +208,7 @@ retry:
 /**
  * Bind parameter to statement
  */
-extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	switch(cType)
 	{
@@ -256,7 +256,7 @@ extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cTy
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR *errorText)
 {
 	DWORD result;
 
@@ -296,7 +296,7 @@ retry:
 /**
  * Destroy prepared statement
  */
-extern "C" void EXPORT DrvFreeStatement(sqlite3_stmt *stmt)
+extern "C" void __EXPORT DrvFreeStatement(sqlite3_stmt *stmt)
 {
    if (stmt != NULL)
 	   sqlite3_finalize(stmt);
@@ -334,7 +334,7 @@ retry:
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
    DWORD dwResult;
    char *pszQueryUTF8;
@@ -385,7 +385,7 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
+extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
 {
    int i, nCount;
 
@@ -409,7 +409,7 @@ extern "C" void EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 
@@ -441,7 +441,7 @@ retry:
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    SQLITE_RESULT *result = (SQLITE_RESULT *)malloc(sizeof(SQLITE_RESULT));
    memset(result, 0, sizeof(SQLITE_RESULT));
@@ -518,7 +518,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stm
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
@@ -530,7 +530,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT hResult, int iRow, int iCo
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pwszBuffer, int nBufLen)
+extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn, WCHAR *pwszBuffer, int nBufLen)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
@@ -547,7 +547,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT hResult, int iRow, int iColumn
 /**
  * Get field value from result as UTF8 string
  */
-extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT hResult, int iRow, int iColumn, char *buffer, int nBufLen)
+extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT hResult, int iRow, int iColumn, char *buffer, int nBufLen)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
@@ -563,7 +563,7 @@ extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT hResult, int iRow, int iCol
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(SQLITE_RESULT *hResult)
+extern "C" int __EXPORT DrvGetNumRows(SQLITE_RESULT *hResult)
 {
    return hResult->nRows;
 }
@@ -571,7 +571,7 @@ extern "C" int EXPORT DrvGetNumRows(SQLITE_RESULT *hResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(SQLITE_RESULT *hResult)
+extern "C" int __EXPORT DrvGetColumnCount(SQLITE_RESULT *hResult)
 {
 	return (hResult != NULL) ? hResult->nCols : 0;
 }
@@ -579,7 +579,7 @@ extern "C" int EXPORT DrvGetColumnCount(SQLITE_RESULT *hResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int column)
 {
    char *pszRet = NULL;
 
@@ -593,7 +593,7 @@ extern "C" const char EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int colum
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    SQLITE_UNBUFFERED_RESULT *result;
    char *pszQueryUTF8;
@@ -631,7 +631,7 @@ retry:
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    if ((hConn == NULL) || (stmt == NULL))
       return NULL;
@@ -647,7 +647,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(SQLITE_CON
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(SQLITE_UNBUFFERED_RESULT *result)
+extern "C" bool __EXPORT DrvFetch(SQLITE_UNBUFFERED_RESULT *result)
 {
 	if (result == NULL)
 		return false;
@@ -672,7 +672,7 @@ retry:
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn)
 {
    if ((iColumn >= 0) && (iColumn < result->numColumns))
       return (LONG)strlen((char *)sqlite3_column_text(result->stmt, iColumn));
@@ -682,7 +682,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *res
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
    WCHAR *pwszRet = NULL;
@@ -703,7 +703,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result,
 /**
  * Get field from current row in unbuffered query result as UTF-8 string
  */
-extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *result, int iColumn, char *pBuffer, int iBufSize)
+extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *result, int iColumn, char *pBuffer, int iBufSize)
 {
    char *pszData;
    char *value = NULL;
@@ -724,7 +724,7 @@ extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *resu
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *result)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *result)
 {
 	return (result != NULL) ? result->numColumns : 0;
 }
@@ -732,7 +732,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *resu
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int column)
 {
    const char *pszRet = NULL;
 
@@ -746,7 +746,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RESUL
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *result)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *result)
 {
    if (result != NULL)
    {
@@ -762,7 +762,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *result)
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(SQLITE_CONN *pConn)
 {
    return DrvQueryInternal(pConn, "BEGIN IMMEDIATE", NULL);
 }
@@ -770,7 +770,7 @@ extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(SQLITE_CONN *pConn)
 {
    return DrvQueryInternal(pConn, "COMMIT", NULL);
 }
@@ -778,7 +778,7 @@ extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(SQLITE_CONN *pConn)
 {
    return DrvQueryInternal(pConn, "ROLLBACK", NULL);
 }
@@ -786,7 +786,7 @@ extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
 #if HAVE_SWPRINTF

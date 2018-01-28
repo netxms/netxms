@@ -82,11 +82,9 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *
 	return dwError;
 }
 
-
-//
-// Clear any pending result sets on given statement
-//
-
+/**
+ * Clear any pending result sets on given statement
+ */
 static void ClearPendingResults(SQLHSTMT statement)
 {
 	while(1)
@@ -99,12 +97,10 @@ static void ClearPendingResults(SQLHSTMT statement)
 	}
 }
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -137,7 +133,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -173,7 +169,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
 	return true;
 }
@@ -181,7 +177,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 }
 
@@ -189,7 +185,7 @@ extern "C" void EXPORT DrvUnload()
  * Connect to database
  * database should be set to Informix source name. Host and schema are ignored
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
 {
 	long iResult;
 	INFORMIX_CONN *pConn;
@@ -255,7 +251,7 @@ connect_failure_0:
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 {
 	MutexLock(pConn->mutexQuery);
 	MutexUnlock(pConn->mutexQuery);
@@ -269,7 +265,7 @@ extern "C" void EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	long iResult;
 	SQLHSTMT statement;
@@ -311,7 +307,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQu
 /**
  * Bind parameter to statement
  */
-extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
@@ -369,7 +365,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -396,7 +392,7 @@ extern "C" DWORD EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *sta
 // Destroy prepared statement
 //
 
-extern "C" void EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
+extern "C" void __EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
 {
 	if (statement == NULL)
 	{
@@ -413,7 +409,7 @@ extern "C" void EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -512,7 +508,7 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
@@ -550,7 +546,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery,
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
@@ -572,7 +568,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
 	LONG nLen = -1;
 
@@ -590,7 +586,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRo
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
+extern "C" WCHAR __EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
 		WCHAR *pBuffer, int nBufSize)
 {
 	WCHAR *pValue = NULL;
@@ -617,7 +613,7 @@ extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, i
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numRows : 0;
 }
@@ -627,7 +623,7 @@ extern "C" int EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
 // Get column count in query result
 //
 
-extern "C" int EXPORT DrvGetColumnCount(INFORMIX_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCount(INFORMIX_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -635,7 +631,7 @@ extern "C" int EXPORT DrvGetColumnCount(INFORMIX_QUERY_RESULT *pResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(INFORMIX_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(INFORMIX_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -643,7 +639,7 @@ extern "C" const char EXPORT *DrvGetColumnName(INFORMIX_QUERY_RESULT *pResult, i
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
 {
 	if (pResult == NULL)
       return;
@@ -669,7 +665,7 @@ extern "C" void EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 	long iResult;
@@ -742,7 +738,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(INFORMIX_CONN *pCo
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -795,7 +791,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(INFORMIX_C
 /**
  * Fetch next result line from unbuffered SELECT results
  */
-extern "C" bool EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" bool __EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	bool bResult = false;
 
@@ -816,7 +812,7 @@ extern "C" bool EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
 {
 	LONG nLen = -1;
 
@@ -839,7 +835,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_RES
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	SQLLEN iDataSize;
 	long iResult;
@@ -877,7 +873,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT 
 /**
  * Get column count in unbuffered query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -885,7 +881,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESU
 /**
  * Get column name in unbuffered query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -893,7 +889,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(INFORMIX_UNBUFFERED_QUE
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	if (pResult == NULL)
       return;
@@ -916,7 +912,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(INFORMIX_UNBUFFERED_QUERY_RESULT 
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(INFORMIX_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
 	DWORD dwResult;
@@ -943,7 +939,7 @@ extern "C" DWORD EXPORT DrvBegin(INFORMIX_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(INFORMIX_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
 
@@ -962,7 +958,7 @@ extern "C" DWORD EXPORT DrvCommit(INFORMIX_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(INFORMIX_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
 
@@ -981,7 +977,7 @@ extern "C" DWORD EXPORT DrvRollback(INFORMIX_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM informix.systables WHERE tabtype='T' AND upper(tabname)=upper('%ls')", name);

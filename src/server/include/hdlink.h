@@ -34,18 +34,12 @@
 /**
  * Driver header
  */
-#ifdef _WIN32
-#define __HDLINK_EXPORT __declspec(dllexport)
-#else
-#define __HDLINK_EXPORT
-#endif
-
 #define DECLARE_HDLINK_ENTRY_POINT(name, implClass) \
-extern "C" int __HDLINK_EXPORT hdlinkAPIVersion; \
-extern "C" const TCHAR __HDLINK_EXPORT *hdlinkName; \
-int __HDLINK_EXPORT hdlinkAPIVersion = HDLINK_API_VERSION; \
-const TCHAR __HDLINK_EXPORT *hdlinkName = name; \
-extern "C" HelpDeskLink __HDLINK_EXPORT *hdlinkCreateInstance() { return new implClass; }
+extern "C" int __EXPORT hdlinkAPIVersion; \
+extern "C" const TCHAR __EXPORT *hdlinkName; \
+int __EXPORT hdlinkAPIVersion = HDLINK_API_VERSION; \
+const TCHAR __EXPORT *hdlinkName = name; \
+extern "C" HelpDeskLink __EXPORT *hdlinkCreateInstance() { return new implClass; }
 
 /**
  * Base class for device drivers

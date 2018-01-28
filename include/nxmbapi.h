@@ -24,14 +24,10 @@
 #ifndef _nxmbapi_h_
 #define _nxmbapi_h_
 
-#ifdef _WIN32
 #ifdef LIBNXMB_EXPORTS
-#define LIBNXMB_EXPORTABLE __declspec(dllexport)
+#define LIBNXMB_EXPORTABLE __EXPORT
 #else
-#define LIBNXMB_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXMB_EXPORTABLE
+#define LIBNXMB_EXPORTABLE __IMPORT
 #endif
 
 #include <nms_common.h>
