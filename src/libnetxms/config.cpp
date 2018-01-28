@@ -1289,7 +1289,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
 /**
  * State information for XML parser
  */
-typedef struct
+struct Config_XmlParserState
 {
    const char *topLevelTag;
    XML_Parser parser;
@@ -1300,14 +1300,14 @@ typedef struct
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
    bool merge;
-} XML_PARSER_STATE;
+};
 
 /**
  * Element start handler for XML parser
  */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
-   XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
+   Config_XmlParserState *ps = (Config_XmlParserState *) userData;
 
    if (ps->level == 0)
    {
@@ -1386,7 +1386,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
  */
 static void EndElement(void *userData, const char *name)
 {
-   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+   Config_XmlParserState *ps = (Config_XmlParserState *)userData;
 
    if (ps->level > MAX_STACK_DEPTH)
    {
@@ -1406,7 +1406,7 @@ static void EndElement(void *userData, const char *name)
  */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
-   XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
+   Config_XmlParserState *ps = (Config_XmlParserState *) userData;
 
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
       ps->charData[ps->level - 1].appendMBString(s, len, CP_UTF8);
@@ -1417,7 +1417,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
  */
 bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag, bool merge)
 {
-   XML_PARSER_STATE state;
+   Config_XmlParserState state;
 
    XML_Parser parser = XML_ParserCreate(NULL);
    XML_SetUserData(parser, &state);

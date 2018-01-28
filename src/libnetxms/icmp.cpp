@@ -262,7 +262,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-static UINT32 LIBNETXMS_EXPORTABLE IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
+static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
 {
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
 

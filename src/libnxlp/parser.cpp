@@ -57,7 +57,7 @@ enum ParserState
 /**
  * XML parser state for creating LogParser object from XML
  */
-struct XML_PARSER_STATE
+struct LogParser_XmlParserState
 {
 	LogParser *parser;
 	ParserState state;
@@ -86,7 +86,7 @@ struct XML_PARSER_STATE
 	int repeatInterval;
 	bool resetRepeat;
 
-	XML_PARSER_STATE() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4)
+	LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4)
 	{
       state = XML_STATE_INIT;
       parser = NULL;
@@ -386,7 +386,7 @@ const TCHAR *LogParser::getMacro(const TCHAR *name)
  */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
-	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+	LogParser_XmlParserState *ps = (LogParser_XmlParserState *)userData;
 
 	if (!strcmp(name, "parser"))
 	{
@@ -598,7 +598,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
  */
 static void EndElement(void *userData, const char *name)
 {
-	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+	LogParser_XmlParserState *ps = (LogParser_XmlParserState *)userData;
 
 	if (ps->state == XML_STATE_ERROR)
       return;
@@ -736,7 +736,7 @@ static void EndElement(void *userData, const char *name)
  */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
-	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+	LogParser_XmlParserState *ps = (LogParser_XmlParserState *)userData;
 
 	switch(ps->state)
 	{
@@ -784,7 +784,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	ObjectArray<LogParser> *parsers = NULL;
 
 	XML_Parser parser = XML_ParserCreate(NULL);
-	XML_PARSER_STATE state;
+	LogParser_XmlParserState state;
 	state.parser = new LogParser;
 	state.parser->setEventNameResolver(eventResolver);
 	XML_SetUserData(parser, &state);

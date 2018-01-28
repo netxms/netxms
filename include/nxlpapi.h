@@ -31,7 +31,11 @@
 #define LIBNXLP_EXPORTABLE __declspec(dllimport)
 #endif
 #else    /* _WIN32 */
+#if __GNUC__ >= 4
+#define LIBNXLP_EXPORTABLE __attribute__ ((visibility ("default")))
+#else
 #define LIBNXLP_EXPORTABLE
+#endif
 #endif
 
 #include <netxms-regex.h>
