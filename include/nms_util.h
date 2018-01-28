@@ -30,7 +30,11 @@
 #define LIBNETXMS_EXPORTABLE __declspec(dllimport)
 #endif
 #else    /* _WIN32 */
+#if __GNUC__ >= 4
+#define LIBNETXMS_EXPORTABLE __attribute__ ((visibility ("default")))
+#else
 #define LIBNETXMS_EXPORTABLE
+#endif
 #endif
 
 #include <nms_common.h>
