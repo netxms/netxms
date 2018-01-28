@@ -604,7 +604,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 
 #if !HAVE_WSTAT
 
-int wstat(const WCHAR *_path, struct stat *_sbuf)
+int LIBNETXMS_EXPORTABLE wstat(const WCHAR *_path, struct stat *_sbuf)
 {
    char path[MAX_PATH];
 
@@ -622,7 +622,7 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
  */
 
 #define DEFINE_PATH_FUNC(func) \
-int w##func(const WCHAR *_path) \
+int LIBNETXMS_EXPORTABLE w##func(const WCHAR *_path) \
 { \
 	char path[MAX_PATH]; \
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL); \
@@ -755,7 +755,7 @@ int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
 
 #if !HAVE_WRENAME
 
-int wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
+int LIBNETXMS_EXPORTABLE wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
 {
    char oldpath[MAX_PATH], newpath[MAX_PATH];
 
@@ -770,7 +770,7 @@ int wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
 
 #if !HAVE_WSYSTEM
 
-int wsystem(const WCHAR *_cmd)
+int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
 {
    char *cmd = MBStringFromWideStringSysLocale(_cmd);
    int rc = system(cmd);
@@ -782,7 +782,7 @@ int wsystem(const WCHAR *_cmd)
 
 #if !HAVE_WACCESS
 
-int waccess(const WCHAR *_path, int mode)
+int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
 
@@ -795,7 +795,7 @@ int waccess(const WCHAR *_path, int mode)
 
 #if !HAVE_WMKDIR
 
-int wmkdir(const WCHAR *_path, int mode)
+int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
 
@@ -808,7 +808,7 @@ int wmkdir(const WCHAR *_path, int mode)
 
 #if !HAVE_WUTIME
 
-int wutime(const WCHAR *_path, utimbuf *buf)
+int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, utimbuf *buf)
 {
    char path[MAX_PATH];
 
@@ -821,7 +821,7 @@ int wutime(const WCHAR *_path, utimbuf *buf)
 
 #if !HAVE_WGETENV
 
-WCHAR *wgetenv(const WCHAR *_string)
+WCHAR LIBNETXMS_EXPORTABLE *wgetenv(const WCHAR *_string)
 {
    char name[256], *p;
    static WCHAR value[8192];
@@ -839,7 +839,7 @@ WCHAR *wgetenv(const WCHAR *_string)
 
 #if !HAVE_WCTIME
 
-WCHAR *wctime(const time_t *timep)
+WCHAR LIBNETXMS_EXPORTABLE *wctime(const time_t *timep)
 {
    static WCHAR value[256];
 
@@ -851,7 +851,7 @@ WCHAR *wctime(const time_t *timep)
 
 #if !HAVE_PUTWS
 
-int putws(const WCHAR *s)
+int LIBNETXMS_EXPORTABLE putws(const WCHAR *s)
 {
 #if HAVE_FPUTWS
    fputws(s, stdout);
@@ -866,7 +866,7 @@ int putws(const WCHAR *s)
 
 #if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
 
-WCHAR *wcserror(int errnum)
+WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum)
 {
    static WCHAR value[8192];
 
@@ -879,9 +879,9 @@ WCHAR *wcserror(int errnum)
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
 
 #if HAVE_POSIX_STRERROR_R
-int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+int LIBNETXMS_EXPORTABLE wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #else
-WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 #endif /* HAVE_POSIX_STRERROR_R */
 {
    char *mbbuf;

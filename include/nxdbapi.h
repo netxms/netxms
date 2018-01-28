@@ -24,14 +24,10 @@
 #ifndef _nxdbapi_h_
 #define _nxdbapi_h_
 
-#ifdef _WIN32
 #ifdef LIBNXDB_EXPORTS
-#define LIBNXDB_EXPORTABLE __declspec(dllexport)
+#define LIBNXDB_EXPORTABLE __EXPORT
 #else
-#define LIBNXDB_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXDB_EXPORTABLE
+#define LIBNXDB_EXPORTABLE __IMPORT
 #endif
 
 #include <dbdrv.h>

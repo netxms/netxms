@@ -3,6 +3,7 @@
 SUBDIRS = win32
 
 lib_LTLIBRARIES = libnxtre.la
+libnxtre_la_CPPFLAGS = -I@top_srcdir@ -I@top_srcdir@/include -DLIBTRE_EXPORTS
 libnxtre_la_LDFLAGS = -no-undefined -version-info 5:0:0 $(LDFLAGS)
 
 noinst_HEADERS =		\
@@ -36,7 +37,6 @@ EXTRA_DIST = \
 	README \
 	THANKS \
 	Makefile.w32 \
-	libtre.def \
 	libtre.vcxproj libtre.vcxproj.filters \
 	windll.cpp \
 	xmalloc.c

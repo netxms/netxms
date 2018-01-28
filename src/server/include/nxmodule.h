@@ -121,12 +121,6 @@ struct NXMODULE_METADATA
    char tagEnd[16];
 };
 
-#ifdef _WIN32
-#define METADATA_EXPORT __declspec(dllexport) 
-#else
-#define METADATA_EXPORT
-#endif
-
 #ifdef UNICODE
 #define METADATA_UNICODE   1
 #else
@@ -137,8 +131,8 @@ struct NXMODULE_METADATA
  * Define module metadata
  */
 #define DEFINE_MODULE_METADATA(name,vendor,version,tag) \
-extern "C" NXMODULE_METADATA METADATA_EXPORT NXM_metadata; \
-NXMODULE_METADATA METADATA_EXPORT NXM_metadata = \
+extern "C" NXMODULE_METADATA __EXPORT NXM_metadata; \
+NXMODULE_METADATA __EXPORT NXM_metadata = \
 { sizeof(struct NXMODULE_METADATA), METADATA_UNICODE, \
    "$$$NXMINFO>$$$", \
    name, vendor, \

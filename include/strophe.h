@@ -16,14 +16,10 @@
 #ifndef __LIBSTROPHE_STROPHE_H__
 #define __LIBSTROPHE_STROPHE_H__
 
-#ifdef _WIN32
 #ifdef LIBSTROPHE_EXPORTS
-#define LIBSTROPHE_EXPORTABLE __declspec(dllexport)
+#define LIBSTROPHE_EXPORTABLE __EXPORT
 #else
-#define LIBSTROPHE_EXPORTABLE __declspec(dllimport)
-#endif
-#else
-#define LIBSTROPHE_EXPORTABLE
+#define LIBSTROPHE_EXPORTABLE __IMPORT
 #endif
 
 #ifdef __cplusplus

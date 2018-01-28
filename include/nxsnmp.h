@@ -23,19 +23,13 @@
 #ifndef _nxsnmp_h_
 #define _nxsnmp_h_
 
-#ifdef __cplusplus
 #include <nms_common.h>
 #include <nms_threads.h>
-#endif
 
-#ifdef _WIN32
 #ifdef LIBNXSNMP_EXPORTS
-#define LIBNXSNMP_EXPORTABLE __declspec(dllexport)
+#define LIBNXSNMP_EXPORTABLE __EXPORT
 #else
-#define LIBNXSNMP_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXSNMP_EXPORTABLE
+#define LIBNXSNMP_EXPORTABLE __IMPORT
 #endif
 
 /** \ingroup SNMP

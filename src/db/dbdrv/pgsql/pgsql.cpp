@@ -32,7 +32,7 @@
 
 DECLARE_DRIVER_HEADER("PGSQL")
 
-extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
+extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
 static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
@@ -52,7 +52,7 @@ static VolatileCounter s_statementId = 0;
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -114,7 +114,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -176,7 +176,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
 #ifndef _WIN32
    s_libpq = dlopen("libpq.so.5", RTLD_NOW);
@@ -190,7 +190,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 #ifndef _WIN32
    if (s_libpq != NULL)
@@ -201,7 +201,7 @@ extern "C" void EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *szLogin,	const char *szPassword, 
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *szLogin,	const char *szPassword, 
 															 const char *szDatabase, const char *schema, WCHAR *errorText)
 {
 	PG_CONN *pConn;	
@@ -278,7 +278,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *szHost,	const char *sz
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
+extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 {
 	if (pConn != NULL)
 	{
@@ -353,7 +353,7 @@ static char *ConvertQuery(WCHAR *query)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
 	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
@@ -393,7 +393,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, D
 /**
  * Bind parameter to prepared statement
  */
-extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	if (pos <= 0)
 		return;
@@ -459,7 +459,7 @@ extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cT
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *errorText)
 {
 	DWORD rc;
 
@@ -524,7 +524,7 @@ extern "C" DWORD EXPORT DrvExecute(PG_CONN *pConn, PG_STATEMENT *hStmt, WCHAR *e
 /**
  * Destroy prepared statement
  */
-extern "C" void EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
+extern "C" void __EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
 {
 	if (hStmt == NULL)
 		return;
@@ -600,7 +600,7 @@ retry:
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
 	DWORD dwRet;
 
@@ -677,7 +677,7 @@ retry:
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	DBDRV_RESULT pResult;
    char *pszQueryUTF8;
@@ -702,7 +702,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
    PGresult	*pResult = NULL;
    bool retry;
@@ -769,7 +769,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *h
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
 {
 	if (pResult == NULL)
       return -1;
@@ -781,7 +781,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nCo
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn, WCHAR *pBuffer, int nBufLen)
+extern "C" WCHAR __EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn, WCHAR *pBuffer, int nBufLen)
 {
 	if (pResult == NULL)
       return NULL;
@@ -801,7 +801,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn
 /**
  * Get field value from result as UTF8 string
  */
-extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nColumn, char *pBuffer, int nBufLen)
+extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nColumn, char *pBuffer, int nBufLen)
 {
 	if (pResult == NULL)
       return NULL;
@@ -818,7 +818,7 @@ extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nCol
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
+extern "C" int __EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 {
 	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;
 }
@@ -826,7 +826,7 @@ extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
+extern "C" int __EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? PQnfields((PGresult *)hResult) : 0;
 }
@@ -834,7 +834,7 @@ extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
 	return (hResult != NULL) ? PQfname((PGresult *)hResult, column) : NULL;
 }
@@ -842,7 +842,7 @@ extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
+extern "C" void __EXPORT DrvFreeResult(DBDRV_RESULT pResult)
 {
 	if (pResult != NULL)
 	{
@@ -853,7 +853,7 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	if (pConn == NULL)
 		return NULL;
@@ -956,7 +956,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WC
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN *pConn, PG_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
    if (pConn == NULL)
       return NULL;
@@ -1057,7 +1057,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(PG_CONN *p
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
+extern "C" bool __EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
 {
    if (result == NULL)
       return false;
@@ -1114,7 +1114,7 @@ extern "C" bool EXPORT DrvFetch(PG_UNBUFFERED_RESULT *result)
 /**
  * Get field length from async quety result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn)
 {
 	if ((result == NULL) || (result->fetchBuffer == NULL))
 		return 0;
@@ -1133,7 +1133,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(PG_UNBUFFERED_RESULT *result,
 /**
  * Get field from current row in async query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn, WCHAR *pBuffer, int nBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int nColumn, WCHAR *pBuffer, int nBufSize)
 {
 	if ((result == NULL) || (result->fetchBuffer == NULL))
 		return NULL;
@@ -1158,7 +1158,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int
 /**
  * Get field from current row in async query result as UTF-8 string
  */
-extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result, int nColumn, char *pBuffer, int nBufSize)
+extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result, int nColumn, char *pBuffer, int nBufSize)
 {
    if ((result == NULL) || (result->fetchBuffer == NULL))
       return NULL;
@@ -1183,7 +1183,7 @@ extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result, 
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(PG_UNBUFFERED_RESULT *result)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(PG_UNBUFFERED_RESULT *result)
 {
 	return ((result != NULL) && (result->fetchBuffer != NULL)) ? PQnfields(result->fetchBuffer) : 0;
 }
@@ -1191,7 +1191,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(PG_UNBUFFERED_RESULT *result)
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(PG_UNBUFFERED_RESULT *result, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(PG_UNBUFFERED_RESULT *result, int column)
 {
 	return ((result != NULL) && (result->fetchBuffer != NULL))? PQfname(result->fetchBuffer, column) : NULL;
 }
@@ -1199,7 +1199,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(PG_UNBUFFERED_RESULT *r
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
 {
    if (result == NULL)
       return;
@@ -1223,7 +1223,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(PG_CONN *pConn)
 {
    DWORD dwResult;
 
@@ -1246,7 +1246,7 @@ extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(PG_CONN *pConn)
 {
    bool bRet;
 
@@ -1262,7 +1262,7 @@ extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(PG_CONN *pConn)
 {
    bool bRet;
 
@@ -1278,7 +1278,7 @@ extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_database() AND table_schema=current_schema() AND lower(table_name)=lower('%ls')", name);

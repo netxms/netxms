@@ -34,18 +34,12 @@
 /**
  * Driver header
  */
-#ifdef _WIN32
-#define __NDD_EXPORT __declspec(dllexport)
-#else
-#define __NDD_EXPORT
-#endif
-
 #define DECLARE_NDD_ENTRY_POINT(name, implClass) \
-extern "C" int __NDD_EXPORT nddAPIVersion; \
-extern "C" const TCHAR __NDD_EXPORT *nddName; \
-int __NDD_EXPORT nddAPIVersion = NDDRV_API_VERSION; \
-const TCHAR __NDD_EXPORT *nddName = name; \
-extern "C" NetworkDeviceDriver __NDD_EXPORT *nddCreateInstance() { return new implClass; }
+extern "C" int __EXPORT nddAPIVersion; \
+extern "C" const TCHAR __EXPORT *nddName; \
+int __EXPORT nddAPIVersion = NDDRV_API_VERSION; \
+const TCHAR __EXPORT *nddName = name; \
+extern "C" NetworkDeviceDriver __EXPORT *nddCreateInstance() { return new implClass; }
 
 
 /**

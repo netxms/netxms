@@ -31,9 +31,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
+
 #endif   /* _WIN32 */
 
 #include <stdio.h>

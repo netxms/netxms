@@ -26,16 +26,11 @@
 
 #include <nddrv.h>
 
-#ifdef _WIN32
 #ifdef AVAYAERS_EXPORTS
-#define AVAYA_ERS_EXPORTABLE __declspec(dllexport)
+#define AVAYA_ERS_EXPORTABLE __EXPORT
 #else
-#define AVAYA_ERS_EXPORTABLE __declspec(dllimport)
+#define AVAYA_ERS_EXPORTABLE __IMPORT
 #endif
-#else
-#define AVAYA_ERS_EXPORTABLE
-#endif
-
 
 /**
  * Driver's class

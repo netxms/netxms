@@ -5,7 +5,7 @@ libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
                      iterator.cpp lexer.cpp library.cpp main.cpp network.cpp \
                      program.cpp selectors.cpp stack.cpp storage.cpp \
                      table.cpp value.cpp variable.cpp vm.cpp
-libnxsl_la_CPPFLAGS=-I@top_srcdir@/include
+libnxsl_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXSL_EXPORTS
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 if USE_INTERNAL_LIBTRE

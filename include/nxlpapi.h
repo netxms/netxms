@@ -24,18 +24,10 @@
 #ifndef _nxlpapi_h_
 #define _nxlpapi_h_
 
-#ifdef _WIN32
 #ifdef LIBNXLP_EXPORTS
-#define LIBNXLP_EXPORTABLE __declspec(dllexport)
+#define LIBNXLP_EXPORTABLE __EXPORT
 #else
-#define LIBNXLP_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#if __GNUC__ >= 4
-#define LIBNXLP_EXPORTABLE __attribute__ ((visibility ("default")))
-#else
-#define LIBNXLP_EXPORTABLE
-#endif
+#define LIBNXLP_EXPORTABLE __IMPORT
 #endif
 
 #include <netxms-regex.h>

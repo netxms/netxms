@@ -15,6 +15,5 @@ SOURCES = \
 	windll.cpp
 
 CPPFLAGS = /I.. /I..\win32 /DLIBTRE_EXPORTS /DHAVE_CONFIG_H
-LDFLAGS = /DEF:..\libtre.def
 
 !include ..\..\Makefile.inc.w32

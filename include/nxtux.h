@@ -23,14 +23,10 @@
 #ifndef _nxtux_h_
 #define _nxtux_h_
 
-#ifdef _WIN32
 #ifdef LIBNXTUX_EXPORTS
-#define LIBNXTUX_EXPORTABLE __declspec(dllexport)
+#define LIBNXTUX_EXPORTABLE __EXPORT
 #else
-#define LIBNXTUX_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXTUX_EXPORTABLE
+#define LIBNXTUX_EXPORTABLE __IMPORT
 #endif
 
 #include <nms_common.h>

@@ -26,16 +26,11 @@
 
 #include <nddrv.h>
 
-#ifdef _WIN32
 #ifdef CISCO_EXPORTS
-#define CISCO_EXPORTABLE __declspec(dllexport)
+#define CISCO_EXPORTABLE __EXPORT
 #else
-#define CISCO_EXPORTABLE __declspec(dllimport)
+#define CISCO_EXPORTABLE __IMPORT
 #endif
-#else
-#define CISCO_EXPORTABLE
-#endif
-
 
 /**
  * Driver's class

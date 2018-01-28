@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,14 +33,10 @@
 #include <uuid.h>
 #include <nxcldefs.h>
 
-#ifdef _WIN32
 #ifdef LIBNXCLIENT_EXPORTS
-#define LIBNXCLIENT_EXPORTABLE __declspec(dllexport)
+#define LIBNXCLIENT_EXPORTABLE __EXPORT
 #else
-#define LIBNXCLIENT_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXCLIENT_EXPORTABLE
+#define LIBNXCLIENT_EXPORTABLE __IMPORT
 #endif
 
 #include "nxclobj.h"

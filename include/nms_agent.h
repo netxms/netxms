@@ -23,14 +23,10 @@
 #ifndef _nms_agent_h_
 #define _nms_agent_h_
 
-#ifdef _WIN32
 #ifdef LIBNXAGENT_EXPORTS
-#define LIBNXAGENT_EXPORTABLE __declspec(dllexport)
+#define LIBNXAGENT_EXPORTABLE __EXPORT
 #else
-#define LIBNXAGENT_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXAGENT_EXPORTABLE
+#define LIBNXAGENT_EXPORTABLE __IMPORT
 #endif
 
 
@@ -46,12 +42,7 @@
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
-#ifdef _WIN32
-#define DECLSPEC_EXPORT __declspec(dllexport) __cdecl
-#else
-#define DECLSPEC_EXPORT
-#endif
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool __EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #endif
 
 /**

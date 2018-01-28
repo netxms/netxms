@@ -34,18 +34,12 @@
 /**
  * Driver header
  */
-#ifdef _WIN32
-#define __PDSDRV_EXPORT __declspec(dllexport)
-#else
-#define __PDSDRV_EXPORT
-#endif
-
 #define DECLARE_PDSDRV_ENTRY_POINT(name, implClass) \
-extern "C" int __PDSDRV_EXPORT pdsdrvAPIVersion; \
-extern "C" const TCHAR __PDSDRV_EXPORT *pdsdrvName; \
-int __PDSDRV_EXPORT pdsdrvAPIVersion = PDSDRV_API_VERSION; \
-const TCHAR __PDSDRV_EXPORT *pdsdrvName = name; \
-extern "C" PerfDataStorageDriver __PDSDRV_EXPORT *pdsdrvCreateInstance() { return new implClass; }
+extern "C" int __EXPORT pdsdrvAPIVersion; \
+extern "C" const TCHAR __EXPORT *pdsdrvName; \
+int __EXPORT pdsdrvAPIVersion = PDSDRV_API_VERSION; \
+const TCHAR __EXPORT *pdsdrvName = name; \
+extern "C" PerfDataStorageDriver __EXPORT *pdsdrvCreateInstance() { return new implClass; }
 
 /**
  * Base class for performance data storage drivers

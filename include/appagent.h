@@ -23,14 +23,10 @@
 #ifndef _appagent_h_
 #define _appagent_h_
 
-#ifdef _WIN32
 #ifdef APPAGENT_EXPORTS
-#define APPAGENT_EXPORTABLE __declspec(dllexport)
+#define APPAGENT_EXPORTABLE __EXPORT
 #else
-#define APPAGENT_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define APPAGENT_EXPORTABLE
+#define APPAGENT_EXPORTABLE __IMPORT
 #endif
 
 #include <nms_common.h>

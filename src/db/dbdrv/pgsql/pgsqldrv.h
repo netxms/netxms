@@ -35,10 +35,8 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#define EXPORT __declspec(dllexport)
 #define HAVE_PQFFORMAT 1
-#else
-#define EXPORT
+
 #endif   /* _WIN32 */
 
 #include <nms_common.h>

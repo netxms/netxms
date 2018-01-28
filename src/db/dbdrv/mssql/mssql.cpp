@@ -22,9 +22,6 @@
 
 #include "mssqldrv.h"
 
-#undef EXPORT
-#define EXPORT __declspec(dllexport)
-
 DECLARE_DRIVER_HEADER("MSSQL")
 
 /**
@@ -96,7 +93,7 @@ static void ClearPendingResults(SQLHSTMT stmt)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -129,7 +126,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -165,7 +162,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
    // Allocate environment
 	SQLHENV sqlEnv;
@@ -200,14 +197,14 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 }
 
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *login, const char *password, 
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password, 
 															 const char *database, const char *schema, WCHAR *errorText)
 {
    long iResult;
@@ -283,7 +280,7 @@ connect_failure_0:
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(MSSQL_CONN *pConn)
 {
    MutexLock(pConn->mutexQuery);
    MutexUnlock(pConn->mutexQuery);
@@ -297,7 +294,7 @@ extern "C" void EXPORT DrvDisconnect(MSSQL_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    long iResult;
 	SQLHSTMT stmt;
@@ -340,7 +337,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MSSQL_CONN *pConn, WCHAR *pwszQuery
 /**
  * Bind parameter to statement
  */
-extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
@@ -397,7 +394,7 @@ extern "C" void EXPORT DrvBind(MSSQL_STATEMENT *stmt, int pos, int sqlType, int 
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCHAR *errorText)
 {
    DWORD dwResult;
 
@@ -421,7 +418,7 @@ extern "C" DWORD EXPORT DrvExecute(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, WCH
 /**
  * Destroy prepared statement
  */
-extern "C" void EXPORT DrvFreeStatement(MSSQL_STATEMENT *stmt)
+extern "C" void __EXPORT DrvFreeStatement(MSSQL_STATEMENT *stmt)
 {
 	if (stmt == NULL)
 		return;
@@ -436,7 +433,7 @@ extern "C" void EXPORT DrvFreeStatement(MSSQL_STATEMENT *stmt)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -583,7 +580,7 @@ static MSSQL_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    MSSQL_QUERY_RESULT *pResult = NULL;
 
@@ -619,7 +616,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(MSSQL_CONN *pConn, WCHAR *pwszQuery, DW
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    MSSQL_QUERY_RESULT *pResult = NULL;
 
@@ -642,7 +639,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(MSSQL_CONN *pConn, MSSQL_STATEM
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
    LONG nLen = -1;
 
@@ -658,7 +655,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(MSSQL_QUERY_RESULT *pResult, int iRow, 
 /**
  * Get field value from result
  */
-extern "C" WCHAR EXPORT *DrvGetField(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
+extern "C" WCHAR __EXPORT *DrvGetField(MSSQL_QUERY_RESULT *pResult, int iRow, int iColumn, WCHAR *pBuffer, int nBufSize)
 {
    WCHAR *pValue = NULL;
 
@@ -677,7 +674,7 @@ extern "C" WCHAR EXPORT *DrvGetField(MSSQL_QUERY_RESULT *pResult, int iRow, int 
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(MSSQL_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetNumRows(MSSQL_QUERY_RESULT *pResult)
 {
    return (pResult != NULL) ? pResult->numRows : 0;
 }
@@ -685,7 +682,7 @@ extern "C" int EXPORT DrvGetNumRows(MSSQL_QUERY_RESULT *pResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(MSSQL_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCount(MSSQL_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -693,7 +690,7 @@ extern "C" int EXPORT DrvGetColumnCount(MSSQL_QUERY_RESULT *pResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(MSSQL_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(MSSQL_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -701,7 +698,7 @@ extern "C" const char EXPORT *DrvGetColumnName(MSSQL_QUERY_RESULT *pResult, int 
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(MSSQL_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeResult(MSSQL_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
    {
@@ -723,7 +720,7 @@ extern "C" void EXPORT DrvFreeResult(MSSQL_QUERY_RESULT *pResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MSSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
    MSSQL_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -792,7 +789,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MSSQL_CONN *pConn,
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    MSSQL_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -846,7 +843,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(MSSQL_CONN
 /**
  * Fetch next result line from unbuffered SELECT results
  */
-extern "C" bool EXPORT DrvFetch(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" bool __EXPORT DrvFetch(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
 {
    bool bResult = false;
 
@@ -875,7 +872,7 @@ extern "C" bool EXPORT DrvFetch(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
 {
    LONG nLen = -1;
    if (pResult != NULL)
@@ -889,7 +886,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR __EXPORT *DrvGetFieldUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    // Check if we have valid result handle
    if (pResult == NULL)
@@ -921,7 +918,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pR
 /**
  * Get column count in unbuffered query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -929,7 +926,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT 
 /**
  * Get column name in unbuffered query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(MSSQL_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -937,7 +934,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MSSQL_UNBUFFERED_QUERY_
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
 {
    if (pResult == NULL)
       return;
@@ -960,7 +957,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(MSSQL_UNBUFFERED_QUERY_RESULT *pR
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(MSSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(MSSQL_CONN *pConn)
 {
    SQLRETURN nRet;
    DWORD dwResult;
@@ -985,7 +982,7 @@ extern "C" DWORD EXPORT DrvBegin(MSSQL_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(MSSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(MSSQL_CONN *pConn)
 {
    SQLRETURN nRet;
 
@@ -1002,7 +999,7 @@ extern "C" DWORD EXPORT DrvCommit(MSSQL_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(MSSQL_CONN *pConn)
 {
    SQLRETURN nRet;
 
@@ -1019,7 +1016,7 @@ extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(MSSQL_CONN *pConn, const WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(MSSQL_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM sysobjects WHERE xtype='U' AND upper(name)=upper('%ls')", name);

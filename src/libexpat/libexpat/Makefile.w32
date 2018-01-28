@@ -2,7 +2,6 @@ TARGET=libexpat.dll
 TYPE=dll
 SOURCES=libexpat.cpp xmlparse.c xmlrole.c xmltok.c xmltok_impl.c xmltok_ns.c
 
-CPPFLAGS=/DCOMPILED_FROM_DSP /DHAVE_EXPAT_CONFIG_H /I ..
-LDFLAGS=/DEF:..\libexpat.def
+CPPFLAGS=/DCOMPILED_FROM_DSP /DHAVE_EXPAT_CONFIG_H /DXML_BUILDING_EXPAT /I ..
 
 !include ..\..\..\Makefile.inc.w32

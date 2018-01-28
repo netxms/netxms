@@ -23,14 +23,10 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
-#ifdef _WIN32
 #ifdef NXCORE_EXPORTS
-#define NXCORE_EXPORTABLE __declspec(dllexport)
+#define NXCORE_EXPORTABLE __EXPORT
 #else
-#define NXCORE_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define NXCORE_EXPORTABLE
+#define NXCORE_EXPORTABLE __IMPORT
 #endif
 
 #define LIBNXCL_NO_DECLARATIONS  1

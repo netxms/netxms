@@ -111,7 +111,7 @@ static void ClearPendingResults(SQLHSTMT statement)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
+extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -144,7 +144,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 	return out;
 }
 
-extern "C" char EXPORT *DrvPrepareStringA(const char *str)
+extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
@@ -180,7 +180,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
 	return true;
 }
@@ -188,7 +188,7 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 /**
  * Unload handler
  */
-extern "C" void EXPORT DrvUnload()
+extern "C" void __EXPORT DrvUnload()
 {
 }
 
@@ -196,7 +196,7 @@ extern "C" void EXPORT DrvUnload()
  * Connect to database
  * pszHost should be set to DB2 source name, and pszDatabase is ignored
  */
-extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                               char *pszPassword, char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
 {
 	long iResult;
@@ -293,7 +293,7 @@ connect_failure_0:
 /**
  * Disconnect from database
  */
-extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 {
 	MutexLock(pConn->mutexQuery);
 	MutexUnlock(pConn->mutexQuery);
@@ -307,7 +307,7 @@ extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
 	long iResult;
 	SQLHSTMT statement;
@@ -356,7 +356,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *p
 /**
  * Bind parameter to statement
  */
-extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" void __EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
 	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
@@ -466,7 +466,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 /**
  * Execute prepared statement
  */
-extern "C" DWORD EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, NETXMS_WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, NETXMS_WCHAR *errorText)
 {
 	DWORD dwResult;
 
@@ -493,7 +493,7 @@ extern "C" DWORD EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *stateme
 // Destroy prepared statement
 //
 
-extern "C" void EXPORT DrvFreeStatement(DB2DRV_STATEMENT *statement)
+extern "C" void __EXPORT DrvFreeStatement(DB2DRV_STATEMENT *statement)
 {
 	if (statement == NULL)
 	{
@@ -510,7 +510,7 @@ extern "C" void EXPORT DrvFreeStatement(DB2DRV_STATEMENT *statement)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+extern "C" DWORD __EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
 {
 	long iResult;
 	DWORD dwResult;
@@ -713,7 +713,7 @@ static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 /**
  * Perform SELECT query
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
 	DB2DRV_QUERY_RESULT *pResult = NULL;
 
@@ -755,7 +755,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQ
 /**
  * Perform SELECT query using prepared statement
  */
-extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
 	DB2DRV_QUERY_RESULT *pResult = NULL;
 
@@ -777,7 +777,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(DB2DRV_CONN *pConn, DB2DRV_STAT
 /**
  * Get field length from result
  */
-extern "C" LONG EXPORT DrvGetFieldLength(DB2DRV_QUERY_RESULT *pResult, int iRow, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLength(DB2DRV_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
 	LONG nLen = -1;
 
@@ -795,7 +795,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB2DRV_QUERY_RESULT *pResult, int iRow,
 /**
  * Get field value from result
  */
-extern "C" NETXMS_WCHAR EXPORT *DrvGetField(DB2DRV_QUERY_RESULT *pResult, int iRow, int iColumn, NETXMS_WCHAR *pBuffer, int nBufSize)
+extern "C" NETXMS_WCHAR __EXPORT *DrvGetField(DB2DRV_QUERY_RESULT *pResult, int iRow, int iColumn, NETXMS_WCHAR *pBuffer, int nBufSize)
 {
 	NETXMS_WCHAR *pValue = NULL;
 
@@ -819,7 +819,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetField(DB2DRV_QUERY_RESULT *pResult, int iR
 /**
  * Get number of rows in result
  */
-extern "C" int EXPORT DrvGetNumRows(DB2DRV_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetNumRows(DB2DRV_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numRows : 0;
 }
@@ -827,7 +827,7 @@ extern "C" int EXPORT DrvGetNumRows(DB2DRV_QUERY_RESULT *pResult)
 /**
  * Get column count in query result
  */
-extern "C" int EXPORT DrvGetColumnCount(DB2DRV_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCount(DB2DRV_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -835,7 +835,7 @@ extern "C" int EXPORT DrvGetColumnCount(DB2DRV_QUERY_RESULT *pResult)
 /**
  * Get column name in query result
  */
-extern "C" const char EXPORT *DrvGetColumnName(DB2DRV_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnName(DB2DRV_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -843,7 +843,7 @@ extern "C" const char EXPORT *DrvGetColumnName(DB2DRV_QUERY_RESULT *pResult, int
 /**
  * Free SELECT results
  */
-extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 {
 	if (pResult == NULL)
       return;
@@ -868,7 +868,7 @@ extern "C" void EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 /**
  * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
 	DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -943,7 +943,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(DB2DRV_CONN *pConn
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
    DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -996,7 +996,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(DB2DRV_CON
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" bool __EXPORT DrvFetch(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	bool bResult = false;
 
@@ -1017,7 +1017,7 @@ extern "C" bool EXPORT DrvFetch(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
+extern "C" LONG __EXPORT DrvGetFieldLengthUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
 {
 	LONG nLen = -1;
 
@@ -1040,7 +1040,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESUL
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
+extern "C" NETXMS_WCHAR __EXPORT *DrvGetFieldUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
 {
 	SQLLEN iDataSize;
 	long iResult;
@@ -1085,7 +1085,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldUnbuffered(DB2DRV_UNBUFFERED_QUERY_RE
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" int __EXPORT DrvGetColumnCountUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->numColumns : 0;
 }
@@ -1093,7 +1093,7 @@ extern "C" int EXPORT DrvGetColumnCountUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int column)
+extern "C" const char __EXPORT *DrvGetColumnNameUnbuffered(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
@@ -1101,7 +1101,7 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(DB2DRV_UNBUFFERED_QUERY
 /**
  * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
+extern "C" void __EXPORT DrvFreeUnbufferedResult(DB2DRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	if (pResult == NULL)
       return;
@@ -1124,7 +1124,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(DB2DRV_UNBUFFERED_QUERY_RESULT *p
 /**
  * Begin transaction
  */
-extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
+extern "C" DWORD __EXPORT DrvBegin(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
 	DWORD dwResult;
@@ -1151,7 +1151,7 @@ extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 /**
  * Commit transaction
  */
-extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
+extern "C" DWORD __EXPORT DrvCommit(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
 
@@ -1170,7 +1170,7 @@ extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 /**
  * Rollback transaction
  */
-extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
+extern "C" DWORD __EXPORT DrvRollback(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
 
@@ -1190,7 +1190,7 @@ extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const NETXMS_WCHAR *name)
+extern "C" int __EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const NETXMS_WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM sysibm.systables WHERE type='T' AND upper(name)=upper('%ls')", name);

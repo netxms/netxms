@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,14 +23,10 @@
 #ifndef _nxsl_h_
 #define _nxsl_h_
 
-#ifdef _WIN32
 #ifdef LIBNXSL_EXPORTS
-#define LIBNXSL_EXPORTABLE __declspec(dllexport)
+#define LIBNXSL_EXPORTABLE __EXPORT
 #else
-#define LIBNXSL_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXSL_EXPORTABLE
+#define LIBNXSL_EXPORTABLE __IMPORT
 #endif
 
 /**
