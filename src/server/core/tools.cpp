@@ -68,37 +68,6 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize)
 }
 
 /**
- * Get hostname for local machine
- */
-TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
-{
-#ifdef _WIN32
-   DWORD dwSize = (UINT32)bufSize;
-   GetComputerName(buffer, &dwSize);
-#else
-#ifdef HAVE_SYS_UTSNAME_H
-	struct utsname uName;
-	if (uname(&uName) >= 0)
-	{
-#ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, uName.nodename, -1, buffer, bufSize);
-		buffer[bufSize - 1] = 0;
-#else
-		nx_strncpy(buffer, uName.nodename, bufSize);
-#endif
-	}
-	else
-	{
-		nx_strncpy(buffer, _T("unknown"), bufSize);
-	}
-#else
-	nx_strncpy(buffer, _T("unknown"), bufSize);
-#endif // HAVE_SYS_UTSNAME_H
-#endif // _WIN32
-	return buffer;
-}
-
-/**
  * Get IP address for local machine
  */
 InetAddress GetLocalIpAddr()
