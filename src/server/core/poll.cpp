@@ -110,7 +110,7 @@ static void CreateManagementNode(const InetAddress& addr)
 	NewNodeData newNodeData(addr);
 	Node *node = new Node(&newNodeData, NF_IS_LOCAL_MGMT);
    NetObjInsert(node, true, false);
-	node->setName(GetLocalHostName(buffer, 256));
+	node->setName(GetLocalHostName(buffer, 256, false));
 
    PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, node);
    p->startExecution();
