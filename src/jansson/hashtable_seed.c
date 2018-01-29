@@ -3,7 +3,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <jansson_private_config.h>
 #endif
 
 #include <stdio.h>
@@ -38,13 +38,13 @@
 #endif
 
 #if defined(_WIN32)
-/* For _getpid() */
-#include <process.h>
+/* For GetModuleHandle(), GetProcAddress() and GetCurrentProcessId() */
+#include <windows.h>
 #endif
 
 #include "jansson.h"
 
-#ifdef _WIN32
+
 static uint32_t buf_to_uint32(char *data) {
     size_t i;
     uint32_t result = 0;
@@ -54,7 +54,7 @@ static uint32_t buf_to_uint32(char *data) {
 
     return result;
 }
-#endif
+
 
 
 /* /dev/urandom */
@@ -95,7 +95,6 @@ static int seed_from_urandom(uint32_t *seed) {
 
 /* Windows Crypto API */
 #if defined(_WIN32) && defined(USE_WINDOWS_CRYPTOAPI)
-#include <windows.h>
 #include <wincrypt.h>
 
 typedef BOOL (WINAPI *CRYPTACQUIRECONTEXTA)(HCRYPTPROV *phProv, LPCSTR pszContainer, LPCSTR pszProvider, DWORD dwProvType, DWORD dwFlags);
@@ -112,7 +111,7 @@ static int seed_from_windows_cryptoapi(uint32_t *seed)
     BYTE data[sizeof(uint32_t)];
     int ok;
 
-    hAdvAPI32 = GetModuleHandle("advapi32.dll");
+    hAdvAPI32 = GetModuleHandle(TEXT("advapi32.dll"));
     if(hAdvAPI32 == NULL)
         return 1;
 
@@ -131,7 +130,7 @@ static int seed_from_windows_cryptoapi(uint32_t *seed)
     if (!pCryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
         return 1;
 
-    ok = CryptGenRandom(hCryptProv, sizeof(uint32_t), data);
+    ok = pCryptGenRandom(hCryptProv, sizeof(uint32_t), data);
     pCryptReleaseContext(hCryptProv, 0);
 
     if (!ok)
@@ -156,7 +155,7 @@ static int seed_from_timestamp_and_pid(uint32_t *seed) {
 
     /* XOR with PID for more randomness */
 #if defined(_WIN32)
-    *seed ^= (uint32_t)_getpid();
+    *seed ^= (uint32_t)GetCurrentProcessId();
 #elif defined(HAVE_GETPID)
     *seed ^= (uint32_t)getpid();
 #endif
@@ -165,16 +164,16 @@ static int seed_from_timestamp_and_pid(uint32_t *seed) {
 }
 
 static uint32_t generate_seed() {
-    uint32_t seed = 0;
+    uint32_t seed;
     int done = 0;
 
 #if !defined(_WIN32) && defined(USE_URANDOM)
-    if (!done && seed_from_urandom(&seed) == 0)
+    if (seed_from_urandom(&seed) == 0)
         done = 1;
 #endif
 
 #if defined(_WIN32) && defined(USE_WINDOWS_CRYPTOAPI)
-    if (!done && seed_from_windows_cryptoapi(&seed) == 0)
+    if (seed_from_windows_cryptoapi(&seed) == 0)
         done = 1;
 #endif
 
@@ -197,7 +196,7 @@ volatile uint32_t hashtable_seed = 0;
 #if defined(HAVE_ATOMIC_BUILTINS) && (defined(HAVE_SCHED_YIELD) || !defined(_WIN32))
 static volatile char seed_initialized = 0;
 
-void json_object_seed(size_t seed) {
+void JANSSON_API json_object_seed(size_t seed) {
     uint32_t new_seed = (uint32_t)seed;
 
     if (hashtable_seed == 0) {
@@ -218,7 +217,7 @@ void json_object_seed(size_t seed) {
     }
 }
 #elif defined(HAVE_SYNC_BUILTINS) && (defined(HAVE_SCHED_YIELD) || !defined(_WIN32))
-void json_object_seed(size_t seed) {
+void JANSSON_API json_object_seed(size_t seed) {
     uint32_t new_seed = (uint32_t)seed;
 
     if (hashtable_seed == 0) {
@@ -245,7 +244,7 @@ void json_object_seed(size_t seed) {
 }
 #elif defined(_WIN32)
 static long seed_initialized = 0;
-void json_object_seed(size_t seed) {
+void JANSSON_API json_object_seed(size_t seed) {
     uint32_t new_seed = (uint32_t)seed;
 
     if (hashtable_seed == 0) {
@@ -265,7 +264,7 @@ void json_object_seed(size_t seed) {
 }
 #else
 /* Fall back to a thread-unsafe version */
-void json_object_seed(size_t seed) {
+void JANSSON_API json_object_seed(size_t seed) {
     uint32_t new_seed = (uint32_t)seed;
 
     if (hashtable_seed == 0) {

@@ -20,6 +20,12 @@
 
 #include <nms_common.h>
 
+#ifdef JANSSON_EXPORTS
+#define JANSSON_API __EXPORT
+#else
+#define JANSSON_API __IMPORT
+#endif
+
 /* If your compiler supports the inline keyword in C, JSON_INLINE is
    defined to `inline', otherwise empty. In C++, the inline is always
    supported. */
@@ -41,5 +47,9 @@
 /* If locale.h and localeconv() are available, define to 1,
    otherwise to 0. */
 #define JSON_HAVE_LOCALECONV 1
+
+/* Maximum recursion depth for parsing JSON input.
+   This limits the depth of e.g. array-within-array constructions. */
+#define JSON_PARSER_MAX_DEPTH 2048
 
 #endif
