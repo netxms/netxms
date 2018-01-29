@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Petri Lehtinen <petri@digip.org>
+ * Copyright (c) 2009-2016 Petri Lehtinen <petri@digip.org>
  *
  * Jansson is free software; you can redistribute it and/or modify
  * it under the terms of the MIT license. See LICENSE for details.
@@ -60,11 +60,6 @@ char *strbuffer_steal_value(strbuffer_t *strbuff)
     return result;
 }
 
-int strbuffer_append(strbuffer_t *strbuff, const char *string)
-{
-    return strbuffer_append_bytes(strbuff, string, strlen(string));
-}
-
 int strbuffer_append_byte(strbuffer_t *strbuff, char byte)
 {
     return strbuffer_append_bytes(strbuff, &byte, 1);
@@ -83,7 +78,7 @@ int strbuffer_append_bytes(strbuffer_t *strbuff, const char *data, size_t size)
             || strbuff->length > STRBUFFER_SIZE_MAX - 1 - size)
             return -1;
 
-        new_size = MAX(strbuff->size * STRBUFFER_FACTOR,
+        new_size = max(strbuff->size * STRBUFFER_FACTOR,
                        strbuff->length + size + 1);
 
         new_value = jsonp_malloc(new_size);

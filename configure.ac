@@ -1858,14 +1858,14 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h])
+AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h sched.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
-AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h])
+AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -2250,6 +2250,11 @@ AC_CHECK_SIZEOF(long long)
 
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_TYPE_INT32_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT8_T
+AC_TYPE_LONG_LONG_INT
 AC_STRUCT_TIMEZONE
 
 AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t, uuid_t, bool],,,[
@@ -2294,6 +2299,7 @@ AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([itoa _itoa isatty malloc_info malloc_trim utime])
 AC_CHECK_FUNCS([getgrnam getpwnam getpwuid getpwuid_r getpeereid])
+AC_CHECK_FUNCS([sched_yield getpid localeconv])
 
 AC_CHECK_DECLS([nanosleep, daemon, strerror])
 
@@ -2427,6 +2433,37 @@ AC_CHECK_DECLS([va_copy, __va_copy],,,[
 #include <stdlib.h>
 #endif
 ])
+
+
+#--------------------------------------------------------------------
+# GCC __sync and __atomic builtins
+#--------------------------------------------------------------------
+
+AC_MSG_CHECKING([for gcc __sync builtins])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+	[[unsigned long val; __sync_bool_compare_and_swap(&val, 0, 1);]])],
+	[have_sync_builtins=yes],
+	[have_sync_builtins=no])
+if test "x$have_sync_builtins" = "xyes"; then
+	AC_DEFINE([HAVE_SYNC_BUILTINS], [1], [Define to 1 if gcc __sync builtins are available])
+fi
+AC_MSG_RESULT([$have_sync_builtins])
+
+AC_MSG_CHECKING([for gcc __atomic builtins])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+	[[
+		char l; 
+		unsigned long v; 
+		__atomic_test_and_set(&l, __ATOMIC_RELAXED); 
+		__atomic_store_n(&v, 1, __ATOMIC_RELEASE); 
+		__atomic_load_n(&v, __ATOMIC_ACQUIRE);
+	]])],
+	[have_atomic_builtins=yes],
+	[have_atomic_builtins=no])
+if test "x$have_atomic_builtins" = "xyes"; then
+	AC_DEFINE([HAVE_ATOMIC_BUILTINS], [1], [Define to 1 if gcc __atomic builtins are available])
+fi
+AC_MSG_RESULT([$have_atomic_builtins])
 
 
 #--------------------------------------------------------------------
