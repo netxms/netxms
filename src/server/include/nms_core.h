@@ -1079,7 +1079,6 @@ void CloseOtherSessions(UINT32 userId, UINT32 thisSession);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
-TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
 InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname);
 
