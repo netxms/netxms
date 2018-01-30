@@ -50,11 +50,18 @@ NXSL_Compiler::NXSL_Compiler()
  */
 NXSL_Compiler::~NXSL_Compiler()
 {
-   safe_free(m_errorText);
+   free(m_errorText);
    delete m_lexer;
    delete m_addrStack;
-	delete m_breakStack;
-	delete m_selectStack;
+
+   Queue *q;
+   while((q = static_cast<Queue*>(m_breakStack->pop())) != NULL)
+      delete q;
+   delete m_breakStack;
+
+   while((q = static_cast<Queue*>(m_selectStack->pop())) != NULL)
+      delete q;
+   delete m_selectStack;
 }
 
 /**
@@ -116,10 +123,8 @@ void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
  */
 UINT32 NXSL_Compiler::popAddr()
 {
-   void *pAddr;
-
-   pAddr = m_addrStack->pop();
-   return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
+   void *addr = m_addrStack->pop();
+   return addr ? CAST_FROM_POINTER(addr, UINT32) : INVALID_ADDRESS;
 }
 
 /**
@@ -127,10 +132,8 @@ UINT32 NXSL_Compiler::popAddr()
  */
 UINT32 NXSL_Compiler::peekAddr()
 {
-   void *pAddr;
-
-   pAddr = m_addrStack->peek();
-   return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
+   void *addr = m_addrStack->peek();
+   return addr ? CAST_FROM_POINTER(addr, UINT32) : INVALID_ADDRESS;
 }
 
 /**
@@ -138,12 +141,10 @@ UINT32 NXSL_Compiler::peekAddr()
  */
 void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
 {
-	Queue *pQueue;
-
-	pQueue = (Queue *)m_breakStack->peek();
-	if (pQueue != NULL)
+	Queue *queue = static_cast<Queue*>(m_breakStack->peek());
+	if (queue != NULL)
 	{
-		pQueue->put(CAST_TO_POINTER(dwAddr, void *));
+		queue->put(CAST_TO_POINTER(dwAddr, void *));
 	}
 }
 
@@ -152,19 +153,16 @@ void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
  */
 void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 {
-	Queue *pQueue;
-	void *pAddr;
-	UINT32 dwAddr;
-
-	pQueue = (Queue *)m_breakStack->pop();
-	if (pQueue != NULL)
+   Queue *queue = static_cast<Queue*>(m_breakStack->pop());
+	if (queue != NULL)
 	{
-		while((pAddr = pQueue->get()) != NULL)
+	   void *addr;
+		while((addr = queue->get()) != NULL)
 		{
-			dwAddr = CAST_FROM_POINTER(pAddr, UINT32);
-			pScript->createJumpAt(dwAddr, pScript->getCodeSize());
+			UINT32 nxslAddr = CAST_FROM_POINTER(addr, UINT32);
+			pScript->createJumpAt(nxslAddr, pScript->getCodeSize());
 		}
-		delete pQueue;
+		delete queue;
 	}
 }
 
