@@ -105,7 +105,11 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
 void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 {
    if (key == NULL)
+   {
+      if (m_objectOwner)
+         destroyObject(value);
       return;
+   }
 
 	StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
 	if (entry != NULL)
