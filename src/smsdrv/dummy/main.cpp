@@ -25,16 +25,10 @@
 #include <nms_util.h>
 #include <nxconfig.h>
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 /**
  * Init driver
  */
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	nxlog_debug(1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
 	return true;
@@ -43,7 +37,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 /**
  * Send SMS
  */
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
    nxlog_debug(6, _T("DummySMS: phone=\"%s\", text=\"%s\""), pszPhoneNumber, pszText);
    return true;
@@ -52,7 +46,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 /**
  * Unload driver
  */
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 }
 

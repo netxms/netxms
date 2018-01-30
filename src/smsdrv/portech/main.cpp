@@ -23,12 +23,6 @@
 
 #include "portech.h"
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 /**
  * Static data
  */
@@ -44,7 +38,7 @@ static enum { OM_TEXT, OM_PDU } s_mode = OM_PDU;
  * option string format: option1=value1;option2=value2;...
  * Valid options are: host, login, password, mode
  */
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *options, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *options, Config *config)
 {
 	nxlog_debug(1, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), options);
 
@@ -237,7 +231,7 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 /**
  * Send SMS
  */
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	SocketConnection *conn;
 	bool success = false;
@@ -279,7 +273,7 @@ retry:
 /**
  * Unload SMS driver
  */
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 }
 

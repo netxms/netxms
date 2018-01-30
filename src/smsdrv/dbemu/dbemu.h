@@ -28,12 +28,6 @@
 #include <nxconfig.h>
 #include <nxdbapi.h>
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 #define MAX_DBPARAM_LEN		(31)
 #define MAX_STR				(256)
 #define MAX_SQL				(1024)

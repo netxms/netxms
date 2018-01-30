@@ -35,7 +35,7 @@ static UINT32 s_maxMessageLength = 255;
 static DB_DRIVER s_driver = NULL;
 static DB_HANDLE s_dbh = NULL;
 
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	bool bRet = false;
 	static NX_CFG_TEMPLATE configTemplate[] = 
@@ -78,7 +78,7 @@ finish:
 	return bRet;
 }
 
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	bool bRet = false;
 
@@ -109,7 +109,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 }
 
 
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 	DBDisconnect(s_dbh);
 	DBUnloadDriver(s_driver);

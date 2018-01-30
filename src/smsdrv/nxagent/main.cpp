@@ -22,12 +22,6 @@
 #include <nms_common.h>
 #include <nxsrvapi.h>
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 /**
  * Configuration
  */
@@ -40,7 +34,7 @@ static UINT32 m_timeout = 30000;	// Default timeout is 30 seconds
  * Initialize driver
  * pszInitArgs format: hostname,port,timeout,secret
  */
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	TCHAR *temp, *ptr, *eptr;
 	int field;
@@ -76,7 +70,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 /**
  * Send SMS
  */
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	bool bSuccess = false;
 
@@ -103,7 +97,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 /**
  * Unload driver
  */
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 }
 
