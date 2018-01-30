@@ -27,12 +27,6 @@
 #include <curl/curl.h>
 #include <jansson.h>
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 #ifndef CURL_MAX_HTTP_HEADER
 // workaround for older cURL versions
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
@@ -57,7 +51,7 @@ static char s_password[128] = "";
 /**
  * Init driver
  */
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
@@ -148,7 +142,7 @@ static bool ParseResponse(const char *xml)
 /**
  * Send SMS
  */
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
 {
    bool success = false;
 
@@ -229,7 +223,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 /**
  * Unload driver
  */
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 }
 

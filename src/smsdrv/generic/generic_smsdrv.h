@@ -29,16 +29,6 @@
 #include <nms_util.h>
 #include <nxconfig.h>
 
-#ifdef _WIN32
-
-#define EXPORT __declspec(dllexport)
-
-#else
-
-#define EXPORT
-
-#endif // _WIN32
-
 #define PDU_BUFFER_SIZE    512
 
 #endif // __GENERIC_SMSDRV_H__

@@ -110,7 +110,7 @@ static bool InitModem(Serial *serial)
  *
  * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
  */
-extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
+extern "C" bool __EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	TCHAR *portName;
 	
@@ -296,7 +296,7 @@ cleanup:
 /**
  * Send SMS
  */
-extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool __EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
       return false;
@@ -421,7 +421,7 @@ cleanup:
 /**
  * Driver unload handler
  */
-extern "C" void EXPORT SMSDriverUnload()
+extern "C" void __EXPORT SMSDriverUnload()
 {
 }
 
