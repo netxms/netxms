@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libnxexpat.la
 
 libnxexpat_la_SOURCES = $(SOURCES)
 libnxexpat_la_CPPFLAGS = -I@top_srcdir@/include -DHAVE_EXPAT_CONFIG_H -DXML_BUILDING_EXPAT -I..
-libnxexpat_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+libnxexpat_la_LDFLAGS = -version-info 2:0:0
 
 EXTRA_DIST = \
 	libexpat.vcxproj libexpat.vcxproj.filters \

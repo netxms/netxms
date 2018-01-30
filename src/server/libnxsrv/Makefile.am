@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libnxsrv.la
 libnxsrv_la_SOURCES = messages.c agent.cpp apinfo.cpp hdlink.cpp hostmib.cpp \
                       iflist.cpp isc.cpp main.cpp ndd.cpp snmpproxy.cpp vlan.cpp
 libnxsrv_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXSRV_EXPORTS
-libnxsrv_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+libnxsrv_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../../libnetxms/libnetxms.la

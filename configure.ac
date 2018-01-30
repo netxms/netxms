@@ -3751,36 +3751,7 @@ AC_SUBST(XEN_LIBS)
 AC_SUBST(ZEROMQ_CPPFLAGS)
 AC_SUBST(ZEROMQ_LDFLAGS)
 
-#--------------------------------------------------------------------
-# Shared libs versions
-#
-# versioning scheme: current:revision:age
-#
-# current
-#	The number of the current interface exported by the library. A current
-#	value of `0', means that you are calling the interface exported by this
-#	library interface 0.
-#
-# revision
-#	The implementation number of the most recent interface exported by this
-#	library. In this case, a revision value of `0' means that this is the
-#	first implementation of the interface.
-#	If the next release of this library exports the same interface, but has a
-#	different implementation (perhaps some bugs have been fixed), the revision
-#	number will be higher, but current number will be the same. In that case,
-#	when given a choice, the library with the highest revision will always
-#	be used by the runtime loader.
-#
-# age
-#	The number of previous additional interfaces supported by this library.
-#	If age were `2', then this library can be linked into executables which
-#	were built with a release of this library that exported the current
-#	interface number, current, or any of the previous two interfaces.
-#	By definition age must be less than or equal to current. At the outset,
-#	only the first ever interface is implemented, so age can only be `0'. 
-#--------------------------------------------------------------------
-
-NETXMS_LIBRARY_VERSION=2:0:0
+NETXMS_LIBRARY_VERSION=`echo $VERSION | cut -f 1 -d '-'`
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 #--------------------------------------------------------------------
@@ -4035,9 +4006,11 @@ echo '---------------------------------------------------------------------'
 echo '                         Configure results'
 echo '---------------------------------------------------------------------'
 echo
-	echo "Prefix                  : ${prefix}"
-	echo "Platform                : ${PLATFORM}"
-	echo "Shared library suffix   : ${SHLIB_SUFFIX}"
+echo "Version                 : ${VERSION}"
+echo "Prefix                  : ${prefix}"
+echo "Platform                : ${PLATFORM}"
+echo "Shared library suffix   : ${SHLIB_SUFFIX}"
+echo "Shared library version  : ${NETXMS_LIBRARY_VERSION}"
 if test "x$IPV6_SUPPORT" = "xyes"; then
 	echo "IPv6 support            : YES"
 else
@@ -4237,7 +4210,7 @@ if test "x${TUXEDO_LIBS}" != "x"; then
 fi
 
 if test "x${MONGODB_CPPFLAGS}" != "x"; then
-       echo "MongoDB CPPFLAGS     : ${MONGODB_CPPFLAGS}"
+	echo "MongoDB CPPFLAGS        : ${MONGODB_CPPFLAGS}"
 fi
 if test "x${MONGODB_LDFLAGS}" != "x"; then
 	echo "MongoDB LDFLAGS         : ${MONGODB_LDFLAGS}"

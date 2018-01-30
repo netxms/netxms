@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libnxcc.la
 
 libnxcc_la_SOURCES = $(SOURCES)
 libnxcc_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXCC_EXPORTS
-libnxcc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
+libnxcc_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 libnxcc_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
