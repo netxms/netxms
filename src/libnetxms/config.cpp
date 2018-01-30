@@ -1300,6 +1300,7 @@ struct Config_XmlParserState
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
    bool merge;
+   bool expandEnv;
 };
 
 /**
