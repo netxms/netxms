@@ -33,7 +33,7 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="element")
 public class PassiveRackElement
 {
-   @Element(required=true)
+   @Element(required=false)
    public String name;
 
    @Element(required=true)
