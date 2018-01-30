@@ -934,7 +934,7 @@ public:
 
 	StringMap& operator =(const StringMap &src);
 
-	void set(const TCHAR *key, const TCHAR *value) { setObject((TCHAR *)key, _tcsdup(value), false); }
+	void set(const TCHAR *key, const TCHAR *value) { if (key != NULL) setObject((TCHAR *)key, _tcsdup(value), false); }
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
 	void set(const TCHAR *key, UINT32 value);
 
