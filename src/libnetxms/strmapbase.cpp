@@ -87,14 +87,14 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
       memcpy(ukey, key, keyLen);
       *((TCHAR *)((BYTE *)ukey + keyLen)) = 0;
       _tcsupr(ukey);
-      HASH_FIND(hh, m_data, ukey, keyLen, entry);
+      HASH_FIND(hh, m_data, ukey, (unsigned int)keyLen, entry);
 #if !HAVE_ALLOCA
       free(ukey);
 #endif
    }
    else
    {
-      HASH_FIND(hh, m_data, key, keyLen, entry);
+      HASH_FIND(hh, m_data, key, (unsigned int)keyLen, entry);
    }
    return entry;
 }
