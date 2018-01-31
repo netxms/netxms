@@ -503,6 +503,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SONMP) ? 1 : 0));
    }
+   else if (!_tcscmp(attr, _T("isSTP")))
+   {
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_STP) ? 1 : 0));
+   }
    else if (!_tcscmp(attr, _T("lastAgentCommTime")))
    {
       value = new NXSL_Value((INT64)node->getLastAgentCommTime());
