@@ -1,4 +1,6 @@
+#ifndef _WIN32
 #include <config.h>
+#endif
 
 /* Define to 1 if you have the `close' function. */
 #define HAVE_CLOSE 1
@@ -23,3 +25,7 @@
 /* Define to 1 if CryptGenRandom should be used for seeding the hash function
    */
 #define USE_WINDOWS_CRYPTOAPI 1
+
+#ifdef _WIN32
+#define HAVE_STDINT_H   1
+#endif

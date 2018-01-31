@@ -39,6 +39,7 @@
 
 #if defined(_WIN32)
 /* For GetModuleHandle(), GetProcAddress() and GetCurrentProcessId() */
+#include <winsock2.h>
 #include <windows.h>
 #endif
 
