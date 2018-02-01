@@ -1585,9 +1585,10 @@ NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
-	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
+	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCTIONS)
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
-   // Pass event to modules
+   if (g_flags & AF_ENABLE_NXSL_FILE_IO_FUNCTIONS)
+      registerIOFunctions();
    CALL_ALL_MODULES(pfNXSLServerEnvConfig, (this));
 }
 

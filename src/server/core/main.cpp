@@ -349,8 +349,16 @@ static void LoadGlobalConfig()
 		g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
 	if (ConfigReadBoolean(_T("CheckTrustedNodes"), true))
 		g_flags |= AF_CHECK_TRUSTED_NODES;
-	if (ConfigReadBoolean(_T("EnableNXSLContainerFunctions"), true))
-		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
+	if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
+	{
+		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
+		nxlog_debug(3, _T("NXSL container management functions enabled"));
+	}
+   if (ConfigReadBoolean(_T("NXSL.EnableFileIOFunctions"), false))
+   {
+      g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
+      nxlog_debug(3, _T("NXSL file I/O functions enabled"));
+   }
    if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
