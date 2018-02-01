@@ -516,6 +516,7 @@ public:
 
    NXSL_ExtFunction *findFunction(const TCHAR *name);
    void registerFunctionSet(int count, NXSL_ExtFunction *list);
+   void registerIOFunctions();
 
    NXSL_ExtSelector *findSelector(const TCHAR *name);
    void registerSelectorSet(int count, NXSL_ExtSelector *list);

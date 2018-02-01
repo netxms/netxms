@@ -33,17 +33,6 @@
 #endif
 
 /**
- * "FILE" class
- */
-class NXSL_FileClass : public NXSL_Class
-{
-public:
-   NXSL_FileClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-};
-
-/**
  * NXSL installer environment
  */
 class NXSL_InstallerEnvironment : public NXSL_Environment
@@ -54,27 +43,12 @@ public:
 	virtual void trace(int level, const TCHAR *text);
 };
 
-/**
- * NXSL external functions
- */
-int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_fopen(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_fclose(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_feof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_fgets(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_fputs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_rmdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 
 /**
  * Global variables
  */
 extern int g_traceLevel;
-extern NXSL_FileClass g_nxslFileClass;
 
 #endif

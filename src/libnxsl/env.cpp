@@ -83,13 +83,21 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 
 /**
  * Default built-in function list
  */
-static NXSL_ExtFunction m_builtinFunctions[] =
+static NXSL_ExtFunction s_builtinFunctions[] =
 {
    { _T("__new@GeoLocation"), F_GeoLocation, -1 },
    { _T("__new@Table"), F_Table, 0 },
@@ -150,9 +158,23 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 };
 
 /**
+ * I/O and file management functions
+ */
+static NXSL_ExtFunction s_ioFunctions[] =
+{
+   { _T("CopyFile"), F_CopyFile, 2 },
+   { _T("CreateDirectory"), F_CreateDirectory, 1 },
+   { _T("DeleteFile"), F_DeleteFile, 1 },
+   { _T("FileAccess"), F_FileAccess, 2 },
+   { _T("OpenFile"), F_OpenFile, -1 },
+   { _T("RemoveDirectory"), F_RemoveDirectory, 1 },
+   { _T("RenameFile"), F_RenameFile, 2 }
+};
+
+/**
  * Default built-in selector list
  */
-static NXSL_ExtSelector m_builtinSelectors[] =
+static NXSL_ExtSelector s_builtinSelectors[] =
 {
    { _T("max"), S_max },
    { _T("min"), S_min }
@@ -163,14 +185,14 @@ static NXSL_ExtSelector m_builtinSelectors[] =
  */
 NXSL_Environment::NXSL_Environment()
 {
-   m_numFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
+   m_numFunctions = sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction);
    m_functionsAllocated = std::max(m_numFunctions, 256);
-   m_functions = (NXSL_ExtFunction *)malloc(m_functionsAllocated * sizeof(m_builtinFunctions));
-   memcpy(m_functions, m_builtinFunctions, sizeof(m_builtinFunctions));
-   m_numSelectors = sizeof(m_builtinSelectors) / sizeof(NXSL_ExtSelector);
+   m_functions = (NXSL_ExtFunction *)malloc(m_functionsAllocated * sizeof(s_builtinFunctions));
+   memcpy(m_functions, s_builtinFunctions, sizeof(s_builtinFunctions));
+   m_numSelectors = sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector);
    m_selectorsAllocated = std::max(m_numSelectors, 16);
-   m_selectors = (NXSL_ExtSelector *)malloc(m_selectorsAllocated * sizeof(m_builtinSelectors));
-   memcpy(m_selectors, m_builtinSelectors, sizeof(m_builtinSelectors));
+   m_selectors = (NXSL_ExtSelector *)malloc(m_selectorsAllocated * sizeof(s_builtinSelectors));
+   memcpy(m_selectors, s_builtinSelectors, sizeof(s_builtinSelectors));
    m_library = NULL;
 }
 
@@ -206,6 +228,14 @@ void NXSL_Environment::registerFunctionSet(int count, NXSL_ExtFunction *list)
    }
    memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
    m_numFunctions += count;
+}
+
+/**
+ * Register I/O and file management functions
+ */
+void NXSL_Environment::registerIOFunctions()
+{
+   registerFunctionSet(sizeof(s_ioFunctions) / sizeof(NXSL_ExtFunction), s_ioFunctions);
 }
 
 /**
