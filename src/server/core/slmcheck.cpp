@@ -27,7 +27,7 @@
 // Static data
 //
 
-NXSL_VariableSystem SlmCheck::m_nxslConstants;
+NXSL_VariableSystem __EXPORT SlmCheck::m_nxslConstants;
 
 /**
  * Initialize static members

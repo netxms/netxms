@@ -58,6 +58,8 @@ Mutex::~Mutex()
  */
 Mutex& Mutex::operator =(const Mutex& src)
 {
+   if (&src == this)
+      return *this;
    if (InterlockedDecrement(m_refCount))
    {
       MutexDestroy(m_mutex);
@@ -105,6 +107,8 @@ RWLock::~RWLock()
  */
 RWLock& RWLock::operator =(const RWLock& src)
 {
+   if (&src == this)
+      return *this;
    if (InterlockedDecrement(m_refCount))
    {
       RWLockDestroy(m_rwlock);
@@ -152,6 +156,8 @@ Condition::~Condition()
  */
 Condition& Condition::operator =(const Condition& src)
 {
+   if (&src == this)
+      return *this;
    if (InterlockedDecrement(m_refCount))
    {
       ConditionDestroy(m_condition);

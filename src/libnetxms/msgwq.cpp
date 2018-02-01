@@ -37,10 +37,10 @@
 /**
  * Housekeeper data
  */
-Mutex MsgWaitQueue::m_housekeeperLock;
-HashMap<UINT64, MsgWaitQueue> *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
-Condition MsgWaitQueue::m_shutdownCondition(true);
-THREAD MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
+Mutex __EXPORT MsgWaitQueue::m_housekeeperLock;
+HashMap<UINT64, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
+Condition __EXPORT MsgWaitQueue::m_shutdownCondition(true);
+THREAD __EXPORT MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
  * Constructor

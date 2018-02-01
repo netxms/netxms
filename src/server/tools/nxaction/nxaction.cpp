@@ -269,12 +269,12 @@ int main(int argc, char *argv[])
                UINT32 dwError;
                int i, k;
 #ifdef UNICODE
-					WCHAR action[256], *args[256];
-
+					WCHAR action[256];
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
 					action[255] = 0;
 					
 					int count = std::min(argc - optind - 2, 256);
+					WCHAR *args[256];
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						args[i] = WideStringFromMBString(argv[k]);
                dwError = conn->execAction(action, count, args, showOutput, OutputCallback);

@@ -46,6 +46,10 @@
 #pragma warning(disable: 4018)
 #endif
 
+#ifdef __HP_cc
+#pragma diag_suppress 2549
+#endif
+
 #include "libnetxms.h"
 #include <assert.h>
 

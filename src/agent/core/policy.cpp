@@ -110,7 +110,7 @@ static int GetPolicyType(const uuid& guid)
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
-            type = DBGetNumRows(hResult) > 0 ? DBGetFieldULong(hResult, 0, 0) : -1;
+            type = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : -1;
             DBFreeResult(hResult);
          }
          DBFreeStatement(hStmt);

@@ -1015,7 +1015,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 int DCItem::getNXSLDataType() const
 {
    static int nxslTypes[] = { NXSL_DT_INT32, NXSL_DT_UINT32, NXSL_DT_INT64, NXSL_DT_UINT64, NXSL_DT_STRING, NXSL_DT_REAL, NXSL_DT_NULL };
-   return ((m_dataType >= 0) && (m_dataType < sizeof(nxslTypes) / sizeof(int))) ? nxslTypes[m_dataType] : NXSL_DT_STRING;
+   return (m_dataType < sizeof(nxslTypes) / sizeof(int)) ? nxslTypes[m_dataType] : NXSL_DT_STRING;
 }
 
 /**

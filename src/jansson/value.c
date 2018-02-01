@@ -1014,8 +1014,6 @@ json_t JANSSON_API *json_copy(json_t *json)
         default:
             return NULL;
     }
-
-    return NULL;
 }
 
 json_t JANSSON_API *json_deep_copy(const json_t *json)
@@ -1043,6 +1041,4 @@ json_t JANSSON_API *json_deep_copy(const json_t *json)
         default:
             return NULL;
     }
-
-    return NULL;
 }

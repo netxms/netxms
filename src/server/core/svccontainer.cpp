@@ -27,7 +27,7 @@
 /**
  * Service log record ID
  */
-INT32 ServiceContainer::logRecordId = -1;
+INT32 __EXPORT ServiceContainer::logRecordId = -1;
 
 /**
  * Default constructor for service service object

@@ -1494,6 +1494,20 @@ if test "x$CXX" = "xaCC" ; then
 			CPPFLAGS="$OLD_CPPFLAGS"
 			AC_MSG_RESULT(no)
 		])
+
+	AC_LANG_PUSH([C++])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts +std=c++11)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS +std=c++11"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
+	AC_LANG_POP([C++])
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
@@ -3067,22 +3081,27 @@ AC_MSG_RESULT($enable_iconv_cache)
 # taken from ZSH's configure
 # Check if iconv uses const in prototype declaration
 if test "x$ac_found_iconv" = "xyes"; then
-  AC_LANG_PUSH([C++])
-  AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
-    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	AC_LANG_PUSH([C++])
+	OLD_CXXFLAGS="$CXXFLAGS"
+	if test "x$CXX" = "xaCC"; then
+		CXXFLAGS="$CXXFLAGS +We"
+	fi
+	AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
+		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-	]],
-        [[
-		char **p = NULL;
-		iconv(0, (const char **)p, 0, 0, 0);
-	]])],
-      [ac_cv_iconv_const=const],
-      [ac_cv_iconv_const=])])
-  AC_LANG_POP([C++])
-  AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
+		]],
+        	[[
+			char **p = NULL;
+			iconv(0, (const char **)p, 0, 0, 0);
+		]])],
+		[ac_cv_iconv_const=const],
+		[ac_cv_iconv_const=])])
+	CXXFLAGS="$OLD_CXXFLAGS"
+	AC_LANG_POP([C++])
+	AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
 fi
 

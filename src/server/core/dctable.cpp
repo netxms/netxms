@@ -25,10 +25,10 @@
 /**
  * Column ID cache
  */
-TC_ID_MAP_ENTRY *DCTable::m_cache = NULL;
-int DCTable::m_cacheSize = 0;
-int DCTable::m_cacheAllocated = 0;
-MUTEX DCTable::m_cacheMutex = MutexCreate();
+TC_ID_MAP_ENTRY __EXPORT *DCTable::m_cache = NULL;
+int __EXPORT DCTable::m_cacheSize = 0;
+int __EXPORT DCTable::m_cacheAllocated = 0;
+MUTEX __EXPORT DCTable::m_cacheMutex = MutexCreate();
 
 /**
  * Compare cache element's name to string key

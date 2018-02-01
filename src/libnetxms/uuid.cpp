@@ -56,7 +56,7 @@
 /**
  * NULL GUID
  */
-const uuid uuid::NULL_UUID = uuid();
+const uuid __EXPORT uuid::NULL_UUID = uuid();
 
 /*
  * Offset between 15-Oct-1582 and 1-Jan-70

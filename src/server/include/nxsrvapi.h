@@ -404,7 +404,7 @@ public:
 	uuid getGuid(int index);
 	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
 	const TCHAR *getServerInfo(int index) { return ((index >= 0) && (index < m_size)) ? m_serverInfoList[index] : NULL; }
-	UINT64 getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : -1; }
+	UINT64 getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : 0; }
 	int getVersion(int index) { return ((index >= 0) && (index < m_size)) ? m_version[index] : -1; }
 };
 

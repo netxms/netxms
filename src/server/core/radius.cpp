@@ -212,11 +212,14 @@ static void random_vector(unsigned char *vector)
 	 */
 	if (!did_srand)
 	{
-		char garbage[8];
+		unsigned char garbage[8];
+#ifdef _WITH_ENCRYPTION
+      RAND_bytes(garbage, 8);
+#endif
       i = (unsigned int)time(NULL) + GetCurrentProcessId();
 		for (n = 0; n < 8; n++)
 		{
-			i += (garbage[n] << i);
+			i += ((int)garbage[n] << i);
 		}
 		srand(i);
 		did_srand = 1;
