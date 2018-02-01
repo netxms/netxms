@@ -27,17 +27,17 @@
 /**
  * Invalid address
  */
-const InetAddress InetAddress::INVALID = InetAddress();
+const InetAddress __EXPORT InetAddress::INVALID = InetAddress();
 
 /**
  * Loopback address (IPv4)
  */
-const InetAddress InetAddress::LOOPBACK = InetAddress(0x7F000001);
+const InetAddress __EXPORT InetAddress::LOOPBACK = InetAddress(0x7F000001);
 
 /**
  * No address indicator (IPv4 0.0.0.0)
  */
-const InetAddress InetAddress::NONE = InetAddress((UINT32)0);
+const InetAddress __EXPORT InetAddress::NONE = InetAddress((UINT32)0);
 
 /**
  * IPv4 link local subnet
