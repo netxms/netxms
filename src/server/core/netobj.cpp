@@ -2458,8 +2458,8 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
    TCHAR *pText, szBuffer[4], scriptName[256];
    int i;
 
-   DbgPrintf(8, _T("NetObj::expandText(sourceObject=%d template='%s' alarm='%d' event='%ld')"),
-             m_id, CHECK_NULL(textTemplate), alarm == NULL ? -1 : alarm->getAlarmId() , event == NULL ? -1 : event->getId());
+   DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
+             m_id, CHECK_NULL(textTemplate), (alarm == NULL) ? 0 : alarm->getAlarmId() , (event == NULL) ? 0 : event->getId());
 
 
    dwSize = (UINT32)_tcslen(textTemplate) + 1;

@@ -1346,12 +1346,12 @@ public:
 	const TCHAR *getOsName() { return CHECK_NULL_EX(m_osName); }
 	const TCHAR *getOsVersion() { return CHECK_NULL_EX(m_osVersion); }
 	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
-	const LONG getBatteryLevel() { return m_batteryLevel; }
+	LONG getBatteryLevel() { return m_batteryLevel; }
 
 	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
-	virtual bool isReadyForStatusPoll()  { return false; }
-	virtual bool isReadyForConfigurationPoll()  { return false; }
+	virtual bool isReadyForStatusPoll() { return false; }
+	virtual bool isReadyForConfigurationPoll() { return false; }
 	virtual bool isReadyForInstancePoll() { return false; }
 };
 

@@ -35,7 +35,9 @@
  * A parser for the basic grammar to use for snmp V2c modules
  */
 
+#ifdef _WIN32
 #pragma warning(disable : 4065 4102)
+#endif
 
 /*
 #ifndef __STDC__

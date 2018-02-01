@@ -953,7 +953,6 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
             if (getAgentConnection() == NULL)
                break;
-            break;
             DbgPrintf(7, _T("Sensor(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:

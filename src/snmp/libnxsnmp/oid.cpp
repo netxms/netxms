@@ -63,6 +63,8 @@ SNMP_ObjectId::~SNMP_ObjectId()
  */
 SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 {
+   if (&src == this)
+      return *this;
    free(m_value);
    m_length = src.m_length;
    m_value = (UINT32 *)nx_memdup(src.m_value, sizeof(UINT32) * m_length);

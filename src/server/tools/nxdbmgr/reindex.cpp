@@ -23,34 +23,6 @@
 #include "nxdbmgr.h"
 
 /**
- * Recreate index
- */
-static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TCHAR *pszColumns)
-{
-	TCHAR szQuery[1024];
-
-	_tprintf(_T("Reindexing table %s by (%s)...\n"), pszTable, pszColumns);
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(szQuery, 1024, _T("DROP INDEX %s ON %s"), pszIndex, pszTable);
-			break;
-		case DB_SYNTAX_MYSQL:
-			_sntprintf(szQuery, 1024, _T("DROP INDEX %s FROM %s"), pszIndex, pszTable);
-			break;
-		case DB_SYNTAX_PGSQL:
-			_sntprintf(szQuery, 1024, _T("DROP INDEX %s CASCADE"), pszIndex);
-			break;
-		default:
-			_sntprintf(szQuery, 1024, _T("DROP INDEX %s"), pszIndex);
-			break;
-	}
-	DBQuery(g_hCoreDB, szQuery);
-	_sntprintf(szQuery, 1024, _T("CREATE INDEX %s ON %s(%s)"), pszIndex, pszTable, pszColumns);
-	SQLQuery(szQuery);
-}
-
-/**
  * Drop all indexes from table - MySQL way
  */
 static void DropAllIndexesFromTable_MYSQL(const TCHAR *table)

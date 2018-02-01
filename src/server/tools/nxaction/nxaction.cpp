@@ -269,8 +269,7 @@ int main(int argc, char *argv[])
                UINT32 dwError;
                int i, k;
 #ifdef UNICODE
-					WCHAR action[256], *args[256];
-
+					WCHAR action[256];
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, action, 256);
 					action[255] = 0;
 					
@@ -279,8 +278,6 @@ int main(int argc, char *argv[])
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						list.addPreallocated(WideStringFromMBString(argv[k]));
                dwError = conn->execAction(action, list, showOutput, OutputCallback);
-					for(i = 0; i < count; i++)
-						free(args[i]);
 #else
                StringList list;
                int count = std::min(argc - optind - 2, 256);

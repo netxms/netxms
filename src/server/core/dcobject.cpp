@@ -25,12 +25,12 @@
 /**
  * Default retention time for collected data
  */
-int DCObject::m_defaultRetentionTime = 30;
+int __EXPORT DCObject::m_defaultRetentionTime = 30;
 
 /**
  * Default data collection polling interval
  */
-int DCObject::m_defaultPollingInterval = 60;
+int __EXPORT DCObject::m_defaultPollingInterval = 60;
 
 /**
  * Default constructor for DCObject

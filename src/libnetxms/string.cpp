@@ -26,7 +26,7 @@
 /**
  * Static members
  */
-const int String::npos = -1;
+const int __EXPORT String::npos = -1;
 
 /**
  * Create empty string

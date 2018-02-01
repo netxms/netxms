@@ -1,6 +1,8 @@
 %{
 
+#ifdef _WIN32
 #pragma warning(disable : 4065 4102)
+#endif
 
 #define YYERROR_VERBOSE
 #define YYINCLUDED_STDLIB_H

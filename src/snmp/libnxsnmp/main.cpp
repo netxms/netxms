@@ -89,9 +89,9 @@ size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
 /**
  * Get text for libnxsnmp error code
  */
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError)
+const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 errorCode)
 {
-   static const TCHAR *pszErrorText[] =
+   static const TCHAR *errorText[] =
    {
       _T("Operation completed successfully"),
       _T("Request timed out"),
@@ -116,8 +116,7 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(UINT32 dwError)
       _T("Malformed or unexpected response from agent")
    };
 
-   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_RESPONSE)) ?
-      pszErrorText[dwError] : _T("Unknown error");
+   return (errorCode <= SNMP_ERR_BAD_RESPONSE) ? errorText[errorCode] : _T("Unknown error");
 }
 
 /**
