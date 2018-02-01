@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.24 to 30.25 (changes also included into 22.15)
+ */
+static bool H_UpgradeFromV24()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 15)
+   {
+      CHK_EXEC(CreateConfigParam(_T("NXSL.EnableFileIOFunctions"), _T("0"), _T("Enable/disable server-side NXSL functions for file I/O (such as OpenFile, DeleteFile, etc.)."), NULL, 'B', true, true, false, false));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='NXSL.EnableContainerFunctions',description='Enable/disable server-side NXSL functions for container management (such as CreateContainer, RemoveContainer, BindObject, UnbindObject).' WHERE var_name='EnableNXSLContainerFunctions'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 15));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 30.23 to 30.24 (changes also included into 22.14)
  */
 static bool H_UpgradeFromV23()
@@ -38,7 +53,6 @@ static bool H_UpgradeFromV23()
    CHK_EXEC(SetMinorSchemaVersion(24));
    return true;
 }
-
 
 /**
  * Upgrade from 30.22 to 30.23 (changes also included into 22.13)
@@ -891,6 +905,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 24, 30, 25, H_UpgradeFromV24 },
    { 23, 30, 24, H_UpgradeFromV23 },
    { 22, 30, 23, H_UpgradeFromV22 },
    { 21, 30, 22, H_UpgradeFromV21 },
