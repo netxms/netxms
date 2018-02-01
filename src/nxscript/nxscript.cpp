@@ -195,6 +195,7 @@ int main(int argc, char *argv[])
       if (!compileOnly)
       {
 		   pEnv = new NXSL_TestEnv;
+		   pEnv->registerIOFunctions();
 		   pEnv->registerFunctionSet(1, &func);
 
          // Create VM

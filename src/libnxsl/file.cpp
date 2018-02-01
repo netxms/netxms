@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NXSL-based installer tool collection
-** Copyright (C) 2005-2011 Victor Kirhenshtein
+** NetXMS Scripting Language Interpreter
+** Copyright (C) 2005-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 **
 **/
 
-#include "nxinstall.h"
-
+#include "libnxsl.h"
 
 /**
  * Check file access.
@@ -30,7 +29,7 @@
  *   1) file name
  *   2) desired access
  */
-int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -38,7 +37,7 @@ int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	*ppResult = new NXSL_Value((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
+	*result = new NXSL_Value((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
 	return 0;
 }
 
@@ -48,7 +47,7 @@ int F_access(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  *   1) source file name
  *   2) destination file name
  */
-int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -57,9 +56,9 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		return NXSL_ERR_NOT_STRING;
 
 #ifdef _WIN32
-	*ppResult = new NXSL_Value((LONG)CopyFile(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), FALSE));
+	*result = new NXSL_Value((LONG)CopyFile(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), FALSE));
 #else
-	*ppResult = new NXSL_Value;	/* TODO: implement file copy on UNIX */
+	*result = new NXSL_Value;	/* TODO: implement file copy on UNIX */
 #endif
 	return 0;
 }
@@ -70,7 +69,7 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  *   1) old file name
  *   2) new file name
  */
-int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
@@ -78,7 +77,7 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
+	*result = new NXSL_Value((LONG)_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
 	return 0;
 }
 
@@ -87,12 +86,12 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm
  * Parameters:
  *   1) file name
  */
-int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)((_tremove(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+	*result = new NXSL_Value((LONG)((_tremove(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
 	return 0;
 }
 
@@ -101,12 +100,16 @@ int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm
  * Parameters:
  *   1) directory name
  */
-int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)_tmkdir(argv[0]->getValueAsCString()));
+#ifdef _WIN32
+	*result = new NXSL_Value(CreateDirectory(argv[0]->getValueAsCString(), NULL));
+#else
+	*result = new NXSL_Value((LONG)((_tmkdir(argv[0]->getValueAsCString(), 0755) == 0) ? 1 : 0));
+#endif
 	return 0;
 }
 
@@ -115,11 +118,15 @@ int F_mkdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  * Parameters:
  *   1) directory name
  */
-int F_rmdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)_trmdir(argv[0]->getValueAsCString()));
+#ifdef _WIN32
+   *result = new NXSL_Value(RemoveDirectory(argv[0]->getValueAsCString()));
+#else
+	*result = new NXSL_Value((LONG)((_trmdir(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+#endif
 	return 0;
 }
