@@ -430,21 +430,31 @@ bool DCTable::transform(Table *value)
          }
          else
          {
-            TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
-            nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                        getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+            time_t now = time(NULL);
+            if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+            {
+               TCHAR buffer[1024];
+               _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
+               nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
+                           getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+               m_lastScriptErrorReport = now;
+            }
          }
       }
    }
    else
    {
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
-      nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                  getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+      time_t now = time(NULL);
+      if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
+         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
+         nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
+                     getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+         m_lastScriptErrorReport = now;
+      }
    }
    delete vm;
    return success;

@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.25 to 30.26 (changes also included into 22.16)
+ */
+static bool H_UpgradeFromV25()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 16)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DataCollection.ScriptErrorReportInterval"), _T("86400"), _T("Minimal interval between reporting errors in data collection related script."), _T("seconds"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 16));
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET units='seconds' WHERE var_name='DataCollection.ScriptErrorReportInterval'")));
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 30.24 to 30.25 (changes also included into 22.15)
  */
 static bool H_UpgradeFromV24()
@@ -905,6 +920,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 25, 30, 26, H_UpgradeFromV25 },
    { 24, 30, 25, H_UpgradeFromV24 },
    { 23, 30, 24, H_UpgradeFromV23 },
    { 22, 30, 23, H_UpgradeFromV22 },

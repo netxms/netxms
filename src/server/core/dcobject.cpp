@@ -63,6 +63,7 @@ DCObject::DCObject()
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_lastScriptErrorReport = 0;
    m_comments = NULL;
    m_pollingSession = NULL;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -108,6 +109,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_lastScriptErrorReport = 0;
    setTransformationScript(src->m_transformationScriptSource);
 
    m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
@@ -159,6 +161,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_lastScriptErrorReport = 0;
    m_comments = NULL;
    m_pollingSession = NULL;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -206,6 +209,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
+   m_lastScriptErrorReport = 0;
 	m_comments = NULL;
    m_pollingSession = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
@@ -1037,6 +1041,7 @@ void DCObject::setTransformationScript(const TCHAR *source)
       m_transformationScriptSource = NULL;
       m_transformationScript = NULL;
    }
+   m_lastScriptErrorReport = 0;  // allow immediate error report after script change
 }
 
 /**

@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.15 to 30.0
+ * Upgrade from 22.16 to 30.0
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.15 to 22.16
  */
 static bool H_UpgradeFromV15()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateConfigParam(_T("DataCollection.ScriptErrorReportInterval"), _T("86400"), _T("Minimal interval between reporting errors in data collection related script."), NULL, 'I', true, false, false, false));
+   CHK_EXEC(SetSchemaLevelForMajorVersion(22, 16));
+   CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
 }
 
@@ -314,7 +325,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 15, 30, 0,  H_UpgradeFromV15 },
+   { 16, 30, 0,  H_UpgradeFromV16 },
+   { 15, 22, 16, H_UpgradeFromV15 },
    { 14, 22, 15, H_UpgradeFromV14 },
    { 13, 22, 14, H_UpgradeFromV13 },
    { 12, 22, 13, H_UpgradeFromV12 },

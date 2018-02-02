@@ -103,6 +103,7 @@ private:
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
    NXSL_Program *m_script;
+   time_t m_lastScriptErrorReport;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -194,6 +195,7 @@ protected:
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_Program *m_transformationScript;  // Compiled transformation script
+   time_t m_lastScriptErrorReport;
 	TCHAR *m_comments;
 	ClientSession *m_pollingSession;
    WORD m_instanceDiscoveryMethod;

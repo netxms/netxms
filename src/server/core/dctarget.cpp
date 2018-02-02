@@ -44,6 +44,7 @@ DataCollectionTarget::DataCollectionTarget() : Template()
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
+   m_scriptErrorReports = new StringMap();
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
@@ -59,6 +60,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
+   m_scriptErrorReports = new StringMap();
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
@@ -74,6 +76,7 @@ DataCollectionTarget::~DataCollectionTarget()
 {
    delete m_deletedItems;
    delete m_deletedTables;
+   delete m_scriptErrorReports;
    MutexDestroy(m_hPollerMutex);
 }
 
@@ -741,8 +744,14 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       }
       if (!vm->run(&args))
       {
-         DbgPrintf(4, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         DbgPrintf(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+         time_t now = time(NULL);
+         time_t lastReport = static_cast<time_t>(m_scriptErrorReports->getInt64(param, 0));
+         if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+         {
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+            m_scriptErrorReports->set(param, static_cast<UINT64>(now));
+         }
          delete_and_null(vm);
       }
    }
