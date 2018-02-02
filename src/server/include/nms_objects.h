@@ -1129,6 +1129,7 @@ class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 protected:
    IntegerArray<UINT32> *m_deletedItems;
    IntegerArray<UINT32> *m_deletedTables;
+   StringMap *m_scriptErrorReports;
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
    MUTEX m_hPollerMutex;

@@ -80,6 +80,16 @@ void StringMap::addAll(const StringMap *src)
 }
 
 /**
+ * Set value from INT32
+ */
+void StringMap::set(const TCHAR *key, INT32 value)
+{
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%d"), (int)value);
+   set(key, buffer);
+}
+
+/**
  * Set value from UINT32
  */
 void StringMap::set(const TCHAR *key, UINT32 value)
@@ -87,6 +97,26 @@ void StringMap::set(const TCHAR *key, UINT32 value)
 	TCHAR buffer[32];
 	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
 	set(key, buffer);
+}
+
+/**
+ * Set value from INT64
+ */
+void StringMap::set(const TCHAR *key, INT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, value);
+   set(key, buffer);
+}
+
+/**
+ * Set value from UINT64
+ */
+void StringMap::set(const TCHAR *key, UINT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, value);
+   set(key, buffer);
 }
 
 /**

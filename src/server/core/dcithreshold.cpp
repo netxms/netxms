@@ -38,6 +38,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_sampleCount = 1;
    m_scriptSource = NULL;
    m_script = NULL;
+   m_lastScriptErrorReport = 0;
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
@@ -61,6 +62,7 @@ Threshold::Threshold()
    m_sampleCount = 1;
    m_scriptSource = NULL;
    m_script = NULL;
+   m_lastScriptErrorReport = 0;
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
@@ -85,7 +87,8 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
    m_sampleCount = src->m_sampleCount;
    m_scriptSource = NULL;
    m_script = NULL;
-   setScript((src->m_scriptSource != NULL) ? _tcsdup(src->m_scriptSource) : NULL);
+   setScript(_tcsdup_ex(src->m_scriptSource));
+   m_lastScriptErrorReport = shadowCopy ? src->m_lastScriptErrorReport : 0;
    m_isReached = shadowCopy ? src->m_isReached : FALSE;
 	m_currentSeverity = shadowCopy ? src->m_currentSeverity : SEVERITY_NORMAL;
 	m_repeatInterval = src->m_repeatInterval;
@@ -119,6 +122,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 		m_sampleCount = 1;
    m_scriptSource = NULL;
    m_script = NULL;
+   m_lastScriptErrorReport = 0;
    setScript(DBGetField(hResult, iRow, 6, NULL, 0));
    m_isReached = DBGetFieldLong(hResult, iRow, 8);
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
@@ -144,6 +148,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
    m_scriptSource = NULL;
    m_script = NULL;
+   m_lastScriptErrorReport = 0;
    const TCHAR *script = config->getSubEntryValue(_T("script"));
    setScript(_tcsdup_ex(script));
    m_isReached = FALSE;
@@ -158,7 +163,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
  */
 Threshold::~Threshold()
 {
-   safe_free(m_scriptSource);
+   free(m_scriptSource);
    delete m_script;
 }
 
@@ -320,18 +325,29 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             }
             else
             {
-               TCHAR buffer[1024];
-               _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
-               nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+               time_t now = time(NULL);
+               if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+               {
+nxlog_debug(1, _T("**** now=%ld last=%ld sum=%ld"), now, m_lastScriptErrorReport, m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400));
+                  TCHAR buffer[1024];
+                  _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
+                  PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
+                  nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+                  m_lastScriptErrorReport = now;
+               }
             }
          }
          else
          {
-            TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-            PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
-            nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+            time_t now = time(NULL);
+            if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
+            {
+               TCHAR buffer[1024];
+               _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
+               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
+               nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+               m_lastScriptErrorReport = now;
+            }
          }
          delete vm;
       }
@@ -861,7 +877,7 @@ void Threshold::associate(DCItem *pItem)
  */
 void Threshold::setScript(TCHAR *script)
 {
-   safe_free(m_scriptSource);
+   free(m_scriptSource);
    delete m_script;
    if (script != NULL)
    {
@@ -890,6 +906,7 @@ void Threshold::setScript(TCHAR *script)
       m_scriptSource = NULL;
       m_script = NULL;
    }
+   m_lastScriptErrorReport = 0;  // allow immediate error report after script change
 }
 
 /**
@@ -899,4 +916,5 @@ void Threshold::reconcile(const Threshold *src)
 {
    m_numMatches = src->m_numMatches;
    m_isReached = src->m_isReached;
+   m_lastScriptErrorReport = src->m_lastScriptErrorReport;
 }

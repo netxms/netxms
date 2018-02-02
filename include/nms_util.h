@@ -931,7 +931,10 @@ public:
 
 	void set(const TCHAR *key, const TCHAR *value) { if (key != NULL) setObject((TCHAR *)key, _tcsdup(value), false); }
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
+   void set(const TCHAR *key, INT32 value);
 	void set(const TCHAR *key, UINT32 value);
+   void set(const TCHAR *key, INT64 value);
+   void set(const TCHAR *key, UINT64 value);
 
    void addAll(const StringMap *src);
 
