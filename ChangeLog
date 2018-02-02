@@ -18,6 +18,7 @@
 	NX-1389 (If library script saved with compilation errors it disappears from script list)
 	NX-1392 (Reload log parser without agent restart)
 	NX-1393 (PostgreSQL deadlock on updating raw_dci_data table)
+	NX-1398 (Windows Server 2016 not detected correctly)
 	NX-1399 (Some SQL queries fail when using MariaDB driver because of MariaDB bug CONC-281)
 
 
