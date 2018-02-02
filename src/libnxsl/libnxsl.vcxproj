@@ -196,11 +196,13 @@
     <ClCompile Include="class.cpp" />
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="env.cpp" />
+    <ClCompile Include="file.cpp" />
     <ClCompile Include="functions.cpp" />
     <ClCompile Include="geolocation.cpp" />
     <ClCompile Include="hashmap.cpp" />
     <ClCompile Include="inetaddr.cpp" />
     <ClCompile Include="instruction.cpp" />
+    <ClCompile Include="io.cpp" />
     <ClCompile Include="iterator.cpp" />
     <ClCompile Include="lex.parser.cpp" />
     <ClCompile Include="lexer.cpp" />
