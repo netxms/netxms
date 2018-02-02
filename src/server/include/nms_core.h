@@ -914,7 +914,7 @@ private:
 
 public:
    SNMPTrapConfiguration();
-   SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT stmt, int row);
+   SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row);
    SNMPTrapConfiguration(ConfigEntry *entry, const uuid& guid, UINT32 id, UINT32 eventCode);
    SNMPTrapConfiguration(NXCPMessage *msg);
    ~SNMPTrapConfiguration();
