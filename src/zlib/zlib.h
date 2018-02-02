@@ -217,7 +217,7 @@ typedef gz_header FAR *gz_headerp;
 
                         /* basic functions */
 
-ZEXTERN const char * ZEXPORT zlibVersion OF((void));
+ZEXTERN const char ZEXPORT *zlibVersion OF((void));
 /* The application can compare zlibVersion and ZLIB_VERSION for consistency.
    If the first character differs, the library code actually used is not
    compatible with the zlib.h header file used by the application.  This check
@@ -1488,7 +1488,7 @@ ZEXTERN int ZEXPORT gzputs OF((gzFile file, const char *s));
      gzputs returns the number of characters written, or -1 in case of error.
 */
 
-ZEXTERN char * ZEXPORT gzgets OF((gzFile file, char *buf, int len));
+ZEXTERN char ZEXPORT *gzgets OF((gzFile file, char *buf, int len));
 /*
      Reads bytes from the compressed file until len-1 characters are read, or a
    newline character is read and transferred to buf, or an end-of-file
@@ -1652,7 +1652,7 @@ ZEXTERN int ZEXPORT gzclose_w OF((gzFile file));
    zlib library.
 */
 
-ZEXTERN const char * ZEXPORT gzerror OF((gzFile file, int *errnum));
+ZEXTERN const char ZEXPORT *gzerror OF((gzFile file, int *errnum));
 /*
      Returns the error message for the last error which occurred on the given
    compressed file.  errnum is set to zlib error number.  If an error occurred
@@ -1885,9 +1885,9 @@ ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #endif /* !Z_SOLO */
 
 /* undocumented functions */
-ZEXTERN const char   * ZEXPORT zError           OF((int));
+ZEXTERN const char   ZEXPORT *zError           OF((int));
 ZEXTERN int            ZEXPORT inflateSyncPoint OF((z_streamp));
-ZEXTERN const z_crc_t FAR * ZEXPORT get_crc_table    OF((void));
+ZEXTERN const z_crc_t FAR ZEXPORT *get_crc_table    OF((void));
 ZEXTERN int            ZEXPORT inflateUndermine OF((z_streamp, int));
 ZEXTERN int            ZEXPORT inflateValidate OF((z_streamp, int));
 ZEXTERN unsigned long  ZEXPORT inflateCodesUsed OF ((z_streamp));

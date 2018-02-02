@@ -377,7 +377,12 @@
 #  define ZEXTERN extern
 #endif
 #ifndef ZEXPORT
-#  define ZEXPORT
+#include <symbol_visibility.h>
+#ifdef ZLIB_EXPORTS
+#  define ZEXPORT __EXPORT
+#else
+#  define ZEXPORT __IMPORT
+#endif
 #endif
 #ifndef ZEXPORTVA
 #  define ZEXPORTVA
