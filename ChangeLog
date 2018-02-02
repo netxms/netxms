@@ -23,6 +23,7 @@
 - Automatic termination of related alarms when DCI is deleted
 - Added attribute "isSTP" to NXSL class "Node"
 - File I/O functions in NXSL (disabled by default)
+- Sub-second interval between packets can be configured in PING subagent (down to 10 milliseconds)
 - Fixed issues:
 	NX-1149 (Pass EventRecordID with matched Windows event log record)
 	NX-1258 (Option to pass event data from Windows event log to NetXMS event)

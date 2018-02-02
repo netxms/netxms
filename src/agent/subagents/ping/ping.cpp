@@ -122,7 +122,7 @@ retry:
    UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
    UINT32 interval = 60000 / m_pollsPerMinute;
 
-   ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime + 1000) ? interval - elapsedTime : 1, Poller, arg);
+   ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime) ? interval - elapsedTime : 1, Poller, arg);
 }
 
 /**
@@ -147,8 +147,8 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	if (szTimeOut[0] != 0)
 	{
 		dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
-		if (dwTimeOut < 500)
-			dwTimeOut = 500;
+		if (dwTimeOut < 100)
+			dwTimeOut = 100;
 		if (dwTimeOut > 5000)
 			dwTimeOut = 5000;
 	}
@@ -413,6 +413,7 @@ static bool SubagentInit(Config *config)
       m_pollsPerMinute = 1;
    else if (m_pollsPerMinute > MAX_POLLS_PER_MINUTE)
       m_pollsPerMinute = MAX_POLLS_PER_MINUTE;
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %d packets per minute (%d ms between packets)"), m_pollsPerMinute, 60000 / m_pollsPerMinute);
 
    // Parse target list
    if (m_pszTargetList != NULL)

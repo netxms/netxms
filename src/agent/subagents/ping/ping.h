@@ -31,11 +31,11 @@
 /**
  * Constants
  */
-#define MAX_POLLS_PER_MINUTE     60
+#define MAX_POLLS_PER_MINUTE     6000
 
 #define PING_OPT_ALLOW_AUTOCONFIGURE   0x0001
 
-#define DEBUG_TAG _T("sa.ping")
+#define DEBUG_TAG _T("ping")
 
 /**
  * Target information structure
