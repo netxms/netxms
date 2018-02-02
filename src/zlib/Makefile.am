@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 lib_LTLIBRARIES = libnxzlib.la
+libnxzlib_la_CPPFLAGS = -I@top_srcdir@/include -DZLIB_EXPORTS
 libnxzlib_la_LDFLAGS = -no-undefined -version-info 1:0:0 $(LDFLAGS)
 
 noinst_HEADERS = \

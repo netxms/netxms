@@ -540,7 +540,7 @@ int ZEXPORT gzungetc(c, file)
 }
 
 /* -- see zlib.h -- */
-char * ZEXPORT gzgets(file, buf, len)
+char ZEXPORT *gzgets(file, buf, len)
     gzFile file;
     char *buf;
     int len;
