@@ -210,7 +210,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			fullRepaint = false;
 		}
 
-		event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
+		if (imgChart != null)
+		   event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
 		paintErrorIndicator(event.gc);
 	}
 	

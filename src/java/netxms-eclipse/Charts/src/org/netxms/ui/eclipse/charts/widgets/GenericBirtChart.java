@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -218,14 +218,14 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			}
 			catch(Exception e)
 			{
-				/* TODO: add logging and/or user notification */
-				e.printStackTrace();
+			   Activator.logError("Exception during chart generation", e);
 			}
 			
 			fullRepaint = false;
 		}
 
-		event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
+		if (imgChart != null)
+		   event.gc.drawImage(imgChart, clientArea.x, clientArea.y);
 		paintErrorIndicator(event.gc);
 	}
 	
