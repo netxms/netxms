@@ -24,6 +24,8 @@
 
 DECLARE_DRIVER_HEADER("ORACLE")
 
+#define DEBUG_TAG _T("db.drv.oracle")
+
 static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
 
 /**
@@ -115,13 +117,13 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
    sword major, minor, update, patch, pupdate;
    OCIClientVersion(&major, &minor, &update, &patch, &pupdate);
-   nxlog_debug(1, _T("ORACLE: OCI version %d.%d.%d.%d.%d"), (int)major, (int)minor, (int)update, (int)patch, (int)pupdate);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("OCI version %d.%d.%d.%d.%d"), (int)major, (int)minor, (int)update, (int)patch, (int)pupdate);
    s_ociVersionMajor = (int)major;
 
    if (OCIEnvNlsCreate(&s_handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
                        NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) != OCI_SUCCESS)
    {
-      nxlog_debug(1, _T("ORACLE: cannot allocate environment handle"));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot allocate environment handle"));
       return false;
    }
 	return true;
@@ -259,14 +261,14 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 #ifdef UNICODE
 #if UNICODE_UCS4
                WCHAR *wver = UCS4StringFromUCS2String(version);
-               nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), wver);
                free(wver);
 #else
-               nxlog_debug(5, _T("ORACLE: connected to %s"), version);
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), version);
 #endif
 #else
                char *mbver = MBStringFromUCS2String(version);
-               nxlog_debug(5, _T("ORACLE: connected to %s"), mbver);
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), mbver);
                free(mbver);
 #endif
             }
