@@ -8,6 +8,10 @@
 #ifndef ZCONF_H
 #define ZCONF_H
 
+#ifdef _WIN32
+#define _CRT_NONSTDC_NO_WARNINGS
+#endif
+
 /*
  * If you *really* need a unique prefix for all types and library functions,
  * compile with -DZ_PREFIX. The "standard" zlib should be compiled without it.
@@ -377,12 +381,16 @@
 #  define ZEXTERN extern
 #endif
 #ifndef ZEXPORT
-#include <symbol_visibility.h>
-#ifdef ZLIB_EXPORTS
-#  define ZEXPORT __EXPORT
-#else
-#  define ZEXPORT __IMPORT
-#endif
+#  ifdef _WIN32
+#     define ZEXPORT
+#  else
+#     include <symbol_visibility.h>
+#     ifdef ZLIB_EXPORTS
+#        define ZEXPORT __EXPORT
+#     else
+#        define ZEXPORT __IMPORT
+#     endif
+#  endif
 #endif
 #ifndef ZEXPORTVA
 #  define ZEXPORTVA
