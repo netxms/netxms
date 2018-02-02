@@ -61,7 +61,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, 
 /**
  * Create SNMP trap configuration object from database
  */
-SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT stmt, int row) : m_mappings(8, 8, true)
+SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb, DB_STATEMENT stmt, int row) : m_mappings(8, 8, true)
 {
    m_id = DBGetFieldULong(trapResult, row, 0);
    TCHAR buffer[MAX_OID_LENGTH];
@@ -71,8 +71,18 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_STATEMENT 
    DBGetField(trapResult, row, 4, m_userTag, MAX_USERTAG_LENGTH);
    m_guid = DBGetFieldGUID(trapResult, row, 5);
 
-   DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   DB_RESULT mapResult = DBSelectPrepared(stmt);
+   DB_RESULT mapResult;
+   if (stmt != NULL)
+   {
+      DBBind(stmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      mapResult = DBSelectPrepared(stmt);
+   }
+   else
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=%u ORDER BY parameter"), m_id);
+      mapResult = DBSelect(hdb, query);
+   }
    if (mapResult != NULL)
    {
       int mapCount = DBGetNumRows(mapResult);
@@ -313,13 +323,15 @@ void LoadTrapCfg()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag,guid FROM snmp_trap_cfg"));
    if (hResult != NULL)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"));
-      if (hStmt != NULL)
+      DB_STATEMENT hStmt = (g_dbSyntax == DB_SYNTAX_ORACLE) ?
+               DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"))
+               : NULL;
+      if ((g_dbSyntax != DB_SYNTAX_ORACLE) || (hStmt != NULL))
       {
          int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
-            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(hResult, hStmt, i);
+            SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(hResult, hdb, hStmt, i);
             if (!trapCfg->getOid().isValid())
             {
                TCHAR buffer[MAX_DB_STRING];
@@ -328,7 +340,8 @@ void LoadTrapCfg()
             }
             m_trapCfgList.add(trapCfg);
          }
-         DBFreeStatement(hStmt);
+         if (hStmt != NULL)
+            DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
    }
