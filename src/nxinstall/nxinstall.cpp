@@ -23,12 +23,10 @@
 
 #include "nxinstall.h"
 
-
 /**
- * Global variables
+ * Trace level
  */
 int g_traceLevel = 0;
-NXSL_FileClass g_nxslFileClass;
 
 /**
  * main()

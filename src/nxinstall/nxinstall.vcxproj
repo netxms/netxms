@@ -164,8 +164,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="env.cpp" />
-    <ClCompile Include="file.cpp" />
-    <ClCompile Include="io.cpp" />
     <ClCompile Include="nxinstall.cpp" />
     <ClCompile Include="system.cpp" />
   </ItemGroup>
