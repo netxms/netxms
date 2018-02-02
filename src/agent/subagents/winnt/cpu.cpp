@@ -303,3 +303,14 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
 
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+* Handler for System.CPU.Count parameter
+*/
+LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   SYSTEM_INFO sysInfo;
+   GetSystemInfo(&sysInfo);
+   ret_uint(value, sysInfo.dwNumberOfProcessors);
+   return SYSINFO_RC_SUCCESS;
+}

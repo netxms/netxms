@@ -7,7 +7,7 @@ SOURCES = \
 	nxagentd.cpp policy.cpp push.cpp register.cpp sa.cpp \
 	service.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
 	subagent.cpp sysinfo.cpp syslog.cpp \
-	tools.cpp trap.cpp tunnel.cpp upgrade.cpp watchdog.cpp win32.cpp
+	tools.cpp trap.cpp tunnel.cpp upgrade.cpp watchdog.cpp
 RESOURCES = nxagentd.rc
 GENERATED = messages.h MSG00001.bin
 

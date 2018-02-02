@@ -1,6 +1,6 @@
 /*
 ** Windows XP/2003/Vista/2008/7/8 NetXMS subagent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,6 +85,29 @@
 #define NETINFO_IF_BYTES_OUT_64      13
 #define NETINFO_IF_PACKETS_IN_64     14
 #define NETINFO_IF_PACKETS_OUT_64    15
+
+/**
+ * Request types for H_MemoryInfo
+ */
+#define MEMINFO_PHYSICAL_FREE       1
+#define MEMINFO_PHYSICAL_FREE_PCT   2
+#define MEMINFO_PHYSICAL_TOTAL      3
+#define MEMINFO_PHYSICAL_USED       4
+#define MEMINFO_PHYSICAL_USED_PCT   5
+#define MEMINFO_VIRTUAL_FREE        6
+#define MEMINFO_VIRTUAL_FREE_PCT    7
+#define MEMINFO_VIRTUAL_TOTAL       8
+#define MEMINFO_VIRTUAL_USED        9
+#define MEMINFO_VIRTUAL_USED_PCT    10
+
+/**
+ * Request types for H_FileSystemInfo
+ */
+#define FSINFO_FREE_BYTES      1
+#define FSINFO_USED_BYTES      2
+#define FSINFO_TOTAL_BYTES     3
+#define FSINFO_FREE_SPACE_PCT  4
+#define FSINFO_USED_SPACE_PCT  5
 
 /**
  * Window list

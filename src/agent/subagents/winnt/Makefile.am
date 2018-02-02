@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	cpu.cpp \
+	fs.cpp \
 	main.cpp \
 	net.cpp \
 	procinfo.cpp \

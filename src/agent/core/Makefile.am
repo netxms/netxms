@@ -35,7 +35,7 @@ EXTRA_DIST = \
     nxagentd.vcxproj nxagentd.vcxproj.filters \
     messages.mc messages.h messages.c \
     nxagentd.rc \
-    win32.cpp resource.h \
+    resource.h \
     nxagentd.h \
     hddinfo.cpp \
     service.cpp \
