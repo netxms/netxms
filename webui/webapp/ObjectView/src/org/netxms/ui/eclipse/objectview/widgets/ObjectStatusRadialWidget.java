@@ -19,8 +19,11 @@
 package org.netxms.ui.eclipse.objectview.widgets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -29,6 +32,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -50,19 +54,22 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	private int centerX;
 	private int centerY;
 	private ColorCache cCache;
-	private Set<Long> objects;
+	private Map<Long, ObjectData> objects;
 	
-	private List<ObjLocation> objectMap = new ArrayList<ObjLocation>();
+	private List<ObjectPosition> objectMap = new ArrayList<ObjectPosition>();
 	
 	/**
 	 * @param parent
 	 * @param aceptedlist 
 	 */
-	public ObjectStatusRadialWidget(Composite parent, AbstractObject rootObject, Set<Long> aceptedlist)
+	public ObjectStatusRadialWidget(Composite parent, AbstractObject rootObject, Collection<AbstractObject> objects)
 	{
 		super(parent, SWT.FILL);
 		this.rootObject = rootObject;
-		this.objects = aceptedlist;
+		
+		this.objects = new HashMap<Long, ObjectData>();
+		for(AbstractObject o : objects)
+		   this.objects.put(o.getObjectId(), new ObjectData(o));
       
 		cCache = new ColorCache(this);
 
@@ -94,7 +101,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	      }
 	      else
 	      {
-	         if (objects != null && !objects.contains(obj.getObjectId()))            
+	         if (objects != null && !objects.containsKey(obj.getObjectId()))            
 	            continue;
 	         
             currObjsize = leafObjectSize;
@@ -112,7 +119,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          e.gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
                diameter * lvl, diameter * lvl, Math.round(degree), Math.round(currObjsize) - 1 + compensation); 
         
-         objectMap.add(new ObjLocation(degree, degree + currObjsize, lvl, obj));
+         objectMap.add(new ObjectPosition(degree, degree + currObjsize, lvl, obj));
 	      
 	      Transform oldTransform = new Transform(e.gc.getDevice());  
 	      e.gc.getTransform(oldTransform);
@@ -197,7 +204,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
             }
             else
             {
-               if(objects.contains(obj.getObjectId()))
+               if (objects.containsKey(obj.getObjectId()))
                   objcoutn++;
             }
          }
@@ -218,9 +225,9 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          objcoutn++;
       }
          
-      if(contFound == 0)
+      if (contFound == 0)
       {
-         if(maxLvl < lvl)
+         if (maxLvl < lvl)
             maxLvl = lvl;
       }
       
@@ -281,7 +288,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       e.gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(rootObject.getStatus()), cCache));
 		e.gc.drawText(text, rect.x+(rectSide/2) - l/2, rect.y+(rectSide/2)-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
-      objectMap.add(new ObjLocation(0, 360, 1, rootObject));           
+      objectMap.add(new ObjectPosition(0, 360, 1, rootObject));           
 	}
 
 	/* (non-Javadoc)
@@ -299,10 +306,12 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	 * @param aceptedlist 
 	 * @param node
 	 */
-	protected void updateObject(AbstractObject rootObject, Set<Long> objects)
+	protected void updateObjects(AbstractObject rootObject, Collection<AbstractObject> objects)
 	{
 		this.rootObject = rootObject;
-		this.objects = objects;
+		this.objects.clear();
+      for(AbstractObject o : objects)
+         this.objects.put(o.getObjectId(), new ObjectData(o));
 		redraw();
 	}
 	
@@ -314,8 +323,22 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	 */
 	protected boolean containsObject(long id)
 	{
-	   return (rootObject.getObjectId() == id) || objects.contains(id);
+	   return (rootObject.getObjectId() == id) || objects.containsKey(id);
 	}
+
+   /**
+    * Check if given object is displayed and is changed
+    * 
+    * @param id object id
+    * @return true if given object is displayed
+    */
+   protected boolean containsChangedObject(AbstractObject object)
+   {
+      if (rootObject.getObjectId() == object.getObjectId())
+         return true;
+      ObjectData d = objects.get(object.getObjectId());
+      return (d != null) ? d.isChanged(object) : false;
+   }
 
    /**
     * Get object at given point within widget
@@ -334,13 +357,13 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       if(clickDegree < 0)
          clickDegree = 360 + clickDegree;
       
-      ObjLocation curr = new ObjLocation((float)clickDegree, (float)clickDegree, clickLvl, null);
+      ObjectPosition curr = new ObjectPosition((float)clickDegree, (float)clickDegree, clickLvl, null);
       
-      for(ObjLocation loc : objectMap)
+      for(ObjectPosition p : objectMap)
       {
-         if(loc.equals(curr))
+         if (p.equals(curr))
          {
-            object = loc.getObject();
+            object = p.getObject();
             break;
          }
       }
@@ -349,16 +372,16 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    }
    
    /**
-    * Object location information
+    * Object position information
     */
-   class ObjLocation
+   class ObjectPosition
    {
       float startDegree;
       float endDegree;
       int lvl;
       AbstractObject obj;
       
-      public ObjLocation(float startDegree, float endDegree, int lvl, AbstractObject obj)
+      public ObjectPosition(float startDegree, float endDegree, int lvl, AbstractObject obj)
       {
          this.startDegree = startDegree;
          this.endDegree = endDegree;
@@ -377,11 +400,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       @Override
       public boolean equals(Object arg0)
       {
-         if(((ObjLocation)arg0).lvl != lvl)
+         if(((ObjectPosition)arg0).lvl != lvl)
          {
             return false;
          }
-         if(((ObjLocation)arg0).startDegree >= startDegree && ((ObjLocation)arg0).endDegree <= endDegree)
+         if(((ObjectPosition)arg0).startDegree >= startDegree && ((ObjectPosition)arg0).endDegree <= endDegree)
          {
             return true;
          }
@@ -395,6 +418,29 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       public int hashCode()
       {
          return Float.floatToIntBits(startDegree)+lvl;
+      }
+   }
+   
+   /**
+    * Object data shown on status map
+    */
+   private class ObjectData
+   {
+      private String name;
+      private ObjectStatus status;
+      private long[] children;
+      
+      public ObjectData(AbstractObject object)
+      {
+         name = object.getObjectName();
+         status = object.getStatus();
+         children = AbstractObjectStatusMap.isContainerObject(object) ? object.getChildIdList() : null;
+      }
+      
+      public boolean isChanged(AbstractObject object)
+      {
+         return (status != object.getStatus()) || !name.equals(object.getObjectName()) ||
+               (AbstractObjectStatusMap.isContainerObject(object) && !Arrays.equals(children, object.getChildIdList()));
       }
    }
 }

@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -56,15 +58,15 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
     * @param filterByTest
     * @return
     */
-   protected Set<Long> createFilteredList(AbstractObject root)
+   protected Collection<AbstractObject> createFilteredList(AbstractObject root)
    {
-      Set<Long> aceptedlist = new HashSet<Long>();
+      Map<Long, AbstractObject> acceptedlist = new HashMap<Long, AbstractObject>();
       for(AbstractObject obj : root.getAllChilds(-1))
       {
          if ((isContainerObject(obj) || isLeafObject(obj)) && isAcceptedByFilter(obj))
-            aceptedlist.add(obj.getObjectId());
+            acceptedlist.put(obj.getObjectId(), obj);
       }
-      return aceptedlist;
+      return acceptedlist.values();
    }
 	
    /* (non-Javadoc)
@@ -74,7 +76,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 	public void refresh()
 	{
       AbstractObject root = session.findObjectById(rootObjectId);
-      Set<Long> objects = createFilteredList(root);
+      Collection<AbstractObject> objects = createFilteredList(root);
       
       if (widget == null)
       {
@@ -164,7 +166,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
       }
       else
       {
-         widget.updateObject(root, objects);
+         widget.updateObjects(root, objects);
          widget.redraw();
       }
 		
@@ -183,7 +185,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (widget.containsObject(object.getObjectId()) || isAcceptedByFilter(object))
+      if (widget.containsChangedObject(object) || (object.isChildOf(rootObjectId) && isAcceptedByFilter(object)))
          refreshTimer.execute();
    }
 
