@@ -38,7 +38,6 @@ static bool H_UpgradeFromV16()
 static bool H_UpgradeFromV15()
 {
    CHK_EXEC(CreateConfigParam(_T("DataCollection.ScriptErrorReportInterval"), _T("86400"), _T("Minimal interval between reporting errors in data collection related script."), NULL, 'I', true, false, false, false));
-   CHK_EXEC(SetSchemaLevelForMajorVersion(22, 16));
    CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
 }
