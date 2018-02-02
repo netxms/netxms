@@ -24,6 +24,8 @@
 
 DECLARE_DRIVER_HEADER("MARIADB")
 
+#define DEBUG_TAG _T("db.drv.mariadb")
+
 /**
  * Update error message from given source
  */
@@ -192,7 +194,12 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
-	return mysql_library_init(0, NULL, NULL) == 0;
+	if (mysql_library_init(0, NULL, NULL) != 0)
+	   return false;
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("MariaDB client library version %hs"), mysql_get_client_info());
+   if (mysql_get_client_version() < 100209)  // client before 10.2.9, warn about CONC-281
+      nxlog_debug_tag(DEBUG_TAG, 0, _T("This version of MariaDB client library can be affected by bug CONC-281, upgrade is recommended"));
+	return true;
 }
 
 /**
@@ -206,12 +213,12 @@ extern "C" void __EXPORT DrvUnload()
 /**
  * Connect to database
  */
-extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *szLogin, const char *szPassword,
-															 const char *szDatabase, const char *schema, WCHAR *errorText)
+extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password,
+                                                const char *database, const char *schema, WCHAR *errorText)
 {
 	MYSQL *pMySQL;
 	MARIADB_CONN *pConn;
-	const char *pHost = szHost;
+	const char *pHost = host;
 	const char *pSocket = NULL;
 	
 	pMySQL = mysql_init(NULL);
@@ -221,7 +228,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *
 		return NULL;
 	}
 
-	pSocket = strstr(szHost, "socket:");
+	pSocket = strstr(host, "socket:");
 	if (pSocket != NULL)
 	{
 		pHost = NULL;
@@ -231,9 +238,9 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *
 	if (!mysql_real_connect(
 		pMySQL, // MYSQL *
 		pHost, // host
-		szLogin[0] == 0 ? NULL : szLogin, // user
-		(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
-		szDatabase, // DB Name
+		login[0] == 0 ? NULL : login, // user
+		(password[0] == 0 || login[0] == 0) ? NULL : password, // pass
+		database, // DB Name
 		0, // use default port
 		pSocket, // char * - unix socket
 		0 // flags
@@ -250,7 +257,8 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *
 
    // Switch to UTF-8 encoding
    mysql_set_character_set(pMySQL, "utf8");
-	
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(pMySQL));
 	return (DBDRV_CONNECTION)pConn;
 }
 
@@ -913,6 +921,12 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
             }
 
             mysql_stmt_bind_result(hStmt->statement, result->bindings);
+
+            /* workaround for MariaDB C Connector bug CONC-281 */
+            if (mysql_get_client_version() < 100209)  // for any client before 10.2.9
+            {
+               mysql_stmt_store_result(hStmt->statement);
+            }
             *pdwError = DBERR_SUCCESS;
          }
          else

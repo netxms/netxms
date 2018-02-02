@@ -7,9 +7,11 @@ crypto.*	Encryption functions
 crypto.cert	Certificate related messages
 
 db.*		Database related
-db.query	SQL query trace
+db.drv.*	Database drivers related
+db.drv.mariadb	MariaDB driver
 db.conn		DB connections
 db.cpool	DB connection pool
+db.query	SQL query trace
 
 housekeeper	Housekeeper messages
 
