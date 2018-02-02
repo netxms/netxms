@@ -62,14 +62,7 @@ LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, A
 LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 #ifdef _WIN32
-LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_DiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
-LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
-LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 #endif
 
 /**
@@ -285,38 +278,13 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 {
 #ifdef _WIN32
-   { _T("Disk.Free(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.Total(*)"), H_DiskInfo, (TCHAR *)DISKINFO_TOTAL_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.Used(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("Disk.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
-   { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_FS_FREE },
-   { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
-   { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISKINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
-   { _T("FileSystem.Type(*)"), H_FileSystemType, NULL, DCI_DT_STRING, DCIDESC_FS_TYPE },
-   { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
-   { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISKINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
    { _T("PhysicalDisk.Firmware(*)"), H_PhysicalDiskInfo, _T("F"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_FIRMWARE },
    { _T("PhysicalDisk.Model(*)"), H_PhysicalDiskInfo, _T("M"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_MODEL },
    { _T("PhysicalDisk.SerialNumber(*)"), H_PhysicalDiskInfo, _T("N"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SERIALNUMBER },
    { _T("PhysicalDisk.SmartAttr(*)"), H_PhysicalDiskInfo, _T("A"), DCI_DT_STRING, DCIDESC_PHYSICALDISK_SMARTATTR },
    { _T("PhysicalDisk.SmartStatus(*)"), H_PhysicalDiskInfo, _T("S"), DCI_DT_INT, DCIDESC_PHYSICALDISK_SMARTSTATUS },
    { _T("PhysicalDisk.Temperature(*)"), H_PhysicalDiskInfo, _T("T"), DCI_DT_INT, DCIDESC_PHYSICALDISK_TEMPERATURE },
-   { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.IsVirtual"), H_SystemIsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
-   { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
-   { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
-   { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
-   { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
-   { _T("System.Memory.Physical.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-   { _T("System.Memory.Physical.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
-   { _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
-   { _T("System.Memory.Virtual.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
-   { _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
-   { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
-   { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
-   { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
-   { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 #endif
 
 #if HAVE_GET_CPUID
@@ -393,9 +361,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
  */
 static NETXMS_SUBAGENT_LIST m_stdLists[] =
 {
-#ifdef _WIN32
-   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
-#endif
    { _T("Agent.ActionList"), H_ActionList, NULL },
    { _T("Agent.SubAgentList"), H_SubAgentList, NULL },
    { _T("Agent.SupportedLists"), H_EnumList, NULL },
@@ -411,10 +376,7 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
    { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SUBAGENTS },
-   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
-#ifdef _WIN32
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
-#endif
+   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS }
 };
 
 /**

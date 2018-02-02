@@ -460,3 +460,122 @@ LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractC
    RegCloseKey(hKey);
 	return rc;
 }
+
+/**
+ * Handler for System.Uname parameter
+ */
+LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1];
+   DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+   GetComputerName(computerName, &dwSize);
+
+   OSVERSIONINFO versionInfo;
+   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   GetVersionEx(&versionInfo);
+
+   TCHAR osVersion[256];
+   if (!GetWindowsVersionString(osVersion, 256))
+   {
+      switch (versionInfo.dwPlatformId)
+      {
+         case VER_PLATFORM_WIN32_WINDOWS:
+            _sntprintf(osVersion, 256, _T("Windows %s-%s"), versionInfo.dwMinorVersion == 0 ? _T("95") :
+               (versionInfo.dwMinorVersion == 10 ? _T("98") :
+               (versionInfo.dwMinorVersion == 90 ? _T("Me") : _T("Unknown"))), versionInfo.szCSDVersion);
+            break;
+         case VER_PLATFORM_WIN32_NT:
+            _sntprintf(osVersion, 256, _T("Windows NT %d.%d %s"), versionInfo.dwMajorVersion,
+               versionInfo.dwMinorVersion, versionInfo.szCSDVersion);
+            break;
+         default:
+            _tcscpy(osVersion, _T("Windows [Unknown Version]"));
+            break;
+         }
+   }
+
+   const TCHAR *cpuType;
+   SYSTEM_INFO sysInfo;
+   GetSystemInfo(&sysInfo);
+   switch (sysInfo.wProcessorArchitecture)
+   {
+      case PROCESSOR_ARCHITECTURE_INTEL:
+         cpuType = _T("Intel IA-32");
+         break;
+      case PROCESSOR_ARCHITECTURE_MIPS:
+         cpuType = _T("MIPS");
+         break;
+      case PROCESSOR_ARCHITECTURE_ALPHA:
+         cpuType = _T("Alpha");
+         break;
+      case PROCESSOR_ARCHITECTURE_PPC:
+         cpuType = _T("PowerPC");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA64:
+         cpuType = _T("Intel IA-64");
+         break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+         cpuType = _T("IA-32 on IA-64");
+         break;
+      case PROCESSOR_ARCHITECTURE_AMD64:
+         cpuType = _T("AMD-64");
+         break;
+      default:
+         cpuType = _T("unknown");
+         break;
+   }
+
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("Windows %s %d.%d.%d %s %s"), computerName, versionInfo.dwMajorVersion,
+      versionInfo.dwMinorVersion, versionInfo.dwBuildNumber, osVersion, cpuType);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.Memory.XXX parameters
+ */
+LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   MEMORYSTATUSEX mse;
+
+   mse.dwLength = sizeof(MEMORYSTATUSEX);
+   if (!GlobalMemoryStatusEx(&mse))
+      return SYSINFO_RC_ERROR;
+
+   switch (CAST_FROM_POINTER(arg, int))
+   {
+      case MEMINFO_PHYSICAL_FREE:
+         ret_uint64(value, mse.ullAvailPhys);
+         break;
+      case MEMINFO_PHYSICAL_FREE_PCT:
+         ret_double(value, ((double)mse.ullAvailPhys * 100.0 / mse.ullTotalPhys), 2);
+         break;
+      case MEMINFO_PHYSICAL_TOTAL:
+         ret_uint64(value, mse.ullTotalPhys);
+         break;
+      case MEMINFO_PHYSICAL_USED:
+         ret_uint64(value, mse.ullTotalPhys - mse.ullAvailPhys);
+         break;
+      case MEMINFO_PHYSICAL_USED_PCT:
+         ret_double(value, (((double)mse.ullTotalPhys - mse.ullAvailPhys) * 100.0 / mse.ullTotalPhys), 2);
+         break;
+      case MEMINFO_VIRTUAL_FREE:
+         ret_uint64(value, mse.ullAvailPageFile);
+         break;
+      case MEMINFO_VIRTUAL_FREE_PCT:
+         ret_double(value, ((double)mse.ullAvailPageFile * 100.0 / mse.ullTotalPageFile), 2);
+         break;
+      case MEMINFO_VIRTUAL_TOTAL:
+         ret_uint64(value, mse.ullTotalPageFile);
+         break;
+      case MEMINFO_VIRTUAL_USED:
+         ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile);
+         break;
+      case MEMINFO_VIRTUAL_USED_PCT:
+         ret_double(value, (((double)mse.ullTotalPageFile - mse.ullAvailPageFile) * 100.0 / mse.ullTotalPageFile), 2);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}

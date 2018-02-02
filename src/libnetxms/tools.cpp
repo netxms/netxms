@@ -1453,7 +1453,7 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 			switch(ver.dwMinorVersion)
 			{
 				case 0:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("10") : _T("Server"));
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("10") : _T("Server 2016"));
 					break;
 				default:
 					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);

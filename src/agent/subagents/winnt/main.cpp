@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,14 +32,20 @@ LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Ab
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuContextSwitches(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CpuCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_FileSystemInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HandleCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue, AbstractCommSession *session);
+LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -52,6 +58,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
+LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -183,6 +190,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Agent.Desktop"), H_AgentDesktop, NULL, DCI_DT_STRING, _T("Desktop associated with agent process") },
 
+   { _T("Disk.Free(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Total(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_TOTAL_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.Used(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Disk.UsedPerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+
+   { _T("FileSystem.Free(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_BYTES, DCI_DT_UINT64, DCIDESC_FS_FREE },
+   { _T("FileSystem.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
+   { _T("FileSystem.Total(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_TOTAL_BYTES, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.Type(*)"), H_FileSystemType, NULL, DCI_DT_STRING, DCIDESC_FS_TYPE },
+   { _T("FileSystem.Used(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
+   { _T("FileSystem.UsedPerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+
    { _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
    { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
    { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
@@ -231,6 +251,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.Interrupts(*)"), H_CpuInterrupts, _T("C"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS_EX },
 	{ _T("System.CPU.ContextSwitches"), H_CpuContextSwitches, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_CONTEXT_SWITCHES },
    
+   { _T("System.CPU.Count"), H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+
    { _T("System.CPU.CurrentUsage"), H_CpuUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR },
    { _T("System.CPU.CurrentUsage.Idle"), H_CpuUsage, _T("T0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IDLE },
    { _T("System.CPU.CurrentUsage.Irq"), H_CpuUsage, _T("T0q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IRQ },
@@ -280,9 +302,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage15.User(*)"), H_CpuUsage, _T("C3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
 	
    { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
-	{ _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+
+   { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
+   { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
+   { _T("System.Memory.Physical.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+   { _T("System.Memory.Physical.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
+   { _T("System.Memory.Physical.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+   { _T("System.Memory.Physical.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+   { _T("System.Memory.Physical.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED_PCT },
+   { _T("System.Memory.Virtual.Free"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+   { _T("System.Memory.Virtual.FreePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_FREE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE_PCT },
+   { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+   { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+   { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+
+   { _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
 	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
+   { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { _T("System.Update.LastDetectTime"), H_SysUpdateTime, _T("Detect"), DCI_DT_INT64, _T("System update: last detect time") },
    { _T("System.Update.LastDownloadTime"), H_SysUpdateTime, _T("Download"), DCI_DT_INT64, _T("System update: last download time") },
    { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") }
@@ -293,6 +330,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
+   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
    { _T("Net.ArpCache"), H_ArpCache, NULL },
    { _T("Net.InterfaceList"), H_InterfaceList, NULL },
    { _T("Net.InterfaceNames"), H_InterfaceNames, NULL },
@@ -309,7 +347,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-	{ _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
 	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
 	{ _T("System.Services"), H_ServiceTable, NULL, _T("Name"), _T("Services") }
 };
