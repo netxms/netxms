@@ -113,7 +113,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 			   char *pa = strrchr(curr, ':');
 			   if (pa != NULL)
 			   {
-			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || (strstr(arch, pa) != NULL))
+			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || !strcmp(pa, ":(none)") || (strstr(arch, pa) != NULL))
 			         *pa = 0;
 			   }
 			}
