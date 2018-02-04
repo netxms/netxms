@@ -331,6 +331,17 @@ public:
 };
 
 /**
+ * Change code of software package
+ */
+enum SoftwarePackageChangeCode
+{
+   SWPKG_NONE = 0,
+   SWPKG_ADDED = 1,
+   SWPKG_UPDATED = 2,
+   SWPKG_REMOVED = 3
+};
+
+/**
  * Software package information
  */
 class SoftwarePackage
@@ -342,6 +353,7 @@ private:
 	time_t m_date;
 	TCHAR *m_url;
 	TCHAR *m_description;
+	SoftwarePackageChangeCode m_changeCode;
 
 	SoftwarePackage();
 
@@ -352,6 +364,9 @@ public:
 
 	const TCHAR *getName() const { return m_name; }
 	const TCHAR *getVersion() const { return m_version; }
+	SoftwarePackageChangeCode getChangeCode() const { return m_changeCode; }
+
+	void setChangeCode(SoftwarePackageChangeCode c) { m_changeCode = c; }
 
 	static SoftwarePackage *createFromTableRow(const Table *table, int row);
 };

@@ -79,6 +79,7 @@ SoftwarePackage::SoftwarePackage()
 	m_date = 0;
 	m_url = NULL;
 	m_description = NULL;
+	m_changeCode = SWPKG_NONE;
 }
 
 /**

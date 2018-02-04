@@ -2274,6 +2274,17 @@ void Node::updatePrimaryIpAddr()
 }
 
 /**
+ * Comparator for package names and versions
+ */
+static int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+{
+   int rc = _tcscmp((*p1)->getName(), (*p2)->getName());
+   if (rc == 0)
+      rc = _tcscmp((*p1)->getVersion(), (*p2)->getVersion());
+   return rc;
+}
+
+/**
  * Comparator for package names
  */
 static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
@@ -2282,10 +2293,74 @@ static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePacka
 }
 
 /**
+ * Calculate package changes
+ */
+static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackage> *oldSet, ObjectArray<SoftwarePackage> *newSet)
+{
+   ObjectArray<SoftwarePackage> *changes = new ObjectArray<SoftwarePackage>(32, 32, false);
+   for(int i = 0; i < oldSet->size(); i++)
+   {
+      SoftwarePackage *p = oldSet->get(i);
+      SoftwarePackage *np = (SoftwarePackage *)newSet->find(p, PackageNameComparator);
+      if (np == NULL)
+      {
+         p->setChangeCode(SWPKG_REMOVED);
+         changes->add(p);
+         continue;
+      }
+
+      if (!_tcscmp(p->getVersion(), np->getVersion()))
+         continue;
+
+      if (newSet->find(p, PackageNameVersionComparator) != NULL)
+         continue;
+
+      // multiple versions of same package could be installed
+      // (example is gpg-pubkey package on RedHat)
+      // if this is the case consider all version changes
+      // to be either install or remove
+      SoftwarePackage *prev = oldSet->get(i - 1);
+      SoftwarePackage *next = oldSet->get(i + 1);
+      bool multipleVersions =
+               ((prev != NULL) && !_tcscmp(prev->getName(), p->getName())) ||
+               ((next != NULL) && !_tcscmp(next->getName(), p->getName()));
+
+      if (multipleVersions)
+      {
+         p->setChangeCode(SWPKG_REMOVED);
+      }
+      else
+      {
+         p->setChangeCode(SWPKG_UPDATED);
+         np->setChangeCode(SWPKG_UPDATED);
+         changes->add(np);
+      }
+      changes->add(p);
+   }
+
+   // Check for new packages
+   for(int i = 0; i < newSet->size(); i++)
+   {
+      SoftwarePackage *p = newSet->get(i);
+      if (p->getChangeCode() == SWPKG_UPDATED)
+         continue;   // already marked as upgrade for some existig package
+      if (oldSet->find(p, PackageNameVersionComparator) != NULL)
+         continue;
+
+      p->setChangeCode(SWPKG_ADDED);
+      changes->add(p);
+   }
+
+   return changes;
+}
+
+/**
  * Update list of software packages for node
  */
 bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
 {
+   static const TCHAR *eventParamNames[] = { _T("name"), _T("version"), _T("previousVersion") };
+
    if (!(m_capabilities & NC_IS_NATIVE_AGENT))
       return false;
 
@@ -2306,60 +2381,44 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
       if (pkg != NULL)
          packages->add(pkg);
    }
-   packages->sort(PackageNameComparator);
+   packages->sort(PackageNameVersionComparator);
    delete table;
    sendPollerMsg(requestId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), packages->size());
 
    lockProperties();
    if (m_softwarePackages != NULL)
    {
-      // Check for removed and updated packages
-      for(int i = 0; i < m_softwarePackages->size(); i++)
+      ObjectArray<SoftwarePackage> *changes = CalculatePackageChanges(m_softwarePackages, packages);
+      for(int i = 0; i < changes->size(); i++)
       {
-         SoftwarePackage *p = m_softwarePackages->get(i);
-         SoftwarePackage *np = (SoftwarePackage *)packages->find(p, PackageNameComparator);
-         if (np != NULL)
+         SoftwarePackage *p = changes->get(i);
+         switch(p->getChangeCode())
          {
-            if (_tcscmp(p->getVersion(), np->getVersion()))
-            {
-               nxlog_debug(5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), p->getVersion(), np->getVersion());
-               sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), p->getVersion(), np->getVersion());
-
-               static const TCHAR *names[] = { _T("name"), _T("version"), _T("previousVersion") };
-               PostEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", names, p->getName(), np->getVersion(), p->getVersion());
-            }
-         }
-         else
-         {
-            nxlog_debug(5, _T("ConfPoll(%s): package %s removed (last installed version was %s)"), m_name, p->getName(), p->getVersion());
-            sendPollerMsg(requestId, _T("   Package %s removed (last installed version was %s)\r\n"), p->getName(), p->getVersion());
-
-            static const TCHAR *names[] = { _T("name"), _T("version") };
-            PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", names, p->getName(), p->getVersion());
+            case SWPKG_ADDED:
+               nxlog_debug(5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
+               sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
+               PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               break;
+            case SWPKG_REMOVED:
+               nxlog_debug(5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
+               sendPollerMsg(requestId, _T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
+               PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               break;
+            case SWPKG_UPDATED:
+               SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
+               nxlog_debug(5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
+               sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
+               PostEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
+               break;
          }
       }
-
-      // Check for new packages
-      for(int i = 0; i < packages->size(); i++)
-      {
-         SoftwarePackage *p = packages->get(i);
-         if (m_softwarePackages->find(p, PackageNameComparator) == NULL)
-         {
-            nxlog_debug(5, _T("ConfPoll(%s): new package %s (version %s)"), m_name, p->getName(), p->getVersion());
-            sendPollerMsg(requestId, _T("   New package %s (version %s)\r\n"), p->getName(), p->getVersion());
-
-            static const TCHAR *names[] = { _T("name"), _T("version") };
-            PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", names, p->getName(), p->getVersion());
-         }
-      }
-
+      delete changes;
       delete m_softwarePackages;
    }
    m_softwarePackages = packages;
    unlockProperties();
    return true;
 }
-
 
 /**
  * Perform configuration poll on node
