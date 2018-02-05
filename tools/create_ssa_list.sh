@@ -12,18 +12,20 @@ extern "C"
 EOT
 
 for sa in $LIST; do
-   echo "   BOOL NxSubAgentRegister_$sa(NETXMS_SUBAGENT_INFO **, Config *);"
+   echo "   bool NxSubAgentRegister_$sa(NETXMS_SUBAGENT_INFO **, Config *);"
 done
 
 cat << EOT
 }
+
+bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *));
 
 void InitStaticSubagents()
 {
 EOT
 
 for sa in $LIST; do
-   echo "   InitSubAgent(NULL, \"static:$sa\", NxSubAgentRegister_$sa, \"NxSubAgentRegister_$sa\");"
+   echo "   InitSubAgent(NULL, \"static:$sa\", NxSubAgentRegister_$sa);"
 done
 
 echo "}"

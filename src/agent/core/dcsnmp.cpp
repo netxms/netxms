@@ -184,7 +184,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 			switch(interpretRawValue)
 			{
 				case SNMP_RAWTYPE_INT32:
-					_sntprintf(value, MAX_RESULT_LENGTH, _T("%d"), ntohl(*((LONG *)rawValue)));
+					_sntprintf(value, MAX_RESULT_LENGTH, _T("%d"), ntohl(*((INT32 *)rawValue)));
 					break;
 				case SNMP_RAWTYPE_UINT32:
 					_sntprintf(value, MAX_RESULT_LENGTH, _T("%u"), ntohl(*((UINT32 *)rawValue)));
@@ -193,7 +193,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 					_sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
 					break;
 				case SNMP_RAWTYPE_UINT64:
-					_sntprintf(value, MAX_RESULT_LENGTH, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+					_sntprintf(value, MAX_RESULT_LENGTH, UINT64_FMT, ntohq(*((UINT64 *)rawValue)));
 					break;
 				case SNMP_RAWTYPE_DOUBLE:
 					_sntprintf(value, MAX_RESULT_LENGTH, _T("%f"), ntohd(*((double *)rawValue)));
