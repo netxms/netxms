@@ -30,7 +30,7 @@ static StructArray<SUBAGENT> s_subAgents(8, 8);
 /**
  * Initialize subagent
  */
-static bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *))
+bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *))
 {
    bool success = false;
 
