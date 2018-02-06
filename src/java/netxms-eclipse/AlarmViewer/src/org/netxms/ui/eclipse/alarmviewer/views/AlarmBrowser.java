@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -63,9 +64,22 @@ public class AlarmBrowser extends ViewPart
 		
 		createActions();
 		contributeToActionBars();
+		activateContext();
 		
 		getSite().setSelectionProvider(alarmView.getSelectionProvider());
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.alarmviewer.context.AlarmBrowser"); //$NON-NLS-1$
+      }
+   }
 
 	/**
 	 * Create actions
@@ -102,6 +116,7 @@ public class AlarmBrowser extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
       manager.add(alarmView.getActionShowColors());
+      manager.add(alarmView.getActionShowFilter());
       manager.add(new Separator());
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
@@ -117,6 +132,7 @@ public class AlarmBrowser extends ViewPart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionExportToCsv);
+      manager.add(alarmView.getActionShowFilter());
 		manager.add(actionRefresh);
 	}
 

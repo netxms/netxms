@@ -49,6 +49,11 @@ import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -87,6 +92,7 @@ import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -116,6 +122,7 @@ public class AlarmList extends CompositeWithMessageBar
 	private SortableTableViewer alarmViewer;
    private AlarmListLabelProvider labelProvider;
 	private AlarmListFilter alarmFilter;
+   private FilterText filterText;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private VisibilityValidator visibilityValidator;
@@ -131,10 +138,12 @@ public class AlarmList extends CompositeWithMessageBar
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
    private Action actionExportToCsv;
+   private Action actionShowFilter;
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
    private Action actionShowColor;
+   private boolean initShowfilter;
 
    /**
     * Create alarm list widget
@@ -150,6 +159,26 @@ public class AlarmList extends CompositeWithMessageBar
 		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;
 		this.visibilityValidator = visibilityValidator;
+
+      getContent().setLayout(new FormLayout());
+		
+      // Create filter area
+      filterText = new FilterText(getContent(), SWT.NONE, null, true);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(false);
+         }
+      });
 		
 		// Setup table columns
 		final String[] names = { 
@@ -177,6 +206,7 @@ public class AlarmList extends CompositeWithMessageBar
       alarmViewer.setContentProvider(new ArrayContentProvider());
       alarmViewer.setComparator(new AlarmComparator());
       alarmFilter = new AlarmListFilter();
+		alarmViewer.addFilter(alarmFilter);
       alarmViewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -191,6 +221,10 @@ public class AlarmList extends CompositeWithMessageBar
             actionShowAlarmDetails.run();
          }
       });
+
+
+      // Get filter settings
+      initShowfilter = Activator.getDefault().getPreferenceStore().getBoolean("INIT_SHOW_FILTER");
 
       createActions();
       createPopupMenu();
@@ -307,8 +341,29 @@ public class AlarmList extends CompositeWithMessageBar
             if ((session != null) && (clientListener != null))
                session.removeListener(clientListener);
             pushSession.stop();
+            ps.setDefault("INIT_SHOW_FILTER", initShowfilter);
          }
       });
+      
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      alarmViewer.getControl().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+
+      // Set initial focus to filter input line
+      if (initShowfilter)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly*/
 	}
 
    /**
@@ -441,6 +496,17 @@ public class AlarmList extends CompositeWithMessageBar
          }
       };
       actionShowColor.setChecked(labelProvider.isShowColor());
+      
+      actionShowFilter = new Action("Show filter") {
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(initShowfilter);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list"); //$NON-NLS-1$
 	}
 
 	/**
@@ -710,7 +776,7 @@ public class AlarmList extends CompositeWithMessageBar
       filteredAlarmList.clear();
       for(Alarm alarm : alarmList.values())
       {
-         if (alarmFilter.select(alarm))
+         if (alarmFilter.filter(alarm))
          {
             filteredAlarmList.add(alarm);
          }
@@ -1077,5 +1143,71 @@ public class AlarmList extends CompositeWithMessageBar
       actionShowColor.setChecked(show);
       alarmViewer.refresh();
       Activator.getDefault().getPreferenceStore().setValue("SHOW_ALARM_STATUS_COLORS", show);
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      alarmFilter.setFilterString(text);
+      alarmViewer.refresh(false);
+   }
+   
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      initShowfilter = enable;
+      filterText.setVisible(initShowfilter);
+      FormData fd = (FormData)alarmViewer.getControl().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      getContent().layout();
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+   
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+   
+   /**
+    * @return action to show filter
+    */
+   public Action getActionShowFilter()
+   {
+      return actionShowFilter;
+   }
+   
+   /**
+    * Set action to be executed when user press "Close" button in object filter.
+    * Default implementation will hide filter area without notifying parent.
+    * 
+    * @param action
+    */
+   public void setFilterCloseAction(Action action)
+   {
+      filterText.setCloseAction(action);
+   }
+   
+   /**
+    * @return true if filter is enabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return initShowfilter;
    }
 }

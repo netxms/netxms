@@ -18,10 +18,16 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.State;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
@@ -38,6 +44,7 @@ public class AlarmTab extends ObjectTab
 {
 	private AlarmList alarmList;
 	private IPropertyChangeListener propertyChangeListener;
+	private boolean initShowFilter = true;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -45,6 +52,9 @@ public class AlarmTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = settings.getBoolean("AlarmTab.showFilter");
+      
       alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix(), new VisibilityValidator() {
          @Override
          public boolean isVisible()
@@ -52,6 +62,15 @@ public class AlarmTab extends ObjectTab
             return isActive();
          }
       });
+      
+      alarmList.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            settings.put("AlarmTab.showFilter", alarmList.isFilterEnabled());
+         }
+      });
+
       // Force update of "show colors" menu item in object tabbed view 
       // when settings changes in any alarm viewer
       propertyChangeListener = new IPropertyChangeListener() {
@@ -66,6 +85,21 @@ public class AlarmTab extends ObjectTab
          }
       };
       Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangeListener);
+      
+      alarmList.setFilterCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            alarmList.enableFilter(false);
+            ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+            Command command = service.getCommand("org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list"); //$NON-NLS-1$
+            State state = command.getState("org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list.state"); //$NON-NLS-1$
+            state.setValue(false);
+            service.refreshElements(command.getId(), null);
+         }
+      });
+      
+      alarmList.enableFilter(initShowFilter);
 	}
 	
 	/**
@@ -147,4 +181,12 @@ public class AlarmTab extends ObjectTab
 	{
 	   alarmList.setShowColors(show);
 	}
+	
+	  /**
+    * @param enabled
+    */
+   public void setFilterEnabled(boolean enabled)
+   {
+      alarmList.enableFilter(enabled);
+   }
 }
