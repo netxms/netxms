@@ -70,4 +70,52 @@ public:
    static NamedPipeListener *create(const TCHAR *name, NamedPipeRequestHandler reqHandler, void *userArg, const TCHAR *user = NULL);
 };
 
+/**
+ * Process executor
+ */
+class LIBNETXMS_EXPORTABLE ProcessExecutor
+{
+private:
+   UINT32 m_streamId;
+   THREAD m_outputThread;
+#ifdef _WIN32
+   HANDLE m_phandle;
+   HANDLE m_pipe;
+#else
+   pid_t m_pid;
+   int m_pipe[2];
+#endif
+   bool m_running;
+
+protected:
+   TCHAR *m_cmd;
+   bool m_sendOutput;
+
+#ifdef _WIN32
+   HANDLE getOutputPipe() { return m_pipe; }
+#else
+   int getOutputPipe() { return m_pipe[0]; }
+#endif
+
+   static THREAD_RESULT THREAD_CALL readOutput(void *arg);
+#ifndef _WIN32
+   static THREAD_RESULT THREAD_CALL waitForProcess(void *arg);
+#endif
+
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
+
+public:
+   ProcessExecutor(const TCHAR *cmd);
+   virtual ~ProcessExecutor();
+
+   UINT32 getStreamId() const { return m_streamId; }
+   const TCHAR *getCommand() const { return m_cmd; }
+
+   bool execute();
+   void stop();
+   bool isRunning();
+   bool waitForCompletion(UINT32 timeout);
+};
+
 #endif   /* _nxproc_h_ */

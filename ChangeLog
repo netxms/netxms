@@ -1,4 +1,12 @@
 *
+* 2.2.4
+*
+
+- Fixed issues:
+	NX-1332 (Execution timeout for external parameter provider)
+
+
+*
 * 2.2.3
 *
 

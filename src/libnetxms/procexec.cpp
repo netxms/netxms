@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,12 +16,17 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: command_exec.cpp
+** File: procexec.cpp
 **
 **/
 
-#include "libnxagent.h"
+#include "libnetxms.h"
+#include <nxproc.h>
 #include <signal.h>
+
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
 
 /**
  * Next free stream ID
@@ -86,9 +91,9 @@ static bool CreatePipeEx(LPHANDLE lpReadPipe, LPHANDLE lpWritePipe, bool asyncRe
 #endif /* _WIN32 */
 
 /**
- * Create new server command execution object from command
+ * Create new process executor object for given command line
  */
-CommandExec::CommandExec(const TCHAR *cmd)
+ProcessExecutor::ProcessExecutor(const TCHAR *cmd)
 {
 #ifdef _WIN32
    m_phandle = INVALID_HANDLE_VALUE;
@@ -102,31 +107,13 @@ CommandExec::CommandExec(const TCHAR *cmd)
    m_streamId = InterlockedIncrement(&s_nextStreamId);
    m_sendOutput = false;
    m_outputThread = INVALID_THREAD_HANDLE;
-}
-
-/**
- * Create new server execution object
- */
-CommandExec::CommandExec()
-{
-#ifdef _WIN32
-   m_phandle = INVALID_HANDLE_VALUE;
-   m_pipe = INVALID_HANDLE_VALUE;
-#else
-   m_pid = 0;
-   m_pipe[0] = -1;
-   m_pipe[1] = -1;
-#endif
-   m_cmd = NULL;
-   m_streamId = InterlockedIncrement(&s_nextStreamId);
-   m_sendOutput = false;
-   m_outputThread = INVALID_THREAD_HANDLE;
+   m_running = false;
 }
 
 /**
  * Destructor
  */
-CommandExec::~CommandExec()
+ProcessExecutor::~ProcessExecutor()
 {
    stop();
    ThreadJoin(m_outputThread);
@@ -139,7 +126,7 @@ CommandExec::~CommandExec()
 /**
  * Execute command
  */
-bool CommandExec::execute()
+bool ProcessExecutor::execute()
 {
    bool success = false;
 
@@ -154,7 +141,7 @@ bool CommandExec::execute()
    if (!CreatePipeEx(&stdoutRead, &stdoutWrite, true))
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("CommandExec::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       return false;
    }
 
@@ -165,7 +152,7 @@ bool CommandExec::execute()
    if (!CreatePipe(&stdinRead, &stdinWrite, &sa, 0))
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("CommandExec::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       CloseHandle(stdoutRead);
       CloseHandle(stdoutWrite);
       return false;
@@ -188,7 +175,7 @@ bool CommandExec::execute()
    cmdLine.append(m_cmd);
    if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
    {
-      nxlog_debug(5, _T("CommandExec::execute(): process \"%s\" started"), cmdLine.getBuffer());
+      nxlog_debug(5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.getBuffer());
 
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
@@ -209,7 +196,7 @@ bool CommandExec::execute()
    else
    {
       TCHAR buffer[1024];
-      nxlog_debug(4, _T("CommandExec::execute(): cannot create process \"%s\" (%s)"), 
+      nxlog_debug(4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (%s)"),
          cmdLine.getBuffer(), GetSystemErrorText(GetLastError(), buffer, 1024));
 
       CloseHandle(stdoutRead);
@@ -222,7 +209,7 @@ bool CommandExec::execute()
 
    if (pipe(m_pipe) == -1)
    {
-      nxlog_debug(4, _T("CommandExec::execute(): pipe() call failed (%s)"), _tcserror(errno));
+      nxlog_debug(4, _T("ProcessExecutor::execute(): pipe() call failed (%s)"), _tcserror(errno));
       return false;
    }
 
@@ -230,7 +217,7 @@ bool CommandExec::execute()
    switch(m_pid)
    {
       case -1: // error
-         nxlog_debug(4, _T("CommandExec::execute(): fork() call failed (%s)"), _tcserror(errno));
+         nxlog_debug(4, _T("ProcessExecutor::execute(): fork() call failed (%s)"), _tcserror(errno));
          close(m_pipe[0]);
          close(m_pipe[1]);
          break;
@@ -258,6 +245,7 @@ bool CommandExec::execute()
          else
          {
             close(m_pipe[0]);
+            m_outputThread = ThreadCreateEx(waitForProcess, 0, this);
          }
          success = true;
          break;
@@ -265,13 +253,28 @@ bool CommandExec::execute()
 
 #endif
 
+   m_running = success;
    return success;
 }
 
+#ifndef _WIN32
+
 /**
- * Start read output thread
+ * Process waiting thread
  */
-THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
+THREAD_RESULT THREAD_CALL ProcessExecutor::waitForProcess(void *arg)
+{
+   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, NULL, 0);
+   static_cast<ProcessExecutor*>(arg)->m_running = false;
+   return THREAD_OK;
+}
+
+#endif
+
+/**
+ * Output reading thread
+ */
+THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
 {
    char buffer[4096];
 
@@ -281,7 +284,7 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
 	memset(&ov, 0, sizeof(OVERLAPPED));
    ov.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-   HANDLE pipe = ((CommandExec *)pArg)->getOutputPipe();
+   HANDLE pipe = static_cast<ProcessExecutor*>(arg)->getOutputPipe();
    while(true)
    {
       if (!ReadFile(pipe, buffer, sizeof(buffer) - 1, NULL, &ov))
@@ -289,18 +292,18 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
          if (GetLastError() != ERROR_IO_PENDING)
          {
             TCHAR emsg[1024];
-            nxlog_debug(6, _T("CommandExec::readOutput(): stopped on ReadFile (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on ReadFile (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
             break;
          }
       }
 
       HANDLE handles[2];
       handles[0] = ov.hEvent;
-      handles[1] = ((CommandExec *)pArg)->m_phandle;
+      handles[1] = static_cast<ProcessExecutor*>(arg)->m_phandle;
       DWORD rc = WaitForMultipleObjects(2, handles, FALSE, 5000);
       if (rc == WAIT_OBJECT_0 + 1)
       {
-         nxlog_debug(6, _T("CommandExec::readOutput(): process termination detected"));
+         nxlog_debug(6, _T("ProcessExecutor::readOutput(): process termination detected"));
          break;   // Process terminated
       }
       if (rc == WAIT_OBJECT_0)
@@ -309,19 +312,19 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
          if (GetOverlappedResult(pipe, &ov, &bytes, TRUE))
          {
             buffer[bytes] = 0;
-            ((CommandExec *)pArg)->onOutput(buffer);
+            static_cast<ProcessExecutor*>(arg)->onOutput(buffer);
          }
          else
          {
             TCHAR emsg[1024];
-            nxlog_debug(6, _T("CommandExec::readOutput(): stopped on GetOverlappedResult (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
+            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on GetOverlappedResult (%s)"), GetSystemErrorText(GetLastError(), emsg, 1024));
             break;
          }
       }
       else
       {
          // Send empty output on timeout
-         ((CommandExec *)pArg)->onOutput("");
+         static_cast<ProcessExecutor*>(arg)->onOutput("");
       }
    }
 
@@ -330,7 +333,7 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
 
 #else /* UNIX implementation */
 
-   int pipe = ((CommandExec *)pArg)->getOutputPipe();
+   int pipe = static_cast<ProcessExecutor*>(arg)->getOutputPipe();
    fcntl(pipe, F_SETFD, fcntl(pipe, F_GETFD) | O_NONBLOCK);
 
    SocketPoller sp;
@@ -345,27 +348,27 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
          if (rc > 0)
          {
             buffer[rc] = 0;
-            ((CommandExec *)pArg)->onOutput(buffer);
+            static_cast<ProcessExecutor*>(arg)->onOutput(buffer);
          }
          else
          {
             if ((rc == -1) && ((errno == EAGAIN) || (errno == EINTR)))
             {
-               ((CommandExec *)pArg)->onOutput("");
+               static_cast<ProcessExecutor*>(arg)->onOutput("");
                continue;
             }
-            nxlog_debug(6, _T("CommandExec::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
+            nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on read (rc=%d err=%s)"), rc, _tcserror(errno));
             break;
          }
       }
       else if (rc == 0)
       {
          // Send empty output on timeout
-         ((CommandExec *)pArg)->onOutput("");
+         static_cast<ProcessExecutor*>(arg)->onOutput("");
       }
       else
       {
-         nxlog_debug(6, _T("CommandExec::readOutput(): stopped on poll (%s)"), _tcserror(errno));
+         nxlog_debug(6, _T("ProcessExecutor::readOutput(): stopped on poll (%s)"), _tcserror(errno));
          break;
       }
    }
@@ -373,32 +376,85 @@ THREAD_RESULT THREAD_CALL CommandExec::readOutput(void *pArg)
 
 #endif
 
-   ((CommandExec *)pArg)->endOfOutput();
+   static_cast<ProcessExecutor*>(arg)->endOfOutput();
+
+#ifndef _WIN32
+   waitpid(static_cast<ProcessExecutor*>(arg)->m_pid, NULL, 0);
+   static_cast<ProcessExecutor*>(arg)->m_running = false;
+#endif
+
    return THREAD_OK;
 }
 
 /**
  * kill command
  */
-void CommandExec::stop()
+void ProcessExecutor::stop()
 {
 #ifdef _WIN32
    TerminateProcess(m_phandle, 127);
 #else
    kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
+   m_running = false;
 }
 
 /**
  * Perform action when output is generated
  */
-void CommandExec::onOutput(const char *text)
+void ProcessExecutor::onOutput(const char *text)
 {
 }
 
 /**
  * Perform action after output is generated
  */
-void CommandExec::endOfOutput()
+void ProcessExecutor::endOfOutput()
 {
+}
+
+/**
+ * Check that process is still running
+ */
+bool ProcessExecutor::isRunning()
+{
+   if (!m_running)
+      return false;
+
+#ifdef _WIN32
+   DWORD exitCode;
+   if (GetProcessExitCode(m_phandle, &exitCode))
+   {
+      if (exitCode != STILL_ACTIVE)
+         m_running = false;
+   }
+   else
+   {
+      m_running = false;
+   }
+#else
+   if (kill(m_pid, 0) != 0)
+      m_running = false;
+#endif
+   return m_running;
+}
+
+/**
+ * Wait for process completion
+ */
+bool ProcessExecutor::waitForCompletion(UINT32 timeout)
+{
+   if (!m_running)
+      return true;
+
+#ifdef _WIN32
+   return WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0;
+#else
+   while(isRunning() && (timeout > 0))
+   {
+      ThreadSleepMs(50);
+      timeout -= std::min(timeout, (UINT32)50);
+   }
+   return !m_running;
+#endif
 }

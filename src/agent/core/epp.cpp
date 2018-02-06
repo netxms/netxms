@@ -22,25 +22,128 @@
 
 #include "nxagentd.h"
 
+/**
+ * Provider executor
+ */
+class ParameterProviderExecutor : public ProcessExecutor
+{
+private:
+   StringMap m_parameters;
+   String m_buffer;
+
+public:
+   ParameterProviderExecutor(const TCHAR *command);
+
+   const StringMap *getParameters() const { return &m_parameters; }
+
+   bool start() { m_parameters.clear(); return ProcessExecutor::execute(); }
+
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
+};
+
+/**
+ * Create new parameter executor object
+ */
+ParameterProviderExecutor::ParameterProviderExecutor(const TCHAR *command) : ProcessExecutor(command)
+{
+   m_sendOutput = true;
+}
+
+/**
+ * Parameter executor output handler
+ */
+void ParameterProviderExecutor::onOutput(const char *text)
+{
+   if (text != NULL)
+   {
+      TCHAR *buffer;
+#ifdef UNICODE
+      buffer = WideStringFromMBStringSysLocale(text);
+#else
+      buffer = _tcsdup(text);
+#endif
+      TCHAR *newLinePtr = NULL, *lineStartPtr = buffer, *eqPtr = NULL;
+      do
+      {
+         newLinePtr = _tcschr(lineStartPtr, _T('\n'));
+         if (newLinePtr != NULL)
+         {
+            *newLinePtr = 0;
+            m_buffer.append(lineStartPtr);
+            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            {
+               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+               stop();
+               m_buffer.clear();
+               break;
+            }
+         }
+         else
+         {
+            m_buffer.append(lineStartPtr);
+            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            {
+               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
+               stop();
+               m_buffer.clear();
+               break;
+            }
+            break;
+         }
+
+         eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
+         if (eqPtr != NULL)
+         {
+            *eqPtr = 0;
+            eqPtr++;
+            m_parameters.set(m_buffer.getBuffer(), eqPtr);
+         }
+         m_buffer.clear();
+         lineStartPtr = newLinePtr+1;
+      } while (*lineStartPtr != 0);
+
+      free(buffer);
+   }
+}
+
+/**
+ * End of output callback
+ */
+void ParameterProviderExecutor::endOfOutput()
+{
+   if (m_buffer.length() > 0)
+   {
+      TCHAR *ptr = _tcschr(m_buffer.getBuffer(), _T('='));
+      if (ptr != NULL)
+      {
+         *ptr = 0;
+         ptr++;
+         m_parameters.set((const TCHAR *)m_buffer, ptr);
+      }
+      m_buffer.clear();
+   }
+}
+
 
 /**
  * External parameter provider
  */
-class ParamProvider
+class ParameterProvider
 {
 private:
-	TCHAR *m_command;
 	int m_pollInterval;
 	time_t m_lastPollTime;
-	MUTEX m_mutex;
-	StringMap *m_parameters;
+	ParameterProviderExecutor *m_executor;
+   StringMap *m_parameters;
+   MUTEX m_mutex;
 
-	void lock() { MutexLock(m_mutex); }
-	void unlock() { MutexUnlock(m_mutex); }
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
 
 public:
-	ParamProvider(const TCHAR *command, int pollInterval);
-	~ParamProvider();
+	ParameterProvider(const TCHAR *command, int pollInterval);
+	~ParameterProvider();
 
 	time_t getLastPollTime() { return m_lastPollTime; }
 	int getPollInterval() { return m_pollInterval; }
@@ -53,29 +156,29 @@ public:
 /**
  * Constructor
  */
-ParamProvider::ParamProvider(const TCHAR *command, int pollInterval)
+ParameterProvider::ParameterProvider(const TCHAR *command, int pollInterval)
 {
-	m_command = _tcsdup(command);
 	m_pollInterval = pollInterval;
 	m_lastPollTime = 0;
-	m_mutex = MutexCreate();
-	m_parameters = new StringMap;
+	m_executor = new ParameterProviderExecutor(command);
+	m_parameters = new StringMap();
+   m_mutex = MutexCreate();
 }
 
 /**
  * Destructor
  */
-ParamProvider::~ParamProvider()
+ParameterProvider::~ParameterProvider()
 {
-	safe_free(m_command);
-	MutexDestroy(m_mutex);
+	delete m_executor;
 	delete m_parameters;
+	MutexDestroy(m_mutex);
 }
 
 /**
  * Get parameter's value
  */
-LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
+LONG ParameterProvider::getValue(const TCHAR *name, TCHAR *buffer)
 {
 	LONG rc = SYSINFO_RC_UNSUPPORTED;
 
@@ -95,52 +198,25 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
 /**
  * Poll provider
  */
-void ParamProvider::poll()
+void ParameterProvider::poll()
 {
-	FILE *hPipe;
-	TCHAR buffer[1024];
-
-	StringMap *parameters = new StringMap;
-	if ((hPipe = _tpopen(m_command, _T("r"))) != NULL)
+	if (m_executor->start())
 	{
-	   DebugPrintf(8, _T("ParamProvider::poll(): started command \"%s\""), m_command);
-		while(!feof(hPipe))
-		{
-			TCHAR *line = safe_fgetts(buffer, 1024, hPipe);
-			if (line == NULL)
-			{
-				if (!feof(hPipe))
-				{
-				   DebugPrintf(4, _T("ParamProvider::poll(): pipe read error: %s"), _tcserror(errno));
-				}
-				break;
-			}
-
-			TCHAR *ptr = _tcschr(buffer, _T('\n'));
-			if (ptr != NULL)
-				*ptr = 0;
-
-			ptr = _tcschr(buffer, _T('='));
-			if (ptr != NULL)
-			{
-				*ptr = 0;
-				ptr++;
-				parameters->set(buffer, ptr);
-			}
-		}
-		pclose(hPipe);
-		DebugPrintf(8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
+	   nxlog_debug(4, _T("ParamProvider::poll(): started command \"%s\""), m_executor->getCommand());
+	   if (m_executor->waitForCompletion(g_eppTimeout * 1000))
+	   {
+         lock();
+         delete m_parameters;
+         m_parameters = new StringMap(*m_executor->getParameters());
+         unlock();
+         nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), (int)m_parameters->size());
+	   }
+	   else
+	   {
+         nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution timeout (%d seconds)"), m_executor->getCommand(), g_eppTimeout);
+         m_executor->stop();
+	   }
 	}
-	else
-	{
-	   DebugPrintf(4, _T("ParamProvider::poll(): pipe open error: %s"), _tcserror(errno));
-	}
-
-	lock();
-	delete m_parameters;
-	m_parameters = parameters;
-	unlock();
-
 	m_lastPollTime = time(NULL);
 }
 
@@ -169,7 +245,7 @@ static EnumerationCallbackResult ParameterListCallback(const TCHAR *key, const v
 /**
  * List available parameters
  */
-void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ParameterProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
    ParameterListCallbackData data;
    data.msg = msg;
@@ -177,7 +253,7 @@ void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *cou
    data.count = 0;
 
 	lock();
-   m_parameters->forEach(ParameterListCallback, &data);
+	m_parameters->forEach(ParameterListCallback, &data);
 	unlock();
 
 	*baseId = data.id;
@@ -196,17 +272,17 @@ static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const 
 /**
  * List available parameters
  */
-void ParamProvider::listParameters(StringList *list)
+void ParameterProvider::listParameters(StringList *list)
 {
 	lock();
-   m_parameters->forEach(ParameterListCallback2, list);
+	m_parameters->forEach(ParameterListCallback2, list);
 	unlock();
 }
 
 /**
  * Static data
  */
-static ObjectArray<ParamProvider> s_providers(0, 8, true);
+static ObjectArray<ParameterProvider> s_providers(0, 8, true);
 
 /**
  * Poller thread
@@ -219,7 +295,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 		time_t now = time(NULL);
 		for(int i = 0; i < s_providers.size(); i++)
 		{
-			ParamProvider *p = s_providers.get(i);
+			ParameterProvider *p = s_providers.get(i);
 			if (now > p->getLastPollTime() + (time_t)p->getPollInterval())
 				p->poll();
 		}
@@ -263,7 +339,7 @@ bool AddParametersProvider(const TCHAR *line)
 		}
 	}
 
-	ParamProvider *p = new ParamProvider(buffer, interval);
+	ParameterProvider *p = new ParameterProvider(buffer, interval);
 	s_providers.add(p);
 
 	return true;
@@ -279,7 +355,7 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 	LONG rc = SYSINFO_RC_UNSUPPORTED;
 	for(int i = 0; i < s_providers.size(); i++)
 	{
-		ParamProvider *p = s_providers.get(i);
+		ParameterProvider *p = s_providers.get(i);
 		rc = p->getValue(name, buffer);
 		if (rc == SYSINFO_RC_SUCCESS)
 			break;
