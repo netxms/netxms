@@ -999,7 +999,7 @@ Tunnel *Tunnel::createFromConfig(TCHAR *config)
       p++;
 
       TCHAR *eptr;
-      int port = _tcstol(p, &eptr, 10);
+      port = _tcstol(p, &eptr, 10);
       if ((port < 1) || (port > 65535))
          return NULL;
    }
