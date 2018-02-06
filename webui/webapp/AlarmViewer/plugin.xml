@@ -68,9 +68,9 @@
             name="Alarm Category Configurator">
       </command>
       <command
-            description="Toggle Filter"
-            id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter"
-            name="Toggle Filter">
+            description="Toggle Alarm Category Filter"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_category"
+            name="Toggle Alarm Category Filter">
       </command>
       <command
             description="Open alarm log"
@@ -87,6 +87,22 @@
                   value="default">
             </parameter>
          </defaultHandler>
+      </command>
+      <command
+            description="Toggle Alarm List Filter"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list"
+            name="Toggle Alarm List Filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.alarmviewer.actions.ToggleAlarmFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list.state">
+         </state>
       </command>
    </extension>
    
@@ -149,7 +165,7 @@
             sequence="M3+Shift+A">
       </key>
       <key
-            commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_filter"
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_category"
             contextId="org.netxms.ui.eclipse.alarmviewer.context.AlarmCategoryConfigurator"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
@@ -159,6 +175,12 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Alt+F8">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list"
+            contextId="org.netxms.ui.eclipse.alarmviewer.context.AlarmBrowser"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
       </key>
    </extension>
 
@@ -261,6 +283,21 @@
                </with>
             </visibleWhen>
          </command>
+         <command
+               commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_list"
+               label="Show filter"
+               style="toggle"
+               tooltip="Show filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.alarmviewer.objecttabs.AlarmTab">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -291,6 +328,11 @@
       <context
             id="org.netxms.ui.eclipse.alarmviewer.context.AlarmCategoryConfigurator"
             name="Alarm Category Configurator"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.alarmviewer.context.AlarmBrowser"
+            name="Alarm Browser"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>

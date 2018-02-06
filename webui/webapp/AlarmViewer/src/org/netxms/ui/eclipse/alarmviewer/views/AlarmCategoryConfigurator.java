@@ -289,7 +289,7 @@ public class AlarmCategoryConfigurator extends ViewPart
       actionShowFilter.setText("Show filter");
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(initShowfilter);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.alarmviewer.commands.show_filter"); //$NON-NLS-1$
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.alarmviewer.commands.show_filter_alarm_category"); //$NON-NLS-1$
 
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(),
             new ActionHandler(actionShowFilter));
