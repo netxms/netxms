@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	jansson.def \
 	jansson.vcxproj jansson.vcxproj.filters \
 	jansson_private.h \
+	jansson_private_config.h \
 	lookup3.h \
 	strbuffer.h \
 	utf.h
