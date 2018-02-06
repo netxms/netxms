@@ -540,49 +540,6 @@ public:
 };
 
 /**
- * Execute server command
- */
-class LIBNXAGENT_EXPORTABLE CommandExec
-{
-private:
-   UINT32 m_streamId;
-   THREAD m_outputThread;
-#ifdef _WIN32
-   HANDLE m_phandle;
-   HANDLE m_pipe;
-#else
-   pid_t m_pid;
-   int m_pipe[2];
-#endif
-
-protected:
-   TCHAR *m_cmd;
-   bool m_sendOutput;
-
-#ifdef _WIN32
-   HANDLE getOutputPipe() { return m_pipe; }
-#else
-   int getOutputPipe() { return m_pipe[0]; }
-#endif
-
-   static THREAD_RESULT THREAD_CALL readOutput(void *pArg);
-
-   virtual void onOutput(const char *text);
-   virtual void endOfOutput();
-
-public:
-   CommandExec(const TCHAR *cmd);
-   CommandExec();
-   virtual ~CommandExec();
-
-   UINT32 getStreamId() const { return m_streamId; }
-   const TCHAR *getCommand() const { return m_cmd; }
-
-   bool execute();
-   void stop();
-};
-
-/**
  * Subagent's parameter information
  */
 typedef struct

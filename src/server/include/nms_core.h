@@ -74,6 +74,7 @@
 #include <nddrv.h>
 #include <npe.h>
 #include <nxcore_smclp.h>
+#include <nxproc.h>
 
 /**
  * Console context
@@ -457,7 +458,7 @@ private:
 	ObjectIndex m_agentConn;
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
-	HashMap<UINT32, CommandExec> *m_serverCommands;
+	HashMap<UINT32, ProcessExecutor> *m_serverCommands;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -750,7 +751,7 @@ private:
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
 #endif
-   void registerServerCommand(CommandExec *command) { m_serverCommands->set(command->getStreamId(), command); }
+   void registerServerCommand(ProcessExecutor *command) { m_serverCommands->set(command->getStreamId(), command); }
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
@@ -862,7 +863,7 @@ enum ThreadPoolStat
 /**
  * Server command execution data
  */
-class ServerCommandExec : public CommandExec
+class ServerCommandExec : public ProcessExecutor
 {
 private:
    UINT32 m_requestId;

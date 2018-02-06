@@ -9,6 +9,8 @@ void TestMessageClass();
 void TestMutexWrapper();
 void TestRWLockWrapper();
 void TestConditionWrapper();
+void TestProcessExecutor(const char *procname);
+void TestProcessExecutorWorker();
 
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -1258,6 +1260,12 @@ static void TestDebugTags()
  */
 int main(int argc, char *argv[])
 {
+   if ((argc > 1) && !strcmp(argv[1], "@proc"))
+   {
+      TestProcessExecutorWorker();
+      return 0;
+   }
+
 #ifdef _WIN32
    WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -1286,6 +1294,7 @@ int main(int argc, char *argv[])
    TestRingBuffer();
    TestDebugLevel();
    TestDebugTags();
+   TestProcessExecutor(argv[0]);
 
    MsgWaitQueue::shutdown();
    return 0;

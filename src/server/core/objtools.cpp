@@ -1505,7 +1505,7 @@ cleanup:
 /**
  * Command execution data constructor
  */
-ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *session) : CommandExec()
+ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *session) : ProcessExecutor(NULL)
 {
    NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)

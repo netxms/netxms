@@ -259,7 +259,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
    _tcscpy(m_language, _T("en"));
-   m_serverCommands = new HashMap<UINT32, CommandExec>(true);
+   m_serverCommands = new HashMap<UINT32, ProcessExecutor>(true);
    m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(true);
 }
 
@@ -12214,7 +12214,7 @@ void ClientSession::stopServerCommand(NXCPMessage *request)
    msg.setId(request->getId());
    msg.setCode(CMD_REQUEST_COMPLETED);
 
-   CommandExec *cmd = m_serverCommands->get(request->getFieldAsUInt32(VID_COMMAND_ID));
+   ProcessExecutor *cmd = m_serverCommands->get(request->getFieldAsUInt32(VID_COMMAND_ID));
    if (cmd != NULL)
    {
       cmd->stop();
