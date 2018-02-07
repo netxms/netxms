@@ -10,8 +10,15 @@
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
 	NX-1219 (Add 'created' and 'last login' columns to User Manager)
-	NX-1332 (Execution timeout for external parameter provider)
 	NX-1386 (Implemented units for Server Variables)
+
+
+*
+* 2.2.4
+*
+
+- Fixed issues:
+	NX-1332 (Execution timeout for external parameter provider)
 
 
 *
