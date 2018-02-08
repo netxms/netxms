@@ -217,10 +217,11 @@
     <ClCompile Include="msgrecv.cpp" />
     <ClCompile Include="msgwq.cpp" />
     <ClCompile Include="net.cpp" />
+    <ClCompile Include="npipe.cpp" />
+    <ClCompile Include="npipe_win32.cpp" />
     <ClCompile Include="nxcp.cpp" />
-    <ClCompile Include="nxproc.cpp" />
-    <ClCompile Include="nxproc_win32.cpp" />
     <ClCompile Include="pa.cpp" />
+    <ClCompile Include="procexec.cpp" />
     <ClCompile Include="qsort.c" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="rbuffer.cpp" />

@@ -108,12 +108,6 @@
     <ClCompile Include="nxcp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nxproc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nxproc_win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -223,6 +217,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ztools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npipe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npipe_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="procexec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

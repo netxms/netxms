@@ -423,7 +423,7 @@ bool ProcessExecutor::isRunning()
 
 #ifdef _WIN32
    DWORD exitCode;
-   if (GetProcessExitCode(m_phandle, &exitCode))
+   if (GetExitCodeProcess(m_phandle, &exitCode))
    {
       if (exitCode != STILL_ACTIVE)
          m_running = false;

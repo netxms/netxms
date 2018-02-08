@@ -168,7 +168,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bridge.cpp" />
-    <ClCompile Include="cmdexec.cpp" />
     <ClCompile Include="dfile_info.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="registry.cpp" />
