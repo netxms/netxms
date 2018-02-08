@@ -71,6 +71,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.market.Repository;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.actionmanager.dialogs.ActionSelectionDialog;
