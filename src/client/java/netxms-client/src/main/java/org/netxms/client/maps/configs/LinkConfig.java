@@ -50,7 +50,10 @@ public class LinkConfig
    private long[] bendPoints;
    
    @Element(required=false)
-   private boolean useActiveThresholds;   
+   private boolean useActiveThresholds;
+
+   @Element(required=false)
+   private boolean isLocked;
 
    /**
     * Default constructor
@@ -62,13 +65,14 @@ public class LinkConfig
       bendPoints = null;
       dciList = null;
       useActiveThresholds = false;
+      isLocked = false;
    }
    
    /**
     * Constructor for creating XML
     */
    public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int color, int routing,
-         long[] bendPoints, boolean useActiveThresholds)
+         long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
    {
       super();
       this.dciList = dciList;
@@ -77,6 +81,7 @@ public class LinkConfig
       this.routing = routing;
       this.bendPoints = bendPoints;
       this.useActiveThresholds = useActiveThresholds;
+      this.isLocked = isLocked;
    }   
    
    /**
@@ -202,6 +207,22 @@ public class LinkConfig
       return useActiveThresholds;
    }
 
+   /*
+    * @return true if link is locked
+    */
+   public boolean isLocked()
+   {
+      return isLocked;
+   }
+   
+   /**
+    * @param isLocked set link locked or unlocked
+    */
+   public void setLocked(boolean isLocked)
+   {
+      this.isLocked = isLocked;
+   }
+
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
@@ -209,6 +230,7 @@ public class LinkConfig
    public String toString()
    {
       return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + objectStatusList.toString()
-            + ", color=" + color + ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + "]";
+            + ", color=" + color + ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + "]"
+            + ", isLocked=" + isLocked;
    }
 }

@@ -61,9 +61,10 @@ public class NetworkMapLink
 	 * @param dciList
 	 * @param flags
 	 */
-	public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, SingleDciConfig[] dciList, int flags)
+	public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, SingleDciConfig[] dciList, int flags, boolean isLocked)
 	{		
 	   config.setDciList(dciList);
+	   config.setLocked(isLocked);
 	   initData(name, type, element1, element2, connectorName1, connectorName2, flags);
 	}
 
@@ -448,6 +449,22 @@ public class NetworkMapLink
    public LinkConfig getConfig()
    {
       return config;
+   }
+
+   /*
+    * @return true if link is locked
+    */
+   public boolean isLocked()
+   {
+      return config.isLocked();
+   }
+   
+   /**
+    * @param isLocked set true if link should be locked
+    */
+   public void setLocked(boolean isLocked)
+   {
+      config.setLocked(isLocked);
    }
 
    /* (non-Javadoc)
