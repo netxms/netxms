@@ -68,7 +68,7 @@ public class LinkEditor
 	{
 		mapPage.removeLink(link);
 		long[] bp = link.getBendPoints();
-		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags()); 
+		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags(), link.isLocked()); 
 		link.setColor(color);
 		link.setStatusObject(statusObject);
 		link.setRouting(routingAlgorithm);

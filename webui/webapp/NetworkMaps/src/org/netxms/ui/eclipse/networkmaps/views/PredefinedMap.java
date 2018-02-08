@@ -502,6 +502,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			manager.add(new Separator());
 			manager.add(actionLinkProperties);
 		}
+		manager.add(actionLockLink);
 	}
 
 	/*
