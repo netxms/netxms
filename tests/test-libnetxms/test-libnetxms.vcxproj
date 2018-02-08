@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="nxcp.cpp" />
+    <ClCompile Include="proc.cpp" />
     <ClCompile Include="test-libnetxms.cpp" />
     <ClCompile Include="threads.cpp" />
   </ItemGroup>

@@ -18,9 +18,6 @@
     <ClCompile Include="bridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cmdexec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dfile_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
