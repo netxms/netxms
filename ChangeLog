@@ -18,7 +18,10 @@
 *
 
 - Fixed issues:
+	NX-1208 (Added filter to alarm list)
 	NX-1332 (Execution timeout for external parameter provider)
+	NX-1337 (Map link color based on object status)
+	NX-1346 (Unable to select template group on config export)
 
 
 *
