@@ -106,6 +106,10 @@ DISABLE_MQTT="no"
 MQTT_CPPFLAGS=""
 MQTT_LDFLAGS=""
 MQTT_LIBS=""
+PYTHON_SUPPORT="no"
+PYTHON_CPPFLAGS=""
+PYTHON_LDFLAGS=""
+PYTHON_LIBS=""
 DISABLE_CURL="no"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="yes"
@@ -359,6 +363,19 @@ AC_ARG_WITH(curl,
 		DISABLE_CURL="yes"
 	fi
 ])
+
+AC_ARG_WITH(python,
+[AS_HELP_STRING(--with-python,build with Python extensions support)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		PYTHON_BASE="$withval"
+		PYTHON_REQUIRED=yes
+	fi
+	COMPONENTS="$COMPONENTS python"
+	PYTHON_SUPPORT=yes
+else
+	PYTHON_SUPPORT=no
+fi ])
 
 AC_ARG_WITH(mongodb,
 [AS_HELP_STRING(--with-mongodb,build MongoDB-dependent components)],
@@ -3495,12 +3512,64 @@ if test "x$DISABLE_MQTT" != "xyes"; then
 		AC_MSG_ERROR([*** Cannot find mosquitto.h - check your libmosquitto installation or disable MQTT support with --disable-mqtt ***])
 	])
 	AC_CHECK_LIB(mosquitto, mosquitto_lib_init, [ MQTT_LIBS="-lmosquitto" ], [
-		AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation or disable MQTT support with --disable-mqtt***])
+		AC_MSG_ERROR([*** libmosquitto is missing - check your libmosquitto installation or disable MQTT support with --disable-mqtt ***])
 	])
     
 	MQTT_SUPPORT="yes"
 	AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
+# Python
+#--------------------------------------------------------------------
+
+if test "x$PYTHON_SUPPORT" = "xyes"; then
+	PYTHON_VERSIONS="3.5m 3.5 3m 3 2.7"
+
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$PYTHON_BASE" != "x"; then
+		BIN_PREFIX="$PYTHON_BASE/bin/"
+	fi
+
+	PYTHON_VERSION=""
+	for PV in $PYTHON_VERSIONS; do
+		PY_CONFIG="${BIN_PREFIX}python${PV}-config"
+		"$PY_CONFIG" --prefix >/dev/null
+		if test $? -eq 0; then
+			PYTHON_VERSION="$PV"
+			break
+		fi
+	done
+
+	if test "x$PYTHON_VERSION" != "x"; then
+		PYTHON_CPPFLAGS=`$PY_CONFIG --includes`
+		PYTHON_LDFLAGS=`$PY_CONFIG --ldflags`
+		PYTHON_LIBS=`$PY_CONFIG --libs`
+
+		CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
+		LIBS="$LIBS $PYTHON_LIBS"
+	
+		AC_CHECK_HEADER(Python.h,,[
+			AC_MSG_ERROR([*** Cannot find Python.h - check your libpython installation or disable Python support with --without-python ***])
+		])
+		AC_CHECK_FUNC(Py_Initialize, , [
+			AC_MSG_ERROR([*** Cannot find Py_Initialize function - check your libpython installation or disable Python support with --without-python ***])
+		])
+    
+		AC_DEFINE(WITH_PYTHON, 1, Define to 1 if Python is supported)
+	else
+		AC_MSG_ERROR([*** Cannot find Python configuration tool - check your libpython installation or disable Python support with --without-python ***])
+	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -4061,6 +4130,23 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 else
 	echo "Build Server            : NO"
 fi
+
+if test "x${PYTHON_SUPPORT}" = "xyes"; then
+	echo "Python support          : YES"
+	echo "Python version          : $PYTHON_VERSION"
+else
+	echo "Python support          : NO"
+fi
+if test "x${PYTHON_CPPFLAGS}" != "x"; then
+	echo "Python CPPFLAGS         : ${PYTHON_CPPFLAGS}"
+fi
+if test "x${PYTHON_LDFLAGS}" != "x"; then
+	echo "Python LDFLAGS          : ${PYTHON_LDFLAGS}"
+fi
+if test "x${PYTHON_LIBS}" != "x"; then
+	echo "Python LIBS             : ${PYTHON_LIBS}"
+fi
+
 if test "x${WITH_ENCRYPTION}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
