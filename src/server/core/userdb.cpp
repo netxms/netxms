@@ -1441,6 +1441,29 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
 }
 
 /**
+ * Find a list of UserDatabaseObjects of specific id`s
+ */
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
+{
+   ObjectArray<UserDatabaseObject> *userDB = new ObjectArray<UserDatabaseObject>(16, 16, true);
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   for(int i = 0; i < ids->size(); i++)
+   {
+      UserDatabaseObject *object = s_userDatabase.get(ids->get(i));
+      if (object != NULL)
+      {
+         if (object->isGroup())
+            userDB->add(new Group(static_cast<Group *>(object)));
+         else
+            userDB->add(new User(static_cast<User *>(object)));
+      }
+   }
+   RWLockUnlock(s_userDatabaseLock);
+
+   return userDB;
+}
+
+/**
  * Get custom attribute's value
  */
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)

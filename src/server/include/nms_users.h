@@ -198,6 +198,7 @@ protected:
 
 public:
 	UserDatabaseObject();
+	UserDatabaseObject(const UserDatabaseObject *src);
 	UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	UserDatabaseObject(UINT32 id, const TCHAR *name);
 	virtual ~UserDatabaseObject();
@@ -240,6 +241,10 @@ public:
 	void setDn(const TCHAR *dn);
 	void setLdapId(const TCHAR *id);
    void detachLdapUser();
+
+   NXSL_Value *getCustomAttributeForNXSL(const TCHAR *name) const;
+   NXSL_Value *getCustomAttributesForNXSL() const;
+   virtual NXSL_Value *createNXSLObject();
 };
 
 /**
@@ -292,6 +297,7 @@ protected:
 
 public:
 	User();
+	User(const User *src);
 	User(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	User(UINT32 id, const TCHAR *name);
 	virtual ~User();
@@ -326,6 +332,8 @@ public:
 	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
 	void setFullName(const TCHAR *fullName);
 	void enable();
+
+   virtual NXSL_Value *createNXSLObject();
 };
 
 /**
@@ -339,6 +347,7 @@ protected:
 
 public:
 	Group();
+	Group(const Group *src);
 	Group(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	Group(UINT32 id, const TCHAR *name);
 	virtual ~Group();
@@ -355,6 +364,9 @@ public:
 	void deleteUser(UINT32 userId);
 	bool isMember(UINT32 userId, IntegerArray<UINT32> *searchPath = NULL);
 	int getMembers(UINT32 **members);
+	UINT32 getMemberCount() { return m_memberCount; }
+
+   virtual NXSL_Value *createNXSLObject();
 };
 
 /**
@@ -427,6 +439,7 @@ THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
+ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids);
 
 /**
  * CAS API

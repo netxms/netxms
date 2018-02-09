@@ -230,6 +230,41 @@ public:
 	virtual void trace(int level, const TCHAR *text);
 };
 
+/**
+ * NXSL "UserDBObject" class
+ */
+class NXSL_UserDBObjectClass : public NXSL_Class
+{
+public:
+   NXSL_UserDBObjectClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
+ * NXSL "User" class
+ */
+class NXSL_UserClass : public NXSL_UserDBObjectClass
+{
+public:
+   NXSL_UserClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
+ * NXSL "UserGroup" class
+ */
+class NXSL_UserGroupClass : public NXSL_UserDBObjectClass
+{
+public:
+   NXSL_UserGroupClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
 class ScheduleParameters;
 
 /**
@@ -271,6 +306,9 @@ extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
+extern NXSL_UserClass g_nxslUserClass;
+extern NXSL_UserGroupClass g_nxslUserGroupClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif

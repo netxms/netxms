@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.26 to 30.27
+ */
+static bool H_UpgradeFromV26()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE responsible_users (")
+         _T("   object_id integer not null,")
+         _T("   user_id integer not null,")
+         _T("   PRIMARY KEY(object_id,user_id))")));
+   CHK_EXEC(SetMinorSchemaVersion(27));
+   return true;
+}
+
+/**
  * Upgrade from 30.25 to 30.26 (changes also included into 22.16)
  */
 static bool H_UpgradeFromV25()
@@ -920,6 +934,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 26, 30, 27, H_UpgradeFromV26 },
    { 25, 30, 26, H_UpgradeFromV25 },
    { 24, 30, 25, H_UpgradeFromV24 },
    { 23, 30, 24, H_UpgradeFromV23 },

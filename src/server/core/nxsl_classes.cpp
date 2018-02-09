@@ -268,6 +268,20 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
    {
       value = new NXSL_Value(object->getPostalAddress()->getPostCode());
    }
+   else if (!_tcscmp(attr, _T("responsibleUsers")))
+   {
+      NXSL_Array *array = new NXSL_Array();
+      IntegerArray<UINT32> *responsibleUsers = object->getAllResponsibleUsers();
+      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(responsibleUsers);
+      userDB->setOwner(false);
+      for(int i = 0; i < userDB->size(); i++)
+      {
+         array->append(userDB->get(i)->createNXSLObject());
+      }
+      value = new NXSL_Value(array);
+      delete userDB;
+      delete responsibleUsers;
+   }
    else if (!_tcscmp(attr, _T("status")))
    {
       value = new NXSL_Value((LONG)object->getStatus());
@@ -1708,6 +1722,192 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * NXSL class UserDBObjectClass: constructor
+ */
+NXSL_UserDBObjectClass::NXSL_UserDBObjectClass() : NXSL_Class()
+{
+   setName(_T("UserDBObject"));
+}
+
+/**
+ * NXSL class UserDBObjectClass: get attribute
+ */
+NXSL_Value *NXSL_UserDBObjectClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NULL;
+   UserDatabaseObject *dbObject = static_cast<UserDatabaseObject *>(object->getData());
+
+   if (!_tcscmp(attr, _T("description")))
+   {
+      value = new NXSL_Value(dbObject->getDescription());
+   }
+   else if (!_tcscmp(attr, _T("flags")))
+   {
+      value = new NXSL_Value(dbObject->getFlags());
+   }
+   else if (!_tcscmp(attr, _T("guid")))
+   {
+      TCHAR buffer[64];
+      value = new NXSL_Value(dbObject->getGuidAsText(buffer));
+   }
+   else if (!_tcscmp(attr, _T("id")))
+   {
+      value = new NXSL_Value(dbObject->getId());
+   }
+   else if (!_tcscmp(attr, _T("isDeleted")))
+   {
+      value = new NXSL_Value(dbObject->isDeleted());
+   }
+   else if (!_tcscmp(attr, _T("isDisabled")))
+   {
+      value = new NXSL_Value(dbObject->isDisabled());
+   }
+   else if (!_tcscmp(attr, _T("isGroup")))
+   {
+      value = new NXSL_Value(dbObject->isGroup());
+   }
+   else if (!_tcscmp(attr, _T("isModified")))
+   {
+      value = new NXSL_Value(dbObject->isModified());
+   }
+   else if (!_tcscmp(attr, _T("isLDAPUser")))
+   {
+      value = new NXSL_Value(dbObject->isLDAPUser());
+   }
+   else if (!_tcscmp(attr, _T("LDAPDomain")))
+   {
+      value = new NXSL_Value(dbObject->getDn());
+   }
+   else if (!_tcscmp(attr, _T("LDAPId")))
+   {
+      value = new NXSL_Value(dbObject->getLdapId());
+   }
+   else if (!_tcscmp(attr, _T("systemRights")))
+   {
+      value = new NXSL_Value(dbObject->getSystemRights());
+   }
+
+   return value;
+}
+
+/**
+ * NXSL class UserClass: constructor
+ */
+NXSL_UserClass::NXSL_UserClass() : NXSL_UserDBObjectClass()
+{
+   setName(_T("User"));
+}
+
+/**
+ * NXSL class UserDBObjectClass: get attribute
+ */
+NXSL_Value *NXSL_UserClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_UserDBObjectClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   User *user = static_cast<User *>(object->getData());
+   if (!_tcscmp(attr, _T("authMethod")))
+   {
+      value = new NXSL_Value(user->getAuthMethod());
+   }
+   else if (!_tcscmp(attr, _T("certMappingData")))
+   {
+      value = new NXSL_Value(user->getCertMappingData());
+   }
+   else if (!_tcscmp(attr, _T("certMappingMethod")))
+   {
+      value = new NXSL_Value(user->getCertMappingMethod());
+   }
+   else if (!_tcscmp(attr, _T("disabledUntil")))
+   {
+      value = new NXSL_Value(static_cast<UINT32>(user->getReEnableTime()));
+   }
+   else if (!_tcscmp(attr, _T("fullName")))
+   {
+      value = new NXSL_Value(user->getFullName());
+   }
+   else if (!_tcscmp(attr, _T("graceLogins")))
+   {
+      value = new NXSL_Value(user->getGraceLogins());
+   }
+   else if (!_tcscmp(attr, _T("lastLogin")))
+   {
+      value = new NXSL_Value(static_cast<UINT32>(user->getLastLoginTime()));
+   }
+   else if (!_tcscmp(attr, _T("xmppId")))
+   {
+      value = new NXSL_Value(user->getXmppId());
+   }
+
+   return value;
+}
+
+/**
+ * NXSL class User: NXSL object destructor
+ */
+void NXSL_UserClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (User *)object->getData();
+}
+
+/**
+ * NXSL class UserGroupClass: constructor
+ */
+NXSL_UserGroupClass::NXSL_UserGroupClass() : NXSL_UserDBObjectClass()
+{
+   setName(_T("UserGroup"));
+}
+
+/**
+ * NXSL class UserDBObjectClass: get attribute
+ */
+NXSL_Value *NXSL_UserGroupClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_UserDBObjectClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Group *group = static_cast<Group *>(object->getData());
+   if (!_tcscmp(attr, _T("memberCount")))
+   {
+      value = new NXSL_Value(group->getMemberCount());
+   }
+   else if (!_tcscmp(attr, _T("members")))
+   {
+      UINT32 *members = NULL;
+      int count = group->getMembers(&members);
+      IntegerArray<UINT32> memberArray;
+      for(int i = 0; i < count; i++)
+         memberArray.add(members[i]);
+
+      NXSL_Array *array = new NXSL_Array();
+      ObjectArray<UserDatabaseObject> *userDB = FindUserDBObjects(&memberArray);
+      userDB->setOwner(false);
+      for(int i = 0; i < userDB->size(); i++)
+      {
+         if (userDB->get(i)->isGroup())
+            array->append(new NXSL_Value(new NXSL_Object(&g_nxslUserGroupClass, userDB->get(i))));
+         else
+            array->append(new NXSL_Value(new NXSL_Object(&g_nxslUserClass, userDB->get(i))));
+      }
+      value = new NXSL_Value(array);
+      delete userDB;
+   }
+
+   return value;
+}
+
+/**
+ * NXSL class UserGroupClass: NXSL object destructor
+ */
+void NXSL_UserGroupClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (Group *)object->getData();
+}
+
+/**
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
@@ -1724,4 +1924,7 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
+NXSL_UserClass g_nxslUserClass;
+NXSL_UserGroupClass g_nxslUserGroupClass;
 NXSL_ZoneClass g_nxslZoneClass;

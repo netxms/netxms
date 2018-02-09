@@ -144,6 +144,7 @@ public abstract class AbstractObject
 	protected final List<Long> dashboards = new ArrayList<Long>(0);
 	protected final Map<String, String> customAttributes = new HashMap<String, String>(0);
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
+   protected final List<Long> responsibleUsers = new ArrayList<Long>(0);
 	protected Map<String, Object> moduleData = null;
 	
 	@Internal private int effectiveRights = 0;
@@ -299,6 +300,13 @@ public abstract class AbstractObject
 		         Logger.error("AbstractObject", "Unable to find data provider for module " + module);
 		      }
 		   }
+		}
+		
+		// Responsible users
+		Long[] users = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RESPONSIBLE_USERS);
+		for(i = 0; i < users.length; i++)
+		{
+		   responsibleUsers.add(users[i]);
 		}
 	}
 
@@ -984,5 +992,15 @@ public abstract class AbstractObject
          addString(strings, u.getDescription());
       }
       return strings;
+   }
+   
+   /**
+    * Get direct responsible users
+    * 
+    * @return responsible users list
+    */
+   public List<Long> getResponsibleUsers()
+   {
+      return responsibleUsers;
    }
 }

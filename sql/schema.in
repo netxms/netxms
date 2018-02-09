@@ -1771,3 +1771,13 @@ CREATE TABLE sensors
    frequency integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * Object responsible users
+ */
+CREATE TABLE responsible_users
+(
+   object_id integer not null,
+   user_id integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;

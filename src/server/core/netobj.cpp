@@ -89,6 +89,7 @@ NetObj::NetObj()
    m_state = 0;
    m_runtimeFlags = 0;
    m_flags = 0;
+   m_rwlockResponsibleUsers = RWLockCreate();
 }
 
 /**
@@ -110,6 +111,7 @@ NetObj::~NetObj()
    delete m_postalAddress;
    delete m_dashboards;
    delete m_urls;
+   RWLockDestroy(m_rwlockResponsibleUsers);
 }
 
 /**
@@ -244,6 +246,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       data.id = m_id;
       data.hdb = hdb;
       success = (m_moduleData->forEach(DeleteModuleDataCallback, &data) == _CONTINUE);
+   }
+
+   // Delete responsible users
+   if (success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
    }
 
    return success;
@@ -431,6 +439,31 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
 	if (success)
 		success = loadTrustedNodes(hdb);
+
+	if (success)
+	{
+	   hStmt = DBPrepare(hdb, _T("SELECT user_id FROM responsible_users WHERE object_id=?"));
+	   if (hStmt != NULL)
+	   {
+	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+	      DB_RESULT hResult = DBSelectPrepared(hStmt);
+	      if (hResult != NULL)
+	      {
+	         int numRows = DBGetNumRows(hResult);
+	         for(int i = 0; i < numRows; i++)
+	         {
+	            m_responsibleUsers.add(DBGetFieldULong(hResult, i, 0));
+	         }
+	         DBFreeResult(hResult);
+	      }
+	      else
+	         success = false;
+
+	      DBFreeStatement(hStmt);
+	   }
+	   else
+	      success = false;
+	}
 
 	if (!success)
 		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
@@ -622,6 +655,30 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 
 	if (success)
 		success = saveTrustedNodes(hdb);
+
+	// Save responsible users
+	if (success && !m_responsibleUsers.isEmpty())
+	{
+	   success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
+	   if (success)
+	   {
+	      hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"));
+	      if (hStmt != NULL)
+	      {
+	         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+	         lockResponsibleUsersList(false);
+	         for(int i = 0; i < m_responsibleUsers.size(); i++)
+	         {
+	            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers.get(i));
+	            success = DBExecute(hStmt);
+	         }
+	         unlockResponsibleUsersList();
+	         DBFreeStatement(hStmt);
+	      }
+	      else
+	         success = false;
+	   }
+	}
 
    return success;
 }
@@ -1230,6 +1287,10 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_childList->size(); i++, dwId++)
       msg->setField(dwId, m_childList->get(i)->getId());
    unlockChildList();
+
+   lockResponsibleUsersList(false);
+   msg->setFieldFromInt32Array(VID_RESPONSIBLE_USERS, &m_responsibleUsers);
+   unlockResponsibleUsersList();
 }
 
 /**
@@ -1398,6 +1459,13 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
          m_urls->add(new ObjectUrl(pRequest, fieldId));
          fieldId += 10;
       }
+   }
+
+   if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
+   {
+      lockResponsibleUsersList(true);
+      pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, &m_responsibleUsers);
+      unlockResponsibleUsersList();
    }
 
    return RCC_SUCCESS;
@@ -2441,6 +2509,13 @@ json_t *NetObj::toJson()
    unlockParentList();
    json_object_set_new(root, "parents", parents);
 
+   json_t *responsibleUsers = json_array();
+   lockResponsibleUsersList(false);
+   for(int i = 0; i < m_responsibleUsers.size(); i++)
+      json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers.get(i)));
+   unlockResponsibleUsersList();
+   json_object_set_new(root, "responsibleUsers", responsibleUsers);
+
    return root;
 }
 
@@ -2854,4 +2929,43 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
    }
    pText[dwPos] = 0;
    return pText;
+}
+
+/**
+ * Internal function to get inherited list of responsible users for object
+ */
+void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
+{
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+   {
+      NetObj *obj = m_parentList->get(i);
+      obj->lockResponsibleUsersList(false);
+      for(int n = 0; n < obj->getResponsibleUsers()->size(); n++)
+      {
+         UINT32 userId = obj->getResponsibleUsers()->get(n);
+         if (!list->contains(userId))
+            list->add(userId);
+      }
+      obj->unlockResponsibleUsersList();
+      m_parentList->get(i)->getAllResponsibleUsersInternal(list);
+   }
+   unlockParentList();
+}
+
+/**
+ * Get all responsible users for object
+ */
+IntegerArray<UINT32> *NetObj::getAllResponsibleUsers()
+{
+   IntegerArray<UINT32> *responsibleUsers = new IntegerArray<UINT32>();
+   lockResponsibleUsersList(false);
+   for(int i = 0; i < m_responsibleUsers.size(); i++)
+   {
+      responsibleUsers->add(m_responsibleUsers.get(i));
+   }
+   unlockResponsibleUsersList();
+
+   getAllResponsibleUsersInternal(responsibleUsers);
+   return responsibleUsers;
 }

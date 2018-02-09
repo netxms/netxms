@@ -3592,6 +3592,27 @@ public class NXCSession
       waitForSync(syncUserDB, commandTimeout * 10);
       subscribe(CHANNEL_USERDB);
    }
+   
+   /**
+    * Find a multiple users by list of IDs
+    * 
+    * @param ids of user DBObjects to find
+    * @return list of found users
+    */
+   public List<AbstractUserObject> findUserDBObjectsByIds(final List<Long> ids)
+   {
+      List<AbstractUserObject> users = new ArrayList<AbstractUserObject>();
+      synchronized(userDB)
+      {
+         for(Long l : ids)
+         {
+            AbstractUserObject user = userDB.get(l);
+            if (user != null)
+                  users.add(user);
+         }
+      }
+      return users;
+   }
 
    /**
     * Find user by ID
@@ -5232,6 +5253,12 @@ public class NXCSession
       if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENTS))
       {
          msg.setField(NXCPCodes.VID_PASSIVE_ELEMENTS, data.getPassiveElements());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.RESPONSIBLE_USERS))
+      {
+         Long[] users = data.getResponsibleUsers().toArray(new Long[data.getResponsibleUsers().size()]);
+         msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, users);
       }
             
       modifyCustomObject(data, userData, msg);

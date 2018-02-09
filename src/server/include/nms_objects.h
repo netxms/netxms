@@ -580,6 +580,9 @@ protected:
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
+   IntegerArray<UINT32> m_responsibleUsers;
+   RWLOCK m_rwlockResponsibleUsers;
+
    void lockProperties() const { MutexLock(m_mutexProperties); }
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
@@ -600,6 +603,14 @@ protected:
          RWLockReadLock(m_rwlockChildList, INFINITE);
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
+   void lockResponsibleUsersList(bool writeLock)
+   {
+      if (writeLock)
+         RWLockWriteLock(m_rwlockResponsibleUsers, INFINITE);
+      else
+         RWLockReadLock(m_rwlockResponsibleUsers, INFINITE);
+   }
+   void unlockResponsibleUsersList() { RWLockUnlock(m_rwlockResponsibleUsers); }
 
    void setModified(UINT32 flags, bool notify = true);                  // Used to mark object as modified
 
@@ -621,6 +632,8 @@ protected:
    void addLocationToHistory();
    bool isLocationTableExists(DB_HANDLE hdb);
    bool createLocationHistoryTable(DB_HANDLE hdb);
+
+   void getAllResponsibleUsersInternal(IntegerArray<UINT32> *list);
 
 public:
    NetObj();
@@ -757,6 +770,9 @@ public:
 
    static const TCHAR *getObjectClassName(int objectClass);
    TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
+
+   const IntegerArray<UINT32> *getResponsibleUsers() { return &m_responsibleUsers; }
+   IntegerArray<UINT32> *getAllResponsibleUsers();
 };
 
 /**

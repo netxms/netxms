@@ -131,6 +131,7 @@ public class NXCObjectModificationData
    public static final int XML_CONFIG             = 78;
    public static final int SNMP_PORT_LIST         = 79;
    public static final int PASSIVE_ELEMENTS       = 80;
+   public static final int RESPONSIBLE_USERS      = 81;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -237,6 +238,7 @@ public class NXCObjectModificationData
    private String xmlConfig;
    private List<String> snmpPorts;
    private String passiveElements;
+   private List<Long> responsibleUsers;
 
    /**
 	 * Constructor for creating modification data for given object
@@ -1996,5 +1998,24 @@ public class NXCObjectModificationData
    {
       this.passiveElements = passiveElements;
       fieldSet.add(PASSIVE_ELEMENTS);
+   }
+   
+   /**
+    * @return responsible users list
+    */
+   public List<Long> getResponsibleUsers()
+   {
+      return responsibleUsers;
+   }
+   
+   /**
+    * Set responsible users
+    * 
+    * @param responsibleUsers to set
+    */
+   public void setResponsibleUsers(List<Long> responsibleUsers)
+   {
+      this.responsibleUsers = responsibleUsers;
+      fieldSet.add(RESPONSIBLE_USERS);
    }
 }

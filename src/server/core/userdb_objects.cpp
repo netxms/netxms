@@ -123,6 +123,23 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 }
 
 /**
+ * Copy constructor for generic object
+ */
+UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
+{
+   m_id = src->m_id;
+   m_guid = src->m_guid;
+   _tcsncpy(m_name, src->m_name, MAX_USER_NAME);
+   m_systemRights = src->m_systemRights;
+   _tcsncpy(m_description, src->m_description, MAX_USER_DESCR);
+   m_flags = src->m_flags;
+   m_attributes.addAll(&src->m_attributes);
+   m_ldapDn = _tcsdup(src->m_ldapDn);
+   m_ldapId = _tcsdup(src->m_ldapId);
+   m_created = src->m_created;
+}
+
+/**
  * Destructor for generic user database object
  */
 UserDatabaseObject::~UserDatabaseObject()
@@ -385,6 +402,42 @@ json_t *UserDatabaseObject::toJson() const
    return root;
 }
 
+/**
+ * Get custom attribute as NXSL value
+ */
+NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(const TCHAR *name) const
+{
+   NXSL_Value *value = NULL;
+   const TCHAR *av = m_attributes.get(name);
+   if (av != NULL)
+      value = new NXSL_Value(av);
+   return value;
+}
+
+/**
+ * Get all custom attributes as NXSL hash map
+ */
+NXSL_Value *UserDatabaseObject::getCustomAttributesForNXSL() const
+{
+   NXSL_HashMap *map = new NXSL_HashMap();
+   StructArray<KeyValuePair> *attributes = m_attributes.toArray();
+   for(int i = 0; i < attributes->size(); i++)
+   {
+      KeyValuePair *p = attributes->get(i);
+      map->set(p->key, new NXSL_Value(static_cast<const TCHAR*>(p->value)));
+   }
+   delete attributes;
+   return new NXSL_Value(map);
+}
+
+/**
+ * Create NXSL object
+ */
+NXSL_Value *UserDatabaseObject::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslUserDBObjectClass, this));
+}
+
 /*****************************************************************************
  **  User
  ****************************************************************************/
@@ -491,6 +544,28 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
    m_xmppId[0] = 0;
+}
+
+/**
+ * Copy constructor for user object
+ */
+User::User(const User *src) : UserDatabaseObject(src)
+{
+   m_password.hashType = src->m_password.hashType;
+   memcpy(m_password.hash, src->m_password.hash, SHA256_DIGEST_SIZE);
+   memcpy(m_password.salt, src->m_password.salt, PASSWORD_SALT_LENGTH);
+
+   _tcsncpy(m_fullName, src->m_fullName, MAX_USER_FULLNAME);
+   m_graceLogins = src->m_graceLogins;
+   m_authMethod = src->m_authMethod;
+   m_certMappingMethod = src->m_certMappingMethod;
+   m_certMappingData = _tcsdup(src->m_certMappingData);
+   m_disabledUntil = src->m_disabledUntil;
+   m_lastPasswordChange = src->m_lastPasswordChange;
+   m_lastLogin = src->m_lastLogin;
+   m_minPasswordLength = src->m_minPasswordLength;
+   m_authFailures = src->m_authFailures;
+   _tcsncpy(m_xmppId, src->m_xmppId, MAX_XMPP_ID_LEN);
 }
 
 /**
@@ -771,6 +846,14 @@ json_t *User::toJson() const
    return root;
 }
 
+/**
+ * Create NXSL object
+ */
+NXSL_Value *User::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslUserClass, this));
+}
+
 /*****************************************************************************
  **  Group
  ****************************************************************************/
@@ -828,6 +911,16 @@ Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 {
 	m_memberCount = 0;
 	m_members = NULL;
+}
+
+/**
+ * Copy constructor for group object
+ */
+Group::Group(const Group *src) : UserDatabaseObject(src)
+{
+   m_memberCount = src->m_memberCount;
+   m_members = static_cast<UINT32 *>(malloc(src->m_memberCount * sizeof(UINT32)));
+   memcpy(m_members, src->m_members, src->m_memberCount * sizeof(UINT32));
 }
 
 /**
@@ -1109,4 +1202,12 @@ json_t *Group::toJson() const
    json_t *root = UserDatabaseObject::toJson();
    json_object_set_new(root, "members", json_integer_array(m_members, m_memberCount));
    return root;
+}
+
+/**
+ * Create NXSL object
+ */
+NXSL_Value *Group::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslUserGroupClass, this));
 }
