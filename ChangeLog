@@ -6,6 +6,7 @@
 - Raw DCI values saved in history along with corresponding transformed values
 - Collected DCI data recalculation based on stored raw values and current transformation settings
 - Fixed issues:
+	NX-183 (Implemented responsible users for objects)
 	NX-900 (Server started during nxdbmgr check forced repair)
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
