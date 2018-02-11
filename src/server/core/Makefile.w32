@@ -23,7 +23,7 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	netmap_element.cpp netmap_link.cpp netmap_objlist.cpp \
 	netobj.cpp netsrv.cpp node.cpp nodelink.cpp np.cpp npe.cpp \
 	nxsl_classes.cpp nxslext.cpp objects.cpp objtools.cpp package.cpp \
-	pds.cpp poll.cpp ps.cpp rack.cpp radius.cpp \
+	pds.cpp poll.cpp ps.cpp py_ext.cpp py_mgr.cpp rack.cpp radius.cpp \
 	reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 	sensor.cpp session.cpp slmcheck.cpp smclp.cpp \
 	sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \

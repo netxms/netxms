@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxpython.h>
 
 /**
  * Externals
@@ -618,6 +619,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_LOCAL_CONSOLE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EMBEDDED_PYTHON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));
@@ -1111,6 +1113,46 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       if (libraryLocked)
          scriptLibrary->unlock();
+   }
+   else if (IsCommand(_T("PYTHON"), szBuffer, 2))
+   {
+#if WITH_PYTHON
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("EXEC"), szBuffer, 3))
+      {
+         PythonInterpreter *p = PythonInterpreter::create();
+         if (p != NULL)
+         {
+            pArg = ExtractWord(pArg, szBuffer);
+            char *script;
+            UINT32 fileSize;
+            if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
+            {
+               p->execute(script);
+               free(script);
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: Cannot load script\n\n"));
+            }
+            delete p;
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("ERROR: Cannot create Python interpreter\n\n"));
+         }
+      }
+      else if (IsCommand(_T("INFO"), szBuffer, 1))
+      {
+         ConsolePrintf(pCtx, _T("Python version %hs\nInterpreter is %sinitialized\n"), Py_GetVersion(), Py_IsInitialized() ? _T("") : _T("not "));
+      }
+      else
+      {
+         ConsolePrintf(pCtx, _T("ERROR: invalid subcommand\n\n"));
+      }
+#else
+      ConsolePrintf(pCtx, _T("ERROR: server was built without Python support\n\n"));
+#endif
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {

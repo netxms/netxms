@@ -1,6 +1,7 @@
 bin_PROGRAMS = netxmsd
 netxmsd_SOURCES = netxmsd.cpp
-netxmsd_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+netxmsd_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @PYTHON_CPPFLAGS@
+netxmsd_LDFLAGS = @PYTHON_LDFLAGS@
 netxmsd_LDADD = \
 	../core/libnxcore.la \
 	../libnxsrv/libnxsrv.la \
@@ -10,7 +11,7 @@ netxmsd_LDADD = \
 	../../db/libnxdb/libnxdb.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
-   @SERVER_LIBS@
+   @SERVER_LIBS@ @PYTHON_LIBS@
 
 EXTRA_DIST = \
 	netxmsd.vcxproj netxmsd.vcxproj.filters \

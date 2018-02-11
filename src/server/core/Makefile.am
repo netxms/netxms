@@ -27,8 +27,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			netmap_objlist.cpp netobj.cpp netsrv.cpp \
 			node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
-			pds.cpp poll.cpp ps.cpp rack.cpp radius.cpp \
-			reporting.cpp rootobj.cpp schedule.cpp script.cpp \
+			pds.cpp poll.cpp ps.cpp py_ext.cpp py_mgr.cpp rack.cpp \
+			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp session.cpp slmcheck.cpp smclp.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
@@ -36,9 +36,10 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
-libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS @MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@
+libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
+	@MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@ @PYTHON_CPPFLAGS@
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @ZEROMQ_LDFLAGS@
+libnxcore_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @ZEROMQ_LDFLAGS@ @PYTHON_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
@@ -47,7 +48,7 @@ libnxcore_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
-	@SERVER_LIBS@
+	@SERVER_LIBS@ @PYTHON_LIBS@
 if XMPP_SUPPORT
 libnxcore_la_LIBADD += @top_srcdir@/src/libstrophe/libstrophe.la
 endif

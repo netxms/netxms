@@ -41,7 +41,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifdef WITH_ZMQ
+#if WITH_ZMQ
 #include "zeromq.h"
 #endif
 
@@ -82,6 +82,8 @@ void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
+void InitializeEmbeddedPython();
+void ShutdownEmbeddedPython();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -359,6 +361,10 @@ static void LoadGlobalConfig()
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
       nxlog_debug(3, _T("NXSL file I/O functions enabled"));
    }
+#if WITH_PYTHON
+   if (ConfigReadBoolean(_T("Python.EnableEmbeddedInterpreter"), true))
+      g_flags |= AF_ENABLE_EMBEDDED_PYTHON;
+#endif
    if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
@@ -869,6 +875,8 @@ retry_db_lock:
 	// Initialize certificate store and CA
 	InitCertificates();
 
+	InitializeEmbeddedPython();
+
 	// Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
 	if (!ServerCustomInit())
@@ -1167,6 +1175,8 @@ void NXCORE_EXPORTABLE Shutdown()
    ThreadPoolDestroy(g_mainThreadPool);
    MsgWaitQueue::shutdown();
    WatchdogShutdown();
+
+   ShutdownEmbeddedPython();
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
