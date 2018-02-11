@@ -54,7 +54,7 @@ class PythonInterpreter
 {
 public:
    static PythonInterpreter *create();
-}
+};
 
 #endif
 
