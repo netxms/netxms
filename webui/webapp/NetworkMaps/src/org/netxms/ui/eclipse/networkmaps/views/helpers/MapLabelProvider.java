@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,13 +26,13 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
 import org.eclipse.draw2d.BendpointConnectionRouter;
 import org.eclipse.draw2d.ConnectionEndpointLocator;
-import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.ConnectionRouter;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
-import org.eclipse.draw2d.PositionConstants;
+import org.eclipse.draw2d.PolylineConnection;
+import org.eclipse.draw2d.PolylineDecoration;
 import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
 import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
@@ -46,15 +45,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.NXCommon;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -81,6 +78,13 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MapLabelProvider extends LabelProvider implements IFigureProvider, ISelfStyleProvider
 {
+   private static final Color COLOR_AGENT_TUNNEL = new Color(Display.getDefault(), new RGB(255, 0, 0));
+   private static final Color COLOR_AGENT_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 0));
+   private static final Color COLOR_ICMP_PROXY = new Color(Display.getDefault(), new RGB(0, 0, 255));
+   private static final Color COLOR_SNMP_PROXY = new Color(Display.getDefault(), new RGB(255, 255, 0));
+   private static final Color COLOR_SSH_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 255));
+   private static final Color COLOR_ZONE_PROXY = new Color(Display.getDefault(), new RGB(255, 0, 255));
+   
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;
@@ -106,6 +110,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusIcons = true;
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
+   private boolean showLinkDirection = true;
 	private boolean enableLongObjectName = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
@@ -160,6 +165,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusIcons = store.getBoolean("NetMap.ShowStatusIcon"); //$NON-NLS-1$
 		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame"); //$NON-NLS-1$
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
+		showLinkDirection = store.getBoolean("NetMap.ShowLinkDirection");
 		
 		colors = new ColorCache();
 		
@@ -414,6 +420,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.showStatusBackground = showStatusBackground;
 	}
+	
+	/**
+	 * @return show link direction
+	 */
+	public boolean isShowLinkDirection()
+	{
+	   return showLinkDirection;
+	}
+	
+	/**
+	 * @param showLinkDirection
+	 */
+	public void setShowLinkDirection(boolean showLinkDirection)
+	{
+	   this.showLinkDirection = showLinkDirection;
+	}
 
 	/**
 	 * Check if given element selected in the viewer
@@ -463,14 +485,73 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
+      
+		if (showLinkDirection)
+		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
+      
+		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
+      ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
+      owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();     
+      ((PolylineConnection)connection.getConnectionFigure()).setSourceAnchor(new MultiConnectionAnchor(owner, link));
 		
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
+      if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
+      {
+         ObjectStatus status = ObjectStatus.UNKNOWN;
+         for(Long id : link.getStatusObject())
+         {
+            AbstractObject object = session.findObjectById(id);
+            if (object != null)
+            {
+               ObjectStatus s = object.getStatus();
+               if ((s.compareTo(ObjectStatus.UNKNOWN) < 0) && ((status.compareTo(s) < 0) || (status == ObjectStatus.UNKNOWN)))
+               {
+                  status = s;
+                  if (status == ObjectStatus.CRITICAL)
+                     break;
+               }
+            } 
+         }
+         connection.setLineColor(StatusDisplayInfo.getStatusColor(status));            
+      }
+      else if (link.getColor() >= 0)
+      {
+         connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
+      }
+      else if (link.getType() == NetworkMapLink.AGENT_TUNEL)
+      {
+         connection.setLineColor(COLOR_AGENT_TUNNEL);
+      }
+      else if (link.getType() == NetworkMapLink.AGENT_PROXY)
+      {
+         connection.setLineColor(COLOR_AGENT_PROXY);
+      }
+      else if (link.getType() == NetworkMapLink.ICMP_PROXY)
+      {
+         connection.setLineColor(COLOR_ICMP_PROXY);
+      }
+      else if (link.getType() == NetworkMapLink.SNMP_PROXY)
+      {
+         connection.setLineColor(COLOR_SNMP_PROXY);
+      }
+      else if (link.getType() == NetworkMapLink.SSH_PROXY)
+      {
+         connection.setLineColor(COLOR_SSH_PROXY);
+      }
+      else if (link.getType() == NetworkMapLink.ZONE_PROXY)
+      {
+         connection.setLineColor(COLOR_ZONE_PROXY);
+      }
+      else if (defaultLinkColor != null)
+      {
+         connection.setLineColor(defaultLinkColor);
+      }
+      
       if ((hasName || hasDciData) && connectionLabelsVisible)
       {
-         ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
-         nameLocator.setRelativePosition(PositionConstants.CENTER);
+         MultiLabelConnectionLocator nameLocator = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link);
          
          String labelString = ""; //$NON-NLS-1$
          if (hasName)
@@ -484,67 +565,20 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             labelString += dciValueProvider.getDciDataAsString(link);
          }
          
-         final Label label = new ConnectorLabel(labelString);
+         final Label label;
+         if (link.getType() == NetworkMapLink.AGENT_TUNEL || 
+             link.getType() == NetworkMapLink.AGENT_PROXY ||
+             link.getType() == NetworkMapLink.ICMP_PROXY ||
+             link.getType() == NetworkMapLink.SNMP_PROXY ||
+             link.getType() == NetworkMapLink.SSH_PROXY ||
+             link.getType() == NetworkMapLink.ZONE_PROXY)
+            label = new ConnectorLabel(labelString, connection.getLineColor());
+         else            
+            label = new ConnectorLabel(labelString);
+         
          label.setFont(fontLabel);
          connection.getConnectionFigure().add(label, nameLocator);
       }
-
-		if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
-		{
-		   ObjectStatus status = ObjectStatus.UNKNOWN;
-		   for(Long id : link.getStatusObject())
-		   {
-   			AbstractObject object = session.findObjectById(id);
-   			if (object != null)
-            {
-   			   ObjectStatus s = object.getStatus();
-   			   if ((s.compareTo(ObjectStatus.UNKNOWN) < 0) && ((status.compareTo(s) < 0) || (status == ObjectStatus.UNKNOWN)))
-   			   {
-   			      status = s;
-   			      if (status == ObjectStatus.CRITICAL)
-   			         break;
-   			   }
-            } 
-         }
-		   
-         if (!link.getDciAsList().isEmpty() && link.getConfig().isUseActiveThresholds())
-         {
-            Severity severity = Severity.UNKNOWN;
-            try
-            {
-               List<Threshold> thresholds = session.getActiveThresholds(link.getDciAsList());
-               for(Threshold t : thresholds)
-               {
-                  Severity s = t.getCurrentSeverity();
-                  if ((s.compareTo(Severity.UNKNOWN) < 0) && ((severity.compareTo(s) < 0) || (severity == Severity.UNKNOWN)))
-                  {
-                     severity = s;
-                     if (severity == Severity.CRITICAL)
-                        break;
-                  }
-               }
-            }
-            catch(IOException | NXCException e)
-            {
-               e.printStackTrace();
-            }            
-
-            if (status.getValue() > severity.getValue())
-               connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
-            else
-               connection.setLineColor(StatusDisplayInfo.getStatusColor(severity));
-         }
-         else
-            connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
-		}
-		else if (link.getColor() >= 0)
-		{
-			connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
-		}
-		else if (defaultLinkColor != null)
-		{
-			connection.setLineColor(defaultLinkColor);
-		}
 		
 		switch(link.getRouting())
 		{

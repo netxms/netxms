@@ -28,14 +28,19 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Connector label
  */
 public class ConnectorLabel extends Label
 {
-	private static final Color FOREGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 166, 205, 139);
+	private static final Color DEFAULT_FOREGROUND_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
+	private static final Color DEFAULT_BACKGROUND_COLOR = new Color(Display.getCurrent(), 166, 205, 139);
+	
+	private Color backgroundColor = null;
+   private ColorCache cCache = new ColorCache();
 		
 	/**
 	 * Create connector label with text
@@ -47,6 +52,20 @@ public class ConnectorLabel extends Label
 		super(s);
 		initLabel();
 	}
+	
+	/**
+    * Create connector label with text and custom
+    * background color
+    *
+    * @param s label`s text
+    * @param backgroundColor label`s background color
+    */
+   public ConnectorLabel(String s, Color backgroundColor)
+   {
+      super(s);
+      this.backgroundColor = backgroundColor;
+      initLabel();
+   }
 
 	/**
 	 * Create connector label with image and text
@@ -65,8 +84,9 @@ public class ConnectorLabel extends Label
 	 */
 	private void initLabel()
 	{
-		setForegroundColor(FOREGROUND_COLOR);
-		setBackgroundColor(BACKGROUND_COLOR);
+		setForegroundColor(backgroundColor == null ? DEFAULT_FOREGROUND_COLOR : 
+		   ColorConverter.selectTextColorByBackgroundColor(backgroundColor, cCache));
+		setBackgroundColor(backgroundColor == null ? DEFAULT_BACKGROUND_COLOR : backgroundColor);
 	}
 
 	/* (non-Javadoc)
@@ -77,7 +97,7 @@ public class ConnectorLabel extends Label
 	{
 		Rectangle bounds = getBounds();
 
-		gc.setBackgroundColor(BACKGROUND_COLOR);
+		gc.setBackgroundColor(backgroundColor == null ? DEFAULT_BACKGROUND_COLOR : backgroundColor);
 		gc.setAntialias(SWT.ON);
 		gc.fillRoundRectangle(bounds, 8, 8);
 

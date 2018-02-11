@@ -164,6 +164,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
 	protected Action actionShowStatusFrame;
+	protected Action actionShowLinkDirection;
 	protected Action actionZoomIn;
 	protected Action actionZoomOut;
 	protected Action actionZoomFit;
@@ -628,6 +629,19 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 
+		actionShowLinkDirection = new Action("Show link direction", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setShowLinkDirection(!labelProvider.isShowLinkDirection());
+            setChecked(labelProvider.isShowLinkDirection());
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh();
+         }
+      };
+      actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
+		
 		actionShowStatusBackground = new Action(Messages.get().AbstractNetworkMapView_ShowStatusBkgnd, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -976,6 +990,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
+		manager.add(actionShowLinkDirection);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
@@ -1116,6 +1131,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
+		manager.add(actionShowLinkDirection);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());

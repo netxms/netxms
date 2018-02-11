@@ -67,6 +67,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
    {
 	   WatchdogNotify(watchdogId);
    	NetObj *object = objects->get(i);
+   	nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 8, _T("Object %s [%d] at index %d"), object->getName(), object->getId(), i);
       if (object->isDeleted())
       {
          nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] marked for deletion"), object->getName(), object->getId());

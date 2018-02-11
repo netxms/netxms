@@ -496,6 +496,7 @@ private:
    DECLARE_THREAD_STARTER(processConsoleCommand)
    DECLARE_THREAD_STARTER(queryAgentTable)
    DECLARE_THREAD_STARTER(queryL2Topology)
+   DECLARE_THREAD_STARTER(queryInternalCommunicationTopology)
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
    DECLARE_THREAD_STARTER(recalculateDCIValues)
@@ -658,6 +659,7 @@ private:
 	void updateCertificateComments(NXCPMessage *pRequest);
 	void getCertificateList(UINT32 dwRqId);
 	void queryL2Topology(NXCPMessage *pRequest);
+   void queryInternalCommunicationTopology(NXCPMessage *pRequest);
 	void sendSMS(NXCPMessage *pRequest);
 	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(NXCPMessage *pRequest);

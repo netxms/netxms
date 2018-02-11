@@ -6169,6 +6169,78 @@ UINT32 Node::getEffectiveSnmpProxy() const
 }
 
 /**
+ * Get effective SSH proxy for this node
+ */
+UINT32 Node::getEffectiveSshProxy() const
+{
+   UINT32 sshProxy = m_sshProxy;
+   if (IsZoningEnabled() && (sshProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         sshProxy = zone->getProxyNodeId();
+      }
+   }
+   return sshProxy;
+}
+
+/**
+ * Get effective ICMP proxy for this node
+ */
+UINT32 Node::getEffectiveIcmpProxy() const
+{
+   UINT32 icmpProxy = m_icmpProxy;
+   if (IsZoningEnabled() && (icmpProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getProxyNodeId();
+      }
+   }
+   return icmpProxy;
+}
+
+/**
+ * Get effective Agent proxy for this node
+ */
+UINT32 Node::getEffectiveAgentProxy() const
+{
+   UINT32 agentProxy = m_agentProxy;
+   if (IsZoningEnabled() && (agentProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         agentProxy = zone->getProxyNodeId();
+      }
+   }
+   return agentProxy;
+}
+
+/**
+ * Get effective Zone proxy for this node
+ */
+UINT32 Node::getEffectiveZoneProxy() const
+{
+   UINT32 zoneProxy = 0;
+   if (IsZoningEnabled() && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         zoneProxy = zone->getProxyNodeId();
+      }
+   }
+   return zoneProxy;
+}
+
+/**
  * Create SNMP transport
  */
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
@@ -7991,6 +8063,130 @@ void Node::deployAgentPolicies()
       policy->decRefCount();
    }
    delete policies;
+}
+
+/**
+ * Build internal connection topology
+ */
+NetworkMapObjectList *Node::buildInternalConnectionTopology()
+{
+   NetworkMapObjectList *topology = new NetworkMapObjectList();
+   topology->setAllowDuplicateLinks(true);
+   buildInternalConnectionTopologyInternal(topology, m_id, false, false);
+
+   return topology;
+}
+
+/**
+ * Checks if proxy has been set and links objects, if not set, creates new server link or edits existing
+ */
+bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies)
+{
+   if (IsZoningEnabled() && getEffectiveZoneProxy() == proxyId && linkType != LINK_TYPE_ZONE_PROXY)
+      return false;
+
+   if (proxyId != 0)
+   {
+      Node *proxy = reinterpret_cast<Node *>(FindObjectById(proxyId, OBJECT_NODE));
+      if (proxy != NULL && proxy->getId() != m_id)
+      {
+         ObjLink *link = topology->getLink(m_id, proxyId, linkType);
+         if (link != NULL)
+            return true;
+
+         topology->addObject(proxyId);
+         topology->linkObjects(m_id, proxyId, linkType, linkName);
+         proxy->buildInternalConnectionTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
+      }
+   }
+   else
+      return false;
+
+   return true;
+}
+
+/**
+ * Build internal connection topology - internal function
+ */
+void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies)
+{
+   if (topology->getNumObjects() != 0 && seedNode == m_id)
+      return;
+   topology->addObject(m_id);
+
+   if (IsZoningEnabled())
+      checkProxyAndLink(topology, seedNode, getEffectiveZoneProxy(), LINK_TYPE_ZONE_PROXY, _T("Zone proxy"), checkAllProxies);
+
+   String protocols;
+	if (!m_tunnelId.equals(uuid::NULL_UUID))
+	{
+	   topology->addObject(FindLocalMgmtNode());
+	   topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_AGENT_TUNNEL, _T("Agent tunnel"));
+	}
+	else if (!checkProxyAndLink(topology, seedNode, getEffectiveAgentProxy(), LINK_TYPE_AGENT_PROXY, _T("Agent proxy"), checkAllProxies))
+	   protocols.append(_T("Agent "));
+
+	// Only agent connection necessary for proxy nodes
+	// Only if IP is set while using agent tunnel
+	if (!agentConnectionOnly && _tcscmp(m_primaryName, _T("0.0.0.0")))
+	{
+      if (!checkProxyAndLink(topology, seedNode, getEffectiveIcmpProxy(), LINK_TYPE_ICMP_PROXY, _T("ICMP proxy"), checkAllProxies))
+         protocols.append(_T("ICMP "));
+      if (!checkProxyAndLink(topology, seedNode, getEffectiveSnmpProxy(), LINK_TYPE_SNMP_PROXY, _T("SNMP proxy"), checkAllProxies))
+         protocols.append(_T("SNMP "));
+      if (!checkProxyAndLink(topology, seedNode, getEffectiveSshProxy(), LINK_TYPE_SSH_PROXY, _T("SSH proxy"), checkAllProxies))
+         protocols.append(_T("SSH"));
+	}
+
+	if (!protocols.isEmpty() || agentConnectionOnly)
+	{
+	   bool inSameZone = true;
+      if (IsZoningEnabled())
+      {
+         Node *server = reinterpret_cast<Node *>(FindObjectById(FindLocalMgmtNode(), OBJECT_NODE));
+         if (server != NULL && server->getZoneUIN() != m_zoneUIN)
+            inSameZone = false;
+      }
+      if (inSameZone)
+      {
+         topology->addObject(FindLocalMgmtNode());
+         topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_NORMAL, (agentConnectionOnly ? _T("Direct") : protocols));
+      }
+	}
+}
+
+/**
+ * Build entire network map
+ */
+NetworkMapObjectList *Node::buildInternalCommunicationTopology()
+{
+   NetworkMapObjectList *topology = new NetworkMapObjectList();
+   topology->setAllowDuplicateLinks(true);
+   buildInternalCommunicationTopologyInternal(topology);
+
+   return topology;
+}
+
+/**
+ * Build entire network map - internal function
+ */
+void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology)
+{
+   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+   for(int i = 0; i < objects->size(); i++)
+   {
+      NetObj *obj = objects->get(i);
+      if (obj != NULL && !obj->isDeleted())
+      {
+         if (obj->getId() == m_id)
+            continue;
+
+         if (obj->getObjectClass() == OBJECT_NODE)
+            static_cast<Node *>(obj)->buildInternalConnectionTopologyInternal(topology, m_id, false, true);
+         else if (obj->getObjectClass() == OBJECT_SENSOR)
+            static_cast<Sensor *>(obj)->buildInternalConnectionTopologyInternal(topology, true);
+      }
+   }
 }
 
 /**

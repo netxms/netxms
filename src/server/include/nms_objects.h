@@ -1581,6 +1581,8 @@ public:
  */
 class NXCORE_EXPORTABLE Sensor : public DataCollectionTarget
 {
+   friend class Node;
+
 protected:
 	MacAddress m_macAddress;
 	UINT32 m_deviceClass; // Internal device class UPS, meeter
@@ -1613,6 +1615,8 @@ protected:
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
                TCHAR *metaType, TCHAR *description, UINT32 proxyNode);
    static Sensor *registerLoraDevice(Sensor *sensor);
+
+   void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 public:
    Sensor();
@@ -1656,6 +1660,8 @@ public:
    void checkDlmsConverterAccessibility();
    void prepareDlmsDciParameters(String &parameter);
    void prepareLoraDciParameters(String &parameter);
+
+   NetworkMapObjectList *buildInternalConnectionTopology();
 };
 
 class Subnet;
@@ -1722,6 +1728,7 @@ enum ProxyType
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 {
 	friend class Subnet;
+   friend void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 private:
 	/**
@@ -1904,6 +1911,9 @@ protected:
    void setLastAgentCommTime() { m_lastAgentCommTime = time(NULL); }
 
 	void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
+	void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology);
+   void buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, UINT32 seedNode, bool agentConnectionOnly, bool checkAllProxies);
+	bool checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies);
 
 public:
    Node();
@@ -2087,6 +2097,11 @@ public:
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
    UINT32 getEffectiveSnmpProxy() const;
 
+   UINT32 getEffectiveSshProxy() const;
+   UINT32 getEffectiveIcmpProxy() const;
+   UINT32 getEffectiveAgentProxy() const;
+   UINT32 getEffectiveZoneProxy() const;
+
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
 	void writePackageListToMessage(NXCPMessage *msg);
@@ -2124,6 +2139,9 @@ public:
 	void incSnmpTrapCount();
 
 	static const TCHAR *typeName(NodeType type);
+
+	NetworkMapObjectList *buildInternalConnectionTopology();
+	NetworkMapObjectList *buildInternalCommunicationTopology();
 };
 
 /**

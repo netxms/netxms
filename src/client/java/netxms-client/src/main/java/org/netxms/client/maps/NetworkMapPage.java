@@ -74,6 +74,16 @@ public class NetworkMapPage
 	 */
 	public void addLink(final NetworkMapLink link)
 	{
+	   link.resetPosition();
+	   for(NetworkMapLink l : links)
+	   {
+	      if ((l.getElement1() == link.getElement1() && l.getElement2() == link.getElement2()) ||
+	          (l.getElement1() == link.getElement2() && l.getElement2() == link.getElement1()))
+	      {
+	         l.updatePosition();
+	         link.setDuplicateCount(l.getDuplicateCount());
+	      }
+	   }
 		links.add(link);
 	}
 	
@@ -84,7 +94,8 @@ public class NetworkMapPage
 	 */
 	public void addAllLinks(Collection<NetworkMapLink> set)
 	{
-		links.addAll(set);
+	   for(NetworkMapLink l : set)
+	      addLink(l);
 	}
 	
 	/**

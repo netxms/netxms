@@ -371,9 +371,10 @@ enum InterfaceOperState
 /**
  * Network map types
  */
-#define MAP_TYPE_CUSTOM          0
-#define MAP_TYPE_LAYER2_TOPOLOGY 1
-#define MAP_TYPE_IP_TOPOLOGY     2
+#define MAP_TYPE_CUSTOM                      0
+#define MAP_TYPE_LAYER2_TOPOLOGY             1
+#define MAP_TYPE_IP_TOPOLOGY                 2
+#define MAP_INTERNAL_COMMUNICATION_TOPOLOGY  3
 
 /**
  * Components that can be locked by management pack installer

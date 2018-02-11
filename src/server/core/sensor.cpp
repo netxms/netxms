@@ -1010,3 +1010,34 @@ void Sensor::prepareForDeletion()
 
    DataCollectionTarget::prepareForDeletion();
 }
+
+/**
+ * Build internal connection topology
+ */
+NetworkMapObjectList *Sensor::buildInternalConnectionTopology()
+{
+   NetworkMapObjectList *topology = new NetworkMapObjectList();
+   topology->setAllowDuplicateLinks(true);
+   buildInternalConnectionTopologyInternal(topology, false);
+
+   return topology;
+}
+
+/**
+ * Build internal connection topology - internal function
+ */
+void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies)
+{
+   topology->addObject(m_id);
+
+   if (m_proxyNodeId != 0)
+   {
+      Node *proxy = static_cast<Node *>(FindObjectById(m_proxyNodeId, OBJECT_NODE));
+      if (proxy != NULL)
+      {
+         topology->addObject(m_proxyNodeId);
+         topology->linkObjects(m_id, m_proxyNodeId, LINK_TYPE_SENSOR_PROXY, _T("Sensor proxy"));
+         proxy->buildInternalConnectionTopologyInternal(topology, m_proxyNodeId, false, checkAllProxies);
+      }
+   }
+}

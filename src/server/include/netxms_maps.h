@@ -29,6 +29,7 @@
  * Constants
  */
 #define MAX_CONNECTOR_NAME		128
+#define MAX_LINK_NAME         64
 #define MAX_PORT_COUNT			16
 #define MAX_BEND_POINTS       16
 
@@ -43,9 +44,16 @@
 /**
  * Object link types
  */
-#define LINK_TYPE_NORMAL      0
-#define LINK_TYPE_VPN         1
-#define LINK_TYPE_MULTILINK   2
+#define LINK_TYPE_NORMAL     	  0
+#define LINK_TYPE_VPN        	  1
+#define LINK_TYPE_MULTILINK     2
+#define LINK_TYPE_AGENT_TUNNEL  3
+#define LINK_TYPE_AGENT_PROXY   4
+#define LINK_TYPE_SSH_PROXY     5
+#define LINK_TYPE_SNMP_PROXY    6
+#define LINK_TYPE_ICMP_PROXY    7
+#define LINK_TYPE_SENSOR_PROXY  8
+#define LINK_TYPE_ZONE_PROXY    9
 
 /**
  * Link between objects
@@ -62,6 +70,7 @@ public:
 	UINT32 portIdArray1[MAX_PORT_COUNT];
 	UINT32 portIdArray2[MAX_PORT_COUNT];
 	UINT32 flags;
+	String name;
 
    ObjLink();
    ObjLink(const ObjLink *src);
@@ -75,6 +84,7 @@ class NetworkMapObjectList
 protected:
    IntegerArray<UINT32> *m_objectList;
    ObjectArray<ObjLink> *m_linkList;
+   bool m_allowDuplicateLinks;
 
 public:
    NetworkMapObjectList();
@@ -97,7 +107,11 @@ public:
 	void createMessage(NXCPMessage *pMsg);
 
 	bool isLinkExist(UINT32 objectId1, UINT32 objectId2) const;
+	ObjLink *getLink(UINT32 objectId1, UINT32 objectId2, UINT32 linkType);
 	bool isObjectExist(UINT32 objectId) const;
+
+	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }
+	bool isAllowDuplicateLinks() const { return m_allowDuplicateLinks; }
 };
 
 /**

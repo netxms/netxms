@@ -168,6 +168,7 @@ DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(queryL2Topology)
+DEFINE_THREAD_STARTER(queryInternalCommunicationTopology)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(recalculateDCIValues)
@@ -1093,6 +1094,9 @@ void ClientSession::processingThread()
 			case CMD_QUERY_L2_TOPOLOGY:
 				CALL_IN_NEW_THREAD(queryL2Topology, pMsg);
 				break;
+			case CMD_QUERY_INTERNAL_TOPOLOGY:
+			   CALL_IN_NEW_THREAD(queryInternalCommunicationTopology, pMsg);
+			   break;
 			case CMD_SEND_SMS:
 				sendSMS(pMsg);
 				break;
@@ -10253,8 +10257,8 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 void ClientSession::queryL2Topology(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-	NetObj *object;
-	UINT32 dwResult;
+   NetObj *object;
+   UINT32 dwResult;
 
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
@@ -10302,6 +10306,65 @@ void ClientSession::queryL2Topology(NXCPMessage *pRequest)
 	}
 
 	sendMessage(&msg);
+}
+
+/**
+ * Query object internal connection topology
+ */
+void ClientSession::queryInternalCommunicationTopology(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   NetObj *object;
+   UINT32 dwResult;
+
+   msg.setId(pRequest->getId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+
+   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->getObjectClass() == OBJECT_NODE)
+         {
+            NetworkMapObjectList *topology = static_cast<Node *>(object)->buildInternalConnectionTopology();
+            if (topology != NULL)
+            {
+               msg.setField(VID_RCC, RCC_SUCCESS);
+               topology->createMessage(&msg);
+               delete topology;
+            }
+            else if (object->getObjectClass() == OBJECT_SENSOR)
+            {
+               NetworkMapObjectList *topology = static_cast<Sensor *>(object)->buildInternalConnectionTopology();
+               if (topology != NULL)
+               {
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  topology->createMessage(&msg);
+                  delete topology;
+               }
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_EXEC_FAILED);
+            }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
 }
 
 /**

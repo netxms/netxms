@@ -34,6 +34,13 @@ public class NetworkMapLink
 	public static final int NORMAL = 0;
 	public static final int VPN = 1;
 	public static final int MULTILINK = 2;
+   public static final int AGENT_TUNEL = 3;
+   public static final int AGENT_PROXY = 4;
+   public static final int SSH_PROXY = 5;
+   public static final int SNMP_PROXY = 6;
+   public static final int ICMP_PROXY = 7;
+   public static final int SENSOR_PROXY = 8;
+   public static final int ZONE_PROXY = 9;
 	
 	// Routing types
 	public static final int ROUTING_DEFAULT = 0;
@@ -49,6 +56,8 @@ public class NetworkMapLink
 	private String connectorName2;
 	private LinkConfig config = new LinkConfig();
 	private int flags;
+	private int duplicateCount = 0;
+	private int position = 0;
 
 	/**
 	 * 
@@ -442,14 +451,6 @@ public class NetworkMapLink
    {
       this.connectorName2 = connectorName2;
    }
-   
-   /**
-    * @return link config
-    */
-   public LinkConfig getConfig()
-   {
-      return config;
-   }
 
    /*
     * @return true if link is locked
@@ -465,6 +466,56 @@ public class NetworkMapLink
    public void setLocked(boolean isLocked)
    {
       config.setLocked(isLocked);
+   }
+
+   /*
+    * Set link duplicate count
+    */
+   public void setDuplicateCount(int duplicateCount)
+   {
+      this.duplicateCount = duplicateCount;
+   }
+   
+   /**
+    * @return link duplicate count
+    */
+   public int getDuplicateCount()
+   {
+      return duplicateCount;
+   }
+   
+   /**
+    * Increase link position and duplicate count
+    */
+   public void updatePosition()
+   {
+      position++;
+      duplicateCount++;
+   }
+   
+   /**
+    * Reset link position and duplicate count
+    */
+   public void resetPosition()
+   {
+      position = 0;
+      duplicateCount = 0;
+   }
+   
+   /**
+    * @return link position
+    */
+   public int getPosition()
+   {
+      return position;
+   }
+   
+   /**
+    * @return link config
+    */
+   public LinkConfig getConfig()
+   {
+      return config;
    }
 
    /* (non-Javadoc)

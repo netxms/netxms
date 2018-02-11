@@ -37,6 +37,7 @@ public class MapOptions extends PropertyPage
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
+   private Button checkShowLinkDirection;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
@@ -97,6 +98,10 @@ public class MapOptions extends PropertyPage
       checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText(Messages.get().MapOptions_ShowStatusBkgnd);
       checkShowStatusBkgnd.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
+      
+      checkShowLinkDirection = new Button(objectDisplayGroup, SWT.CHECK);
+      checkShowLinkDirection.setText("Show link direction");
+      checkShowLinkDirection.setSelection((object.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
       
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
@@ -228,7 +233,9 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
 		if (checkCalculateStatus.getSelection())
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
-		md.setObjectFlags(flags, 0x1F);
+		if (checkShowLinkDirection.getSelection())
+		   flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
+		md.setObjectFlags(flags, 0x5F);
 		
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);

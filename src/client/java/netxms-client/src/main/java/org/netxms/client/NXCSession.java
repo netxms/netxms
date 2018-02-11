@@ -5537,17 +5537,64 @@ public class NXCSession
 
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
       long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
-      for(int i = 0; i < count; i++, varId += 4)
+      for(int i = 0; i < count; i++, varId += 3)
       {
          NetworkMapObject obj1 = page.findObjectElement(response.getFieldAsInt64(varId++));
          NetworkMapObject obj2 = page.findObjectElement(response.getFieldAsInt64(varId++));
          int type = response.getFieldAsInt32(varId++);
          String port1 = response.getFieldAsString(varId++);
          String port2 = response.getFieldAsString(varId++);
+         String name = response.getFieldAsString(varId++);
          int flags = response.getFieldAsInt32(varId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2, flags));
+            page.addLink(new NetworkMapLink(name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
+         }
+      }
+      return page;
+   }
+   
+   /**
+    * Query internal connection topology for node
+    *
+    * @param nodeId The node ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return The NetworkMapPage
+    */
+   public NetworkMapPage queryInternalConnectionTopology(final long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_INTERNAL_TOPOLOGY);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_OBJECTS);
+      long[] idList = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+      if (idList.length != count) 
+         throw new NXCException(RCC.INTERNAL_ERROR);
+
+      NetworkMapPage page = new NetworkMapPage(msg.getMessageId() + ".InternalConnectionTopology");
+      for(int i = 0; i < count; i++)
+      {
+         page.addElement(new NetworkMapObject(page.createElementId(), idList[i]));
+      }
+
+      count = response.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
+      long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
+      for(int i = 0; i < count; i++, varId += 3)
+      {
+         NetworkMapObject obj1 = page.findObjectElement(response.getFieldAsInt64(varId++));
+         NetworkMapObject obj2 = page.findObjectElement(response.getFieldAsInt64(varId++));
+         int type = response.getFieldAsInt32(varId++);
+         String port1 = response.getFieldAsString(varId++);
+         String port2 = response.getFieldAsString(varId++);
+         String name = response.getFieldAsString(varId++);
+         int flags = response.getFieldAsInt32(varId++);
+         if ((obj1 != null) && (obj2 != null))
+         {
+            page.addLink(new NetworkMapLink(name, type, obj1.getId(), obj2.getId(), port1, port2, flags));
          }
       }
       return page;

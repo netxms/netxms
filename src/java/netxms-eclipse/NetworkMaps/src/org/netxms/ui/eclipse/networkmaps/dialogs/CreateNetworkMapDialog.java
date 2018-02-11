@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -87,6 +88,7 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add(Messages.get().CreateNetworkMapDialog_Custom);
       mapType.add(Messages.get().CreateNetworkMapDialog_L2Topology);
       mapType.add(Messages.get().CreateNetworkMapDialog_IpTopology);
+      mapType.add("Internal Communication Topology");
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -96,7 +98,7 @@ public class CreateNetworkMapDialog extends Dialog
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0);
+		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0 && mapType.getSelectionIndex() != 3);
 			}
 
 			@Override
@@ -133,7 +135,7 @@ public class CreateNetworkMapDialog extends Dialog
 		}
 		
 		type = mapType.getSelectionIndex();
-		if (type > 0)
+		if (type > 0 && type != NetworkMap.TYPE_ENTIRE_NETWORK)
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)

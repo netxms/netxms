@@ -72,6 +72,14 @@
             name="%view.name.IPRoute"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.networkmaps.viewCategory.networkmaps"
+            class="org.netxms.ui.eclipse.networkmaps.views.InternalConnectionTopology"
+            id="org.netxms.ui.eclipse.networkmaps.views.InternalConnectionMap"
+            name="Internal Connection Topology"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -131,6 +139,12 @@
                label="%action.label.IPRouteFrom"
                menubarPath="TopologySubmenu/ip"
                tooltip="Show IP route from remote node to currently selected node">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowInternalConnectionTopology"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowInternalConnectionMap"
+               label="Internal Connection Topology"
+               menubarPath="TopologySubmenu/mac">
          </action>
       </objectContribution>
       <objectContribution

@@ -55,6 +55,7 @@ ObjLink::ObjLink(const ObjLink *src)
 	}
 
 	flags = src->flags;
+	name = src->name;
 }
 
 /**
@@ -96,17 +97,18 @@ NetworkMapObjectList::~NetworkMapObjectList()
  */
 void NetworkMapObjectList::merge(const NetworkMapObjectList *src)
 {
-   int i;
+   if (src->isAllowDuplicateLinks())
+      m_allowDuplicateLinks = true;
 
-   for(i = 0; i < src->m_objectList->size(); i++)
+   for(int i = 0; i < src->m_objectList->size(); i++)
    {
       if (!isObjectExist(src->m_objectList->get(i)))
          m_objectList->add(src->m_objectList->get(i));
    }
-   for(i = 0; i < src->m_linkList->size(); i++)
+   for(int i = 0; i < src->m_linkList->size(); i++)
    {
       ObjLink *l = src->m_linkList->get(i);
-      if (!isLinkExist(l->id1, l->id2))
+      if (m_allowDuplicateLinks || !isLinkExist(l->id1, l->id2))
          m_linkList->add(new ObjLink(l));
    }
 }
@@ -173,8 +175,19 @@ void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, con
          if (((m_linkList->get(i)->id1 == id1) && (m_linkList->get(i)->id2 == id2)) ||
              ((m_linkList->get(i)->id2 == id1) && (m_linkList->get(i)->id1 == id2)))
          {
-            linkExists = true;
-            break;
+            if (m_allowDuplicateLinks)
+            {
+               if (m_linkList->get(i)->type == linkType)
+               {
+                  linkExists = true;
+                  break;
+               }
+            }
+            else
+            {
+               linkExists = true;
+               break;
+            }
          }
       }
       if (!linkExists)
@@ -183,7 +196,9 @@ void NetworkMapObjectList::linkObjects(UINT32 id1, UINT32 id2, int linkType, con
          link->id1 = id1;
          link->id2 = id2;
          link->type = linkType;
-			m_linkList->add(link);
+         if (linkName != NULL)
+            link->name = linkName;
+         m_linkList->add(link);
       }
    }
 }
@@ -294,7 +309,7 @@ void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 		msg->setField(dwId++, (WORD)l->type);
 		msg->setField(dwId++, l->port1);
 		msg->setField(dwId++, l->port2);
-		msg->setField(dwId++, _T(""));
+		msg->setField(dwId++, l->name);
 		msg->setField(dwId++, m_linkList->get(i)->flags);
 	}
 }
@@ -311,6 +326,22 @@ bool NetworkMapObjectList::isLinkExist(UINT32 objectId1, UINT32 objectId2) const
 			return true;
 	}
 	return false;
+}
+
+/**
+ * Get link between two given objects if it exists
+ */
+ObjLink *NetworkMapObjectList::getLink(UINT32 objectId1, UINT32 objectId2, UINT32 linkType)
+{
+   for(int i = 0; i < m_linkList->size(); i++)
+   {
+      ObjLink *l = m_linkList->get(i);
+      if (((l->id1 == objectId1) && (l->id2 == objectId2)) ||
+         (((l->id1 == objectId2) && (l->id2 == objectId1)) &&
+           (l->type == linkType)))
+         return l;
+   }
+   return NULL;
 }
 
 /**

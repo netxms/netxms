@@ -71,7 +71,13 @@ NetworkMap::NetworkMap() : NetObj()
 NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : NetObj()
 {
 	m_mapType = type;
-	m_seedObjects = new IntegerArray<UINT32>(seeds);
+	if (type == MAP_INTERNAL_COMMUNICATION_TOPOLOGY)
+	{
+	   m_seedObjects = new IntegerArray<UINT32>();
+	   m_seedObjects->add(FindLocalMgmtNode());
+	}
+	else
+	   m_seedObjects = new IntegerArray<UINT32>(seeds);
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
@@ -709,6 +715,9 @@ void NetworkMap::updateContent()
                case MAP_TYPE_IP_TOPOLOGY:
                   topology = seed->buildIPTopology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0);
                   break;
+               case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
+                  topology = seed->buildInternalCommunicationTopology();
+                  break;
                default:
                   topology = NULL;
                   break;
@@ -771,7 +780,6 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
 
       UINT32 objID1 = objectIdFromElementId(link->getElement1());
       UINT32 objID2 = objectIdFromElementId(link->getElement2());
-
       bool linkExists = false;
       if (objects->isLinkExist(objID1, objID2))
       {
@@ -843,7 +851,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
          NetworkMapLink *l = m_links->get(j);
          UINT32 obj1 = objectIdFromElementId(l->getElement1());
          UINT32 obj2 = objectIdFromElementId(l->getElement2());
-         if ((objects->getLinks()->get(i)->id1 == obj1) && (objects->getLinks()->get(i)->id2 == obj2))
+         if ((objects->getLinks()->get(i)->id1 == obj1) && (objects->getLinks()->get(i)->id2 == obj2) && (objects->getLinks()->get(i)->type == l->getType()))
          {
             found = true;
             break;
@@ -860,6 +868,7 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
             NetworkMapLink *l = new NetworkMapLink(e1, e2, linkInfo->type);
             l->setConnector1Name(linkInfo->port1);
             l->setConnector2Name(linkInfo->port2);
+            l->setName(linkInfo->name);
             String config;
             config.append(_T("<config>\n"));
             config.append(_T("\t<dciList length=\"0\"/>\n"));
