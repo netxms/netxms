@@ -25,6 +25,7 @@
 	NX-1337 (Map link color based on object status)
 	NX-1346 (Unable to select template group on config export)
 	NX-1400 (NetworkMap link can be locked when using bendpoints)
+	NX-1405 (Agent may crash when parsing Windows event log message)
 
 
 *
