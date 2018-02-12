@@ -121,6 +121,7 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
    if (!sqlite3_threadsafe() ||	// Fail if SQLite compiled without threading support
 		 (sqlite3_initialize() != SQLITE_OK))
       return false;
+   sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
    sqlite3_enable_shared_cache(1);
    nxlog_debug(1, _T("SQLite version %hs"), sqlite3_libversion());
    return true;

@@ -1292,7 +1292,15 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*"));
 
       if (success)
+      {
          hdb = cachedb;
+
+         // create additional indexes
+         DBQuery(cachedb, _T("CREATE INDEX idx_items_node_id ON items(node_id)"));
+         DBQuery(cachedb, _T("CREATE INDEX idx_thresholds_item_id ON thresholds(item_id)"));
+         DBQuery(cachedb, _T("CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id)"));
+         DBQuery(cachedb, _T("CREATE INDEX idx_dct_thresholds_table_id ON dct_thresholds(table_id)"));
+      }
    }
 
    // Load built-in object properties
