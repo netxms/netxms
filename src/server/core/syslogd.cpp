@@ -477,9 +477,9 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 			WCHAR wmsg[MAX_LOG_MSG_LENGTH];
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szTag, -1, wtag, MAX_SYSLOG_TAG_LEN);
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, record.szMessage, -1, wmsg, MAX_LOG_MSG_LENGTH);
-			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, NULL, record.dwSourceObject);
+			s_parser->matchEvent(wtag, record.nFacility, 1 << record.nSeverity, wmsg, NULL, 0, record.dwSourceObject);
 #else
-			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, NULL, record.dwSourceObject);
+			s_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity, record.szMessage, NULL, 0, record.dwSourceObject);
 #endif
 		}
 		MutexUnlock(s_parserLock);
