@@ -216,7 +216,7 @@ CREATE TABLE zones
   id integer not null,    // Zone object ID
   zone_guid integer not null, // Globally unique ID for zone
   proxy_node integer not null,
-  snmp_ports integer null,
+  snmp_ports varchar(512) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
