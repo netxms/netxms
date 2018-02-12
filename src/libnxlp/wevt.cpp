@@ -99,7 +99,53 @@ static StringList *ExtractVariables(EVT_HANDLE event)
       variables = new StringList();
       PEVT_VARIANT values = PEVT_VARIANT(buffer);
       for (DWORD i = 0; i < propCount; i++)
-         variables->add(values[i].StringVal);
+      {
+         switch (values[i].Type)
+         {
+            case EvtVarTypeString:
+               variables->add(values[i].StringVal);
+               break;
+            case EvtVarTypeAnsiString:
+               variables->addMBString(values[i].AnsiStringVal);
+               break;
+            case EvtVarTypeSByte:
+               variables->add((INT32)values[i].SByteVal);
+               break;
+            case EvtVarTypeByte:
+               variables->add((INT32)values[i].ByteVal);
+               break;
+            case EvtVarTypeInt16:
+               variables->add((INT32)values[i].Int16Val);
+               break;
+            case EvtVarTypeUInt16:
+               variables->add((UINT32)values[i].UInt16Val);
+               break;
+            case EvtVarTypeInt32:
+               variables->add(values[i].Int32Val);
+               break;
+            case EvtVarTypeUInt32:
+               variables->add(values[i].UInt32Val);
+               break;
+            case EvtVarTypeInt64:
+               variables->add(values[i].Int64Val);
+               break;
+            case EvtVarTypeUInt64:
+               variables->add(values[i].UInt64Val);
+               break;
+            case EvtVarTypeSingle:
+               variables->add(values[i].SingleVal);
+               break;
+            case EvtVarTypeDouble:
+               variables->add(values[i].DoubleVal);
+               break;
+            case EvtVarTypeBoolean:
+               variables->add(values[i].BooleanVal ? _T("True") : _T("False"));
+               break;
+            default:
+               variables->add(_T(""));
+               break;
+         }
+      }
    }
 
 cleanup:
