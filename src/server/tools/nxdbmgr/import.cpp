@@ -29,6 +29,24 @@
 extern const TCHAR *g_tables[];
 
 /**
+ * Well-known integer fields to be fixed during import
+ */
+static struct
+{
+   const TCHAR *table;
+   const char *column;
+} s_fixFields[] =
+{
+   { _T("network_maps"), "bg_zoom" },
+   { _T("nodes"), "capabilities" },
+   { _T("nodes"), "port_rows" },
+   { _T("nodes"), "port_numbering_scheme" },
+   { _T("snmp_communities"), "zone" },
+   { _T("usm_credentials"), "zone" },
+   { NULL, NULL },
+};
+
+/**
  * Callback for import table
  */
 static int ImportTableCB(void *arg, int cols, char **data, char **names)
@@ -40,7 +58,7 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	for(i = 0; i < cols; i++)
 	{
 		query.appendMBString(names[i], strlen(names[i]), CP_UTF8);
-		query += _T(",");
+		query.append(_T(","));
 	}
 	query.shrink();
 	query += _T(") VALUES (");
@@ -48,19 +66,34 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	{
 		if (data[i] != NULL)
 		{
+			if (*data[i] == 0)
+			{
+            bool fix = false;
+				for(int n = 0; s_fixFields[n].table != NULL; n++)
+					if (!_tcsicmp(s_fixFields[n].table, static_cast<TCHAR*>(arg)) &&
+                   !stricmp(s_fixFields[n].column, names[i]))
+               {
+                  fix = true;
+                  break;
+               }
+            query.append(fix ? _T("0,") : _T("'',"));
+			}
+			else
+			{
 #ifdef UNICODE
-			WCHAR *wcData = WideStringFromUTF8String(data[i]);
-			String prepData = DBPrepareString(g_hCoreDB, wcData);
-			free(wcData);
+				WCHAR *wcData = WideStringFromUTF8String(data[i]);
+				String prepData = DBPrepareString(g_hCoreDB, wcData);
+				free(wcData);
 #else
-			String prepData = DBPrepareString(g_hCoreDB, data[i]);
+				String prepData = DBPrepareString(g_hCoreDB, data[i]);
 #endif
-			query += (const TCHAR *)prepData;
-			query += _T(",");
+				query.append(prepData);
+				query.append(_T(","));
+			}
 		}
 		else
 		{
-			query += _T("NULL,");
+			query.append(_T("NULL,"));
 		}
 	}
 	query.shrink();
