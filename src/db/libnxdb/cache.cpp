@@ -41,9 +41,10 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBOpenInMemoryDatabase()
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot open in-memory database: %s"), errorText);
       DBUnloadDriver(drv);
    }
+
+   DBQuery(hdb, _T("PRAGMA page_size=65536"));
    return hdb;
 }
-
 
 /**
  * Close in-memory database
