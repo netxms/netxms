@@ -43,6 +43,7 @@ static Queue s_smsQueue;
 static bool (* s_fpDrvSendMsg)(const TCHAR *, const TCHAR *);
 static void (* s_fpDrvUnload)();
 static THREAD s_senderThread = INVALID_THREAD_HANDLE;
+static bool s_smsDriverLoaded = false;
 
 /**
  * Sender thread
@@ -105,6 +106,7 @@ void InitSMSSender()
             if (DrvInit(szDrvConfig, &g_serverConfig))
             {
                s_senderThread = ThreadCreateEx(SenderThread, 0, NULL);
+               s_smsDriverLoaded = true;
             }
             else
             {
@@ -141,8 +143,10 @@ void ShutdownSMSSender()
  */
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 {
-	SMS *pMsg = (SMS *)malloc(sizeof(SMS));
-	nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
-	pMsg->szText = _tcsdup(pszText);
-	s_smsQueue.put(pMsg);
+   if (!s_smsDriverLoaded)
+      return;
+   SMS *pMsg = (SMS *)malloc(sizeof(SMS));
+   _tcslcpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
+   pMsg->szText = _tcsdup(pszText);
+   s_smsQueue.put(pMsg);
 }

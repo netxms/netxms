@@ -109,3 +109,19 @@ NXSL_Value *NXSL_InetAddressClass::createObject(const InetAddress& addr)
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslInetAddressClass, new InetAddress(addr)));
 }
+
+/**
+ * Constructor for InetAddress class
+ */
+int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc == 1) && !argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   InetAddress addr = (argc == 0) ? InetAddress() : InetAddress::parse(argv[0]->getValueAsCString());
+   *result = NXSL_InetAddressClass::createObject(addr);
+   return 0;
+}

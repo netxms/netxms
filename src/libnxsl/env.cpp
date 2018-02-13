@@ -78,6 +78,7 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *v
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -100,6 +101,7 @@ int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, i
 static NXSL_ExtFunction s_builtinFunctions[] =
 {
    { _T("__new@GeoLocation"), F_GeoLocation, -1 },
+   { _T("__new@InetAddress"), F_InetAddress, -1 },
    { _T("__new@Table"), F_Table, 0 },
    { _T("__new@TIME"), F_TIME, 0 },
 	{ _T("_exit"), F_exit, -1 },

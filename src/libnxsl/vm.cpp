@@ -1057,6 +1057,7 @@ void NXSL_VM::execute()
             {
                error(NXSL_ERR_NOT_INTEGER);
             }
+            delete pValue;
          }
          else
          {

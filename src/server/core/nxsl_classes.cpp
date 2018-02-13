@@ -712,7 +712,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       NXSL_Array *a = new NXSL_Array();
       for(int i = 0; i < addrList->size(); i++)
       {
-         a->append(new NXSL_Value(NXSL_InetAddressClass::createObject(addrList->get(i))));
+         a->append(NXSL_InetAddressClass::createObject(addrList->get(i)));
       }
       value = new NXSL_Value(a);
    }

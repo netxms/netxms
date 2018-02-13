@@ -538,6 +538,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 												 (int)((event != NULL) ? event->m_code : 0), textTemplate, scriptName, vm->getErrorText());
 									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 								}
+                        delete vm;
 							}
 							else
 							{
