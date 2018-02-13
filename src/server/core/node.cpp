@@ -2434,13 +2434,10 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
  */
 void Node::configurationPoll(PollerInfo *poller)
 {
-   if (!IsShutdownInProgress())
-   {
-      poller->startExecution();
-      ObjectTransactionStart();
-      configurationPoll(NULL, 0, poller, 0);
-      ObjectTransactionEnd();
-   }
+   poller->startExecution();
+   ObjectTransactionStart();
+   configurationPoll(NULL, 0, poller, 0);
+   ObjectTransactionEnd();
    delete poller;
 }
 
@@ -3743,13 +3740,10 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
  */
 void Node::instanceDiscoveryPoll(PollerInfo *poller)
 {
-   if (!IsShutdownInProgress())
-   {
-      poller->startExecution();
-      ObjectTransactionStart();
-      instanceDiscoveryPoll(NULL, 0, poller);
-      ObjectTransactionEnd();
-   }
+   poller->startExecution();
+   ObjectTransactionStart();
+   instanceDiscoveryPoll(NULL, 0, poller);
+   ObjectTransactionEnd();
    delete poller;
 }
 
@@ -6237,11 +6231,8 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
  */
 void Node::routingTablePoll(PollerInfo *poller)
 {
-   if (!IsShutdownInProgress())
-   {
-      poller->startExecution();
-      updateRoutingTable();
-   }
+   poller->startExecution();
+   updateRoutingTable();
    delete poller;
 }
 
@@ -6758,11 +6749,8 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
  */
 void Node::topologyPoll(PollerInfo *poller)
 {
-   if (!IsShutdownInProgress())
-   {
-      poller->startExecution();
-      topologyPoll(NULL, 0, poller);
-   }
+   poller->startExecution();
+   topologyPoll(NULL, 0, poller);
    delete poller;
 }
 
