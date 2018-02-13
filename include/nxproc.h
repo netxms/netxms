@@ -9,6 +9,13 @@
 #define MAX_PIPE_NAME_LEN     128
 
 /**
+ * Sub-process command codes
+ */
+#define SPC_EXIT              0x0001
+#define SPC_REQUEST_COMPLETED 0x0002
+#define SPC_USER              0x0100   /* base ID for user messages */
+
+/**
  * Named pipe class
  */
 class LIBNETXMS_EXPORTABLE NamedPipe
@@ -118,6 +125,43 @@ public:
 
    bool isRunning();
    bool waitForCompletion(UINT32 timeout);
+};
+
+/**
+ * Sub-process request handler
+ */
+typedef NXCPMessage* (*SubProcessRequestHandler)(NXCPMessage *);
+
+/**
+ * Sub-process state
+ */
+enum SubProcessState
+{
+   SP_INIT = 0,
+   SP_RUNNING = 1,
+   SP_STOPPED = 2
+};
+
+/**
+ * Sub-process executor
+ */
+class LIBNETXMS_EXPORTABLE SubProcessExecutor : public ProcessExecutor
+{
+private:
+   NamedPipe *m_pipe;
+   SubProcessState m_state;
+
+   static ObjectArray<SubProcessExecutor> *m_registry;
+   static Mutex m_registryLock;
+   static THREAD m_monitorThread;
+
+   static THREAD_RESULT THREAD_CALL monitorThread(void *arg);
+
+public:
+   SubProcessExecutor(const TCHAR *name);
+   virtual ~SubProcessExecutor();
+
+   SubProcessState getState() const { return m_state; }
 };
 
 #endif   /* _nxproc_h_ */

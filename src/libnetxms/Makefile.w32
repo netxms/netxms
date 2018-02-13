@@ -12,9 +12,9 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	serial.cpp sha1.cpp sha2.cpp spoll.cpp StackWalker.cpp \
 	streamcomp.cpp string.cpp stringlist.cpp strlcat.c strlcpy.c \
 	strmap.cpp strmapbase.cpp strptime.c strset.cpp \
-	strtoll.c strtoull.c table.cpp threads.cpp timegm.c tools.cpp \
-	tp.cpp unicode.cpp uuid.cpp wcslcat.c wcslcpy.c wcstoll.c \
-	wcstoull.c xml.cpp ztools.cpp
+	strtoll.c strtoull.c subproc.cpp table.cpp threads.cpp \
+	timegm.c tools.cpp tp.cpp unicode.cpp uuid.cpp wcslcat.c \
+	wcslcpy.c wcstoll.c wcstoull.c xml.cpp ztools.cpp
 
 CPPFLAGS = /I "$(NETXMS_BASE)\src\libexpat\libexpat" /I "$(NETXMS_BASE)\src\zlib" /DLIBNETXMS_EXPORTS
 LIBS = libexpat.lib libtre.lib jansson.lib nxzlib.lib ws2_32.lib dbghelp.lib psapi.lib rpcrt4.lib iphlpapi.lib crypt32.lib

@@ -8,8 +8,8 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
           qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c serial.cpp \
 	  sha1.cpp sha2.cpp socket_listener.cpp solaris9_atomic.c spoll.cpp streamcomp.cpp \
 	  string.cpp stringlist.cpp strlcat.c strlcpy.c strmap.cpp \
-	  strmapbase.cpp strptime.c \
-	  strset.cpp strtoll.c strtoull.c table.cpp threads.cpp timegm.c \
+	  strmapbase.cpp strptime.c strset.cpp strtoll.c strtoull.c \
+	  subproc.cpp table.cpp threads.cpp timegm.c \
 	  tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
 	  wcscasecmp.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp ztools.cpp
 
