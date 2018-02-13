@@ -773,6 +773,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
 		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
+		md.setMapObjectDisplayMode(labelProvider.getObjectFigureType());
 		
 		int flags = mapObject.getFlags();
 		if (labelProvider.isShowStatusIcons())
