@@ -175,12 +175,20 @@ void ShowServerStats(CONSOLE_CTX console)
 }
 
 /**
+ * Show queue stats from function
+ */
+void ShowQueueStats(CONSOLE_CTX console, int size, const TCHAR *pszName)
+{
+   ConsolePrintf(console, _T("%-32s : %d\n"), pszName, size);
+}
+
+/**
  * Show queue stats
  */
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName)
 {
    if (pQueue != NULL)
-      ConsolePrintf(console, _T("%-32s : %d\n"), pszName, pQueue->size());
+      ShowQueueStats(console, pQueue->size(), pszName);
 }
 
 /**

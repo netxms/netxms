@@ -716,7 +716,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Create queue for delayed SQL queries
 	g_dbWriterQueue = new Queue(256, 64);
-	g_dciDataWriterQueue = new Queue(1024, 1024);
 	g_dciRawDataWriterQueue = new Queue(1024, 1024);
 
 	// Initialize database driver and connect to database
@@ -909,6 +908,9 @@ retry_db_lock:
 	// Initialize watchdog
 	WatchdogInit();
 
+   // Start database _T("lazy") write thread
+   StartDBWriter();
+
 	// Load modules
 	if (!LoadNetXMSModules())
 		return FALSE;	// Mandatory module not loaded
@@ -998,9 +1000,6 @@ retry_db_lock:
 
 	// Start built-in syslog daemon
    StartSyslogServer();
-
-	// Start database _T("lazy") write thread
-	StartDBWriter();
 
 	// Start beacon host poller
 	ThreadCreate(BeaconPoller, 0, NULL);
