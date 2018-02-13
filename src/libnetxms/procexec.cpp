@@ -458,3 +458,15 @@ bool ProcessExecutor::waitForCompletion(UINT32 timeout)
    return !m_running;
 #endif
 }
+
+/**
+ * Get process ID
+ */
+pid_t ProcessExecutor::getProcessId()
+{
+#ifdef _WIN32
+   return GetProcessId(m_phandle);
+#else
+   return m_pid;
+#endif
+}

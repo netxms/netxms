@@ -111,9 +111,11 @@ public:
 
    UINT32 getStreamId() const { return m_streamId; }
    const TCHAR *getCommand() const { return m_cmd; }
+   pid_t getProcessId();
 
-   bool execute();
-   void stop();
+   virtual bool execute();
+   virtual void stop();
+
    bool isRunning();
    bool waitForCompletion(UINT32 timeout);
 };
