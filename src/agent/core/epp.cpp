@@ -36,7 +36,7 @@ public:
 
    const StringMap *getParameters() const { return &m_parameters; }
 
-   bool start() { m_parameters.clear(); return ProcessExecutor::execute(); }
+   virtual bool execute() { m_parameters.clear(); return ProcessExecutor::execute(); }
 
    virtual void onOutput(const char *text);
    virtual void endOfOutput();
@@ -66,12 +66,14 @@ void ParameterProviderExecutor::onOutput(const char *text)
       TCHAR *newLinePtr = NULL, *lineStartPtr = buffer, *eqPtr = NULL;
       do
       {
-         newLinePtr = _tcschr(lineStartPtr, _T('\n'));
+         newLinePtr = _tcschr(lineStartPtr, _T('\r'));
+         if (newLinePtr == NULL)
+            newLinePtr = _tcschr(lineStartPtr, _T('\n'));
          if (newLinePtr != NULL)
          {
             *newLinePtr = 0;
             m_buffer.append(lineStartPtr);
-            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
             {
                nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
                stop();
@@ -82,7 +84,7 @@ void ParameterProviderExecutor::onOutput(const char *text)
          else
          {
             m_buffer.append(lineStartPtr);
-            if (m_buffer.length() > MAX_RESULT_LENGTH*3)
+            if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
             {
                nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
                stop();
@@ -200,7 +202,7 @@ LONG ParameterProvider::getValue(const TCHAR *name, TCHAR *buffer)
  */
 void ParameterProvider::poll()
 {
-	if (m_executor->start())
+	if (m_executor->execute())
 	{
 	   nxlog_debug(4, _T("ParamProvider::poll(): started command \"%s\""), m_executor->getCommand());
 	   if (m_executor->waitForCompletion(g_eppTimeout * 1000))
