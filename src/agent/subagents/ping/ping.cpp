@@ -407,7 +407,7 @@ static bool SubagentInit(Config *config)
 	   return false;
 	}
 
-	s_pollers = ThreadPoolCreate(1, 1024, _T("PING"));
+	s_pollers = ThreadPoolCreate(_T("PING"), 1, 1024);
 
    if (m_pollsPerMinute == 0)
       m_pollsPerMinute = 1;

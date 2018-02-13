@@ -261,6 +261,12 @@ void DataCollector(void *arg)
       return;
    }
 
+   if (IsShutdownInProgress())
+   {
+      pItem->clearBusyFlag();
+      return;
+   }
+
    DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
              pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
    UINT32 sourceNodeId = target->getEffectiveSourceNode(pItem);
@@ -550,10 +556,10 @@ static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
  */
 void InitDataCollector()
 {
-   g_dataCollectorThreadPool = ThreadPoolCreate(
+   g_dataCollectorThreadPool = ThreadPoolCreate(_T("DATACOLL"),
             ConfigReadInt(_T("ThreadPool.DataCollector.BaseSize"), 10),
             ConfigReadInt(_T("ThreadPool.DataCollector.MaxSize"), 250),
-            _T("DATACOLL"));
+            128 * 1024);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
    s_statCollectorThread = ThreadCreateEx(StatCollector, 0, NULL);

@@ -888,14 +888,12 @@ retry_db_lock:
 
    // Create thread pools
 	nxlog_debug(2, _T("Creating thread pools"));
-	g_mainThreadPool = ThreadPoolCreate(
+	g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
             ConfigReadInt(_T("ThreadPool.Main.BaseSize"), 8),
-            ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256),
-            _T("MAIN"));
-	g_agentConnectionThreadPool = ThreadPoolCreate(
+            ConfigReadInt(_T("ThreadPool.Main.MaxSize"), 256));
+	g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"),
             ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 4),
-            ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256),
-            _T("AGENT"));
+            ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256));
 
 	// Setup unique identifiers table
 	if (!InitIdTable())
