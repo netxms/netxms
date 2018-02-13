@@ -124,7 +124,7 @@ ThreadPool *g_npeThreadPool = NULL;
  */
 void RegisterPredictionEngines()
 {
-   g_npeThreadPool = ThreadPoolCreate(0, 1024, _T("NPE"));
+   g_npeThreadPool = ThreadPoolCreate(_T("NPE"), 0, 1024);
    ENUMERATE_MODULES(pfGetPredictionEngines)
    {
       ObjectArray<PredictionEngine> *engines = g_pModuleList[__i].pfGetPredictionEngines();
