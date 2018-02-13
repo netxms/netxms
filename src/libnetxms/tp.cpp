@@ -66,6 +66,7 @@ struct ThreadPool
 {
    int minThreads;
    int maxThreads;
+   int stackSize;
    VolatileCounter activeRequests;
    MUTEX mutex;
    THREAD maintThread;
@@ -230,11 +231,12 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 /**
  * Create thread pool
  */
-ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads, const TCHAR *name)
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThreads, int maxThreads, int stackSize)
 {
    ThreadPool *p = (ThreadPool *)malloc(sizeof(ThreadPool));
    p->minThreads = minThreads;
    p->maxThreads = maxThreads;
+   p->stackSize = stackSize;
    p->activeRequests = 0;
    p->threads = new HashMap<UINT64, WorkerThreadInfo>();
    p->queue = new Queue(64, 64);
@@ -255,11 +257,11 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads
    {
       WorkerThreadInfo *wt = new WorkerThreadInfo;
       wt->pool = p;
-      wt->handle = ThreadCreateEx(WorkerThread, 0, wt);
+      wt->handle = ThreadCreateEx(WorkerThread, stackSize, wt);
       p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
    }
 
-   p->maintThread = ThreadCreateEx(MaintenanceThread, 0, p);
+   p->maintThread = ThreadCreateEx(MaintenanceThread, 256 * 1024, p);
 
    s_registryLock.lock();
    s_registry.set(p->name, p);
@@ -330,7 +332,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
       {
          WorkerThreadInfo *wt = new WorkerThreadInfo;
          wt->pool = p;
-         wt->handle = ThreadCreateEx(WorkerThread, 0, wt);
+         wt->handle = ThreadCreateEx(WorkerThread, p->stackSize, wt);
          p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
          started = true;
       }

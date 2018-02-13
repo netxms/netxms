@@ -943,7 +943,7 @@ static UINT32 DataCollectionSchedulerRun()
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
    DebugPrintf(1, _T("Data collection scheduler thread started"));
-   s_dataCollectorPool = ThreadPoolCreate(1, g_dcMaxCollectorPoolSize, _T("DATACOLL"));
+   s_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))

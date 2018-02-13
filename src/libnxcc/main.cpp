@@ -98,7 +98,7 @@ bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, Cluste
    if ((g_nxccNodeId < 1) || (g_nxccNodeId > CLUSTER_MAX_NODE_ID))
       return false;
 
-   g_nxccThreadPool = ThreadPoolCreate(1, 16, _T("CLUSTER"));
+   g_nxccThreadPool = ThreadPoolCreate(_T("CLUSTER"), 1, 16);
 
    memset(g_nxccNodes, 0, sizeof(g_nxccNodes));
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)

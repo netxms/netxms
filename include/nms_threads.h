@@ -1021,7 +1021,7 @@ struct ThreadPoolInfo
 typedef void (* ThreadPoolWorkerFunction)(void *);
 
 /* Thread pool functions */
-ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads, const TCHAR *name);
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThreads, int maxThreads, int stackSize = 0);
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg);

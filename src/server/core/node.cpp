@@ -1343,15 +1343,18 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void Node::statusPoll(PollerInfo *poller)
 {
-   poller->startExecution();
-   statusPoll(NULL, 0, poller);
-
-   // Check if the node has to be deleted due to long downtime
-   time_t unreachableDeleteDays = (time_t)ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
-   if ((unreachableDeleteDays > 0) && (m_downSince > 0) &&
-       (time(NULL) - m_downSince > unreachableDeleteDays * 24 * 3600))
+   if (!IsShutdownInProgress())
    {
-      deleteObject();
+      poller->startExecution();
+      statusPoll(NULL, 0, poller);
+
+      // Check if the node has to be deleted due to long downtime
+      time_t unreachableDeleteDays = (time_t)ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
+      if ((unreachableDeleteDays > 0) && (m_downSince > 0) &&
+          (time(NULL) - m_downSince > unreachableDeleteDays * 24 * 3600))
+      {
+         deleteObject();
+      }
    }
    delete poller;
 }
@@ -2431,10 +2434,13 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
  */
 void Node::configurationPoll(PollerInfo *poller)
 {
-   poller->startExecution();
-   ObjectTransactionStart();
-   configurationPoll(NULL, 0, poller, 0);
-   ObjectTransactionEnd();
+   if (!IsShutdownInProgress())
+   {
+      poller->startExecution();
+      ObjectTransactionStart();
+      configurationPoll(NULL, 0, poller, 0);
+      ObjectTransactionEnd();
+   }
    delete poller;
 }
 
@@ -3737,10 +3743,13 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
  */
 void Node::instanceDiscoveryPoll(PollerInfo *poller)
 {
-   poller->startExecution();
-   ObjectTransactionStart();
-   instanceDiscoveryPoll(NULL, 0, poller);
-   ObjectTransactionEnd();
+   if (!IsShutdownInProgress())
+   {
+      poller->startExecution();
+      ObjectTransactionStart();
+      instanceDiscoveryPoll(NULL, 0, poller);
+      ObjectTransactionEnd();
+   }
    delete poller;
 }
 
@@ -6228,8 +6237,11 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
  */
 void Node::routingTablePoll(PollerInfo *poller)
 {
-   poller->startExecution();
-   updateRoutingTable();
+   if (!IsShutdownInProgress())
+   {
+      poller->startExecution();
+      updateRoutingTable();
+   }
    delete poller;
 }
 
@@ -6746,8 +6758,11 @@ void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, U
  */
 void Node::topologyPoll(PollerInfo *poller)
 {
-   poller->startExecution();
-   topologyPoll(NULL, 0, poller);
+   if (!IsShutdownInProgress())
+   {
+      poller->startExecution();
+      topologyPoll(NULL, 0, poller);
+   }
    delete poller;
 }
 
