@@ -102,7 +102,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 {
    ThreadSetName("EventLogger");
 
-   while(!IsShutdownInProgress())
+   while(true)
    {
       Event *pEvent = (Event *)s_loggerQueue->getOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
@@ -127,7 +127,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
 				_T("event_source,dci_id,event_severity,event_message,root_event_id,user_tag) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?)"));
+				_T("VALUES (?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				do
@@ -144,7 +144,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBExecute(hStmt);
 					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
-					pEvent = (Event *)s_loggerQueue->get();
+					pEvent = (Event *)s_loggerQueue->getOrBlock(500);
 				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
 				DBFreeStatement(hStmt);
 			}

@@ -2811,6 +2811,7 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                                      (int)((event != NULL) ? event->getCode() : 0), textTemplate, scriptName, vm->getErrorText());
                            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
                         }
+                        delete vm;
                      }
                      else
                      {

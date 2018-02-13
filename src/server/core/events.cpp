@@ -577,7 +577,7 @@ void Event::expandMessageText()
  */
 TCHAR *Event::expandText(const TCHAR *textTemplate, const Alarm *alarm)
 {
-	NetObj *obj = FindObjectById(m_sourceId);
+   NetObj *obj = FindObjectById(m_sourceId);
    if (obj == NULL)
    {
      obj = FindObjectById(g_dwMgmtNode);
@@ -585,7 +585,7 @@ TCHAR *Event::expandText(const TCHAR *textTemplate, const Alarm *alarm)
         obj = g_pEntireNet;
    }
 
-	return obj->expandText(textTemplate, alarm, this, NULL, NULL);
+   return obj->expandText(textTemplate, alarm, this, NULL, NULL);
 }
 
 /**
