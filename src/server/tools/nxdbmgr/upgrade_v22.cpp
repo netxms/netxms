@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.16 to 30.0
+ * Upgrade from 22.17 to 30.0
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.16 to 22.17
  */
 static bool H_UpgradeFromV16()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.DataQueues"), _T("1"), _T("Number of queues for DCI data writer."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
 
@@ -324,7 +334,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 16, 30, 0,  H_UpgradeFromV16 },
+   { 17, 30, 0,  H_UpgradeFromV17 },
+   { 18, 22, 17, H_UpgradeFromV16 },
    { 15, 22, 16, H_UpgradeFromV15 },
    { 14, 22, 15, H_UpgradeFromV14 },
    { 13, 22, 14, H_UpgradeFromV13 },

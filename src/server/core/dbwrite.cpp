@@ -58,14 +58,33 @@ struct DELAYED_RAW_DATA_UPDATE
 };
 
 /**
+ * IData writer
+ */
+struct IDataWriter
+{
+   THREAD thread;
+   Queue *queue;
+};
+
+/**
+ * Maximum possible number of IData writers
+ */
+#define MAX_IDATA_WRITERS  16
+
+/**
+ * Configured number of IData writers
+ */
+static int s_idataWriterCount = 1;
+
+/**
+ * IData writers
+ */
+static IDataWriter s_idataWriters[MAX_IDATA_WRITERS];
+
+/**
  * Generic DB writer queue
  */
 Queue *g_dbWriterQueue = NULL;
-
-/**
- * DCI data (idata_* tables) writer queue
- */
-Queue *g_dciDataWriterQueue = NULL;
 
 /**
  * Raw DCI data writer queue
@@ -83,7 +102,6 @@ UINT64 g_otherWriteRequests = 0;
  * Static data
  */
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
-static THREAD s_iDataWriterThread = INVALID_THREAD_HANDLE;
 static THREAD s_rawDataWriterThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -160,7 +178,15 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 	rq->dciId = dciId;
    _tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
    _tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
-	g_dciDataWriterQueue->put(rq);
+   if (s_idataWriterCount > 1)
+   {
+      int hash = nodeId % s_idataWriterCount;
+      s_idataWriters[hash].queue->put(rq);
+   }
+   else
+   {
+      s_idataWriters[0].queue->put(rq);
+   }
 	g_idataWriteRequests++;
 }
 
@@ -236,10 +262,11 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
    ThreadSetName("DBWriter/IData");
+   IDataWriter *writer = static_cast<IDataWriter*>(arg);
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
-		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->getOrBlock();
+		DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -288,7 +315,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (!success || (count > maxRecords))
 					break;
 
-				rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->get();
+				rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
 				if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
 					break;
 			}
@@ -354,7 +381,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
                if (!success || (count > maxRecords))
                   break;
 
-               rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->get();
+               rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock(500);
                if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
                   break;
             }
@@ -382,8 +409,19 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 void StartDBWriter()
 {
    s_writerThread = ThreadCreateEx(DBWriteThread, 0, NULL);
-	s_iDataWriterThread = ThreadCreateEx(IDataWriteThread, 0, NULL);
 	s_rawDataWriterThread = ThreadCreateEx(RawDataWriteThread, 0, NULL);
+
+	s_idataWriterCount = ConfigReadInt(_T("DBWriter.DataQueues"), 1);
+	if (s_idataWriterCount < 1)
+	   s_idataWriterCount = 1;
+	else if (s_idataWriterCount > MAX_IDATA_WRITERS)
+	   s_idataWriterCount = MAX_IDATA_WRITERS;
+	nxlog_debug(1, _T("Using %d DCI data write queues"), s_idataWriterCount);
+	for(int i = 0; i < s_idataWriterCount; i++)
+	{
+	   s_idataWriters[i].queue = new Queue();
+	   s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
+	}
 }
 
 /**
@@ -392,9 +430,24 @@ void StartDBWriter()
 void StopDBWriter()
 {
    g_dbWriterQueue->put(INVALID_POINTER_VALUE);
-	g_dciDataWriterQueue->put(INVALID_POINTER_VALUE);
 	g_dciRawDataWriterQueue->put(INVALID_POINTER_VALUE);
    ThreadJoin(s_writerThread);
-	ThreadJoin(s_iDataWriterThread);
 	ThreadJoin(s_rawDataWriterThread);
+   for(int i = 0; i < s_idataWriterCount; i++)
+   {
+      s_idataWriters[i].queue->put(INVALID_POINTER_VALUE);
+      ThreadJoin(s_idataWriters[i].thread);
+      delete s_idataWriters[i].queue;
+   }
+}
+
+/**
+ * Get size of IData writer queue
+ */
+int GetIDataWriterQueueSize()
+{
+   int size = 0;
+   for(int i = 0; i < s_idataWriterCount; i++)
+      size += s_idataWriters[i].queue->size();
+   return size;
 }

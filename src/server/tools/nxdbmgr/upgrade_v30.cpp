@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.27 to 30.28 (changes also included into 22.17)
+ */
+static bool H_UpgradeFromV27()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 17)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.DataQueues"), _T("1"), _T("Number of queues for DCI data writer."), NULL, 'I', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 17));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Upgrade from 30.26 to 30.27
  */
 static bool H_UpgradeFromV26()
@@ -934,6 +948,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 27, 30, 28, H_UpgradeFromV27 },
    { 26, 30, 27, H_UpgradeFromV26 },
    { 25, 30, 26, H_UpgradeFromV25 },
    { 24, 30, 25, H_UpgradeFromV24 },

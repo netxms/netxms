@@ -45,7 +45,7 @@ static int s_throttlingLowWatermark = 50000;
  */
 bool ThrottleHousekeeper()
 {
-   int qsize = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+   int qsize = g_dbWriterQueue->size() + GetIDataWriterQueueSize() + g_dciRawDataWriterQueue->size();
    if (qsize < s_throttlingHighWatermark)
       return true;
 
@@ -53,7 +53,7 @@ bool ThrottleHousekeeper()
    while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
    {
       ConditionWait(s_wakeupCondition, 30000);
-      qsize = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+      qsize = g_dbWriterQueue->size() + GetIDataWriterQueueSize() + g_dciRawDataWriterQueue->size();
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper resumed (queue size %d)"), qsize);
    return !s_shutdown;

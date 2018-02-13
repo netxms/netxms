@@ -479,9 +479,9 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       pollerQS[currPos] = (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
 
       dbWriterQS[currPos] = g_dbWriterQueue->size();
-      iDataWriterQS[currPos] = g_dciDataWriterQueue->size();
+      iDataWriterQS[currPos] = GetIDataWriterQueueSize();
       rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->size();
-      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+      dbAndIDataWriterQS[currPos] = dbWriterQS[currPos] + iDataWriterQS[currPos] + rawDataWriterQS[currPos];
       syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
       syslogWriterQS[currPos] = g_syslogWriteQueue.size();
       currPos++;
