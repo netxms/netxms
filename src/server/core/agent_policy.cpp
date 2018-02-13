@@ -115,7 +115,7 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    lockChildList(false);
    if (success && (m_childList->size() > 0))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

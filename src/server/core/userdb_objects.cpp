@@ -276,7 +276,7 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
 	if (DBQuery(hdb, query))
 	{
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"), true);
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -882,7 +882,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 			if (success && (m_memberCount > 0))
 			{
             DBFreeStatement(hStmt);
-            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"));
+            hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"), m_memberCount > 1);
             if (hStmt != NULL)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

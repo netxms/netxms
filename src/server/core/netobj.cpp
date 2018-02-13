@@ -535,9 +535,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
       success = DBQuery(hdb, szQuery);
-		if (success)
+		if (success && !m_customAttributes.isEmpty())
 		{
-			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
+			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -555,9 +555,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (success)
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
-      if (success && (m_dashboards->size() > 0))
+      if (success && !m_dashboards->isEmpty())
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"), true);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -579,9 +579,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (success)
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_urls WHERE object_id=?"));
-      if (success && (m_urls->size() > 0))
+      if (success && !m_urls->isEmpty())
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_urls (object_id,url_id,url,description) VALUES (?,?,?,?)"), true);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1782,7 +1782,7 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
 	if (success && (m_trustedNodes != NULL) && (m_trustedNodes->size() > 0))
 	{
-	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"));
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"), m_trustedNodes->size() > 1);
 	   if (hStmt != NULL)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

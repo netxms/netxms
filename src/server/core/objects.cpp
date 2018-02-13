@@ -2382,7 +2382,7 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
       success = ExecuteQueryOnObject(hdb, userId, _T("DELETE FROM object_access_snapshot WHERE user_id=?"));
       if (success && (accessList.size() > 0))
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_access_snapshot (user_id,object_id,access_rights) VALUES (?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_access_snapshot (user_id,object_id,access_rights) VALUES (?,?,?)"), accessList.size() > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);

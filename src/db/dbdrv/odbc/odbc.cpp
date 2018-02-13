@@ -277,7 +277,7 @@ extern "C" void __EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    long iResult;
 	SQLHSTMT stmt;

@@ -239,7 +239,7 @@ static bool SaveSubscriptions()
    if (DBBegin(db))
    {
       DBQuery(db, _T("DELETE FROM zmq_subscription"));
-      DB_STATEMENT statement = DBPrepare(db, _T("INSERT INTO zmq_subscription (object_id, subscription_type, ignore_items, items) VALUES (?, ?, ?, ?)"));
+      DB_STATEMENT statement = DBPrepare(db, _T("INSERT INTO zmq_subscription (object_id, subscription_type, ignore_items, items) VALUES (?, ?, ?, ?)"), true);
       if (statement != NULL)
       {
          if (SaveSubscriptionInternal(statement, &m_eventSubscription, DB_TYPE_EVENT))

@@ -406,7 +406,7 @@ static UCS2CHAR *ConvertQuery(WCHAR *query)
 /**
  * Prepare statement
  */
-extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
 	ORACLE_STATEMENT *stmt = NULL;
 	OCIStmt *handleStmt;

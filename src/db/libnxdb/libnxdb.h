@@ -50,7 +50,7 @@ struct db_driver_t
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
 	bool (* m_fpDrvSetPrefetchLimit)(DBDRV_CONNECTION, int);
-	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
+	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, bool, DWORD *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
 	bool (* m_fpDrvOpenBatch)(DBDRV_STATEMENT);
 	void (* m_fpDrvNextBatchRow)(DBDRV_STATEMENT);

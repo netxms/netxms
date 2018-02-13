@@ -386,6 +386,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 {
    ThreadSetName("SyslogWriter");
    DbgPrintf(1, _T("Syslog writer thread started"));
+   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
       NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.getOrBlock();
@@ -394,7 +395,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?)"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?)"), true);
       if (hStmt == NULL)
       {
          free(r);
@@ -428,7 +429,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          }
          free(r);
          count++;
-         if (count == 1000)
+         if (count == maxRecords)
             break;
          r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.get();
          if ((r == NULL) || (r == INVALID_POINTER_VALUE))
