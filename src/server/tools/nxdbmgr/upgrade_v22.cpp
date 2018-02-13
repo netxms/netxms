@@ -28,7 +28,7 @@
  */
 static bool H_UpgradeFromV16()
 {
-   CHK_EXEC(CreateConfigParam(_T("DBWriter.DataQueues"), _T("1"), _T("Number of queues for DCI data writer."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.DataQueues"), _T("1"), _T("Number of queues for DCI data writer."), 'I', true, true, false, false));
    CHK_EXEC(SetMinorSchemaVersion(17));
    return true;
 }
