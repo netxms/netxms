@@ -902,6 +902,7 @@ public:
    void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
 	int size() const;
+   bool isEmpty() const { return size() == 0; }
    bool contains(const TCHAR *key) const { return (key != NULL) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != NULL) : false; }
    bool contains(const TCHAR *key, size_t len) const { return (key != NULL) ? (find(key, len * sizeof(TCHAR)) != NULL) : false; }
 

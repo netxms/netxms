@@ -324,7 +324,7 @@ void LoadTrapCfg()
    if (hResult != NULL)
    {
       DB_STATEMENT hStmt = (g_dbSyntax == DB_SYNTAX_ORACLE) ?
-               DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"))
+               DBPrepare(hdb, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap WHERE trap_id=? ORDER BY parameter"), true)
                : NULL;
       if ((g_dbSyntax != DB_SYNTAX_ORACLE) || (hStmt != NULL))
       {
@@ -999,7 +999,7 @@ bool SNMPTrapConfiguration::saveParameterMapping(DB_HANDLE hdb)
    {
 	   DBFreeStatement(hStmt);
 
-		hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,snmp_oid,description,flags) VALUES (?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,snmp_oid,description,flags) VALUES (?,?,?,?,?)"), true);
 		if (hStmt != NULL)
 		{
          TCHAR oid[1024];

@@ -1110,7 +1110,7 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
 /**
  * Prepare statement
  */
-DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *errorText)
+DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query, bool optimizeForReuse, TCHAR *errorText)
 {
 	DB_STATEMENT result = NULL;
 	INT64 ms;
@@ -1129,11 +1129,11 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
       ms = GetCurrentTimeMs();
 
 	DWORD errorCode;
-	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+	DBDRV_STATEMENT stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
    if ((stmt == NULL) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-		stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+		stmt = hConn->m_driver->m_fpDrvPrepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
 	}
    MutexUnlock(hConn->m_mutexTransLock);
 
@@ -1184,10 +1184,10 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 /**
  * Prepare statement
  */
-DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *query)
+DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *query, bool optimizeForReuse)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-	return DBPrepareEx(hConn, query, errorText);
+	return DBPrepareEx(hConn, query, optimizeForReuse, errorText);
 }
 
 /**

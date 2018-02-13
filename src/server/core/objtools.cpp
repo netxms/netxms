@@ -752,17 +752,17 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    {
       pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * aclSize);
       pMsg->getFieldAsInt32Array(VID_ACL, aclSize, pdwAcl);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"), aclSize > 1);
+      if (hStmt == NULL)
+         return ReturnDBFailure(hdb, hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
       for(i = 0; i < aclSize; i++)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
-         if (hStmt == NULL)
-            return ReturnDBFailure(hdb, hStmt);
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pdwAcl[i]);
          if(!DBExecute(hStmt))
             return ReturnDBFailure(hdb, hStmt);
-         DBFreeStatement(hStmt);
       }
+      DBFreeStatement(hStmt);
    }
 
    // Update columns configuration
@@ -784,7 +784,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       {
          hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_table_columns (tool_id,")
                                 _T("col_number,col_name,col_oid,col_format,col_substr) ")
-                                _T("VALUES (?,?,?,?,?,?)"));
+                                _T("VALUES (?,?,?,?,?,?)"), dwNumColumns > 1);
          if (hStmt == NULL)
             return ReturnDBFailure(hdb, hStmt);
 
@@ -818,7 +818,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    UINT32 numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"), numFields > 1);
       if (hStmt == NULL)
          return ReturnDBFailure(hdb, hStmt);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);

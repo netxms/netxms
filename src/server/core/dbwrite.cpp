@@ -322,7 +322,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		if (DBBegin(hdb))
 		{
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"), true);
          if (hStmt != NULL)
          {
             DB_STATEMENT hDeleteStmt = NULL;
@@ -333,7 +333,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
                if (rq->deleteFlag)
                {
                   if (hDeleteStmt == NULL)
-                     hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"));
+                     hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"), true);
                   if (hDeleteStmt != NULL)
                   {
                      DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);

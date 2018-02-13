@@ -310,7 +310,7 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
       lockChildList(false);
 		if (success && !m_childList->isEmpty())
 		{
-		   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"));
+		   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
 		   if (hStmt != NULL)
 		   {
 		      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

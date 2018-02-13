@@ -5976,7 +5976,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 		if (SQLQuery(_T("DELETE FROM object_custom_attributes")))
 		{
 			TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-			DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, insertQuery, errorText);
+			DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, insertQuery, true, errorText);
 			if (hStmt != NULL)
 			{
 				TCHAR name[128], *value;

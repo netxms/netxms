@@ -152,7 +152,7 @@ static bool MigrateTable(const TCHAR *table)
       query += _T(",?");
    query += _T(")");
 
-   DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, query, errorText);
+   DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, query, true, errorText);
    if (hStmt != NULL)
    {
       success = true;

@@ -265,7 +265,7 @@ extern "C" void __EXPORT DrvDisconnect(INFORMIX_CONN *pConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
 	long iResult;
 	SQLHSTMT statement;

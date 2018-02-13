@@ -181,7 +181,7 @@ extern "C" void __EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 /**
  * Prepare statement
  */
-extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);

@@ -123,7 +123,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
    insertStatement.shrink();
    insertStatement.append(_T(')'));
 
-   DB_STATEMENT hInsertStmt = DBPrepareEx(cacheDB, insertStatement, errorText);
+   DB_STATEMENT hInsertStmt = DBPrepareEx(cacheDB, insertStatement, true, errorText);
    if (hInsertStmt == NULL)
    {
       DBFreeResult(hResult);
