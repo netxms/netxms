@@ -247,3 +247,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
    DbgPrintf(1, _T("Event processing thread stopped"));
    return THREAD_OK;
 }
+
+/**
+ * Get size of event log writer queue
+ */
+int GetEventLogWriterQueueSize()
+{
+   return s_loggerQueue->size();
+}

@@ -718,6 +718,7 @@ extern double g_dAvgRawDataWriterQueueSize;
 extern double g_dAvgDBAndIDataWriterQueueSize;
 extern double g_dAvgSyslogProcessingQueueSize;
 extern double g_dAvgSyslogWriterQueueSize;
+extern double g_dAvgEventLogWriterQueueSize;
 extern UINT32 g_dwAvgDCIQueuingTime;
 
 

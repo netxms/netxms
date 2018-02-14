@@ -4923,6 +4923,10 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_dwAvgDCIQueuingTime);
       }
+      else if (!_tcsicmp(param, _T("Server.AverageEventLogWriterQueueSize")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgEventLogWriterQueueSize);
+      }
       else if (!_tcsicmp(param, _T("Server.AveragePollerQueueSize")))
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgPollerQueueSize);
