@@ -65,6 +65,12 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
          break;
       }
 
+      if (IsShutdownInProgress())
+      {
+         delete request;
+         break;
+      }
+
       NXCPMessage response(CMD_ADM_MESSAGE, request->getId());
       if (request->getCode() == CMD_ADM_REQUEST)
       {
@@ -155,13 +161,16 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
       iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
       {
-         int error;
-
+         if (IsShutdownInProgress())
+         {
+            closesocket(sockClient);
+            break;
+         }
 #ifdef _WIN32
-         error = WSAGetLastError();
+         int error = WSAGetLastError();
          if (error != WSAEINTR)
 #else
-         error = errno;
+         int error = errno;
          if (error != EINTR)
 #endif
             nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);

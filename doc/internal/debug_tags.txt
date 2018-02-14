@@ -13,6 +13,7 @@ db.drv.oracle	Oracle driver
 db.conn		DB connections
 db.cpool	DB connection pool
 db.query	SQL query trace
+db.writer	DB background writers
 
 housekeeper	Housekeeper messages
 

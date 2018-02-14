@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.17 to 22.18
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.RawDataFlushInterval"), _T("30"), _T("Interval between writes of accumulated raw DCI data to database."), 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 22.16 to 22.17
  */
 static bool H_UpgradeFromV16()
@@ -325,6 +335,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 17, 22, 18, H_UpgradeFromV17 },
    { 16, 22, 17, H_UpgradeFromV16 },
    { 15, 22, 16, H_UpgradeFromV15 },
    { 14, 22, 15, H_UpgradeFromV14 },

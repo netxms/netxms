@@ -21,6 +21,9 @@
 **/
 
 #include "nxcore.h"
+#include <uthash.h>
+
+#define DEBUG_TAG _T("db.writer")
 
 /**
  * Delayed SQL request
@@ -49,6 +52,7 @@ struct DELAYED_IDATA_INSERT
  */
 struct DELAYED_RAW_DATA_UPDATE
 {
+   UT_hash_handle hh;
    time_t timestamp;
    UINT32 dciId;
    bool deleteFlag;
@@ -88,7 +92,9 @@ Queue *g_dbWriterQueue = NULL;
 /**
  * Raw DCI data writer queue
  */
-Queue *g_dciRawDataWriterQueue = NULL;
+static DELAYED_RAW_DATA_UPDATE *s_rawDataWriterQueue = NULL;
+static Mutex s_rawDataWriterLock;
+static int s_batchSize = 0;
 
 /**
  * Performance counters
@@ -193,13 +199,20 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
  */
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
 {
-	DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+   s_rawDataWriterLock.lock();
+   DELAYED_RAW_DATA_UPDATE *rq;
+   HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
+   if (rq == NULL)
+   {
+      rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+      rq->dciId = dciId;
+      rq->deleteFlag = false;
+      HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
+   }
 	rq->timestamp = timestamp;
-	rq->dciId = dciId;
 	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
-	rq->deleteFlag = false;
-	g_dciRawDataWriterQueue->put(rq);
+   s_rawDataWriterLock.unlock();
 	g_rawDataWriteRequests++;
 }
 
@@ -208,10 +221,17 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
  */
 void QueueRawDciDataDelete(UINT32 dciId)
 {
-   DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
-   rq->dciId = dciId;
+   s_rawDataWriterLock.lock();
+   DELAYED_RAW_DATA_UPDATE *rq;
+   HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
+   if (rq == NULL)
+   {
+      rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+      rq->dciId = dciId;
+      HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
+   }
    rq->deleteFlag = true;
-   g_dciRawDataWriterQueue->put(rq);
+   s_rawDataWriterLock.unlock();
    g_rawDataWriteRequests++;
 }
 
@@ -329,72 +349,104 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 }
 
 /**
+ * Save raw DCI data
+ */
+static void SaveRawData(int maxRecords)
+{
+   s_rawDataWriterLock.lock();
+   DELAYED_RAW_DATA_UPDATE *batch = s_rawDataWriterQueue;
+   s_rawDataWriterQueue = NULL;
+   s_rawDataWriterLock.unlock();
+
+   s_batchSize = HASH_COUNT(batch);
+   if (s_batchSize == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty raw data batch, skipping write cycle"));
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("%d records in raw data batch"), s_batchSize);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (DBBegin(hdb))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"), true);
+      if (hStmt != NULL)
+      {
+         DB_STATEMENT hDeleteStmt = NULL;
+         int count = 0;
+
+         DELAYED_RAW_DATA_UPDATE *rq, *tmp;
+         HASH_ITER(hh, batch, rq, tmp)
+         {
+            bool success = false;
+            if (rq->deleteFlag)
+            {
+               if (hDeleteStmt == NULL)
+                  hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"), true);
+               if (hDeleteStmt != NULL)
+               {
+                  DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
+                  success = DBExecute(hDeleteStmt);
+               }
+            }
+            else
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
+               success = DBExecute(hStmt);
+            }
+
+            if (!success)
+               break;
+
+            HASH_DEL(batch, rq);
+            free(rq);
+            s_batchSize--;
+
+            count++;
+            if (count >= maxRecords)
+            {
+               DBCommit(hdb);
+               if (!DBBegin(hdb))
+                  break;
+               count = 0;
+            }
+         }
+         DBFreeStatement(hStmt);
+         if (hDeleteStmt != NULL)
+            DBFreeStatement(hDeleteStmt);
+      }
+      DBCommit(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   // Clean remaining items if any
+   DELAYED_RAW_DATA_UPDATE *rq, *tmp;
+   HASH_ITER(hh, batch, rq, tmp)
+   {
+      HASH_DEL(batch, rq);
+      free(rq);
+   }
+   s_batchSize = 0;
+}
+
+/**
  * Database "lazy" write thread for raw_dci_values UPDATEs
  */
 static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 {
    ThreadSetName("DBWriter/RData");
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
-   while(true)
+   int flushInterval = ConfigReadInt(_T("DBWriter.RawDataFlushInterval"), 30);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data flush interval is %d seconds"), flushInterval);
+   while(!SleepAndCheckForShutdown(flushInterval))
    {
-		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock();
-      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
-         break;
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		if (DBBegin(hdb))
-		{
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"), true);
-         if (hStmt != NULL)
-         {
-            DB_STATEMENT hDeleteStmt = NULL;
-            int count = 0;
-            while(true)
-            {
-               bool success = false;
-               if (rq->deleteFlag)
-               {
-                  if (hDeleteStmt == NULL)
-                     hDeleteStmt = DBPrepare(hdb, _T("DELETE FROM raw_dci_values WHERE item_id=?"), true);
-                  if (hDeleteStmt != NULL)
-                  {
-                     DBBind(hDeleteStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-                     success = DBExecute(hDeleteStmt);
-                  }
-               }
-               else
-               {
-                  DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-                  DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
-                  success = DBExecute(hStmt);
-               }
-               free(rq);
-
-               count++;
-               if (!success || (count > maxRecords))
-                  break;
-
-               rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock(500);
-               if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
-                  break;
-            }
-            DBFreeStatement(hStmt);
-            if (hDeleteStmt != NULL)
-               DBFreeStatement(hDeleteStmt);
-         }
-			DBCommit(hdb);
-		}
-		else
-		{
-			free(rq);
-		}
-		DBConnectionPoolReleaseConnection(hdb);
-      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
-         break;
+      SaveRawData(maxRecords);
 	}
-
+   SaveRawData(maxRecords);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data writer stopped"));
    return THREAD_OK;
 }
 
@@ -425,15 +477,15 @@ void StartDBWriter()
 void StopDBWriter()
 {
    g_dbWriterQueue->put(INVALID_POINTER_VALUE);
-	g_dciRawDataWriterQueue->put(INVALID_POINTER_VALUE);
    ThreadJoin(s_writerThread);
-	ThreadJoin(s_rawDataWriterThread);
    for(int i = 0; i < s_idataWriterCount; i++)
    {
       s_idataWriters[i].queue->put(INVALID_POINTER_VALUE);
       ThreadJoin(s_idataWriters[i].thread);
       delete s_idataWriters[i].queue;
    }
+   ThreadJoin(s_rawDataWriterThread);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("All background database writers stopped"));
 }
 
 /**
@@ -445,4 +497,15 @@ int GetIDataWriterQueueSize()
    for(int i = 0; i < s_idataWriterCount; i++)
       size += s_idataWriters[i].queue->size();
    return size;
+}
+
+/**
+ * Get size of raw data writer queue
+ */
+int GetRawDataWriterQueueSize()
+{
+   s_rawDataWriterLock.lock();
+   int size = HASH_COUNT(s_rawDataWriterQueue);
+   s_rawDataWriterLock.unlock();
+   return size + s_batchSize;
 }

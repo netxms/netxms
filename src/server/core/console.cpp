@@ -779,7 +779,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ShowQueueStats(pCtx, &g_templateUpdateQueue, _T("Template updates"));
          ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
          ShowQueueStats(pCtx, GetIDataWriterQueueSize(), _T("Database writer (IData)"));
-         ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));
+         ShowQueueStats(pCtx, GetRawDataWriterQueueSize(), _T("Database writer (raw DCI values)"));
          ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
          ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
          ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node discovery poller"));
