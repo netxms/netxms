@@ -141,7 +141,7 @@ public:
 /**
  * Job queue class
  */
-class ServerJobQueue
+class NXCORE_EXPORTABLE ServerJobQueue
 {
 private:
 	int m_jobCount;
