@@ -34,6 +34,8 @@ extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 
+int GetEventLogWriterQueueSize();
+
 /**
  * Thread pool for data collectors
  */
@@ -50,6 +52,7 @@ double g_dAvgRawDataWriterQueueSize = 0;
 double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgSyslogProcessingQueueSize = 0;
 double g_dAvgSyslogWriterQueueSize = 0;
+double g_dAvgEventLogWriterQueueSize = 0;
 UINT32 g_dwAvgDCIQueuingTime = 0;
 Queue g_dciCacheLoaderQueue;
 
@@ -446,8 +449,8 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    UINT32 i, currPos = 0;
    UINT32 pollerQS[12], dataCollectorQS[12], dbWriterQS[12];
    UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
-   UINT32 syslogProcessingQS[12], syslogWriterQS[12];
-   double sum1, sum2, sum3, sum4, sum5, sum8, sum9, sum10;
+   UINT32 syslogProcessingQS[12], syslogWriterQS[12], eventLogWriterQS[12];
+   double sum1, sum2, sum3, sum4, sum5, sum8, sum9, sum10, sum11;
 
    memset(pollerQS, 0, sizeof(UINT32) * 12);
    memset(dataCollectorQS, 0, sizeof(UINT32) * 12);
@@ -464,6 +467,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    g_dAvgDBAndIDataWriterQueueSize = 0;
    g_dAvgSyslogProcessingQueueSize = 0;
    g_dAvgSyslogWriterQueueSize = 0;
+   g_dAvgEventLogWriterQueueSize = 0;
    g_dAvgPollerQueueSize = 0;
    while(!SleepAndCheckForShutdown(5))
    {
@@ -484,12 +488,13 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       dbAndIDataWriterQS[currPos] = dbWriterQS[currPos] + iDataWriterQS[currPos] + rawDataWriterQS[currPos];
       syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
       syslogWriterQS[currPos] = g_syslogWriteQueue.size();
+      eventLogWriterQS[currPos] = GetEventLogWriterQueueSize();
       currPos++;
       if (currPos == 12)
          currPos = 0;
 
       // Calculate new averages
-      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0, sum10 = 0; i < 12; i++)
+      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0, sum10 = 0, sum11 = 0; i < 12; i++)
       {
          sum1 += dataCollectorQS[i];
          sum2 += dbWriterQS[i];
@@ -499,6 +504,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          sum8 += syslogProcessingQS[i];
          sum9 += syslogWriterQS[i];
          sum10 += pollerQS[i];
+         sum11 += eventLogWriterQS[i];
       }
       g_dAvgDataCollectorQueueSize = sum1 / 12;
       g_dAvgDBWriterQueueSize = sum2 / 12;
@@ -508,6 +514,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       g_dAvgSyslogProcessingQueueSize = sum8 / 12;
       g_dAvgSyslogWriterQueueSize = sum9 / 12;
       g_dAvgPollerQueueSize = sum10 / 12;
+      g_dAvgEventLogWriterQueueSize = sum11 / 12;
    }
    return THREAD_OK;
 }
