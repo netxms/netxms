@@ -2403,6 +2403,8 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
          SoftwarePackage *p = changes->get(i);
          switch(p->getChangeCode())
          {
+            case SWPKG_NONE:
+               break;
             case SWPKG_ADDED:
                nxlog_debug(5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
@@ -2659,11 +2661,12 @@ NodeType Node::detectNodeType()
    NodeType type = NODE_TYPE_UNKNOWN;
    if (m_flags & NF_IS_SNMP)
    {
-      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"), m_name, m_id, m_driver->getName());
+      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
+               m_name, m_id, (m_driver != NULL) ? m_driver->getName() : _T("(not set)"));
 
-      // Assume physical device if it supports SNMP and driver is not "GENERIC"
+      // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
       // FIXME: add driver method to determine node type
-      if (_tcscmp(m_driver->getName(), _T("GENERIC")))
+      if ((m_driver != NULL) && _tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
       {
          type = NODE_TYPE_PHYSICAL;
       }
