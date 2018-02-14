@@ -36,7 +36,7 @@ void TestOracleBatch()
 
    /*** insert single record ***/
    StartTest(_T("Insert single record"));
-   DB_STATEMENT hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), buffer);
+   DB_STATEMENT hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), true, buffer);
    AssertNotNullEx(hStmt, buffer);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)0);
 #ifdef UNICODE
@@ -59,7 +59,7 @@ void TestOracleBatch()
 
    /*** do bulk insert ***/
    StartTest(_T("Bulk insert"));
-   hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), buffer);
+   hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), true, buffer);
    AssertNotNullEx(hStmt, buffer);
    AssertTrueEx(DBOpenBatch(hStmt), _T("Call to DBOpenBatch() failed"));
    for(INT32 i = 1; i <= 110; i++)
