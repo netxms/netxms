@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.28 to 30.29 (changes also included into 22.18)
+ */
+static bool H_UpgradeFromV28()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 18)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.RawDataFlushInterval"), _T("30"), _T("Interval between writes of accumulated raw DCI data to database."), _T("seconds"), 'I', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 17));
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET units='seconds' WHERE var_name='DBWriter.RawDataFlushInterval'")));
+   CHK_EXEC(SetMinorSchemaVersion(29));
+   return true;
+}
+
+/**
  * Upgrade from 30.27 to 30.28 (changes also included into 22.17)
  */
 static bool H_UpgradeFromV27()
@@ -948,6 +963,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 28, 30, 28, H_UpgradeFromV28 },
    { 27, 30, 28, H_UpgradeFromV27 },
    { 26, 30, 27, H_UpgradeFromV26 },
    { 25, 30, 26, H_UpgradeFromV25 },

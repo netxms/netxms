@@ -480,7 +480,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 
       dbWriterQS[currPos] = g_dbWriterQueue->size();
       iDataWriterQS[currPos] = GetIDataWriterQueueSize();
-      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->size();
+      rawDataWriterQS[currPos] = GetRawDataWriterQueueSize();
       dbAndIDataWriterQS[currPos] = dbWriterQS[currPos] + iDataWriterQS[currPos] + rawDataWriterQS[currPos];
       syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
       syslogWriterQS[currPos] = g_syslogWriteQueue.size();

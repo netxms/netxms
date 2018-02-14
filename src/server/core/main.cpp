@@ -722,7 +722,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Create queue for delayed SQL queries
 	g_dbWriterQueue = new Queue(256, 64);
-	g_dciRawDataWriterQueue = new Queue(1024, 1024);
 
 	// Initialize database driver and connect to database
 	if (!DBInit(MSG_OTHER, (g_flags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))

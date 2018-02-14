@@ -1017,6 +1017,7 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void QueueRawDciDataDelete(UINT32 dciId);
 int GetIDataWriterQueueSize();
+int GetRawDataWriterQueueSize();
 void StartDBWriter();
 void StopDBWriter();
 
@@ -1327,7 +1328,6 @@ extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
 extern Queue *g_dbWriterQueue;
-extern Queue *g_dciRawDataWriterQueue;
 extern UINT64 g_idataWriteRequests;
 extern UINT64 g_rawDataWriteRequests;
 extern UINT64 g_otherWriteRequests;
