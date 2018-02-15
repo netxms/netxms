@@ -32,6 +32,7 @@ extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
+extern ThreadPool *g_syncerThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
@@ -861,6 +862,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ShowThreadPool(pCtx, g_dataCollectorThreadPool);
          ShowThreadPool(pCtx, g_schedulerThreadPool);
          ShowThreadPool(pCtx, g_agentConnectionThreadPool);
+         ShowThreadPool(pCtx, g_syncerThreadPool);
       }
       else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
       {

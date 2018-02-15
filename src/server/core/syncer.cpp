@@ -31,6 +31,16 @@
 void NetObjDelete(NetObj *pObject);
 
 /**
+ * Thread pool
+ */
+ThreadPool *g_syncerThreadPool = NULL;
+
+/**
+ * Outstanding save requests
+ */
+static VolatileCounter s_outstandingSaveRequests = 0;
+
+/**
  * Object transaction lock
  */
 static RWLOCK s_objectTxnLock = RWLockCreate();
@@ -54,10 +64,31 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
 }
 
 /**
+ * Save object to database on separate thread
+ */
+static void SaveObject(void *object)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DBBegin(hdb);
+   if (static_cast<NetObj*>(object)->saveToDatabase(hdb))
+   {
+      DBCommit(hdb);
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   InterlockedDecrement(&s_outstandingSaveRequests);
+}
+
+/**
  * Save objects to database
  */
 void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 {
+   s_outstandingSaveRequests = 0;
+
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
 
@@ -94,21 +125,38 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 		else if (object->isModified())
 		{
 		   nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] modified"), object->getName(), object->getId());
-		   DBBegin(hdb);
-			if (object->saveToDatabase(hdb))
-			{
-				DBCommit(hdb);
-			}
-			else
-			{
-				DBRollback(hdb);
-			}
+		   if (g_syncerThreadPool != NULL)
+		   {
+		      InterlockedIncrement(&s_outstandingSaveRequests);
+		      ThreadPoolExecute(g_syncerThreadPool, SaveObject, object);
+		   }
+		   else
+		   {
+            DBBegin(hdb);
+            if (object->saveToDatabase(hdb))
+            {
+               DBCommit(hdb);
+            }
+            else
+            {
+               DBRollback(hdb);
+            }
+		   }
 		}
 		else if (saveRuntimeData)
 		{
          object->saveRuntimeData(hdb);
 		}
    }
+
+	if (g_syncerThreadPool != NULL)
+	{
+	   while(s_outstandingSaveRequests > 0)
+	   {
+	      nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 7, _T("Waiting for outstanding object save requests (%d requests in queue)"), (int)s_outstandingSaveRequests);
+	      ThreadSleep(1);
+	   }
+	}
 
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
