@@ -156,6 +156,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
 	   {
 	      nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 7, _T("Waiting for outstanding object save requests (%d requests in queue)"), (int)s_outstandingSaveRequests);
 	      ThreadSleep(1);
+	      WatchdogNotify(watchdogId);
 	   }
 	}
 
