@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -451,4 +451,119 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
 
    currObj->decRefCount();
    return result;
+}
+
+/**
+ * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
+ * Identification column appended to provided column list
+ */
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns)
+{
+   String query;
+   if ((g_dbSyntax == DB_SYNTAX_PGSQL) && (g_flags & AF_DB_SUPPORTS_MERGE))
+   {
+      query.append(_T("INSERT INTO "));
+      query.append(table);
+      query.append(_T(" ("));
+      int count = 0;
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T(','));
+         count++;
+      }
+      query.append(idColumn);
+      query.append(_T(") VALUES (?"));
+      for(int i = 0; i < count; i++)
+         query.append(_T(",?"));
+      query.append(_T(") ON CONFLICT ("));
+      query.append(idColumn);
+      query.append(_T(") DO UPDATE SET "));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T("=excluded."));
+         query.append(columns[i]);
+         query.append(_T(','));
+      }
+      query.shrink();
+   }
+   else if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      query.append(_T("MERGE INTO "));
+      query.append(table);
+      query.append(_T(" t USING (SELECT "));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(_T("? AS "));
+         query.append(columns[i]);
+         query.append(_T(','));
+      }
+      query.append(_T("? AS "));
+      query.append(idColumn);
+      query.append(_T(" FROM dual) d ON (t."));
+      query.append(idColumn);
+      query.append(_T("=d."));
+      query.append(idColumn);
+      query.append(_T(") WHEN MATCHED THEN UPDATE SET "));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(_T("t."));
+         query.append(columns[i]);
+         query.append(_T("=d."));
+         query.append(columns[i]);
+         query.append(_T(','));
+      }
+      query.shrink();
+      query.append(_T(" WHEN NOT MATCHED THEN INSERT ("));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T(','));
+      }
+      query.append(idColumn);
+      query.append(_T(") VALUES ("));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(_T("d."));
+         query.append(columns[i]);
+         query.append(_T(','));
+      }
+      query.append(_T("d."));
+      query.append(idColumn);
+      query.append(_T(')'));
+   }
+   else if (IsDatabaseRecordExist(hdb, table, idColumn, id))
+   {
+      query.append(_T("UPDATE "));
+      query.append(table);
+      query.append(_T(" SET "));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T("=?,"));
+      }
+      query.append(_T(" WHERE "));
+      query.append(idColumn);
+      query.append(_T("=?"));
+   }
+   else
+   {
+      query.append(_T("INSERT INTO "));
+      query.append(table);
+      query.append(_T(" ("));
+      int count = 0;
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T(','));
+         count++;
+      }
+      query.append(idColumn);
+      query.append(_T(") VALUES (?"));
+      for(int i = 0; i < count; i++)
+         query.append(_T(",?"));
+      query.append(_T(')'));
+   }
+   return DBPrepare(hdb, query);
 }

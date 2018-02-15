@@ -776,6 +776,28 @@ BOOL NXCORE_EXPORTABLE Initialize()
    {
       DBSetSessionInitCallback(OracleSessionInitCallback);
    }
+   else if (g_dbSyntax == DB_SYNTAX_PGSQL)
+   {
+      DB_RESULT hResult = DBSelect(hdbBootstrap, _T("SELECT version()"));
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            char version[256];
+            DBGetFieldA(hResult, 0, 0, version, 256);
+            int major, minor;
+            if (sscanf(version, "PostgreSQL %d.%d.", &major, &minor) == 2)
+            {
+               nxlog_debug(1, _T("Detected PostgreSQL version %d.%d"), major, minor);
+               if ((major >= 10) || ((major == 9) && (minor >= 5)))
+               {
+                  g_flags |= AF_DB_SUPPORTS_MERGE;
+               }
+            }
+         }
+         DBFreeResult(hResult);
+      }
+   }
 
 	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolBaseSize"), 10);
 	int maxSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxSize"), 30);

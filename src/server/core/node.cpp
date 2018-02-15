@@ -510,35 +510,24 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_NODE_PROPERTIES))
    {
-      int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_id))
-      {
-         hStmt = DBPrepare(hdb,
-            _T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,capabilities=?,snmp_version=?,community=?,")
-            _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
-            _T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
-            _T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-            _T("down_since=?,driver_name=?,rack_image_front=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
-            _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
-            _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,")
-            _T("ssh_proxy=?,chassis_id=?,port_rows=?,port_numbering_scheme=?,agent_comp_mode=?,tunnel_id=?,")
-            _T("lldp_id=?,fail_time_snmp=?,fail_time_agent=?,rack_orientation=?,rack_image_rear=? WHERE id=?"));
-      }
-      else
-      {
-         hStmt = DBPrepare(hdb,
-           _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,capabilities,snmp_version,community,status_poll_type,")
-           _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
-           _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-           _T("snmp_sys_name,bridge_base_addr,down_since,driver_name,rack_image_front,rack_position,rack_height,rack_id,boot_time,")
-           _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-           _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,chassis_id,port_rows,port_numbering_scheme,agent_comp_mode,")
-           _T("tunnel_id,lldp_id,fail_time_snmp,fail_time_agent,rack_orientation,rack_image_rear,id) ")
-           _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-      }
+      static const TCHAR *columns[] = {
+         _T("primary_ip"), _T("primary_name"), _T("snmp_port"), _T("capabilities"), _T("snmp_version"), _T("community"),
+         _T("status_poll_type"), _T("agent_port"), _T("auth_method"), _T("secret"), _T("snmp_oid"), _T("uname"),
+         _T("agent_version"), _T("platform_name"), _T("poller_node_id"), _T("zone_guid"), _T("proxy_node"), _T("snmp_proxy"),
+         _T("icmp_proxy"), _T("required_polls"), _T("use_ifxtable"), _T("usm_auth_password"), _T("usm_priv_password"),
+         _T("usm_methods"), _T("snmp_sys_name"), _T("bridge_base_addr"), _T("down_since"), _T("driver_name"),
+         _T("rack_image_front"), _T("rack_position"), _T("rack_height"), _T("rack_id"), _T("boot_time"), _T("agent_cache_mode"),
+         _T("snmp_sys_contact"), _T("snmp_sys_location"), _T("last_agent_comm_time"), _T("syslog_msg_count"),
+         _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_proxy"),
+         _T("chassis_id"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
+         _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"),
+         NULL
+      };
+
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
       if (hStmt != NULL)
       {
+         int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
          TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16];
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
@@ -8157,7 +8146,7 @@ void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topolog
       if (inSameZone)
       {
          topology->addObject(FindLocalMgmtNode());
-         topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_NORMAL, (agentConnectionOnly ? _T("Direct") : protocols));
+         topology->linkObjects(m_id, FindLocalMgmtNode(), LINK_TYPE_NORMAL, (agentConnectionOnly ? _T("Direct") : (const TCHAR *)protocols));
       }
 	}
 }

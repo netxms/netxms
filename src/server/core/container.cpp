@@ -139,15 +139,8 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
-      {
-         hStmt = DBPrepare(hdb, _T("UPDATE object_containers SET object_class=?,auto_bind_filter=? WHERE id=?"));
-      }
-      else
-      {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (object_class,auto_bind_filter,id) VALUES (?,?,?)"));
-      }
+      static const TCHAR *columns[] = { _T("object_class"), _T("auto_bind_filter"), NULL };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_id, columns);
       if (hStmt == NULL)
       {
          unlockProperties();

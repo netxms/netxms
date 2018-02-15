@@ -344,31 +344,19 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       else
          dwNodeId = 0;
 
-      // Form and execute INSERT or UPDATE query
-      DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("interfaces"), _T("id"), m_id))
-      {
-         hStmt = DBPrepare(hdb,
-            _T("UPDATE interfaces SET node_id=?,if_type=?,if_index=?,mac_addr=?,")
-            _T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
-            _T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
-            _T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
-            _T("peer_proto=?,alias=?,mtu=?,speed=?,parent_iface=?,")
-            _T("iftable_suffix=? WHERE id=?"));
-      }
-      else
-      {
-         hStmt = DBPrepare(hdb,
-            _T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
-            _T("required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-            _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,")
-            _T("parent_iface,iftable_suffix,id) ")
-            _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-      }
+      static const TCHAR *columns[] = {
+         _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
+         _T("phy_slot"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"), _T("description"), _T("admin_state"),
+         _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"), _T("peer_proto"), _T("alias"),
+         _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"),
+         NULL
+      };
+
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
       if (hStmt == NULL)
       {
          unlockProperties();
-         return FALSE;
+         return false;
       }
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwNodeId);
