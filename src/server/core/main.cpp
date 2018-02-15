@@ -68,6 +68,7 @@ extern const TCHAR *g_szMessages[];
  * Externals
  */
 extern Queue g_dciCacheLoaderQueue;
+extern ThreadPool *g_syncerThreadPool;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -1008,6 +1009,13 @@ retry_db_lock:
 		return FALSE;
 	}
 
+	// Create syncer thread pool
+   maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
+   if (maxSize > 1)
+   {
+      g_syncerThreadPool = ThreadPoolCreate(_T("SYNCER"), ConfigReadInt(_T("ThreadPool.Syncer.BaseSize"), 1), maxSize);
+   }
+
 	// Start threads
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);
@@ -1170,6 +1178,9 @@ void NXCORE_EXPORTABLE Shutdown()
    UpdatePStorageDatabase(hdb, INVALID_INDEX);
 	nxlog_debug(2, _T("All persistent storage values saved"));
 	DBConnectionPoolReleaseConnection(hdb);
+
+	if (g_syncerThreadPool != NULL)
+	   ThreadPoolDestroy(g_syncerThreadPool);
 
 	StopDBWriter();
 	nxlog_debug(1, _T("Database writer stopped"));

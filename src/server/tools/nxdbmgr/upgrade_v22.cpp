@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.18 to 30.0
+ * Upgrade from 22.19 to 30.0
+ */
+static bool H_UpgradeFromV19()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.18 to 22.19
  */
 static bool H_UpgradeFromV18()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.Syncer.BaseSize"), _T("1"), _T("Base size for syncer thread pool."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.Syncer.MaxSize"), _T("1"), _T("Maximum size for syncer thread pool (value of 1 will disable pool creation)."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(19));
    return true;
 }
 
@@ -344,7 +355,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 18, 30, 0,  H_UpgradeFromV18 },
+   { 19, 30, 0,  H_UpgradeFromV19 },
+   { 18, 22, 19, H_UpgradeFromV18 },
    { 17, 22, 18, H_UpgradeFromV17 },
    { 16, 22, 17, H_UpgradeFromV16 },
    { 15, 22, 16, H_UpgradeFromV15 },

@@ -207,6 +207,9 @@ void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR 
  */
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
 {
+   if (p == NULL)
+      return;
+
    ThreadPoolInfo info;
    ThreadPoolGetInfo(p, &info);
    ConsolePrintf(console, _T("\x1b[1m%s\x1b[0m\n")
