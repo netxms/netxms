@@ -510,24 +510,15 @@ void DCTable::processNewError(bool noInstance, time_t now)
  */
 bool DCTable::saveToDatabase(DB_HANDLE hdb)
 {
-	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_id))
-	{
-		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
-		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
-                             _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=?,")
-									  _T("instd_method=?,instd_data=?,instd_filter=?,instance=?,instance_retention_time=? WHERE item_id=?"));
-	}
-	else
-	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
-		                       _T("description,flags,source,snmp_port,polling_interval,")
-		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,comments,guid,")
-									  _T("instd_method,instd_data,instd_filter,instance,instance_retention_time,item_id) ")
-									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
+   static const TCHAR *columns[] = {
+      _T("node_id"), _T("template_id"), _T("template_item_id"), _T("name"), _T("description"), _T("flags"), _T("source"),
+      _T("snmp_port"), _T("polling_interval"), _T("retention_time"), _T("status"), _T("system_tag"), _T("resource_id"),
+      _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
+      _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
+      NULL
+   };
+
+	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("dc_tables"), _T("item_id"), m_id, columns);
 	if (hStmt == NULL)
 		return FALSE;
 

@@ -1226,6 +1226,12 @@ UINT32 RenameScript(const NXCPMessage *request);
 UINT32 DeleteScript(const NXCPMessage *request);
 
 /**
+ * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
+ * Identification column appended to provided column list
+ */
+DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id, const TCHAR * const *columns);
+
+/**
  * File monitoring
  */
 struct MONITORED_FILE

@@ -458,34 +458,18 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (!(m_modified & MODIFY_COMMON_PROPERTIES))
       return true;
 
-	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_id))
-	{
-		hStmt = DBPrepare(hdb,
-                    _T("UPDATE object_properties SET name=?,status=?,")
-                    _T("is_deleted=?,inherit_access_rights=?,")
-                    _T("last_modified=?,status_calc_alg=?,status_prop_alg=?,")
-                    _T("status_fixed_val=?,status_shift=?,status_translation=?,")
-                    _T("status_single_threshold=?,status_thresholds=?,")
-                    _T("comments=?,is_system=?,location_type=?,latitude=?,")
-						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
-						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=?,maint_mode=?,maint_event_id=? WHERE object_id=?"));
-	}
-	else
-	{
-		hStmt = DBPrepare(hdb,
-                    _T("INSERT INTO object_properties (name,status,is_deleted,")
-                    _T("inherit_access_rights,last_modified,status_calc_alg,")
-                    _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
-                    _T("status_single_threshold,status_thresholds,comments,is_system,")
-						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,")
-						  _T("maint_event_id,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
-	if (hStmt == NULL)
-		return false;
+   static const TCHAR *columns[] = {
+      _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
+      _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
+      _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
+      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
+      _T("street_address"), _T("postcode"), _T("maint_mode"), _T("maint_event_id"),
+      NULL
+   };
+
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
+   if (hStmt == NULL)
+      return false;
 
    TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
    for(int i = 0, j = 0; i < 4; i++, j += 2)

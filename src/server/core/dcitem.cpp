@@ -319,32 +319,16 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
  */
 bool DCItem::saveToDatabase(DB_HANDLE hdb)
 {
-   // Prepare and execute query
-	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("items"), _T("item_id"), m_id))
-	{
-		hStmt = DBPrepare(hdb,
-		           _T("UPDATE items SET node_id=?,template_id=?,name=?,source=?,")
-                 _T("datatype=?,polling_interval=?,retention_time=?,status=?,")
-                 _T("delta_calculation=?,transformation=?,description=?,")
-                 _T("instance=?,template_item_id=?,flags=?,")
-                 _T("resource_id=?,proxy_node=?,base_units=?,")
-		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
-	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
-					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,")
-					  _T("comments=?,guid=?,npe_name=?,instance_retention_time=? WHERE item_id=?"));
-	}
-   else
-	{
-		hStmt = DBPrepare(hdb,
-		           _T("INSERT INTO items (node_id,template_id,name,source,")
-                 _T("datatype,polling_interval,retention_time,status,delta_calculation,")
-                 _T("transformation,description,instance,template_item_id,flags,")
-                 _T("resource_id,proxy_node,base_units,unit_multiplier,")
-		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,instance_retention_time,item_id) VALUES ")
-		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
+   static const TCHAR *columns[] = {
+      _T("node_id"), _T("template_id"), _T("name"), _T("source"), _T("datatype"), _T("polling_interval"), _T("retention_time"),
+      _T("status"), _T("delta_calculation"), _T("transformation"), _T("description"), _T("instance"), _T("template_item_id"),
+      _T("flags"), _T("resource_id"), _T("proxy_node"), _T("base_units"), _T("unit_multiplier"), _T("custom_units_name"),
+      _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
+      _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
+      NULL
+   };
+
+	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("items"), _T("item_id"), m_id, columns);
 	if (hStmt == NULL)
 		return false;
 
