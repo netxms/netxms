@@ -1234,12 +1234,11 @@ BOOL LoadObjects()
    if (cachedb != NULL)
    {
       static const TCHAR *intColumns[] = { _T("condition_id"), _T("sequence_number"), _T("dci_id"), _T("node_id"), _T("dci_func"), _T("num_pols"),
-                                          _T("dashboard_id"), _T("element_id"), _T("element_type"), _T("threshold_id"), _T("item_id"),
-                                          _T("sequence_number"), _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"),
-                                          _T("rearm_event_code"), _T("repeat_interval"), _T("current_state"), _T("current_severity"),
-                                          _T("match_count"), _T("last_event_timestamp"), _T("dashboard_id"), _T("element_id"), _T("element_type"),
-                                          _T("table_id"), _T("flags"), _T("id"), _T("table_id"), _T("activation_event"), _T("deactivation_event"),
-                                          _T("group_id") };
+                                           _T("dashboard_id"), _T("element_id"), _T("element_type"), _T("threshold_id"), _T("item_id"),
+                                           _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"), _T("rearm_event_code"),
+                                           _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
+                                           _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
+                                           _T("deactivation_event"), _T("group_id") };
 
       nxlog_debug(1, _T("Caching object configuration tables"));
       bool success =
