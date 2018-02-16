@@ -543,6 +543,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
          query.append(columns[i]);
          query.append(_T("=?,"));
       }
+      query.shrink();
       query.append(_T(" WHERE "));
       query.append(idColumn);
       query.append(_T("=?"));
