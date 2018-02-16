@@ -59,7 +59,7 @@ void LIBNXDB_EXPORTABLE DBCloseInMemoryDatabase(DB_HANDLE hdb)
 /**
  * Cache table
  */
-bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns)
+bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns, const TCHAR * const *intColumns)
 {
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT %s FROM %s"), columns, table);
@@ -96,7 +96,19 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
          insertStatement.append(_T(", "));
       }
       createStatement.append(name);
-      createStatement.append(_T(" varchar"));
+      bool isInteger = false;
+      if (intColumns != NULL)
+      {
+         for(int c = 0; intColumns[c] != NULL; c++)
+         {
+            if (!_tcsicmp(intColumns[c], name))
+            {
+               isInteger = true;
+               break;
+            }
+         }
+      }
+      createStatement.append(isInteger ? _T("integer") : _T(" varchar"));
       insertStatement.append(name);
    }
    if (indexColumn != NULL)

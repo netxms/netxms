@@ -1233,6 +1233,14 @@ BOOL LoadObjects()
    DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
    if (cachedb != NULL)
    {
+      static const TCHAR *intColumns[] = { _T("condition_id"), _T("sequence_number"), _T("dci_id"), _T("node_id"), _T("dci_func"), _T("num_pols"),
+                                          _T("dashboard_id"), _T("element_id"), _T("element_type"), _T("threshold_id"), _T("item_id"),
+                                          _T("sequence_number"), _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"),
+                                          _T("rearm_event_code"), _T("repeat_interval"), _T("current_state"), _T("current_severity"),
+                                          _T("match_count"), _T("last_event_timestamp"), _T("dashboard_id"), _T("element_id"), _T("element_type"),
+                                          _T("table_id"), _T("flags"), _T("id"), _T("table_id"), _T("activation_event"), _T("deactivation_event"),
+                                          _T("group_id") };
+
       nxlog_debug(1, _T("Caching object configuration tables"));
       bool success =
                DBCacheTable(cachedb, mainDB, _T("object_properties"), _T("object_id"), _T("*")) &&
@@ -1242,7 +1250,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("zones"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("conditions"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("cond_dci_map"), _T("condition_id,sequence_number"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("cond_dci_map"), _T("condition_id,sequence_number"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("subnets"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nsmap"), _T("subnet_id,node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("racks"), _T("id"), _T("*")) &&
@@ -1261,15 +1269,15 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("cluster_resources"), _T("cluster_id,resource_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("templates"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("items"), _T("item_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("thresholds"), _T("threshold_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("thresholds"), _T("threshold_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("raw_dci_values"), _T("item_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dc_tables"), _T("item_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dc_table_columns"), _T("table_id,column_name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dc_table_columns"), _T("table_id,column_name"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dct_column_names"), _T("column_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dct_thresholds"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_thresholds"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dct_threshold_conditions"), _T("threshold_id,group_id,sequence_number"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dct_threshold_instances"), _T("threshold_id,instance"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dct_node_map"), _T("template_id,node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_node_map"), _T("template_id,node_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dci_schedules"), _T("item_id,schedule_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("id"), _T("*")) &&
@@ -1283,7 +1291,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("slm_checks"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("business_services"), _T("service_id"), _T("*")) &&
