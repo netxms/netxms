@@ -150,13 +150,17 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 	{
 		if (m_size == m_allocated)
 		{
-			m_allocated += 32;
+			m_allocated += 64;
 			m_data = (NXSL_ArrayElement *)realloc(m_data, sizeof(NXSL_ArrayElement) * m_allocated);
 		}
 		m_data[m_size].index = index;
 		m_data[m_size].value = value;
 		m_size++;
-		qsort(m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+		if ((m_size > 1) && (m_data[m_size - 2].index > index))
+		{
+		   // do not sort if adding at the end
+		   qsort(m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+		}
 	}
 }
 
