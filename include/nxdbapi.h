@@ -243,6 +243,6 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBOpenInMemoryDatabase();
 void LIBNXDB_EXPORTABLE DBCloseInMemoryDatabase(DB_HANDLE hdb);
-bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns);
+bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns, const TCHAR * const *intColumns = NULL);
 
 #endif   /* _nxsrvapi_h_ */
