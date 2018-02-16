@@ -123,7 +123,7 @@ public abstract class DciValue
 	 */
 	public String getName()
 	{
-		return name;
+		return name.isEmpty() ? "[" + getId() + "]" : name;
 	}
 
 	/**

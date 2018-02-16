@@ -73,7 +73,9 @@ public class ShowLineChart implements DciOpenHandler
       }
       catch(UnsupportedEncodingException e1)
       {
-         sb.append("<name unavailable>");
+         sb.append("[");
+         sb.append(dci.getId());
+         sb.append("]");
       }
 		
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
