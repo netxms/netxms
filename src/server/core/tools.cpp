@@ -533,6 +533,35 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
       query.append(idColumn);
       query.append(_T(')'));
    }
+   else if (g_dbSyntax == DB_SYNTAX_MYSQL)
+   {
+      query.append(_T("INSERT INTO "));
+      query.append(table);
+      query.append(_T(" ("));
+      int count = 0;
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T(','));
+         count++;
+      }
+      query.append(idColumn);
+      query.append(_T(") VALUES (?"));
+      for(int i = 0; i < count; i++)
+         query.append(_T(",?"));
+      query.append(_T(") ON DUPLICATE KEY UPDATE "));
+      for(int i = 0; columns[i] != NULL; i++)
+      {
+         query.append(columns[i]);
+         query.append(_T("=VALUES("));
+         query.append(columns[i]);
+         query.append(_T("),"));
+      }
+      query.append(idColumn);
+      query.append(_T("=VALUES("));
+      query.append(idColumn);
+      query.append(_T(')'));
+   }
    else if (IsDatabaseRecordExist(hdb, table, idColumn, id))
    {
       query.append(_T("UPDATE "));
