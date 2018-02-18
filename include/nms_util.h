@@ -1268,6 +1268,7 @@ public:
    void write(UINT64 n) { UINT64 x = htonq(n); write(&x, 8); }
    void write(double n) { double x = htond(n); write(&x, 8); }
    void writeString(const TCHAR *s);
+   void writeStringUtf8(const char *s);
 
    size_t read(void *buffer, size_t count);
    char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
@@ -1280,6 +1281,7 @@ public:
    UINT64 readUInt64();
    double readDouble();
    TCHAR *readString();
+   char *readStringUtf8();
 
    bool save(int f);
 };

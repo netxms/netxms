@@ -44,24 +44,24 @@ NXSL_TestClass::NXSL_TestClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Test, quote, 1);
 }
 
-NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const char *pszAttr)
 {
    NXSL_Value *pValue = NULL;
 
-   if (!_tcscmp(pszAttr, _T("name")))
+   if (!strcmp(pszAttr, "name"))
    {
       pValue = new NXSL_Value(_T("Demo Object"));
    }
-   else if (!_tcscmp(pszAttr, _T("value")))
+   else if (!strcmp(pszAttr, "value"))
    {
 		pValue = new NXSL_Value((TCHAR *)pObject->getData());
    }
    return pValue;
 }
 
-bool NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
+bool NXSL_TestClass::setAttr(NXSL_Object *pObject, const char *pszAttr, NXSL_Value *pValue)
 {
-   if (!_tcscmp(pszAttr, _T("value")))
+   if (!strcmp(pszAttr, "value"))
    {
 		_tcscpy((TCHAR *)pObject->getData(), CHECK_NULL(pValue->getValueAsCString()));
 		return TRUE;

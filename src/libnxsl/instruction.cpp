@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -48,16 +48,11 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
  * Create instruction with string operand.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
-#ifdef UNICODE
-	m_operand.m_pszString = WideStringFromUTF8String(pszString);
-	free(pszString);
-#else
-   m_operand.m_pszString = pszString;
-#endif
+   m_operand.m_identifier = new NXSL_Identifier(identifier);
    m_nStackItems = 0;
 }
 
@@ -65,16 +60,11 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString)
  * Create instruction with string operand and non-zero stack item count.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
-#ifdef UNICODE
-	m_operand.m_pszString = WideStringFromUTF8String(pszString);
-	free(pszString);
-#else
-   m_operand.m_pszString = pszString;
-#endif
+   m_operand.m_identifier = new NXSL_Identifier(identifier);
    m_nStackItems = nStackItems;
 }
 
@@ -112,8 +102,8 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
 		case OP_TYPE_CONST:
          m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
          break;
-      case OP_TYPE_STRING:
-         m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
+      case OP_TYPE_IDENTIFIER:
+         m_operand.m_identifier = new NXSL_Identifier(*pSrc->m_operand.m_identifier);
          break;
       default:
          m_operand.m_dwAddr = pSrc->m_operand.m_dwAddr;
@@ -128,8 +118,8 @@ NXSL_Instruction::~NXSL_Instruction()
 {
    switch(getOperandType())
    {
-      case OP_TYPE_STRING:
-         safe_free(m_operand.m_pszString);
+      case OP_TYPE_IDENTIFIER:
+         delete m_operand.m_identifier;
          break;
       case OP_TYPE_CONST:
          delete m_operand.m_pConstant;
@@ -165,10 +155,13 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_SELECT:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
-         return OP_TYPE_STRING;
+         return OP_TYPE_IDENTIFIER;
 		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
          return OP_TYPE_CONST;
+      case OPCODE_PUSH_VARPTR:
+      case OPCODE_SET_VARPTR:
+         return OP_TYPE_VARIABLE;
       case OPCODE_JMP:
       case OPCODE_CALL:
       case OPCODE_JZ:
@@ -177,7 +170,21 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_JNZ_PEEK:
       case OPCODE_CATCH:
          return OP_TYPE_ADDR;
+      case OPCODE_CALL_EXTPTR:
+         return OP_TYPE_EXT_FUNCTION;
       default:
          return OP_TYPE_NONE;
    }
+}
+
+/**
+ * Restore variable reference
+ */
+void NXSL_Instruction::restoreVariableReference(NXSL_Identifier *identifier)
+{
+   if (m_nOpCode == OPCODE_PUSH_VARPTR)
+      m_nOpCode = OPCODE_PUSH_VARIABLE;
+   else if (m_nOpCode == OPCODE_SET_VARPTR)
+      m_nOpCode = OPCODE_SET;
+   m_operand.m_identifier = identifier;
 }

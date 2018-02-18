@@ -214,16 +214,16 @@ void NXSL_Array::remove(int index)
 /**
  * Call method on array
  */
-int NXSL_Array::callMethod(const TCHAR *name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (!_tcscmp(name, _T("append")) || !_tcscmp(name, _T("push")))
+   if (!strcmp(name.value, "append") || !strcmp(name.value, "push"))
    {
       if (argc != 1)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
       append(new NXSL_Value(argv[0]));
       *result = new NXSL_Value(getMaxIndex());
    }
-   else if (!_tcscmp(name, _T("insert")))
+   else if (!strcmp(name.value, "insert"))
    {
       if (argc != 2)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -234,14 +234,14 @@ int NXSL_Array::callMethod(const TCHAR *name, int argc, NXSL_Value **argv, NXSL_
       insert(argv[0]->getValueAsInt32(), new NXSL_Value(argv[1]));
       *result = new NXSL_Value();
    }
-   else if (!_tcscmp(name, _T("pop")))
+   else if (!strcmp(name.value, "pop"))
    {
       if (argc != 0)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
       *result = (m_size > 0) ? m_data[--m_size].value : new NXSL_Value();
    }
-   else if (!_tcscmp(name, _T("remove")))
+   else if (!strcmp(name.value, "remove"))
    {
       if (argc != 1)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;

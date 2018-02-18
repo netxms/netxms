@@ -33,7 +33,6 @@
 union YYSTYPE;
 typedef void *yyscan_t;
 
-
 //
 // Various defines
 //
@@ -126,6 +125,9 @@ typedef void *yyscan_t;
 #define OPCODE_STORAGE_DEC    80
 #define OPCODE_STORAGE_DECP   81
 #define OPCODE_PEEK_ELEMENT   82
+#define OPCODE_PUSH_VARPTR    83
+#define OPCODE_SET_VARPTR     84
+#define OPCODE_CALL_EXTPTR    85
 
 class NXSL_Compiler;
 

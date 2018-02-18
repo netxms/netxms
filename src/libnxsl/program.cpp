@@ -52,7 +52,8 @@ const char *g_nxslCommandMnemonic[] =
    "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
    "SETHM", "NEWARR", "NEWHM", "CPOP",
    "SREAD", "SWRITE", "SELECT", "PUSHCP",
-   "SINC", "SINCP", "SDEC", "SDECP", "EPEEK"
+   "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
+   "PUSH", "SET", "CALL"
 };
 
 /**
@@ -60,8 +61,8 @@ const char *g_nxslCommandMnemonic[] =
  */
 NXSL_Program::NXSL_Program()
 {
-   m_instructionSet = new ObjectArray<NXSL_Instruction>(32, 32, true);
-   m_constants = new StringObjectMap<NXSL_Value>(true);
+   m_instructionSet = new ObjectArray<NXSL_Instruction>(256, 256, true);
+   m_constants = new HashMap<NXSL_Identifier, NXSL_Value>(true);
    m_functions = new ObjectArray<NXSL_Function>(16, 16, true);
    m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, true);
 }
@@ -81,22 +82,14 @@ NXSL_Program::~NXSL_Program()
  * Add new constant. Name expected to be dynamically allocated and
  * will be destroyed by NXSL_Program when no longer needed.
  */
-bool NXSL_Program::addConstant(const char *name, NXSL_Value *value)
+bool NXSL_Program::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 {
    bool success = false;
-#ifdef UNICODE
-   WCHAR *tname = WideStringFromUTF8String(name);
-#else
-   const char *tname = name;
-#endif
-   if (m_constants->get(tname) == NULL)
+   if (!m_constants->contains(name))
    {
-      m_constants->set(tname, value);
+      m_constants->set(name, value);
       success = true;
    }
-#ifdef UNICODE
-   free(tname);
-#endif
    return success;
 }
 
@@ -135,32 +128,17 @@ void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
  * Will use first free address if dwAddr == INVALID_ADDRESS
  * Name must be in UTF-8
  */
-bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszError)
+bool NXSL_Program::addFunction(const NXSL_Identifier& name, UINT32 dwAddr, char *pszError)
 {
    // Check for duplicate function names
-#ifdef UNICODE
-	WCHAR *pwszName = WideStringFromUTF8String(pszName);
-#endif
    for(int i = 0; i < m_functions->size(); i++)
-#ifdef UNICODE
-      if (!wcscmp(m_functions->get(i)->m_name, pwszName))
-#else
-      if (!strcmp(m_functions->get(i)->m_name, pszName))
-#endif
+      if (name.equals(m_functions->get(i)->m_name))
       {
-         sprintf(pszError, "Duplicate function name: \"%s\"", pszName);
-#ifdef UNICODE
-			free(pwszName);
-#endif
+         sprintf(pszError, "Duplicate function name: \"%s\"", name.value);
          return false;
       }
    NXSL_Function *f = new NXSL_Function;
-#ifdef UNICODE
-   nx_strncpy(f->m_name, pwszName, MAX_FUNCTION_NAME);
-	free(pwszName);
-#else
-   nx_strncpy(f->m_name, pszName, MAX_FUNCTION_NAME);
-#endif
+	f->m_name = name;
    f->m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_instructionSet->size() : dwAddr;
    m_functions->add(f);
    return true;
@@ -194,9 +172,9 @@ void NXSL_Program::resolveFunctions()
          for(int j = 0; j < m_functions->size(); j++)
          {
             NXSL_Function *f = m_functions->get(j);
-            if (!_tcscmp(f->m_name, instr->m_operand.m_pszString))
+            if (instr->m_operand.m_identifier->equals(f->m_name))
             {
-               free(instr->m_operand.m_pszString);
+               delete instr->m_operand.m_identifier;
                instr->m_operand.m_dwAddr = f->m_dwAddr;
                instr->m_nOpCode = OPCODE_CALL;
                break;
@@ -220,13 +198,16 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_CALL_EXTERNAL:
          case OPCODE_GLOBAL:
          case OPCODE_SELECT:
-            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
+            _ftprintf(pFile, _T("%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_nStackItems);
             break;
          case OPCODE_CALL:
             _ftprintf(pFile, _T("%04X, %d\n"), instr->m_operand.m_dwAddr, instr->m_nStackItems);
             break;
          case OPCODE_CALL_METHOD:
-            _ftprintf(pFile, _T("@%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
+            _ftprintf(pFile, _T("@%hs, %d\n"), instr->m_operand.m_identifier->value, instr->m_nStackItems);
+            break;
+         case OPCODE_CALL_EXTPTR:
+            _ftprintf(pFile, _T("%hs, %d\n"), instr->m_operand.m_function->m_name, instr->m_nStackItems);
             break;
          case OPCODE_CATCH:
          case OPCODE_JMP:
@@ -251,7 +232,11 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
          case OPCODE_CASE_CONST:
-            _ftprintf(pFile, _T("%s\n"), instr->m_operand.m_pszString);
+            _ftprintf(pFile, _T("%hs\n"), instr->m_operand.m_identifier->value);
+            break;
+         case OPCODE_PUSH_VARPTR:
+         case OPCODE_SET_VARPTR:
+            _ftprintf(pFile, _T("%hs\n"), instr->m_operand.m_variable->getName().value);
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
@@ -426,6 +411,9 @@ void NXSL_Program::serialize(ByteStream& s)
          case OP_TYPE_ADDR:
             s.write(instr->m_operand.m_dwAddr);
             break;
+         case OP_TYPE_IDENTIFIER:
+            break;
+            /*
          case OP_TYPE_STRING:
             {
                INT32 idx = strings.indexOf(instr->m_operand.m_pszString);
@@ -436,6 +424,7 @@ void NXSL_Program::serialize(ByteStream& s)
                }
                s.write(idx);
             }
+            */
             break;
          case OP_TYPE_CONST:
             {
@@ -491,7 +480,7 @@ void NXSL_Program::serialize(ByteStream& s)
    for(i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
-      s.writeString(f->m_name);
+      s.writeStringUtf8(f->m_name.value);
       s.write(f->m_dwAddr);
    }
 
@@ -566,6 +555,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          case OP_TYPE_ADDR:
             instr->m_operand.m_dwAddr = s.readUInt32();
             break;
+            /*
          case OP_TYPE_STRING:
             {
                INT32 idx = s.readInt32();
@@ -579,6 +569,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                instr->m_operand.m_pszString = _tcsdup(str);
             }
             break;
+            */
          case OP_TYPE_CONST:
             {
                INT32 idx = s.readInt32();
@@ -621,7 +612,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
    s.seek(header.functionSectionOffset);
    while(!s.eos())
    {
-      TCHAR *name = s.readString();
+      char *name = s.readStringUtf8();
       if (name == NULL)
       {
          nx_strncpy(errMsg, _T("Binary file read error (functions section)"), errMsgSize);

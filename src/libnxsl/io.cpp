@@ -31,7 +31,7 @@ class NXSL_FileClass : public NXSL_Class
 public:
    NXSL_FileClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -223,15 +223,15 @@ NXSL_FileClass::NXSL_FileClass() : NXSL_Class()
 /**
  * Get attributes
  */
-NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_FileHandle *f = static_cast<NXSL_FileHandle*>(object->getData());
 	NXSL_Value *value = NULL;
-	if (!_tcscmp(attr, _T("eof")))
+	if (!strcmp(attr, "eof"))
 	{
 		value = new NXSL_Value((INT32)feof(f->handle));
 	}
-	else if (!_tcscmp(attr, _T("name")))
+	else if (!strcmp(attr, "name"))
    {
       value = new NXSL_Value(f->name);
    }

@@ -134,7 +134,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
       {
          m_pszValStr = NULL;
       }
-		m_name = (value->m_name != NULL) ? _tcsdup(value->m_name) : NULL;
+		m_name = (value->m_name != NULL) ? strdup(value->m_name) : NULL;
    }
    else
    {

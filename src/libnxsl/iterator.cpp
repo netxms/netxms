@@ -44,7 +44,7 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 		value = (NXSL_Value *)stack->pop();
 		if (value->isString())
 		{
-			NXSL_Iterator *it = new NXSL_Iterator(value->getValueAsCString(), array);
+			NXSL_Iterator *it = new NXSL_Iterator(value->getValueAsMBString(), array);
 			stack->push(new NXSL_Value(it));
 		}
 		else
@@ -67,9 +67,8 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 /**
  * Constructor
  */
-NXSL_Iterator::NXSL_Iterator(const TCHAR *variable, NXSL_Array *array)
+NXSL_Iterator::NXSL_Iterator(const NXSL_Identifier& variable, NXSL_Array *array) : m_variable(variable)
 {
-	m_variable = _tcsdup(variable);
 	m_array = array;
 	m_refCount = 0;
 	m_position = -1;
@@ -83,7 +82,6 @@ NXSL_Iterator::~NXSL_Iterator()
 	m_array->decHandleCount();
 	if (m_array->isUnused())
 		delete m_array;
-	safe_free(m_variable);
 }
 
 /**

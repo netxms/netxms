@@ -90,8 +90,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"when"     return T_WHEN;
 <INITIAL>"while"    return T_WHILE;
 
-<INITIAL>{identifier}	{ yylval->valStr = strdup(yytext); return T_IDENTIFIER; }
-<INITIAL>{compound_ident} { yylval->valStr = strdup(yytext); return T_COMPOUND_IDENTIFIER; }
+<INITIAL>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
+<INITIAL>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
 <INITIAL>{integer}	{
 				INT64 nVal;
 

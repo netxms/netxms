@@ -29,8 +29,7 @@
 NXSL_Class::NXSL_Class()
 {
    setName(_T("Object"));
-   m_methods = new StringObjectMap<NXSL_ExtMethod>(true);
-   m_methods->setIgnoreCase(false);
+   m_methods = new HashMap<NXSL_Identifier, NXSL_ExtMethod>(true);
 }
 
 /**
@@ -46,7 +45,7 @@ NXSL_Class::~NXSL_Class()
  */
 void NXSL_Class::setName(const TCHAR *name)
 {
-   nx_strncpy(m_name, name, MAX_CLASS_NAME);
+   _tcslcpy(m_name, name, MAX_CLASS_NAME);
    m_classHierarchy.add(name);
 }
 
@@ -54,7 +53,7 @@ void NXSL_Class::setName(const TCHAR *name)
  * Get attribute
  * Default implementation always returns error
  */
-NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const char *pszAttr)
 {
    return NULL;
 }
@@ -63,7 +62,7 @@ NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  * Set attribute
  * Default implementation always returns error
  */
-bool NXSL_Class::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value)
+bool NXSL_Class::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
 {
    return false;
 }
@@ -72,7 +71,7 @@ bool NXSL_Class::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *val
  * Call method
  * Default implementation calls methods registered with NXSL_REGISTER_METHOD macro.
  */
-int NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+int NXSL_Class::callMethod(const NXSL_Identifier& name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    NXSL_ExtMethod *m = m_methods->get(name);
    if (m != NULL)

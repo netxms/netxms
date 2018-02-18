@@ -81,16 +81,23 @@ void ByteStream::writeString(const TCHAR *s)
 #else
    char *utf8str = UTF8StringFromMBString(s);
 #endif
+   writeStringUtf8(utf8str);
+   free(utf8str);
+}
 
+/**
+ * Write string in UTF-8 prepended with length
+ */
+void ByteStream::writeStringUtf8(const char *s)
+{
    // write len < 2^15 as 2 bytes and 4 bytes with higher bit set otherwise
-   UINT32 len = (UINT32)strlen(utf8str);
+   UINT32 len = (UINT32)strlen(s);
    if (len < 0x8000)
       write((UINT16)len);
    else
       write(len | 0x80000000);
 
-   write(utf8str, len);
-   free(utf8str);
+   write(s, len);
 }
 
 /**
@@ -258,6 +265,39 @@ TCHAR *ByteStream::readString()
 #else
    utf8_to_mb((char *)&m_data[m_pos], (int)len, s, (int)len + 1);
 #endif
+   s[len] = 0;
+   m_pos += len;
+   return s;
+}
+
+/**
+ * Read UTF-8 encoded string. Returned string is dynamically allocated and must be freed by caller.
+ */
+char *ByteStream::readStringUtf8()
+{
+   if (m_size - m_pos < 2)
+      return NULL;
+
+   BYTE b = readByte();
+   m_pos--;
+   size_t len;
+   if (b & 0x80)
+   {
+      // 4 byte length
+      if (m_size - m_pos < 4)
+         return NULL;
+      len = (size_t)(readUInt32() & ~0x80000000);
+   }
+   else
+   {
+      len = (size_t)readInt16();
+   }
+
+   if (m_size - m_pos < len)
+      return NULL;
+
+   char *s = (char *)malloc(len + 1);
+   memcpy(s, &m_data[m_pos], len);
    s[len] = 0;
    m_pos += len;
    return s;

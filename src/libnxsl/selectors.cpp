@@ -26,7 +26,7 @@
 /**
  * Select max value
  */
-int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm)
+int S_max(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
@@ -50,7 +50,7 @@ int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, i
 /**
  * Select min value
  */
-int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm)
+int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm)
 {
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;

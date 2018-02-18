@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -92,71 +92,71 @@ int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
-int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
-int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+int S_max(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 
 /**
  * Default built-in function list
  */
 static NXSL_ExtFunction s_builtinFunctions[] =
 {
-   { _T("__new@GeoLocation"), F_GeoLocation, -1 },
-   { _T("__new@InetAddress"), F_InetAddress, -1 },
-   { _T("__new@Table"), F_Table, 0 },
-   { _T("__new@TIME"), F_TIME, 0 },
-	{ _T("_exit"), F_exit, -1 },
-   { _T("abs"), F_abs, 1 },
-   { _T("ceil"), F_ceil, 1 },
-   { _T("chr"), F_chr, 1 },
-   { _T("classof"), F_classof, 1 },
-	{ _T("d2x"), F_d2x, -1 },
-   { _T("exp"), F_exp, 1 },
-   { _T("gethostbyaddr"), F_gethostbyaddr, 1 },
-   { _T("gethostbyname"), F_gethostbyname, -1 },
-   { _T("floor"), F_floor, 1 },
-   { _T("format"), F_format, -1 },
-   { _T("gmtime"), F_gmtime, -1 },
-   { _T("index"), F_index, -1 },
-   { _T("inList"), F_inList, 3 },
-   { _T("left"), F_left, -1 },
-   { _T("length"), F_length, 1 },
-   { _T("localtime"), F_localtime, -1 },
-   { _T("log"), F_log, 1 },
-   { _T("log10"), F_log10, 1 },
-   { _T("lower"), F_lower, 1 },
-	{ _T("ltrim"), F_ltrim, 1 },
-   { _T("max"), F_max, -1 },
-   { _T("md5"), F_md5, 1 },
-   { _T("min"), F_min, -1 },
-   { _T("mktime"), F_mktime, 1 },
-   { _T("ord"), F_ord, 1 },
-   { _T("pow"), F_pow, 2 },
-   { _T("random"), F_random, 2 },
-   { _T("right"), F_right, -1 },
-   { _T("rindex"), F_rindex, -1 },
-   { _T("round"), F_round, -1 },
-	{ _T("rtrim"), F_rtrim, 1 },
-	{ _T("sha1"), F_sha1, 1 },
-	{ _T("sha256"), F_sha256, 1 },
-	{ _T("sleep"), F_sleep, 1 },
-	{ _T("strftime"), F_strftime, -1 },
-	{ _T("substr"), F_substr, -1 },
-	{ _T("sys"), F_sys, 1 },
-	{ _T("time"), F_time, 0 },
-   { _T("trace"), F_trace, 2 },
-	{ _T("trim"), F_trim, 1 },
-   { _T("typeof"), F_typeof, 1 },
-   { _T("upper"), F_upper, 1 },
-   { _T("x2d"), F_x2d, 1 },
-   { _T("AddrInRange"), F_AddrInRange, 3 },
-   { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
-   { _T("ArrayToString"), F_ArrayToString, 2 },
-   { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
-	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
-   { _T("SplitString"), F_SplitString, 2 },
-	{ _T("TCPConnector"), F_tcpConnector, 2 },
-	{ _T("UDPConnector"), F_udpConnector, 2 },
-   { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
+   { "__new@GeoLocation", F_GeoLocation, -1 },
+   { "__new@InetAddress", F_InetAddress, -1 },
+   { "__new@Table", F_Table, 0 },
+   { "__new@TIME", F_TIME, 0 },
+	{ "_exit", F_exit, -1 },
+   { "abs", F_abs, 1 },
+   { "ceil", F_ceil, 1 },
+   { "chr", F_chr, 1 },
+   { "classof", F_classof, 1 },
+	{ "d2x", F_d2x, -1 },
+   { "exp", F_exp, 1 },
+   { "gethostbyaddr", F_gethostbyaddr, 1 },
+   { "gethostbyname", F_gethostbyname, -1 },
+   { "floor", F_floor, 1 },
+   { "format", F_format, -1 },
+   { "gmtime", F_gmtime, -1 },
+   { "index", F_index, -1 },
+   { "inList", F_inList, 3 },
+   { "left", F_left, -1 },
+   { "length", F_length, 1 },
+   { "localtime", F_localtime, -1 },
+   { "log", F_log, 1 },
+   { "log10", F_log10, 1 },
+   { "lower", F_lower, 1 },
+	{ "ltrim", F_ltrim, 1 },
+   { "max", F_max, -1 },
+   { "md5", F_md5, 1 },
+   { "min", F_min, -1 },
+   { "mktime", F_mktime, 1 },
+   { "ord", F_ord, 1 },
+   { "pow", F_pow, 2 },
+   { "random", F_random, 2 },
+   { "right", F_right, -1 },
+   { "rindex", F_rindex, -1 },
+   { "round", F_round, -1 },
+	{ "rtrim", F_rtrim, 1 },
+	{ "sha1", F_sha1, 1 },
+	{ "sha256", F_sha256, 1 },
+	{ "sleep", F_sleep, 1 },
+	{ "strftime", F_strftime, -1 },
+	{ "substr", F_substr, -1 },
+	{ "sys", F_sys, 1 },
+	{ "time", F_time, 0 },
+   { "trace", F_trace, 2 },
+	{ "trim", F_trim, 1 },
+   { "typeof", F_typeof, 1 },
+   { "upper", F_upper, 1 },
+   { "x2d", F_x2d, 1 },
+   { "AddrInRange", F_AddrInRange, 3 },
+   { "AddrInSubnet", F_AddrInSubnet, 3 },
+   { "ArrayToString", F_ArrayToString, 2 },
+   { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
+	{ "SecondsToUptime", F_SecondsToUptime, 1 },
+   { "SplitString", F_SplitString, 2 },
+	{ "TCPConnector", F_tcpConnector, 2 },
+	{ "UDPConnector", F_udpConnector, 2 },
+   { "WritePersistentStorage", F_WritePersistentStorage, 2 }
 };
 
 /**
@@ -164,13 +164,13 @@ static NXSL_ExtFunction s_builtinFunctions[] =
  */
 static NXSL_ExtFunction s_ioFunctions[] =
 {
-   { _T("CopyFile"), F_CopyFile, 2 },
-   { _T("CreateDirectory"), F_CreateDirectory, 1 },
-   { _T("DeleteFile"), F_DeleteFile, 1 },
-   { _T("FileAccess"), F_FileAccess, 2 },
-   { _T("OpenFile"), F_OpenFile, -1 },
-   { _T("RemoveDirectory"), F_RemoveDirectory, 1 },
-   { _T("RenameFile"), F_RenameFile, 2 }
+   { "CopyFile", F_CopyFile, 2 },
+   { "CreateDirectory", F_CreateDirectory, 1 },
+   { "DeleteFile", F_DeleteFile, 1 },
+   { "FileAccess", F_FileAccess, 2 },
+   { "OpenFile", F_OpenFile, -1 },
+   { "RemoveDirectory", F_RemoveDirectory, 1 },
+   { "RenameFile", F_RenameFile, 2 }
 };
 
 /**
@@ -178,8 +178,8 @@ static NXSL_ExtFunction s_ioFunctions[] =
  */
 static NXSL_ExtSelector s_builtinSelectors[] =
 {
-   { _T("max"), S_max },
-   { _T("min"), S_min }
+   { "max", S_max },
+   { "min", S_min }
 };
 
 /**
@@ -191,10 +191,12 @@ NXSL_Environment::NXSL_Environment()
    m_functionsAllocated = std::max(m_numFunctions, 256);
    m_functions = (NXSL_ExtFunction *)malloc(m_functionsAllocated * sizeof(s_builtinFunctions));
    memcpy(m_functions, s_builtinFunctions, sizeof(s_builtinFunctions));
+
    m_numSelectors = sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector);
    m_selectorsAllocated = std::max(m_numSelectors, 16);
    m_selectors = (NXSL_ExtSelector *)malloc(m_selectorsAllocated * sizeof(s_builtinSelectors));
    memcpy(m_selectors, s_builtinSelectors, sizeof(s_builtinSelectors));
+
    m_library = NULL;
 }
 
@@ -210,10 +212,10 @@ NXSL_Environment::~NXSL_Environment()
 /**
  * Find function by name
  */
-NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
+NXSL_ExtFunction *NXSL_Environment::findFunction(const NXSL_Identifier& name)
 {
    for(int i = 0; i < m_numFunctions; i++)
-      if (!_tcscmp(m_functions[i].m_name, name))
+      if (!strcmp(m_functions[i].m_name, name.value))
          return &m_functions[i];
    return NULL;
 }
@@ -243,10 +245,10 @@ void NXSL_Environment::registerIOFunctions()
 /**
  * Find selector by name
  */
-NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
+NXSL_ExtSelector *NXSL_Environment::findSelector(const NXSL_Identifier& name)
 {
    for(int i = 0; i < m_numSelectors; i++)
-      if (!_tcscmp(m_selectors[i].m_name, name))
+      if (!strcmp(m_selectors[i].m_name, name.value))
          return &m_selectors[i];
    return NULL;
 }

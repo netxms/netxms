@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -22,38 +22,27 @@
 **/
 
 #include "libnxsl.h"
+#include <uthash.h>
 
 /**
  * Create variable with NULL value
  */
-NXSL_Variable::NXSL_Variable(const TCHAR *pszName)
+NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name) : m_name(name)
 {
-   m_pszName = _tcsdup(pszName);
-   m_pValue = new NXSL_Value;    // Create NULL value
-   m_pValue->onVariableSet();
-	m_isConstant = false;
+   m_name = name;
+   m_value = new NXSL_Value;    // Create NULL value
+   m_value->onVariableSet();
+	m_constant = false;
 }
 
 /**
  * Create variable with given value
  */
-NXSL_Variable::NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue, bool constant)
+NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name, NXSL_Value *value, bool constant) : m_name(name)
 {
-   m_pszName = _tcsdup(pszName);
-   m_pValue = pValue;
-   m_pValue->onVariableSet();
-	m_isConstant = constant;
-}
-
-/**
- * Create variable as copy of existing variable
- */
-NXSL_Variable::NXSL_Variable(NXSL_Variable *pSrc)
-{
-   m_pszName = _tcsdup(pSrc->m_pszName);
-   m_pValue = new NXSL_Value(pSrc->m_pValue);
-   m_pValue->onVariableSet();
-	m_isConstant = pSrc->m_isConstant;
+   m_value = value;
+   m_value->onVariableSet();
+	m_constant = constant;
 }
 
 /**
@@ -61,8 +50,7 @@ NXSL_Variable::NXSL_Variable(NXSL_Variable *pSrc)
  */
 NXSL_Variable::~NXSL_Variable()
 {
-   free(m_pszName);
-   delete m_pValue;
+   delete m_value;
 }
 
 /**
@@ -70,18 +58,28 @@ NXSL_Variable::~NXSL_Variable()
  */
 void NXSL_Variable::setValue(NXSL_Value *pValue)
 {
-   delete m_pValue;
-   m_pValue = pValue;
-   m_pValue->onVariableSet();
+   delete m_value;
+   m_value = pValue;
+   m_value->onVariableSet();
 }
+
+/**
+ * Variable pointer structure
+ */
+struct NXSL_VariablePtr
+{
+   UT_hash_handle hh;
+   NXSL_Variable v;
+};
 
 /**
  * Create new variable system
  */
 NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
 {
-   m_variables = new ObjectArray<NXSL_Variable>(16, 16, true);
+   m_variables = NULL;
 	m_isConstant = constant;
+	m_restorePointCount = 0;
 }
 
 /**
@@ -89,10 +87,15 @@ NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
  */
 NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *src)
 {
-   m_variables = new ObjectArray<NXSL_Variable>(src->m_variables->size(), 16, true);
-   for(int i = 0; i < src->m_variables->size(); i++)
-      m_variables->add(new NXSL_Variable(src->m_variables->get(i)));
-	m_isConstant = src->m_isConstant;
+   m_variables = NULL;
+   m_isConstant = src->m_isConstant;
+   m_restorePointCount = 0;
+
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, src->m_variables, var, tmp)
+   {
+      create(var->v.getName(), new NXSL_Value(var->v.getValue()));
+   }
 }
 
 /**
@@ -100,7 +103,22 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *src)
  */
 NXSL_VariableSystem::~NXSL_VariableSystem()
 {
-   delete m_variables;
+   clear();
+   for(int i = 0; i < m_restorePointCount; i++)
+      delete m_restorePoints[i].identifier;
+}
+
+/**
+ * Clear variable system
+ */
+void NXSL_VariableSystem::clear()
+{
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, m_variables, var, tmp)
+   {
+      var->v.~NXSL_Variable();
+      free(var);
+   }
 }
 
 /**
@@ -108,30 +126,30 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
  */
 void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 {
-	for(int i = 0; i < src->m_variables->size(); i++)
-	{
-      NXSL_Variable *v = src->m_variables->get(i);
-      if (find(v->getName()) == NULL)
-		{
-         create(v->getName(), new NXSL_Value(v->getValue()));
-		}
-	}
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, src->m_variables, var, tmp)
+   {
+      if (find(var->v.getName()) == NULL)
+      {
+         create(var->v.getName(), new NXSL_Value(var->v.getValue()));
+      }
+   }
 }
 
 /**
  * Callback for adding variables
  */
-static EnumerationCallbackResult AddVariableCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult AddVariableCallback(const void *key, const void *value, void *data)
 {
-   if (((NXSL_VariableSystem *)data)->find(key) == NULL)
-      ((NXSL_VariableSystem *)data)->create(key, new NXSL_Value((NXSL_Value *)value));
+   if (((NXSL_VariableSystem *)data)->find(*static_cast<const NXSL_Identifier*>(key)) == NULL)
+      ((NXSL_VariableSystem *)data)->create(*static_cast<const NXSL_Identifier*>(key), new NXSL_Value(static_cast<const NXSL_Value*>(value)));
    return _CONTINUE;
 }
 
 /**
  * Add all values from given map
  */
-void NXSL_VariableSystem::addAll(StringObjectMap<NXSL_Value> *src)
+void NXSL_VariableSystem::addAll(HashMap<NXSL_Identifier, NXSL_Value> *src)
 {
    src->forEach(AddVariableCallback, this);
 }
@@ -139,23 +157,44 @@ void NXSL_VariableSystem::addAll(StringObjectMap<NXSL_Value> *src)
 /**
  * Find variable by name
  */
-NXSL_Variable *NXSL_VariableSystem::find(const TCHAR *pszName)
+NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
 {
-   for(int i = 0; i < m_variables->size(); i++)
-   {
-      NXSL_Variable *v = m_variables->get(i);
-      if (!_tcscmp(pszName, v->getName()))
-         return v;
-   }
-   return NULL;
+   NXSL_VariablePtr *var;
+   HASH_FIND(hh, m_variables, name.value, name.length, var);
+   return (var != NULL) ? &var->v : NULL;
 }
 
 /**
  * Create variable
  */
-NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pValue)
+NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
-   NXSL_Variable *v = new NXSL_Variable(pszName, (pValue != NULL) ? pValue : new NXSL_Value, m_isConstant);
-	m_variables->add(v);
+   NXSL_VariablePtr *var = (NXSL_VariablePtr *)calloc(1, sizeof(NXSL_VariablePtr));
+   NXSL_Variable *v = new (&var->v) NXSL_Variable(name, (value != NULL) ? value : new NXSL_Value(), m_isConstant);
+   HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;
+}
+
+/**
+ * Create restore point for variable reference
+ */
+bool NXSL_VariableSystem::createVariableReferenceRestorePoint(UINT32 addr, NXSL_Identifier *identifier)
+{
+   if (m_restorePointCount >= MAX_VREF_RESTORE_POINTS)
+      return false;
+
+   m_restorePoints[m_restorePointCount].addr = addr;
+   m_restorePoints[m_restorePointCount].identifier = identifier;
+   m_restorePointCount++;
+   return true;
+}
+
+/**
+ * Restore saved variable references
+ */
+void NXSL_VariableSystem::restoreVariableReferences(ObjectArray<NXSL_Instruction> *instructions)
+{
+   for(int i = 0; i < m_restorePointCount; i++)
+      instructions->get(m_restorePoints[i].addr)->restoreVariableReference(m_restorePoints[i].identifier);
+   m_restorePointCount = 0;
 }

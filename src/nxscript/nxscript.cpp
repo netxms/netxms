@@ -36,7 +36,7 @@ public:
 
 void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 {
-   vm->setGlobalVariable(_T("$nxscript"), new NXSL_Value(NETXMS_VERSION_STRING));
+   vm->setGlobalVariable("$nxscript", new NXSL_Value(NETXMS_VERSION_STRING));
 }
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
@@ -53,7 +53,7 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 int main(int argc, char *argv[])
 {
    TCHAR *pszSource, szError[1024];
-   TCHAR entryPoint[256] = _T("");
+   const char *entryPoint = NULL;
    char outFile[MAX_PATH] = "";
    UINT32 dwSize;
    NXSL_Program *pScript;
@@ -68,10 +68,10 @@ int main(int argc, char *argv[])
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
-   _tcscpy(func.m_name, _T("new"));
+   strcpy(func.m_name, "__new");
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2015 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2018 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
@@ -92,12 +92,7 @@ int main(int argc, char *argv[])
             dump = true;
             break;
 			case 'e':
-#ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, entryPoint, 255);
-				entryPoint[255] = 0;
-#else
-				nx_strncpy(entryPoint, optarg, 256);
-#endif
+				entryPoint = optarg;
 				break;
          case 'o':
 				strncpy(outFile, optarg, MAX_PATH - 1);
@@ -216,7 +211,7 @@ int main(int argc, char *argv[])
 			         ppArgs = NULL;
 		         }
 
-               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, entryPoint))
 		         {
 			         NXSL_Value *result = vm->getResult();
 			         if (printResult)
