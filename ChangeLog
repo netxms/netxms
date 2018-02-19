@@ -2,6 +2,7 @@
 * 2.2.4
 *
 
+- Portech SMS gateway works correctly with newer gateway versions
 - Fixed issues:
 	NX-1208 (Added filter to alarm list)
 	NX-1332 (Execution timeout for external parameter provider)
