@@ -99,7 +99,7 @@ public class GrafanaDataCollection extends AbstractHandler
             continue;
          
          DciData data = getSession().getCollectedData(Long.parseLong(dciTarget.get("id").getAsString()),
-                                                      Long.parseLong(dci.get("id").getAsString()), from, to, 0, false);
+                                                      Long.parseLong(dci.get("id").getAsString()), from, to, 0, true);
          root = new JsonObject();
          JsonArray datapoints = new JsonArray();
          JsonArray datapoint;
@@ -107,8 +107,8 @@ public class GrafanaDataCollection extends AbstractHandler
          for(int i = values.length - 1; i >= 0; i--)
          {
             DciDataRow r = values[i];
-            datapoint = new JsonArray();
-            datapoint.add(r.getValueAsDouble());
+				datapoint = new JsonArray();
+            datapoint.add(r.getRawValueAsDouble());
             datapoint.add(r.getTimestamp().getTime());
             datapoints.add(datapoint);
          }
