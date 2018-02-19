@@ -132,28 +132,40 @@ static bool SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	char szTmp[128];
 	
 	nxlog_debug(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
-	
+
+   // Older versions responded with OK, newer with 0
+   const char *okText;
 	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 10000));
+   if (conn->waitForText("0\r\n", 10000))
+   {
+      okText = "0\r\n";
+   }
+   else
+   {
+      __chk(conn->writeLine("ATZ"));	// init modem
+      __chk(conn->waitForText("OK\r\n", 10000));
+      okText = "OK\r\n";
+   }
 	nxlog_debug(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 10000));
+	__chk(conn->waitForText(okText, 10000));
 	nxlog_debug(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=1"));	// text mode
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText(okText, 5000));
 	nxlog_debug(4, _T("SMS: AT+CMGF=1 sent"));
 
+   ThreadSleep(1);
 #ifdef UNICODE
 	char mbPhoneNumber[256];
 	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 256, NULL, NULL);
 	mbPhoneNumber[255] = 0;
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%s\r\n", mbPhoneNumber);
+	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
 #else
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%s\r\n", pszPhoneNumber);
+	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
 #endif
 	__chk(conn->writeLine(szTmp));	// set number
 	__chk(conn->waitForText(">", 10000));
@@ -162,13 +174,14 @@ static bool SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	char mbText[161];
 	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, mbText, 161, NULL, NULL);
 	mbText[160] = 0;
-	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", mbText, 0x1A);
+   __chk(conn->writeLine(mbText));
 #else
-	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
+   __chk(conn->writeLine(pszText));
 #endif
-	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
+   snprintf(szTmp, sizeof(szTmp), "%c\r\n", 0x1A);
+   __chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
 	__chk(conn->waitForText("+CMGS", 45000));
-	__chk(conn->waitForText("OK", 5000));
+	__chk(conn->waitForText(okText, 5000));
 	nxlog_debug(4, _T("SMS sent successfully"));
 
 	return true;
@@ -197,24 +210,36 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	nx_strncpy(text, pszText, bufferSize);
 #endif
 
-	__chk(conn->writeLine("ATZ"));	// init modem
-	__chk(conn->waitForText("OK", 10000));
-	nxlog_debug(4, _T("SMS: ATZ sent"));
+   // Older versions responded with OK, newer with 0
+   const char *okText;
+   __chk(conn->writeLine("ATZ"));	// init modem
+   if (conn->waitForText("0\r\n", 10000))
+   {
+      okText = "0\r\n";
+   }
+   else
+   {
+      __chk(conn->writeLine("ATZ"));	// init modem
+      __chk(conn->waitForText("OK\r\n", 10000));
+      okText = "OK\r\n";
+   }
+   nxlog_debug(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("ATE0"));	// disable echo
-	__chk(conn->waitForText("OK", 10000));
+	__chk(conn->waitForText(okText, 10000));
 	nxlog_debug(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=0"));	// PDU mode
-	__chk(conn->waitForText("OK", 10000));
+	__chk(conn->waitForText(okText, 10000));
 	nxlog_debug(4, _T("SMS: AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
 	SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
 
-	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
+   ThreadSleep(1);
+   snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	__chk(conn->waitForText(">", 10000));
 	nxlog_debug(4, _T("SMS: %hs sent"), szTmp);
@@ -222,7 +247,7 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	__chk(conn->waitForText("+CMGS", 45000));
-	__chk(conn->waitForText("OK", 2000));
+	__chk(conn->waitForText(okText, 2000));
 	nxlog_debug(4, _T("SMS sent successfully"));
 
 	return true;
