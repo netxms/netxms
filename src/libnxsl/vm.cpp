@@ -338,6 +338,10 @@ resume:
       error(NXSL_ERR_NO_MAIN);
    }
 
+   // Restore instructions replaced to direct variable pointers
+   m_globals->restoreVariableReferences(m_instructionSet);
+   m_constants->restoreVariableReferences(m_instructionSet);
+
    // Restore global variables
    if (ppGlobals == NULL)
 	   delete m_globals;
@@ -431,7 +435,7 @@ void NXSL_VM::setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *pValue)
 /**
  * Find variable
  */
-NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, bool *isGlobal)
+NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs)
 {
    NXSL_Variable *var = m_constants->find(name);
    if (var == NULL)
@@ -440,17 +444,17 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, bool *isGlobal
       if (var == NULL)
       {
          var = m_locals->find(name);
-         if (isGlobal != NULL)
-            *isGlobal = false;
+         if (vs != NULL)
+            *vs = m_locals;
       }
-      else if (isGlobal != NULL)
+      else if (vs != NULL)
       {
-         *isGlobal = true;
+         *vs = m_globals;
       }
    }
-   else if (isGlobal != NULL)
+   else if (vs != NULL)
    {
-      *isGlobal = true;
+      *vs = m_constants;
    }
    return var;
 }
@@ -458,12 +462,14 @@ NXSL_Variable *NXSL_VM::findVariable(const NXSL_Identifier& name, bool *isGlobal
 /**
  * Find variable or create if does not exist
  */
-NXSL_Variable *NXSL_VM::findOrCreateVariable(const NXSL_Identifier& name, bool *isGlobal)
+NXSL_Variable *NXSL_VM::findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs)
 {
-   NXSL_Variable *var = findVariable(name, isGlobal);
+   NXSL_Variable *var = findVariable(name, vs);
    if (var == NULL)
    {
       var = m_locals->create(name);
+      if (vs != NULL)
+         *vs = m_locals;
    }
    return var;
 }
@@ -500,7 +506,8 @@ void NXSL_VM::execute()
    UINT32 dwNext = m_cp + 1;
    char varName[MAX_IDENTIFIER_LENGTH];
    int i, nRet;
-   bool constructor, isGlobal;
+   bool constructor;
+   NXSL_VariableSystem *vs;
 
    cp = m_instructionSet->get(m_cp);
    switch(cp->m_nOpCode)
@@ -509,16 +516,10 @@ void NXSL_VM::execute()
          m_dataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
          break;
       case OPCODE_PUSH_VARIABLE:
-         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &isGlobal);
+         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
          m_dataStack->push(new NXSL_Value(pVar->getValue()));
-         if (isGlobal)
-         {
-            // convert to direct variable access without name lookup
-            cp->m_nOpCode = OPCODE_PUSH_VARPTR;
-            delete cp->m_operand.m_identifier;
-            cp->m_operand.m_variable = pVar;
-         }
-         else if (m_locals->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
+         // convert to direct variable access without name lookup
+         if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
          {
             cp->m_nOpCode = OPCODE_PUSH_VARPTR;
             cp->m_operand.m_variable = pVar;
@@ -533,9 +534,11 @@ void NXSL_VM::execute()
          {
             m_dataStack->push(new NXSL_Value(pVar->getValue()));
             // convert to direct value access without name lookup
-            cp->m_nOpCode = OPCODE_PUSH_CONSTANT;
-            delete cp->m_operand.m_identifier;
-            cp->m_operand.m_pConstant = new NXSL_Value(pVar->getValue());
+            if (m_constants->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
+            {
+               cp->m_nOpCode = OPCODE_PUSH_VARPTR;
+               cp->m_operand.m_variable = pVar;
+            }
          }
          else
          {
@@ -549,7 +552,7 @@ void NXSL_VM::execute()
          m_dataStack->push(new NXSL_Value(new NXSL_HashMap()));
          break;
       case OPCODE_SET:
-         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &isGlobal);
+         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
 			if (!pVar->isConstant())
 			{
 				pValue = (NXSL_Value *)m_dataStack->peek();
@@ -557,13 +560,7 @@ void NXSL_VM::execute()
 				{
 					pVar->setValue(new NXSL_Value(pValue));
                // convert to direct variable access without name lookup
-		         if (isGlobal)
-		         {
-		            cp->m_nOpCode = OPCODE_SET_VARPTR;
-		            delete cp->m_operand.m_identifier;
-		            cp->m_operand.m_variable = pVar;
-		         }
-		         else if (m_locals->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
+		         if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
 		         {
                   cp->m_nOpCode = OPCODE_SET_VARPTR;
                   cp->m_operand.m_variable = pVar;
@@ -1134,12 +1131,35 @@ void NXSL_VM::execute()
          break;
       case OPCODE_INC:  // Post increment/decrement
       case OPCODE_DEC:
-         pVar = findOrCreateVariable(*cp->m_operand.m_identifier);
+         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
          pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
             m_dataStack->push(new NXSL_Value(pValue));
             if (cp->m_nOpCode == OPCODE_INC)
+               pValue->increment();
+            else
+               pValue->decrement();
+
+            // Convert to direct variable access
+            if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
+            {
+               cp->m_nOpCode = (cp->m_nOpCode == OPCODE_INC) ? OPCODE_INC_VARPTR : OPCODE_DEC_VARPTR;
+               cp->m_operand.m_variable = pVar;
+            }
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+         break;
+      case OPCODE_INC_VARPTR:  // Post increment/decrement
+      case OPCODE_DEC_VARPTR:
+         pValue = cp->m_operand.m_variable->getValue();
+         if (pValue->isNumeric())
+         {
+            m_dataStack->push(new NXSL_Value(pValue));
+            if (cp->m_nOpCode == OPCODE_INC_VARPTR)
                pValue->increment();
             else
                pValue->decrement();
@@ -1151,11 +1171,34 @@ void NXSL_VM::execute()
          break;
       case OPCODE_INCP: // Pre increment/decrement
       case OPCODE_DECP:
-         pVar = findOrCreateVariable(*cp->m_operand.m_identifier);
+         pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
          pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
             if (cp->m_nOpCode == OPCODE_INCP)
+               pValue->increment();
+            else
+               pValue->decrement();
+            m_dataStack->push(new NXSL_Value(pValue));
+
+            // Convert to direct variable access
+            if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
+            {
+               cp->m_nOpCode = (cp->m_nOpCode == OPCODE_INCP) ? OPCODE_INCP_VARPTR : OPCODE_DECP_VARPTR;
+               cp->m_operand.m_variable = pVar;
+            }
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+         break;
+      case OPCODE_INCP_VARPTR: // Pre increment/decrement
+      case OPCODE_DECP_VARPTR:
+         pValue = cp->m_operand.m_variable->getValue();
+         if (pValue->isNumeric())
+         {
+            if (cp->m_nOpCode == OPCODE_INCP_VARPTR)
                pValue->increment();
             else
                pValue->decrement();

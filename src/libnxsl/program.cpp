@@ -53,7 +53,8 @@ const char *g_nxslCommandMnemonic[] =
    "SETHM", "NEWARR", "NEWHM", "CPOP",
    "SREAD", "SWRITE", "SELECT", "PUSHCP",
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
-   "PUSH", "SET", "CALL"
+   "PUSH", "SET", "CALL", "INC", "DEC",
+   "INCP", "DECP"
 };
 
 /**

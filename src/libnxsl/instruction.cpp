@@ -161,6 +161,10 @@ OperandType NXSL_Instruction::getOperandType()
          return OP_TYPE_CONST;
       case OPCODE_PUSH_VARPTR:
       case OPCODE_SET_VARPTR:
+      case OPCODE_INC_VARPTR:
+      case OPCODE_DEC_VARPTR:
+      case OPCODE_INCP_VARPTR:
+      case OPCODE_DECP_VARPTR:
          return OP_TYPE_VARIABLE;
       case OPCODE_JMP:
       case OPCODE_CALL:
@@ -182,9 +186,28 @@ OperandType NXSL_Instruction::getOperandType()
  */
 void NXSL_Instruction::restoreVariableReference(NXSL_Identifier *identifier)
 {
-   if (m_nOpCode == OPCODE_PUSH_VARPTR)
-      m_nOpCode = OPCODE_PUSH_VARIABLE;
-   else if (m_nOpCode == OPCODE_SET_VARPTR)
-      m_nOpCode = OPCODE_SET;
+   switch(m_nOpCode)
+   {
+      case OPCODE_PUSH_VARPTR:
+         m_nOpCode = OPCODE_PUSH_VARIABLE;
+         break;
+      case OPCODE_SET_VARPTR:
+         m_nOpCode = OPCODE_SET;
+         break;
+      case OPCODE_INC_VARPTR:
+         m_nOpCode = OPCODE_INC;
+         break;
+      case OPCODE_DEC_VARPTR:
+         m_nOpCode = OPCODE_DEC;
+         break;
+      case OPCODE_INCP_VARPTR:
+         m_nOpCode = OPCODE_INCP;
+         break;
+      case OPCODE_DECP_VARPTR:
+         m_nOpCode = OPCODE_DECP;
+         break;
+      default:
+         break;
+   }
    m_operand.m_identifier = identifier;
 }

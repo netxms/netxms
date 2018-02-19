@@ -891,8 +891,8 @@ protected:
    void error(int errorCode, int sourceLine = -1);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
-   NXSL_Variable *findVariable(const NXSL_Identifier& name, bool *isGlobal = NULL);
-   NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, bool *isGlobal = NULL);
+   NXSL_Variable *findVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = NULL);
+   NXSL_Variable *findOrCreateVariable(const NXSL_Identifier& name, NXSL_VariableSystem **vs = NULL);
 	NXSL_Variable *createVariable(const NXSL_Identifier& name);
 
    void relocateCode(UINT32 dwStartOffset, UINT32 dwLen, UINT32 dwShift);
