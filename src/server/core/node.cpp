@@ -1081,7 +1081,7 @@ bool Node::isMyIP(const InetAddress& addr)
  */
 bool Node::filterInterface(InterfaceInfo *info)
 {
-   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"));
+   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"), this);
    if (vm == NULL)
    {
       DbgPrintf(7, _T("Node::filterInterface(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
@@ -1111,7 +1111,6 @@ bool Node::filterInterface(InterfaceInfo *info)
 
    bool pass = true;
    NXSL_Value *argv = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, iface));
-   vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
    if (vm->run(1, &argv))
    {
       NXSL_Value *result = vm->getResult();

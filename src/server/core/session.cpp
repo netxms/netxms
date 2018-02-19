@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -10898,11 +10898,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != NULL)
                {
-                  vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
-                  if (object->getObjectClass() == OBJECT_NODE)
-                  {
-                     vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-                  }
+                  SetupServerScriptVM(vm, object, NULL);
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);
                   success = true;
@@ -11082,11 +11078,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                   vm = GetServerScriptLibrary()->createVM(args->get(0), env);
                   if (vm != NULL)
                   {
-                     vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
-                     if(object->getObjectClass() == OBJECT_NODE)
-                     {
-                        vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-                     }
+                     SetupServerScriptVM(vm, object, NULL);
                      WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      sendMessage(&msg);

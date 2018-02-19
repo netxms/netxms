@@ -417,8 +417,8 @@ class NXSL_TimeClass : public NXSL_Class
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *attr);
-   virtual bool setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
+   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -433,43 +433,43 @@ NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
 /**
  * Get TIME class attribute
  */
-NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const char *attr)
 {
    NXSL_Value *value;
    struct tm *st = (struct tm *)pObject->getData();
-   if (!_tcscmp(attr, _T("sec")) || !_tcscmp(attr, _T("tm_sec")))
+   if (!strcmp(attr, "sec") || !strcmp(attr, "tm_sec"))
    {
       value = new NXSL_Value((LONG)st->tm_sec);
    }
-   else if (!_tcscmp(attr, _T("min")) || !_tcscmp(attr, _T("tm_min")))
+   else if (!strcmp(attr, "min") || !strcmp(attr, "tm_min"))
    {
       value = new NXSL_Value((LONG)st->tm_min);
    }
-   else if (!_tcscmp(attr, _T("hour")) || !_tcscmp(attr, _T("tm_hour")))
+   else if (!strcmp(attr, "hour") || !strcmp(attr, "tm_hour"))
    {
       value = new NXSL_Value((LONG)st->tm_hour);
    }
-   else if (!_tcscmp(attr, _T("mday")) || !_tcscmp(attr, _T("tm_mday")))
+   else if (!strcmp(attr, "mday") || !strcmp(attr, "tm_mday"))
    {
       value = new NXSL_Value((LONG)st->tm_mday);
    }
-   else if (!_tcscmp(attr, _T("mon")) || !_tcscmp(attr, _T("tm_mon")))
+   else if (!strcmp(attr, "mon") || !strcmp(attr, "tm_mon"))
    {
       value = new NXSL_Value((LONG)st->tm_mon);
    }
-   else if (!_tcscmp(attr, _T("year")) || !_tcscmp(attr, _T("tm_year")))
+   else if (!strcmp(attr, "year") || !strcmp(attr, "tm_year"))
    {
       value = new NXSL_Value((LONG)(st->tm_year + 1900));
    }
-   else if (!_tcscmp(attr, _T("yday")) || !_tcscmp(attr, _T("tm_yday")))
+   else if (!strcmp(attr, "yday") || !strcmp(attr, "tm_yday"))
    {
       value = new NXSL_Value((LONG)st->tm_yday);
    }
-   else if (!_tcscmp(attr, _T("wday")) || !_tcscmp(attr, _T("tm_wday")))
+   else if (!strcmp(attr, "wday") || !strcmp(attr, "tm_wday"))
    {
       value = new NXSL_Value((LONG)st->tm_wday);
    }
-   else if (!_tcscmp(attr, _T("isdst")) || !_tcscmp(attr, _T("tm_isdst")))
+   else if (!strcmp(attr, "isdst") || !strcmp(attr, "tm_isdst"))
    {
       value = new NXSL_Value((LONG)st->tm_isdst);
    }
@@ -483,46 +483,46 @@ NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
 /**
  * Set "TIME" class attribute
  */
-bool NXSL_TimeClass::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value)
+bool NXSL_TimeClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
 {
    if (!value->isInteger())
       return false;
 
    bool success = true;
    struct tm *st = (struct tm *)object->getData();
-   if (!_tcscmp(attr, _T("sec")) || !_tcscmp(attr, _T("tm_sec")))
+   if (!strcmp(attr, "sec") || !strcmp(attr, "tm_sec"))
    {
       st->tm_sec = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("min")) || !_tcscmp(attr, _T("tm_min")))
+   else if (!strcmp(attr, "min") || !strcmp(attr, "tm_min"))
    {
       st->tm_min = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("hour")) || !_tcscmp(attr, _T("tm_hour")))
+   else if (!strcmp(attr, "hour") || !strcmp(attr, "tm_hour"))
    {
       st->tm_hour = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("mday")) || !_tcscmp(attr, _T("tm_mday")))
+   else if (!strcmp(attr, "mday") || !strcmp(attr, "tm_mday"))
    {
       st->tm_mday = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("mon")) || !_tcscmp(attr, _T("tm_mon")))
+   else if (!strcmp(attr, "mon") || !strcmp(attr, "tm_mon"))
    {
       st->tm_mon = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("year")) || !_tcscmp(attr, _T("tm_year")))
+   else if (!strcmp(attr, "year") || !strcmp(attr, "tm_year"))
    {
       st->tm_year = value->getValueAsInt32() - 1900;
    }
-   else if (!_tcscmp(attr, _T("yday")) || !_tcscmp(attr, _T("tm_yday")))
+   else if (!strcmp(attr, "yday") || !strcmp(attr, "tm_yday"))
    {
       st->tm_yday = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("wday")) || !_tcscmp(attr, _T("tm_wday")))
+   else if (!strcmp(attr, "wday") || !strcmp(attr, "tm_wday"))
    {
       st->tm_wday = value->getValueAsInt32();
    }
-   else if (!_tcscmp(attr, _T("isdst")) || !_tcscmp(attr, _T("tm_isdst")))
+   else if (!strcmp(attr, "isdst") || !strcmp(attr, "tm_isdst"))
    {
       st->tm_isdst = value->getValueAsInt32();
    }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,48 +54,48 @@ void NXSL_InetAddressClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "InetAddress" class: get attribute
  */
-NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_Value *value = NULL;
    InetAddress *a = (InetAddress *)object->getData();
-   if (!_tcscmp(attr, _T("address")))
+   if (!strcmp(attr, "address"))
    {
       TCHAR buffer[64];
       value = new NXSL_Value(a->toString(buffer));
    }
-   else if (!_tcscmp(attr, _T("family")))
+   else if (!strcmp(attr, "family"))
    {
       value = new NXSL_Value((a->getFamily() == AF_INET) ? _T("inet") : (a->getFamily() == AF_INET6 ? _T("inet6") : _T("unspec")));
    }
-   else if (!_tcscmp(attr, _T("isAnyLocal")))
+   else if (!strcmp(attr, "isAnyLocal"))
    {
       value = new NXSL_Value(a->isAnyLocal());
    }
-   else if (!_tcscmp(attr, _T("isBroadcast")))
+   else if (!strcmp(attr, "isBroadcast"))
    {
       value = new NXSL_Value(a->isBroadcast());
    }
-   else if (!_tcscmp(attr, _T("isLinkLocal")))
+   else if (!strcmp(attr, "isLinkLocal"))
    {
       value = new NXSL_Value(a->isLinkLocal());
    }
-   else if (!_tcscmp(attr, _T("isLoopback")))
+   else if (!strcmp(attr, "isLoopback"))
    {
       value = new NXSL_Value(a->isLoopback());
    }
-   else if (!_tcscmp(attr, _T("isMulticast")))
+   else if (!strcmp(attr, "isMulticast"))
    {
       value = new NXSL_Value(a->isMulticast());
    }
-   else if (!_tcscmp(attr, _T("isValid")))
+   else if (!strcmp(attr, "isValid"))
    {
       value = new NXSL_Value(a->isValid());
    }
-   else if (!_tcscmp(attr, _T("isValidUnicast")))
+   else if (!strcmp(attr, "isValidUnicast"))
    {
       value = new NXSL_Value(a->isValidUnicast());
    }
-   else if (!_tcscmp(attr, _T("mask")))
+   else if (!strcmp(attr, "mask"))
    {
       value = new NXSL_Value(a->getMaskBits());
    }

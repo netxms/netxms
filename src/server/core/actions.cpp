@@ -343,17 +343,10 @@ static bool ForwardEvent(const TCHAR *server, Event *event)
 static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 {
 	BOOL success = FALSE;
-	NXSL_VM *vm = CreateServerScriptVM(scriptName);
+	NXSL_VM *vm = CreateServerScriptVM(scriptName, FindObjectById(event->getSourceId()));
 	if (vm != NULL)
 	{
-		NetObj *object = FindObjectById(event->getSourceId());
-		if (object != NULL)
-		{
-         vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
-		   if (object->getObjectClass() == OBJECT_NODE)
-	         vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
-		}
-		vm->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
+		vm->setGlobalVariable("$event", new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
 
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());

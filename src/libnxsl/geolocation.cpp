@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -54,35 +54,35 @@ void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "GeoLocation" class: get attribute
  */
-NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_Value *value = NULL;
    GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
-   if (!_tcscmp(attr, _T("isManual")))
+   if (!strcmp(attr, "isManual"))
    {
       value = new NXSL_Value(gl->isManual());
    }
-   else if (!_tcscmp(attr, _T("isValid")))
+   else if (!strcmp(attr, "isValid"))
    {
       value = new NXSL_Value(gl->isValid());
    }
-   else if (!_tcscmp(attr, _T("latitude")))
+   else if (!strcmp(attr, "latitude"))
    {
       value = new NXSL_Value(gl->getLatitude());
    }
-   else if (!_tcscmp(attr, _T("latitudeText")))
+   else if (!strcmp(attr, "latitudeText"))
    {
       value = new NXSL_Value(gl->getLatitudeAsString());
    }
-   else if (!_tcscmp(attr, _T("longitude")))
+   else if (!strcmp(attr, "longitude"))
    {
       value = new NXSL_Value(gl->getLongitude());
    }
-   else if (!_tcscmp(attr, _T("longitudeText")))
+   else if (!strcmp(attr, "longitudeText"))
    {
       value = new NXSL_Value(gl->getLongitudeAsString());
    }
-   else if (!_tcscmp(attr, _T("type")))
+   else if (!strcmp(attr, "type"))
    {
       value = new NXSL_Value(gl->getType());
    }

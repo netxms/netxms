@@ -1294,14 +1294,13 @@ AutoBindDecision Template::isApplicable(DataCollectionTarget *target)
 	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
-	   filter = new NXSL_VM(new NXSL_ServerEnv());
-	   if (!filter->load(m_applyFilter))
+	   filter = CreateServerScriptVM(m_applyFilter, target);
+	   if (filter == NULL)
 	   {
 	      TCHAR buffer[1024];
 	      _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
-	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
-	      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, filter->getErrorText());
-	      delete_and_null(filter);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_id);
+	      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, _T("Script load error"));
 	   }
 	}
    unlockProperties();
@@ -1309,9 +1308,6 @@ AutoBindDecision Template::isApplicable(DataCollectionTarget *target)
    if (filter == NULL)
       return result;
 
-   filter->setGlobalVariable(_T("$object"), target->createNXSLObject());
-   if (target->getObjectClass() == OBJECT_NODE)
-      filter->setGlobalVariable(_T("$node"), target->createNXSLObject());
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();

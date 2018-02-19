@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -434,7 +434,7 @@ void ConditionObject::check()
 	{
 		array->set(i + 1, new NXSL_Value(ppValueList[i]));
 	}
-   m_script->setGlobalVariable(_T("$values"), new NXSL_Value(array));
+   m_script->setGlobalVariable("$values", new NXSL_Value(array));
 
    DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_id, m_name);
    if (m_script->run(numValues, ppValueList))

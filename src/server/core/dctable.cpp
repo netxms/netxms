@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -405,17 +405,10 @@ bool DCTable::transform(Table *value)
       return true;
 
    bool success = false;
-   NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
-   if (vm->load(m_transformationScript))
+   NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+   if (vm != NULL)
    {
       NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
-      vm->setGlobalVariable(_T("$object"), m_owner->createNXSLObject());
-      if (m_owner->getObjectClass() == OBJECT_NODE)
-      {
-         vm->setGlobalVariable(_T("$node"), m_owner->createNXSLObject());
-      }
-      vm->setGlobalVariable(_T("$dci"), createNXSLObject());
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_owner->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
       // remove lock from DCI for script execution to avoid deadlocks
       unlock();
@@ -442,6 +435,7 @@ bool DCTable::transform(Table *value)
             }
          }
       }
+      delete vm;
    }
    else
    {
@@ -450,13 +444,12 @@ bool DCTable::transform(Table *value)
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
+         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load error"), m_id);
          nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                     getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+                     getOwnerId(), getOwnerName(), m_id, m_name, _T("Script load error"));
          m_lastScriptErrorReport = now;
       }
    }
-   delete vm;
    return success;
 }
 

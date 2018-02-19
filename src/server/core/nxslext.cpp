@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1513,52 +1513,52 @@ static int F_CurrencyName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
-	{ _T("map"), F_map, -1 },
-   { _T("mapList"), F_mapList, -1 },
-   { _T("AgentExecuteAction"), F_AgentExecuteAction, -1 },
-   { _T("AgentExecuteActionWithOutput"), F_AgentExecuteActionWithOutput, -1 },
-	{ _T("AgentReadList"), F_AgentReadList, 2 },
-	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
-	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
-	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
-   { _T("CountryAlphaCode"), F_CountryAlphaCode, 1 },
-   { _T("CountryName"), F_CountryName, 1 },
-   { _T("CurrencyAlphaCode"), F_CurrencyAlphaCode, 1 },
-   { _T("CurrencyExponent"), F_CurrencyExponent, 1 },
-   { _T("CurrencyName"), F_CurrencyName, 1 },
-	{ _T("DeleteCustomAttribute"), F_DeleteCustomAttribute, 2 },
-   { _T("DriverReadParameter"), F_DriverReadParameter, 2 },
-   { _T("EnterMaintenance"), F_EnterMaintenance, 1 },
-   { _T("GetAllNodes"), F_GetAllNodes, -1 },
-   { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
-   { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
-   { _T("GetEventParameter"), F_GetEventParameter, 2 },
-   { _T("GetInterfaceName"), F_GetInterfaceName, 2 },
-   { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
-   { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
-   { _T("GetNodeParents"), F_GetNodeParents, 1 },
-   { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
-   { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
-   { _T("GetObjectParents"), F_GetObjectParents, 1 },
-   { _T("GetSyslogRuleCheckCount"), F_GetSyslogRuleCheckCount, -1 },
-   { _T("GetSyslogRuleMatchCount"), F_GetSyslogRuleMatchCount, -1 },
-	{ _T("FindAlarmById"), F_FindAlarmById, 1 },
-	{ _T("FindAlarmByKey"), F_FindAlarmByKey, 1 },
-   { _T("FindAlarmByKeyRegex"), F_FindAlarmByKeyRegex, 1 },
-	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
-	{ _T("FindObject"), F_FindObject, -1 },
-   { _T("LeaveMaintenance"), F_LeaveMaintenance, 1 },
-   { _T("ManageObject"), F_ManageObject, 1 },
-	{ _T("PostEvent"), F_PostEvent, -1 },
-	{ _T("RenameObject"), F_RenameObject, 2 },
-   { _T("SetCustomAttribute"), F_SetCustomAttribute, 3 },
-   { _T("SetEventParameter"), F_SetEventParameter, 3 },
-	{ _T("SetInterfaceExpectedState"), F_SetInterfaceExpectedState, 2 },
-	{ _T("SNMPGet"), F_SNMPGet, 2 },
-	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
-	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },
-	{ _T("SNMPWalk"), F_SNMPWalk, 2 },
-   { _T("UnmanageObject"), F_UnmanageObject, 1 }
+	{ "map", F_map, -1 },
+   { "mapList", F_mapList, -1 },
+   { "AgentExecuteAction", F_AgentExecuteAction, -1 },
+   { "AgentExecuteActionWithOutput", F_AgentExecuteActionWithOutput, -1 },
+	{ "AgentReadList", F_AgentReadList, 2 },
+	{ "AgentReadParameter", F_AgentReadParameter, 2 },
+	{ "AgentReadTable", F_AgentReadTable, 2 },
+	{ "CreateSNMPTransport", F_CreateSNMPTransport, 1 },
+   { "CountryAlphaCode", F_CountryAlphaCode, 1 },
+   { "CountryName", F_CountryName, 1 },
+   { "CurrencyAlphaCode", F_CurrencyAlphaCode, 1 },
+   { "CurrencyExponent", F_CurrencyExponent, 1 },
+   { "CurrencyName", F_CurrencyName, 1 },
+	{ "DeleteCustomAttribute", F_DeleteCustomAttribute, 2 },
+   { "DriverReadParameter", F_DriverReadParameter, 2 },
+   { "EnterMaintenance", F_EnterMaintenance, 1 },
+   { "GetAllNodes", F_GetAllNodes, -1 },
+   { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
+   { "GetCustomAttribute", F_GetCustomAttribute, 2 },
+   { "GetEventParameter", F_GetEventParameter, 2 },
+   { "GetInterfaceName", F_GetInterfaceName, 2 },
+   { "GetInterfaceObject", F_GetInterfaceObject, 2 },
+   { "GetNodeInterfaces", F_GetNodeInterfaces, 1 },
+   { "GetNodeParents", F_GetNodeParents, 1 },
+   { "GetNodeTemplates", F_GetNodeTemplates, 1 },
+   { "GetObjectChildren", F_GetObjectChildren, 1 },
+   { "GetObjectParents", F_GetObjectParents, 1 },
+   { "GetSyslogRuleCheckCount", F_GetSyslogRuleCheckCount, -1 },
+   { "GetSyslogRuleMatchCount", F_GetSyslogRuleMatchCount, -1 },
+	{ "FindAlarmById", F_FindAlarmById, 1 },
+	{ "FindAlarmByKey", F_FindAlarmByKey, 1 },
+   { "FindAlarmByKeyRegex", F_FindAlarmByKeyRegex, 1 },
+	{ "FindNodeObject", F_FindNodeObject, 2 },
+	{ "FindObject", F_FindObject, -1 },
+   { "LeaveMaintenance", F_LeaveMaintenance, 1 },
+   { "ManageObject", F_ManageObject, 1 },
+	{ "PostEvent", F_PostEvent, -1 },
+	{ "RenameObject", F_RenameObject, 2 },
+   { "SetCustomAttribute", F_SetCustomAttribute, 3 },
+   { "SetEventParameter", F_SetEventParameter, 3 },
+	{ "SetInterfaceExpectedState", F_SetInterfaceExpectedState, 2 },
+	{ "SNMPGet", F_SNMPGet, 2 },
+	{ "SNMPGetValue", F_SNMPGetValue, 2 },
+	{ "SNMPSet", F_SNMPSet, -1 /* 3 or 4 */ },
+	{ "SNMPWalk", F_SNMPWalk, 2 },
+   { "UnmanageObject", F_UnmanageObject, 1 }
 };
 
 /**
@@ -1566,11 +1566,11 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
  */
 static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
-	{ _T("BindObject"), F_BindObject, 2 },
-	{ _T("CreateContainer"), F_CreateContainer, 2 },
-	{ _T("CreateNode"), F_CreateNode, 3 },
-	{ _T("DeleteObject"), F_DeleteObject, 1 },
-	{ _T("UnbindObject"), F_UnbindObject, 2 }
+	{ "BindObject", F_BindObject, 2 },
+	{ "CreateContainer", F_CreateContainer, 2 },
+	{ "CreateNode", F_CreateNode, 3 },
+	{ "DeleteObject", F_DeleteObject, 1 },
+	{ "UnbindObject", F_UnbindObject, 2 }
 };
 
 /*** NXSL_ServerEnv class implementation ***/
@@ -1627,13 +1627,13 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    vm->setStorage(&g_nxslPstorage);
 
    // Add DCI data types
-   vm->addConstant(_T("DCI::INT32"), new NXSL_Value(DCI_DT_INT));
-   vm->addConstant(_T("DCI::UINT32"), new NXSL_Value(DCI_DT_UINT));
-   vm->addConstant(_T("DCI::INT64"), new NXSL_Value(DCI_DT_INT64));
-   vm->addConstant(_T("DCI::UINT64"), new NXSL_Value(DCI_DT_UINT64));
-   vm->addConstant(_T("DCI::FLOAT"), new NXSL_Value(DCI_DT_FLOAT));
-   vm->addConstant(_T("DCI::STRING"), new NXSL_Value(DCI_DT_STRING));
-   vm->addConstant(_T("DCI::NULL"), new NXSL_Value(DCI_DT_NULL));
+   vm->addConstant("DCI::INT32", new NXSL_Value(DCI_DT_INT));
+   vm->addConstant("DCI::UINT32", new NXSL_Value(DCI_DT_UINT));
+   vm->addConstant("DCI::INT64", new NXSL_Value(DCI_DT_INT64));
+   vm->addConstant("DCI::UINT64", new NXSL_Value(DCI_DT_UINT64));
+   vm->addConstant("DCI::FLOAT", new NXSL_Value(DCI_DT_FLOAT));
+   vm->addConstant("DCI::STRING", new NXSL_Value(DCI_DT_STRING));
+   vm->addConstant("DCI::NULL", new NXSL_Value(DCI_DT_NULL));
 
    CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
 }
@@ -1682,11 +1682,11 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
 /**
  * Call hook script
  */
-NXSL_VM *FindHookScript(const TCHAR *hookName)
+NXSL_VM *FindHookScript(const TCHAR *hookName, NetObj *object)
 {
 	TCHAR scriptName[MAX_PATH] = _T("Hook::");
 	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-	NXSL_VM *vm = CreateServerScriptVM(scriptName);
+	NXSL_VM *vm = CreateServerScriptVM(scriptName, object);
 	if (vm == NULL)
 		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
    return vm;

@@ -34,7 +34,7 @@ public:
    virtual void onObjectCreate(NXSL_Object *object);
    virtual void onObjectDelete(NXSL_Object *object);
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -45,7 +45,7 @@ class NXSL_NodeClass : public NXSL_NetObjClass
 public:
    NXSL_NodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -56,7 +56,7 @@ class NXSL_InterfaceClass : public NXSL_NetObjClass
 public:
    NXSL_InterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -67,7 +67,7 @@ class NXSL_MobileDeviceClass : public NXSL_NetObjClass
 public:
    NXSL_MobileDeviceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -78,7 +78,7 @@ class NXSL_ChassisClass : public NXSL_NetObjClass
 public:
    NXSL_ChassisClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -89,7 +89,7 @@ class NXSL_ClusterClass : public NXSL_NetObjClass
 public:
    NXSL_ClusterClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -100,7 +100,7 @@ class NXSL_ContainerClass : public NXSL_NetObjClass
 public:
    NXSL_ContainerClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -111,7 +111,7 @@ class NXSL_ZoneClass : public NXSL_NetObjClass
 public:
    NXSL_ZoneClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -122,7 +122,7 @@ class NXSL_EventClass : public NXSL_Class
 public:
    NXSL_EventClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -133,7 +133,7 @@ class NXSL_AlarmClass : public NXSL_Class
 public:
    NXSL_AlarmClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -145,7 +145,7 @@ class NXSL_DciClass : public NXSL_Class
 public:
    NXSL_DciClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -157,7 +157,7 @@ class NXSL_SensorClass : public NXSL_NetObjClass
 public:
    NXSL_SensorClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -168,7 +168,7 @@ class NXSL_SNMPTransportClass : public NXSL_Class
 public:
 	NXSL_SNMPTransportClass();
 
-	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+	virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -180,7 +180,7 @@ class NXSL_SNMPVarBindClass : public NXSL_Class
 public:
 	NXSL_SNMPVarBindClass();
 
-	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+	virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -192,7 +192,7 @@ class NXSL_ComponentClass : public NXSL_Class
 public:
    NXSL_ComponentClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -238,7 +238,7 @@ class NXSL_UserDBObjectClass : public NXSL_Class
 public:
    NXSL_UserDBObjectClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
@@ -249,7 +249,7 @@ class NXSL_UserClass : public NXSL_UserDBObjectClass
 public:
    NXSL_UserClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -261,7 +261,7 @@ class NXSL_UserGroupClass : public NXSL_UserDBObjectClass
 public:
    NXSL_UserGroupClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -273,9 +273,19 @@ class ScheduleParameters;
 NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();
 
 /**
+ * Setup server script VM. Returns pointer to same VM for convenience.
+ */
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCObject *dci);
+
+/**
  * Create NXSL VM from library script
  */
-NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name);
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci = NULL);
+
+/**
+ * Create NXSL VM from compiled script
+ */
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci = NULL);
 
 /**
  * Functions
@@ -286,7 +296,7 @@ bool IsValidScriptId(UINT32 id);
 UINT32 ResolveScriptName(const TCHAR *name);
 void CreateScriptExportRecord(String &xml, UINT32 id);
 void ImportScript(ConfigEntry *config);
-NXSL_VM *FindHookScript(const TCHAR *hookName);
+NXSL_VM *FindHookScript(const TCHAR *hookName, NetObj *object);
 bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
 
 /**

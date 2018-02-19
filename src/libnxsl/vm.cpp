@@ -203,7 +203,7 @@ EnumerationCallbackResult NXSL_VM::createConstantsCallback(const void *key, cons
 /**
  * Load program
  */
-bool NXSL_VM::load(NXSL_Program *program)
+bool NXSL_VM::load(const NXSL_Program *program)
 {
    bool success = true;
 

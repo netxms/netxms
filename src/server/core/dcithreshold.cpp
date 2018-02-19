@@ -302,19 +302,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    {
       if (m_script != NULL)
       {
-         NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
-         if (vm->load(m_script))
+         NXSL_VM *vm = CreateServerScriptVM(m_script, target, dci);
+         if (vm != NULL)
          {
             NXSL_Value *parameters[2];
             parameters[0] = new NXSL_Value(value.getString());
             parameters[1] = new NXSL_Value(m_value.getString());
-            vm->setGlobalVariable(_T("$object"), target->createNXSLObject());
-            if (target->getObjectClass() == OBJECT_NODE)
-            {
-               vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));
-            }
-            vm->setGlobalVariable(_T("$dci"), dci->createNXSLObject());
-            vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
             if (vm->run(2, parameters))
             {
                NXSL_Value *result = vm->getResult();
@@ -328,7 +321,6 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                time_t now = time(NULL);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
-nxlog_debug(1, _T("**** now=%ld last=%ld sum=%ld"), now, m_lastScriptErrorReport, m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400));
                   TCHAR buffer[1024];
                   _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
@@ -336,6 +328,7 @@ nxlog_debug(1, _T("**** now=%ld last=%ld sum=%ld"), now, m_lastScriptErrorReport
                   m_lastScriptErrorReport = now;
                }
             }
+            delete vm;
          }
          else
          {
@@ -344,12 +337,11 @@ nxlog_debug(1, _T("**** now=%ld last=%ld sum=%ld"), now, m_lastScriptErrorReport
             {
                TCHAR buffer[1024];
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
-               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
-               nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+               PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, _T("Script load failed"), dci->getId());
+               nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, _T("Script load failed"));
                m_lastScriptErrorReport = now;
             }
          }
-         delete vm;
       }
       else
       {

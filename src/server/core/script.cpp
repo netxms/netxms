@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,11 +36,41 @@ NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary()
 }
 
 /**
+ * Setup server script VM. Returns pointer to same VM for convenience.
+ */
+NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCObject *dci)
+{
+   if ((vm == NULL) || (object == NULL))
+      return vm;
+   vm->setGlobalVariable("$object", object->createNXSLObject());
+   if (object->getObjectClass() == OBJECT_NODE)
+      vm->setGlobalVariable("$node", object->createNXSLObject());
+   vm->setGlobalVariable("$isCluster", new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+   if (dci != NULL)
+      vm->setGlobalVariable("$dci", dci->createNXSLObject());
+   return vm;
+}
+
+/**
  * Create NXSL VM from library script
  */
-NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name)
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const TCHAR *name, NetObj *object, DCObject *dci)
 {
-   return s_scriptLibrary.createVM(name, new NXSL_ServerEnv());
+   return SetupServerScriptVM(s_scriptLibrary.createVM(name, new NXSL_ServerEnv()), object, dci);
+}
+
+/**
+ * Create NXSL VM from compiled script
+ */
+NXSL_VM NXCORE_EXPORTABLE *CreateServerScriptVM(const NXSL_Program *script, NetObj *object, DCObject *dci)
+{
+   NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
+   if (!vm->load(script))
+   {
+      delete vm;
+      return NULL;
+   }
+   return SetupServerScriptVM(vm, object, dci);
 }
 
 /**
@@ -449,15 +479,9 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
       }
    }
 
-   NXSL_VM *vm = s_scriptLibrary.createVM(name, new NXSL_ServerEnv());
+   NXSL_VM *vm = CreateServerScriptVM(name, object);
    if (vm != NULL)
    {
-      if(object != NULL)
-      {
-         vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
-         if (object->getObjectClass() == OBJECT_NODE)
-            vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
-      }
       if (vm->run(&args))
       {
          if (object != NULL)

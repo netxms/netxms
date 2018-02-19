@@ -332,14 +332,13 @@ AutoBindDecision Container::isSuitableForObject(NetObj *object)
 	lockProperties();
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
 	{
-	   filter = new NXSL_VM(new NXSL_ServerEnv());
-	   if (!filter->load(m_bindFilter))
+	   filter = CreateServerScriptVM(m_bindFilter, object);
+	   if (filter == NULL)
 	   {
 	      TCHAR buffer[1024];
 	      _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
-	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
-	      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, filter->getErrorText());
-	      delete_and_null(filter);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_id);
+	      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, _T("Script load error"));
 	   }
 	}
    unlockProperties();
@@ -347,9 +346,6 @@ AutoBindDecision Container::isSuitableForObject(NetObj *object)
    if (filter == NULL)
       return result;
 
-   filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
-   if (object->getObjectClass() == OBJECT_NODE)
-      filter->setGlobalVariable(_T("$node"), object->createNXSLObject());
    if (filter->run())
    {
       NXSL_Value *value = filter->getResult();

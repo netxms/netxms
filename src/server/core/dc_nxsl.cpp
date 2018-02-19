@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -507,21 +507,21 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
  */
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
-   { _T("CreateDCI"), F_CreateDCI, 7 },
-   { _T("FindAllDCIs"), F_FindAllDCIs, -1 },
-   { _T("FindDCIByName"), F_FindDCIByName, 2 },
-   { _T("FindDCIByDescription"), F_FindDCIByDescription, 2 },
-	{ _T("GetAvgDCIValue"), F_GetAvgDCIValue, 4 },
-   { _T("GetDCIObject"), F_GetDCIObject, 2 },
-   { _T("GetDCIRawValue"), F_GetDCIRawValue, 2 },
-   { _T("GetDCIValue"), F_GetDCIValue, 2 },
-   { _T("GetDCIValues"), F_GetDCIValues, 4 },
-   { _T("GetDCIValueByDescription"), F_GetDCIValueByDescription, 2 },
-   { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
-	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },
-	{ _T("GetMinDCIValue"), F_GetMinDCIValue, 4 },
-	{ _T("GetSumDCIValue"), F_GetSumDCIValue, 4 },
-   { _T("PushDCIData"), F_PushDCIData, 3 }
+   { "CreateDCI", F_CreateDCI, 7 },
+   { "FindAllDCIs", F_FindAllDCIs, -1 },
+   { "FindDCIByName", F_FindDCIByName, 2 },
+   { "FindDCIByDescription", F_FindDCIByDescription, 2 },
+	{ "GetAvgDCIValue", F_GetAvgDCIValue, 4 },
+   { "GetDCIObject", F_GetDCIObject, 2 },
+   { "GetDCIRawValue", F_GetDCIRawValue, 2 },
+   { "GetDCIValue", F_GetDCIValue, 2 },
+   { "GetDCIValues", F_GetDCIValues, 4 },
+   { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
+   { "GetDCIValueByName", F_GetDCIValueByName, 2 },
+	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
+	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
+	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
+   { "PushDCIData", F_PushDCIData, 3 }
 };
 
 /**

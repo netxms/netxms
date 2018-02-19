@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1006,11 +1006,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 	lockProperties();
 	if (m_filter != NULL)
 	{
-      m_filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
-      if (object->getObjectClass() == OBJECT_NODE)
-      {
-		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-      }
+	   SetupServerScriptVM(m_filter, object, NULL);
 		if (m_filter->run())
 		{
 			NXSL_Value *value = m_filter->getResult();

@@ -920,7 +920,7 @@ public:
    void storageWrite(const TCHAR *name, double value) { m_storage->write(name, new NXSL_Value(value)); }
 	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
 
-   bool load(NXSL_Program *program);
+   bool load(const NXSL_Program *program);
    bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,
             NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
             const char *entryPoint = NULL);
@@ -951,7 +951,7 @@ public:
    NXSL_TableRowClass();
    virtual ~NXSL_TableRowClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -964,7 +964,7 @@ public:
    NXSL_TableColumnClass();
    virtual ~NXSL_TableColumnClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -977,7 +977,7 @@ public:
    NXSL_TableClass();
    virtual ~NXSL_TableClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -1002,7 +1002,7 @@ public:
    NXSL_ConnectorClass();
    virtual ~NXSL_ConnectorClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -1015,7 +1015,7 @@ public:
    NXSL_GeoLocationClass();
    virtual ~NXSL_GeoLocationClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 
    static NXSL_Value *createObject(const GeoLocation& gl);
@@ -1030,7 +1030,7 @@ public:
    NXSL_InetAddressClass();
    virtual ~NXSL_InetAddressClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 
    static NXSL_Value *createObject(const InetAddress& addr);

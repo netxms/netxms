@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ NXSL_VariableSystem __EXPORT SlmCheck::m_nxslConstants;
  */
 void SlmCheck::init()
 {
-	m_nxslConstants.create(_T("OK"), new NXSL_Value((LONG)0));
-	m_nxslConstants.create(_T("FAIL"), new NXSL_Value((LONG)1));
+	m_nxslConstants.create("OK", new NXSL_Value((LONG)0));
+	m_nxslConstants.create("FAIL", new NXSL_Value((LONG)1));
 }
 
 /**
@@ -373,15 +373,15 @@ void SlmCheck::execute()
 			{
 				NXSL_VariableSystem *pGlobals = NULL;
 
-				m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
-				m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
+				m_pCompiledScript->setGlobalVariable("$reason", new NXSL_Value(m_reason));
+				m_pCompiledScript->setGlobalVariable("$node", getNodeObjectForNXSL());
 				if (m_pCompiledScript->run(0, NULL, NULL, &pGlobals, &m_nxslConstants))
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
 					m_status = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
 					if (m_status == STATUS_CRITICAL)
 					{
-						NXSL_Variable *reason = pGlobals->find(_T("$reason"));
+						NXSL_Variable *reason = pGlobals->find("$reason");
 						setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
 					}
 					DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_name, (long)m_id, pValue->getValueAsInt32());

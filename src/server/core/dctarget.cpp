@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -729,18 +729,12 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       }
    }
 
-   NXSL_VM *vm = CreateServerScriptVM(name);
+   NXSL_VM *vm = CreateServerScriptVM(name, this);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), createNXSLObject());
-      if (getObjectClass() == OBJECT_NODE)
-      {
-         vm->setGlobalVariable(_T("$node"), createNXSLObject());
-      }
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
       if (targetObject != NULL)
       {
-         vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
+         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject());
       }
       if (!vm->run(&args))
       {
@@ -878,18 +872,12 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
    }
 
    UINT32 rc = DCE_NOT_SUPPORTED;
-   NXSL_VM *vm = CreateServerScriptVM(name);
+   NXSL_VM *vm = CreateServerScriptVM(name, this);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), createNXSLObject());
-      if (getObjectClass() == OBJECT_NODE)
-      {
-         vm->setGlobalVariable(_T("$node"), createNXSLObject());
-      }
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
       if (targetObject != NULL)
       {
-         vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
+         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject());
       }
       if (vm->run(&args))
       {
@@ -1732,14 +1720,13 @@ void DataCollectionTarget::executeHookScript(const TCHAR *hookName)
 {
    TCHAR scriptName[MAX_PATH] = _T("Hook::");
    nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
    if (vm == NULL)
    {
       DbgPrintf(7, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
       return;
    }
 
-   vm->setGlobalVariable(_T("$object"), createNXSLObject());
    if (!vm->run())
    {
       DbgPrintf(4, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),

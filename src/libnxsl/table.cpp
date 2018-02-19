@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -232,15 +232,15 @@ void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "Table" class: get attribute
  */
-NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_Value *value = NULL;
    Table *table = (Table *)object->getData();
-   if (!_tcscmp(attr, _T("columnCount")))
+   if (!strcmp(attr, "columnCount"))
    {
       value = new NXSL_Value((LONG)table->getNumColumns());
    }
-   else if (!_tcscmp(attr, _T("columns")))
+   else if (!strcmp(attr, "columns"))
    {
       NXSL_Array *columns = new NXSL_Array();
       ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
@@ -250,11 +250,11 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       }
       value = new NXSL_Value(columns);
    }
-   else if (!_tcscmp(attr, _T("rowCount")))
+   else if (!strcmp(attr, "rowCount"))
    {
       value = new NXSL_Value((LONG)table->getNumRows());
    }
-   else if (!_tcscmp(attr, _T("rows")))
+   else if (!strcmp(attr, "rows"))
    {
       NXSL_Array *rows = new NXSL_Array();
       for(int i = 0; i < table->getNumRows(); i++)
@@ -263,7 +263,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       }
       value = new NXSL_Value(rows);
    }
-   else if (!_tcscmp(attr, _T("title")))
+   else if (!strcmp(attr, "title"))
    {
       value = new NXSL_Value(table->getTitle());
    }
@@ -317,23 +317,23 @@ void NXSL_TableColumnClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "TableColumn" class: get attribute
  */
-NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_TableColumnClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_Value *value = NULL;
    TableColumnDefinition *tc = (TableColumnDefinition *)object->getData();
-   if (!_tcscmp(attr, _T("dataType")))
+   if (!strcmp(attr, "dataType"))
    {
       value = new NXSL_Value(tc->getDataType());
    }
-   else if (!_tcscmp(attr, _T("displayName")))
+   else if (!strcmp(attr, "displayName"))
    {
       value = new NXSL_Value(tc->getDisplayName());
    }
-   else if (!_tcscmp(attr, _T("isInstanceColumn")))
+   else if (!strcmp(attr, "isInstanceColumn"))
    {
       value = new NXSL_Value((INT32)(tc->isInstanceColumn() ? 1 : 0));
    }
-   else if (!_tcscmp(attr, _T("name")))
+   else if (!strcmp(attr, "name"))
    {
       value = new NXSL_Value(tc->getName());
    }
@@ -403,15 +403,15 @@ void NXSL_TableRowClass::onObjectDelete(NXSL_Object *object)
 /**
  * Implementation of "TableRow" class: get attribute
  */
-NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_Value *value = NULL;
    TableRowReference *row = (TableRowReference *)object->getData();
-   if (!_tcscmp(attr, _T("index")))
+   if (!strcmp(attr, "index"))
    {
       value = new NXSL_Value(row->getIndex());
    }
-   else if (!_tcscmp(attr, _T("values")))
+   else if (!strcmp(attr, "values"))
    {
       NXSL_Array *values = new NXSL_Array();
       for(int i = 0; i < row->getTable()->getNumColumns(); i++)

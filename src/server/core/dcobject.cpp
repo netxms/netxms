@@ -391,12 +391,9 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_VM *vm = CreateServerScriptVM(&macro[7]);
+			NXSL_VM *vm = CreateServerScriptVM(&macro[7], m_owner, this);
 			if (vm != NULL)
 			{
-				if (m_owner != NULL)
-					vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_owner)));
-
 				if (vm->run(0, NULL))
 				{
 					NXSL_Value *result = vm->getResult();
@@ -504,11 +501,9 @@ bool DCObject::matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm
          {
             *closingBracker = 0;
 
-            NXSL_VM *vm = CreateServerScriptVM(scriptName);
+            NXSL_VM *vm = CreateServerScriptVM(scriptName, m_owner, this);
             if (vm != NULL)
             {
-               vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_owner)));
-               vm->setGlobalVariable(_T("$dci"), createNXSLObject());
                if (vm->run(0, NULL))
                {
                   NXSL_Value *result = vm->getResult();
@@ -1199,16 +1194,13 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
    NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
    DCObject *dco = ((FilterCallbackData *)data)->dco;
 
-   instanceFilter->setGlobalVariable(_T("$object"), dco->getOwner()->createNXSLObject());
-   instanceFilter->setGlobalVariable(_T("$targetObject"), dco->getOwner()->createNXSLObject());
-   if (dco->getOwner()->getObjectClass() == OBJECT_NODE)
-      instanceFilter->setGlobalVariable(_T("$node"), dco->getOwner()->createNXSLObject());
-   instanceFilter->setGlobalVariable(_T("$dci"), dco->createNXSLObject());
+   SetupServerScriptVM(instanceFilter, dco->getOwner(), dco);
+   instanceFilter->setGlobalVariable("$targetObject", dco->getOwner()->createNXSLObject());
    if (dco->getSourceNode() != 0)
    {
       Node *sourceNode = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (sourceNode != NULL)
-         instanceFilter->setGlobalVariable(_T("$sourceNode"), sourceNode->createNXSLObject());
+         instanceFilter->setGlobalVariable("$sourceNode", sourceNode->createNXSLObject());
    }
 
    NXSL_Value *argv[2];

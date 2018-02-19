@@ -2515,6 +2515,7 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
    struct tm tmbuffer;
 #endif
    TCHAR *pText, szBuffer[4], scriptName[256];
+   char entryPoint[MAX_IDENTIFIER_LENGTH];
    int i;
 
    DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
@@ -2748,31 +2749,38 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                      scriptName[i] = 0;
 
                      // Entry point can be given in form script/entry_point
-                     TCHAR *entryPoint = _tcschr(scriptName, _T('/'));
-                     if (entryPoint != NULL)
+                     TCHAR *s = _tcschr(scriptName, _T('/'));
+                     if (s != NULL)
                      {
-                        *entryPoint = 0;
-                        entryPoint++;
-                        StrStrip(entryPoint);
+                        *s = 0;
+                        s++;
+                        StrStrip(s);
+#ifdef UNICODE
+                        WideCharToMultiByte(CP_UTF8, 0, s, -1, entryPoint, MAX_IDENTIFIER_LENGTH, NULL, NULL);
+                        entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
+#else
+                        strlcpy(entryPoint, s, MAX_IDENTIFIER_LENGTH);
+#endif
+                     }
+                     else
+                     {
+                        entryPoint[0] = 0;
                      }
                      StrStrip(scriptName);
 
-                     NXSL_VM *vm = CreateServerScriptVM(scriptName);
+                     NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
                      if (vm != NULL)
                      {
-                        vm->setGlobalVariable(_T("$object"), createNXSLObject());
-                        if (getObjectClass() == OBJECT_NODE)
-                           vm->setGlobalVariable(_T("$node"), createNXSLObject());
                         if (event != NULL)
-                           vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, const_cast<Event *>(event))) : new NXSL_Value);
+                           vm->setGlobalVariable("$event", (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, const_cast<Event *>(event))) : new NXSL_Value);
                         if (alarm != NULL)
                         {
-                           vm->setGlobalVariable(_T("$alarm"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : new NXSL_Value);
-                           vm->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarm->getMessage()));
-                           vm->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarm->getKey()));
+                           vm->setGlobalVariable("$alarm", (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : new NXSL_Value);
+                           vm->setGlobalVariable("$alarmMessage", new NXSL_Value(alarm->getMessage()));
+                           vm->setGlobalVariable("$alarmKey", new NXSL_Value(alarm->getKey()));
                         }
 
-                        if (vm->run(0, NULL, NULL, NULL, NULL, entryPoint))
+                        if (vm->run(0, NULL, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
                         {
                            NXSL_Value *result = vm->getResult();
                            if (result != NULL)

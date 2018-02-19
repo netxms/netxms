@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -307,14 +307,14 @@ void NXSL_PersistentStorage::remove(const TCHAR *name)
 /**
  * Situation info
  */
-class SistuationInfo
+class SituationInfo
 {
 private:
    TCHAR *situationName;
    TCHAR *instanceName;
 public:
-   ~SistuationInfo() { free(situationName);  free(instanceName); }
-   SistuationInfo(const TCHAR *situation, const TCHAR *instance) { situationName  = _tcsdup(situation); instanceName = _tcsdup(instance); }
+   ~SituationInfo() { free(situationName);  free(instanceName); }
+   SituationInfo(const TCHAR *situation, const TCHAR *instance) { situationName  = _tcsdup(situation); instanceName = _tcsdup(instance); }
    const TCHAR *getSituationName() { return situationName; }
    const TCHAR *getInstanceName() { return instanceName; }
 };
@@ -327,7 +327,7 @@ class NXSL_SituationClass : public NXSL_Class
 public:
    NXSL_SituationClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -335,28 +335,25 @@ public:
 /**
  * Implementation of "Situation" class
  */
-NXSL_SituationClass::NXSL_SituationClass()
-                    :NXSL_Class()
+NXSL_SituationClass::NXSL_SituationClass() : NXSL_Class()
 {
    setName(_T("Situation"));
 }
 
 void NXSL_SituationClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (SistuationInfo *)object->getData();
+   delete (SituationInfo *)object->getData();
 }
 
-NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const char *pszAttr)
 {
-   SistuationInfo *info;
+   SituationInfo *info = (SituationInfo *)pObject->getData();
    NXSL_Value *value = NULL;
-
-   info = (SistuationInfo *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("name")))
+   if (!strcmp(pszAttr, "name"))
    {
       value = new NXSL_Value(info->getSituationName());
    }
-   else if (!_tcscmp(pszAttr, _T("instance")))
+   else if (!strcmp(pszAttr, "instance"))
    {
       value = new NXSL_Value(info->getInstanceName());
    }
@@ -367,7 +364,7 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
       key.append(_T("."));
       key.append(info->getInstanceName());
       key.append(_T("."));
-      key.append(pszAttr);
+      key.appendMBString(pszAttr, strlen(pszAttr), CP_UTF8);
 
       const TCHAR *attrValue = GetPersistentStorageValue((const TCHAR *)key);
 		if (attrValue != NULL)
@@ -401,7 +398,7 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
    if (situationName != NULL && instanceName != NULL)
    {
-      *ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, new SistuationInfo(situationName, instanceName)));
+      *ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, new SituationInfo(situationName, instanceName)));
    }
    else
    {
@@ -429,7 +426,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 	if (_tcscmp(object->getClass()->getName(), m_nxslSituationClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	SistuationInfo *info = ((SistuationInfo *)object->getData());
+	SituationInfo *info = ((SituationInfo *)object->getData());
 	String key;
 	key.append(info->getSituationName());
 	key.append(_T("."));
@@ -448,8 +445,8 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
  */
 NXSL_ExtFunction g_nxslSituationFunctions[] =
 {
-   { _T("FindSituation"), F_FindSituation, 2 },
-   { _T("GetSituationAttribute"), F_GetSituationAttribute, 2 }
+   { "FindSituation", F_FindSituation, 2 },
+   { "GetSituationAttribute", F_GetSituationAttribute, 2 }
 };
 UINT32 g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);
 

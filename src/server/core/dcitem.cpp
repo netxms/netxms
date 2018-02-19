@@ -918,19 +918,12 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
    if (m_transformationScript != NULL)
    {
-      NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
-      if (vm->load(m_transformationScript))
+      NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
+      if (vm != NULL)
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
          if (nxslValue->isNumeric() && (m_dataType != DCI_DT_STRING))
             nxslValue->convert(getNXSLDataType()); // make sure that input NXSL variable type is the same as DCI type
-         vm->setGlobalVariable(_T("$object"), m_owner->createNXSLObject());
-         if (m_owner->getObjectClass() == OBJECT_NODE)
-         {
-            vm->setGlobalVariable(_T("$node"), m_owner->createNXSLObject());
-         }
-         vm->setGlobalVariable(_T("$dci"), createNXSLObject());
-         vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_owner->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
          // remove lock from DCI for script execution to avoid deadlocks
          unlock();
@@ -984,6 +977,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                m_lastScriptErrorReport = now;
             }
          }
+         delete vm;
       }
       else
       {
@@ -992,14 +986,13 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          {
             TCHAR buffer[1024];
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
-            PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
+            PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load failed"), m_id);
             nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                        getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+                        getOwnerId(), getOwnerName(), m_id, m_name, _T("Script load failed"));
             m_lastScriptErrorReport = now;
          }
          success = false;
       }
-      delete vm;
    }
    return success;
 }
@@ -1675,13 +1668,13 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
    if (vm != NULL)
    {
       NXSL_Value *pValue = new NXSL_Value(value);
-      vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+      vm->setGlobalVariable("$object", object->createNXSLObject());
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
+         vm->setGlobalVariable("$node", object->createNXSLObject());
       }
       //FIXME: vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      vm->setGlobalVariable("$isCluster", new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
 		if (vm->run(1, &pValue))
       {

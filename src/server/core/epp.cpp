@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ EPRule::EPRule(ConfigEntry *config)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
       }
       else
       {
@@ -155,7 +155,7 @@ EPRule::EPRule(DB_RESULT hResult, int row)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
       }
       else
       {
@@ -231,7 +231,7 @@ EPRule::EPRule(NXCPMessage *msg)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
       }
       else
       {
@@ -441,6 +441,10 @@ bool EPRule::matchScript(Event *pEvent)
    if (m_pScript == NULL)
       return true;
 
+   SetupServerScriptVM(m_pScript, FindObjectById(pEvent->getSourceId()), NULL);
+   m_pScript->setGlobalVariable("$event", new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
+   m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value());
+
    // Pass event's parameters as arguments and
    // other information as variables
    NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
@@ -449,21 +453,12 @@ bool EPRule::matchScript(Event *pEvent)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    NXSL_VariableSystem *pLocals = new NXSL_VariableSystem;
-   pLocals->create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
-   pLocals->create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
-   pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
-   pLocals->create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
-   pLocals->create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
-   pLocals->create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
-	NetObj *pObject = FindObjectById(pEvent->getSourceId());
-	if (pObject != NULL)
-	{
-      m_pScript->setGlobalVariable(_T("$object"), pObject->createNXSLObject());
-		if (pObject->getObjectClass() == OBJECT_NODE)
-			m_pScript->setGlobalVariable(_T("$node"), pObject->createNXSLObject());
-	}
-	m_pScript->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
-	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
+   pLocals->create("EVENT_CODE", new NXSL_Value(pEvent->getCode()));
+   pLocals->create("SEVERITY", new NXSL_Value(pEvent->getSeverity()));
+   pLocals->create("SEVERITY_TEXT", new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
+   pLocals->create("OBJECT_ID", new NXSL_Value(pEvent->getSourceId()));
+   pLocals->create("EVENT_TEXT", new NXSL_Value((TCHAR *)pEvent->getMessage()));
+   pLocals->create("USER_TAG", new NXSL_Value((TCHAR *)pEvent->getUserTag()));
 
    // Run script
    NXSL_VariableSystem *globals = NULL;
@@ -475,7 +470,7 @@ bool EPRule::matchScript(Event *pEvent)
          bRet = value->getValueAsInt32() ? true : false;
          if (bRet)
          {
-         	NXSL_Variable *var = globals->find(_T("CUSTOM_MESSAGE"));
+         	NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
          	if (var != NULL)
          	{
          		// Update custom message in event

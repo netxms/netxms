@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ class NXSL_DiscoveryClass : public NXSL_Class
 public:
    NXSL_DiscoveryClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
 };
 
 /**
@@ -103,79 +103,79 @@ NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
    setName(_T("NewNode"));
 }
 
-NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const char *pszAttr)
 {
    DISCOVERY_FILTER_DATA *pData;
    NXSL_Value *pValue = NULL;
    TCHAR szBuffer[256];
 
    pData = (DISCOVERY_FILTER_DATA *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("ipAddr")))
+   if (!strcmp(pszAttr, "ipAddr"))
    {
       pValue = new NXSL_Value(pData->ipAddr.toString(szBuffer));
    }
-   else if (!_tcscmp(pszAttr, _T("netMask")))
+   else if (!strcmp(pszAttr, "netMask"))
    {
       pValue = new NXSL_Value(pData->ipAddr.getMaskBits());
    }
-   else if (!_tcscmp(pszAttr, _T("subnet")))
+   else if (!strcmp(pszAttr, "subnet"))
    {
       pValue = new NXSL_Value(pData->ipAddr.getSubnetAddress().toString(szBuffer));
    }
-   else if (!_tcscmp(pszAttr, _T("isAgent")))
+   else if (!strcmp(pszAttr, "isAgent"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_AGENT) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSNMP")))
+   else if (!strcmp(pszAttr, "isSNMP"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_SNMP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isBridge")))
+   else if (!strcmp(pszAttr, "isBridge"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isRouter")))
+   else if (!strcmp(pszAttr, "isRouter"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isPrinter")))
+   else if (!strcmp(pszAttr, "isPrinter"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isCDP")))
+   else if (!strcmp(pszAttr, "isCDP"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_CDP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSONMP")))
+   else if (!strcmp(pszAttr, "isSONMP"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_SONMP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isLLDP")))
+   else if (!strcmp(pszAttr, "isLLDP"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_LLDP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
+   else if (!strcmp(pszAttr, "snmpVersion"))
    {
       pValue = new NXSL_Value((LONG)pData->nSNMPVersion);
    }
-   else if (!_tcscmp(pszAttr, _T("snmpOID")))
+   else if (!strcmp(pszAttr, "snmpOID"))
    {
       pValue = new NXSL_Value(pData->szObjectId);
    }
-   else if (!_tcscmp(pszAttr, _T("agentVersion")))
+   else if (!strcmp(pszAttr, "agentVersion"))
    {
       pValue = new NXSL_Value(pData->szAgentVersion);
    }
-   else if (!_tcscmp(pszAttr, _T("platformName")))
+   else if (!strcmp(pszAttr, "platformName"))
    {
       pValue = new NXSL_Value(pData->szPlatform);
    }
-   else if (!_tcscmp(pszAttr, _T("zone")))
+   else if (!strcmp(pszAttr, "zone"))
    {
       Zone *zone = FindZoneByUIN(pData->zoneUIN);
       pValue = (zone != NULL) ? zone->createNXSLObject() : new NXSL_Value();
    }
-   else if (!_tcscmp(pszAttr, _T("zoneUIN")))
+   else if (!strcmp(pszAttr, "zoneUIN"))
    {
       pValue = new NXSL_Value(pData->zoneUIN);
    }
@@ -472,15 +472,15 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       return FALSE;  // Broadcast MAC
    }
 
-   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"));
+   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), NULL);
    if (hook != NULL)
    {
       bool stop = false;
-      hook->setGlobalVariable(_T("$ipAddr"), new NXSL_Value(szIpAddr));
-      hook->setGlobalVariable(_T("$ipNetMask"), new NXSL_Value(newNodeData->ipAddr.getMaskBits()));
+      hook->setGlobalVariable("$ipAddr", new NXSL_Value(szIpAddr));
+      hook->setGlobalVariable("$ipNetMask", new NXSL_Value(newNodeData->ipAddr.getMaskBits()));
       MACToStr(macAddr, szBuffer);
-      hook->setGlobalVariable(_T("$macAddr"), new NXSL_Value(szBuffer));
-      hook->setGlobalVariable(_T("$zoneUIN"), new NXSL_Value(newNodeData->zoneUIN));
+      hook->setGlobalVariable("$macAddr", new NXSL_Value(szBuffer));
+      hook->setGlobalVariable("$zoneUIN", new NXSL_Value(newNodeData->zoneUIN));
       if (hook->run())
       {
          NXSL_Value *result = hook->getResult();
@@ -687,7 +687,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    }
    else
    {
-      NXSL_VM *vm = CreateServerScriptVM(szFilter);
+      NXSL_VM *vm = CreateServerScriptVM(szFilter, NULL);
       if (vm != NULL)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
