@@ -9,6 +9,7 @@
 - New network map element - text box
 - Improved audit logging on object creation
 - NXSL function "GeoLocation" replaced with "GeoLocation" class constructor
+- Portech SMS gateway works correctly with newer gateway versions
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
