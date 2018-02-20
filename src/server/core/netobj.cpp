@@ -2780,7 +2780,7 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                            vm->setGlobalVariable("$alarmKey", new NXSL_Value(alarm->getKey()));
                         }
 
-                        if (vm->run(0, NULL, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+                        if (vm->run(0, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
                         {
                            NXSL_Value *result = vm->getResult();
                            if (result != NULL)

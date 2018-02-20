@@ -876,6 +876,8 @@ protected:
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
 
+
+
    NXSL_Value *m_pRetValue;
    int m_errorCode;
    int m_errorLine;
@@ -927,12 +929,10 @@ public:
 	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
 
    bool load(const NXSL_Program *program);
-   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,
-            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
-            const char *entryPoint = NULL);
-   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem *pUserLocals = NULL,
-            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
-            const char *entryPoint = NULL);
+   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals = NULL,
+            NXSL_VariableSystem *pConstants = NULL, const char *entryPoint = NULL);
+   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals = NULL,
+            NXSL_VariableSystem *pConstants = NULL, const char *entryPoint = NULL);
    bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }

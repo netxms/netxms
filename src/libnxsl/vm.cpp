@@ -249,22 +249,20 @@ bool NXSL_VM::load(const NXSL_Program *program)
  * Run program
  * Returns true on success and false on error
  */
-bool NXSL_VM::run(int argc, NXSL_Value **argv,
-                  NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
+bool NXSL_VM::run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals,
                   NXSL_VariableSystem *pConstants, const char *entryPoint)
 {
    ObjectArray<NXSL_Value> args(argc, 8, false);
    for(int i = 0; i < argc; i++)
       args.add(argv[i]);
-   return run(&args, pUserLocals, ppGlobals, pConstants, entryPoint);
+   return run(&args, ppGlobals, pConstants, entryPoint);
 }
 
 /**
  * Run program
  * Returns true on success and false on error
  */
-bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
-                  NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
+bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals,
                   NXSL_VariableSystem *pConstants, const char *entryPoint)
 {
 	m_cp = INVALID_ADDRESS;
@@ -278,7 +276,7 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
    m_catchStack = new NXSL_Stack;
 
    // Create local variable system for main() and bind arguments
-   m_locals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
+   m_locals = new NXSL_VariableSystem();
    for(int i = 0; i < args->size(); i++)
    {
       char name[32];
