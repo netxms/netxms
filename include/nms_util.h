@@ -570,8 +570,11 @@ public:
     */
    void free(T *p)
    {
-      *((T**)p) = m_firstDeleted;
-      m_firstDeleted = p;
+      if (p != NULL)
+      {
+         *((T**)p) = m_firstDeleted;
+         m_firstDeleted = p;
+      }
    }
 
    /**
@@ -579,8 +582,11 @@ public:
     */
    void destroy(T *p)
    {
-      p->~T();
-      free(p);
+      if (p != NULL)
+      {
+         p->~T();
+         free(p);
+      }
    }
 };
 
