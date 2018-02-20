@@ -484,6 +484,103 @@ public:
 };
 
 /**
+ * Object memory pool
+ */
+template <class T> class ObjectMemoryPool
+{
+private:
+   void *m_currentRegion;
+   T *m_firstDeleted;
+   size_t m_regionSize;
+   size_t m_elementSize;
+   size_t m_allocated;
+
+public:
+   /**
+    * Create new memory pool
+    */
+   ObjectMemoryPool(size_t regionCapacity = 256)
+   {
+      m_elementSize = sizeof(T);
+      if (m_elementSize % 8 != 0)
+         m_elementSize += 8 - m_elementSize % 8;
+      m_regionSize = regionCapacity * m_elementSize + sizeof(void*);
+      m_currentRegion = malloc(m_regionSize);
+      *((void **)m_currentRegion) = NULL; // pointer to previous region
+      m_firstDeleted = NULL;
+      m_allocated = sizeof(void*);
+   }
+
+   /**
+    * Destroy memory pool. Will destroy allocated memory but object destructors will not be called.
+    */
+   ~ObjectMemoryPool()
+   {
+      void *r = m_currentRegion;
+      while(r != NULL)
+      {
+         void *n = *((void **)r);
+         ::free(r);
+         r = n;
+      }
+   }
+
+   /**
+    * Allocate memory for object without initializing
+    */
+   T *allocate()
+   {
+      T *p;
+      if (m_firstDeleted != NULL)
+      {
+         p = m_firstDeleted;
+         m_firstDeleted = *((T**)p);
+      }
+      else if (m_allocated < m_regionSize)
+      {
+         p = (T*)((char*)m_currentRegion + m_allocated);
+         m_allocated += m_elementSize;
+      }
+      else
+      {
+         void *region = malloc(m_regionSize);
+         *((void **)region) = m_currentRegion;
+         m_currentRegion = region;
+         p = (T*)((char*)m_currentRegion + sizeof(void*));
+         m_allocated = sizeof(void*) + m_elementSize;
+      }
+      return p;
+   }
+
+   /**
+    * Create object using default constructor
+    */
+   T *create()
+   {
+      T *p = allocate();
+      return new(p) T();
+   }
+
+   /**
+    * Free memory block without calling object destructor
+    */
+   void free(T *p)
+   {
+      *((T**)p) = m_firstDeleted;
+      m_firstDeleted = p;
+   }
+
+   /**
+    * Destroy object
+    */
+   void destroy(T *p)
+   {
+      p->~T();
+      free(p);
+   }
+};
+
+/**
  * Class that can store any object with connected to it mutex
  */
 template <class T> class ObjectLock
