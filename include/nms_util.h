@@ -1218,10 +1218,10 @@ private:
    unsigned int m_keylen;
 
 	HashMapEntry *find(const void *key) const;
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 
 protected:
-	void (*m_objectDestructor)(void *);
+	void (*m_objectDestructor)(void *, HashMapBase *);
 
 	HashMapBase(bool objectOwner, unsigned int keylen);
 
@@ -1269,7 +1269,7 @@ public:
 template <class K, class V> class HashMap : public HashMapBase
 {
 private:
-	static void destructor(void *object) { delete (V*)object; }
+	static void destructor(void *object, HashMapBase *map) { delete (V*)object; }
 
 public:
 	HashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
@@ -1288,7 +1288,7 @@ public:
 template <class K, class V> class RefCountHashMap : public HashMapBase
 {
 private:
-   static void destructor(void *object) { if (object != NULL) ((V*)object)->decRefCount(); }
+   static void destructor(void *object, HashMapBase *map) { if (object != NULL) ((V*)object)->decRefCount(); }
 
 public:
    RefCountHashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
