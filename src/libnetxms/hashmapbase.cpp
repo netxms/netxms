@@ -51,7 +51,7 @@ struct HashMapEntry
 /**
  * Standard object destructor
  */
-static void ObjectDestructor(void *object)
+static void ObjectDestructor(void *object, HashMapBase *map)
 {
 	free(object);
 }
