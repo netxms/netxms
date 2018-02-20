@@ -337,7 +337,11 @@ void EPRule::createNXMPRecord(String &str)
    m_pstorageSetActions.forEach(AddPSSetActionsToSML, &str);
    str += _T("\t\t\t\t</setValue>\n\t\t\t\t<deleteValue>\n");
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
-      str.appendFormattedString(_T("\t\t\t\t\t<value key=\"%s\">\n"), m_pstorageDeleteActions.get(i));
+   {
+      str.append(_T("\t\t\t\t\t<value key=\""));
+      str.append(m_pstorageDeleteActions.get(i));
+      str.append(_T("\" />\n"));
+   }
    str += _T("\t\t\t\t</deleteValue>\n\t\t\t</pStorageActions>\n\t\t</rule>\n");
 }
 
