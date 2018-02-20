@@ -28,7 +28,7 @@
 template<typename T> class StringIntMap : public StringMapBase
 {
 private:
-   static void destructor(void *object) { }
+   static void destructor(void *object, StringMapBase *) { }
 
 public:
    StringIntMap() : StringMapBase(false) { m_objectDestructor = destructor; }
