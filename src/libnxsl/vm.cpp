@@ -339,6 +339,7 @@ resume:
    }
 
    // Restore instructions replaced to direct variable pointers
+   m_locals->restoreVariableReferences(m_instructionSet);
    m_globals->restoreVariableReferences(m_instructionSet);
    m_constants->restoreVariableReferences(m_instructionSet);
 
