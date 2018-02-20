@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,22 +28,22 @@
  */
 #define ASSIGN_NUMERIC_VALUE(x) \
 { \
-   switch(m_nDataType) \
+   switch(m_dataType) \
    { \
       case NXSL_DT_INT32: \
-         m_value.nInt32 = (x); \
+         m_value.int32 = (x); \
          break; \
       case NXSL_DT_UINT32: \
-         m_value.uInt32 = (x); \
+         m_value.uint32 = (x); \
          break; \
       case NXSL_DT_INT64: \
-         m_value.nInt64 = (x); \
+         m_value.int64 = (x); \
          break; \
       case NXSL_DT_UINT64: \
-         m_value.uInt64 = (x); \
+         m_value.uint64 = (x); \
          break; \
       case NXSL_DT_REAL: \
-         m_value.dReal = (x); \
+         m_value.real = (x); \
          break; \
       default: \
          break; \
@@ -55,22 +55,22 @@
  */
 #define RETRIEVE_NUMERIC_VALUE(x, dt) \
 { \
-   switch(m_nDataType) \
+   switch(m_dataType) \
    { \
       case NXSL_DT_INT32: \
-         x = (dt)m_value.nInt32; \
+         x = (dt)m_value.int32; \
          break; \
       case NXSL_DT_UINT32: \
-         x = (dt)m_value.uInt32; \
+         x = (dt)m_value.uint32; \
          break; \
       case NXSL_DT_INT64: \
-         x = (dt)m_value.nInt64; \
+         x = (dt)m_value.int64; \
          break; \
       case NXSL_DT_UINT64: \
-         x = (dt)m_value.uInt64; \
+         x = (dt)m_value.uint64; \
          break; \
       case NXSL_DT_REAL: \
-         x = (dt)m_value.dReal; \
+         x = (dt)m_value.real; \
          break; \
       default: \
          x = 0; \
@@ -83,14 +83,14 @@
  */
 NXSL_Value::NXSL_Value()
 {
-   m_nDataType = NXSL_DT_NULL;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_NULL;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
 	m_name = NULL;
-   m_bStringIsValid = FALSE;
+   m_stringIsValid = FALSE;
 }
 
 /**
@@ -100,22 +100,22 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
 {
    if (value != NULL)
    {
-      m_nDataType = value->m_nDataType;
-      if (m_nDataType == NXSL_DT_OBJECT)
+      m_dataType = value->m_dataType;
+      if (m_dataType == NXSL_DT_OBJECT)
       {
          m_value.object = new NXSL_Object(value->m_value.object);
       }
-      else if (m_nDataType == NXSL_DT_ARRAY)
+      else if (m_dataType == NXSL_DT_ARRAY)
       {
          m_value.arrayHandle = value->m_value.arrayHandle;
 			m_value.arrayHandle->incRefCount();
       }
-      else if (m_nDataType == NXSL_DT_HASHMAP)
+      else if (m_dataType == NXSL_DT_HASHMAP)
       {
          m_value.hashMapHandle = value->m_value.hashMapHandle;
 			m_value.hashMapHandle->incRefCount();
       }
-      else if (m_nDataType == NXSL_DT_ITERATOR)
+      else if (m_dataType == NXSL_DT_ITERATOR)
       {
          m_value.iterator = value->m_value.iterator;
 			m_value.iterator->incRefCount();
@@ -124,26 +124,34 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
       {
          memcpy(&m_value, &value->m_value, sizeof(m_value));
       }
-      m_bStringIsValid = value->m_bStringIsValid;
-      if (m_bStringIsValid)
+      m_stringIsValid = value->m_stringIsValid;
+      if (m_stringIsValid)
       {
-         m_dwStrLen = value->m_dwStrLen;
-         m_pszValStr = (TCHAR *)nx_memdup(value->m_pszValStr, (m_dwStrLen + 1) * sizeof(TCHAR));
+         m_length = value->m_length;
+         if (m_length < NXSL_SHORT_STRING_LENGTH)
+         {
+            memcmp(m_value.string, value->m_value.string, (m_length + 1) * sizeof(TCHAR));
+            m_string = NULL;
+         }
+         else
+         {
+            m_string = (TCHAR *)nx_memdup(value->m_string, (m_length + 1) * sizeof(TCHAR));
+         }
       }
       else
       {
-         m_pszValStr = NULL;
+         m_string = NULL;
       }
 		m_name = (value->m_name != NULL) ? strdup(value->m_name) : NULL;
    }
    else
    {
-      m_nDataType = NXSL_DT_NULL;
-      m_pszValStr = NULL;
+      m_dataType = NXSL_DT_NULL;
+      m_string = NULL;
 		m_name = NULL;
    }
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
 }
 
@@ -152,14 +160,14 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
  */
 NXSL_Value::NXSL_Value(NXSL_Object *object)
 {
-   m_nDataType = NXSL_DT_OBJECT;
+   m_dataType = NXSL_DT_OBJECT;
    m_value.object = object;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
+   m_stringIsValid = FALSE;
 	m_name = NULL;
 }
 
@@ -168,15 +176,15 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
  */
 NXSL_Value::NXSL_Value(NXSL_Array *array)
 {
-   m_nDataType = NXSL_DT_ARRAY;
+   m_dataType = NXSL_DT_ARRAY;
    m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(array);
 	m_value.arrayHandle->incRefCount();
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
+   m_stringIsValid = FALSE;
 	m_name = NULL;
 }
 
@@ -185,15 +193,15 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
  */
 NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
 {
-   m_nDataType = NXSL_DT_HASHMAP;
+   m_dataType = NXSL_DT_HASHMAP;
    m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(hashMap);
 	m_value.hashMapHandle->incRefCount();
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
+   m_stringIsValid = FALSE;
 	m_name = NULL;
 }
 
@@ -202,15 +210,15 @@ NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
  */
 NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
 {
-   m_nDataType = NXSL_DT_ITERATOR;
+   m_dataType = NXSL_DT_ITERATOR;
    m_value.iterator = iterator;
 	iterator->incRefCount();
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
+   m_stringIsValid = FALSE;
 	m_name = NULL;
 }
 
@@ -219,14 +227,14 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
  */
 NXSL_Value::NXSL_Value(INT32 nValue)
 {
-   m_nDataType = NXSL_DT_INT32;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_INT32;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.nInt32 = nValue;
+   m_stringIsValid = FALSE;
+   m_value.int32 = nValue;
 	m_name = NULL;
 }
 
@@ -235,14 +243,14 @@ NXSL_Value::NXSL_Value(INT32 nValue)
  */
 NXSL_Value::NXSL_Value(UINT32 uValue)
 {
-   m_nDataType = NXSL_DT_UINT32;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_UINT32;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.uInt32 = uValue;
+   m_stringIsValid = FALSE;
+   m_value.uint32 = uValue;
 	m_name = NULL;
 }
 
@@ -251,14 +259,14 @@ NXSL_Value::NXSL_Value(UINT32 uValue)
  */
 NXSL_Value::NXSL_Value(INT64 nValue)
 {
-   m_nDataType = NXSL_DT_INT64;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_INT64;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.nInt64 = nValue;
+   m_stringIsValid = FALSE;
+   m_value.int64 = nValue;
 	m_name = NULL;
 }
 
@@ -267,14 +275,14 @@ NXSL_Value::NXSL_Value(INT64 nValue)
  */
 NXSL_Value::NXSL_Value(UINT64 uValue)
 {
-   m_nDataType = NXSL_DT_UINT64;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_UINT64;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.uInt64 = uValue;
+   m_stringIsValid = FALSE;
+   m_value.uint64 = uValue;
 	m_name = NULL;
 }
 
@@ -283,14 +291,14 @@ NXSL_Value::NXSL_Value(UINT64 uValue)
  */
 NXSL_Value::NXSL_Value(double dValue)
 {
-   m_nDataType = NXSL_DT_REAL;
-   m_pszValStr = NULL;
-   m_dwStrLen = 0;
+   m_dataType = NXSL_DT_REAL;
+   m_string = NULL;
+   m_length = 0;
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.dReal = dValue;
+   m_stringIsValid = FALSE;
+   m_value.real = dValue;
 	m_name = NULL;
 }
 
@@ -299,21 +307,30 @@ NXSL_Value::NXSL_Value(double dValue)
  */
 NXSL_Value::NXSL_Value(const TCHAR *value)
 {
-   m_nDataType = NXSL_DT_STRING;
+   m_dataType = NXSL_DT_STRING;
 	if (value != NULL)
 	{
-		m_dwStrLen = (UINT32)_tcslen(value);
-		m_pszValStr = _tcsdup(value);
+		m_length = (UINT32)_tcslen(value);
+		if (m_length < NXSL_SHORT_STRING_LENGTH)
+		{
+		   _tcscpy(m_value.string, value);
+		   m_string = NULL;
+		}
+		else
+		{
+		   m_string = _tcsdup(value);
+		}
 	}
 	else
 	{
-		m_dwStrLen = 0;
-		m_pszValStr = _tcsdup(_T(""));
+		m_length = 0;
+		m_value.string[0] = 0;
+		m_string = NULL;
 	}
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = TRUE;
+   m_stringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
 }
@@ -325,19 +342,26 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
  */
 NXSL_Value::NXSL_Value(const char *value)
 {
-   m_nDataType = NXSL_DT_STRING;
+   m_dataType = NXSL_DT_STRING;
 	if (value != NULL)
 	{
-		m_pszValStr = WideStringFromUTF8String(value);
-		m_dwStrLen = (UINT32)_tcslen(m_pszValStr);
+		m_string = WideStringFromUTF8String(value);
+		m_length = (UINT32)_tcslen(m_string);
+		if (m_length < NXSL_SHORT_STRING_LENGTH)
+		{
+		   _tcscpy(m_value.string, m_string);
+		   free(m_string);
+		   m_string = NULL;
+		}
 	}
 	else
 	{
-		m_dwStrLen = 0;
-		m_pszValStr = _tcsdup(_T(""));
+		m_length = 0;
+      m_value.string[0] = 0;
+      m_string = NULL;
 	}
-	m_valueMBStr = NULL;
-   m_bStringIsValid = TRUE;
+	m_mbString = NULL;
+   m_stringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
 }
@@ -349,22 +373,38 @@ NXSL_Value::NXSL_Value(const char *value)
  */
 NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 {
-   m_nDataType = NXSL_DT_STRING;
-   m_dwStrLen = dwLen;
-   m_pszValStr = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
-	if (value != NULL)
-	{
-		memcpy(m_pszValStr, value, dwLen * sizeof(TCHAR));
-	   m_pszValStr[dwLen] = 0;
-	}
-	else
-	{
-		memset(m_pszValStr, 0, (dwLen + 1) * sizeof(TCHAR));
-	}
+   m_dataType = NXSL_DT_STRING;
+   m_length = dwLen;
+   if (m_length < NXSL_SHORT_STRING_LENGTH)
+   {
+      if (value != NULL)
+      {
+         memcpy(m_value.string, value, dwLen * sizeof(TCHAR));
+         m_value.string[dwLen] = 0;
+      }
+      else
+      {
+         memset(m_value.string, 0, (dwLen + 1) * sizeof(TCHAR));
+      }
+      m_string = NULL;
+   }
+   else
+   {
+      m_string = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
+      if (value != NULL)
+      {
+         memcpy(m_string, value, dwLen * sizeof(TCHAR));
+         m_string[dwLen] = 0;
+      }
+      else
+      {
+         memset(m_string, 0, (dwLen + 1) * sizeof(TCHAR));
+      }
+   }
 #ifdef UNICODE
-	m_valueMBStr = NULL;
+	m_mbString = NULL;
 #endif
-   m_bStringIsValid = TRUE;
+   m_stringIsValid = TRUE;
    updateNumber();
 	m_name = NULL;
 }
@@ -375,11 +415,11 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 NXSL_Value::~NXSL_Value()
 {
 	free(m_name);
-   free(m_pszValStr);
+   free(m_string);
 #ifdef UNICODE
-	free(m_valueMBStr);
+	free(m_mbString);
 #endif
-   switch(m_nDataType)
+   switch(m_dataType)
 	{
 		case NXSL_DT_OBJECT:
 			delete m_value.object;
@@ -407,13 +447,13 @@ NXSL_Value::~NXSL_Value()
  */
 void NXSL_Value::set(INT32 nValue)
 {
-   m_nDataType = NXSL_DT_INT32;
-	safe_free_and_null(m_pszValStr);
+   m_dataType = NXSL_DT_INT32;
+	safe_free_and_null(m_string);
 #ifdef UNICODE
-	safe_free_and_null(m_valueMBStr);
+	safe_free_and_null(m_mbString);
 #endif
-   m_bStringIsValid = FALSE;
-   m_value.nInt32 = nValue;
+   m_stringIsValid = FALSE;
+   m_value.int32 = nValue;
 }
 
 /**
@@ -421,31 +461,32 @@ void NXSL_Value::set(INT32 nValue)
  */
 void NXSL_Value::updateNumber()
 {
-   if (m_pszValStr[0] == 0)
+   const TCHAR *s = (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
+   if (s[0] == 0)
       return;
 
    TCHAR *eptr;
-   INT64 nVal = _tcstoll(m_pszValStr, &eptr, 0);
-   if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
+   INT64 nVal = _tcstoll(s, &eptr, 0);
+   if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
    {
       if (nVal > 0x7FFFFFFF)
       {
-         m_nDataType = NXSL_DT_INT64;
-         m_value.nInt64 = nVal;
+         m_dataType = NXSL_DT_INT64;
+         m_value.int64 = nVal;
       }
       else
       {
-         m_nDataType = NXSL_DT_INT32;
-         m_value.nInt32 = (INT32)nVal;
+         m_dataType = NXSL_DT_INT32;
+         m_value.int32 = (INT32)nVal;
       }
    }
    else
    {
-      double dVal = _tcstod(m_pszValStr, &eptr);
-      if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
+      double dVal = _tcstod(s, &eptr);
+      if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
       {
-         m_nDataType = NXSL_DT_REAL;
-         m_value.dReal = dVal;
+         m_dataType = NXSL_DT_REAL;
+         m_value.real = dVal;
       }
    }
 }
@@ -457,26 +498,26 @@ void NXSL_Value::updateString()
 {
    TCHAR szBuffer[64];
 
-   safe_free(m_pszValStr);
+   free(m_string);
 #ifdef UNICODE
-	safe_free_and_null(m_valueMBStr);
+	safe_free_and_null(m_mbString);
 #endif
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         _sntprintf(szBuffer, 64, _T("%d"), m_value.nInt32);
+         _sntprintf(szBuffer, 64, _T("%d"), m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         _sntprintf(szBuffer, 64, _T("%u"), m_value.uInt32);
+         _sntprintf(szBuffer, 64, _T("%u"), m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         _sntprintf(szBuffer, 64, INT64_FMT, m_value.nInt64);
+         _sntprintf(szBuffer, 64, INT64_FMT, m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uInt64);
+         _sntprintf(szBuffer, 64, UINT64_FMT, m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         _sntprintf(szBuffer, 64, _T("%f"), m_value.dReal);
+         _sntprintf(szBuffer, 64, _T("%f"), m_value.real);
          break;
       case NXSL_DT_NULL:
          _tcscpy(szBuffer, _T(""));
@@ -497,9 +538,17 @@ void NXSL_Value::updateString()
          szBuffer[0] = 0;
          break;
    }
-   m_dwStrLen = (UINT32)_tcslen(szBuffer);
-   m_pszValStr = _tcsdup(szBuffer);
-   m_bStringIsValid = TRUE;
+   m_length = (UINT32)_tcslen(szBuffer);
+   if (m_length < NXSL_SHORT_STRING_LENGTH)
+   {
+      _tcscpy(m_value.string, szBuffer);
+      m_string = NULL;
+   }
+   else
+   {
+      m_string = _tcsdup(szBuffer);
+   }
+   m_stringIsValid = TRUE;
 }
 
 /**
@@ -514,7 +563,7 @@ bool NXSL_Value::convert(int nDataType)
    double dReal;
    bool bRet = true;
 
-   if (m_nDataType == nDataType)
+   if (m_dataType == nDataType)
       return true;
 
 	if ((nDataType == NXSL_DT_STRING) && isString())
@@ -524,31 +573,31 @@ bool NXSL_Value::convert(int nDataType)
    {
       case NXSL_DT_INT32:
          RETRIEVE_NUMERIC_VALUE(nInt32, INT32);
-         m_nDataType = nDataType;
-         m_value.nInt32 = nInt32;
+         m_dataType = nDataType;
+         m_value.int32 = nInt32;
          break;
       case NXSL_DT_UINT32:
          RETRIEVE_NUMERIC_VALUE(uInt32, UINT32);
-         m_nDataType = nDataType;
-         m_value.uInt32 = uInt32;
+         m_dataType = nDataType;
+         m_value.uint32 = uInt32;
          break;
       case NXSL_DT_INT64:
          RETRIEVE_NUMERIC_VALUE(nInt64, INT64);
-         m_nDataType = nDataType;
-         m_value.nInt64 = nInt64;
+         m_dataType = nDataType;
+         m_value.int64 = nInt64;
          break;
       case NXSL_DT_UINT64:
          RETRIEVE_NUMERIC_VALUE(uInt64, UINT64);
-         m_nDataType = nDataType;
-         m_value.uInt64 = uInt64;
+         m_dataType = nDataType;
+         m_value.uint64 = uInt64;
          break;
       case NXSL_DT_REAL:
-         if ((m_nDataType == NXSL_DT_UINT64) && (m_value.uInt64 > _ULL(9007199254740992)))
+         if ((m_dataType == NXSL_DT_UINT64) && (m_value.uint64 > _ULL(9007199254740992)))
          {
             // forbid automatic conversion if 64 bit number may not be represented exactly as floating point number
             bRet = false;
          }
-         else if ((m_nDataType == NXSL_DT_INT64) && ((m_value.nInt64 > _LL(9007199254740992)) || (m_value.nInt64 < _LL(-9007199254740992))))
+         else if ((m_dataType == NXSL_DT_INT64) && ((m_value.int64 > _LL(9007199254740992)) || (m_value.int64 < _LL(-9007199254740992))))
          {
             // forbid automatic conversion if 64 bit number may not be represented exactly as floating point number
             bRet = false;
@@ -556,14 +605,14 @@ bool NXSL_Value::convert(int nDataType)
          else
          {
             dReal = getValueAsReal();
-            m_nDataType = nDataType;
-            m_value.dReal = dReal;
+            m_dataType = nDataType;
+            m_value.real = dReal;
          }
          break;
 		case NXSL_DT_STRING:
-			if (m_nDataType == NXSL_DT_NULL)
+			if (m_dataType == NXSL_DT_NULL)
 			{
-				m_nDataType = NXSL_DT_STRING;
+				m_dataType = NXSL_DT_STRING;
 				bRet = true;
 				// String value will be invalidated on exit, and next
 				// call to updateString() will create empty string value
@@ -586,9 +635,9 @@ const TCHAR *NXSL_Value::getValueAsCString()
    if (isNull() || isObject() || isArray())
       return NULL;
 
-   if (!m_bStringIsValid)
+   if (!m_stringIsValid)
       updateString();
-   return m_pszValStr;
+   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
 }
 
 /**
@@ -601,14 +650,13 @@ const char *NXSL_Value::getValueAsMBString()
    if (isNull() || isObject() || isArray())
       return NULL;
 
-	if (m_valueMBStr != NULL)
-		return m_valueMBStr;
+	if (m_mbString != NULL)
+		return m_mbString;
 
-   if (!m_bStringIsValid)
+   if (!m_stringIsValid)
       updateString();
-	if (m_pszValStr != NULL)
-		m_valueMBStr = MBStringFromWideString(m_pszValStr);
-   return m_valueMBStr;
+   m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : CHECK_NULL_EX(m_string));
+   return m_mbString;
 }
 
 #endif
@@ -618,10 +666,10 @@ const char *NXSL_Value::getValueAsMBString()
  */
 const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
 {
-   if (!m_bStringIsValid)
+   if (!m_stringIsValid)
       updateString();
-   *pdwLen = m_dwStrLen;
-   return m_pszValStr;
+   *pdwLen = m_length;
+   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
 }
 
 /**
@@ -675,22 +723,22 @@ double NXSL_Value::getValueAsReal()
 {
    double dVal;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         dVal = (double)m_value.nInt32;
+         dVal = (double)m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         dVal = (double)m_value.uInt32;
+         dVal = (double)m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         dVal = (double)m_value.nInt64;
+         dVal = (double)m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         dVal = (double)((INT64)m_value.uInt64);
+         dVal = (double)((INT64)m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         dVal = m_value.dReal;
+         dVal = m_value.real;
          break;
       default:
          dVal = 0;
@@ -704,21 +752,41 @@ double NXSL_Value::getValueAsReal()
  */
 void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
 {
-   if (!m_bStringIsValid)
+   if (!m_stringIsValid)
 	{
       updateString();
 	}
 #ifdef UNICODE
 	else
 	{
-		safe_free_and_null(m_valueMBStr);
+		safe_free_and_null(m_mbString);
 	}
 #endif
-   m_pszValStr = (TCHAR *)realloc(m_pszValStr, (m_dwStrLen + dwLen + 1) * sizeof(TCHAR));
-   memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen * sizeof(TCHAR));
-   m_dwStrLen += dwLen;
-   m_pszValStr[m_dwStrLen] = 0;
-   m_nDataType = NXSL_DT_STRING;
+   if (m_length < NXSL_SHORT_STRING_LENGTH)
+   {
+      if (m_length + dwLen < NXSL_SHORT_STRING_LENGTH)
+      {
+         memcpy(&m_value.string[m_length], pszString, dwLen * sizeof(TCHAR));
+         m_length += dwLen;
+         m_value.string[m_length] = 0;
+      }
+      else
+      {
+         m_string = (TCHAR *)malloc((m_length + dwLen + 1) * sizeof(TCHAR));
+         memcpy(m_string, m_value.string, m_length * sizeof(TCHAR));
+         memcpy(&m_string[m_length], pszString, dwLen * sizeof(TCHAR));
+         m_length += dwLen;
+         m_string[m_length] = 0;
+      }
+   }
+   else
+   {
+      m_string = (TCHAR *)realloc(m_string, (m_length + dwLen + 1) * sizeof(TCHAR));
+      memcpy(&m_string[m_length], pszString, dwLen * sizeof(TCHAR));
+      m_length += dwLen;
+      m_string[m_length] = 0;
+   }
+   m_dataType = NXSL_DT_STRING;
    updateNumber();
 }
 
@@ -729,22 +797,22 @@ void NXSL_Value::increment()
 {
    if (isNumeric())
    {
-      switch(m_nDataType)
+      switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.nInt32++;
+            m_value.int32++;
             break;
          case NXSL_DT_UINT32:
-            m_value.uInt32++;
+            m_value.uint32++;
             break;
          case NXSL_DT_INT64:
-            m_value.nInt64++;
+            m_value.int64++;
             break;
          case NXSL_DT_UINT64:
-            m_value.uInt64++;
+            m_value.uint64++;
             break;
          case NXSL_DT_REAL:
-            m_value.dReal++;
+            m_value.real++;
             break;
          default:
             break;
@@ -760,22 +828,22 @@ void NXSL_Value::decrement()
 {
    if (isNumeric())
    {
-      switch(m_nDataType)
+      switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.nInt32--;
+            m_value.int32--;
             break;
          case NXSL_DT_UINT32:
-            m_value.uInt32--;
+            m_value.uint32--;
             break;
          case NXSL_DT_INT64:
-            m_value.nInt64--;
+            m_value.int64--;
             break;
          case NXSL_DT_UINT64:
-            m_value.uInt64--;
+            m_value.uint64--;
             break;
          case NXSL_DT_REAL:
-            m_value.dReal--;
+            m_value.real--;
             break;
          default:
             break;
@@ -791,24 +859,24 @@ void NXSL_Value::negate()
 {
    if (isNumeric())
    {
-      switch(m_nDataType)
+      switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.nInt32 = -m_value.nInt32;
+            m_value.int32 = -m_value.int32;
             break;
          case NXSL_DT_UINT32:
-            m_value.nInt32 = -((INT32)m_value.uInt32);
-            m_nDataType = NXSL_DT_INT32;
+            m_value.int32 = -((INT32)m_value.uint32);
+            m_dataType = NXSL_DT_INT32;
             break;
          case NXSL_DT_INT64:
-            m_value.nInt64 = -m_value.nInt64;
+            m_value.int64 = -m_value.int64;
             break;
          case NXSL_DT_UINT64:
-            m_value.nInt64 = -((INT64)m_value.uInt64);
-            m_nDataType = NXSL_DT_INT64;
+            m_value.int64 = -((INT64)m_value.uint64);
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_REAL:
-            m_value.dReal = -m_value.dReal;
+            m_value.real = -m_value.real;
             break;
          default:
             break;
@@ -824,19 +892,19 @@ void NXSL_Value::bitNot()
 {
    if (isNumeric())
    {
-      switch(m_nDataType)
+      switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.nInt32 = ~m_value.nInt32;
+            m_value.int32 = ~m_value.int32;
             break;
          case NXSL_DT_UINT32:
-            m_value.nInt32 = ~m_value.uInt32;
+            m_value.int32 = ~m_value.uint32;
             break;
          case NXSL_DT_INT64:
-            m_value.nInt64 = ~m_value.nInt64;
+            m_value.int64 = ~m_value.int64;
             break;
          case NXSL_DT_UINT64:
-            m_value.nInt64 = ~m_value.uInt64;
+            m_value.int64 = ~m_value.uint64;
             break;
          default:
             break;
@@ -852,22 +920,22 @@ bool NXSL_Value::isZero() const
 {
    bool bVal = false;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 == 0);
+         bVal = (m_value.int32 == 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 == 0);
+         bVal = (m_value.uint32 == 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 == 0);
+         bVal = (m_value.int64 == 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 == 0);
+         bVal = (m_value.uint64 == 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal == 0);
+         bVal = (m_value.real == 0);
          break;
       default:
          break;
@@ -882,22 +950,22 @@ bool NXSL_Value::isNonZero() const
 {
    bool bVal = false;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 != 0);
+         bVal = (m_value.int32 != 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 != 0);
+         bVal = (m_value.uint32 != 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 != 0);
+         bVal = (m_value.int64 != 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 != 0);
+         bVal = (m_value.uint64 != 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal != 0);
+         bVal = (m_value.real != 0);
          break;
       default:
          break;
@@ -915,22 +983,22 @@ BOOL NXSL_Value::EQ(NXSL_Value *pVal)
 {
    BOOL bVal = FALSE;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 == pVal->m_value.nInt32);
+         bVal = (m_value.int32 == pVal->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 == pVal->m_value.uInt32);
+         bVal = (m_value.uint32 == pVal->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 == pVal->m_value.nInt64);
+         bVal = (m_value.int64 == pVal->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 == pVal->m_value.uInt64);
+         bVal = (m_value.uint64 == pVal->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal == pVal->m_value.dReal);
+         bVal = (m_value.real == pVal->m_value.real);
          break;
       default:
          break;
@@ -942,22 +1010,22 @@ BOOL NXSL_Value::LT(NXSL_Value *pVal)
 {
    BOOL bVal = FALSE;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 < pVal->m_value.nInt32);
+         bVal = (m_value.int32 < pVal->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 < pVal->m_value.uInt32);
+         bVal = (m_value.uint32 < pVal->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 < pVal->m_value.nInt64);
+         bVal = (m_value.int64 < pVal->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 < pVal->m_value.uInt64);
+         bVal = (m_value.uint64 < pVal->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal < pVal->m_value.dReal);
+         bVal = (m_value.real < pVal->m_value.real);
          break;
       default:
          break;
@@ -969,22 +1037,22 @@ BOOL NXSL_Value::LE(NXSL_Value *pVal)
 {
    BOOL bVal = FALSE;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 <= pVal->m_value.nInt32);
+         bVal = (m_value.int32 <= pVal->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 <= pVal->m_value.uInt32);
+         bVal = (m_value.uint32 <= pVal->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 <= pVal->m_value.nInt64);
+         bVal = (m_value.int64 <= pVal->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 <= pVal->m_value.uInt64);
+         bVal = (m_value.uint64 <= pVal->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal <= pVal->m_value.dReal);
+         bVal = (m_value.real <= pVal->m_value.real);
          break;
       default:
          break;
@@ -996,22 +1064,22 @@ BOOL NXSL_Value::GT(NXSL_Value *pVal)
 {
    BOOL bVal = FALSE;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 > pVal->m_value.nInt32);
+         bVal = (m_value.int32 > pVal->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 > pVal->m_value.uInt32);
+         bVal = (m_value.uint32 > pVal->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 > pVal->m_value.nInt64);
+         bVal = (m_value.int64 > pVal->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 > pVal->m_value.uInt64);
+         bVal = (m_value.uint64 > pVal->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal > pVal->m_value.dReal);
+         bVal = (m_value.real > pVal->m_value.real);
          break;
       default:
          break;
@@ -1023,22 +1091,22 @@ BOOL NXSL_Value::GE(NXSL_Value *pVal)
 {
    BOOL bVal = FALSE;
 
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.nInt32 >= pVal->m_value.nInt32);
+         bVal = (m_value.int32 >= pVal->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uInt32 >= pVal->m_value.uInt32);
+         bVal = (m_value.uint32 >= pVal->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.nInt64 >= pVal->m_value.nInt64);
+         bVal = (m_value.int64 >= pVal->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uInt64 >= pVal->m_value.uInt64);
+         bVal = (m_value.uint64 >= pVal->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.dReal >= pVal->m_value.dReal);
+         bVal = (m_value.real >= pVal->m_value.real);
          break;
       default:
          break;
@@ -1054,22 +1122,22 @@ BOOL NXSL_Value::GE(NXSL_Value *pVal)
 
 void NXSL_Value::add(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 += pVal->m_value.nInt32;
+         m_value.int32 += pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 += pVal->m_value.uInt32;
+         m_value.uint32 += pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 += pVal->m_value.nInt64;
+         m_value.int64 += pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 += pVal->m_value.uInt64;
+         m_value.uint64 += pVal->m_value.uint64;
          break;
       case NXSL_DT_REAL:
-         m_value.dReal += pVal->m_value.dReal;
+         m_value.real += pVal->m_value.real;
          break;
       default:
          break;
@@ -1079,22 +1147,22 @@ void NXSL_Value::add(NXSL_Value *pVal)
 
 void NXSL_Value::sub(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 -= pVal->m_value.nInt32;
+         m_value.int32 -= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 -= pVal->m_value.uInt32;
+         m_value.uint32 -= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 -= pVal->m_value.nInt64;
+         m_value.int64 -= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 -= pVal->m_value.uInt64;
+         m_value.uint64 -= pVal->m_value.uint64;
          break;
       case NXSL_DT_REAL:
-         m_value.dReal -= pVal->m_value.dReal;
+         m_value.real -= pVal->m_value.real;
          break;
       default:
          break;
@@ -1104,22 +1172,22 @@ void NXSL_Value::sub(NXSL_Value *pVal)
 
 void NXSL_Value::mul(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 *= pVal->m_value.nInt32;
+         m_value.int32 *= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 *= pVal->m_value.uInt32;
+         m_value.uint32 *= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 *= pVal->m_value.nInt64;
+         m_value.int64 *= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 *= pVal->m_value.uInt64;
+         m_value.uint64 *= pVal->m_value.uint64;
          break;
       case NXSL_DT_REAL:
-         m_value.dReal *= pVal->m_value.dReal;
+         m_value.real *= pVal->m_value.real;
          break;
       default:
          break;
@@ -1129,22 +1197,22 @@ void NXSL_Value::mul(NXSL_Value *pVal)
 
 void NXSL_Value::div(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 /= pVal->m_value.nInt32;
+         m_value.int32 /= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 /= pVal->m_value.uInt32;
+         m_value.uint32 /= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 /= pVal->m_value.nInt64;
+         m_value.int64 /= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 /= pVal->m_value.uInt64;
+         m_value.uint64 /= pVal->m_value.uint64;
          break;
       case NXSL_DT_REAL:
-         m_value.dReal /= pVal->m_value.dReal;
+         m_value.real /= pVal->m_value.real;
          break;
       default:
          break;
@@ -1154,19 +1222,19 @@ void NXSL_Value::div(NXSL_Value *pVal)
 
 void NXSL_Value::rem(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 %= pVal->m_value.nInt32;
+         m_value.int32 %= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 %= pVal->m_value.uInt32;
+         m_value.uint32 %= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 %= pVal->m_value.nInt64;
+         m_value.int64 %= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 %= pVal->m_value.uInt64;
+         m_value.uint64 %= pVal->m_value.uint64;
          break;
       default:
          break;
@@ -1176,19 +1244,19 @@ void NXSL_Value::rem(NXSL_Value *pVal)
 
 void NXSL_Value::bitAnd(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 &= pVal->m_value.nInt32;
+         m_value.int32 &= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 &= pVal->m_value.uInt32;
+         m_value.uint32 &= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 &= pVal->m_value.nInt64;
+         m_value.int64 &= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 &= pVal->m_value.uInt64;
+         m_value.uint64 &= pVal->m_value.uint64;
          break;
       default:
          break;
@@ -1198,19 +1266,19 @@ void NXSL_Value::bitAnd(NXSL_Value *pVal)
 
 void NXSL_Value::bitOr(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 |= pVal->m_value.nInt32;
+         m_value.int32 |= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 |= pVal->m_value.uInt32;
+         m_value.uint32 |= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 |= pVal->m_value.nInt64;
+         m_value.int64 |= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 |= pVal->m_value.uInt64;
+         m_value.uint64 |= pVal->m_value.uint64;
          break;
       default:
          break;
@@ -1220,19 +1288,19 @@ void NXSL_Value::bitOr(NXSL_Value *pVal)
 
 void NXSL_Value::bitXor(NXSL_Value *pVal)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 ^= pVal->m_value.nInt32;
+         m_value.int32 ^= pVal->m_value.int32;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 ^= pVal->m_value.uInt32;
+         m_value.uint32 ^= pVal->m_value.uint32;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 ^= pVal->m_value.nInt64;
+         m_value.int64 ^= pVal->m_value.int64;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 ^= pVal->m_value.uInt64;
+         m_value.uint64 ^= pVal->m_value.uint64;
          break;
       default:
          break;
@@ -1247,19 +1315,19 @@ void NXSL_Value::bitXor(NXSL_Value *pVal)
 
 void NXSL_Value::lshift(int nBits)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 <<= nBits;
+         m_value.int32 <<= nBits;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 <<= nBits;
+         m_value.uint32 <<= nBits;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 <<= nBits;
+         m_value.int64 <<= nBits;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 <<= nBits;
+         m_value.uint64 <<= nBits;
          break;
       default:
          break;
@@ -1269,19 +1337,19 @@ void NXSL_Value::lshift(int nBits)
 
 void NXSL_Value::rshift(int nBits)
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         m_value.nInt32 >>= nBits;
+         m_value.int32 >>= nBits;
          break;
       case NXSL_DT_UINT32:
-         m_value.uInt32 >>= nBits;
+         m_value.uint32 >>= nBits;
          break;
       case NXSL_DT_INT64:
-         m_value.nInt64 >>= nBits;
+         m_value.int64 >>= nBits;
          break;
       case NXSL_DT_UINT64:
-         m_value.uInt64 >>= nBits;
+         m_value.uint64 >>= nBits;
          break;
       default:
          break;
@@ -1294,7 +1362,7 @@ void NXSL_Value::rshift(int nBits)
  */
 bool NXSL_Value::isObject(const TCHAR *className) const
 {
-	if (m_nDataType != NXSL_DT_OBJECT)
+	if (m_dataType != NXSL_DT_OBJECT)
 		return false;
 
 	return m_value.object->getClass()->instanceOf(className);
@@ -1307,9 +1375,9 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
 {
    if (v == this)
       return true;
-   if (v->m_nDataType != m_nDataType)
+   if (v->m_dataType != m_dataType)
       return false;
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_ARRAY:
          {
@@ -1333,9 +1401,9 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
             return true;
          return false;
       case NXSL_DT_INT32:
-         return v->m_value.nInt32 == m_value.nInt32;
+         return v->m_value.int32 == m_value.int32;
       case NXSL_DT_INT64:
-         return v->m_value.nInt64 == m_value.nInt64;
+         return v->m_value.int64 == m_value.int64;
       case NXSL_DT_ITERATOR:
          return false;
       case NXSL_DT_NULL:
@@ -1345,13 +1413,17 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
             !_tcscmp(v->m_value.object->getClass()->getName(), m_value.object->getClass()->getName());
          break;
       case NXSL_DT_REAL:
-         return v->m_value.dReal == m_value.dReal;
+         return v->m_value.real == m_value.real;
       case NXSL_DT_STRING:
-         return !_tcscmp(v->m_pszValStr, m_pszValStr) ? true : false;
+         if (v->m_length != m_length)
+            return false;
+         if (m_length < NXSL_SHORT_STRING_LENGTH)
+            return !_tcscmp(v->m_value.string, m_value.string) ? true : false;
+         return !_tcscmp(v->m_string, m_string) ? true : false;
       case NXSL_DT_UINT32:
-         return v->m_value.uInt32 == m_value.uInt32;
+         return v->m_value.uint32 == m_value.uint32;
       case NXSL_DT_UINT64:
-         return v->m_value.uInt64 == m_value.uInt64;
+         return v->m_value.uint64 == m_value.uint64;
    }
    return false;
 }
@@ -1361,8 +1433,8 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
  */
 void NXSL_Value::serialize(ByteStream &s) const
 {
-   s.write(m_nDataType);
-   switch(m_nDataType)
+   s.write(m_dataType);
+   switch(m_dataType)
    {
       case NXSL_DT_ARRAY:
          {
@@ -1381,10 +1453,10 @@ void NXSL_Value::serialize(ByteStream &s) const
          }
          break;
       case NXSL_DT_INT32:
-         s.write(m_value.nInt32);
+         s.write(m_value.int32);
          break;
       case NXSL_DT_INT64:
-         s.write(m_value.nInt64);
+         s.write(m_value.int64);
          break;
       case NXSL_DT_ITERATOR:
          break;
@@ -1393,16 +1465,16 @@ void NXSL_Value::serialize(ByteStream &s) const
       case NXSL_DT_OBJECT:
          break;
       case NXSL_DT_REAL:
-         s.write(m_value.dReal);
+         s.write(m_value.real);
          break;
       case NXSL_DT_STRING:
-         s.writeString(m_pszValStr);
+         s.writeString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string);
          break;
       case NXSL_DT_UINT32:
-         s.write(m_value.uInt32);
+         s.write(m_value.uint32);
          break;
       case NXSL_DT_UINT64:
-         s.write(m_value.uInt64);
+         s.write(m_value.uint64);
          break;
    }
 }
@@ -1413,8 +1485,8 @@ void NXSL_Value::serialize(ByteStream &s) const
 NXSL_Value *NXSL_Value::load(ByteStream &s)
 {
    NXSL_Value *v = new NXSL_Value();
-   v->m_nDataType = s.readByte();
-   switch(v->m_nDataType)
+   v->m_dataType = s.readByte();
+   switch(v->m_dataType)
    {
       case NXSL_DT_ARRAY:
          {
@@ -1437,10 +1509,10 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
          }
          break;
       case NXSL_DT_INT32:
-         v->m_value.nInt32 = s.readInt32();
+         v->m_value.int32 = s.readInt32();
          break;
       case NXSL_DT_INT64:
-         v->m_value.nInt64 = s.readInt64();
+         v->m_value.int64 = s.readInt64();
          break;
       case NXSL_DT_ITERATOR:
          break;
@@ -1449,19 +1521,25 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
       case NXSL_DT_OBJECT:
          break;
       case NXSL_DT_REAL:
-         v->m_value.dReal = s.readDouble();
+         v->m_value.real = s.readDouble();
          break;
       case NXSL_DT_STRING:
-         v->m_pszValStr = s.readString();
-         v->m_dwStrLen = (UINT32)_tcslen(v->m_pszValStr);
-         v->m_bStringIsValid = TRUE;
+         v->m_string = s.readString();
+         v->m_length = (UINT32)_tcslen(v->m_string);
+         if (v->m_length < NXSL_SHORT_STRING_LENGTH)
+         {
+            _tcscpy(v->m_value.string, v->m_string);
+            free(v->m_string);
+            v->m_string = NULL;
+         }
+         v->m_stringIsValid = TRUE;
          v->updateNumber();
          break;
       case NXSL_DT_UINT32:
-         v->m_value.uInt32 = s.readUInt32();
+         v->m_value.uint32 = s.readUInt32();
          break;
       case NXSL_DT_UINT64:
-         v->m_value.uInt64 = s.readUInt64();
+         v->m_value.uint64 = s.readUInt64();
          break;
    }
    return v;
@@ -1472,11 +1550,11 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
  */
 void NXSL_Value::copyOnWrite()
 {
-   if ((m_nDataType == NXSL_DT_ARRAY) && m_value.arrayHandle->isSharedObject())
+   if ((m_dataType == NXSL_DT_ARRAY) && m_value.arrayHandle->isSharedObject())
    {
       m_value.arrayHandle->cloneObject();
    }
-   else if ((m_nDataType == NXSL_DT_HASHMAP) && m_value.hashMapHandle->isSharedObject())
+   else if ((m_dataType == NXSL_DT_HASHMAP) && m_value.hashMapHandle->isSharedObject())
    {
       m_value.hashMapHandle->cloneObject();
    }
@@ -1487,7 +1565,7 @@ void NXSL_Value::copyOnWrite()
  */
 void NXSL_Value::onVariableSet()
 {
-   switch(m_nDataType)
+   switch(m_dataType)
    {
       case NXSL_DT_ARRAY:
          if (m_value.arrayHandle->isShared())

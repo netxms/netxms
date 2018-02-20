@@ -116,6 +116,7 @@ void NXSL_VariableSystem::clear()
    NXSL_VariablePtr *var, *tmp;
    HASH_ITER(hh, m_variables, var, tmp)
    {
+      HASH_DEL(m_variables, var);
       var->v.~NXSL_Variable();
       free(var);
    }

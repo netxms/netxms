@@ -354,30 +354,36 @@ public:
 };
 
 /**
+ * Maximum length of short string (when allocation is not needed)
+ */
+#define NXSL_SHORT_STRING_LENGTH  32
+
+/**
  * Variable or constant value
  */
 class LIBNXSL_EXPORTABLE NXSL_Value
 {
 protected:
-   UINT32 m_dwStrLen;
-   TCHAR *m_pszValStr;
+   UINT32 m_length;
+   TCHAR *m_string;
 #ifdef UNICODE
-	char *m_valueMBStr;	// value as MB string; NULL until first request
+	char *m_mbString;	// value as MB string; NULL until first request
 #endif
 	char *m_name;
-   BYTE m_nDataType;
-   BYTE m_bStringIsValid;
+   BYTE m_dataType;
+   BYTE m_stringIsValid;
    union
    {
-      INT32 nInt32;
-      UINT32 uInt32;
-      INT64 nInt64;
-      UINT64 uInt64;
-      double dReal;
+      INT32 int32;
+      UINT32 uint32;
+      INT64 int64;
+      UINT64 uint64;
+      double real;
       NXSL_Object *object;
 		NXSL_Iterator *iterator;
 		NXSL_Handle<NXSL_Array> *arrayHandle;
       NXSL_Handle<NXSL_HashMap> *hashMapHandle;
+      TCHAR string[NXSL_SHORT_STRING_LENGTH];
    } m_value;
 
    void updateNumber();
@@ -385,11 +391,11 @@ protected:
 
    void invalidateString()
    {
-      safe_free_and_null(m_pszValStr);
+      safe_free_and_null(m_string);
 #ifdef UNICODE
-		safe_free_and_null(m_valueMBStr);
+		safe_free_and_null(m_mbString);
 #endif
-      m_bStringIsValid = FALSE;
+      m_stringIsValid = FALSE;
    }
 
 public:
@@ -417,19 +423,19 @@ public:
 	const char *getName() const { return m_name; }
 
    bool convert(int nDataType);
-   int getDataType() const { return m_nDataType; }
+   int getDataType() const { return m_dataType; }
 
-   bool isNull() const { return (m_nDataType == NXSL_DT_NULL); }
-   bool isObject() const { return (m_nDataType == NXSL_DT_OBJECT); }
+   bool isNull() const { return (m_dataType == NXSL_DT_NULL); }
+   bool isObject() const { return (m_dataType == NXSL_DT_OBJECT); }
 	bool isObject(const TCHAR *className) const;
-   bool isArray() const { return (m_nDataType == NXSL_DT_ARRAY); }
-   bool isHashMap() const { return (m_nDataType == NXSL_DT_HASHMAP); }
-   bool isIterator() const { return (m_nDataType == NXSL_DT_ITERATOR); }
-   bool isString() const { return (m_nDataType >= NXSL_DT_STRING); }
-   bool isNumeric() const { return (m_nDataType > NXSL_DT_STRING); }
-   bool isReal() const { return (m_nDataType == NXSL_DT_REAL); }
-   bool isInteger() const { return (m_nDataType > NXSL_DT_REAL); }
-   bool isUnsigned() const { return (m_nDataType >= NXSL_DT_UINT32); }
+   bool isArray() const { return (m_dataType == NXSL_DT_ARRAY); }
+   bool isHashMap() const { return (m_dataType == NXSL_DT_HASHMAP); }
+   bool isIterator() const { return (m_dataType == NXSL_DT_ITERATOR); }
+   bool isString() const { return (m_dataType >= NXSL_DT_STRING); }
+   bool isNumeric() const { return (m_dataType > NXSL_DT_STRING); }
+   bool isReal() const { return (m_dataType == NXSL_DT_REAL); }
+   bool isInteger() const { return (m_dataType > NXSL_DT_REAL); }
+   bool isUnsigned() const { return (m_dataType >= NXSL_DT_UINT32); }
    bool isZero() const;
    bool isNonZero() const;
 
@@ -446,10 +452,10 @@ public:
    UINT64 getValueAsUInt64();
    double getValueAsReal();
    bool getValueAsBoolean() { return getValueAsInt32() != 0; }
-   NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
-   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
-   NXSL_HashMap *getValueAsHashMap() { return (m_nDataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }
-   NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.iterator : NULL; }
+   NXSL_Object *getValueAsObject() { return (m_dataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
+   NXSL_Array *getValueAsArray() { return (m_dataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
+   NXSL_HashMap *getValueAsHashMap() { return (m_dataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }
+   NXSL_Iterator *getValueAsIterator() { return (m_dataType == NXSL_DT_ITERATOR) ? m_value.iterator : NULL; }
 
    void concatenate(const TCHAR *string, UINT32 len);
    
