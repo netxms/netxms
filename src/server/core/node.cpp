@@ -45,7 +45,7 @@ Node::Node() : DataCollectionTarget()
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
-   m_snmpVersion = SNMP_VERSION_1;
+   m_snmpVersion = SNMP_VERSION_2C;
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
    m_snmpObjectId[0] = 0;
@@ -148,7 +148,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
-   m_snmpVersion = SNMP_VERSION_1;
+   m_snmpVersion = SNMP_VERSION_2C;
    m_snmpPort = newNodeData->snmpPort;
    if (newNodeData->snmpSecurity != NULL)
       m_snmpSecurity = new SNMP_SecurityContext(newNodeData->snmpSecurity);
