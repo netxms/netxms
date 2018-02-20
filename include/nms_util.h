@@ -491,6 +491,7 @@ template <class T> class ObjectMemoryPool
 private:
    void *m_currentRegion;
    T *m_firstDeleted;
+   size_t m_headerSize;
    size_t m_regionSize;
    size_t m_elementSize;
    size_t m_allocated;
@@ -501,10 +502,13 @@ public:
     */
    ObjectMemoryPool(size_t regionCapacity = 256)
    {
+      m_headerSize = sizeof(void*);
+      if (m_headerSize % 16 != 0)
+         m_headerSize += 8 - m_headerSize % 8;
       m_elementSize = sizeof(T);
       if (m_elementSize % 8 != 0)
          m_elementSize += 8 - m_elementSize % 8;
-      m_regionSize = regionCapacity * m_elementSize + sizeof(void*);
+      m_regionSize = m_headerSize + regionCapacity * m_elementSize;
       m_currentRegion = malloc(m_regionSize);
       *((void **)m_currentRegion) = NULL; // pointer to previous region
       m_firstDeleted = NULL;
@@ -546,8 +550,8 @@ public:
          void *region = malloc(m_regionSize);
          *((void **)region) = m_currentRegion;
          m_currentRegion = region;
-         p = (T*)((char*)m_currentRegion + sizeof(void*));
-         m_allocated = sizeof(void*) + m_elementSize;
+         p = (T*)((char*)m_currentRegion + m_headerSize);
+         m_allocated = m_headerSize + m_elementSize;
       }
       return p;
    }
