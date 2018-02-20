@@ -27,7 +27,7 @@
 /**
  * Standard object destructor
  */
-static void ObjectDestructor(void *object)
+static void ObjectDestructor(void *object, StringMapBase *map)
 {
 	free(object);
 }

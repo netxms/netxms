@@ -983,13 +983,13 @@ protected:
    StringMapEntry *m_data;
 	bool m_objectOwner;
    bool m_ignoreCase;
-	void (*m_objectDestructor)(void *);
+	void (*m_objectDestructor)(void *, StringMapBase *);
 
 	StringMapEntry *find(const TCHAR *key, size_t keyLen) const;
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key) const;
    void *getObject(const TCHAR *key, size_t len) const;
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 
 public:
 	StringMapBase(bool objectOwner);
@@ -1063,7 +1063,7 @@ template <class T> class StringObjectMap : public StringMapBase
    DISABLE_COPY_CTOR(StringObjectMap)
 
 private:
-	static void destructor(void *object) { delete (T*)object; }
+	static void destructor(void *object, StringMapBase *map) { delete (T*)object; }
 
 public:
 	StringObjectMap(bool objectOwner) : StringMapBase(objectOwner) { m_objectDestructor = destructor; }
