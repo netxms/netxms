@@ -24,6 +24,22 @@
 #include "libnxsl.h"
 
 /**
+ * Value manager constructor
+ */
+NXSL_ValueManager::NXSL_ValueManager()
+{
+   m_values = new ObjectMemoryPool<NXSL_Value>(256);
+}
+
+/**
+ * Value manager destructor
+ */
+NXSL_ValueManager::~NXSL_ValueManager()
+{
+   delete m_values;
+}
+
+/**
  * Assign value to correct number field
  */
 #define ASSIGN_NUMERIC_VALUE(x) \
@@ -130,7 +146,7 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
          m_length = value->m_length;
          if (m_length < NXSL_SHORT_STRING_LENGTH)
          {
-            memcmp(m_value.string, value->m_value.string, (m_length + 1) * sizeof(TCHAR));
+            memcpy(m_value.string, value->m_value.string, (m_length + 1) * sizeof(TCHAR));
             m_string = NULL;
          }
          else
@@ -1482,25 +1498,25 @@ void NXSL_Value::serialize(ByteStream &s) const
 /**
  * Load value from byte stream
  */
-NXSL_Value *NXSL_Value::load(ByteStream &s)
+NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
 {
-   NXSL_Value *v = new NXSL_Value();
+   NXSL_Value *v = vm->createValue();
    v->m_dataType = s.readByte();
    switch(v->m_dataType)
    {
       case NXSL_DT_ARRAY:
          {
-            v->m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(new NXSL_Array());
+            v->m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(new NXSL_Array(vm));
             int size = (int)s.readUInt16();
             for(int i = 0; i < size; i++)
             {
-               v->m_value.arrayHandle->getObject()->set(i, load(s));
+               v->m_value.arrayHandle->getObject()->set(i, load(vm, s));
             }
          }
          break;
       case NXSL_DT_HASHMAP:
          {
-            v->m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(new NXSL_HashMap());
+            v->m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(new NXSL_HashMap(vm));
             int size = (int)s.readUInt16();
             for(int i = 0; i < size; i++)
             {

@@ -40,9 +40,10 @@ NXSL_Storage::~NXSL_Storage()
 /**
  * Local storage constructor
  */
-NXSL_LocalStorage::NXSL_LocalStorage() : NXSL_Storage()
+NXSL_LocalStorage::NXSL_LocalStorage(NXSL_VM *vm) : NXSL_Storage()
 {
-   m_values = new StringObjectMap<NXSL_Value>(true);
+   m_vm = vm;
+   m_values = new NXSL_StringValueMap(vm, true);
 }
 
 /**
@@ -57,19 +58,19 @@ NXSL_LocalStorage::~NXSL_LocalStorage()
  * Write to storage. Storage becomes owner of provided value.
  * Passing NULL value will effectively remove value from storage.
  */
-void NXSL_LocalStorage::write(const TCHAR *name, NXSL_Value *value)
+void NXSL_LocalStorage::write(const TCHAR *name, const NXSL_Value *value)
 {
    if ((value == NULL) || value->isNull())
       m_values->remove(name);
    else
-      m_values->set(name, value);
+      m_values->set(name, m_vm->createValue(value));
 }
 
 /**
  * Read from storage. Returns new value owned by caller. Returns NXSL NULL if there are no value with given name.
  */
-NXSL_Value *NXSL_LocalStorage::read(const TCHAR *name)
+NXSL_Value *NXSL_LocalStorage::read(const TCHAR *name, NXSL_ValueManager *vm)
 {
    NXSL_Value *v = m_values->get(name);
-   return (v != NULL) ? new NXSL_Value(v) : new NXSL_Value();
+   return (v != NULL) ? vm->createValue(v) : vm->createValue();
 }

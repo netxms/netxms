@@ -56,48 +56,49 @@ void NXSL_InetAddressClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_VM *vm = object->vm();
    NXSL_Value *value = NULL;
    InetAddress *a = (InetAddress *)object->getData();
    if (!strcmp(attr, "address"))
    {
       TCHAR buffer[64];
-      value = new NXSL_Value(a->toString(buffer));
+      value = vm->createValue(a->toString(buffer));
    }
    else if (!strcmp(attr, "family"))
    {
-      value = new NXSL_Value((a->getFamily() == AF_INET) ? _T("inet") : (a->getFamily() == AF_INET6 ? _T("inet6") : _T("unspec")));
+      value = vm->createValue((a->getFamily() == AF_INET) ? _T("inet") : (a->getFamily() == AF_INET6 ? _T("inet6") : _T("unspec")));
    }
    else if (!strcmp(attr, "isAnyLocal"))
    {
-      value = new NXSL_Value(a->isAnyLocal());
+      value = vm->createValue(a->isAnyLocal());
    }
    else if (!strcmp(attr, "isBroadcast"))
    {
-      value = new NXSL_Value(a->isBroadcast());
+      value = vm->createValue(a->isBroadcast());
    }
    else if (!strcmp(attr, "isLinkLocal"))
    {
-      value = new NXSL_Value(a->isLinkLocal());
+      value = vm->createValue(a->isLinkLocal());
    }
    else if (!strcmp(attr, "isLoopback"))
    {
-      value = new NXSL_Value(a->isLoopback());
+      value = vm->createValue(a->isLoopback());
    }
    else if (!strcmp(attr, "isMulticast"))
    {
-      value = new NXSL_Value(a->isMulticast());
+      value = vm->createValue(a->isMulticast());
    }
    else if (!strcmp(attr, "isValid"))
    {
-      value = new NXSL_Value(a->isValid());
+      value = vm->createValue(a->isValid());
    }
    else if (!strcmp(attr, "isValidUnicast"))
    {
-      value = new NXSL_Value(a->isValidUnicast());
+      value = vm->createValue(a->isValidUnicast());
    }
    else if (!strcmp(attr, "mask"))
    {
-      value = new NXSL_Value(a->getMaskBits());
+      value = vm->createValue(a->getMaskBits());
    }
    return value;
 }
@@ -105,9 +106,9 @@ NXSL_Value *NXSL_InetAddressClass::getAttr(NXSL_Object *object, const char *attr
 /**
  * Create NXSL object from InetAddress object
  */
-NXSL_Value *NXSL_InetAddressClass::createObject(const InetAddress& addr)
+NXSL_Value *NXSL_InetAddressClass::createObject(NXSL_VM *vm, const InetAddress& addr)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslInetAddressClass, new InetAddress(addr)));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslInetAddressClass, new InetAddress(addr)));
 }
 
 /**
@@ -122,6 +123,6 @@ int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       return NXSL_ERR_NOT_STRING;
 
    InetAddress addr = (argc == 0) ? InetAddress() : InetAddress::parse(argv[0]->getValueAsCString());
-   *result = NXSL_InetAddressClass::createObject(addr);
+   *result = NXSL_InetAddressClass::createObject(vm, addr);
    return 0;
 }

@@ -33,7 +33,7 @@ NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
  */
 NXSL_METHOD_DEFINITION(Connector, read)
 {
-   *result = new NXSL_Value;
+   *result = vm->createValue();
    return 0;
 }
 
@@ -80,7 +80,7 @@ static NXSL_ConnectorClass m_nxslConnectorClass;
  */
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslConnectorClass, NULL));
+	*ppResult = vm->createValue(new NXSL_Object(vm, &m_nxslConnectorClass, NULL));
    return 0;
 }
 
@@ -89,7 +89,7 @@ int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
  */
 int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslConnectorClass, NULL));
+	*ppResult = vm->createValue(new NXSL_Object(vm, &m_nxslConnectorClass, NULL));
    return 0;
 }
 

@@ -25,7 +25,7 @@
 
 NXSL_METHOD_DEFINITION(Test, debug)
 {
-   *result = new NXSL_Value(_T("Sample debug output"));
+   *result = vm->createValue(_T("Sample debug output"));
    return 0;
 }
 
@@ -33,7 +33,7 @@ NXSL_METHOD_DEFINITION(Test, quote)
 {
    TCHAR buffer[4096];
    _sntprintf(buffer, 4096, _T("\"%s\""), argv[0]->getValueAsCString());
-   *result = new NXSL_Value(buffer);
+   *result = vm->createValue(buffer);
    return 0;
 }
 
@@ -44,17 +44,17 @@ NXSL_TestClass::NXSL_TestClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Test, quote, 1);
 }
 
-NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const char *pszAttr)
+NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *object, const char *pszAttr)
 {
    NXSL_Value *pValue = NULL;
 
    if (!strcmp(pszAttr, "name"))
    {
-      pValue = new NXSL_Value(_T("Demo Object"));
+      pValue = object->vm()->createValue(_T("Demo Object"));
    }
    else if (!strcmp(pszAttr, "value"))
    {
-		pValue = new NXSL_Value((TCHAR *)pObject->getData());
+		pValue = object->vm()->createValue((TCHAR *)object->getData());
    }
    return pValue;
 }

@@ -35,7 +35,7 @@ const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("iter
  */
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-   *ppResult = new NXSL_Value(g_szTypeNames[argv[0]->getDataType()]);
+   *ppResult = vm->createValue(g_szTypeNames[argv[0]->getDataType()]);
    return 0;
 }
 
@@ -47,7 +47,7 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 		
-   *ppResult = new NXSL_Value(argv[0]->getValueAsObject()->getClass()->getName());
+   *ppResult = vm->createValue(argv[0]->getValueAsObject()->getClass()->getName());
    return 0;
 }
 
@@ -62,11 +62,11 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    {
       if (argv[0]->isReal())
       {
-         *ppResult = new NXSL_Value(fabs(argv[0]->getValueAsReal()));
+         *ppResult = vm->createValue(fabs(argv[0]->getValueAsReal()));
       }
       else
       {
-         *ppResult = new NXSL_Value(argv[0]);
+         *ppResult = vm->createValue(argv[0]);
          if (!argv[0]->isUnsigned())
             if ((*ppResult)->getValueAsInt64() < 0)
                (*ppResult)->negate();
@@ -89,7 +89,7 @@ int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if ((argv[0]->isNumeric()) && (argv[1]->isNumeric()))
    {
-      *ppResult = new NXSL_Value(pow(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
+      *ppResult = vm->createValue(pow(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));
       nRet = 0;
    }
    else
@@ -108,7 +108,7 @@ int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argv[0]->isNumeric())
    {
-      *ppResult = new NXSL_Value(log(argv[0]->getValueAsReal()));
+      *ppResult = vm->createValue(log(argv[0]->getValueAsReal()));
       nRet = 0;
    }
    else
@@ -127,7 +127,7 @@ int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argv[0]->isNumeric())
    {
-      *ppResult = new NXSL_Value(log10(argv[0]->getValueAsReal()));
+      *ppResult = vm->createValue(log10(argv[0]->getValueAsReal()));
       nRet = 0;
    }
    else
@@ -146,7 +146,7 @@ int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argv[0]->isNumeric())
    {
-      *ppResult = new NXSL_Value(exp(argv[0]->getValueAsReal()));
+      *ppResult = vm->createValue(exp(argv[0]->getValueAsReal()));
       nRet = 0;
    }
    else
@@ -167,7 +167,7 @@ int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argv[0]->isString())
    {
-      *ppResult = new NXSL_Value(argv[0]);
+      *ppResult = vm->createValue(argv[0]);
       pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
       for(i = 0; i < dwLen; i++, pStr++)
          *pStr = toupper(*pStr);
@@ -191,7 +191,7 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    if (argv[0]->isString())
    {
-      *ppResult = new NXSL_Value(argv[0]);
+      *ppResult = vm->createValue(argv[0]);
       pStr = (TCHAR *)(*ppResult)->getValueAsString(&dwLen);
       for(i = 0; i < dwLen; i++, pStr++)
          *pStr = tolower(*pStr);
@@ -215,7 +215,7 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    if (argv[0]->isString())
    {
       argv[0]->getValueAsString(&dwLen);
-      *ppResult = new NXSL_Value(dwLen);
+      *ppResult = vm->createValue(dwLen);
       nRet = 0;
    }
    else
@@ -245,7 +245,7 @@ int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		if (argv[i]->getValueAsReal() < pCurr->getValueAsReal())
          pCurr = argv[i];
    }
-   *ppResult = new NXSL_Value(pCurr);
+   *ppResult = vm->createValue(pCurr);
    return 0;
 }
 
@@ -269,7 +269,7 @@ int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		if (argv[i]->getValueAsReal() > pCurr->getValueAsReal())
          pCurr = argv[i];
    }
-   *ppResult = new NXSL_Value(pCurr);
+   *ppResult = vm->createValue(pCurr);
    return 0;
 }
 
@@ -286,7 +286,7 @@ int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *v
       dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
       dwStart = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
       dwEnd = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
-      *ppResult = new NXSL_Value((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
+      *ppResult = vm->createValue((LONG)(((dwAddr >= dwStart) && (dwAddr <= dwEnd)) ? 1 : 0));
       nRet = 0;
    }
    else
@@ -309,7 +309,7 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
       dwAddr = ntohl(_t_inet_addr(argv[0]->getValueAsCString()));
       dwSubnet = ntohl(_t_inet_addr(argv[1]->getValueAsCString()));
       dwMask = ntohl(_t_inet_addr(argv[2]->getValueAsCString()));
-      *ppResult = new NXSL_Value((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
+      *ppResult = vm->createValue((LONG)(((dwAddr & dwMask) == dwSubnet) ? 1 : 0));
       nRet = 0;
    }
    else
@@ -366,7 +366,7 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #endif
    TCHAR buffer[512];
    _tcsftime(buffer, 512, argv[0]->getValueAsCString(), ptm);
-   *ppResult = new NXSL_Value(buffer);   
+   *ppResult = vm->createValue(buffer);
    
    return 0;
 }
@@ -396,7 +396,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    TCHAR result[128];
    _sntprintf(result, 128, _T("%u days, %2u:%02u"), d, h, n);
 
-   *ppResult = new NXSL_Value(result);
+   *ppResult = vm->createValue(result);
    return 0;
 }
 
@@ -405,7 +405,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
  */
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-   *ppResult = new NXSL_Value((UINT32)time(NULL));
+   *ppResult = vm->createValue((UINT32)time(NULL));
    return 0;
 }
 
@@ -435,43 +435,44 @@ NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const char *attr)
 {
+   NXSL_VM *vm = pObject->vm();
    NXSL_Value *value;
    struct tm *st = (struct tm *)pObject->getData();
    if (!strcmp(attr, "sec") || !strcmp(attr, "tm_sec"))
    {
-      value = new NXSL_Value((LONG)st->tm_sec);
+      value = vm->createValue((LONG)st->tm_sec);
    }
    else if (!strcmp(attr, "min") || !strcmp(attr, "tm_min"))
    {
-      value = new NXSL_Value((LONG)st->tm_min);
+      value = vm->createValue((LONG)st->tm_min);
    }
    else if (!strcmp(attr, "hour") || !strcmp(attr, "tm_hour"))
    {
-      value = new NXSL_Value((LONG)st->tm_hour);
+      value = vm->createValue((LONG)st->tm_hour);
    }
    else if (!strcmp(attr, "mday") || !strcmp(attr, "tm_mday"))
    {
-      value = new NXSL_Value((LONG)st->tm_mday);
+      value = vm->createValue((LONG)st->tm_mday);
    }
    else if (!strcmp(attr, "mon") || !strcmp(attr, "tm_mon"))
    {
-      value = new NXSL_Value((LONG)st->tm_mon);
+      value = vm->createValue((LONG)st->tm_mon);
    }
    else if (!strcmp(attr, "year") || !strcmp(attr, "tm_year"))
    {
-      value = new NXSL_Value((LONG)(st->tm_year + 1900));
+      value = vm->createValue((LONG)(st->tm_year + 1900));
    }
    else if (!strcmp(attr, "yday") || !strcmp(attr, "tm_yday"))
    {
-      value = new NXSL_Value((LONG)st->tm_yday);
+      value = vm->createValue((LONG)st->tm_yday);
    }
    else if (!strcmp(attr, "wday") || !strcmp(attr, "tm_wday"))
    {
-      value = new NXSL_Value((LONG)st->tm_wday);
+      value = vm->createValue((LONG)st->tm_wday);
    }
    else if (!strcmp(attr, "isdst") || !strcmp(attr, "tm_isdst"))
    {
-      value = new NXSL_Value((LONG)st->tm_isdst);
+      value = vm->createValue((LONG)st->tm_isdst);
    }
 	else
 	{
@@ -575,7 +576,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = localtime(&t);
 #endif
-   *ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+   *ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -608,7 +609,7 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = gmtime(&t);
 #endif
-	*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -624,7 +625,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       return NXSL_ERR_BAD_CLASS;
 
    struct tm *st = (struct tm *)argv[0]->getValueAsObject()->getData();
-   *result = new NXSL_Value((INT64)mktime(st));
+   *result = vm->createValue((INT64)mktime(st));
    return 0;
 }
 
@@ -633,7 +634,7 @@ int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   *result = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, calloc(1, sizeof(struct tm))));
+   *result = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, calloc(1, sizeof(struct tm))));
    return 0;
 }
 
@@ -695,11 +696,11 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		{
 			nCount = dwLen;
 		}
-		*ppResult = new NXSL_Value(pBase, (UINT32)nCount);
+		*ppResult = vm->createValue(pBase, (UINT32)nCount);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value(_T(""));
+		*ppResult = vm->createValue(_T(""));
 	}
 
 	return NXSL_ERR_SUCCESS;
@@ -715,7 +716,7 @@ int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       return NXSL_ERR_NOT_STRING;
 
    UINT64 v = _tcstoull(argv[0]->getValueAsCString(), NULL, 16);
-   *result = (v <= 0x7FFFFFFF) ? new NXSL_Value((UINT32)v) : new NXSL_Value(v);
+   *result = (v <= 0x7FFFFFFF) ? vm->createValue((UINT32)v) : vm->createValue(v);
    return 0;
 }
 
@@ -746,7 +747,7 @@ int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		_sntprintf(format, 32, _T("%%0%dX"), argv[1]->getValueAsInt32());
 	}
 	_sntprintf(buffer, 128, format, argv[0]->getValueAsUInt32());
-	*ppResult = new NXSL_Value(buffer);
+	*ppResult = vm->createValue(buffer);
 	return NXSL_ERR_SUCCESS;
 }
 
@@ -761,7 +762,7 @@ int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    TCHAR buffer[2];
    buffer[0] = (TCHAR)argv[0]->getValueAsInt32();
    buffer[1] = 0;
-   *result = new NXSL_Value(buffer);
+   *result = vm->createValue(buffer);
    return NXSL_ERR_SUCCESS;
 }
 
@@ -773,7 +774,7 @@ int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = new NXSL_Value((INT32)(argv[0]->getValueAsCString()[0]));
+   *result = vm->createValue((INT32)(argv[0]->getValueAsCString()[0]));
    return NXSL_ERR_SUCCESS;
 }
 
@@ -816,12 +817,12 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       memcpy(newStr, str, len * sizeof(TCHAR));
       for(UINT32 i = len; i < (UINT32)newLen; i++)
          newStr[i] = pad;
-      *ppResult = new NXSL_Value(newStr, newLen);
+      *ppResult = vm->createValue(newStr, newLen);
       free(newStr);
 	}
 	else
 	{
-	   *ppResult = new NXSL_Value(_T(""));
+	   *ppResult = vm->createValue(_T(""));
 	}
 	return NXSL_ERR_SUCCESS;
 }
@@ -872,12 +873,12 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       memcpy(&newStr[(UINT32)newLen - len], &str[shift], len * sizeof(TCHAR));
       for(UINT32 i = 0; i < (UINT32)newLen - len; i++)
          newStr[i] = pad;
-      *ppResult = new NXSL_Value(newStr, newLen);
+      *ppResult = vm->createValue(newStr, newLen);
       free(newStr);
    }
    else
    {
-      *ppResult = new NXSL_Value(_T(""));
+      *ppResult = vm->createValue(_T(""));
    }
 	return 0;
 }
@@ -890,7 +891,7 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (argc > 1)
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-	*ppResult = (argc == 0) ? new NXSL_Value((LONG)0) : new NXSL_Value(argv[0]);
+	*ppResult = (argc == 0) ? vm->createValue((LONG)0) : vm->createValue(argv[0]);
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
 
@@ -911,7 +912,7 @@ int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (len > 0)
 		for(i = (int)len - 1; (i >= startPos) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
 
-	*ppResult = new NXSL_Value(&string[startPos], i - startPos + 1);
+	*ppResult = vm->createValue(&string[startPos], i - startPos + 1);
 	return 0;
 }
 
@@ -931,7 +932,7 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	int i;
 	for(i = (int)len - 1; (i >= 0) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
 
-	*ppResult = new NXSL_Value(string, i + 1);
+	*ppResult = vm->createValue(string, i + 1);
 	return 0;
 }
 
@@ -951,7 +952,7 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	int i;
 	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
 
-	*ppResult = new NXSL_Value(&string[i], (int)len - i);
+	*ppResult = vm->createValue(&string[i], (int)len - i);
 	return 0;
 }
 
@@ -967,7 +968,7 @@ int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		return NXSL_ERR_NOT_STRING;
 
 	vm->trace(argv[0]->getValueAsInt32(), argv[1]->getValueAsCString());
-	*ppResult = new NXSL_Value();
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -1040,7 +1041,7 @@ static int F_index_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		index = !memcmp(str, substr, substrLength * sizeof(TCHAR)) ? 1 : 0;
 	}
 
-	*ppResult = new NXSL_Value((LONG)index);
+	*ppResult = vm->createValue((LONG)index);
 	return 0;
 }
 
@@ -1076,7 +1077,7 @@ int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		return NXSL_ERR_NOT_INTEGER;
 
 	int range = argv[1]->getValueAsInt32() - argv[0]->getValueAsInt32() + 1;
-	*ppResult = new NXSL_Value((rand() % range) + argv[0]->getValueAsInt32());
+	*ppResult = vm->createValue((rand() % range) + argv[0]->getValueAsInt32());
 	return 0;
 }
 
@@ -1089,7 +1090,7 @@ int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		return NXSL_ERR_NOT_INTEGER;
 
 	ThreadSleepMs(argv[0]->getValueAsUInt32());
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -1110,7 +1111,7 @@ int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 			break;
 	}
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -1122,7 +1123,7 @@ int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isNumeric())
 		return NXSL_ERR_NOT_NUMBER;
 
-	*ppResult = new NXSL_Value(floor(argv[0]->getValueAsReal()));
+	*ppResult = vm->createValue(floor(argv[0]->getValueAsReal()));
 	return 0;
 }
 
@@ -1134,7 +1135,7 @@ int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isNumeric())
 		return NXSL_ERR_NOT_NUMBER;
 
-	*ppResult = new NXSL_Value(ceil(argv[0]->getValueAsReal()));
+	*ppResult = vm->createValue(ceil(argv[0]->getValueAsReal()));
 	return 0;
 }
 
@@ -1153,7 +1154,7 @@ int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (argc == 1)
 	{
 		// round to whole number
-		*ppResult = new NXSL_Value((d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5));
+		*ppResult = vm->createValue((d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5));
 	}
 	else
 	{
@@ -1168,7 +1169,7 @@ int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		d *= pow(10.0, p);
 		d = (d > 0.0) ? floor(d + 0.5) : ceil(d - 0.5);
 		d *= pow(10.0, -p);
-		*ppResult = new NXSL_Value(d);
+		*ppResult = vm->createValue(d);
 	}
 	return 0;
 }
@@ -1202,7 +1203,7 @@ int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	TCHAR format[32], buffer[64];
 	_sntprintf(format, 32, _T("%%%d.%df"), width, precision);
 	_sntprintf(buffer, 64, format, argv[0]->getValueAsReal());
-	*ppResult = new NXSL_Value(buffer);
+	*ppResult = vm->createValue(buffer);
 	return 0;
 }
 
@@ -1236,7 +1237,7 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
       }
       free(strings);
    }
-   *ppResult = new NXSL_Value(result ? 1 : 0);
+   *ppResult = vm->createValue(result ? 1 : 0);
 	return 0;
 }
 
@@ -1259,7 +1260,7 @@ int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, MD5_DIGEST_SIZE, text);
-   *ppResult = new NXSL_Value(text);
+   *ppResult = vm->createValue(text);
 
 	return 0;
 }
@@ -1283,7 +1284,7 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[SHA1_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, SHA1_DIGEST_SIZE, text);
-   *ppResult = new NXSL_Value(text);
+   *ppResult = vm->createValue(text);
 
 	return 0;
 }
@@ -1307,7 +1308,7 @@ int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
    TCHAR text[SHA256_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, SHA256_DIGEST_SIZE, text);
-   *ppResult = new NXSL_Value(text);
+   *ppResult = vm->createValue(text);
 
 	return 0;
 }
@@ -1326,16 +1327,16 @@ int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
       TCHAR buffer[256];
       if (addr.getHostByAddr(buffer, 256) != NULL)
       {
-         *ppResult = new NXSL_Value(buffer);
+         *ppResult = vm->createValue(buffer);
       }
       else
       {
-         *ppResult = new NXSL_Value;
+         *ppResult = vm->createValue();
       }
    }
    else
    {
-      *ppResult = new NXSL_Value;
+      *ppResult = vm->createValue();
    }
 
    return 0;
@@ -1364,11 +1365,11 @@ int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
    InetAddress addr = InetAddress::resolveHostName(argv[0]->getValueAsCString(), af);
    if (addr.isValid())
    {
-      *ppResult = new NXSL_Value((const TCHAR *)addr.toString());
+      *ppResult = vm->createValue((const TCHAR *)addr.toString());
    }
    else
    {
-      *ppResult = new NXSL_Value;
+      *ppResult = vm->createValue();
    }
    return 0;
 }
@@ -1408,7 +1409,7 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
    String s;
    NXSL_Array *a = argv[0]->getValueAsArray();
    ArrayToString(a, s, argv[1]->getValueAsCString());
-   *result = new NXSL_Value(s);
+   *result = vm->createValue(s);
    return 0;
 }
 
@@ -1423,15 +1424,15 @@ int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    int count = 0;
    TCHAR **strings = SplitString(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()[0], &count);
 
-   NXSL_Array *a = new NXSL_Array();
+   NXSL_Array *a = new NXSL_Array(vm);
    for(int i = 0; i < count; i++)
    {
-      a->append(new NXSL_Value(strings[i]));
+      a->append(vm->createValue(strings[i]));
       free(strings[i]);
    }
    free(strings);
 
-   *result = new NXSL_Value(a);
+   *result = vm->createValue(a);
    return 0;
 }
 
@@ -1455,8 +1456,10 @@ int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, N
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   vm->storageWrite(argv[0]->getValueAsCString(), new NXSL_Value(argv[1]));
+   NXSL_Value *value = vm->createValue(argv[1]);
+   vm->storageWrite(argv[0]->getValueAsCString(), value);
+   vm->destroyValue(value);
 
-   *result = new NXSL_Value();
+   *result = vm->createValue();
    return 0;
 }

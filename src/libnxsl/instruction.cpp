@@ -26,8 +26,9 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_nStackItems = 0;
@@ -36,8 +37,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode)
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, NXSL_Value *pValue)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_operand.m_pConstant = pValue;
@@ -48,8 +50,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
  * Create instruction with string operand.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_operand.m_identifier = new NXSL_Identifier(identifier);
@@ -60,8 +63,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifi
  * Create instruction with string operand and non-zero stack item count.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_operand.m_identifier = new NXSL_Identifier(identifier);
@@ -71,8 +75,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifi
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, UINT32 dwAddr)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_operand.m_dwAddr = dwAddr;
@@ -82,8 +87,9 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, short nStackItems)
 {
+   m_vm = vm;
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_nStackItems = nStackItems;
@@ -92,15 +98,16 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, short nStackItems)
 /**
  * Copy constructor
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *pSrc)
 {
+   m_vm = vm;
    m_nOpCode = pSrc->m_nOpCode;
    m_nSourceLine = pSrc->m_nSourceLine;
    m_nStackItems = pSrc->m_nStackItems;
    switch(getOperandType())
    {
 		case OP_TYPE_CONST:
-         m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
+         m_operand.m_pConstant = m_vm->createValue(pSrc->m_operand.m_pConstant);
          break;
       case OP_TYPE_IDENTIFIER:
          m_operand.m_identifier = new NXSL_Identifier(*pSrc->m_operand.m_identifier);
@@ -122,7 +129,7 @@ NXSL_Instruction::~NXSL_Instruction()
          delete m_operand.m_identifier;
          break;
       case OP_TYPE_CONST:
-         delete m_operand.m_pConstant;
+         m_vm->destroyValue(m_operand.m_pConstant);
          break;
       default:
          break;

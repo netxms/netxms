@@ -27,10 +27,10 @@
 /**
  * Create variable with NULL value
  */
-NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name) : m_name(name)
+NXSL_Variable::NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name) : NXSL_RuntimeObject(vm), m_name(name)
 {
    m_name = name;
-   m_value = new NXSL_Value;    // Create NULL value
+   m_value = vm->createValue();    // Create NULL value
    m_value->onVariableSet();
 	m_constant = false;
 }
@@ -38,7 +38,7 @@ NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name) : m_name(name)
 /**
  * Create variable with given value
  */
-NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name, NXSL_Value *value, bool constant) : m_name(name)
+NXSL_Variable::NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name, NXSL_Value *value, bool constant) : NXSL_RuntimeObject(vm), m_name(name)
 {
    m_value = value;
    m_value->onVariableSet();
@@ -50,7 +50,7 @@ NXSL_Variable::NXSL_Variable(const NXSL_Identifier& name, NXSL_Value *value, boo
  */
 NXSL_Variable::~NXSL_Variable()
 {
-   delete m_value;
+   m_vm->destroyValue(m_value);
 }
 
 /**
@@ -58,7 +58,7 @@ NXSL_Variable::~NXSL_Variable()
  */
 void NXSL_Variable::setValue(NXSL_Value *pValue)
 {
-   delete m_value;
+   m_vm->destroyValue(m_value);
    m_value = pValue;
    m_value->onVariableSet();
 }
@@ -75,7 +75,7 @@ struct NXSL_VariablePtr
 /**
  * Create new variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, bool constant) : NXSL_RuntimeObject(vm)
 {
    m_variables = NULL;
 	m_isConstant = constant;
@@ -85,7 +85,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(bool constant)
 /**
  * Clone existing variable system
  */
-NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *src)
+NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystem *src) : NXSL_RuntimeObject(vm)
 {
    m_variables = NULL;
    m_isConstant = src->m_isConstant;
@@ -94,7 +94,7 @@ NXSL_VariableSystem::NXSL_VariableSystem(NXSL_VariableSystem *src)
    NXSL_VariablePtr *var, *tmp;
    HASH_ITER(hh, src->m_variables, var, tmp)
    {
-      create(var->v.getName(), new NXSL_Value(var->v.getValue()));
+      create(var->v.getName(), vm->createValue(var->v.getValue()));
    }
 }
 
@@ -132,7 +132,7 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
    {
       if (find(var->v.getName()) == NULL)
       {
-         create(var->v.getName(), new NXSL_Value(var->v.getValue()));
+         create(var->v.getName(), m_vm->createValue(var->v.getValue()));
       }
    }
 }
@@ -143,14 +143,17 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 static EnumerationCallbackResult AddVariableCallback(const void *key, const void *value, void *data)
 {
    if (((NXSL_VariableSystem *)data)->find(*static_cast<const NXSL_Identifier*>(key)) == NULL)
-      ((NXSL_VariableSystem *)data)->create(*static_cast<const NXSL_Identifier*>(key), new NXSL_Value(static_cast<const NXSL_Value*>(value)));
+   {
+      ((NXSL_VariableSystem *)data)->create(*static_cast<const NXSL_Identifier*>(key),
+               ((NXSL_VariableSystem *)data)->vm()->createValue(static_cast<const NXSL_Value*>(value)));
+   }
    return _CONTINUE;
 }
 
 /**
  * Add all values from given map
  */
-void NXSL_VariableSystem::addAll(HashMap<NXSL_Identifier, NXSL_Value> *src)
+void NXSL_VariableSystem::addAll(NXSL_ValueHashMap<NXSL_Identifier> *src)
 {
    src->forEach(AddVariableCallback, this);
 }
@@ -171,7 +174,7 @@ NXSL_Variable *NXSL_VariableSystem::find(const NXSL_Identifier& name)
 NXSL_Variable *NXSL_VariableSystem::create(const NXSL_Identifier& name, NXSL_Value *value)
 {
    NXSL_VariablePtr *var = (NXSL_VariablePtr *)calloc(1, sizeof(NXSL_VariablePtr));
-   NXSL_Variable *v = new (&var->v) NXSL_Variable(name, (value != NULL) ? value : new NXSL_Value(), m_isConstant);
+   NXSL_Variable *v = new (&var->v) NXSL_Variable(m_vm, name, (value != NULL) ? value : m_vm->createValue(), m_isConstant);
    HASH_ADD_KEYPTR(hh, m_variables, v->m_name.value, v->m_name.length, var);
    return v;
 }

@@ -37,7 +37,7 @@ int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
-	*result = new NXSL_Value((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
+	*result = vm->createValue((LONG)((_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0) ? 1 : 0));
 	return 0;
 }
 
@@ -56,9 +56,9 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 		return NXSL_ERR_NOT_STRING;
 
 #ifdef _WIN32
-	*result = new NXSL_Value((LONG)CopyFile(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), FALSE));
+	*result = vm->createValue((LONG)CopyFile(argv[0]->getValueAsCString(), argv[1]->getValueAsCString(), FALSE));
 #else
-	*result = new NXSL_Value;	/* TODO: implement file copy on UNIX */
+	*result = vm->createValue();	/* TODO: implement file copy on UNIX */
 #endif
 	return 0;
 }
@@ -77,7 +77,7 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*result = new NXSL_Value((LONG)_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
+	*result = vm->createValue((LONG)_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
 	return 0;
 }
 
@@ -91,7 +91,7 @@ int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*result = new NXSL_Value((LONG)((_tremove(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+	*result = vm->createValue((LONG)((_tremove(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
 	return 0;
 }
 
@@ -106,9 +106,9 @@ int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 		return NXSL_ERR_NOT_STRING;
 
 #ifdef _WIN32
-	*result = new NXSL_Value(CreateDirectory(argv[0]->getValueAsCString(), NULL));
+	*result = vm->createValue(CreateDirectory(argv[0]->getValueAsCString(), NULL));
 #else
-	*result = new NXSL_Value((LONG)((_tmkdir(argv[0]->getValueAsCString(), 0755) == 0) ? 1 : 0));
+	*result = vm->createValue((LONG)((_tmkdir(argv[0]->getValueAsCString(), 0755) == 0) ? 1 : 0));
 #endif
 	return 0;
 }
@@ -124,9 +124,9 @@ int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 		return NXSL_ERR_NOT_STRING;
 
 #ifdef _WIN32
-   *result = new NXSL_Value(RemoveDirectory(argv[0]->getValueAsCString()));
+   *result = vm->createValue(RemoveDirectory(argv[0]->getValueAsCString()));
 #else
-	*result = new NXSL_Value((LONG)((_trmdir(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
+	*result = vm->createValue((LONG)((_trmdir(argv[0]->getValueAsCString()) == 0) ? 1 : 0));
 #endif
 	return 0;
 }

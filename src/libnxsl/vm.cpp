@@ -133,7 +133,7 @@ static int SelectResultType(int nType1, int nType2, int nOp)
 /**
  * Constructor
  */
-NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
+NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager()
 {
    m_instructionSet = NULL;
    m_cp = INVALID_ADDRESS;
@@ -143,8 +143,8 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = NULL;
-   m_constants = new NXSL_VariableSystem(true);
-   m_globals = new NXSL_VariableSystem(false);
+   m_constants = new NXSL_VariableSystem(this, true);
+   m_globals = new NXSL_VariableSystem(this, false);
    m_locals = NULL;
    m_functions = NULL;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
@@ -160,7 +160,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
 	}
 	else
 	{
-      m_localStorage = new NXSL_LocalStorage();
+      m_localStorage = new NXSL_LocalStorage(this);
       m_storage = m_localStorage;
 	}
 }
@@ -183,12 +183,12 @@ NXSL_VM::~NXSL_VM()
    delete m_localStorage;
 
    delete m_env;
-   delete m_pRetValue;
+   destroyValue(m_pRetValue);
 
    delete m_functions;
    delete m_modules;
 
-   safe_free(m_errorText);
+   free(m_errorText);
 }
 
 /**
@@ -196,7 +196,8 @@ NXSL_VM::~NXSL_VM()
  */
 EnumerationCallbackResult NXSL_VM::createConstantsCallback(const void *key, const void *value, void *data)
 {
-   ((NXSL_VM *)data)->m_constants->create(*static_cast<const NXSL_Identifier*>(key), new NXSL_Value(static_cast<const NXSL_Value*>(value)));
+   static_cast<NXSL_VM*>(data)->m_constants->create(*static_cast<const NXSL_Identifier*>(key),
+            static_cast<NXSL_VM*>(data)->createValue(static_cast<const NXSL_Value*>(value)));
    return _CONTINUE;
 }
 
@@ -216,7 +217,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    // Copy instructions
    m_instructionSet = new ObjectArray<NXSL_Instruction>(program->m_instructionSet->size(), 32, true);
    for(i = 0; i < program->m_instructionSet->size(); i++)
-      m_instructionSet->add(new NXSL_Instruction(program->m_instructionSet->get(i)));
+      m_instructionSet->add(new NXSL_Instruction(this, program->m_instructionSet->get(i)));
 
    // Copy function information
    m_functions = new ObjectArray<NXSL_Function>(program->m_functions->size(), 8, true);
@@ -226,8 +227,8 @@ bool NXSL_VM::load(const NXSL_Program *program)
    // Set constants
    m_constants->clear();
    program->m_constants->forEach(createConstantsCallback, this);
-   m_constants->create("NXSL::build", new NXSL_Value(NETXMS_VERSION_BUILD_STRING));
-   m_constants->create("NXSL::version", new NXSL_Value(NETXMS_VERSION_STRING));
+   m_constants->create("NXSL::build", createValue(NETXMS_VERSION_BUILD_STRING));
+   m_constants->create("NXSL::version", createValue(NETXMS_VERSION_STRING));
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
@@ -252,7 +253,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
 bool NXSL_VM::run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals,
                   NXSL_VariableSystem *pConstants, const char *entryPoint)
 {
-   ObjectArray<NXSL_Value> args(argc, 8, false);
+   ObjectRefArray<NXSL_Value> args(argc, 8);
    for(int i = 0; i < argc; i++)
       args.add(argv[i]);
    return run(&args, ppGlobals, pConstants, entryPoint);
@@ -262,13 +263,14 @@ bool NXSL_VM::run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals,
  * Run program
  * Returns true on success and false on error
  */
-bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals,
+bool NXSL_VM::run(ObjectRefArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals,
                   NXSL_VariableSystem *pConstants, const char *entryPoint)
 {
 	m_cp = INVALID_ADDRESS;
 
    // Delete previous return value
-   delete_and_null(m_pRetValue);
+	destroyValue(m_pRetValue);
+	m_pRetValue = NULL;
 
    // Create stacks
    m_dataStack = new NXSL_Stack;
@@ -276,7 +278,7 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals
    m_catchStack = new NXSL_Stack;
 
    // Create local variable system for main() and bind arguments
-   m_locals = new NXSL_VariableSystem();
+   m_locals = new NXSL_VariableSystem(this);
    for(int i = 0; i < args->size(); i++)
    {
       char name[32];
@@ -285,8 +287,8 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals
    }
 
    // Preserve original global variables and constants
-   NXSL_VariableSystem *pSavedGlobals = new NXSL_VariableSystem(m_globals);
-   NXSL_VariableSystem *pSavedConstants = new NXSL_VariableSystem(m_constants);
+   NXSL_VariableSystem *pSavedGlobals = new NXSL_VariableSystem(this, m_globals);
+   NXSL_VariableSystem *pSavedConstants = new NXSL_VariableSystem(this, m_constants);
    if (pConstants != NULL)
       m_constants->merge(pConstants);
 
@@ -323,10 +325,10 @@ resume:
       {
          if (unwind())
          {
-            setGlobalVariable("$errorcode", new NXSL_Value(m_errorCode));
-            setGlobalVariable("$errorline", new NXSL_Value(m_errorLine));
-            setGlobalVariable("$errormsg", new NXSL_Value(GetErrorMessage(m_errorCode)));
-            setGlobalVariable("$errortext", new NXSL_Value(m_errorText));
+            setGlobalVariable("$errorcode", createValue(m_errorCode));
+            setGlobalVariable("$errorline", createValue(m_errorLine));
+            setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
+            setGlobalVariable("$errortext", createValue(m_errorText));
             goto resume;
          }
       }
@@ -358,7 +360,7 @@ resume:
    // Cleanup
 	NXSL_Value *v;
    while((v = (NXSL_Value *)m_dataStack->pop()) != NULL)
-      delete v;
+      destroyValue(v);
    
    while(m_dwSubLevel > 0)
    {
@@ -398,7 +400,7 @@ bool NXSL_VM::unwind()
    }
 
    while(m_dataStack->getSize() > p->dataStackSize)
-      delete (NXSL_Value *)m_dataStack->pop();
+      destroyValue((NXSL_Value *)m_dataStack->pop());
 
    m_cp = p->addr;
    delete p;
@@ -412,7 +414,7 @@ bool NXSL_VM::addConstant(const NXSL_Identifier& name, NXSL_Value *value)
 {
    if (m_constants->find(name) != NULL)
    {
-      delete value;
+      destroyValue(value);
       return false;  // not added
    }
    m_constants->create(name, value);
@@ -512,11 +514,11 @@ void NXSL_VM::execute()
    switch(cp->m_nOpCode)
    {
       case OPCODE_PUSH_CONSTANT:
-         m_dataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
+         m_dataStack->push(createValue(cp->m_operand.m_pConstant));
          break;
       case OPCODE_PUSH_VARIABLE:
          pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
-         m_dataStack->push(new NXSL_Value(pVar->getValue()));
+         m_dataStack->push(createValue(pVar->getValue()));
          // convert to direct variable access without name lookup
          if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
          {
@@ -525,13 +527,13 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_PUSH_VARPTR:
-         m_dataStack->push(new NXSL_Value(cp->m_operand.m_variable->getValue()));
+         m_dataStack->push(createValue(cp->m_operand.m_variable->getValue()));
          break;
       case OPCODE_PUSH_CONSTREF:
          pVar = m_constants->find(*cp->m_operand.m_identifier);
          if (pVar != NULL)
          {
-            m_dataStack->push(new NXSL_Value(pVar->getValue()));
+            m_dataStack->push(createValue(pVar->getValue()));
             // convert to direct value access without name lookup
             if (m_constants->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
             {
@@ -541,14 +543,14 @@ void NXSL_VM::execute()
          }
          else
          {
-            m_dataStack->push(new NXSL_Value());
+            m_dataStack->push(createValue());
          }
          break;
       case OPCODE_NEW_ARRAY:
-         m_dataStack->push(new NXSL_Value(new NXSL_Array()));
+         m_dataStack->push(createValue(new NXSL_Array(this)));
          break;
       case OPCODE_NEW_HASHMAP:
-         m_dataStack->push(new NXSL_Value(new NXSL_HashMap()));
+         m_dataStack->push(createValue(new NXSL_HashMap(this)));
          break;
       case OPCODE_SET:
          pVar = findOrCreateVariable(*cp->m_operand.m_identifier, &vs);
@@ -557,7 +559,7 @@ void NXSL_VM::execute()
 				pValue = (NXSL_Value *)m_dataStack->peek();
 				if (pValue != NULL)
 				{
-					pVar->setValue(new NXSL_Value(pValue));
+					pVar->setValue(createValue(pValue));
                // convert to direct variable access without name lookup
 		         if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
 		         {
@@ -579,7 +581,7 @@ void NXSL_VM::execute()
          pValue = (NXSL_Value *)m_dataStack->peek();
          if (pValue != NULL)
          {
-            cp->m_operand.m_variable->setValue(new NXSL_Value(pValue));
+            cp->m_operand.m_variable->setValue(createValue(pValue));
          }
          else
          {
@@ -603,7 +605,7 @@ void NXSL_VM::execute()
 				pVar = createVariable(*cp->m_operand.m_identifier);
 				if (pVar != NULL)
 				{
-					pVar->setValue(new NXSL_Value(new NXSL_Array));
+					pVar->setValue(createValue(new NXSL_Array(this)));
 				}
 				else
 				{
@@ -623,7 +625,7 @@ void NXSL_VM::execute()
 				}
 				else
 				{
-					m_globals->create(*cp->m_operand.m_identifier, new NXSL_Value(new NXSL_Array));
+					m_globals->create(*cp->m_operand.m_identifier, createValue(new NXSL_Array(this)));
 				}
 			}
 			else
@@ -660,7 +662,7 @@ void NXSL_VM::execute()
 					}
 					else
 					{
-						m_globals->create(*cp->m_operand.m_identifier, new NXSL_Value);
+						m_globals->create(*cp->m_operand.m_identifier, createValue());
 					}
 				}
 			}
@@ -697,9 +699,9 @@ void NXSL_VM::execute()
 				{
 					error(NXSL_ERR_DATA_STACK_UNDERFLOW);
 				}
-				delete key;
-				delete container;
-				delete pValue;
+				destroyValue(key);
+				destroyValue(container);
+				destroyValue(pValue);
 			}
          else
          {
@@ -729,13 +731,13 @@ void NXSL_VM::execute()
 					{
 						error(NXSL_ERR_NOT_CONTAINER);
 					}
-					delete container;
+					destroyValue(container);
 				}
 				else
 				{
 					error(NXSL_ERR_DATA_STACK_UNDERFLOW);
 				}
-				delete pValue;
+				destroyValue(pValue);
 			}
          else
          {
@@ -795,7 +797,7 @@ void NXSL_VM::execute()
             {
                error(NXSL_ERR_DATA_STACK_UNDERFLOW);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -833,13 +835,13 @@ void NXSL_VM::execute()
                {
                   error(NXSL_ERR_DATA_STACK_UNDERFLOW);
                }
-               delete key;
+               destroyValue(key);
             }
             else
             {
                error(NXSL_ERR_DATA_STACK_UNDERFLOW);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -873,7 +875,7 @@ void NXSL_VM::execute()
 			break;
       case OPCODE_POP:
          for(i = 0; i < cp->m_nStackItems; i++)
-            delete (NXSL_Value *)m_dataStack->pop();
+            destroyValue((NXSL_Value *)m_dataStack->pop());
          break;
       case OPCODE_JMP:
          dwNext = cp->m_operand.m_dwAddr;
@@ -892,7 +894,7 @@ void NXSL_VM::execute()
             {
                error(NXSL_ERR_BAD_CONDITION);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -975,7 +977,7 @@ void NXSL_VM::execute()
                   if (nRet == 0)
                   {
                      for(i = 0; i < cp->m_nStackItems + 1; i++)
-                        delete (NXSL_Value *)m_dataStack->pop();
+                        destroyValue((NXSL_Value *)m_dataStack->pop());
                      m_dataStack->push(pResult);
                   }
                   else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)
@@ -1004,7 +1006,7 @@ void NXSL_VM::execute()
                if (nRet == 0)
                {
                   for(i = 0; i < cp->m_nStackItems + 1; i++)
-                     delete (NXSL_Value *)m_dataStack->pop();
+                     destroyValue((NXSL_Value *)m_dataStack->pop());
                   m_dataStack->push(result);
                }
                else
@@ -1024,7 +1026,7 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_RET_NULL:
-         m_dataStack->push(new NXSL_Value);
+         m_dataStack->push(createValue());
          /* no break */
       case OPCODE_RETURN:
          if (m_dwSubLevel > 0)
@@ -1044,7 +1046,7 @@ void NXSL_VM::execute()
       case OPCODE_BIND:
          snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%d", m_nBindPos++);
          pVar = m_locals->find(varName);
-         pValue = (pVar != NULL) ? new NXSL_Value(pVar->getValue()) : new NXSL_Value;
+         pValue = (pVar != NULL) ? createValue(pVar->getValue()) : createValue();
          pVar = m_locals->find(*cp->m_operand.m_identifier);
          if (pVar == NULL)
             m_locals->create(*cp->m_operand.m_identifier, pValue);
@@ -1056,7 +1058,7 @@ void NXSL_VM::execute()
          if (pValue != NULL)
          {
 				m_env->print(pValue);
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1089,7 +1091,7 @@ void NXSL_VM::execute()
             {
                error(NXSL_ERR_NOT_INTEGER);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1134,7 +1136,7 @@ void NXSL_VM::execute()
          pValue = pVar->getValue();
          if (pValue->isNumeric())
          {
-            m_dataStack->push(new NXSL_Value(pValue));
+            m_dataStack->push(createValue(pValue));
             if (cp->m_nOpCode == OPCODE_INC)
                pValue->increment();
             else
@@ -1157,7 +1159,7 @@ void NXSL_VM::execute()
          pValue = cp->m_operand.m_variable->getValue();
          if (pValue->isNumeric())
          {
-            m_dataStack->push(new NXSL_Value(pValue));
+            m_dataStack->push(createValue(pValue));
             if (cp->m_nOpCode == OPCODE_INC_VARPTR)
                pValue->increment();
             else
@@ -1178,7 +1180,7 @@ void NXSL_VM::execute()
                pValue->increment();
             else
                pValue->decrement();
-            m_dataStack->push(new NXSL_Value(pValue));
+            m_dataStack->push(createValue(pValue));
 
             // Convert to direct variable access
             if (vs->createVariableReferenceRestorePoint(m_cp, cp->m_operand.m_identifier))
@@ -1201,7 +1203,7 @@ void NXSL_VM::execute()
                pValue->increment();
             else
                pValue->decrement();
-            m_dataStack->push(new NXSL_Value(pValue));
+            m_dataStack->push(createValue(pValue));
          }
          else
          {
@@ -1230,7 +1232,7 @@ void NXSL_VM::execute()
                   {
 							if (cp->m_nOpCode == OPCODE_SAFE_GET_ATTR)
 							{
-	                     m_dataStack->push(new NXSL_Value);
+	                     m_dataStack->push(createValue());
 							}
 							else
 							{
@@ -1255,7 +1257,7 @@ void NXSL_VM::execute()
             {
                error(NXSL_ERR_NOT_OBJECT);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1271,9 +1273,7 @@ void NXSL_VM::execute()
 				{
 					if (pReference->getDataType() == NXSL_DT_OBJECT)
 					{
-						NXSL_Object *pObj;
-
-						pObj = pReference->getValueAsObject();
+						NXSL_Object *pObj = pReference->getValueAsObject();
 						if (pObj != NULL)
 						{
 							if (pObj->getClass()->setAttr(pObj, cp->m_operand.m_identifier->value, pValue))
@@ -1295,13 +1295,13 @@ void NXSL_VM::execute()
 					{
 						error(NXSL_ERR_NOT_OBJECT);
 					}
-					delete pReference;
+					destroyValue(pReference);
 				}
 				else
 				{
 					error(NXSL_ERR_DATA_STACK_UNDERFLOW);
 				}
-				delete pValue;
+				destroyValue(pValue);
          }
          else
          {
@@ -1309,7 +1309,7 @@ void NXSL_VM::execute()
          }
          break;
 		case OPCODE_FOREACH:
-			nRet = NXSL_Iterator::createIterator(m_dataStack);
+			nRet = NXSL_Iterator::createIterator(this, m_dataStack);
 			if (nRet != 0)
 			{
 				error(nRet);
@@ -1323,11 +1323,11 @@ void NXSL_VM::execute()
 				{
 					NXSL_Iterator *it = pValue->getValueAsIterator();
 					NXSL_Value *next = it->next();
-					m_dataStack->push(new NXSL_Value((LONG)((next != NULL) ? 1 : 0)));
+					m_dataStack->push(createValue((LONG)((next != NULL) ? 1 : 0)));
 					NXSL_Variable *var = findOrCreateVariable(it->getVariableName());
 					if (!var->isConstant())
 					{
-						var->setValue((next != NULL) ? new NXSL_Value(next) : new NXSL_Value);
+						var->setValue((next != NULL) ? createValue(next) : createValue());
 					}
 					else
 					{
@@ -1368,7 +1368,7 @@ void NXSL_VM::execute()
             {
                if (name->isString())
                {
-                  m_storage->write(name->getValueAsCString(), new NXSL_Value(pValue));
+                  m_storage->write(name->getValueAsCString(), createValue(pValue));
                   m_dataStack->push(pValue);
                   pValue = NULL;    // Prevent deletion
                }
@@ -1376,13 +1376,13 @@ void NXSL_VM::execute()
                {
                   error(NXSL_ERR_NOT_STRING);
                }
-               delete name;
+               destroyValue(name);
             }
             else
             {
                error(NXSL_ERR_DATA_STACK_UNDERFLOW);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1395,14 +1395,14 @@ void NXSL_VM::execute()
          {
             if (pValue->isString())
             {
-               m_dataStack->push(m_storage->read(pValue->getValueAsCString()));
+               m_dataStack->push(m_storage->read(pValue->getValueAsCString(), this));
             }
             else
             {
                error(NXSL_ERR_NOT_STRING);
             }
             if (cp->m_nStackItems == 0)
-               delete pValue;
+               destroyValue(pValue);
          }
          else
          {
@@ -1416,10 +1416,10 @@ void NXSL_VM::execute()
          {
             if (pValue->isString())
             {
-               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString());
+               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString(), this);
                if (sval->isNumeric())
                {
-                  m_dataStack->push(new NXSL_Value(sval));
+                  m_dataStack->push(createValue(sval));
                   if (cp->m_nOpCode == OPCODE_STORAGE_INC)
                      sval->increment();
                   else
@@ -1429,14 +1429,14 @@ void NXSL_VM::execute()
                else
                {
                   error(NXSL_ERR_NOT_NUMBER);
-                  delete sval;
+                  destroyValue(sval);
                }
             }
             else
             {
                error(NXSL_ERR_NOT_STRING);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1450,27 +1450,27 @@ void NXSL_VM::execute()
          {
             if (pValue->isString())
             {
-               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString());
+               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString(), this);
                if (sval->isNumeric())
                {
                   if (cp->m_nOpCode == OPCODE_STORAGE_INCP)
                      sval->increment();
                   else
                      sval->decrement();
-                  m_dataStack->push(new NXSL_Value(sval));
+                  m_dataStack->push(createValue(sval));
                   m_storage->write(pValue->getValueAsCString(), sval);
                }
                else
                {
                   error(NXSL_ERR_NOT_NUMBER);
-                  delete sval;
+                  destroyValue(sval);
                }
             }
             else
             {
                error(NXSL_ERR_NOT_STRING);
             }
-            delete pValue;
+            destroyValue(pValue);
          }
          else
          {
@@ -1478,7 +1478,7 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_PUSHCP:
-         m_dataStack->push(new NXSL_Value((INT32)m_cp + cp->m_nStackItems));
+         m_dataStack->push(createValue((INT32)m_cp + cp->m_nStackItems));
          break;
       case OPCODE_SELECT:
          dwNext = callSelector(*cp->m_operand.m_identifier, cp->m_nStackItems);
@@ -1501,7 +1501,7 @@ bool NXSL_VM::setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *
 	{
       // copy on write
       array->copyOnWrite();
-		array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(value));
+		array->getValueAsArray()->set(index->getValueAsInt32(), createValue(value));
       success = true;
 	}
    else
@@ -1546,7 +1546,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
          }
       }
 
-      m_dataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+      m_dataStack->push((element != NULL) ? createValue(element) : createValue());
 
       if (opcode == OPCODE_INC_ELEMENT)
       {
@@ -1586,7 +1586,7 @@ bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value
 	if (key->isString())
 	{
       hashMap->copyOnWrite();
-		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(value));
+		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), createValue(value));
       success = true;
 	}
    else
@@ -1631,7 +1631,7 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
          }
       }
 
-      m_dataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+      m_dataStack->push((element != NULL) ? createValue(element) : createValue());
 
       if (opcode == OPCODE_INC_ELEMENT)
       {
@@ -1746,23 +1746,23 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      case OPCODE_EQ:
                      case OPCODE_NE:
                         nResult = pVal1->EQ(pVal2);
-                        pRes = new NXSL_Value((nOpCode == OPCODE_EQ) ? nResult : !nResult);
+                        pRes = createValue((nOpCode == OPCODE_EQ) ? nResult : !nResult);
                         break;
                      case OPCODE_LT:
                         nResult = pVal1->LT(pVal2);
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_LE:
                         nResult = pVal1->LE(pVal2);
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_GT:
                         nResult = pVal1->GT(pVal2);
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_GE:
                         nResult = pVal1->GE(pVal2);
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_LSHIFT:
                         pRes = pVal1;
@@ -1791,15 +1791,15 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         break;
                      case OPCODE_AND:
                         nResult = (pVal1->isNonZero() && pVal2->isNonZero());
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_OR:
                         nResult = (pVal1->isNonZero() || pVal2->isNonZero());
-                        pRes = new NXSL_Value(nResult);
+                        pRes = createValue(nResult);
                         break;
                      case OPCODE_CASE:
                      case OPCODE_CASE_CONST:
-                        pRes = new NXSL_Value((LONG)pVal1->EQ(pVal2));
+                        pRes = createValue((LONG)pVal1->EQ(pVal2));
                         break;
                      default:
                         error(NXSL_ERR_INTERNAL);
@@ -1841,7 +1841,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                      else
                         nResult = 0;
                   }
-                  pRes = new NXSL_Value((nOpCode == OPCODE_NE) ? !nResult : nResult);
+                  pRes = createValue((nOpCode == OPCODE_NE) ? !nResult : nResult);
                   break;
                case OPCODE_CONCAT:
                   if (pVal1->isString())
@@ -1851,7 +1851,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   }
                   else
                   {
-                     pRes = new NXSL_Value(_T(""));
+                     pRes = createValue(_T(""));
                   }
                   pszText2 = pVal2->getValueAsString(&dwLen2);
                   pRes->concatenate(pszText2, dwLen2);
@@ -1860,7 +1860,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                case OPCODE_ILIKE:
                   if (pVal1->isString() && pVal2->isString())
                   {
-                     pRes = new NXSL_Value((LONG)MatchString(pVal2->getValueAsCString(),
+                     pRes = createValue((LONG)MatchString(pVal2->getValueAsCString(),
                                                              pVal1->getValueAsCString(),
                                                              nOpCode == OPCODE_LIKE));
                   }
@@ -1916,8 +1916,8 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
 
    if (dynamicValues)
    {
-      delete pVal1;
-      delete pVal2;
+      destroyValue(pVal1);
+      destroyValue(pVal2);
    }
 
    if (pRes != NULL)
@@ -2013,7 +2013,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    // Add code from module
    int start = m_instructionSet->size();
    for(i = 0; i < module->m_instructionSet->size(); i++)
-      m_instructionSet->add(new NXSL_Instruction(module->m_instructionSet->get(i)));
+      m_instructionSet->add(new NXSL_Instruction(this, module->m_instructionSet->get(i)));
    relocateCode(start, module->m_instructionSet->size(), start);
    
    // Add function names from module
@@ -2054,7 +2054,7 @@ bool NXSL_VM::callExternalFunction(NXSL_ExtFunction *function, int stackItems)
          if (ret == 0)
          {
             for(int i = 0; i < stackItems; i++)
-               delete (NXSL_Value *)m_dataStack->pop();
+               destroyValue((NXSL_Value *)m_dataStack->pop());
             m_dataStack->push(result);
          }
          else if (ret == NXSL_STOP_SCRIPT_EXECUTION)
@@ -2095,7 +2095,7 @@ void NXSL_VM::callFunction(int nArgCount)
       m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
       m_codeStack->push(m_locals);
       m_locals->restoreVariableReferences(m_instructionSet);
-      m_locals = new NXSL_VariableSystem;
+      m_locals = new NXSL_VariableSystem(this);
       m_nBindPos = 1;
 
       // Bind arguments
@@ -2110,7 +2110,7 @@ void NXSL_VM::callFunction(int nArgCount)
 				{
 					// Named parameter
 					snprintf(varName, MAX_IDENTIFIER_LENGTH, "$%s", pValue->getName());
-	            m_locals->create(varName, new NXSL_Value(pValue));
+	            m_locals->create(varName, createValue(pValue));
 				}
          }
          else
@@ -2174,12 +2174,12 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 
       if (!v->isInteger())
       {
-         delete v;
+         destroyValue(v);
          error(NXSL_ERR_INTERNAL);
          goto cleanup;
       }
       addrList[i] = v->getValueAsUInt32();
-      delete v;
+      destroyValue(v);
 
       valueList[i] = (NXSL_Value *)m_dataStack->pop();
       if (valueList[i] == NULL)
@@ -2215,8 +2215,8 @@ UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 
 cleanup:
    for(int j = 0; j < numElements; j++)
-      delete valueList[j];
-   delete options;
+      destroyValue(valueList[j]);
+   destroyValue(options);
 
 #if !HAVE_ALLOCA
    free(addrList);
@@ -2245,20 +2245,20 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
 		value = pValue->getValueAsString(&valueLen);
       if (_tregnexec(&preg, value, valueLen, 256, fields, 0) == 0)
       {
-         pResult = new NXSL_Value((LONG)1);
+         pResult = createValue((LONG)1);
          for(i = 1; (i < 256) && (fields[i].rm_so != -1); i++)
          {
             snprintf(varName, 16, "$%d", i);
             pVar = m_locals->find(varName);
             if (pVar == NULL)
-               m_locals->create(varName, new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+               m_locals->create(varName, createValue(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
             else
-               pVar->setValue(new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+               pVar->setValue(createValue(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
          }
       }
       else
       {
-         pResult = new NXSL_Value((LONG)0);
+         pResult = createValue((LONG)0);
       }
       regfree(&preg);
    }
@@ -2375,7 +2375,7 @@ void NXSL_VM::setStorage(NXSL_Storage *storage)
    else
    {
       if (m_localStorage == NULL)
-         m_localStorage = new NXSL_LocalStorage();
+         m_localStorage = new NXSL_LocalStorage(this);
       m_storage = m_localStorage;
    }
 }
@@ -2387,20 +2387,20 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const char *attribute, bool safe)
 {
    if (!strcmp(attribute, "maxIndex"))
    {
-      m_dataStack->push((a->size() > 0) ? new NXSL_Value((INT32)a->getMaxIndex()) : new NXSL_Value());
+      m_dataStack->push((a->size() > 0) ? createValue((INT32)a->getMaxIndex()) : createValue());
    }
    else if (!strcmp(attribute, "minIndex"))
    {
-      m_dataStack->push((a->size() > 0) ? new NXSL_Value((INT32)a->getMinIndex()) : new NXSL_Value());
+      m_dataStack->push((a->size() > 0) ? createValue((INT32)a->getMinIndex()) : createValue());
    }
    else if (!strcmp(attribute, "size"))
    {
-      m_dataStack->push(new NXSL_Value((INT32)a->size()));
+      m_dataStack->push(createValue((INT32)a->size()));
    }
    else
    {
       if (safe)
-         m_dataStack->push(new NXSL_Value());
+         m_dataStack->push(createValue());
       else
          error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
    }
@@ -2417,7 +2417,7 @@ void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool s
    }
    else if (!strcmp(attribute, "size"))
    {
-      m_dataStack->push(new NXSL_Value((INT32)m->size()));
+      m_dataStack->push(createValue((INT32)m->size()));
    }
    else if (!strcmp(attribute, "values"))
    {
@@ -2426,7 +2426,7 @@ void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const char *attribute, bool s
    else
    {
       if (safe)
-         m_dataStack->push(new NXSL_Value());
+         m_dataStack->push(createValue());
       else
          error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
    }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Create empty array
  */
-NXSL_Array::NXSL_Array() : NXSL_HandleCountObject()
+NXSL_Array::NXSL_Array(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 {
 	m_size = 0;
 	m_allocated = 0;
@@ -36,7 +36,7 @@ NXSL_Array::NXSL_Array() : NXSL_HandleCountObject()
 /**
  *  Create copy of given array
  */
-NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject()
+NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject(src->m_vm)
 {
 	m_size = src->m_size;
 	m_allocated = src->m_size;
@@ -46,7 +46,7 @@ NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject()
 		for(int i = 0; i < m_size; i++)
 		{
 			m_data[i].index = src->m_data[i].index;
-			m_data[i].value = new NXSL_Value(src->m_data[i].value);
+			m_data[i].value = m_vm->createValue(src->m_data[i].value);
 		}
 	}
 	else
@@ -58,7 +58,7 @@ NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject()
 /**
  * Create array populated with values from string list
  */
-NXSL_Array::NXSL_Array(const StringList *values) : NXSL_HandleCountObject()
+NXSL_Array::NXSL_Array(NXSL_ValueManager *vm, const StringList *values) : NXSL_HandleCountObject(vm)
 {
 	m_size = values->size();
 	m_allocated = m_size;
@@ -68,7 +68,7 @@ NXSL_Array::NXSL_Array(const StringList *values) : NXSL_HandleCountObject()
 		for(int i = 0; i < m_size; i++)
 		{
 			m_data[i].index = i;
-			m_data[i].value = new NXSL_Value(values->get(i));
+			m_data[i].value = m_vm->createValue(values->get(i));
 		}
 	}
 	else
@@ -85,8 +85,8 @@ NXSL_Array::~NXSL_Array()
 	int i;
 
 	for(i = 0; i < m_size; i++)
-		delete m_data[i].value;
-	safe_free(m_data);
+		m_vm->destroyValue(m_data[i].value);
+	free(m_data);
 }
 
 /**
@@ -143,7 +143,7 @@ void NXSL_Array::set(int index, NXSL_Value *value)
 	element = (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
 	if (element != NULL)
 	{
-		delete element->value;
+		m_vm->destroyValue(element->value);
 		element->value = value;
 	}
 	else
@@ -205,7 +205,7 @@ void NXSL_Array::remove(int index)
    }
    if ((i >= 0) && (m_data[i].index == index))
    {
-      delete m_data[i].value;
+      m_vm->destroyValue(m_data[i].value);
       m_size--;
       memmove(&m_data[i], &m_data[i + 1], sizeof(NXSL_ArrayElement) * (m_size - i));
    }
@@ -220,8 +220,8 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
    {
       if (argc != 1)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-      append(new NXSL_Value(argv[0]));
-      *result = new NXSL_Value(getMaxIndex());
+      append(m_vm->createValue(argv[0]));
+      *result = m_vm->createValue(getMaxIndex());
    }
    else if (!strcmp(name.value, "insert"))
    {
@@ -231,15 +231,15 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
       if (!argv[0]->isInteger())
          return NXSL_ERR_NOT_INTEGER;
 
-      insert(argv[0]->getValueAsInt32(), new NXSL_Value(argv[1]));
-      *result = new NXSL_Value();
+      insert(argv[0]->getValueAsInt32(), m_vm->createValue(argv[1]));
+      *result = m_vm->createValue();
    }
    else if (!strcmp(name.value, "pop"))
    {
       if (argc != 0)
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-      *result = (m_size > 0) ? m_data[--m_size].value : new NXSL_Value();
+      *result = (m_size > 0) ? m_data[--m_size].value : m_vm->createValue();
    }
    else if (!strcmp(name.value, "remove"))
    {
@@ -250,7 +250,7 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
          return NXSL_ERR_NOT_INTEGER;
 
       remove(argv[0]->getValueAsInt32());
-      *result = new NXSL_Value();
+      *result = m_vm->createValue();
    }
    else
    {

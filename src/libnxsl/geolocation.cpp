@@ -56,35 +56,36 @@ void NXSL_GeoLocationClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr)
 {
+   NXSL_VM *vm = object->vm();
    NXSL_Value *value = NULL;
    GeoLocation *gl = static_cast<GeoLocation*>(object->getData());
    if (!strcmp(attr, "isManual"))
    {
-      value = new NXSL_Value(gl->isManual());
+      value = vm->createValue(gl->isManual());
    }
    else if (!strcmp(attr, "isValid"))
    {
-      value = new NXSL_Value(gl->isValid());
+      value = vm->createValue(gl->isValid());
    }
    else if (!strcmp(attr, "latitude"))
    {
-      value = new NXSL_Value(gl->getLatitude());
+      value = vm->createValue(gl->getLatitude());
    }
    else if (!strcmp(attr, "latitudeText"))
    {
-      value = new NXSL_Value(gl->getLatitudeAsString());
+      value = vm->createValue(gl->getLatitudeAsString());
    }
    else if (!strcmp(attr, "longitude"))
    {
-      value = new NXSL_Value(gl->getLongitude());
+      value = vm->createValue(gl->getLongitude());
    }
    else if (!strcmp(attr, "longitudeText"))
    {
-      value = new NXSL_Value(gl->getLongitudeAsString());
+      value = vm->createValue(gl->getLongitudeAsString());
    }
    else if (!strcmp(attr, "type"))
    {
-      value = new NXSL_Value(gl->getType());
+      value = vm->createValue(gl->getType());
    }
    return value;
 }
@@ -92,9 +93,9 @@ NXSL_Value *NXSL_GeoLocationClass::getAttr(NXSL_Object *object, const char *attr
 /**
  * Create NXSL object from GeoLocation object
  */
-NXSL_Value *NXSL_GeoLocationClass::createObject(const GeoLocation& gl)
+NXSL_Value *NXSL_GeoLocationClass::createObject(NXSL_VM *vm, const GeoLocation& gl)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(gl)));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslGeoLocationClass, new GeoLocation(gl)));
 }
 
 /**
@@ -121,6 +122,6 @@ int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    }
 
    GeoLocation *gl = new GeoLocation(type, argv[0]->getValueAsReal(), argv[1]->getValueAsReal());
-   *result = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, gl));
+   *result = vm->createValue(new NXSL_Object(vm, &g_nxslGeoLocationClass, gl));
    return 0;
 }

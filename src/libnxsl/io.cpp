@@ -75,7 +75,7 @@ NXSL_METHOD_DEFINITION(FILE, close)
       fclose(f->handle);
       f->closed = true;
    }
-   *result = new NXSL_Value;
+   *result = vm->createValue();
    return 0;
 }
 
@@ -100,11 +100,11 @@ NXSL_METHOD_DEFINITION(FILE, read)
          if (bytes > 0)
          {
             buffer[count] = 0;
-            *result = new NXSL_Value(buffer);
+            *result = vm->createValue(buffer);
          }
          else
          {
-            *result = new NXSL_Value();
+            *result = vm->createValue();
          }
 
          if (buffer != sbuffer)
@@ -112,12 +112,12 @@ NXSL_METHOD_DEFINITION(FILE, read)
       }
       else
       {
-         *result = new NXSL_Value(_T(""));
+         *result = vm->createValue(_T(""));
       }
    }
    else
    {
-      *result = new NXSL_Value();
+      *result = vm->createValue();
    }
    return 0;
 }
@@ -136,16 +136,16 @@ NXSL_METHOD_DEFINITION(FILE, readLine)
          TCHAR *ptr = _tcschr(buffer, _T('\n'));
          if (ptr != NULL)
             *ptr = 0;
-         *result = new NXSL_Value(buffer);
+         *result = vm->createValue(buffer);
       }
       else
       {
-         *result = new NXSL_Value();
+         *result = vm->createValue();
       }
    }
    else
    {
-      *result = new NXSL_Value();
+      *result = vm->createValue();
    }
    return 0;
 }
@@ -174,7 +174,7 @@ NXSL_METHOD_DEFINITION(FILE, write)
 #endif
       }
    }
-   *result = new NXSL_Value();
+   *result = vm->createValue();
    return 0;
 }
 
@@ -203,7 +203,7 @@ NXSL_METHOD_DEFINITION(FILE, writeLine)
          fputc('\n', f->handle);
       }
    }
-   *result = new NXSL_Value();
+   *result = vm->createValue();
    return 0;
 }
 
@@ -229,11 +229,11 @@ NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const char *attr)
 	NXSL_Value *value = NULL;
 	if (!strcmp(attr, "eof"))
 	{
-		value = new NXSL_Value((INT32)feof(f->handle));
+		value = object->vm()->createValue((INT32)feof(f->handle));
 	}
 	else if (!strcmp(attr, "name"))
    {
-      value = new NXSL_Value(f->name);
+      value = object->vm()->createValue(f->name);
    }
 	return value;
 }
@@ -275,11 +275,11 @@ int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	FILE *handle = _tfopen(argv[0]->getValueAsCString(), mode);
 	if (handle != NULL)
 	{
-		*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslFileClass, new NXSL_FileHandle(argv[0]->getValueAsCString(), handle)));
+		*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslFileClass, new NXSL_FileHandle(argv[0]->getValueAsCString(), handle)));
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 	return 0;
 }

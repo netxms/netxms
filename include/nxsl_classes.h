@@ -120,6 +120,21 @@ public:
 class NXSL_Value;
 class NXSL_Object;
 class NXSL_VM;
+class NXSL_ValueManager;
+
+/**
+ * Runtime object
+ */
+class LIBNXSL_EXPORTABLE NXSL_RuntimeObject
+{
+protected:
+   NXSL_VM *m_vm;
+
+public:
+   NXSL_RuntimeObject(NXSL_VM *vm) { m_vm = vm; }
+
+   NXSL_VM *vm() { return m_vm; }
+};
 
 /**
  * External method structure
@@ -182,7 +197,7 @@ struct __nxsl_class_data
 /**
  * Object instance
  */
-class LIBNXSL_EXPORTABLE NXSL_Object
+class LIBNXSL_EXPORTABLE NXSL_Object : public NXSL_RuntimeObject
 {
 private:
    NXSL_Class *m_class;
@@ -190,8 +205,8 @@ private:
 
 public:
    NXSL_Object(NXSL_Object *object);
-   NXSL_Object(NXSL_Class *nxslClass, void *data);
-   ~NXSL_Object();
+   NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, void *data);
+   virtual ~NXSL_Object();
 
    NXSL_Class *getClass() { return m_class; }
 	void *getData() { return m_data->data; }
@@ -203,11 +218,13 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_HandleCountObject
 {
 protected:
+   NXSL_ValueManager *m_vm;
    int m_handleCount;
 
 public:
-   NXSL_HandleCountObject()
+   NXSL_HandleCountObject(NXSL_ValueManager *vm)
    {
+      m_vm = vm;
       m_handleCount = 0;
    }
 
@@ -215,6 +232,7 @@ public:
 	void decHandleCount() { m_handleCount--; }
 	bool isUnused() { return m_handleCount < 1; }
    bool isShared() { return m_handleCount > 1; }
+   NXSL_ValueManager *vm() { return m_vm; }
 };
 
 /**
@@ -237,10 +255,10 @@ private:
 	NXSL_ArrayElement *m_data;
 
 public:
-	NXSL_Array();
+	NXSL_Array(NXSL_ValueManager *vm);
 	NXSL_Array(const NXSL_Array *src);
-   NXSL_Array(const StringList *values);
-	~NXSL_Array();
+   NXSL_Array(NXSL_ValueManager *vm, const StringList *values);
+	virtual ~NXSL_Array();
 
    int size() const { return m_size; }
    int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
@@ -260,17 +278,58 @@ public:
 };
 
 /**
+ * String map for holding NXSL_Value objects
+ */
+class NXSL_StringValueMap : public StringMapBase
+{
+   DISABLE_COPY_CTOR(NXSL_StringValueMap)
+
+private:
+   NXSL_ValueManager *m_vm;
+
+   static void destructor(void *object, StringMapBase *map);
+
+public:
+   NXSL_StringValueMap(NXSL_ValueManager *vm, bool objectOwner) : StringMapBase(objectOwner) { m_vm = vm; m_objectDestructor = destructor; }
+
+   void set(const TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, false); }
+   void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, true); }
+   NXSL_Value *get(const TCHAR *key) const { return (NXSL_Value*)getObject(key); }
+};
+
+/**
+ * Hash map template for holding NXSL_Value objects
+ */
+template <class K> class NXSL_ValueHashMap : public HashMapBase
+{
+private:
+   NXSL_ValueManager *m_vm;
+
+   static void destructor(void *object, HashMapBase *map) { static_cast<NXSL_ValueHashMap*>(map)->m_vm->destroyValue((NXSL_Value*)object); }
+
+public:
+   NXSL_ValueHashMap(NXSL_ValueManager *vm, bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
+
+   NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
+   void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
+
+   Iterator<NXSL_Value> *iterator() { return new Iterator<NXSL_Value>(new HashMapIterator(this)); }
+};
+
+/**
  * NXSL hash map
  */
 class LIBNXSL_EXPORTABLE NXSL_HashMap : public NXSL_HandleCountObject
 {
 private:
-   StringObjectMap<NXSL_Value> *m_values;
+   NXSL_StringValueMap *m_values;
 
 public:
-	NXSL_HashMap();
+	NXSL_HashMap(NXSL_ValueManager *vm);
 	NXSL_HashMap(const NXSL_HashMap *src);
-	~NXSL_HashMap();
+	virtual ~NXSL_HashMap();
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
@@ -285,7 +344,7 @@ public:
 /**
  * Iterator for arrays
  */
-class LIBNXSL_EXPORTABLE NXSL_Iterator
+class LIBNXSL_EXPORTABLE NXSL_Iterator : public NXSL_RuntimeObject
 {
 private:
 	int m_refCount;
@@ -294,8 +353,8 @@ private:
 	int m_position;
 
 public:
-	NXSL_Iterator(const NXSL_Identifier& variable, NXSL_Array *array);
-	~NXSL_Iterator();
+	NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Array *array);
+	virtual ~NXSL_Iterator();
 
 	const NXSL_Identifier& getVariableName() { return m_variable; }
 
@@ -305,7 +364,7 @@ public:
 
 	NXSL_Value *next();
 
-	static int createIterator(NXSL_Stack *stack);
+	static int createIterator(NXSL_VM *vm, NXSL_Stack *stack);
 };
 
 /**
@@ -363,6 +422,9 @@ public:
  */
 class LIBNXSL_EXPORTABLE NXSL_Value
 {
+   friend class NXSL_ValueManager;
+   friend class ObjectMemoryPool<NXSL_Value>;
+
 protected:
    UINT32 m_length;
    TCHAR *m_string;
@@ -398,7 +460,6 @@ protected:
       m_stringIsValid = FALSE;
    }
 
-public:
    NXSL_Value();
    NXSL_Value(const NXSL_Value *src);
    NXSL_Value(NXSL_Object *object);
@@ -417,6 +478,7 @@ public:
 #endif
    ~NXSL_Value();
 
+public:
    void set(INT32 value);
 
 	void setName(const char *name) { free(m_name); m_name = (name != NULL) ? strdup(name) : NULL; }
@@ -487,7 +549,38 @@ public:
    bool equals(const NXSL_Value *v) const;
    void serialize(ByteStream& s) const;
 
-   static NXSL_Value *load(ByteStream& s);
+   static NXSL_Value *load(NXSL_ValueManager *vm, ByteStream& s);
+};
+
+/**
+ * Value management functionality
+ */
+class LIBNXSL_EXPORTABLE NXSL_ValueManager
+{
+protected:
+   ObjectMemoryPool<NXSL_Value> *m_values;
+
+public:
+   NXSL_ValueManager();
+   virtual ~NXSL_ValueManager();
+
+   NXSL_Value *createValue() { return new(m_values->allocate()) NXSL_Value(); }
+   NXSL_Value *createValue(const NXSL_Value *src) { return new(m_values->allocate()) NXSL_Value(src); }
+   NXSL_Value *createValue(NXSL_Object *object) { return new(m_values->allocate()) NXSL_Value(object); }
+   NXSL_Value *createValue(NXSL_Array *array) { return new(m_values->allocate()) NXSL_Value(array); }
+   NXSL_Value *createValue(NXSL_Iterator *iterator) { return new(m_values->allocate()) NXSL_Value(iterator); }
+   NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new(m_values->allocate()) NXSL_Value(hashMap); }
+   NXSL_Value *createValue(INT32 n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(UINT32 n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(INT64 n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(UINT64 n) { return new(m_values->allocate()) NXSL_Value(n); }
+   NXSL_Value *createValue(double d) { return new(m_values->allocate()) NXSL_Value(d); }
+   NXSL_Value *createValue(const TCHAR *s) { return new(m_values->allocate()) NXSL_Value(s); }
+   NXSL_Value *createValue(const TCHAR *s, UINT32 l) { return new(m_values->allocate()) NXSL_Value(s, l); }
+#ifdef UNICODE
+   NXSL_Value *createValue(const char *s) { return new(m_values->allocate()) NXSL_Value(s); }
+#endif
+   void destroyValue(NXSL_Value *v) { m_values->destroy(v); }
 };
 
 /**
@@ -574,7 +667,7 @@ public:
 /**
  * Runtime variable information
  */
-class LIBNXSL_EXPORTABLE NXSL_Variable
+class LIBNXSL_EXPORTABLE NXSL_Variable : public NXSL_RuntimeObject
 {
    friend class NXSL_VariableSystem;
 
@@ -583,8 +676,8 @@ protected:
    NXSL_Value *m_value;
 	bool m_constant;
 
-   NXSL_Variable(const NXSL_Identifier& name);
-   NXSL_Variable(const NXSL_Identifier& name, NXSL_Value *value, bool constant = false);
+   NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name);
+   NXSL_Variable(NXSL_VM *vm, const NXSL_Identifier& name, NXSL_Value *value, bool constant = false);
    ~NXSL_Variable();
 
 public:
@@ -616,6 +709,7 @@ class LIBNXSL_EXPORTABLE NXSL_Instruction
    friend class NXSL_VM;
 
 protected:
+   NXSL_ValueManager *m_vm;
    INT16 m_nOpCode;
    INT16 m_nStackItems;
    union
@@ -629,13 +723,13 @@ protected:
    INT32 m_nSourceLine;
 
 public:
-   NXSL_Instruction(int nLine, short nOpCode);
-   NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue);
-   NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier);
-   NXSL_Instruction(int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems);
-   NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr);
-   NXSL_Instruction(int nLine, short nOpCode, short nStackItems);
-   NXSL_Instruction(NXSL_Instruction *pSrc);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, NXSL_Value *pValue);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, UINT32 dwAddr);
+   NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, short nStackItems);
+   NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *pSrc);
    ~NXSL_Instruction();
 
    OperandType getOperandType();
@@ -664,7 +758,7 @@ struct VREF_RESTORE_POINT
 /**
  * Variable system
  */
-class LIBNXSL_EXPORTABLE NXSL_VariableSystem
+class LIBNXSL_EXPORTABLE NXSL_VariableSystem : public NXSL_RuntimeObject
 {
 protected:
    NXSL_VariablePtr *m_variables;
@@ -673,14 +767,14 @@ protected:
    VREF_RESTORE_POINT m_restorePoints[MAX_VREF_RESTORE_POINTS];
 
 public:
-   NXSL_VariableSystem(bool constant = false);
-   NXSL_VariableSystem(NXSL_VariableSystem *src);
+   NXSL_VariableSystem(NXSL_VM *vm, bool constant = false);
+   NXSL_VariableSystem(NXSL_VM *vm, NXSL_VariableSystem *src);
    ~NXSL_VariableSystem();
 
    NXSL_Variable *find(const NXSL_Identifier& name);
    NXSL_Variable *create(const NXSL_Identifier& name, NXSL_Value *value = NULL);
    void merge(NXSL_VariableSystem *src);
-   void addAll(HashMap<NXSL_Identifier, NXSL_Value> *src);
+   void addAll(NXSL_ValueHashMap<NXSL_Identifier> *src);
    void clear();
    bool isConstant() { return m_isConstant; }
 
@@ -703,21 +797,21 @@ struct NXSL_Module
 /**
  * Compiled NXSL program
  */
-class LIBNXSL_EXPORTABLE NXSL_Program
+class LIBNXSL_EXPORTABLE NXSL_Program : public NXSL_ValueManager
 {
    friend class NXSL_VM;
 
 protected:
    ObjectArray<NXSL_Instruction> *m_instructionSet;
    ObjectArray<NXSL_ModuleImport> *m_requiredModules;
-   HashMap<NXSL_Identifier, NXSL_Value> *m_constants;
+   NXSL_ValueHashMap<NXSL_Identifier> *m_constants;
    ObjectArray<NXSL_Function> *m_functions;
 
 	UINT32 getFinalJumpDestination(UINT32 dwAddr, int srcJump);
 
 public:
    NXSL_Program();
-   ~NXSL_Program();
+   virtual ~NXSL_Program();
 
    bool addFunction(const NXSL_Identifier& name, UINT32 dwAddr, char *pszError);
    void resolveFunctions();
@@ -818,15 +912,15 @@ public:
    virtual ~NXSL_Storage();
 
    /**
-    * Write to storage. Storage becomes owner of provided value.
+    * Write to storage. Caller still has ownership of provided value.
     * Passing NULL value will effectively remove value from storage.
     */
-   virtual void write(const TCHAR *name, NXSL_Value *value) = 0;
+   virtual void write(const TCHAR *name, const NXSL_Value *value) = 0;
 
    /**
     * Read from storage. Returns new value owned by caller. Returns NXSL NULL if there are no value with given name.
     */
-   virtual NXSL_Value *read(const TCHAR *name) = 0;
+   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *manager) = 0;
 };
 
 /**
@@ -835,20 +929,21 @@ public:
 class LIBNXSL_EXPORTABLE NXSL_LocalStorage : public NXSL_Storage
 {
 protected:
-   StringObjectMap<NXSL_Value> *m_values;
+   NXSL_VM *m_vm;
+   NXSL_StringValueMap *m_values;
 
 public:
-   NXSL_LocalStorage();
+   NXSL_LocalStorage(NXSL_VM *vm);
    virtual ~NXSL_LocalStorage();
 
-   virtual void write(const TCHAR *name, NXSL_Value *value);
-   virtual NXSL_Value *read(const TCHAR *name);
+   virtual void write(const TCHAR *name, const NXSL_Value *value);
+   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm);
 };
 
 /**
  * NXSL virtual machine
  */
-class LIBNXSL_EXPORTABLE NXSL_VM
+class LIBNXSL_EXPORTABLE NXSL_VM : public NXSL_ValueManager
 {
 private:
    static EnumerationCallbackResult createConstantsCallback(const void *key, const void *value, void *data);
@@ -875,8 +970,6 @@ protected:
 
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
-
-
 
    NXSL_Value *m_pRetValue;
    int m_errorCode;
@@ -908,7 +1001,7 @@ protected:
 
 public:
    NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);
-   ~NXSL_VM();
+   virtual ~NXSL_VM();
 
    void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
 
@@ -919,21 +1012,15 @@ public:
 
 	void setStorage(NXSL_Storage *storage);
 
-	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
-   void storageWrite(const TCHAR *name, const TCHAR *value) { m_storage->write(name, new NXSL_Value(value)); }
-   void storageWrite(const TCHAR *name, INT32 value) { m_storage->write(name, new NXSL_Value(value)); }
-   void storageWrite(const TCHAR *name, UINT32 value) { m_storage->write(name, new NXSL_Value(value)); }
-   void storageWrite(const TCHAR *name, INT64 value) { m_storage->write(name, new NXSL_Value(value)); }
-   void storageWrite(const TCHAR *name, UINT64 value) { m_storage->write(name, new NXSL_Value(value)); }
-   void storageWrite(const TCHAR *name, double value) { m_storage->write(name, new NXSL_Value(value)); }
-	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
+	void storageWrite(const TCHAR *name, const NXSL_Value *value) { m_storage->write(name, value); }
+	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name, this); }
 
    bool load(const NXSL_Program *program);
-   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals = NULL,
+   bool run(ObjectRefArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals = NULL,
             NXSL_VariableSystem *pConstants = NULL, const char *entryPoint = NULL);
    bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals = NULL,
             NXSL_VariableSystem *pConstants = NULL, const char *entryPoint = NULL);
-   bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
+   bool run() { ObjectRefArray<NXSL_Value> args(1, 1); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
@@ -1024,7 +1111,7 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 
-   static NXSL_Value *createObject(const GeoLocation& gl);
+   static NXSL_Value *createObject(NXSL_VM *vm, const GeoLocation& gl);
 };
 
 /**
@@ -1039,7 +1126,7 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
 
-   static NXSL_Value *createObject(const InetAddress& addr);
+   static NXSL_Value *createObject(NXSL_VM *vm, const InetAddress& addr);
 };
 
 /**

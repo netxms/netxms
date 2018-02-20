@@ -24,24 +24,32 @@
 #include "libnxsl.h"
 
 /**
+ * Object destructor for string map of NXSL_Value objects
+ */
+void NXSL_StringValueMap::destructor(void *object, StringMapBase *map)
+{
+    static_cast<NXSL_StringValueMap*>(map)->m_vm->destroyValue(static_cast<NXSL_Value*>(object));
+}
+
+/**
  * Create empty hash map
  */
-NXSL_HashMap::NXSL_HashMap() : NXSL_HandleCountObject()
+NXSL_HashMap::NXSL_HashMap(NXSL_ValueManager *vm) : NXSL_HandleCountObject(vm)
 {
-   m_values = new StringObjectMap<NXSL_Value>(true);
+   m_values = new NXSL_StringValueMap(vm, true);
 }
 
 /**
  * Create copy of existing hash map
  */
-NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject()
+NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject(src->m_vm)
 {
-   m_values = new StringObjectMap<NXSL_Value>(true);
+   m_values = new NXSL_StringValueMap(src->m_vm, true);
    StructArray<KeyValuePair> *values = src->m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair *p = values->get(i);
-      m_values->set(p->key, new NXSL_Value((const NXSL_Value *)p->value));
+      m_values->set(p->key, m_vm->createValue((const NXSL_Value *)p->value));
    }
    delete values;
 }
@@ -59,15 +67,15 @@ NXSL_HashMap::~NXSL_HashMap()
  */
 NXSL_Value *NXSL_HashMap::getKeys() const
 {
-   NXSL_Array *array = new NXSL_Array();
+   NXSL_Array *array = new NXSL_Array(m_vm);
    StructArray<KeyValuePair> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair *p = values->get(i);
-      array->append(new NXSL_Value(p->key));
+      array->append(m_vm->createValue(p->key));
    }
    delete values;
-   return new NXSL_Value(array);
+   return m_vm->createValue(array);
 }
 
 /**
@@ -75,15 +83,15 @@ NXSL_Value *NXSL_HashMap::getKeys() const
  */
 NXSL_Value *NXSL_HashMap::getValues() const
 {
-   NXSL_Array *array = new NXSL_Array();
+   NXSL_Array *array = new NXSL_Array(m_vm);
    StructArray<KeyValuePair> *values = m_values->toArray();
    for(int i = 0; i < values->size(); i++)
    {
       KeyValuePair *p = values->get(i);
-      array->append(new NXSL_Value((const NXSL_Value *)p->value));
+      array->append(m_vm->createValue((const NXSL_Value *)p->value));
    }
    delete values;
-   return new NXSL_Value(array);
+   return m_vm->createValue(array);
 }
 
 /**

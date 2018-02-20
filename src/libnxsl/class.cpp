@@ -101,7 +101,7 @@ void NXSL_Class::onObjectDelete(NXSL_Object *object)
 /**
  * Create new NXSL object of given class
  */
-NXSL_Object::NXSL_Object(NXSL_Class *nxslClass, void *data)
+NXSL_Object::NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, void *data) : NXSL_RuntimeObject(vm)
 {
    m_class = nxslClass;
 	m_data = (__nxsl_class_data *)malloc(sizeof(__nxsl_class_data));
@@ -113,7 +113,7 @@ NXSL_Object::NXSL_Object(NXSL_Class *nxslClass, void *data)
 /**
  * Create new reference to existing object
  */
-NXSL_Object::NXSL_Object(NXSL_Object *object)
+NXSL_Object::NXSL_Object(NXSL_Object *object) : NXSL_RuntimeObject(object->m_vm)
 {
    m_class = object->m_class;
    m_data = object->m_data;

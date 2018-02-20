@@ -60,10 +60,10 @@ const char *g_nxslCommandMnemonic[] =
 /**
  * Constructor
  */
-NXSL_Program::NXSL_Program()
+NXSL_Program::NXSL_Program() : NXSL_ValueManager()
 {
    m_instructionSet = new ObjectArray<NXSL_Instruction>(256, 256, true);
-   m_constants = new HashMap<NXSL_Identifier, NXSL_Value>(true);
+   m_constants = new NXSL_ValueHashMap<NXSL_Identifier>(this, true);
    m_functions = new ObjectArray<NXSL_Function>(16, 16, true);
    m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, true);
 }
@@ -121,7 +121,7 @@ void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
 		return;
 
 	int nLine = m_instructionSet->get(dwOpAddr)->m_nSourceLine;
-   m_instructionSet->set(dwOpAddr, new NXSL_Instruction(nLine, OPCODE_JMP, dwJumpAddr));
+   m_instructionSet->set(dwOpAddr, new NXSL_Instruction(this, nLine, OPCODE_JMP, dwJumpAddr));
 }
 
 /**
@@ -390,7 +390,7 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
 void NXSL_Program::serialize(ByteStream& s)
 {
    StringList strings;
-   ObjectArray<NXSL_Value> constants(64, 64, false);
+   ObjectRefArray<NXSL_Value> constants(64, 64);
 
    NXSL_FileHeader header;
    memset(&header, 0, sizeof(header));
@@ -527,21 +527,21 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       strings.addPreallocated(str);
    }
 
+   NXSL_Program *p = new NXSL_Program();
+
    // Load constants
-   ObjectArray<NXSL_Value> constants(64, 64, true);
+   ObjectRefArray<NXSL_Value> constants(64, 64);
    s.seek(header.constSectionOffset);
    while(!s.eos() && (s.pos() < header.moduleSectionOffset))
    {
-      NXSL_Value *v = NXSL_Value::load(s);
+      NXSL_Value *v = NXSL_Value::load(p, s);
       if (v == NULL)
       {
          nx_strncpy(errMsg, _T("Binary file read error (constants section)"), errMsgSize);
-         return NULL;   // read error
+         goto failure;   // read error
       }
       constants.add(v);
    }   
-
-   NXSL_Program *p = new NXSL_Program();
 
    // Load code
    s.seek(header.codeSectionOffset);
@@ -550,7 +550,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       INT16 opcode = s.readInt16();
       INT16 si = s.readInt16();
       INT32 line = s.readInt32();
-      NXSL_Instruction *instr = new NXSL_Instruction(line, opcode, si);
+      NXSL_Instruction *instr = new NXSL_Instruction(p, line, opcode, si);
       switch(instr->getOperandType())
       {
          case OP_TYPE_ADDR:
@@ -581,7 +581,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                   delete instr;
                   goto failure;
                }
-               instr->m_operand.m_pConstant = new NXSL_Value(v);
+               instr->m_operand.m_pConstant = p->createValue(v);
             }
             break;
          default:
@@ -623,9 +623,15 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       free(name);
    }
 
+   for(int i = 0; i < constants.size(); i++)
+      p->destroyValue(constants.get(i));
+
    return p;
 
 failure:
+   for(int i = 0; i < constants.size(); i++)
+      p->destroyValue(constants.get(i));
+
    delete p;
    return NULL;
 }

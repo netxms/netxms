@@ -36,14 +36,14 @@ public:
 
 void NXSL_TestEnv::configureVM(NXSL_VM *vm)
 {
-   vm->setGlobalVariable("$nxscript", new NXSL_Value(NETXMS_VERSION_STRING));
+   vm->setGlobalVariable("$nxscript", vm->createValue(NETXMS_VERSION_STRING));
 }
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
 	_tcscpy(buffer, _T("test value"));
-   *ppResult = new NXSL_Value(new NXSL_Object(&m_testClass, buffer));
+   *ppResult = vm->createValue(new NXSL_Object(vm, &m_testClass, buffer));
    return 0;
 }
 
@@ -204,14 +204,14 @@ int main(int argc, char *argv[])
 		         {
 			         ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
 			         for(i = optind + 1; i < argc; i++)
-				         ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
+				         ppArgs[i - optind - 1] = vm->createValue(argv[i]);
 		         }
 		         else
 		         {
 			         ppArgs = NULL;
 		         }
 
-               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, entryPoint))
+               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, entryPoint))
 		         {
 			         NXSL_Value *result = vm->getResult();
 			         if (printResult)

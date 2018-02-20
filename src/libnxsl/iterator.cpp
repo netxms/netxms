@@ -27,7 +27,7 @@
  * Helper function - create new iterator on stack
  * On success, returns 0, otherwise error code
  */
-int NXSL_Iterator::createIterator(NXSL_Stack *stack)
+int NXSL_Iterator::createIterator(NXSL_VM *vm, NXSL_Stack *stack)
 {
 	if (stack->getSize() < 2)
 		return NXSL_ERR_DATA_STACK_UNDERFLOW;
@@ -37,15 +37,15 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 	NXSL_Value *value = (NXSL_Value *)stack->pop();
 	if (value->isArray() || value->isNull())
 	{
-		NXSL_Array *array = value->isArray() ? value->getValueAsArray() : new NXSL_Array();
+		NXSL_Array *array = value->isArray() ? value->getValueAsArray() : new NXSL_Array(vm);
 		array->incHandleCount();
 
-		delete value;
+		vm->destroyValue(value);
 		value = (NXSL_Value *)stack->pop();
 		if (value->isString())
 		{
-			NXSL_Iterator *it = new NXSL_Iterator(value->getValueAsMBString(), array);
-			stack->push(new NXSL_Value(it));
+			NXSL_Iterator *it = new NXSL_Iterator(vm, value->getValueAsMBString(), array);
+			stack->push(vm->createValue(it));
 		}
 		else
 		{
@@ -59,7 +59,7 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 	{
 		rc = NXSL_ERR_NOT_ARRAY;
 	}
-	delete value;
+	vm->destroyValue(value);
 
 	return rc;
 }
@@ -67,7 +67,7 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 /**
  * Constructor
  */
-NXSL_Iterator::NXSL_Iterator(const NXSL_Identifier& variable, NXSL_Array *array) : m_variable(variable)
+NXSL_Iterator::NXSL_Iterator(NXSL_VM *vm, const NXSL_Identifier& variable, NXSL_Array *array) : NXSL_RuntimeObject(vm), m_variable(variable)
 {
 	m_array = array;
 	m_refCount = 0;
