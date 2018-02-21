@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -167,7 +166,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
       else
       {
          widget.updateObjects(root, objects);
-         widget.redraw();
+         widget.refresh();
       }
 		
 		dataArea.layout(true, true);
