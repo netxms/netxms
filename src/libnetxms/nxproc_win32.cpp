@@ -130,6 +130,7 @@ NamedPipeListener::~NamedPipeListener()
 {
    CloseHandle(m_handle);
    stop();
+   CloseHandle(m_stopEvent);
 }
 
 /**
@@ -137,10 +138,14 @@ NamedPipeListener::~NamedPipeListener()
  */
 void NamedPipeListener::serverThread()
 {
+   HANDLE connectEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
    nxlog_debug(2, _T("NamedPipeListener(%s): waiting for connection"), m_name);
    while(!m_stop)
    {
-      BOOL connected = ConnectNamedPipe(m_handle, NULL);
+      OVERLAPPED ov;
+      memset(&ov, 0, sizeof(OVERLAPPED));
+      ov.hEvent = connectEvent;
+      BOOL connected = ConnectNamedPipe(m_handle, &ov);
 		if (connected || (GetLastError() == ERROR_PIPE_CONNECTED))
 		{
          nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection"), m_name);
@@ -148,6 +153,29 @@ void NamedPipeListener::serverThread()
          m_reqHandler(pipe, m_userArg);
          delete pipe;
 		}
+      else if (GetLastError() == ERROR_IO_PENDING)
+      {
+         HANDLE handles[2];
+         handles[0] = connectEvent;
+         handles[1] = m_stopEvent;
+         DWORD rc = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+         if (rc == WAIT_OBJECT_0 + 1)
+         {
+            CancelIo(m_handle);
+            break;
+         }
+         if (rc == WAIT_OBJECT_0)
+         {
+            DWORD bytes;
+            if (GetOverlappedResult(m_handle, &ov, &bytes, TRUE))
+            {
+               nxlog_debug(5, _T("NamedPipeListener(%s): accepted connection"), m_name);
+               NamedPipe *pipe = new NamedPipe(m_name, m_handle, NULL);
+               m_reqHandler(pipe, m_userArg);
+               delete pipe;
+            }
+         }
+      }
 		else
 		{
          TCHAR errorText[1024];
@@ -155,6 +183,8 @@ void NamedPipeListener::serverThread()
          ThreadSleep(5);
 		}
    }
+   CloseHandle(connectEvent);
+   nxlog_debug(2, _T("NamedPipeListener(%s): stopped"), m_name);
 }
 
 /**
