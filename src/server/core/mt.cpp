@@ -531,7 +531,7 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 			break;
 		}
 	}
-	*result = (value != NULL) ? new NXSL_Value(value) : ((argc == 3) ? new NXSL_Value(argv[2]) : new NXSL_Value);
+	*result = (value != NULL) ? vm->createValue(value) : ((argc == 3) ? vm->createValue(argv[2]) : vm->createValue());
 	RWLockUnlock(s_mappingTablesLock);
 
 	return 0;
@@ -582,12 +582,12 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
          mappedList.append((v != NULL) ? v : ((argc == 4) ? argv[3]->getValueAsCString() : _T("")));
          free(strings[i]);
       }
-      *result = new NXSL_Value(mappedList);
+      *result = vm->createValue(mappedList);
    }
    else
    {
       // mapping table not found, return original value
-      *result = new NXSL_Value(argv[0]);
+      *result = vm->createValue(argv[0]);
       for(int i = 0; i < count; i++)
          free(strings[i]);
    }

@@ -9152,11 +9152,11 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             // $4 - minor version number
             // $5 - release number
             NXSL_Value *ppArgList[5];
-            ppArgList[0] = new NXSL_Value(m_clientAddr.toString(szBuffer));
-            ppArgList[1] = new NXSL_Value(szPlatform);
-            ppArgList[2] = new NXSL_Value((LONG)wMajor);
-            ppArgList[3] = new NXSL_Value((LONG)wMinor);
-            ppArgList[4] = new NXSL_Value((LONG)wRelease);
+            ppArgList[0] = vm->createValue(m_clientAddr.toString(szBuffer));
+            ppArgList[1] = vm->createValue(szPlatform);
+            ppArgList[2] = vm->createValue((LONG)wMajor);
+            ppArgList[3] = vm->createValue((LONG)wMinor);
+            ppArgList[4] = vm->createValue((LONG)wRelease);
 
             // Run script
             DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
@@ -10967,14 +10967,14 @@ class LibraryScriptExecutionData
 {
 public:
    NXSL_VM *vm;
-   ObjectArray<NXSL_Value> args;
+   ObjectRefArray<NXSL_Value> args;
    TCHAR *name;
 
-   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(16, 16, false)
+   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(16, 16)
    {
       vm = _vm;
       for(int i = 1; i < _args->size(); i++)
-         args.add(new NXSL_Value(_args->get(i)));
+         args.add(vm->createValue(_args->get(i)));
       name = _tcsdup(_args->get(0));
    }
    ~LibraryScriptExecutionData()
@@ -11121,9 +11121,9 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
    {
       if (withOutput)
       {
-         ObjectArray<NXSL_Value> sargs(args->size() - 1, 1, false);
+         ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
          for(int i = 1; i < args->size(); i++)
-            sargs.add(new NXSL_Value(args->get(i)));
+            sargs.add(vm->createValue(args->get(i)));
          msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
          if (vm->run(&sargs))
          {

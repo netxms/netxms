@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -880,12 +880,12 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
       // Syslog daemon not initialized
-      *result = new NXSL_Value(-1);
+      *result = vm->createValue(-1);
       return 0;
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
+   *result = vm->createValue(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }
@@ -917,12 +917,12 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
       // Syslog daemon not initialized
-      *result = new NXSL_Value(-1);
+      *result = vm->createValue(-1);
       return 0;
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
+   *result = vm->createValue(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }

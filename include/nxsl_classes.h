@@ -915,12 +915,12 @@ public:
     * Write to storage. Caller still has ownership of provided value.
     * Passing NULL value will effectively remove value from storage.
     */
-   virtual void write(const TCHAR *name, const NXSL_Value *value) = 0;
+   virtual void write(const TCHAR *name, NXSL_Value *value) = 0;
 
    /**
     * Read from storage. Returns new value owned by caller. Returns NXSL NULL if there are no value with given name.
     */
-   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *manager) = 0;
+   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm) = 0;
 };
 
 /**
@@ -936,7 +936,7 @@ public:
    NXSL_LocalStorage(NXSL_VM *vm);
    virtual ~NXSL_LocalStorage();
 
-   virtual void write(const TCHAR *name, const NXSL_Value *value);
+   virtual void write(const TCHAR *name, NXSL_Value *value);
    virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm);
 };
 
@@ -1012,7 +1012,7 @@ public:
 
 	void setStorage(NXSL_Storage *storage);
 
-	void storageWrite(const TCHAR *name, const NXSL_Value *value) { m_storage->write(name, value); }
+	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
 	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name, this); }
 
    bool load(const NXSL_Program *program);

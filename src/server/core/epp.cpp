@@ -119,7 +119,7 @@ EPRule::EPRule(ConfigEntry *config)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", m_pScript->createValue(_T("")));
       }
       else
       {
@@ -155,7 +155,7 @@ EPRule::EPRule(DB_RESULT hResult, int row)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", m_pScript->createValue(_T("")));
       }
       else
       {
@@ -231,7 +231,7 @@ EPRule::EPRule(NXCPMessage *msg)
       m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
-      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value(_T("")));
+      	m_pScript->setGlobalVariable("CUSTOM_MESSAGE", m_pScript->createValue(_T("")));
       }
       else
       {
@@ -446,21 +446,21 @@ bool EPRule::matchScript(Event *pEvent)
       return true;
 
    SetupServerScriptVM(m_pScript, FindObjectById(pEvent->getSourceId()), NULL);
-   m_pScript->setGlobalVariable("$event", new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
-   m_pScript->setGlobalVariable("CUSTOM_MESSAGE", new NXSL_Value());
-   m_pScript->setGlobalVariable("EVENT_CODE", new NXSL_Value(pEvent->getCode()));
-   m_pScript->setGlobalVariable("SEVERITY", new NXSL_Value(pEvent->getSeverity()));
-   m_pScript->setGlobalVariable("SEVERITY_TEXT", new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
-   m_pScript->setGlobalVariable("OBJECT_ID", new NXSL_Value(pEvent->getSourceId()));
-   m_pScript->setGlobalVariable("EVENT_TEXT", new NXSL_Value((TCHAR *)pEvent->getMessage()));
-   m_pScript->setGlobalVariable("USER_TAG", new NXSL_Value((TCHAR *)pEvent->getUserTag()));
+   m_pScript->setGlobalVariable("$event", m_pScript->createValue(new NXSL_Object(m_pScript, &g_nxslEventClass, pEvent)));
+   m_pScript->setGlobalVariable("CUSTOM_MESSAGE", m_pScript->createValue());
+   m_pScript->setGlobalVariable("EVENT_CODE", m_pScript->createValue(pEvent->getCode()));
+   m_pScript->setGlobalVariable("SEVERITY", m_pScript->createValue(pEvent->getSeverity()));
+   m_pScript->setGlobalVariable("SEVERITY_TEXT", m_pScript->createValue(GetStatusAsText(pEvent->getSeverity(), true)));
+   m_pScript->setGlobalVariable("OBJECT_ID", m_pScript->createValue(pEvent->getSourceId()));
+   m_pScript->setGlobalVariable("EVENT_TEXT", m_pScript->createValue((TCHAR *)pEvent->getMessage()));
+   m_pScript->setGlobalVariable("USER_TAG", m_pScript->createValue((TCHAR *)pEvent->getUserTag()));
 
    // Pass event's parameters as arguments and
    // other information as variables
    NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
    memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
    for(int i = 0; i < pEvent->getParametersCount(); i++)
-      ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
+      ppValueList[i] = m_pScript->createValue(pEvent->getParameter(i));
 
    // Run script
    NXSL_VariableSystem *globals = NULL;

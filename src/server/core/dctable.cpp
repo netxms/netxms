@@ -408,7 +408,7 @@ bool DCTable::transform(Table *value)
    NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
    if (vm != NULL)
    {
-      NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
+      NXSL_Value *nxslValue = vm->createValue(new NXSL_Object(vm, &g_nxslStaticTableClass, value));
 
       // remove lock from DCI for script execution to avoid deadlocks
       unlock();

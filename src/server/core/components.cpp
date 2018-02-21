@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -182,13 +182,13 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId)
 /*
  * Get child components as NXSL Array
  */
-NXSL_Array *Component::getChildrenForNXSL()
+NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *components = new NXSL_Array();
+   NXSL_Array *components = new NXSL_Array(vm);
 
    for(int i = 0; i < m_childs.size(); i++)
    {
-      components->set(i, new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, m_childs.get(i))));
+      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, m_childs.get(i))));
    }
 
    return components;

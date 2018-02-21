@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1747,7 +1747,7 @@ int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
 
    UINT32 alarmId = argv[0]->getValueAsUInt32();
    Alarm *alarm = FindAlarmById(alarmId);
-   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 
@@ -1774,7 +1774,7 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    }
    MutexUnlock(m_mutex);
 
-   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 
@@ -1801,7 +1801,7 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    }
    MutexUnlock(m_mutex);
 
-   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
 }
 

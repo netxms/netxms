@@ -297,7 +297,7 @@ public:
 
 	UINT32 getIndex() { return m_index; }
 	UINT32 getParentIndex() { return m_parentIndex; }
-	NXSL_Array *getChildrenForNXSL();
+	NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
 
 	UINT32 getClass() { return m_class; }
 	const TCHAR *getFirmware() { return m_firmware; }
@@ -728,13 +728,13 @@ public:
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
-   NXSL_Value *getCustomAttributeForNXSL(const TCHAR *name) const;
-   NXSL_Value *getCustomAttributesForNXSL() const;
+   NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
+   NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
    void setCustomAttribute(const TCHAR *name, const TCHAR *value);
    void setCustomAttributePV(const TCHAR *name, TCHAR *value);
    void deleteCustomAttribute(const TCHAR *name);
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
@@ -749,8 +749,8 @@ public:
    int getChildCount() { return m_childList->size(); }
    int getParentCount() { return m_parentList->size(); }
 
-	virtual NXSL_Array *getParentsForNXSL();
-	virtual NXSL_Array *getChildrenForNXSL();
+	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
+	virtual NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
 
 	virtual bool showThresholdSummary();
    virtual bool isEventSource();
@@ -870,7 +870,7 @@ public:
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId);
    DCObject *getDCObjectByName(const TCHAR *name, UINT32 userId);
    DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
-   NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userId);
+   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId);
    bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    bool unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_dciListModified = true; }
@@ -956,7 +956,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -1364,7 +1364,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -1481,7 +1481,7 @@ public:
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -1495,7 +1495,7 @@ public:
    UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
    UINT32 collectAggregatedData(DCTable *table, Table **result);
 
-   NXSL_Array *getNodesForNXSL();
+   NXSL_Array *getNodesForNXSL(NXSL_VM *vm);
 };
 
 /**
@@ -1548,7 +1548,7 @@ public:
    virtual bool isReadyForConfigurationPoll()  { return false; }
    virtual bool isReadyForInstancePoll() { return false; }
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -1631,7 +1631,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual void prepareForDeletion();
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    const TCHAR *getXmlConfig() const { return m_xmlConfig; }
@@ -1932,7 +1932,7 @@ public:
    virtual bool isReadyForRoutePoll();
    virtual bool isReadyForTopologyPoll();
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -2079,9 +2079,9 @@ public:
    UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
    UINT32 getTableForClient(const TCHAR *name, Table **table);
 
-	virtual NXSL_Array *getParentsForNXSL();
-	virtual NXSL_Array *getTemplatesForNXSL();
-	NXSL_Array *getInterfacesForNXSL();
+	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
+	virtual NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
+	NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
 
 	ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
@@ -2355,7 +2355,7 @@ public:
 
    virtual json_t *toJson();
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
@@ -2440,7 +2440,7 @@ public:
 
 	virtual bool showThresholdSummary();
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    virtual json_t *toJson();
 
@@ -2843,8 +2843,6 @@ public:
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
 {
 protected:
-	static NXSL_VariableSystem m_nxslConstants;
-
 	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
 	TCHAR *m_script;
@@ -2861,7 +2859,7 @@ protected:
 
    void setScript(const TCHAR *script);
 	UINT32 getOwnerId();
-	NXSL_Value *getNodeObjectForNXSL();
+	NXSL_Value *getNodeObjectForNXSL(NXSL_VM *vm);
 	bool insertTicket();
 	void closeTicket();
 	void setReason(const TCHAR *reason) { nx_strncpy(m_reason, CHECK_NULL_EX(reason), 256); }
@@ -2872,8 +2870,6 @@ public:
 	SlmCheck(const TCHAR *name, bool isTemplate);
 	SlmCheck(SlmCheck *tmpl);
 	virtual ~SlmCheck();
-
-	static void init();
 
 	virtual int getObjectClass() const { return OBJECT_SLMCHECK; }
 

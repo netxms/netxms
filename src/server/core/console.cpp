@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1094,7 +1094,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                pArg = ExtractWord(pArg, szBuffer);
                if (szBuffer[0] == 0)
                   break;
-               argv[argc++] = new NXSL_Value(szBuffer);
+               argv[argc++] = vm->createValue(szBuffer);
             }
 
             if (vm->run(argc, argv))

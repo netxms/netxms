@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -340,9 +340,9 @@ bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Sensor::createNXSLObject()
+NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslSensorClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslSensorClass, this));
 }
 
 /**

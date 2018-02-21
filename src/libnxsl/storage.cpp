@@ -58,7 +58,7 @@ NXSL_LocalStorage::~NXSL_LocalStorage()
  * Write to storage. Storage becomes owner of provided value.
  * Passing NULL value will effectively remove value from storage.
  */
-void NXSL_LocalStorage::write(const TCHAR *name, const NXSL_Value *value)
+void NXSL_LocalStorage::write(const TCHAR *name, NXSL_Value *value)
 {
    if ((value == NULL) || value->isNull())
       m_values->remove(name);

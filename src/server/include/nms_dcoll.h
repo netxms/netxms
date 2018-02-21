@@ -297,7 +297,7 @@ public:
    virtual void createExportRecord(String &str) = 0;
    virtual json_t *toJson();
 
-   NXSL_Value *createNXSLObject();
+   NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
 	void setName(const TCHAR *name) { nx_strncpy(m_name, name, MAX_ITEM_NAME); }
 	void setDescription(const TCHAR *description) { nx_strncpy(m_description, description, MAX_DB_STRING); }
@@ -402,8 +402,8 @@ public:
    virtual void processNewError(bool noInstance, time_t now);
 
    void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
-   NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
-   NXSL_Value *getRawValueForNXSL();
+   NXSL_Value *getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls);
+   NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);

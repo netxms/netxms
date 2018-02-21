@@ -1881,9 +1881,9 @@ bool NetObj::isTrustedNode(UINT32 id)
 /**
  * Get list of parent objects for NXSL script
  */
-NXSL_Array *NetObj::getParentsForNXSL()
+NXSL_Array *NetObj::getParentsForNXSL(NXSL_VM *vm)
 {
-	NXSL_Array *parents = new NXSL_Array;
+	NXSL_Array *parents = new NXSL_Array(vm);
 	int index = 0;
 
 	lockParentList(false);
@@ -1894,7 +1894,7 @@ NXSL_Array *NetObj::getParentsForNXSL()
 			 (obj->getObjectClass() == OBJECT_SERVICEROOT) ||
 			 (obj->getObjectClass() == OBJECT_NETWORK))
 		{
-			parents->set(index++, obj->createNXSLObject());
+			parents->set(index++, obj->createNXSLObject(vm));
 		}
 	}
 	unlockParentList();
@@ -1905,15 +1905,15 @@ NXSL_Array *NetObj::getParentsForNXSL()
 /**
  * Get list of child objects for NXSL script
  */
-NXSL_Array *NetObj::getChildrenForNXSL()
+NXSL_Array *NetObj::getChildrenForNXSL(NXSL_VM *vm)
 {
-	NXSL_Array *children = new NXSL_Array;
+	NXSL_Array *children = new NXSL_Array(vm);
 	int index = 0;
 
 	lockChildList(false);
 	for(int i = 0; i < m_childList->size(); i++)
 	{
-      children->set(index++, m_childList->get(i)->createNXSLObject());
+      children->set(index++, m_childList->get(i)->createNXSLObject(vm));
 	}
 	unlockChildList();
 
@@ -2409,13 +2409,13 @@ TCHAR *NetObj::getCustomAttributeCopy(const TCHAR *name) const
 /**
  * Get custom attribute as NXSL value
  */
-NXSL_Value *NetObj::getCustomAttributeForNXSL(const TCHAR *name) const
+NXSL_Value *NetObj::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
 {
    NXSL_Value *value = NULL;
    lockProperties();
    const TCHAR *av = m_customAttributes.get(name);
    if (av != NULL)
-      value = new NXSL_Value(av);
+      value = vm->createValue(av);
    unlockProperties();
    return value;
 }
@@ -2423,27 +2423,27 @@ NXSL_Value *NetObj::getCustomAttributeForNXSL(const TCHAR *name) const
 /**
  * Get all custom attributes as NXSL hash map
  */
-NXSL_Value *NetObj::getCustomAttributesForNXSL() const
+NXSL_Value *NetObj::getCustomAttributesForNXSL(NXSL_VM *vm) const
 {
-   NXSL_HashMap *map = new NXSL_HashMap();
+   NXSL_HashMap *map = new NXSL_HashMap(vm);
    lockProperties();
    StructArray<KeyValuePair> *attributes = m_customAttributes.toArray();
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair *p = attributes->get(i);
-      map->set(p->key, new NXSL_Value((const TCHAR *)p->value));
+      map->set(p->key, vm->createValue((const TCHAR *)p->value));
    }
    unlockProperties();
    delete attributes;
-   return new NXSL_Value(map);
+   return vm->createValue(map);
 }
 
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *NetObj::createNXSLObject()
+NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslNetObjClass, this));
 }
 
 /**
@@ -2772,12 +2772,12 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                      if (vm != NULL)
                      {
                         if (event != NULL)
-                           vm->setGlobalVariable("$event", (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, const_cast<Event *>(event))) : new NXSL_Value);
+                           vm->setGlobalVariable("$event", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, const_cast<Event *>(event))) : vm->createValue());
                         if (alarm != NULL)
                         {
-                           vm->setGlobalVariable("$alarm", (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : new NXSL_Value);
-                           vm->setGlobalVariable("$alarmMessage", new NXSL_Value(alarm->getMessage()));
-                           vm->setGlobalVariable("$alarmKey", new NXSL_Value(alarm->getKey()));
+                           vm->setGlobalVariable("$alarm", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : vm->createValue());
+                           vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
+                           vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
                         }
 
                         if (vm->run(0, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))

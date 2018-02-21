@@ -242,9 +242,9 @@ public:
 	void setLdapId(const TCHAR *id);
    void detachLdapUser();
 
-   NXSL_Value *getCustomAttributeForNXSL(const TCHAR *name) const;
-   NXSL_Value *getCustomAttributesForNXSL() const;
-   virtual NXSL_Value *createNXSLObject();
+   NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
+   NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 };
 
 /**
@@ -333,7 +333,7 @@ public:
 	void setFullName(const TCHAR *fullName);
 	void enable();
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 };
 
 /**
@@ -366,7 +366,7 @@ public:
 	int getMembers(UINT32 **members);
 	UINT32 getMemberCount() { return m_memberCount; }
 
-   virtual NXSL_Value *createNXSLObject();
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 };
 
 /**

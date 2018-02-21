@@ -44,11 +44,11 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if (dci != NULL)
 	{
-		*ppResult = dci->createNXSLObject();
+		*ppResult = dci->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -76,21 +76,21 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL() : ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+         *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL(vm) : ((DCItem *)dci)->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          Table *t = ((DCTable *)dci)->getLastValue();
-         *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslTableClass, t)) : new NXSL_Value;
+         *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
       }
       else
       {
-   		*ppResult = new NXSL_Value;	// Return NULL
+   		*ppResult = vm->createValue();	// Return NULL
       }
    }
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -119,7 +119,7 @@ static int F_GetDCIRawValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 /**
  * Internal implementation of GetDCIValueByName and GetDCIValueByDescription
  */
-static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -138,21 +138,21 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = ((DCItem *)dci)->getValueForNXSL(F_LAST, 1);
+         *ppResult = ((DCItem *)dci)->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
          Table *t = ((DCTable *)dci)->getLastValue();
-         *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslTableClass, t)) : new NXSL_Value;
+         *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
       }
       else
       {
-   		*ppResult = new NXSL_Value;	// Return NULL
+   		*ppResult = vm->createValue();	// Return NULL
       }
    }
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -165,7 +165,7 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
  */
 static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return GetDciValueExImpl(true, argc, argv, ppResult);
+	return GetDciValueExImpl(true, argc, argv, ppResult, vm);
 }
 
 /**
@@ -175,7 +175,7 @@ static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  */
 static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return GetDciValueExImpl(false, argc, argv, ppResult);
+	return GetDciValueExImpl(false, argc, argv, ppResult, vm);
 }
 
 /**
@@ -196,7 +196,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString(), 0);
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
 	return 0;
 }
 
@@ -218,7 +218,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((UINT32)0);
+	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
 	return 0;
 }
 
@@ -260,7 +260,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
    }
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	*ppResult = node->getAllDCObjectsForNXSL(nameFilter, descriptionFilter, 0);
+	*ppResult = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, 0);
 	return 0;
 }
 
@@ -287,17 +287,17 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
       TCHAR *result = ((DCItem *)dci)->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
       if (result != NULL)
       {
-         *ppResult = new NXSL_Value(result);
+         *ppResult = vm->createValue(result);
          free(result);
       }
       else
       {
-		   *ppResult = new NXSL_Value;	// Return NULL if query failed
+		   *ppResult = vm->createValue();	// Return NULL if query failed
       }
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -371,33 +371,33 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != NULL)
 			{
-            NXSL_Array *result = new NXSL_Array();
+            NXSL_Array *result = new NXSL_Array(vm);
             int count = DBGetNumRows(hResult);
             for(int i = 0; i < count; i++)
             {
                TCHAR buffer[MAX_RESULT_LENGTH];
                DBGetField(hResult, i, 0, buffer, MAX_RESULT_LENGTH);
-               result->set(i, new NXSL_Value(buffer));
+               result->set(i, vm->createValue(buffer));
             }
-				*ppResult = new NXSL_Value(result);
+				*ppResult = vm->createValue(result);
 				DBFreeResult(hResult);
 			}
 			else
 			{
-				*ppResult = new NXSL_Value;	// Return NULL if prepared select failed
+				*ppResult = vm->createValue();	// Return NULL if prepared select failed
 			}
 			DBFreeStatement(hStmt);
 		}
 		else
 		{
-			*ppResult = new NXSL_Value;	// Return NULL if prepare failed
+			*ppResult = vm->createValue();	// Return NULL if prepare failed
 		}
 
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+		*ppResult = vm->createValue();	// Return NULL if DCI not found
 	}
 
 	return 0;
@@ -457,11 +457,11 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
 			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
-		*ppResult = dci->createNXSLObject();
+		*ppResult = dci->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 	return 0;
 }
@@ -498,7 +498,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
          dci->setLastPollTime(t);
    }
 
-   *ppResult = new NXSL_Value(success ? 1 : 0);
+   *ppResult = vm->createValue(success ? 1 : 0);
    return 0;
 }
 

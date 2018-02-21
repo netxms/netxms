@@ -711,30 +711,30 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
    nx_strncpy(name, param, 256);
    Trim(name);
 
-   ObjectArray<NXSL_Value> args(16, 16, false);
-
-   // Can be in form parameter(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
-   {
-      if (name[_tcslen(name) - 1] != _T(')'))
-         return NULL;
-      name[_tcslen(name) - 1] = 0;
-
-      if (!ParseValueList(&p, args))
-      {
-         // argument parsing error
-         args.clear();
-         return NULL;
-      }
-   }
-
    NXSL_VM *vm = CreateServerScriptVM(name, this);
    if (vm != NULL)
    {
+      ObjectRefArray<NXSL_Value> args(16, 16);
+
+      // Can be in form parameter(arg1, arg2, ... argN)
+      TCHAR *p = _tcschr(name, _T('('));
+      if (p != NULL)
+      {
+         if (name[_tcslen(name) - 1] != _T(')'))
+            return NULL;
+         name[_tcslen(name) - 1] = 0;
+
+         if (!ParseValueList(vm, &p, args))
+         {
+            // argument parsing error
+            delete vm;
+            return NULL;
+         }
+      }
+
       if (targetObject != NULL)
       {
-         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject());
+         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject(vm));
       }
       if (!vm->run(&args))
       {
@@ -748,10 +748,6 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
          }
          delete_and_null(vm);
       }
-   }
-   else
-   {
-      args.setOwner(true);
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != NULL) ? _T("success") : _T("failure"));
    return vm;
@@ -853,31 +849,31 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
    nx_strncpy(name, param, 256);
    Trim(name);
 
-   ObjectArray<NXSL_Value> args(16, 16, false);
-
-   // Can be in form parameter(arg1, arg2, ... argN)
-   TCHAR *p = _tcschr(name, _T('('));
-   if (p != NULL)
-   {
-      if (name[_tcslen(name) - 1] != _T(')'))
-         return DCE_NOT_SUPPORTED;
-      name[_tcslen(name) - 1] = 0;
-
-      if (!ParseValueList(&p, args))
-      {
-         // argument parsing error
-         args.clear();
-         return DCE_NOT_SUPPORTED;
-      }
-   }
-
    UINT32 rc = DCE_NOT_SUPPORTED;
    NXSL_VM *vm = CreateServerScriptVM(name, this);
    if (vm != NULL)
    {
+      ObjectRefArray<NXSL_Value> args(16, 16);
+
+      // Can be in form parameter(arg1, arg2, ... argN)
+      TCHAR *p = _tcschr(name, _T('('));
+      if (p != NULL)
+      {
+         if (name[_tcslen(name) - 1] != _T(')'))
+            return DCE_NOT_SUPPORTED;
+         name[_tcslen(name) - 1] = 0;
+
+         if (!ParseValueList(vm, &p, args))
+         {
+            // argument parsing error
+            delete vm;
+            return DCE_NOT_SUPPORTED;
+         }
+      }
+
       if (targetObject != NULL)
       {
-         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject());
+         vm->setGlobalVariable("$targetObject", targetObject->createNXSLObject(vm));
       }
       if (vm->run(&args))
       {
@@ -924,7 +920,6 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
    }
    else
    {
-      args.setOwner(true);
       DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): script \"%s\" not found"), m_name, param, name);
    }
    DbgPrintf(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);

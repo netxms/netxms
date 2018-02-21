@@ -306,8 +306,8 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          if (vm != NULL)
          {
             NXSL_Value *parameters[2];
-            parameters[0] = new NXSL_Value(value.getString());
-            parameters[1] = new NXSL_Value(m_value.getString());
+            parameters[0] = vm->createValue(value.getString());
+            parameters[1] = vm->createValue(m_value.getString());
             if (vm->run(2, parameters))
             {
                NXSL_Value *result = vm->getResult();

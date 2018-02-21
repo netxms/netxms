@@ -56,8 +56,8 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
-	NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(argv[1]->getValueAsCString());
-	*ppResult = (value != NULL) ? value : new NXSL_Value(); // Return NULL if attribute not found
+	NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
+	*ppResult = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
 	return 0;
 }
 
@@ -79,8 +79,8 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
-   NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(argv[1]->getValueAsCString());
-   *ppResult = (value != NULL) ? value : new NXSL_Value(); // Return NULL if attribute not found
+   NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
+   *ppResult = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
 	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
 	return 0;
 }
@@ -105,7 +105,7 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
 	netxmsObject->deleteCustomAttribute(argv[1]->getValueAsCString());
-   *ppResult = new NXSL_Value;
+   *ppResult = vm->createValue();
 	return 0;
 }
 
@@ -129,11 +129,11 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
-		*ppResult = new NXSL_Value(ifc->getName());
+		*ppResult = vm->createValue(ifc->getName());
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if interface not found
+		*ppResult = vm->createValue();	// Return NULL if interface not found
 	}
 
 	return 0;
@@ -159,11 +159,11 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, ifc));
+		*ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, ifc));
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;	// Return NULL if interface not found
+		*ppResult = vm->createValue();	// Return NULL if interface not found
 	}
 
 	return 0;
@@ -211,12 +211,12 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		{
 			if ((currNode != NULL) && (node->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+				*ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, node));
 			}
 			else
 			{
 				// No access, return null
-				*ppResult = new NXSL_Value;
+				*ppResult = vm->createValue();
 				DbgPrintf(4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
 				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
 							 argv[1]->getValueAsCString(), node->getName(), node->getId());
@@ -224,13 +224,13 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		}
 		else
 		{
-			*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+			*ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, node));
 		}
 	}
 	else
 	{
 		// Node not found, return null
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 
 	return 0;
@@ -279,12 +279,12 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 			}
 			if ((currNode != NULL) && (object->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = object->createNXSLObject();
+				*ppResult = object->createNXSLObject(vm);
 			}
 			else
 			{
 				// No access, return null
-				*ppResult = new NXSL_Value;
+				*ppResult = vm->createValue();
 				DbgPrintf(4, _T("NXSL::FindObject('%s', %s [%d]): access denied for node %s [%d]"),
 				          argv[0]->getValueAsCString(),
 				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
@@ -293,13 +293,13 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		}
 		else
 		{
-			*ppResult = object->createNXSLObject();;
+			*ppResult = object->createNXSLObject(vm);;
 		}
 	}
 	else
 	{
 		// Object not found, return null
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 
 	return 0;
@@ -320,7 +320,7 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	*ppResult = new NXSL_Value(node->getParentsForNXSL());
+	*ppResult = vm->createValue(node->getParentsForNXSL(vm));
 	return 0;
 }
 
@@ -339,7 +339,7 @@ static int F_GetNodeTemplates(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	*ppResult = new NXSL_Value(node->getTemplatesForNXSL());
+	*ppResult = vm->createValue(node->getTemplatesForNXSL(vm));
 	return 0;
 }
 
@@ -358,7 +358,7 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj *)object->getData();
-	*ppResult = new NXSL_Value(netobj->getParentsForNXSL());
+	*ppResult = vm->createValue(netobj->getParentsForNXSL(vm));
 	return 0;
 }
 
@@ -377,7 +377,7 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj *)object->getData();
-	*ppResult = new NXSL_Value(netobj->getChildrenForNXSL());
+	*ppResult = vm->createValue(netobj->getChildrenForNXSL(vm));
 	return 0;
 }
 
@@ -396,7 +396,7 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	*ppResult = new NXSL_Value(node->getInterfacesForNXSL());
+	*ppResult = vm->createValue(node->getInterfacesForNXSL(vm));
 	return 0;
 }
 
@@ -423,7 +423,7 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
       node = (Node *)object->getData();
    }
 
-   NXSL_Array *a = new NXSL_Array;
+   NXSL_Array *a = new NXSL_Array(vm);
    if (!(g_flags & AF_CHECK_TRUSTED_NODES) || (node != NULL))
    {
       ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
@@ -433,13 +433,13 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
          Node *n = (Node *)nodes->get(i);
          if ((node == NULL) || n->isTrustedNode(node->getId()))
          {
-            a->set(index++, n->createNXSLObject());
+            a->set(index++, n->createNXSLObject(vm));
          }
          n->decRefCount();
       }
       delete nodes;
    }
-   *ppResult = new NXSL_Value(a);
+   *ppResult = vm->createValue(a);
    return 0;
 }
 
@@ -463,7 +463,7 @@ static int F_GetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 
 	Event *e = (Event *)object->getData();
 	const TCHAR *value = e->getNamedParameter(argv[1]->getValueAsCString());
-	*ppResult = (value != NULL) ? new NXSL_Value(value) : new NXSL_Value;
+	*ppResult = (value != NULL) ? vm->createValue(value) : vm->createValue();
 	return 0;
 }
 
@@ -487,7 +487,7 @@ static int F_SetEventParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 
 	Event *e = (Event *)object->getData();
 	e->setNamedParameter(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -564,7 +564,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		success = FALSE;
 	}
 
-	*ppResult = new NXSL_Value((LONG)success);
+	*ppResult = vm->createValue((LONG)success);
 	return 0;
 }
 
@@ -609,11 +609,11 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		parent->addChild(node);
 		node->addParent(parent);
 		node->unhide();
-		*ppResult = node->createNXSLObject();
+		*ppResult = node->createNXSLObject(vm);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 	return 0;
 }
@@ -652,7 +652,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	container->addParent(parent);
 	container->unhide();
 
-	*ppResult = container->createNXSLObject();
+	*ppResult = container->createNXSLObject(vm);
 	return 0;
 }
 
@@ -677,7 +677,7 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	NetObj *netobj = (NetObj*)obj->getData();
 	netobj->deleteObject();
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -719,7 +719,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	child->addParent(netobj);
 	netobj->calculateCompoundStatus();
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 
 	return 0;
 }
@@ -758,7 +758,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	netobj->deleteChild(child);
 	child->deleteParent(netobj);
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 
 	return 0;
 }
@@ -787,7 +787,7 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	((NetObj *)object->getData())->setName(argv[1]->getValueAsCString());
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -811,7 +811,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	((NetObj *)object->getData())->setMgmtStatus(TRUE);
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -835,7 +835,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	((NetObj *)object->getData())->setMgmtStatus(FALSE);
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -859,7 +859,7 @@ static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 
 	((NetObj *)object->getData())->enterMaintenanceMode();
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -883,7 +883,7 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 
 	((NetObj *)object->getData())->leaveMaintenanceMode();
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -927,7 +927,7 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 	if ((state >= 0) && (state <= 2))
 		((Interface *)object->getData())->setExpectedState(state);
 
-	*ppResult = new NXSL_Value;
+	*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -953,11 +953,11 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	if (node != NULL)
 	{
 		SNMP_Transport *t = node->createSnmpTransport();
-      *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslSnmpTransportClass, t)) : new NXSL_Value;
+      *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 
 	return 0;
@@ -1005,18 +1005,18 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
       if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          SNMP_Variable *pVar = rspPDU->getVariable(0);
-		   *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, pVar));
+		   *ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, pVar));
          rspPDU->unlinkVariables();
 	   }
       else
       {
-   		*ppResult = new NXSL_Value;
+   		*ppResult = vm->createValue();
       }
       delete rspPDU;
    }
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
    delete pdu;
 	return 0;
@@ -1050,11 +1050,11 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	if (SnmpGetEx(trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS)
 	{
-		*ppResult = new NXSL_Value(buffer);
+		*ppResult = vm->createValue(buffer);
 	}
 	else
 	{
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	}
 
 	return 0;
@@ -1143,7 +1143,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 
 finish:
    delete request;
-	*ppResult = new NXSL_Value(ret);
+	*ppResult = vm->createValue(ret);
 	return 0;
 }
 
@@ -1152,7 +1152,8 @@ finish:
  */
 static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
 {
-   ((NXSL_Array *)userArg)->append(new NXSL_Value(new NXSL_Object(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(userArg)->vm());
+   static_cast<NXSL_Array*>(userArg)->append(vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -1177,16 +1178,16 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
 	if (!obj->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   NXSL_Array *varList = new NXSL_Array;
+   NXSL_Array *varList = new NXSL_Array(vm);
 	SNMP_Transport *transport = (SNMP_Transport *)obj->getData();
 	UINT32 result = SnmpWalk(transport, argv[1]->getValueAsCString(), WalkCallback, varList);
 	if (result == SNMP_ERR_SUCCESS)
    {
-      *ppResult = new NXSL_Value(varList);
+      *ppResult = vm->createValue(varList);
    }
 	else
    {
-      *ppResult = new NXSL_Value;
+      *ppResult = vm->createValue();
       delete varList;
    }
 	return 0;
@@ -1226,13 +1227,13 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       for(int i = 2; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, false, NULL, NULL);
-      *ppResult = new NXSL_Value((rcc == ERR_SUCCESS) ? 1 : 0);
+      *ppResult = vm->createValue((rcc == ERR_SUCCESS) ? 1 : 0);
       conn->decRefCount();
       nxlog_debug(5, _T("NXSL: F_AgentExecuteAction: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
-      *ppResult = new NXSL_Value(0);
+      *ppResult = vm->createValue(0);
    }
    return 0;
 }
@@ -1281,13 +1282,13 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
          list.add(argv[i]->getValueAsCString());
       String output;
       UINT32 rcc = conn->execAction(argv[1]->getValueAsCString(), list, true, ActionOutputHandler, &output);
-      *ppResult = (rcc == ERR_SUCCESS) ? new NXSL_Value(output) : new NXSL_Value();
+      *ppResult = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       conn->decRefCount();
       nxlog_debug(5, _T("NXSL: F_AgentExecuteActionWithOutput: action %s on node %s [%d]: RCC=%d"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
-      *ppResult = new NXSL_Value();
+      *ppResult = vm->createValue();
    }
    return 0;
 }
@@ -1317,9 +1318,9 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	TCHAR buffer[MAX_RESULT_LENGTH];
 	UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
 	if (rcc == DCE_SUCCESS)
-		*ppResult = new NXSL_Value(buffer);
+		*ppResult = vm->createValue(buffer);
 	else
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -1348,9 +1349,9 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	Table *table;
    UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
 	if (rcc == DCE_SUCCESS)
-      *ppResult = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, table));
+      *ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table));
 	else
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
 	return 0;
 }
 
@@ -1379,9 +1380,9 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 	StringList *list;
    UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
 	if (rcc == DCE_SUCCESS)
-      *ppResult = new NXSL_Value(new NXSL_Array(list));
+      *ppResult = vm->createValue(new NXSL_Array(vm, list));
 	else
-		*ppResult = new NXSL_Value;
+		*ppResult = vm->createValue();
    delete list;
 	return 0;
 }
@@ -1411,9 +1412,9 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppRes
    TCHAR buffer[MAX_RESULT_LENGTH];
    UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
    if (rcc == DCE_SUCCESS)
-      *ppResult = new NXSL_Value(buffer);
+      *ppResult = vm->createValue(buffer);
    else
-      *ppResult = new NXSL_Value;
+      *ppResult = vm->createValue();
    return 0;
 }
 
@@ -1434,11 +1435,11 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	TCHAR buffer[MAX_CONFIG_VALUE];
 	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE, _T("")))
 	{
-		*ppResult = new NXSL_Value(buffer);
+		*ppResult = vm->createValue(buffer);
 	}
 	else
 	{
-		*ppResult = (argc == 2) ? new NXSL_Value(argv[1]) : new NXSL_Value;
+		*ppResult = (argc == 2) ? vm->createValue(argv[1]) : vm->createValue();
 	}
 
 	return 0;
@@ -1453,7 +1454,7 @@ static int F_CountryAlphaCode(int argc, NXSL_Value **argv, NXSL_Value **result, 
       return NXSL_ERR_NOT_STRING;
 
    const TCHAR *code = CountryAlphaCode(argv[0]->getValueAsCString());
-   *result = (code != NULL) ? new NXSL_Value(code) : new NXSL_Value();
+   *result = (code != NULL) ? vm->createValue(code) : vm->createValue();
    return 0;
 }
 
@@ -1466,7 +1467,7 @@ static int F_CountryName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       return NXSL_ERR_NOT_STRING;
 
    const TCHAR *name = CountryName(argv[0]->getValueAsCString());
-   *result = (name != NULL) ? new NXSL_Value(name) : new NXSL_Value();
+   *result = (name != NULL) ? vm->createValue(name) : vm->createValue();
    return 0;
 }
 
@@ -1479,7 +1480,7 @@ static int F_CurrencyAlphaCode(int argc, NXSL_Value **argv, NXSL_Value **result,
       return NXSL_ERR_NOT_STRING;
 
    const TCHAR *code = CurrencyAlphaCode(argv[0]->getValueAsCString());
-   *result = (code != NULL) ? new NXSL_Value(code) : new NXSL_Value();
+   *result = (code != NULL) ? vm->createValue(code) : vm->createValue();
    return 0;
 }
 
@@ -1491,7 +1492,7 @@ static int F_CurrencyExponent(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   *result = new NXSL_Value(CurrencyExponent(argv[0]->getValueAsCString()));
+   *result = vm->createValue(CurrencyExponent(argv[0]->getValueAsCString()));
    return 0;
 }
 
@@ -1504,7 +1505,7 @@ static int F_CurrencyName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
       return NXSL_ERR_NOT_STRING;
 
    const TCHAR *name = CurrencyName(argv[0]->getValueAsCString());
-   *result = (name != NULL) ? new NXSL_Value(name) : new NXSL_Value();
+   *result = (name != NULL) ? vm->createValue(name) : vm->createValue();
    return 0;
 }
 
@@ -1627,13 +1628,13 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    vm->setStorage(&g_nxslPstorage);
 
    // Add DCI data types
-   vm->addConstant("DCI::INT32", new NXSL_Value(DCI_DT_INT));
-   vm->addConstant("DCI::UINT32", new NXSL_Value(DCI_DT_UINT));
-   vm->addConstant("DCI::INT64", new NXSL_Value(DCI_DT_INT64));
-   vm->addConstant("DCI::UINT64", new NXSL_Value(DCI_DT_UINT64));
-   vm->addConstant("DCI::FLOAT", new NXSL_Value(DCI_DT_FLOAT));
-   vm->addConstant("DCI::STRING", new NXSL_Value(DCI_DT_STRING));
-   vm->addConstant("DCI::NULL", new NXSL_Value(DCI_DT_NULL));
+   vm->addConstant("DCI::INT32", vm->createValue(DCI_DT_INT));
+   vm->addConstant("DCI::UINT32", vm->createValue(DCI_DT_UINT));
+   vm->addConstant("DCI::INT64", vm->createValue(DCI_DT_INT64));
+   vm->addConstant("DCI::UINT64", vm->createValue(DCI_DT_UINT64));
+   vm->addConstant("DCI::FLOAT", vm->createValue(DCI_DT_FLOAT));
+   vm->addConstant("DCI::STRING", vm->createValue(DCI_DT_STRING));
+   vm->addConstant("DCI::NULL", vm->createValue(DCI_DT_NULL));
 
    CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
 }

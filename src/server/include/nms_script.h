@@ -297,7 +297,7 @@ UINT32 ResolveScriptName(const TCHAR *name);
 void CreateScriptExportRecord(String &xml, UINT32 id);
 void ImportScript(ConfigEntry *config);
 NXSL_VM *FindHookScript(const TCHAR *hookName, NetObj *object);
-bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
+bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args);
 
 /**
  * Global variables

@@ -1110,7 +1110,7 @@ bool Node::filterInterface(InterfaceInfo *info)
    iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
    bool pass = true;
-   NXSL_Value *argv = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, iface));
+   NXSL_Value *argv = vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, iface));
    if (vm->run(1, &argv))
    {
       NXSL_Value *result = vm->getResult();
@@ -7275,9 +7275,9 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 /**
  * Get list of parent objects for NXSL script
  */
-NXSL_Array *Node::getParentsForNXSL()
+NXSL_Array *Node::getParentsForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *parents = new NXSL_Array;
+   NXSL_Array *parents = new NXSL_Array(vm);
    int index = 0;
 
    lockParentList(FALSE);
@@ -7290,7 +7290,7 @@ NXSL_Array *Node::getParentsForNXSL()
            (object->getObjectClass() == OBJECT_SERVICEROOT)) &&
           object->isTrustedNode(m_id))
       {
-         parents->set(index++, object->createNXSLObject());
+         parents->set(index++, object->createNXSLObject(vm));
       }
    }
    unlockParentList();
@@ -7301,9 +7301,9 @@ NXSL_Array *Node::getParentsForNXSL()
 /**
  * Get list of template type parent objects for NXSL script
  */
-NXSL_Array *Node::getTemplatesForNXSL()
+NXSL_Array *Node::getTemplatesForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *parents = new NXSL_Array;
+   NXSL_Array *parents = new NXSL_Array(vm);
    int index = 0;
 
    lockParentList(false);
@@ -7312,7 +7312,7 @@ NXSL_Array *Node::getTemplatesForNXSL()
       NetObj *object = m_parentList->get(i);
       if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
       {
-         parents->set(index++, object->createNXSLObject());
+         parents->set(index++, object->createNXSLObject(vm));
       }
    }
    unlockParentList();
@@ -7323,9 +7323,9 @@ NXSL_Array *Node::getTemplatesForNXSL()
 /**
  * Get list of interface objects for NXSL script
  */
-NXSL_Array *Node::getInterfacesForNXSL()
+NXSL_Array *Node::getInterfacesForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *ifaces = new NXSL_Array;
+   NXSL_Array *ifaces = new NXSL_Array(vm);
    int index = 0;
 
    lockChildList(false);
@@ -7333,7 +7333,7 @@ NXSL_Array *Node::getInterfacesForNXSL()
    {
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         ifaces->set(index++, m_childList->get(i)->createNXSLObject());
+         ifaces->set(index++, m_childList->get(i)->createNXSLObject(vm));
       }
    }
    unlockChildList();
@@ -7863,9 +7863,9 @@ void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Node::createNXSLObject()
+NXSL_Value *Node::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, this));
 }
 
 /**

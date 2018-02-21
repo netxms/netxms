@@ -42,12 +42,12 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, NetObj *object, DCOb
 {
    if ((vm == NULL) || (object == NULL))
       return vm;
-   vm->setGlobalVariable("$object", object->createNXSLObject());
+   vm->setGlobalVariable("$object", object->createNXSLObject(vm));
    if (object->getObjectClass() == OBJECT_NODE)
-      vm->setGlobalVariable("$node", object->createNXSLObject());
-   vm->setGlobalVariable("$isCluster", new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      vm->setGlobalVariable("$node", object->createNXSLObject(vm));
+   vm->setGlobalVariable("$isCluster", vm->createValue((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
    if (dci != NULL)
-      vm->setGlobalVariable("$dci", dci->createNXSLObject());
+      vm->setGlobalVariable("$dci", dci->createNXSLObject(vm));
    return vm;
 }
 
@@ -445,18 +445,26 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
    nx_strncpy(name, param->m_params, 256);
    Trim(name);
 
-   ObjectArray<NXSL_Value> args(16, 16, false);
-
    Node *object = (Node *)FindObjectById(param->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
       if (!object->checkAccessRights(param->m_userId, OBJECT_ACCESS_CONTROL))
       {
-			nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
-			            param->m_params, param->m_userId, object->getName(), object->getId());
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
+                     param->m_params, param->m_userId, object->getName(), object->getId());
          return;
       }
    }
+
+   NXSL_VM *vm = CreateServerScriptVM(name, object);
+   if (vm == NULL)
+   {
+      nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
+                  param->m_params, object->getName(), object->getId());
+      return;
+   }
+
+   ObjectRefArray<NXSL_Value> args(16, 16);
 
    // Can be in form parameter(arg1, arg2, ... argN)
    TCHAR *p = _tcschr(name, _T('('));
@@ -466,7 +474,7 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
          return;
       name[_tcslen(name) - 1] = 0;
 
-      if (!ParseValueList(&p, args))
+      if (!ParseValueList(vm, &p, args))
       {
          // argument parsing error
          if (object != NULL)
@@ -474,43 +482,35 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
                         param->m_params, object->getName(), object->getId());
          else
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), param->m_params);
-         args.setOwner(true);
+         delete vm;
          return;
       }
    }
 
-   NXSL_VM *vm = CreateServerScriptVM(name, object);
-   if (vm != NULL)
+   if (vm->run(&args))
    {
-      if (vm->run(&args))
-      {
-         if (object != NULL)
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
-                        param->m_params, object->getName(), object->getId());
-         else
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), param->m_params);
-      }
+      if (object != NULL)
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
+                     param->m_params, object->getName(), object->getId());
       else
-      {
-         if (object != NULL)
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
-                        param->m_params, object->getName(), object->getId(), vm->getErrorText());
-         else
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
-                        param->m_params, vm->getErrorText());
-      }
-      delete vm;
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), param->m_params);
    }
    else
    {
-      args.setOwner(true);
+      if (object != NULL)
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
+                     param->m_params, object->getName(), object->getId(), vm->getErrorText());
+      else
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
+                     param->m_params, vm->getErrorText());
    }
+   delete vm;
 }
 
 /**
  * Parse value list
  */
-bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
+bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args)
 {
    TCHAR *p = *start;
 
@@ -534,7 +534,7 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
             {
                state = 3;
                *p = 0;
-               args.add(new NXSL_Value(s));
+               args.add(vm->createValue(s));
             }
             break;
          case ',':
@@ -542,7 +542,7 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
             {
                *p = 0;
                Trim(s);
-               args.add(new NXSL_Value(s));
+               args.add(vm->createValue(s));
                s = p + 1;
             }
             else if (state == 3)
@@ -555,7 +555,7 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
             if (state == 1)
             {
                Trim(s);
-               args.add(new NXSL_Value(s));
+               args.add(vm->createValue(s));
                state = 0;
             }
             else if (state == 3)
@@ -574,7 +574,7 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
             {
                *p = 0;
                Trim(s);
-               args.add(new NXSL_Value(s));
+               args.add(vm->createValue(s));
                state = 0;
             }
             else if (state == 3)
@@ -610,15 +610,15 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
             if ((state == 1) && (*(p + 1) == '('))
             {
                p++;
-               ObjectArray<NXSL_Value> elements(16, 16, false);
-               if (ParseValueList(&p, elements))
+               ObjectRefArray<NXSL_Value> elements(16, 16);
+               if (ParseValueList(vm, &p, elements))
                {
-                  NXSL_Array *array = new NXSL_Array();
+                  NXSL_Array *array = new NXSL_Array(vm);
                   for(int i = 0; i < elements.size(); i++)
                   {
                      array->set(i, elements.get(i));
                   }
-                  args.add(new NXSL_Value(array));
+                  args.add(vm->createValue(array));
                   state = 3;
                }
                else

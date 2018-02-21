@@ -241,9 +241,6 @@ void ObjectsInit()
    NetObjInsert(g_pBusinessServiceRoot, false, false);
 
 	DbgPrintf(1, _T("Built-in objects created"));
-
-	// Initialize service checks
-	SlmCheck::init();
 }
 
 /**

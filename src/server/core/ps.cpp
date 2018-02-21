@@ -63,6 +63,9 @@ void PersistentStorageInit()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Destroy storage
+ */
 void PersistentStorageDestroy()
 {
    MutexDestroy(s_lockPStorage);
@@ -110,7 +113,7 @@ bool DeletePersistentStorageValue(const TCHAR *key)
  */
 const TCHAR *GetPersistentStorageValue(const TCHAR *key)
 {
-   if(key == NULL)
+   if (key == NULL)
       return NULL;
    MutexLock(s_lockPStorage);
    const TCHAR *value = s_persistentStorage.get(key);
@@ -276,7 +279,9 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
  * NXSL persistent storage implementation
  *****************************************/
 
-
+/**
+ * Write value to storage
+ */
 void NXSL_PersistentStorage::write(const TCHAR *name, NXSL_Value *value)
 {
    if(!value->isNull())
@@ -287,14 +292,19 @@ void NXSL_PersistentStorage::write(const TCHAR *name, NXSL_Value *value)
    {
       DeletePersistentStorageValue(name);
    }
-   delete value;
 }
 
-NXSL_Value *NXSL_PersistentStorage::read(const TCHAR *name)
+/**
+ * Read from persistent storage
+ */
+NXSL_Value *NXSL_PersistentStorage::read(const TCHAR *name, NXSL_ValueManager *vm)
 {
-   return new NXSL_Value(GetPersistentStorageValue(name));
+   return vm->createValue(GetPersistentStorageValue(name));
 }
 
+/**
+ * Remove persistent storage entry
+ */
 void NXSL_PersistentStorage::remove(const TCHAR *name)
 {
    DeletePersistentStorageValue(name);
@@ -331,7 +341,6 @@ public:
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
-
 /**
  * Implementation of "Situation" class
  */
@@ -345,17 +354,18 @@ void NXSL_SituationClass::onObjectDelete(NXSL_Object *object)
    delete (SituationInfo *)object->getData();
 }
 
-NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const char *pszAttr)
+NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   SituationInfo *info = (SituationInfo *)pObject->getData();
+   NXSL_VM *vm = object->vm();
+   SituationInfo *info = (SituationInfo *)object->getData();
    NXSL_Value *value = NULL;
-   if (!strcmp(pszAttr, "name"))
+   if (!strcmp(attr, "name"))
    {
-      value = new NXSL_Value(info->getSituationName());
+      value = vm->createValue(info->getSituationName());
    }
-   else if (!strcmp(pszAttr, "instance"))
+   else if (!strcmp(attr, "instance"))
    {
-      value = new NXSL_Value(info->getInstanceName());
+      value = vm->createValue(info->getInstanceName());
    }
 	else
 	{
@@ -364,16 +374,16 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const char *pszAt
       key.append(_T("."));
       key.append(info->getInstanceName());
       key.append(_T("."));
-      key.appendMBString(pszAttr, strlen(pszAttr), CP_UTF8);
+      key.appendMBString(attr, strlen(attr), CP_UTF8);
 
-      const TCHAR *attrValue = GetPersistentStorageValue((const TCHAR *)key);
+      const TCHAR *attrValue = GetPersistentStorageValue(key);
 		if (attrValue != NULL)
 		{
-			value = new NXSL_Value(attrValue);
+			value = vm->createValue(attrValue);
 		}
 		else
 		{
-			value = new NXSL_Value;	// return NULL
+			value = vm->createValue();	// return NULL
 		}
 	}
    return value;
@@ -398,16 +408,15 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
    if (situationName != NULL && instanceName != NULL)
    {
-      *ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, new SituationInfo(situationName, instanceName)));
+      *ppResult = vm->createValue(new NXSL_Object(vm, &m_nxslSituationClass, new SituationInfo(situationName, instanceName)));
    }
    else
    {
-      *ppResult = new NXSL_Value;
+      *ppResult = vm->createValue();
    }
 
    return 0;
 }
-
 
 /**
  * NXSL function: get situation instance attribute
@@ -435,7 +444,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 	key.append(argv[1]->getValueAsCString());
 
 	const TCHAR *attrValue = GetPersistentStorageValue((const TCHAR *)key);
-	*ppResult = (attrValue != NULL) ? new NXSL_Value(attrValue) : new NXSL_Value;
+	*ppResult = (attrValue != NULL) ? vm->createValue(attrValue) : vm->createValue();
 	return 0;
 }
 

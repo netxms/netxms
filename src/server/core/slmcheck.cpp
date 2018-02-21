@@ -22,22 +22,6 @@
 
 #include "nxcore.h"
 
-
-//
-// Static data
-//
-
-NXSL_VariableSystem __EXPORT SlmCheck::m_nxslConstants;
-
-/**
- * Initialize static members
- */
-void SlmCheck::init()
-{
-	m_nxslConstants.create("OK", new NXSL_Value((LONG)0));
-	m_nxslConstants.create("FAIL", new NXSL_Value((LONG)1));
-}
-
 /**
  * SLM check default constructor
  */
@@ -98,7 +82,7 @@ SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 SlmCheck::~SlmCheck()
 {
 	delete m_threshold;
-	safe_free(m_script);
+	free(m_script);
 	delete m_pCompiledScript;
 }
 
@@ -142,6 +126,9 @@ void SlmCheck::compileScript()
 		m_pCompiledScript = NXSLCompileAndCreateVM(m_script, errorMsg, errorMsgLen, new NXSL_ServerEnv);
 		if (m_pCompiledScript == NULL)
 			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, errorMsg);
+
+		m_pCompiledScript->addConstant("OK", m_pCompiledScript->createValue((LONG)0));
+      m_pCompiledScript->addConstant("FAIL", m_pCompiledScript->createValue((LONG)1));
 	}
 }
 
@@ -330,27 +317,15 @@ void SlmCheck::postModify()
  */
 void SlmCheck::setScript(const TCHAR *script)
 {
+   delete_and_null(m_pCompiledScript);
 	if (script != NULL)
 	{
 		free(m_script);
-		delete m_pCompiledScript;
 		m_script = _tcsdup(script);
-		if (m_script != NULL)
-		{
-			TCHAR error[256];
-
-			m_pCompiledScript = NXSLCompileAndCreateVM(m_script, error, 256, new NXSL_ServerEnv);
-			if (m_pCompiledScript == NULL)
-				nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
-		}
-		else
-		{
-			m_pCompiledScript = NULL;
-		}
+		compileScript();
 	}
 	else
 	{
-		delete_and_null(m_pCompiledScript);
 		safe_free_and_null(m_script);
 	}
 	setModified(MODIFY_OTHER);
@@ -373,9 +348,9 @@ void SlmCheck::execute()
 			{
 				NXSL_VariableSystem *pGlobals = NULL;
 
-				m_pCompiledScript->setGlobalVariable("$reason", new NXSL_Value(m_reason));
-				m_pCompiledScript->setGlobalVariable("$node", getNodeObjectForNXSL());
-				if (m_pCompiledScript->run(0, NULL, &pGlobals, &m_nxslConstants))
+				m_pCompiledScript->setGlobalVariable("$reason", m_pCompiledScript->createValue(m_reason));
+				m_pCompiledScript->setGlobalVariable("$node", getNodeObjectForNXSL(m_pCompiledScript));
+				if (m_pCompiledScript->run(0, NULL, &pGlobals))
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
 					m_status = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
@@ -495,7 +470,7 @@ UINT32 SlmCheck::getOwnerId()
  * Get related node object for use in NXSL script
  * Will return NXSL_Value of type NULL if there are no associated node
  */
-NXSL_Value *SlmCheck::getNodeObjectForNXSL()
+NXSL_Value *SlmCheck::getNodeObjectForNXSL(NXSL_VM *vm)
 {
 	NXSL_Value *value = NULL;
 	UINT32 nodeId = 0;
@@ -517,11 +492,11 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 		NetObj *node = FindObjectById(nodeId);
 		if ((node != NULL) && (node->getObjectClass() == OBJECT_NODE))
 		{
-			value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
+			value = vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, node));
 		}
 	}
 
-	return (value != NULL) ? value : new NXSL_Value;
+	return (value != NULL) ? value : vm->createValue();
 }
 
 /**

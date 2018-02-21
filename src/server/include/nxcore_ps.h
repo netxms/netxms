@@ -39,8 +39,10 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId);
  */
 class NXSL_PersistentStorage : public NXSL_Storage
 {
+public:
    virtual void write(const TCHAR *name, NXSL_Value *value);
-   virtual NXSL_Value *read(const TCHAR *name);
+   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm);
+
    void remove(const TCHAR *name);
 };
 

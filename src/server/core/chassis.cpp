@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -371,9 +371,9 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Chassis::createNXSLObject()
+NXSL_Value *Chassis::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslChassisClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslChassisClass, this));
 }
 
 /**

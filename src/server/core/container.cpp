@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -376,9 +376,9 @@ bool Container::showThresholdSummary()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Container::createNXSLObject()
+NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslContainerClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, this));
 }
 
 /**

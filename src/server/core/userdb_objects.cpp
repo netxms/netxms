@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -405,37 +405,37 @@ json_t *UserDatabaseObject::toJson() const
 /**
  * Get custom attribute as NXSL value
  */
-NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(const TCHAR *name) const
+NXSL_Value *UserDatabaseObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
 {
    NXSL_Value *value = NULL;
    const TCHAR *av = m_attributes.get(name);
    if (av != NULL)
-      value = new NXSL_Value(av);
+      value = vm->createValue(av);
    return value;
 }
 
 /**
  * Get all custom attributes as NXSL hash map
  */
-NXSL_Value *UserDatabaseObject::getCustomAttributesForNXSL() const
+NXSL_Value *UserDatabaseObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
 {
-   NXSL_HashMap *map = new NXSL_HashMap();
+   NXSL_HashMap *map = new NXSL_HashMap(vm);
    StructArray<KeyValuePair> *attributes = m_attributes.toArray();
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair *p = attributes->get(i);
-      map->set(p->key, new NXSL_Value(static_cast<const TCHAR*>(p->value)));
+      map->set(p->key, vm->createValue(static_cast<const TCHAR*>(p->value)));
    }
    delete attributes;
-   return new NXSL_Value(map);
+   return vm->createValue(map);
 }
 
 /**
  * Create NXSL object
  */
-NXSL_Value *UserDatabaseObject::createNXSLObject()
+NXSL_Value *UserDatabaseObject::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslUserDBObjectClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslUserDBObjectClass, this));
 }
 
 /*****************************************************************************
@@ -849,9 +849,9 @@ json_t *User::toJson() const
 /**
  * Create NXSL object
  */
-NXSL_Value *User::createNXSLObject()
+NXSL_Value *User::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslUserClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslUserClass, this));
 }
 
 /*****************************************************************************
@@ -1207,7 +1207,7 @@ json_t *Group::toJson() const
 /**
  * Create NXSL object
  */
-NXSL_Value *Group::createNXSLObject()
+NXSL_Value *Group::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslUserGroupClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslUserGroupClass, this));
 }

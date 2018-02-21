@@ -409,32 +409,32 @@ void ConditionObject::check()
             {
                if (pItem->getType() == DCO_TYPE_ITEM)
                {
-                  ppValueList[i] = ((DCItem *)pItem)->getValueForNXSL(m_dciList[i].function, m_dciList[i].polls);
+                  ppValueList[i] = ((DCItem *)pItem)->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
                }
                else if (pItem->getType() == DCO_TYPE_TABLE)
                {
                   Table *t = ((DCTable *)pItem)->getLastValue();
                   if (t != NULL)
                   {
-                     ppValueList[i] = new NXSL_Value(new NXSL_Object(&g_nxslTableClass, t));
+                     ppValueList[i] = m_script->createValue(new NXSL_Object(m_script, &g_nxslTableClass, t));
                   }
                }
             }
          }
       }
       if (ppValueList[i] == NULL)
-         ppValueList[i] = new NXSL_Value;
+         ppValueList[i] = m_script->createValue();
    }
    int numValues = m_dciCount;
    unlockProperties();
 
 	// Create array from values
-	NXSL_Array *array = new NXSL_Array;
+	NXSL_Array *array = new NXSL_Array(m_script);
 	for(int i = 0; i < numValues; i++)
 	{
-		array->set(i + 1, new NXSL_Value(ppValueList[i]));
+		array->set(i + 1, m_script->createValue(ppValueList[i]));
 	}
-   m_script->setGlobalVariable("$values", new NXSL_Value(array));
+   m_script->setGlobalVariable("$values", m_script->createValue(array));
 
    DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_id, m_name);
    if (m_script->run(numValues, ppValueList))

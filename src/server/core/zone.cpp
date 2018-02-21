@@ -245,9 +245,9 @@ void Zone::removeFromIndex(Interface *iface)
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Zone::createNXSLObject()
+NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslZoneClass, this));
 }
 
 /**

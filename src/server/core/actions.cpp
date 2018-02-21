@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -346,13 +346,13 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 	NXSL_VM *vm = CreateServerScriptVM(scriptName, FindObjectById(event->getSourceId()));
 	if (vm != NULL)
 	{
-		vm->setGlobalVariable("$event", new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
+		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event)));
 
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
 		memset(ppValueList, 0, sizeof(NXSL_Value *) * event->getParametersCount());
 		for(int i = 0; i < event->getParametersCount(); i++)
-			ppValueList[i] = new NXSL_Value(event->getParameter(i));
+			ppValueList[i] = vm->createValue(event->getParameter(i));
 
 		if (vm->run(event->getParametersCount(), ppValueList))
 		{

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -913,17 +913,17 @@ void Cluster::onDataCollectionChange()
 /**
  * Create NXSL object for this object
  */
-NXSL_Value *Cluster::createNXSLObject()
+NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslClusterClass, this));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslClusterClass, this));
 }
 
 /**
  * Get cluster nodes as NXSL array
  */
-NXSL_Array *Cluster::getNodesForNXSL()
+NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
 {
-   NXSL_Array *nodes = new NXSL_Array();
+   NXSL_Array *nodes = new NXSL_Array(vm);
    int index = 0;
 
    lockChildList(false);
@@ -931,7 +931,7 @@ NXSL_Array *Cluster::getNodesForNXSL()
    {
       if (m_childList->get(i)->getObjectClass() == OBJECT_NODE)
       {
-         nodes->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_childList->get(i))));
+         nodes->set(index++, m_childList->get(i)->createNXSLObject(vm));
       }
    }
    unlockChildList();

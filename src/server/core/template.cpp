@@ -950,9 +950,9 @@ DCObject *Template::getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock
 /**
  * Get all DC objects with matching name and description
  */
-NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userID)
+NXSL_Value *Template::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userID)
 {
-   NXSL_Array *list = new NXSL_Array();
+   NXSL_Array *list = new NXSL_Array(vm);
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
@@ -961,11 +961,11 @@ NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *des
           ((description == NULL) || MatchString(description, curr->getDescription(), false)) &&
           curr->hasAccess(userID))
 		{
-         list->set(list->size(), curr->createNXSLObject());
+         list->set(list->size(), curr->createNXSLObject(vm));
 		}
 	}
 	unlockDciAccess();
-   return new NXSL_Value(list);
+   return vm->createValue(list);
 }
 
 /**

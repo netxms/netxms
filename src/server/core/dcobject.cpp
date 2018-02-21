@@ -1146,9 +1146,9 @@ const TCHAR *DCObject::getOwnerName() const
 /**
  * Create NXSL object for this data collection object
  */
-NXSL_Value *DCObject::createNXSLObject()
+NXSL_Value *DCObject::createNXSLObject(NXSL_VM *vm)
 {
-   return new NXSL_Value(new NXSL_Object(&g_nxslDciClass, new DCObjectInfo(this)));
+   return vm->createValue(new NXSL_Object(vm, &g_nxslDciClass, new DCObjectInfo(this)));
 }
 
 /**
@@ -1195,17 +1195,17 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
    DCObject *dco = ((FilterCallbackData *)data)->dco;
 
    SetupServerScriptVM(instanceFilter, dco->getOwner(), dco);
-   instanceFilter->setGlobalVariable("$targetObject", dco->getOwner()->createNXSLObject());
+   instanceFilter->setGlobalVariable("$targetObject", dco->getOwner()->createNXSLObject(instanceFilter));
    if (dco->getSourceNode() != 0)
    {
       Node *sourceNode = (Node *)FindObjectById(dco->getSourceNode(), OBJECT_NODE);
       if (sourceNode != NULL)
-         instanceFilter->setGlobalVariable("$sourceNode", sourceNode->createNXSLObject());
+         instanceFilter->setGlobalVariable("$sourceNode", sourceNode->createNXSLObject(instanceFilter));
    }
 
    NXSL_Value *argv[2];
-   argv[0] = new NXSL_Value(key);
-   argv[1] = new NXSL_Value((const TCHAR *)value);
+   argv[0] = instanceFilter->createValue(key);
+   argv[1] = instanceFilter->createValue((const TCHAR *)value);
 
    if (instanceFilter->run(2, argv))
    {

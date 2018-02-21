@@ -921,7 +921,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       NXSL_VM *vm = CreateServerScriptVM(m_transformationScript, m_owner, this);
       if (vm != NULL)
       {
-         NXSL_Value *nxslValue = new NXSL_Value(value.getString());
+         NXSL_Value *nxslValue = vm->createValue(value.getString());
          if (nxslValue->isNumeric() && (m_dataType != DCI_DT_STRING))
             nxslValue->convert(getNXSLDataType()); // make sure that input NXSL variable type is the same as DCI type
 
@@ -1263,10 +1263,10 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 /**
  * Get item's last value for use in NXSL
  */
-NXSL_Value *DCItem::getRawValueForNXSL()
+NXSL_Value *DCItem::getRawValueForNXSL(NXSL_VM *vm)
 {
 	lock();
-   NXSL_Value *value = new NXSL_Value(m_prevRawValue.getString());
+   NXSL_Value *value = vm->createValue(m_prevRawValue.getString());
    unlock();
    return value;
 }
@@ -1274,7 +1274,7 @@ NXSL_Value *DCItem::getRawValueForNXSL()
 /**
  * Get item's last value for use in NXSL
  */
-NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
+NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
 {
    NXSL_Value *pValue;
 
@@ -1283,18 +1283,18 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         pValue = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
+         pValue = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? vm->createValue(m_ppValueCache[0]->getString()) : vm->createValue();
          break;
       case F_DIFF:
          if (m_bCacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
             CalculateItemValueDiff(result, m_dataType, *m_ppValueCache[0], *m_ppValueCache[1]);
-            pValue = new NXSL_Value(result.getString());
+            pValue = vm->createValue(result.getString());
          }
          else
          {
-            pValue = new NXSL_Value;
+            pValue = vm->createValue();
          }
          break;
       case F_AVERAGE:
@@ -1302,11 +1302,11 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          {
             ItemValue result;
             CalculateItemValueAverage(result, m_dataType, std::min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
-            pValue = new NXSL_Value(result.getString());
+            pValue = vm->createValue(result.getString());
          }
          else
          {
-            pValue = new NXSL_Value;
+            pValue = vm->createValue();
          }
          break;
       case F_DEVIATION:
@@ -1314,18 +1314,18 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          {
             ItemValue result;
             CalculateItemValueMD(result, m_dataType, std::min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
-            pValue = new NXSL_Value(result.getString());
+            pValue = vm->createValue(result.getString());
          }
          else
          {
-            pValue = new NXSL_Value;
+            pValue = vm->createValue();
          }
          break;
       case F_ERROR:
-         pValue = new NXSL_Value((INT32)((m_dwErrorCount >= (UINT32)nPolls) ? 1 : 0));
+         pValue = vm->createValue((INT32)((m_dwErrorCount >= (UINT32)nPolls) ? 1 : 0));
          break;
       default:
-         pValue = new NXSL_Value;
+         pValue = vm->createValue();
          break;
    }
 	unlock();
@@ -1667,14 +1667,14 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
 	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
    if (vm != NULL)
    {
-      NXSL_Value *pValue = new NXSL_Value(value);
-      vm->setGlobalVariable("$object", object->createNXSLObject());
+      NXSL_Value *pValue = vm->createValue(value);
+      vm->setGlobalVariable("$object", object->createNXSLObject(vm));
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         vm->setGlobalVariable("$node", object->createNXSLObject());
+         vm->setGlobalVariable("$node", object->createNXSLObject(vm));
       }
-      //FIXME: vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-      vm->setGlobalVariable("$isCluster", new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      //FIXME: vm->setGlobalVariable(_T("$dci"), vm->createValue(new NXSL_Object(&g_nxslDciClass, this)));
+      vm->setGlobalVariable("$isCluster", vm->createValue((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
 		if (vm->run(1, &pValue))
       {
