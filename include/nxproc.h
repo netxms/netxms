@@ -60,6 +60,9 @@ private:
    THREAD m_serverThread;
    bool m_stop;
    TCHAR m_user[64];
+#ifdef _WIN32
+   HANDLE m_stopEvent;
+#endif
 
    void serverThread();
    static THREAD_RESULT THREAD_CALL serverThreadStarter(void *arg);

@@ -36,6 +36,9 @@ NamedPipeListener::NamedPipeListener(const TCHAR *name, HPIPE handle, NamedPipeR
    m_serverThread = INVALID_THREAD_HANDLE;
    m_stop = false;
    _tcslcpy(m_user, CHECK_NULL_EX(user), 64);
+#ifdef _WIN32
+   m_stopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+#endif
 }
 
 /**
@@ -56,6 +59,9 @@ void NamedPipeListener::start()
 void NamedPipeListener::stop()
 {
    m_stop = true;
+#ifdef _WIN32
+   SetEvent(m_stopEvent);
+#endif
    ThreadJoin(m_serverThread);
    m_serverThread = INVALID_THREAD_HANDLE;
 }
