@@ -35,6 +35,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -47,6 +48,7 @@ public class ObjectFilter extends ViewerFilter
 	private static final int COMMENTS = 2;
 	private static final int IP_ADDRESS = 3;
 	private static final int OBJECT_ID = 4;
+	private static final int ZONE = 5;
 	
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
@@ -125,6 +127,19 @@ public class ObjectFilter extends ViewerFilter
 			      return String.valueOf(objectID).startsWith(filterString);
 			   }
             return false;
+			case ZONE:
+			   if (object instanceof AbstractNode)
+			   {
+			      long zoneUIN = ((AbstractNode)object).getZoneId();
+			      if (String.valueOf(zoneUIN).startsWith(filterString))
+			         return true;
+			      else
+			      {
+			         Zone zone = ConsoleSharedData.getSession().findZone(zoneUIN);
+			         if (zone != null)
+			            return usePatternMatching ? Glob.matchIgnoreCase(filterString, zone.getObjectName()) : zone.getObjectName().toLowerCase().contains(filterString.toLowerCase());
+			      }
+			   }
 		}
 		
 		return false;
@@ -197,6 +212,11 @@ public class ObjectFilter extends ViewerFilter
 			else if (filterString.charAt(0) == '#')
 			{
 			   mode = OBJECT_ID;
+			   this.filterString = filterString.substring(1);
+			}
+			else if (filterString.charAt(0) == '@')
+			{
+			   mode = ZONE;
 			   this.filterString = filterString.substring(1);
 			}
 			else

@@ -57,6 +57,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.Glob;
 import org.netxms.base.InetAddressEx;
@@ -66,6 +67,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
@@ -144,10 +146,12 @@ public class ObjectFinder extends ViewPart
    private Button radioPattern;
    private Button radioRegularExpression;
    private CheckboxTableViewer classList;
+   private CheckboxTableViewer zoneList;
    private Text ipRangeStart;
    private Text ipRangeEnd;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
+   private NXCSession session;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -155,6 +159,8 @@ public class ObjectFinder extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {
+      session = ConsoleSharedData.getSession();
+      
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -307,6 +313,61 @@ public class ObjectFinder extends ViewPart
          }
       });
       
+      if (session.isZoningEnabled())
+      {      
+         /*** Zone filter ***/
+         Composite zoneFilterGroup = new Composite(conditionGroup, SWT.NONE);
+         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+         gd.verticalSpan = 2;
+         zoneFilterGroup.setLayoutData(gd);
+         layout = new GridLayout();
+         zoneFilterGroup.setLayout(layout);
+         
+         Label zoneFilterTitle = new Label(zoneFilterGroup, SWT.NONE);
+         zoneFilterTitle.setText("Zone filter");
+         
+         zoneList = CheckboxTableViewer.newCheckList(zoneFilterGroup, SWT.BORDER | SWT.CHECK);
+         zoneList.setContentProvider(new ArrayContentProvider());
+         List<Zone> zones = session.getAllZones();
+         zoneList.setLabelProvider(new WorkbenchLabelProvider());
+         zoneList.setInput(zones);
+         zoneList.setAllChecked(true);
+         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+         gd.heightHint = 100;
+         zoneList.getTable().setLayoutData(gd);
+         
+         Composite zoneListButtons = new Composite(zoneFilterGroup, SWT.NONE);
+         rlayout = new RowLayout();
+         rlayout.marginLeft = 0;
+         zoneListButtons.setLayout(rlayout);
+         
+         selectAll = new Button(zoneListButtons, SWT.PUSH);
+         selectAll.setText("Select &all");
+         rd = new RowData();
+         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+         selectAll.setLayoutData(rd);
+         selectAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               zoneList.setAllChecked(true);
+            }
+         });
+         
+         clearAll = new Button(zoneListButtons, SWT.PUSH);
+         clearAll.setText("&Clear all");
+         rd = new RowData();
+         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+         clearAll.setLayoutData(rd);
+         clearAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               zoneList.setAllChecked(false);
+            }
+         });
+      }
+      
       getSite().setSelectionProvider(results);
       createResultsContextMenu();
       
@@ -449,21 +510,29 @@ public class ObjectFinder extends ViewPart
       for(Object o : classList.getCheckedElements())
          classFilter.add(((ObjectClass)o).classId);
       
+      List<Long> zoneFilter = new ArrayList<Long>();
+      if (session.isZoningEnabled())
+      {
+         for(Object o : zoneList.getCheckedElements())
+            zoneFilter.add(((Zone)o).getUIN());
+      }
+      
       if (radioRegularExpression.getSelection())
-         doSearch(text.getText().trim(), SEARCH_MODE_REGEXP, classFilter, addrStart, addrEnd);
+         doSearch(text.getText().trim(), SEARCH_MODE_REGEXP, classFilter, zoneFilter, addrStart, addrEnd);
       else
-         doSearch(text.getText().trim().toLowerCase(), radioPattern.getSelection() ? SEARCH_MODE_PATTERN : SEARCH_MODE_NORMAL, classFilter, addrStart, addrEnd);
+         doSearch(text.getText().trim().toLowerCase(), radioPattern.getSelection() ? SEARCH_MODE_PATTERN : SEARCH_MODE_NORMAL, classFilter, zoneFilter, addrStart, addrEnd);
    }
    
    /**
     * Do object search
     * 
     * @param searchString search string
-    * @param classFilter 
+    * @param classFilter
+    * @param zoneFilter
     * @param addrEnd 
     * @param addrStart 
     */
-   private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final InetAddress addrStart, final InetAddress addrEnd)
+   private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Long> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
    {
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Find objects", this, Activator.PLUGIN_ID, null) {
@@ -475,6 +544,12 @@ public class ObjectFinder extends ViewPart
                @Override
                public boolean filter(AbstractObject object)
                {
+                  if (session.isZoningEnabled())
+                  {
+                     if (object instanceof AbstractNode && !zoneFilter.contains(((AbstractNode)object).getZoneId()))
+                        return false;
+                  }
+                  
                   if (!classFilter.contains(object.getObjectClass()))
                      return false;
                   
