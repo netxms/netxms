@@ -166,7 +166,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
       else
       {
          widget.updateObjects(root, objects);
-         widget.redraw();
+         widget.refresh();
       }
 		
 		dataArea.layout(true, true);

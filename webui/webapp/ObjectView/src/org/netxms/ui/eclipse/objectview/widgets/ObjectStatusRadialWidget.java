@@ -24,9 +24,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
@@ -78,12 +81,64 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	}
 	
 	/**
+	 * Calculate substring for string to fit in the sector
 	 * 
-	 * @param object
+	 * @param text object name
+	 * @param gc gc object
+	 * @param lineNum number of lines that can be used to display object name
+	 * @return  formated string
 	 */
-	private float drawParts(PaintEvent e, AbstractObject object, int lvl, float degree)
+	private String substring(String text, GC gc, int lineNum)
+	{
+      StringBuilder name = new StringBuilder("");
+      int start = 0;
+      for(int i = 0; i < lineNum; i++)
+      {
+         int end = text.length();
+         String substr = text.substring(start);
+         int nameL = gc.textExtent(substr).x;
+         int numOfCharToLeave = (int)((diameter / 2 - 6)/(nameL/substr.length())); //make best guess
+         if(numOfCharToLeave >= substr.length())
+            numOfCharToLeave = substr.length() - 1;
+         String tmp;
+         for(int j = 0; nameL > diameter / 2 - 6; j++)
+         {
+            if(i+1 == lineNum)
+            {
+               tmp = substr.substring(0, numOfCharToLeave-j).toString(); 
+               tmp += "...";
+            }
+            else
+            {
+               tmp = substr.substring(0, numOfCharToLeave-j).toString();
+            }
+            nameL = gc.textExtent(tmp).x;      
+            end = numOfCharToLeave - j + start;
+         }         
+         
+         name.append(text.substring(start, end));
+         if(end == text.length())
+         {
+            break;
+         }
+         else
+         {
+            name.append((i+1 == lineNum) ? "..." : "\n" );
+         }
+         start = end;
+      }	   
+	   
+	   return name.toString();	   
+	}
+	
+	/**
+	 * Draw sectors for all objects
+	 * 
+	 * @param object the root object
+	 */
+	private float drawParts(GC gc, AbstractObject object, int lvl, float degree)
 	{	   
-      e.gc.setAlpha(255);
+      gc.setAlpha(255);
 
       float objectSize = 0;
 	   for(AbstractObject obj : object.getChildsAsArray())
@@ -91,7 +146,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	      float currObjsize = 0;	      
 	      if (AbstractObjectStatusMap.isContainerObject(obj))
 	      {
-	         currObjsize = drawParts(e, obj, lvl + 1, degree); 
+	         currObjsize = drawParts(gc, obj, lvl + 1, degree); 
 	         if (currObjsize == 0)
 	         {
 	            if (objects != null)
@@ -111,18 +166,18 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          int compensation = Integer.signum(Math.round(degree + currObjsize) - (Math.round(degree) + Math.round(currObjsize)));
          
          // white circle before each level
-         e.gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-         e.gc.fillArc(centerX - (diameter * lvl) / 2 - 3, centerY - (diameter * lvl) / 2 - 3, 
+         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+         gc.fillArc(centerX - (diameter * lvl) / 2 - 3, centerY - (diameter * lvl) / 2 - 3, 
                diameter * lvl + 6, diameter * lvl + 6, Math.round(degree), Math.round(currObjsize) + compensation);
          
-         e.gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
-         e.gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
+         gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
+         gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
                diameter * lvl, diameter * lvl, Math.round(degree), Math.round(currObjsize) - 1 + compensation); 
         
          objectMap.add(new ObjectPosition(degree, degree + currObjsize, lvl, obj));
 	      
-	      Transform oldTransform = new Transform(e.gc.getDevice());  
-	      e.gc.getTransform(oldTransform);
+	      Transform oldTransform = new Transform(gc.getDevice());  
+	      gc.getTransform(oldTransform);
 	      
          //draw text         
          String text = obj.getObjectName();
@@ -131,7 +186,6 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          tr.translate(centerX, centerY);
          
          //text centering
-         int h = e.gc.textExtent(text).y;
          float rotate = 0;
          float middle = degree + currObjsize / 2;
          if (middle >= 90 && middle < 180)
@@ -144,31 +198,33 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
             rotate = -(middle - 180);
          
          tr.rotate(rotate);
-         e.gc.setTransform(tr);
+         gc.setTransform(tr);
          
          // cut text function
-         int l = e.gc.textExtent(text).x;
-         if (l > diameter / 2)
+         int l = gc.textExtent(text).x;
+         int h = gc.textExtent(text).y;
+         //high of sector
+         int high = (int)((Math.tan(currObjsize/2))*((diameter * lvl) / 2)*2)-6;
+         int lineNum = high/(h+13);
+         if(lineNum < 0 || lineNum > 3)
+            lineNum = 3;
+         if (l > diameter / 2 - 6)
          {
-            String name = obj.getObjectName();
-            int nameL = e.gc.textExtent(name).x;
-            if(nameL > diameter/2)
-            {
-               int numOfCharToLeave = (int)(diameter/2/(nameL/name.length()));
-               name = name.subSequence(0, numOfCharToLeave-4).toString(); //make best guess
-               name += "...";
-            }
-            text = name;
+            text = substring(text, gc, lineNum);
          }
+         h = gc.textExtent(text).y;
          
-         e.gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
-            
-         if(middle>=90 && middle <=180 || middle>180 && middle < 270)
-            e.gc.drawText(text, -(diameter*(lvl))/2+5, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
-         else
-            e.gc.drawText(text, (diameter*(lvl-1))/2+5, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+         gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
 
-         e.gc.setTransform(oldTransform);    
+         if(middle>=90 && middle <=180 || middle>180 && middle < 270)
+         {
+            l = gc.textExtent(text).x;
+            gc.drawText(text, -(diameter*(lvl-1))/2-6-l, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+         }
+         else
+            gc.drawText(text, (diameter*(lvl-1))/2+5, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+
+         gc.setTransform(oldTransform);    
          tr.dispose();
          oldTransform.dispose();
 	      
@@ -240,10 +296,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-      e.gc.setAdvanced(true);
-      if (!e.gc.getAdvanced()) 
+	   GC gc = e.gc;
+      gc.setAdvanced(true);
+      if (!gc.getAdvanced()) 
       {
-        e.gc.drawText("Advanced graphics not supported", 30, 30, true);
+        gc.drawText("Advanced graphics not supported", 30, 30, true);
         return;
       } 
 	   
@@ -255,10 +312,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 		rect.width--;
 		rect.height--;
 		
-		e.gc.setAntialias(SWT.ON);
-		e.gc.setTextAntialias(SWT.ON);
-		e.gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
-		e.gc.setLineWidth(1);
+		gc.setAntialias(SWT.ON);
+		gc.setTextAntialias(SWT.ON);
+		gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
+		gc.setLineWidth(1);
 		//calculate values
       int rectSide = Math.min(rect.width, rect.height);
       diameter = rectSide / (maxLvl + 1);
@@ -266,27 +323,27 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       centerY = rect.y+(rectSide/2);
 
 		//draw objects
-		drawParts(e, rootObject, 2, 0);		
+		drawParts(gc, rootObject, 2, 0);		
 		
 		//draw general oval with 	
 		//draw white oval
-      e.gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-      e.gc.setAlpha(255);
-      e.gc.fillOval(centerX-diameter/2-3, centerY-diameter/2-3, diameter+6, diameter+6);
+      gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+      gc.setAlpha(255);
+      gc.fillOval(centerX-diameter/2-3, centerY-diameter/2-3, diameter+6, diameter+6);
       
-		e.gc.setBackground(StatusDisplayInfo.getStatusColor(rootObject.getStatus()));
-		e.gc.setAlpha(255);
-      e.gc.fillOval(centerX-diameter/2, centerY-diameter/2, diameter, diameter);
+		gc.setBackground(StatusDisplayInfo.getStatusColor(rootObject.getStatus()));
+		gc.setAlpha(255);
+      gc.fillOval(centerX-diameter/2, centerY-diameter/2, diameter, diameter);
 
 		final String text = (rootObject instanceof AbstractNode) ?
 		      (rootObject.getObjectName() + "\n" + ((AbstractNode)rootObject).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
 		      rootObject.getObjectName();
 		      
-		e.gc.setClipping(rect);
-		int h = e.gc.textExtent(text).y;
-      int l = e.gc.textExtent(text).x;
-      e.gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(rootObject.getStatus()), cCache));
-		e.gc.drawText(text, rect.x+(rectSide/2) - l/2, rect.y+(rectSide/2)-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+		gc.setClipping(rect);
+		int h = gc.textExtent(text).y;
+      int l = gc.textExtent(text).x;
+      gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(rootObject.getStatus()), cCache));
+		gc.drawText(text, rect.x+(rectSide/2) - l/2, rect.y+(rectSide/2)-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
       objectMap.add(new ObjectPosition(0, 360, 1, rootObject));           
 	}
