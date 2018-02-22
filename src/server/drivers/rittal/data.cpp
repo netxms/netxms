@@ -86,7 +86,7 @@ bool RittalDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, Rittal
    if (s2 == NULL)
       return false;
 
-   _tcslcpy(buffer, name, std::min((size_t)32, (size_t)(s2 - s1) + 1));
+   _tcslcpy(buffer, s1, std::min((size_t)32, (size_t)(s2 - s1) + 1));
    UINT32 position = _tcstoul(buffer, NULL, 10);
 
    MutexLock(m_cacheLock);
