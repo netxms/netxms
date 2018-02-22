@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.30 to 30.31 (changes also included into 22.20)
+ */
+static bool H_UpgradeFromV30()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 20)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config_values SET var_description='Don''t use aliases' WHERE var_name='UseInterfaceAliases' AND var_value='0'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET description='Resolve node name using DNS, SNMP system name, or host name if current node name is it''s IP address.' WHERE var_name='ResolveNodeNames'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET description='Number of hops from seed node to be added to topology map.' WHERE var_name='TopologyDiscoveryRadius'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET description='Network topology information expiration time. Server will use cached topology information if it is newer than given interval.' WHERE var_name='TopologyExpirationTime'")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 20));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 30.29 to 30.30 (changes also included into 22.19)
  */
 static bool H_UpgradeFromV29()
@@ -979,6 +996,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 30, 30, 31, H_UpgradeFromV30 },
    { 29, 30, 30, H_UpgradeFromV29 },
    { 28, 30, 28, H_UpgradeFromV28 },
    { 27, 30, 28, H_UpgradeFromV27 },
