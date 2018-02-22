@@ -52,7 +52,7 @@ public class AccessIntegrationTools extends AbstractHandler
          String password = request.getString("password");
          if ((login != null) || (password != null))
          {
-            NXCSession session = new NXCSession(serverAddress);
+            NXCSession session = new NXCSession(properties.getServerAddress(), properties.getServerPort());
             session.connect();
             session.login(login, (password == null) ? "" : password);
             
