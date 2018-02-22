@@ -46,8 +46,6 @@ static const TCHAR *s_className[]=
  */
 NetObj::NetObj()
 {
-   int i;
-
    m_id = 0;
    m_dwRefCount = 0;
    m_mutexProperties = MutexCreate();
@@ -76,7 +74,7 @@ NetObj::NetObj()
    m_statusShift = 0;
    m_statusSingleThreshold = 75;
    m_timestamp = 0;
-   for(i = 0; i < 4; i++)
+   for(int i = 0; i < 4; i++)
    {
       m_statusTranslation[i] = i + 1;
       m_statusThresholds[i] = 80 - i * 20;
@@ -89,6 +87,7 @@ NetObj::NetObj()
    m_state = 0;
    m_runtimeFlags = 0;
    m_flags = 0;
+   m_responsibleUsers = new IntegerArray<UINT32>(0, 16);
    m_rwlockResponsibleUsers = RWLockCreate();
 }
 
@@ -111,6 +110,7 @@ NetObj::~NetObj()
    delete m_postalAddress;
    delete m_dashboards;
    delete m_urls;
+   delete m_responsibleUsers;
    RWLockDestroy(m_rwlockResponsibleUsers);
 }
 
@@ -452,7 +452,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	         int numRows = DBGetNumRows(hResult);
 	         for(int i = 0; i < numRows; i++)
 	         {
-	            m_responsibleUsers.add(DBGetFieldULong(hResult, i, 0));
+	            m_responsibleUsers->add(DBGetFieldULong(hResult, i, 0));
 	         }
 	         DBFreeResult(hResult);
 	      }
@@ -641,7 +641,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 		success = saveTrustedNodes(hdb);
 
 	// Save responsible users
-	if (success && !m_responsibleUsers.isEmpty())
+	if (success && !m_responsibleUsers->isEmpty())
 	{
 	   success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
 	   if (success)
@@ -651,9 +651,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	      {
 	         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	         lockResponsibleUsersList(false);
-	         for(int i = 0; i < m_responsibleUsers.size(); i++)
+	         for(int i = 0; i < m_responsibleUsers->size(); i++)
 	         {
-	            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers.get(i));
+	            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers->get(i));
 	            success = DBExecute(hStmt);
 	         }
 	         unlockResponsibleUsersList();
@@ -1273,7 +1273,7 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
    unlockChildList();
 
    lockResponsibleUsersList(false);
-   msg->setFieldFromInt32Array(VID_RESPONSIBLE_USERS, &m_responsibleUsers);
+   msg->setFieldFromInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
    unlockResponsibleUsersList();
 }
 
@@ -1448,7 +1448,7 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
       lockResponsibleUsersList(true);
-      pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, &m_responsibleUsers);
+      pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
       unlockResponsibleUsersList();
    }
 
@@ -2495,8 +2495,8 @@ json_t *NetObj::toJson()
 
    json_t *responsibleUsers = json_array();
    lockResponsibleUsersList(false);
-   for(int i = 0; i < m_responsibleUsers.size(); i++)
-      json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers.get(i)));
+   for(int i = 0; i < m_responsibleUsers->size(); i++)
+      json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers->get(i)));
    unlockResponsibleUsersList();
    json_object_set_new(root, "responsibleUsers", responsibleUsers);
 
@@ -2520,7 +2520,6 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
 
    DbgPrintf(8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(")"),
              m_id, CHECK_NULL(textTemplate), (alarm == NULL) ? 0 : alarm->getAlarmId() , (event == NULL) ? 0 : event->getId());
-
 
    dwSize = (UINT32)_tcslen(textTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
@@ -2951,12 +2950,8 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
  */
 IntegerArray<UINT32> *NetObj::getAllResponsibleUsers()
 {
-   IntegerArray<UINT32> *responsibleUsers = new IntegerArray<UINT32>();
    lockResponsibleUsersList(false);
-   for(int i = 0; i < m_responsibleUsers.size(); i++)
-   {
-      responsibleUsers->add(m_responsibleUsers.get(i));
-   }
+   IntegerArray<UINT32> *responsibleUsers = new IntegerArray<UINT32>(m_responsibleUsers);
    unlockResponsibleUsersList();
 
    getAllResponsibleUsersInternal(responsibleUsers);

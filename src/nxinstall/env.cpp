@@ -23,14 +23,13 @@
 
 #include "nxinstall.h"
 
-
 /**
  * Additional NXSL functions
  */
 static NXSL_ExtFunction s_nxslInstallerFunctions[] =
 {
-   { _T("chdir"), F_chdir, 1 },
-   { _T("system"), F_system, 1 }
+   { "chdir", F_chdir, 1 },
+   { "system", F_system, 1 }
 };
 
 /**

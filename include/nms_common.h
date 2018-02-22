@@ -57,6 +57,10 @@
 #define _CRT_NO_POSIX_ERROR_CODES
 #endif
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H

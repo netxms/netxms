@@ -52,7 +52,7 @@ static void PipeConnector(NamedPipe *pipe, void *userArg)
          case SPC_EXIT:
             response = new NXCPMessage(SPC_REQUEST_COMPLETED, request->getId());
             response->setField(VID_RCC, 0);
-            break;
+            goto stop;
          default:
             if (request->getCode() >= SPC_USER)
                response = reinterpret_cast<SubProcessRequestHandler>(userArg)(request);

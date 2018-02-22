@@ -246,6 +246,7 @@
     <ClCompile Include="strset.cpp" />
     <ClCompile Include="strtoll.c" />
     <ClCompile Include="strtoull.c" />
+    <ClCompile Include="subproc.cpp" />
     <ClCompile Include="table.cpp" />
     <ClCompile Include="threads.cpp" />
     <ClCompile Include="timegm.c" />

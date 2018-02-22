@@ -33,7 +33,7 @@ int F_chdir(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)_tchdir(argv[0]->getValueAsCString()));
+	*ppResult = vm->createValue((LONG)_tchdir(argv[0]->getValueAsCString()));
 	return 0;
 }
 
@@ -47,6 +47,6 @@ int F_system(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	*ppResult = new NXSL_Value((LONG)_tsystem(argv[0]->getValueAsCString()));
+	*ppResult = vm->createValue((LONG)_tsystem(argv[0]->getValueAsCString()));
 	return 0;
 }

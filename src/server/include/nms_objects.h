@@ -580,7 +580,7 @@ protected:
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
-   IntegerArray<UINT32> m_responsibleUsers;
+   IntegerArray<UINT32> *m_responsibleUsers;
    RWLOCK m_rwlockResponsibleUsers;
 
    void lockProperties() const { MutexLock(m_mutexProperties); }
@@ -771,7 +771,7 @@ public:
    static const TCHAR *getObjectClassName(int objectClass);
    TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
 
-   const IntegerArray<UINT32> *getResponsibleUsers() { return &m_responsibleUsers; }
+   const IntegerArray<UINT32> *getResponsibleUsers() { return m_responsibleUsers; }
    IntegerArray<UINT32> *getAllResponsibleUsers();
 };
 

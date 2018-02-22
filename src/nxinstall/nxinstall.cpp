@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 			{
 				ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
 				for(i = optind + 1; i < argc; i++)
-					ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
+					ppArgs[i - optind - 1] = vm->createValue(argv[i]);
 			}
 			else
 			{

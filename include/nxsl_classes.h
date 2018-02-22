@@ -64,7 +64,7 @@ struct identifier_t
 /**
  * NXSL identifier
  */
-struct NXSL_Identifier
+struct LIBNXSL_EXPORTABLE NXSL_Identifier
 {
    BYTE length;
    char value[MAX_IDENTIFIER_LENGTH];
