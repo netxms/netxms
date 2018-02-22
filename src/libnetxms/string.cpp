@@ -66,7 +66,7 @@ String::String(const TCHAR *init)
  */
 String::~String()
 {
-   safe_free(m_buffer);
+   free(m_buffer);
 }
 
 /**
