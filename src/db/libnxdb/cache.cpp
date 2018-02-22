@@ -108,7 +108,7 @@ bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, cons
             }
          }
       }
-      createStatement.append(isInteger ? _T("integer") : _T(" varchar"));
+      createStatement.append(isInteger ? _T(" integer") : _T(" varchar"));
       insertStatement.append(name);
    }
    if (indexColumn != NULL)
