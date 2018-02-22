@@ -525,6 +525,7 @@ mibs_DATA = \
 	RITTAL-CMC-III-MIB.txt \
 	RITTAL-CMC-III-PRODUCTS-MIB.txt \
 	RITTAL-CMC-TC-MIB.txt \
+	Rittal-IT-Chiller.txt \
 	RITTAL-SMI-MIB.txt \
 	RMON-MIB.txt \
 	RMON2-MIB.txt \
