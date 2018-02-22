@@ -71,6 +71,14 @@ void ExternalSubagent::startListener()
       m_listener->start();
 }
 
+/**
+ * Stop listener
+ */
+void ExternalSubagent::stopListener()
+{
+   m_listener->stop();
+}
+
 /*
  * Send message to external subagent
  */
@@ -498,6 +506,15 @@ bool AddExternalSubagent(const TCHAR *config)
 	s_subagents.add(subagent);
 	subagent->startListener();
 	return true;
+}
+
+/**
+ * Stop external subagent connectors
+ */
+void StopExternalSubagentConnectors()
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+      s_subagents.get(i)->stopListener();
 }
 
 /**

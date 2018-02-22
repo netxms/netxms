@@ -218,6 +218,7 @@ public:
 	~ExternalSubagent();
 
 	void startListener();
+   void stopListener();
 	void connect(NamedPipe *pipe);
 
 	bool isConnected() { return m_connected; }
@@ -557,6 +558,7 @@ void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *co
 void ListParametersFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
+void StopExternalSubagentConnectors();
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
