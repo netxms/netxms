@@ -140,9 +140,21 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
  */
 void NamedPipeListener::serverThread()
 {
+   fd_set rfds;
+   struct timeval tv;
+
+   SetSocketNonBlocking(m_handle);
    nxlog_debug(2, _T("NamedPipeListener(%s): waiting for connection"), m_name);
    while(!m_stop)
    {
+      tv.tv_sec = 2;
+      tv.tv_usec = 0;
+
+      FD_ZERO(&rfds);
+      FD_SET(m_handle, &rfds);
+      if (select(m_handle + 1, &rfds, NULL, NULL, &tv) <= 0)
+         continue;
+
       struct sockaddr_un addrRemote;
       socklen_t size = sizeof(struct sockaddr_un);
       SOCKET cs = accept(m_handle, (struct sockaddr *)&addrRemote, &size);
@@ -194,6 +206,7 @@ void NamedPipeListener::serverThread()
          nxlog_debug(2, _T("NamedPipeListener(%s): accept failed (%s)"), m_name, _tcserror(errno));
       }
    }
+   nxlog_debug(2, _T("NamedPipeListener(%s): stopped"), m_name);
 }
 
 /**

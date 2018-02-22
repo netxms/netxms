@@ -1156,6 +1156,7 @@ void Shutdown()
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);
 		ThreadJoin(s_tunnelManagerThread);
+		StopExternalSubagentConnectors();
 	}
 	ThreadJoin(s_eventSenderThread);
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
