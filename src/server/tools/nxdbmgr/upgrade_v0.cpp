@@ -1393,7 +1393,7 @@ static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','2','Fixed')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','3','Relative')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','4','Translated')")));
-   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','0','Don`t use aliases')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','0','Don''t use aliases')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','1','Use aliases when possible')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','2','Concatenate alias and name')")));
    CHK_EXEC(SQLQuery(_T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('UseInterfaceAliases','3','Concatenate name and alias')")));
