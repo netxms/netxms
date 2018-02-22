@@ -737,7 +737,7 @@ InterfaceList *Node::getInterfaceList()
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
          }
 
-         int useAliases = ConfigReadBoolean(_T("UseInterfaceAliases"), false);
+         int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
          pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != NULL) && (m_capabilities & NC_IS_BRIDGE))
