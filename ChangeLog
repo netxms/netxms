@@ -32,6 +32,7 @@
 	NX-1405 (Agent may crash when parsing Windows event log message)
 	NX-1408 (Object filtering by zone in object browser and object search form)
 	NX-1411 (Server configuration option "UseInterfaceAliases" not working)
+	NX-1413 (Agent may crash when processing external parameters provider's output)
 
 
 *

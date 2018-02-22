@@ -89,20 +89,22 @@ void ParameterProviderExecutor::onOutput(const char *text)
                nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
                stop();
                m_buffer.clear();
-               break;
             }
             break;
          }
 
-         eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
-         if (eqPtr != NULL)
+         if (m_buffer.length() > 1)
          {
-            *eqPtr = 0;
-            eqPtr++;
-            m_parameters.set(m_buffer.getBuffer(), eqPtr);
+            eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
+            if (eqPtr != NULL)
+            {
+               *eqPtr = 0;
+               eqPtr++;
+               m_parameters.set(m_buffer.getBuffer(), eqPtr);
+            }
          }
          m_buffer.clear();
-         lineStartPtr = newLinePtr+1;
+         lineStartPtr = newLinePtr + 1;
       } while (*lineStartPtr != 0);
 
       free(buffer);
