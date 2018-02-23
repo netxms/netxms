@@ -6,7 +6,7 @@
 
 m4_ifdef([m4_esyscmd_s],
 	[AC_INIT([NetXMS], m4_esyscmd_s([git describe --tags --always | sed 's/^Release-//']), [bugs@netxms.org])],
-        [AC_INIT([NetXMS], [2.2.3], [bugs@netxms.org])])
+        [AC_INIT([NetXMS], [2.2.4], [bugs@netxms.org])])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
