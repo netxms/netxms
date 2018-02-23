@@ -69,6 +69,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.ZoneMember;
@@ -548,12 +549,18 @@ public class ObjectFinder extends ViewPart
                @Override
                public boolean filter(AbstractObject object)
                {
-                  if (session.isZoningEnabled())
+                  if (session.isZoningEnabled() && session.getAllZones().size() != zoneFilter.size())
                   {
                      if (object instanceof ZoneMember)
                      {
                          ZoneMember node = (ZoneMember)object;
                          return zoneFilter.contains(node.getZoneId());
+                     }
+                     if (object instanceof Sensor)
+                     {
+                        AbstractNode proxy = session.findObjectById(((Sensor)object).getProxyId(), AbstractNode.class);
+                        if (proxy != null)
+                           return zoneFilter.contains(proxy.getZoneId());
                      }
                      else if (object instanceof Interface)
                      {
@@ -576,12 +583,13 @@ public class ObjectFinder extends ViewPart
                      else if (object instanceof GenericObject)
                      {
                         AbstractObject children[] = ((GenericObject)object).getChildsAsArray();
+                        boolean match = false;
                         for(AbstractObject o : children)
                         {
                            if (o instanceof ZoneMember && zoneFilter.contains(((ZoneMember)o).getZoneId()))
-                              return true;
+                              match = true;
                         }
-                        
+                        return match;
                      }
                   }
                   
