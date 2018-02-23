@@ -554,33 +554,40 @@ public class ObjectFinder extends ViewPart
                      if (object instanceof ZoneMember)
                      {
                          ZoneMember node = (ZoneMember)object;
-                         return zoneFilter.contains(node.getZoneId());
+                         if (!zoneFilter.contains(node.getZoneId()))
+                        	 return false;
                      }
                      if (object instanceof Sensor)
                      {
                         AbstractNode proxy = session.findObjectById(((Sensor)object).getProxyId(), AbstractNode.class);
-                        if (proxy != null)
-                           return zoneFilter.contains(proxy.getZoneId());
+                        if (proxy != null && zoneFilter.contains(proxy.getZoneId()))
+                           return false;
                      }
                      else if (object instanceof Interface)
                      {
                         AbstractNode parent = ((Interface)object).getParentNode();
-                        if (parent != null)
-                           return zoneFilter.contains(parent.getZoneId());
+                        if (parent != null && !zoneFilter.contains(parent.getZoneId()))
+                           return false;
                      }
                      else if (object instanceof NetworkService)
                      {
                         AbstractNode parent = ((NetworkService)object).getParentNode();
-                        if (parent != null)
-                           return zoneFilter.contains(parent.getZoneId());
+                        if (parent != null && !zoneFilter.contains(parent.getZoneId()))
+                           return false;
                      }  
                      else if (object instanceof VPNConnector)
                      {
                         AbstractNode parent = ((VPNConnector)object).getParentNode();
-                        if (parent != null)
-                           return zoneFilter.contains(parent.getZoneId());
+                        if (parent != null && !zoneFilter.contains(parent.getZoneId()))
+                           return false;
                      }
-                     else if (object instanceof GenericObject)
+                     else if (object instanceof AccessPoint)
+                     {
+                    	 AbstractNode parent = ((AccessPoint)object).getParentNode();
+                         if (parent != null && !zoneFilter.contains(parent.getZoneId()))
+                            return false;
+                     }
+                     else if (object instanceof GenericObject  && !zoneFilter.isEmpty())
                      {
                         AbstractObject children[] = ((GenericObject)object).getChildsAsArray();
                         boolean match = false;
@@ -589,7 +596,8 @@ public class ObjectFinder extends ViewPart
                            if (o instanceof ZoneMember && zoneFilter.contains(((ZoneMember)o).getZoneId()))
                               match = true;
                         }
-                        return match;
+                        if (!match)
+                        	return false;
                      }
                   }
                   
