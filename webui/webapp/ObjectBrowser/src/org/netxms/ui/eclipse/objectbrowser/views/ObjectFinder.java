@@ -174,7 +174,7 @@ public class ObjectFinder extends ViewPart
       Composite conditionGroup = new Composite(parent, SWT.NONE);
       conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = session.isZoningEnabled() ? 3 : 2;
       conditionGroup.setLayout(layout);
       
       /*** Full text search ***/
@@ -261,6 +261,61 @@ public class ObjectFinder extends ViewPart
          }
       });
       
+      /*** Zone filter ***/
+      if (session.isZoningEnabled())
+      {      
+         Composite zoneFilterGroup = new Composite(conditionGroup, SWT.NONE);
+         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+         gd.verticalSpan = 2;
+         zoneFilterGroup.setLayoutData(gd);
+         layout = new GridLayout();
+         zoneFilterGroup.setLayout(layout);
+         
+         Label zoneFilterTitle = new Label(zoneFilterGroup, SWT.NONE);
+         zoneFilterTitle.setText("Zone filter");
+         
+         zoneList = CheckboxTableViewer.newCheckList(zoneFilterGroup, SWT.BORDER | SWT.CHECK);
+         zoneList.setContentProvider(new ArrayContentProvider());
+         List<Zone> zones = session.getAllZones();
+         zoneList.setLabelProvider(new WorkbenchLabelProvider());
+         zoneList.setInput(zones);
+         zoneList.setAllChecked(true);
+         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+         gd.heightHint = 100;
+         zoneList.getTable().setLayoutData(gd);
+         
+         Composite zoneListButtons = new Composite(zoneFilterGroup, SWT.NONE);
+         rlayout = new RowLayout();
+         rlayout.marginLeft = 0;
+         zoneListButtons.setLayout(rlayout);
+         
+         selectAll = new Button(zoneListButtons, SWT.PUSH);
+         selectAll.setText("Select &all");
+         rd = new RowData();
+         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+         selectAll.setLayoutData(rd);
+         selectAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               zoneList.setAllChecked(true);
+            }
+         });
+         
+         clearAll = new Button(zoneListButtons, SWT.PUSH);
+         clearAll.setText("&Clear all");
+         rd = new RowData();
+         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+         clearAll.setLayoutData(rd);
+         clearAll.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               zoneList.setAllChecked(false);
+            }
+         });
+      }
+      
       /*** IP filter ***/
       Group ipFilterGroup = new Group(conditionGroup, SWT.NONE);
       ipFilterGroup.setText("IP Range");
@@ -317,61 +372,6 @@ public class ObjectFinder extends ViewPart
             WidgetHelper.saveTableViewerSettings(results, settings, "ResultTable");
          }
       });
-      
-      if (session.isZoningEnabled())
-      {      
-         /*** Zone filter ***/
-         Composite zoneFilterGroup = new Composite(conditionGroup, SWT.NONE);
-         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-         gd.verticalSpan = 2;
-         zoneFilterGroup.setLayoutData(gd);
-         layout = new GridLayout();
-         zoneFilterGroup.setLayout(layout);
-         
-         Label zoneFilterTitle = new Label(zoneFilterGroup, SWT.NONE);
-         zoneFilterTitle.setText("Zone filter");
-         
-         zoneList = CheckboxTableViewer.newCheckList(zoneFilterGroup, SWT.BORDER | SWT.CHECK);
-         zoneList.setContentProvider(new ArrayContentProvider());
-         List<Zone> zones = session.getAllZones();
-         zoneList.setLabelProvider(new WorkbenchLabelProvider());
-         zoneList.setInput(zones);
-         zoneList.setAllChecked(true);
-         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-         gd.heightHint = 100;
-         zoneList.getTable().setLayoutData(gd);
-         
-         Composite zoneListButtons = new Composite(zoneFilterGroup, SWT.NONE);
-         rlayout = new RowLayout();
-         rlayout.marginLeft = 0;
-         zoneListButtons.setLayout(rlayout);
-         
-         selectAll = new Button(zoneListButtons, SWT.PUSH);
-         selectAll.setText("Select &all");
-         rd = new RowData();
-         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-         selectAll.setLayoutData(rd);
-         selectAll.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               zoneList.setAllChecked(true);
-            }
-         });
-         
-         clearAll = new Button(zoneListButtons, SWT.PUSH);
-         clearAll.setText("&Clear all");
-         rd = new RowData();
-         rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-         clearAll.setLayoutData(rd);
-         clearAll.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               zoneList.setAllChecked(false);
-            }
-         });
-      }
       
       getSite().setSelectionProvider(results);
       createResultsContextMenu();
@@ -555,7 +555,7 @@ public class ObjectFinder extends ViewPart
                      {
                          ZoneMember node = (ZoneMember)object;
                          if (!zoneFilter.contains(node.getZoneId()))
-                            return false;
+                        	 return false;
                      }
                      if (object instanceof Sensor)
                      {
@@ -583,7 +583,7 @@ public class ObjectFinder extends ViewPart
                      }
                      else if (object instanceof AccessPoint)
                      {
-                      AbstractNode parent = ((AccessPoint)object).getParentNode();
+                    	 AbstractNode parent = ((AccessPoint)object).getParentNode();
                          if (parent != null && !zoneFilter.contains(parent.getZoneId()))
                             return false;
                      }
@@ -597,7 +597,7 @@ public class ObjectFinder extends ViewPart
                               match = true;
                         }
                         if (!match)
-                           return false;
+                        	return false;
                      }
                   }
                   
