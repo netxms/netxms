@@ -67,6 +67,9 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -543,10 +546,48 @@ public class ObjectFinder extends ViewPart
                @Override
                public boolean filter(AbstractObject object)
                {
-                  if (session.isZoningEnabled())
+                  if (session.isZoningEnabled() && session.getAllZones().size() != zoneFilter.size())
                   {
-                     if (object instanceof AbstractNode && !zoneFilter.contains(((AbstractNode)object).getZoneId()))
-                        return false;
+                     if (object instanceof ZoneMember)
+                     {
+                         ZoneMember node = (ZoneMember)object;
+                         return zoneFilter.contains(node.getZoneId());
+                     }
+                     if (object instanceof Sensor)
+                     {
+                        AbstractNode proxy = session.findObjectById(((Sensor)object).getProxyId(), AbstractNode.class);
+                        if (proxy != null)
+                           return zoneFilter.contains(proxy.getZoneId());
+                     }
+                     else if (object instanceof Interface)
+                     {
+                        AbstractNode parent = ((Interface)object).getParentNode();
+                        if (parent != null)
+                           return zoneFilter.contains(parent.getZoneId());
+                     }
+                     else if (object instanceof NetworkService)
+                     {
+                        AbstractNode parent = ((NetworkService)object).getParentNode();
+                        if (parent != null)
+                           return zoneFilter.contains(parent.getZoneId());
+                     }  
+                     else if (object instanceof VPNConnector)
+                     {
+                        AbstractNode parent = ((VPNConnector)object).getParentNode();
+                        if (parent != null)
+                           return zoneFilter.contains(parent.getZoneId());
+                     }
+                     else if (object instanceof GenericObject)
+                     {
+                        AbstractObject children[] = ((GenericObject)object).getChildsAsArray();
+                        boolean match = false;
+                        for(AbstractObject o : children)
+                        {
+                           if (o instanceof ZoneMember && zoneFilter.contains(((ZoneMember)o).getZoneId()))
+                              match = true;
+                        }
+                        return match;
+                     }
                   }
                   
                   if (!classFilter.contains(object.getObjectClass()))
