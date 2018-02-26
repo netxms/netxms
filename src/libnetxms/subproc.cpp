@@ -274,5 +274,5 @@ NXCPMessage *SubProcessExecutor::sendRequest(NXCPMessage *request)
          return NULL;
       }
    }
-   return response;
+   return NULL;
 }
