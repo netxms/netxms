@@ -52,3 +52,18 @@ void TestProcessExecutor(const char *procname)
    AssertTrue(e.waitForCompletion(500));
    EndTest();
 }
+
+/**
+ * Test sub-process
+ */
+void TestSubProcess(const char *procname)
+{
+   TCHAR cmdLine[MAX_PATH];
+   _sntprintf(cmdLine, MAX_PATH, _T("%hs @subproc"), procname);
+
+   StartTest(_T("Process executor - create"));
+   SubProcessExecutor e(cmdLine);
+   AssertTrue(e.execute());
+   AssertTrue(e.isRunning());
+   EndTest();
+}

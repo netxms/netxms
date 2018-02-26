@@ -95,6 +95,7 @@ private:
    pid_t m_pid;
    int m_pipe[2];
 #endif
+   bool m_started;
    bool m_running;
 
 protected:
@@ -126,6 +127,7 @@ public:
    virtual bool execute();
    virtual void stop();
 
+   bool isStarted() const { return m_started; }
    bool isRunning();
    bool waitForCompletion(UINT32 timeout);
 };
@@ -146,25 +148,44 @@ enum SubProcessState
 };
 
 /**
+ * Maximum length for sub-process name
+ */
+#define MAX_SUBPROCESS_NAME_LEN  16
+
+class PipeMessageReceiver;
+
+/**
  * Sub-process executor
  */
 class LIBNETXMS_EXPORTABLE SubProcessExecutor : public ProcessExecutor
 {
 private:
    NamedPipe *m_pipe;
+   PipeMessageReceiver *m_receiver;
    SubProcessState m_state;
+   VolatileCounter m_requestId;
+   TCHAR m_name[MAX_SUBPROCESS_NAME_LEN];
 
    static ObjectArray<SubProcessExecutor> *m_registry;
    static Mutex m_registryLock;
    static THREAD m_monitorThread;
+   static CONDITION m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL monitorThread(void *arg);
 
 public:
-   SubProcessExecutor(const TCHAR *name);
+   SubProcessExecutor(const TCHAR *name, const TCHAR *command);
    virtual ~SubProcessExecutor();
 
+   virtual bool execute();
+   virtual void stop();
+
+   NXCPMessage *sendRequest(NXCPMessage *request);
+
+   const TCHAR *getName() const { return m_name; }
    SubProcessState getState() const { return m_state; }
+
+   static void shutdown();
 };
 
 #endif   /* _nxproc_h_ */

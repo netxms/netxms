@@ -1,4 +1,4 @@
-agent.conn  Agent connections
+agent.conn      Agent connections
 agent.tunnel    Agent tunnels
 
 client.session	Client sessions
@@ -34,6 +34,9 @@ obj.poll.route	Routing table poll
 obj.poll.status	Status poll
 obj.poll.topo	Topology poll
 obj.sync	Object synchronization
+
+proc.*          Process related trace
+proc.spexec     Sub-process executor
 
 sa.*		Sub-agent related messages
 sa.ping		Ping subagent

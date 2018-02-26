@@ -107,6 +107,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd)
    m_streamId = InterlockedIncrement(&s_nextStreamId);
    m_sendOutput = false;
    m_outputThread = INVALID_THREAD_HANDLE;
+   m_started = false;
    m_running = false;
 }
 
@@ -253,6 +254,7 @@ bool ProcessExecutor::execute()
 
 #endif
 
+   m_started = true;
    m_running = success;
    return success;
 }
@@ -397,6 +399,7 @@ void ProcessExecutor::stop()
    kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
    m_running = false;
+   m_started = false;
 }
 
 /**
