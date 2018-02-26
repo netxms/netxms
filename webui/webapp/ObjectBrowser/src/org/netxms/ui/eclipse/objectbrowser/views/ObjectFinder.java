@@ -66,11 +66,12 @@ import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkService;
-import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.ZoneMember;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
@@ -553,12 +554,6 @@ public class ObjectFinder extends ViewPart
                          ZoneMember node = (ZoneMember)object;
                          if (!zoneFilter.contains(node.getZoneId()))
                         	 return false;
-                     }
-                     if (object instanceof Sensor)
-                     {
-                        AbstractNode proxy = session.findObjectById(((Sensor)object).getProxyId(), AbstractNode.class);
-                        if (proxy != null && zoneFilter.contains(proxy.getZoneId()))
-                           return false;
                      }
                      else if (object instanceof Interface)
                      {

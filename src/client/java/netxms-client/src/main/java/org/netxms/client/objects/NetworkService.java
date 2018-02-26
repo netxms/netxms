@@ -135,4 +135,28 @@ public class NetworkService extends GenericObject
 	{
 		return pollCount;
 	}
+	
+
+   /**
+    * Get parent node object.
+    * 
+    * @return parent node object or null if it is not exist or inaccessible
+    */
+   public AbstractNode getParentNode()
+   {
+      AbstractNode node = null;
+      synchronized(parents)
+      {
+         for(Long id : parents)
+         {
+            AbstractObject object = session.findObjectById(id);
+            if (object instanceof AbstractNode)
+            {
+               node = (AbstractNode)object;
+               break;
+            }
+         }
+      }
+      return node;
+   }
 }
