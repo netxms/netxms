@@ -62,7 +62,7 @@ void TestSubProcess(const char *procname)
    _sntprintf(cmdLine, MAX_PATH, _T("%hs @subproc"), procname);
 
    StartTest(_T("Process executor - create"));
-   SubProcessExecutor e(cmdLine);
+   SubProcessExecutor e(_T("executor"), cmdLine);
    AssertTrue(e.execute());
    AssertTrue(e.isRunning());
    EndTest();
