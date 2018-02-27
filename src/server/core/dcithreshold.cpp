@@ -908,5 +908,7 @@ void Threshold::reconcile(const Threshold *src)
 {
    m_numMatches = src->m_numMatches;
    m_isReached = src->m_isReached;
+   m_lastEventTimestamp = src->m_lastEventTimestamp;
+   m_currentSeverity = src->m_currentSeverity;
    m_lastScriptErrorReport = src->m_lastScriptErrorReport;
 }
