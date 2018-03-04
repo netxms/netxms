@@ -1223,7 +1223,7 @@ SnmpReferencePart:
 SnmpDisplayHintPart:
     DISPLAY_HINT_SYM CharString
 {
-   safe_free($2);
+   free($2);
 }
 |
 ;
@@ -1235,7 +1235,7 @@ SnmpIndexPart:
 }
 |   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
 {
-   safe_free($3);
+   free($3);
 }
 |
 ;
@@ -1245,7 +1245,11 @@ SnmpDefValPart:
 |   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
 {
-   safe_free($3);
+   free($3);
+}
+|   DEFVAL_SYM LEFT_BRACE_SYM Identifier RIGHT_BRACE_SYM
+{
+   free($3);
 }
 |   DEFVAL_SYM LEFT_BRACE_SYM DefValList RIGHT_BRACE_SYM
 |   DEFVAL_SYM AssignedIdentifierList
