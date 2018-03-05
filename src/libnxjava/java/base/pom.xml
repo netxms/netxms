@@ -2,14 +2,42 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.netxms.nxmc</groupId>
-    <artifactId>netxms-eclipse</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <relativePath>../../../java/netxms-eclipse</relativePath>
-  </parent>
   <groupId>com.netxms.nxmc</groupId>
   <artifactId>org.netxms.ui.base</artifactId>
   <version>2.2.3</version>
   <packaging>eclipse-plugin</packaging>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>0.23.1</version>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+  </build>  
+
+ <profiles>
+   <profile>
+     <id>console</id>
+     <repositories>
+        <repository>
+            <id>eclipse-3.8</id>
+            <url>http://download.eclipse.org/eclipse/updates/3.8</url>
+            <layout>p2</layout>
+        </repository>
+     </repositories>
+   </profile>
+   <profile>
+     <id>web</id>
+     <repositories>
+        <repository>  
+            <id>rap-3.4</id>
+            <url>http://download.eclipse.org/rt/rap/3.4</url>
+            <layout>p2</layout>
+        </repository>
+     </repositories>
+   </profile>
+ </profiles>
+
 </project>
