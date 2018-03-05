@@ -492,7 +492,7 @@ bool DataCollectionTarget::isDataCollectionDisabled()
 /**
  * Put items which requires polling into the queue
  */
-void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
+void DataCollectionTarget::queueItemsForPolling(Queue *pollerQueue)
 {
    if ((m_iStatus == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
       return;  // Do not collect data for unmanaged objects or if data collection is disabled
@@ -505,10 +505,10 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 		DCObject *object = m_dcObjects->get(i);
       if (object->isReadyForPolling(currTime))
       {
-         object->setBusyFlag(TRUE);
+         object->setBusyFlag();
          incRefCount();   // Increment reference count for each queued DCI
-         pPollerQueue->put(object);
-			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
+         pollerQueue->put(object);
+			nxlog_debug(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }
    unlockDciAccess();

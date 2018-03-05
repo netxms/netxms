@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -197,6 +197,17 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			continue;
 		}
 
+		if (target == NULL)
+		{
+         nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
+                     pItem->getId(), pItem->getName());
+
+         // Update item's last poll time and clear busy flag so item can be polled again
+         pItem->setLastPollTime(time(NULL));
+         pItem->clearBusyFlag();
+		   continue;
+		}
+
       DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
 		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
 		if (pItem->getSourceNode() != 0)
@@ -294,7 +305,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 		// Update item's last poll time and clear busy flag so item can be polled again
       pItem->setLastPollTime(currTime);
-      pItem->setBusyFlag(FALSE);
+      pItem->clearBusyFlag();
    }
 
    free(pBuffer);

@@ -212,6 +212,7 @@ protected:
 	bool m_forcePoll;
 
    void lock() { MutexLock(m_hMutex); }
+   bool tryLock() { return MutexTryLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
 	bool loadCustomSchedules(DB_HANDLE hdb);
@@ -281,7 +282,8 @@ public:
 	bool isScheduledForDeletion() { return m_scheduledForDeletion ? true : false; }
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
-   void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
+   void setBusyFlag() { m_busy = 1; }
+   void clearBusyFlag() { m_busy = 0; }
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
    virtual void createMessage(NXCPMessage *pMsg);
