@@ -108,6 +108,7 @@ public class LoginJob implements IRunnableWithProgress
 
          final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
+         session.setCommandTimeout(120000);
          
          session.setClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
@@ -162,6 +163,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       catch(Exception e)
       {
+         Activator.logError("Exception in login job", e);
          throw new InvocationTargetException(e);
       }
       finally

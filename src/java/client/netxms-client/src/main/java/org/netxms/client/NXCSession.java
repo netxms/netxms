@@ -456,6 +456,7 @@ public class NXCSession
                      }
                      break;
                   case NXCPCodes.CMD_USER_DB_EOF:
+                     Logger.debug("NXCSession.receiverThread", "User database synchronization completed");
                      completeSync(syncUserDB);
                      break;
                   case NXCPCodes.CMD_USER_DB_UPDATE:
