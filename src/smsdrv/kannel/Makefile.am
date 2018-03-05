@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = kannel.la
 kannel_la_SOURCES = main.cpp
 kannel_la_CPPFLAGS=-I@top_srcdir@/include
 kannel_la_LDFLAGS = -module -avoid-version
-kannel_la_LIBADD = ../../libnetxms/libnetxms.la
+kannel_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = \
 	kannel.vcproj

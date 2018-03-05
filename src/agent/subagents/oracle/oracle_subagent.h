@@ -121,7 +121,7 @@ struct DatabaseQuery
 /**
  * Global variables
  */
-extern DB_DRIVER g_driverHandle;
+extern DB_DRIVER g_oracleDriver;
 extern DatabaseQuery g_queries[];
 
 #endif   /* _oracle_subagent_h_ */

@@ -169,61 +169,19 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
    char *buffer = (char *)malloc(MAX_PACKET_SIZE);
 #endif
 
-#ifdef USE_KQUEUE
-   int kq;
-   struct kevent ke;
-   struct timespec ts;
-   socklen_t iAddrLen;
-   struct sockaddr_in6 saSrc;
-
-   kq = kqueue();
-   EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 5, NULL);
-   kevent(kq, &ke, 1, NULL, 0, NULL);
-
-   // Wait for response
-   for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
-   {
-      UINT64 qwStartTime = GetCurrentTimeMs();
-
-      ts.tv_sec = dwTimeLeft / 1000;
-      ts.tv_nsec = (dwTimeLeft % 1000) * 1000 * 1000;
-
-      memset(&ke, 0, sizeof(ke));
-      if (kevent(kq, NULL, 0, &ke, 1, &ts) > 0)
-#else    /* not USE_KQUEUE */
-
-#if HAVE_POLL
-   struct pollfd fds;
-#else
-   struct timeval timeout;
-   fd_set rdfs;
-#endif
+   SocketPoller sp;
    socklen_t iAddrLen;
    struct sockaddr_in6 saSrc;
 
    // Wait for response
    for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
    {
-#if HAVE_POLL
-      fds.fd = sock;
-      fds.events = POLLIN;
-      fds.revents = POLLIN;
-#else
-      FD_ZERO(&rdfs);
-      FD_SET(sock, &rdfs);
-      timeout.tv_sec = dwTimeLeft / 1000;
-      timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
-#endif
+      sp.reset();
+      sp.add(sock);
 
       UINT64 qwStartTime = GetCurrentTimeMs();
 
-#if HAVE_POLL
-      if (poll(&fds, 1, dwTimeLeft) > 0)
-#else
-      if (select(SELECT_NFDS(sock + 1), &rdfs, NULL, NULL, &timeout) > 0)
-#endif
-
-#endif   /* USE_KQUEUE else */
+      if (sp.poll(dwTimeLeft) > 0)
       {
          dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
          dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
@@ -260,9 +218,6 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
          dwTimeLeft = 0;
       }
    }
-#ifdef USE_KQUEUE
-   close(kq);
-#endif
 #if !HAVE_ALLOCA
    free(buffer);
 #endif
@@ -272,7 +227,7 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
 /**
  * Ping IPv6 address
  */
-UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
+UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
 {
    struct sockaddr_in6 src, dest;
    addr.fillSockAddr((SockAddrBuffer *)&dest);
@@ -285,7 +240,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UIN
 
    // Prepare packet and calculate checksum
    static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
-   int size = max(sizeof(PACKET_HEADER), min((int)dwPacketSize, MAX_PACKET_SIZE));
+   int size = max(sizeof(PACKET_HEADER), min((int)packetSize, MAX_PACKET_SIZE));
 #if HAVE_ALLOCA
    PACKET_HEADER *p = (PACKET_HEADER *)alloca(size);
 #else
@@ -302,18 +257,28 @@ UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UIN
    // Send packets
    int bytes = size - 40;  // excluding IPv6 header
    UINT32 result = ICMP_UNREACHEABLE;
-   while(iNumRetries--)
+#if HAVE_RAND_R
+   unsigned int seed = (unsigned int)(time(NULL) * *((UINT32 *)&addr.getAddressV6()[12]));
+#endif
+   for(int i = 0; i < retries; i++)
    {
       p->sequence++;
       p->checksum = CalculateChecksum((UINT16 *)p, size);
       if (sendto(sd, (char *)p + 40, bytes, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) == bytes)
       {
-          result = WaitForReply(sd, &dest, p->id, p->sequence, dwTimeout, pdwRTT);
+          result = WaitForReply(sd, &dest, p->id, p->sequence, timeout, rtt);
           if (result != ICMP_TIMEOUT)
              break;  // success or fatal error
       }
  
-      ThreadSleepMs(500);     // Wait half a second before sending next packet
+      UINT32 minDelay = 500 * i; // min = 0 in first run, then wait longer and longer
+      UINT32 maxDelay = 200 + minDelay * 2;  // increased random window between retries
+#if HAVE_RAND_R
+      UINT32 delay = minDelay + (rand_r(&seed) % maxDelay);
+#else
+      UINT32 delay = minDelay + (UINT32)(GetCurrentTimeMs() % maxDelay);
+#endif
+      ThreadSleepMs(delay);
    }
 
    close(sd);

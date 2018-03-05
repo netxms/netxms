@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2017 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -287,13 +287,13 @@ NXSL_Value::NXSL_Value(double dValue)
 /**
  * Create "string" value
  */
-NXSL_Value::NXSL_Value(const TCHAR *pszValue)
+NXSL_Value::NXSL_Value(const TCHAR *value)
 {
    m_nDataType = NXSL_DT_STRING;
-	if (pszValue != NULL)
+	if (value != NULL)
 	{
-		m_dwStrLen = (UINT32)_tcslen(pszValue);
-		m_pszValStr = _tcsdup(pszValue);
+		m_dwStrLen = (UINT32)_tcslen(value);
+		m_pszValStr = _tcsdup(value);
 	}
 	else
 	{
@@ -311,14 +311,14 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 #ifdef UNICODE
 
 /**
- * Create "string" value from multibyte string
+ * Create "string" value from UTF-8 string
  */
-NXSL_Value::NXSL_Value(const char *pszValue)
+NXSL_Value::NXSL_Value(const char *value)
 {
    m_nDataType = NXSL_DT_STRING;
-	if (pszValue != NULL)
+	if (value != NULL)
 	{
-		m_pszValStr = WideStringFromUTF8String(pszValue);
+		m_pszValStr = WideStringFromUTF8String(value);
 		m_dwStrLen = (UINT32)_tcslen(m_pszValStr);
 	}
 	else
@@ -337,14 +337,14 @@ NXSL_Value::NXSL_Value(const char *pszValue)
 /**
  * Create "string" value from non null-terminated string
  */
-NXSL_Value::NXSL_Value(const TCHAR *pszValue, UINT32 dwLen)
+NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = dwLen;
    m_pszValStr = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
-	if (pszValue != NULL)
+	if (value != NULL)
 	{
-		memcpy(m_pszValStr, pszValue, dwLen * sizeof(TCHAR));
+		memcpy(m_pszValStr, value, dwLen * sizeof(TCHAR));
 	   m_pszValStr[dwLen] = 0;
 	}
 	else
@@ -364,10 +364,10 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, UINT32 dwLen)
  */
 NXSL_Value::~NXSL_Value()
 {
-	safe_free(m_name);
-   safe_free(m_pszValStr);
+	free(m_name);
+   free(m_pszValStr);
 #ifdef UNICODE
-	safe_free(m_valueMBStr);
+	free(m_valueMBStr);
 #endif
    switch(m_nDataType)
 	{
@@ -702,6 +702,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
    memcpy(&m_pszValStr[m_dwStrLen], pszString, dwLen * sizeof(TCHAR));
    m_dwStrLen += dwLen;
    m_pszValStr[m_dwStrLen] = 0;
+   m_nDataType = NXSL_DT_STRING;
    updateNumber();
 }
 

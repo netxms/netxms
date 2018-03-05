@@ -295,7 +295,10 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       }
 
       if (IsShutdownInProgress())
+      {
+         delete pTransport;
          goto fail;
+      }
 
       pTransport->setSnmpVersion(SNMP_VERSION_2C);
 restart_check:

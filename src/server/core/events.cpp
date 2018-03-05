@@ -1270,7 +1270,6 @@ EventTemplate *FindEventTemplateByCode(UINT32 eventCode)
 EventTemplate *FindEventTemplateByName(const TCHAR *name)
 {
    EventTemplate *result = NULL;
-   UINT32 i;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
    Iterator<EventTemplate> *it = m_eventTemplates.iterator();

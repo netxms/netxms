@@ -1005,6 +1005,7 @@ public:
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
    UINT32 getListFromScript(const TCHAR *param, StringList **list);
+   UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);

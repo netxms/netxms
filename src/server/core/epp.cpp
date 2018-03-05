@@ -390,7 +390,6 @@ bool EPRule::matchScript(Event *pEvent)
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
-   UINT32 i;
 	NetObj *pObject;
 
    if (m_pScript == NULL)
@@ -400,7 +399,7 @@ bool EPRule::matchScript(Event *pEvent)
    // other information as variables
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
    memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
-   for(i = 0; i < pEvent->getParametersCount(); i++)
+   for(int i = 0; i < pEvent->getParametersCount(); i++)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    pLocals = new NXSL_VariableSystem;
@@ -413,8 +412,9 @@ bool EPRule::matchScript(Event *pEvent)
 	pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
+      m_pScript->setGlobalVariable(_T("$object"), pObject->createNXSLObject());
 		if (pObject->getObjectClass() == OBJECT_NODE)
-			m_pScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+			m_pScript->setGlobalVariable(_T("$node"), pObject->createNXSLObject());
 	}
 	m_pScript->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
 	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);

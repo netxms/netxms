@@ -125,7 +125,12 @@ target
 /src/agent/subagents/java/sample/.classpath
 /src/agent/subagents/java/sample/.project
 /src/agent/subagents/java/sample/.settings
-/src/agent/subagents/portCheck/x64
+/src/agent/subagents/jmx/.classpath
+/src/agent/subagents/jmx/.project
+/src/agent/subagents/jmx/.settings
+/src/agent/subagents/ubntlw/.classpath
+/src/agent/subagents/ubntlw/.project
+/src/agent/subagents/ubntlw/.settings
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/client/install/Output

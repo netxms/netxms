@@ -134,10 +134,6 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
 
 #else	/* not _WIN32 */
 
-#if HAVE_POLL_H
-#include <poll.h>
-#endif
-
 /**
  * ICMP echo request structure
  */
@@ -206,61 +202,18 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
    UINT32 dwTimeLeft, dwElapsedTime;
    ECHOREPLY reply;
 
-#ifdef USE_KQUEUE
-	int kq;
-	struct kevent ke;
-	struct timespec ts;
-	socklen_t iAddrLen;
-	struct sockaddr_in saSrc;
-
-	kq = kqueue();
-	EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 5, NULL);
-	kevent(kq, &ke, 1, NULL, 0, NULL);
-
-	// Wait for response
-	for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
-	{
-		UINT64 qwStartTime = GetCurrentTimeMs();
-
-		ts.tv_sec = dwTimeLeft / 1000;
-		ts.tv_nsec = (dwTimeLeft % 1000) * 1000 * 1000;
-
-		memset(&ke, 0, sizeof(ke));
-		if (kevent(kq, NULL, 0, &ke, 1, &ts) > 0)
-#else    /* not USE_KQUEUE */
-
-#if HAVE_POLL
-   struct pollfd fds;
-#else
-   struct timeval timeout;
-   fd_set rdfs;
-#endif
+   SocketPoller sp;
    socklen_t iAddrLen;
    struct sockaddr_in saSrc;
 
    // Wait for response
    for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
    {
-#if HAVE_POLL
-		fds.fd = sock;
-		fds.events = POLLIN;
-		fds.revents = POLLIN;
-#else
-		FD_ZERO(&rdfs);
-		FD_SET(sock, &rdfs);
-		timeout.tv_sec = dwTimeLeft / 1000;
-		timeout.tv_usec = (dwTimeLeft % 1000) * 1000;
-#endif
+      sp.reset();
+      sp.add(sock);
 
       UINT64 qwStartTime = GetCurrentTimeMs();
-
-#if HAVE_POLL
-      if (poll(&fds, 1, dwTimeLeft) > 0)
-#else
-      if (select(SELECT_NFDS(sock + 1), &rdfs, NULL, NULL, &timeout) > 0)
-#endif
-
-#endif   /* USE_KQUEUE else */
+      if (sp.poll(dwTimeLeft) > 0)
 		{
 			dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 			dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
@@ -299,9 +252,6 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
 			dwTimeLeft = 0;
 		}
 	}
-#ifdef USE_KQUEUE
-	close(kq);
-#endif
    return result;
 }
 
@@ -312,67 +262,76 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-static UINT32 LIBNETXMS_EXPORTABLE IcmpPing4(UINT32 addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
+static UINT32 LIBNETXMS_EXPORTABLE IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
 {
-   SOCKET sock;
-   struct sockaddr_in saDest;
-   UINT32 dwResult = ICMP_TIMEOUT;
-   ECHOREQUEST request;
-   int nBytes;
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
 
    // Check packet size
-   if (dwPacketSize < sizeof(ICMPHDR) + sizeof(IPHDR))
-      dwPacketSize = sizeof(ICMPHDR) + sizeof(IPHDR);
-   else if (dwPacketSize > MAX_PING_SIZE)
-      dwPacketSize = MAX_PING_SIZE;
+   if (packetSize < sizeof(ICMPHDR) + sizeof(IPHDR))
+      packetSize = sizeof(ICMPHDR) + sizeof(IPHDR);
+   else if (packetSize > MAX_PING_SIZE)
+      packetSize = MAX_PING_SIZE;
 
    // Create raw socket
-   sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+   SOCKET sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
    {
       return ICMP_RAW_SOCK_FAILED;
    }
 
    // Setup destination address structure
+   struct sockaddr_in saDest;
    memset(&saDest, 0, sizeof(sockaddr_in));
    saDest.sin_addr.s_addr = addr;
    saDest.sin_family = AF_INET;
    saDest.sin_port = 0;
 
    // Fill in request structure
+   ECHOREQUEST request;
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    request.m_icmpHdr.m_cCode = 0;
    request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
    request.m_icmpHdr.m_wSeq = 0;
-   memcpy(request.m_cData, szPayload, min(dwPacketSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
+   memcpy(request.m_cData, szPayload, min(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
+
+   UINT32 result = ICMP_TIMEOUT;
 
    // Do ping
-   nBytes = dwPacketSize - sizeof(IPHDR);
-   while(iNumRetries--)
+#if HAVE_RAND_R
+   unsigned int seed = (unsigned int)(time(NULL) * addr);
+#endif
+   int bytes = packetSize - sizeof(IPHDR);
+   for(int i = 0; i < retries; i++)
    {
       request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
-      request.m_icmpHdr.m_wChecksum = IPChecksum((BYTE *)&request, nBytes);
-      if (sendto(sock, (char *)&request, nBytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == nBytes)
+      request.m_icmpHdr.m_wChecksum = IPChecksum((BYTE *)&request, bytes);
+      if (sendto(sock, (char *)&request, bytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == bytes)
       {
-          dwResult = WaitForReply(sock, addr, request.m_icmpHdr.m_wSeq, dwTimeout, pdwRTT);
-          if (dwResult != ICMP_TIMEOUT)
+          result = WaitForReply(sock, addr, request.m_icmpHdr.m_wSeq, timeout, rtt);
+          if (result != ICMP_TIMEOUT)
              break;  // success or fatal error
       }
 
-      ThreadSleepMs(500);     // Wait half a second before sending next packet
+      UINT32 minDelay = 500 * i; // min = 0 in first run, then wait longer and longer
+      UINT32 maxDelay = 200 + minDelay * 2;  // increased random window between retries
+#if HAVE_RAND_R
+      UINT32 delay = minDelay + (rand_r(&seed) % maxDelay);
+#else
+      UINT32 delay = minDelay + (UINT32)(GetCurrentTimeMs() % maxDelay);
+#endif
+      ThreadSleepMs(delay);
    }
 
    closesocket(sock);
-   return dwResult;
+   return result;
 }
 
 /**
  * Ping IPv6 address
  */
-UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
+UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize);
 
 /**
  * Do an ICMP ping to specific IP address

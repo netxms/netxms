@@ -333,8 +333,24 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 		return NULL;
 
 	ForwardingDatabase *fdb = new ForwardingDatabase(node->getId());
+
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
-	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
+   if (node->isPerVlanFdbSupported())
+   {
+      VlanList *vlans = node->getVlans();
+      if (vlans != NULL)
+      {
+         for(int i = 0; i < vlans->size(); i++)
+         {
+            TCHAR context[16];
+            _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
+            node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context);
+         }
+         vlans->decRefCount();
+      }
+   }
+
+   node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
 	int size = fdb->getSize();
 	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
 

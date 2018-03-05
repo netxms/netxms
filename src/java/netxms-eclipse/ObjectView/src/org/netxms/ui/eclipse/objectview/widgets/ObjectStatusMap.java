@@ -91,6 +91,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private boolean groupObjects = true;
 	private int severityFilter = 0xFF;
 	private SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
+	private Set<Runnable> refreshListeners = new HashSet<Runnable>();
 	
 	/**
 	 * @param parent
@@ -208,6 +209,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		
 		Rectangle r = getClientArea();
 		setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+		
+		for(Runnable l : refreshListeners)
+		   l.run();
 	}
 	
 	/**
@@ -567,5 +571,21 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	public void setSeverityFilter(int severityFilter)
 	{
 		this.severityFilter = severityFilter;
+	}
+	
+	/**
+	 * @param listener
+	 */
+	public void addRefreshListener(Runnable listener)
+	{
+	   refreshListeners.add(listener);
+	}
+	
+	/**
+	 * @param listener
+	 */
+	public void removeRefreshListener(Runnable listener)
+	{
+	   refreshListeners.remove(listener);
 	}
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,8 +52,15 @@ UINT32 GenerateMessageId()
  */
 void InitSessionList()
 {
-	// Create session list and it's access mutex
-	g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
+   if (g_dwMaxSessions == 0)  // default value
+   {
+      g_dwMaxSessions = (g_dwFlags & (AF_ENABLE_PROXY | AF_ENABLE_SNMP_PROXY)) ? 1024 : 32;
+   }
+   else
+   {
+      g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 4096);
+   }
+   nxlog_debug(2, _T("Maximum number of sessions set to %d"), g_dwMaxSessions);
 	g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
 	memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
 	g_hSessionListAccess = MutexCreate();
@@ -344,38 +351,25 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
    // Wait for connection requests
+   SocketPoller sp;
    int errorCount = 0;
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      struct timeval tv;
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-
-      fd_set rdfs;
-      FD_ZERO(&rdfs);
+      sp.reset();
       if (hSocket != INVALID_SOCKET)
-         FD_SET(hSocket, &rdfs);
+         sp.add(hSocket);
 #ifdef WITH_IPV6
       if (hSocket6 != INVALID_SOCKET)
-         FD_SET(hSocket6, &rdfs);
+         sp.add(hSocket6);
 #endif
 
-#if defined(WITH_IPV6) && !defined(_WIN32)
-      SOCKET nfds = 0;
-      if (hSocket != INVALID_SOCKET)
-         nfds = hSocket;
-      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
-         nfds = hSocket6;
-      int nRet = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
-#else
-      int nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
-#endif
+      int nRet = sp.poll(1000);
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
          char clientAddr[128];
          socklen_t size = 128;
 #ifdef WITH_IPV6
-         SOCKET hClientSocket = accept(FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
+         SOCKET hClientSocket = accept(sp.isSet(hSocket) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
 #else
          SOCKET hClientSocket = accept(hSocket, (struct sockaddr *)clientAddr, &size);
 #endif

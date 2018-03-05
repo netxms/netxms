@@ -240,7 +240,7 @@ bool SQLBatch(const TCHAR *pszBatch)
    batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
 
    pszQuery = pszBuffer = batch.getBuffer();
-   while(1)
+   while(true)
    {
       ptr = _tcschr(pszQuery, _T('\n'));
       if (ptr != NULL)
@@ -276,6 +276,8 @@ bool SQLBatch(const TCHAR *pszBatch)
 			}
 		}
 
+		if (ptr == NULL)
+		   break;
       ptr++;
       pszQuery = ptr;
    }

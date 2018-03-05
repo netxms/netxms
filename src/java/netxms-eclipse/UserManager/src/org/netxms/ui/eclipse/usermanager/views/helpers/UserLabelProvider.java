@@ -83,6 +83,8 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
             return (element instanceof User) ? ((User) element).getFullName() : null;
          case UserManagementView.COLUMN_GUID:
             return ((AbstractUserObject)element).getGuid().toString();
+         case UserManagementView.COLUMN_LDAP_DN:
+            return ((AbstractUserObject)element).getLdapDn();
 			case UserManagementView.COLUMN_NAME:
 				return ((AbstractUserObject)element).getName();
          case UserManagementView.COLUMN_SOURCE:

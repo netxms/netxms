@@ -36,5 +36,6 @@ public class GlobTest extends TestCase
 		assertTrue(!Glob.match("c*", ""));
 		assertTrue(Glob.match("*", ""));
 		assertTrue(Glob.match("*bc*f", "abcdef"));
+      assertTrue(!Glob.match("?MSD", "AM"));
 	}
 }

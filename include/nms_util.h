@@ -33,11 +33,14 @@
 #define LIBNETXMS_EXPORTABLE
 #endif
 
-
 #include <nms_common.h>
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
 
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -1100,7 +1103,7 @@ public:
    void setStatusAt(int row, int col, int status);
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
-   const TCHAR *getAsString(int nRow, int nCol);
+   const TCHAR *getAsString(int nRow, int nCol, const TCHAR *defaultValue = NULL);
    INT32 getAsInt(int nRow, int nCol);
    UINT32 getAsUInt(int nRow, int nCol);
    INT64 getAsInt64(int nRow, int nCol);
@@ -1343,6 +1346,38 @@ public:
    void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }
    void setStreetAddress(const TCHAR *streetAddress) { safe_free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
    void setPostCode(const TCHAR *postcode) { safe_free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
+};
+
+/**
+ * Max number of polled sockets
+ */
+#define SOCKET_POLLER_MAX_SOCKETS    16
+
+/**
+ * Socket poller
+ */
+class LIBNETXMS_EXPORTABLE SocketPoller
+{
+private:
+   bool m_write;
+   int m_count;
+#if HAVE_POLL
+   struct pollfd m_sockets[SOCKET_POLLER_MAX_SOCKETS];
+#else
+   fd_set m_sockets;
+#ifndef _WIN32
+   SOCKET m_maxfd;
+#endif
+#endif
+
+public:
+   SocketPoller(bool write = false);
+   ~SocketPoller();
+
+   bool add(SOCKET s);
+   int poll(UINT32 timeout);
+   bool isSet(SOCKET s);
+   void reset();
 };
 
 #endif   /* __cplusplus */
@@ -1745,6 +1780,12 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, i
 char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s);
 char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s);
 
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+#define utf8_to_ucs2(src, srcLen, dst, dstLen) MultiByteToWideChar(CP_UTF8, 0, (src), (srcLen), (dst), (dstLen))
+#else
+int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
+#endif
+
 #if !defined(_WIN32) && !HAVE_WSTAT
 int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif
@@ -1827,6 +1868,10 @@ INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 #if !HAVE_WCSTOULL
 UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
+#endif
+
+#if !HAVE_STRLWR && !defined(_WIN32)
+char LIBNETXMS_EXPORTABLE *strlwr(char *str);
 #endif
 
 #if !HAVE_WCSLWR && !defined(_WIN32)

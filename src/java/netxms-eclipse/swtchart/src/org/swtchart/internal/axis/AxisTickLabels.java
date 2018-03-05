@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -333,7 +334,7 @@ public class AxisTickLabels implements PaintListener
 			tickLabelPositions.add(tickLabelPosition);
 		}
 	}
-	
+
 	/**
 	 * Updates tick label for log scale.
 	 * 
@@ -379,7 +380,7 @@ public class AxisTickLabels implements PaintListener
 		{
 			firstPosition = MIN.subtract(MIN.remainder(tickStep)).add(tickStep);
 		}
-		
+
 		for(int i = digitMin; i <= digitMax; i++)
 		{
 			for(BigDecimal j = firstPosition; j.doubleValue() <= pow(10, i).doubleValue(); j = j.add(tickStep))
@@ -574,7 +575,7 @@ public class AxisTickLabels implements PaintListener
 	 */
 	private long getPeriodInMillis(int unit, int amount)
 	{
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		cal.setTimeInMillis(0);
 		cal.roll(unit, amount);
 		return cal.getTimeInMillis();

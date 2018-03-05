@@ -200,8 +200,7 @@ static void CheckZones()
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
-   TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
-   BOOL bIsDeleted;
+   TCHAR szQuery[1024];
 
    StartStage(_T("Checking zone objects..."));
    hResult = SQLSelect(_T("SELECT id FROM zones"));

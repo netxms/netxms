@@ -22,23 +22,33 @@
 #ifndef __NET_H__
 #define __NET_H__
 
-#define IF_INFO_ADMIN_STATUS     0
-#define IF_INFO_OPER_STATUS      1
-#define IF_INFO_BYTES_IN         2
-#define IF_INFO_BYTES_OUT        3
-#define IF_INFO_DESCRIPTION      4
-#define IF_INFO_IN_ERRORS        5
-#define IF_INFO_OUT_ERRORS       6
-#define IF_INFO_PACKETS_IN       7
-#define IF_INFO_PACKETS_OUT      8
-#define IF_INFO_SPEED            9
+enum InterfaceMetrict
+{
+	IF_INFO_ADMIN_STATUS,
+	IF_INFO_OPER_STATUS,
+	IF_INFO_BYTES_IN,
+	IF_INFO_BYTES_IN_64,
+	IF_INFO_BYTES_OUT,
+	IF_INFO_BYTES_OUT_64,
+	IF_INFO_DESCRIPTION,
+	IF_INFO_IN_ERRORS,
+	IF_INFO_IN_ERRORS_64,
+	IF_INFO_OUT_ERRORS,
+	IF_INFO_OUT_ERRORS_64,
+	IF_INFO_PACKETS_IN,
+	IF_INFO_PACKETS_IN_64,
+	IF_INFO_PACKETS_OUT,
+	IF_INFO_PACKETS_OUT_64,
+	IF_INFO_SPEED
+};
 
 LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfAdminStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfOperStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetInterface64bitSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __NET_H__

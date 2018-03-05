@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -63,25 +65,40 @@ public class DeleteObject extends AbstractHandler
       
       if (confirmed)
       {
-         final Object[] objects = ((IStructuredSelection)selection).toArray();
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().DeleteObject_JobName, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               for(Object o : objects)
-               {
-                  if (o instanceof AbstractObject)
-                     session.deleteObject(((AbstractObject)o).getObjectId());
-               }
-            }
+         if (((IStructuredSelection)selection).getFirstElement() instanceof AbstractObject)
+         {
+            final Object[] objects = ((IStructuredSelection)selection).toArray();
             
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().DeleteObject_JobError;
-            }
-         }.start();
+            Arrays.sort(objects, new Comparator<Object>() {
+               @Override
+               public int compare(Object arg0, Object arg1)
+               {
+                  if (arg0 instanceof AbstractObject && arg1 instanceof AbstractObject)
+                     if (((AbstractObject)arg0).isChildOf(((AbstractObject)arg1).getObjectId()))
+                        return -1;
+                     return 1;
+               }
+            });
+               
+            final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+            new ConsoleJob(Messages.get().DeleteObject_JobName, null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  for(Object o : objects)
+                  {
+                     if (o instanceof AbstractObject)
+                        session.deleteObject(((AbstractObject)o).getObjectId());
+                  }
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return Messages.get().DeleteObject_JobError;
+               }
+            }.start();
+         }
       }     
       return null;
    }

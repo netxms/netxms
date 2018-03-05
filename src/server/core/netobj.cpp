@@ -1746,18 +1746,7 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pChildList[i])));
-		}
-		else if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
-		}
-		else
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pChildList[i])));
-		}
+      children->set(index++, m_pChildList[i]->createNXSLObject());
 	}
 	UnlockChildList();
 

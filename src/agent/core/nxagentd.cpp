@@ -155,7 +155,7 @@ UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in mill
 UINT32 g_dwSNMPTimeout = 1500;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
-UINT32 g_dwMaxSessions = 32;
+UINT32 g_dwMaxSessions = 0;
 UINT32 g_dwSNMPTrapPort = 162;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;

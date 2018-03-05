@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus Library
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 THREAD_RESULT THREAD_CALL NXMBDispatcher::workerThreadStarter(void *arg)
 {
 	((NXMBDispatcher *)arg)->workerThread();
+   ConditionSet(((NXMBDispatcher *)arg)->m_stopCondition);
 	return THREAD_OK;
 }
 
@@ -42,9 +43,10 @@ NXMBDispatcher::NXMBDispatcher()
 	m_subscribers = NULL;
 	m_filters = NULL;
 	m_subscriberListAccess = MutexCreate();
-	m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, this);
+	m_workerThreadHandle = INVALID_THREAD_HANDLE;
    m_callHandlers = new CallHandlerMap();
    m_callHandlerAccess = MutexCreate();
+   m_stopCondition = ConditionCreate(TRUE);
 }
 
 /**
@@ -53,29 +55,36 @@ NXMBDispatcher::NXMBDispatcher()
 NXMBDispatcher::~NXMBDispatcher()
 {
 	NXMBMessage *msg;
-	int i;
-
 	while((msg = (NXMBMessage *)m_queue->get()) != NULL)
 		delete msg;
-	m_queue->put(INVALID_POINTER_VALUE);
-	ThreadJoin(m_workerThreadHandle);
 
+   if (m_workerThreadHandle != INVALID_THREAD_HANDLE)
+   {
+      // ThreadJoin cannot be used here because at least on
+      // Windows waiting on thread from DLL unload handler
+      // will cause deadlock
+	   ThreadDetach(m_workerThreadHandle);
+	   m_queue->put(INVALID_POINTER_VALUE);
+      ConditionWait(m_stopCondition, 30000);
+   }
 	delete m_queue;
 
 	MutexDestroy(m_subscriberListAccess);
 
-	for(i = 0; i < m_numSubscribers; i++)
+	for(int i = 0; i < m_numSubscribers; i++)
 	{
 		if ((m_subscribers[i] != NULL) && m_subscribers[i]->isOwnedByDispatcher())
 			delete m_subscribers[i];
 		if ((m_filters[i] != NULL) && m_filters[i]->isOwnedByDispatcher())
 			delete m_filters[i];
 	}
-	safe_free(m_subscribers);
-	safe_free(m_filters);
+	free(m_subscribers);
+	free(m_filters);
 
    MutexDestroy(m_callHandlerAccess);
    delete m_callHandlers;
+
+   ConditionDestroy(m_stopCondition);
 }
 
 /**
@@ -83,17 +92,17 @@ NXMBDispatcher::~NXMBDispatcher()
  */
 void NXMBDispatcher::workerThread()
 {
-	NXMBMessage *msg;
-	int i;
-
+   nxlog_debug(3, _T("NXMB: dispatcher thread started"));
 	while(true)
 	{
-		msg = (NXMBMessage *)m_queue->getOrBlock();
+		NXMBMessage *msg = (NXMBMessage *)m_queue->getOrBlock();
 		if (msg == INVALID_POINTER_VALUE)
 			break;
 
+      nxlog_debug(7, _T("NXMB: processing message %s from %s"), msg->getType(), msg->getSenderId());
+
 		MutexLock(m_subscriberListAccess);
-		for(i = 0; i < m_numSubscribers; i++)
+		for(int i = 0; i < m_numSubscribers; i++)
 		{
 			if (m_filters[i]->isAllowed(*msg))
 			{
@@ -103,6 +112,7 @@ void NXMBDispatcher::workerThread()
 		MutexUnlock(m_subscriberListAccess);
 		delete msg;
 	}
+   nxlog_debug(3, _T("NXMB: dispatcher thread stopped"));
 }
 
 /**
@@ -213,27 +223,34 @@ bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output
    MutexLock(m_callHandlerAccess);
    NXMBCallHandler handler = m_callHandlers->get(callName);
    MutexUnlock(m_callHandlerAccess);
-   return (handler != NULL) ? handler(callName, input, output) : false;
+   if (handler == NULL)
+   {
+      nxlog_debug(7, _T("NXMB: call handler %s not registered"), callName);
+      return false;
+   }
+   bool success = handler(callName, input, output);
+   nxlog_debug(7, _T("NXMB: call to %s %s"), callName, success ? _T("successful") : _T("failed"));
+   return success;
 }
-
-/**
- * Synchronization counter
- */
-MUTEX NXMBDispatcher::m_instanceAccess = MutexCreate();
 
 /**
  * Global dispatcher instance
  */
-NXMBDispatcher *NXMBDispatcher::m_instance = NULL;
+static NXMBDispatcher s_instance;
+
+/**
+ * Instance access lock
+ */
+static MUTEX s_instanceLock = MutexCreate();
 
 /**
  * Get global dispatcher instance
  */
 NXMBDispatcher *NXMBDispatcher::getInstance()
 {
-   MutexLock(m_instanceAccess);
-	if (m_instance == NULL)
-		m_instance = new NXMBDispatcher();
-   MutexUnlock(m_instanceAccess);
-	return m_instance;
+   MutexLock(s_instanceLock);
+   if (s_instance.m_workerThreadHandle == INVALID_THREAD_HANDLE)
+      s_instance.m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, &s_instance);
+   MutexUnlock(s_instanceLock);
+	return &s_instance;
 }

@@ -84,7 +84,7 @@ UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
 	m_guid = DBGetFieldGUID(hResult, row, 5);
-	m_userDn = DBGetField(hResult, row, 6, NULL, 0);
+	m_ldapDn = DBGetField(hResult, row, 6, NULL, 0);
 	m_ldapId = DBGetField(hResult, row, 7, NULL, 0);
 }
 
@@ -96,7 +96,7 @@ UserDatabaseObject::UserDatabaseObject()
    m_id = 0;
    m_guid = uuid::generate();
    m_name[0] = 0;
-   m_userDn = NULL;
+   m_ldapDn = NULL;
    m_ldapId = NULL;
 	m_systemRights = 0;
 	m_description[0] = 0;
@@ -114,8 +114,8 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = UF_MODIFIED;
-	m_userDn = NULL;
-	m_ldapId= NULL;
+	m_ldapDn = NULL;
+	m_ldapId = NULL;
 }
 
 /**
@@ -123,8 +123,8 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
  */
 UserDatabaseObject::~UserDatabaseObject()
 {
-   safe_free(m_userDn);
-   safe_free(m_ldapId);
+   free(m_ldapDn);
+   free(m_ldapId);
 }
 
 /**
@@ -154,6 +154,8 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->setField(VID_USER_DESCRIPTION, m_description);
    msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_LDAP_DN, m_ldapDn);
+   msg->setField(VID_LDAP_ID, m_ldapId);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
@@ -311,10 +313,10 @@ void UserDatabaseObject::setDn(const TCHAR *dn)
 {
    if(dn == NULL)
       return;
-   if(m_userDn != NULL && !_tcscmp(m_userDn, dn))
+   if(m_ldapDn != NULL && !_tcscmp(m_ldapDn, dn))
       return;
-   free(m_userDn);
-   m_userDn = _tcsdup_ex(dn);
+   free(m_ldapDn);
+   m_ldapDn = _tcsdup_ex(dn);
    m_flags |= UF_MODIFIED;
 }
 
@@ -532,7 +534,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (UINT32)m_disabledUntil);
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
-   DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
+   DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
    DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
 
@@ -811,7 +813,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
-   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_ldapDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
    DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 

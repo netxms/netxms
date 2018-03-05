@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0.6], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0.8], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -565,8 +565,8 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
-	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java bind9 jmx ubntlw netsvc db2 tuxedo mongodb"
+	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -837,7 +837,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS java ubntlw"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
 fi
 
 check_substr "$COMPONENTS" "tuxedo"
@@ -1501,11 +1501,7 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
-				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
-					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-				else
-					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-				fi	
+				LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 			else
 				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 			fi
@@ -1766,7 +1762,7 @@ fi
 
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS kannel slack text2reach websms"
+  SMSDRV_DIRS="$SMSDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -1854,9 +1850,9 @@ AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull setlocale])
-AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
+AC_CHECK_FUNCS([tolower if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
+AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo rand_r])
 AC_CHECK_FUNCS([itoa _itoa isatty getgrnam getpwnam malloc_info malloc_trim])
 
 AC_CHECK_DECLS([nanosleep, daemon, strerror])
@@ -2110,8 +2106,9 @@ fi
 # *BSD specific checks
 #--------------------------------------------------------------------
 
+AC_CHECK_HEADERS([sys/event.h])
 AC_CHECK_LIB(kvm, kvm_open)
-AC_CHECK_FUNCS([kvm_getswapinfo])
+AC_CHECK_FUNCS([kvm_openfiles kvm_getswapinfo kqueue])
 AC_CHECK_TYPES([struct kinfo_proc2],,,[
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
@@ -3123,6 +3120,7 @@ AC_CONFIG_FILES([
 	src/agent/libnxsd/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/bind9/Makefile
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
@@ -3152,6 +3150,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/java/sample/src/main/java/org/netxms/Makefile
 	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/Makefile
 	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/demo/Makefile
+	src/agent/subagents/jmx/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
@@ -3256,12 +3255,16 @@ AC_CONFIG_FILES([
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxupload/Makefile
 	src/smsdrv/Makefile
+	src/smsdrv/anysms/Makefile
 	src/smsdrv/dummy/Makefile
 	src/smsdrv/generic/Makefile
 	src/smsdrv/kannel/Makefile
+	src/smsdrv/mymobile/Makefile
+	src/smsdrv/nexmo/Makefile
 	src/smsdrv/nxagent/Makefile
 	src/smsdrv/portech/Makefile
 	src/smsdrv/slack/Makefile
+	src/smsdrv/smseagle/Makefile
 	src/smsdrv/text2reach/Makefile
 	src/smsdrv/websms/Makefile
 	src/snmp/Makefile

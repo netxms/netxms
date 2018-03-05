@@ -178,6 +178,7 @@ public class SubAgent
     */
    public boolean init(Config config)
    {
+      writeDebugLog(2, "JAVA: subagent initialization started");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
          try
@@ -191,6 +192,7 @@ public class SubAgent
             writeDebugLog(6, "JAVA:   ", e);
          }
       }
+      writeDebugLog(2, "JAVA: subagent initialization completed");
       return true;
    }
 
@@ -309,13 +311,22 @@ public class SubAgent
       {
          classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
          URL url = classLoader.findResource(MANIFEST_PATH);
-         Manifest manifest = new Manifest(url.openStream());
-         Attributes attributes = manifest.getMainAttributes();
-         classList = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
-         if (classList == null)
+         if (url != null)
+         {
+            Manifest manifest = new Manifest(url.openStream());
+            Attributes attributes = manifest.getMainAttributes();
+            classList = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
+            if (classList == null)
+            {
+               classLoader.close();
+               writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+               return null;
+            }
+         }
+         else
          {
             classLoader.close();
-            writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+            writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": manifest not found");
             return null;
          }
       }

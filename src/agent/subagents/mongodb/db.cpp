@@ -118,6 +118,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
    m_stopCondition = ConditionCreate(TRUE);
    m_databaseListLock = MutexCreate();
    m_dataLock = MutexCreate();
+   m_connLock = MutexCreate();
    m_databaseList = NULL;
    m_data = new StringObjectMap<StringObjectMap<MongoDBCommand> >(true);
 }
@@ -202,6 +203,7 @@ void DatabaseInstance::getDatabases()
       bson_strfreev(m_databaseList);
       m_databaseList = NULL;
    }
+   MutexLock(m_connLock);
    if (!(m_databaseList = mongoc_client_get_database_names(m_dbConn, &error)))
    {
 #ifdef UNICODE
@@ -214,6 +216,7 @@ void DatabaseInstance::getDatabases()
       bson_strfreev (m_databaseList);
       m_databaseList = NULL;
    }
+   MutexUnlock(m_connLock);
    MutexUnlock(m_databaseListLock);
 }
 
@@ -239,6 +242,7 @@ bool DatabaseInstance::getServerStatus()
       delete m_serverStatus;
    }
    m_serverStatus = new bson_t;
+   MutexLock(m_connLock);
    if (!mongoc_client_get_server_status(m_dbConn, NULL, m_serverStatus, &error)) {
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
@@ -252,6 +256,7 @@ bool DatabaseInstance::getServerStatus()
       delete m_serverStatus;
       m_serverStatus = NULL;
    }
+   MutexUnlock(m_connLock);
    MutexUnlock(m_serverStatusLock);
    return sucess;
 }
@@ -433,7 +438,9 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
    {
       if((GetCurrentTimeMs() - commandData->m_lastUpdateTime) > 60000)
       {
+         MutexLock(m_connLock);
          result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+         MutexUnlock(m_connLock);
       }
       else
       {
@@ -443,7 +450,9 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
    else
    {
       commandData = new MongoDBCommand();
+      MutexLock(m_connLock);
       result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+      MutexUnlock(m_connLock);
       list = new StringObjectMap<MongoDBCommand>(true);
       list->set(command,commandData);
       m_data->set(dbName,list);
@@ -482,6 +491,7 @@ DatabaseInstance::~DatabaseInstance()
       bson_strfreev(m_databaseList);
    MutexDestroy(m_databaseListLock);
    MutexDestroy(m_dataLock);
+   MutexDestroy(m_connLock);
    delete m_data;
 }
 

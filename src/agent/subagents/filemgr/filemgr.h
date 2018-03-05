@@ -81,25 +81,30 @@ struct MessageData
 	AbstractCommSession *session;
 };
 
+/**
+ * List of monitored files
+ */
 class MonitoredFileList
 {
 private:
    MUTEX m_mutex;
-   ObjectArray<MONITORED_FILE>  m_monitoredFiles;
-   MONITORED_FILE* m_newFile;
+   ObjectArray<MONITORED_FILE> m_files;
+
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
 
 public:
    MonitoredFileList();
    ~MonitoredFileList();
-   void addMonitoringFile(const TCHAR *fileName);
-   bool checkFileMonitored(const TCHAR *fileName);
-   bool removeMonitoringFile(const TCHAR *fileName);
 
-private:
-   void Lock();
-   void Unlock();
+   void add(const TCHAR *fileName);
+   bool contains(const TCHAR *fileName);
+   bool remove(const TCHAR *fileName);
 };
 
+/**
+ * Global instance of monitored files list
+ */
 extern MonitoredFileList g_monitorFileList;
 
 THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *arg);

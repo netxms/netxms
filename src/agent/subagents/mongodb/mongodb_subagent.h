@@ -74,6 +74,7 @@ private:
    char **m_databaseList;
    //Other data
    MUTEX m_dataLock;
+   MUTEX m_connLock;
    StringObjectMap<StringObjectMap<MongoDBCommand> > *m_data;
 
 

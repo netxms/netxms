@@ -47,14 +47,14 @@ public class DashboardView extends DashboardLayout
 
 		for (DashboardElement e : dashboard.getElements())
 		{
-			createElement(e);
+			createElement(e, dashboard.getNumColumns());
 		}
 	}
 
 	/**
 	 * @param element
 	 */
-	private void createElement(DashboardElement element)
+	private void createElement(DashboardElement element, int columnCount)
 	{
 		Log.d(TAG, "createElement: type=" + element.getType());
 
@@ -134,7 +134,7 @@ public class DashboardView extends DashboardLayout
 				gravity |= Gravity.CENTER_VERTICAL;
 				break;
 		}
-		DashboardLayout.LayoutParams layoutParams = new DashboardLayout.LayoutParams(layout.horizontalSpan, layout.verticalSpan, gravity);
+		DashboardLayout.LayoutParams layoutParams = new DashboardLayout.LayoutParams(Math.min(layout.horizontalSpan, columnCount), layout.verticalSpan, gravity);
 		widget.setLayoutParams(layoutParams);
 		addView(widget);
 	}

@@ -25,7 +25,7 @@ import org.netxms.agent.ParameterType;
 /**
  * Adapter for Parameter interface
  */
-public abstract class ParameterAdapter implements Parameter
+public abstract class ParameterAdapter extends AbstractAdapter implements Parameter
 {
    private String name;
    private String description;

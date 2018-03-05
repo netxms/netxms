@@ -25,7 +25,7 @@ import org.netxms.agent.TableParameter;
 /**
  * Adapter for TableParameter interface
  */
-public abstract class TableAdapter implements TableParameter
+public abstract class TableAdapter extends AbstractAdapter implements TableParameter
 {
    private String name;
    private String description;

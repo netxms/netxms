@@ -3413,7 +3413,7 @@ StringMap *Node::getInstanceList(DCItem *dci)
 			node->getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
 			break;
       case IDM_SCRIPT:
-         node->getListFromScript(dci->getInstanceDiscoveryData(), &instances);
+         node->getStringMapFromScript(dci->getInstanceDiscoveryData(), &instanceMap);
          break;
 		case IDM_SNMP_WALK_VALUES:
 		   node->getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
@@ -6584,7 +6584,7 @@ void Node::checkSubnetBinding()
       {
          InetAddress addr(m_ipAddress);
          addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
-		   pSubnet = createSubnet(addr, true);
+		   createSubnet(addr, true);
       }
    }
 
@@ -6721,7 +6721,7 @@ NXSL_Array *Node::getParentsForNXSL()
 			  (m_pParentList[i]->getObjectClass() == OBJECT_SERVICEROOT)) &&
 		    m_pParentList[i]->isTrustedNode(m_id))
 		{
-			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
+			parents->set(index++, m_pParentList[i]->createNXSLObject());
 		}
 	}
 	UnlockParentList();
@@ -6743,7 +6743,7 @@ NXSL_Array *Node::getTemplatesForNXSL()
 		if ((m_pParentList[i]->getObjectClass() == OBJECT_TEMPLATE) &&
 		    m_pParentList[i]->isTrustedNode(m_id))
 		{
-			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
+			parents->set(index++, m_pParentList[i]->createNXSLObject());
 		}
 	}
 	UnlockParentList();
@@ -6764,7 +6764,7 @@ NXSL_Array *Node::getInterfacesForNXSL()
 	{
 		if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 		{
-			ifaces->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
+			ifaces->set(index++, m_pChildList[i]->createNXSLObject());
 		}
 	}
 	UnlockChildList();

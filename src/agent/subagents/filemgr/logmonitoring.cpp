@@ -33,91 +33,99 @@
  */
 #define MAX_MSG_SIZE    262144
 
-MonitoredFileList::MonitoredFileList()
+/**
+ * File list constructor
+ */
+MonitoredFileList::MonitoredFileList() : m_files(16, 16, true)
 {
    m_mutex = MutexCreate();
-   m_monitoredFiles.setOwner(true);
 }
 
+/**
+ * File list destructor
+ */
 MonitoredFileList::~MonitoredFileList()
 {
    MutexDestroy(m_mutex);
 }
 
-void MonitoredFileList::addMonitoringFile(const TCHAR *fileName)
+/**
+ * Add file to list
+ */
+void MonitoredFileList::add(const TCHAR *fileName)
 {
-   Lock();
+   lock();
+
    bool alreadyMonitored = false;
-   for(int i = 0; i < m_monitoredFiles.size(); i++)
+   for(int i = 0; i < m_files.size(); i++)
    {
-      m_newFile = m_monitoredFiles.get(i);
-      if (_tcscmp(m_newFile->fileName, fileName) == 0)
+      MONITORED_FILE *file = m_files.get(i);
+      if (!_tcscmp(file->fileName, fileName))
       {
          alreadyMonitored = true;
-         m_newFile->monitoringCount++;
+         file->monitoringCount++;
+         break;
       }
    }
 
-   if(!alreadyMonitored)
+   if (!alreadyMonitored)
    {
-      m_newFile = new MONITORED_FILE();
-      _tcscpy(m_newFile->fileName, fileName);
-      m_newFile->monitoringCount = 1;
-      m_monitoredFiles.add(m_newFile);
+      MONITORED_FILE *file = new MONITORED_FILE();
+      _tcscpy(file->fileName, fileName);
+      file->monitoringCount = 1;
+      m_files.add(file);
    }
-   Unlock();
+
+   unlock();
 }
 
-bool MonitoredFileList::checkFileMonitored(const TCHAR *fileName)
+/**
+ * Check if file list contains given file
+ */
+bool MonitoredFileList::contains(const TCHAR *fileName)
 {
-   Lock();
+   lock();
    bool result = false;
-   for(int i = 0; i < m_monitoredFiles.size() ; i++)
+   for(int i = 0; i < m_files.size() ; i++)
    {
-      m_newFile = m_monitoredFiles.get(i);
-      if (_tcscmp(m_newFile->fileName, fileName) == 0)
+      if (!_tcscmp(m_files.get(i)->fileName, fileName))
       {
          result = true;
+         break;
       }
    }
-   Unlock();
+   unlock();
    return result;
 }
 
-bool MonitoredFileList::removeMonitoringFile(const TCHAR *fileName)
+/**
+ * Remove file from list
+ */
+bool MonitoredFileList::remove(const TCHAR *fileName)
 {
-   Lock();
-   bool alreadyMonitored = false;
-   for(int i = 0; i < m_monitoredFiles.size() ; i++)
+   lock();
+
+   bool found = false;
+   for(int i = 0; i < m_files.size() ; i++)
    {
-      m_newFile = m_monitoredFiles.get(i);
-      if (_tcscmp(m_newFile->fileName, fileName) == 0)
+      MONITORED_FILE *file = m_files.get(i);
+      if (!_tcscmp(file->fileName, fileName))
       {
-         alreadyMonitored = true;
-         m_newFile->monitoringCount--;
-         if(0 == m_newFile->monitoringCount)
+         found = true;
+         file->monitoringCount--;
+         if (file->monitoringCount == 0)
          {
-            m_monitoredFiles.remove(i);
+            m_files.remove(i);
          }
+         break;
       }
    }
 
-   if(!alreadyMonitored)
-   {
+   if (!found)
       AgentWriteDebugLog(6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
-   }
-   Unlock();
-   return alreadyMonitored;
-}
 
-void MonitoredFileList::Lock()
-{
-   MutexLock(m_mutex);
-}
-
-void MonitoredFileList::Unlock()
-{
-   MutexUnlock(m_mutex);
+   unlock();
+   return found;
 }
 
 /**
@@ -164,7 +172,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    if (hFile == -1)
    {
       AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->getFile());
-      g_monitorFileList.removeMonitoringFile(flData->getFile());
+      g_monitorFileList.remove(flData->getFile());
       return THREAD_OK;
    }
    while (follow)
@@ -204,19 +212,18 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             data.pMsg = pMsg;
 
             bool sent = AgentEnumerateSessions(SendFileUpdateCallback, &data);
-
             if (!sent)
             {
-               g_monitorFileList.removeMonitoringFile(flData->getFileId());
+               g_monitorFileList.remove(flData->getFileId());
             }
 
-            safe_free(readBytes);
+            free(readBytes);
             delete pMsg;
          }
       }
 
       ThreadSleep(threadSleepTime);
-      if (!g_monitorFileList.checkFileMonitored(flData->getFileId()))
+      if (!g_monitorFileList.contains(flData->getFileId()))
       {
          follow = false;
       }

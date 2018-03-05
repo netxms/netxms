@@ -33,7 +33,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
-import org.netxms.client.objects.Node;
+import org.netxms.client.objects.DataCollectionTarget;
 
 /**
  * Test cases for data collection
@@ -107,8 +107,8 @@ public class DataCollectionTest extends AbstractSessionTest
 		final List<ThresholdViolationSummary> list = session.getThresholdSummary(1);
 		for(ThresholdViolationSummary s : list)
 		{
-			Node node = (Node)session.findObjectById(s.getNodeId(), Node.class);
-			System.out.println("* " + node.getObjectName());
+		   DataCollectionTarget target = (DataCollectionTarget)session.findObjectById(s.getNodeId(), DataCollectionTarget.class);
+			System.out.println("* " + target.getObjectName());
 			if (s.getDciList().size() > 0)
 			{
 				for(DciValue v : s.getDciList())

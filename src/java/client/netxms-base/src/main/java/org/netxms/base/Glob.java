@@ -105,6 +105,8 @@ public class Glob
 	            while(!finishScan);
 					break;
 				default:
+               if (sptr >= string.length)
+                  return false;
 					if (pattern[mptr] != string[sptr])
 						return false;
 					sptr++;
