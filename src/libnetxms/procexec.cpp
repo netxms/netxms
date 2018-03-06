@@ -93,7 +93,7 @@ static bool CreatePipeEx(LPHANDLE lpReadPipe, LPHANDLE lpWritePipe, bool asyncRe
 /**
  * Create new process executor object for given command line
  */
-ProcessExecutor::ProcessExecutor(const TCHAR *cmd)
+ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
 {
 #ifdef _WIN32
    m_phandle = INVALID_HANDLE_VALUE;
@@ -105,6 +105,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd)
 #endif
    m_cmd = _tcsdup_ex(cmd);
    m_streamId = InterlockedIncrement(&s_nextStreamId);
+   m_shellExec = shellExec;
    m_sendOutput = false;
    m_outputThread = INVALID_THREAD_HANDLE;
    m_started = false;
@@ -172,7 +173,7 @@ bool ProcessExecutor::execute()
    si.hStdOutput = stdoutWrite;
    si.hStdError = stdoutWrite;
 
-   String cmdLine = _T("CMD.EXE /C ");
+   String cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
    cmdLine.append(m_cmd);
    if (CreateProcess(NULL, cmdLine.getBuffer(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
    {
@@ -230,11 +231,54 @@ bool ProcessExecutor::execute()
          dup2(m_pipe[1], 1);
          dup2(m_pipe[1], 2);
          close(m_pipe[1]);
+         if (m_shellExec)
+         {
 #ifdef UNICODE
-         execl("/bin/sh", "/bin/sh", "-c", UTF8StringFromWideString(m_cmd), NULL);
+            execl("/bin/sh", "/bin/sh", "-c", UTF8StringFromWideString(m_cmd), NULL);
 #else
-         execl("/bin/sh", "/bin/sh", "-c", m_cmd, NULL);
+            execl("/bin/sh", "/bin/sh", "-c", m_cmd, NULL);
 #endif
+         }
+         else
+         {
+#ifdef UNICODE
+            char *tmp = UTF8StringFromWideString(m_cmd);
+#else
+            char *tmp = m_cmd;
+#endif
+
+            char *argv[256];
+            argv[0] = tmp;
+
+            int index = 1;
+            bool squotes = false, dquotes = false;
+            for(char *p = tmp; *p != 0; p++)
+            {
+               if ((*p == ' ') && !squotes && !dquotes)
+               {
+                  *p = 0;
+                  p++;
+                  while(*p == ' ')
+                     p++;
+                  argv[index++] = p;
+               }
+               else if ((*p == '\'') && !dquotes)
+               {
+                  squotes = !squotes;
+                  memmove(p, p + 1, strlen(p));
+                  p--;
+               }
+               else if ((*p == '"') && !squotes)
+               {
+                  dquotes = !dquotes;
+                  memmove(p, p + 1, strlen(p));
+                  p--;
+               }
+            }
+            argv[index] = NULL;
+
+            execv(argv[0], argv);
+         }
          exit(127);
          break;
       default: // parent
@@ -394,9 +438,11 @@ THREAD_RESULT THREAD_CALL ProcessExecutor::readOutput(void *arg)
 void ProcessExecutor::stop()
 {
 #ifdef _WIN32
-   TerminateProcess(m_phandle, 127);
+   if (m_phandle != INVALID_HANDLE_VALUE)
+      TerminateProcess(m_phandle, 127);
 #else
-   kill(-m_pid, SIGKILL);  // kill all processes in group
+   if (m_pid != 0)
+      kill(-m_pid, SIGKILL);  // kill all processes in group
 #endif
    m_running = false;
    m_started = false;

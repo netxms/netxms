@@ -100,6 +100,7 @@ private:
 
 protected:
    TCHAR *m_cmd;
+   bool m_shellExec;
    bool m_sendOutput;
 
 #ifdef _WIN32
@@ -117,7 +118,7 @@ protected:
    virtual void endOfOutput();
 
 public:
-   ProcessExecutor(const TCHAR *cmd);
+   ProcessExecutor(const TCHAR *cmd, bool shellExec = true);
    virtual ~ProcessExecutor();
 
    UINT32 getStreamId() const { return m_streamId; }
@@ -135,7 +136,7 @@ public:
 /**
  * Sub-process request handler
  */
-typedef NXCPMessage* (*SubProcessRequestHandler)(NXCPMessage *);
+typedef NXCPMessage* (*SubProcessRequestHandler)(UINT16, const void *, size_t);
 
 /**
  * Sub-process state
@@ -144,7 +145,8 @@ enum SubProcessState
 {
    SP_INIT = 0,
    SP_RUNNING = 1,
-   SP_STOPPED = 2
+   SP_COMM_FAILURE = 2,
+   SP_STOPPED = 3
 };
 
 /**
@@ -153,6 +155,7 @@ enum SubProcessState
 #define MAX_SUBPROCESS_NAME_LEN  16
 
 class PipeMessageReceiver;
+class MsgWaitQueue;
 
 /**
  * Sub-process executor
@@ -161,10 +164,13 @@ class LIBNETXMS_EXPORTABLE SubProcessExecutor : public ProcessExecutor
 {
 private:
    NamedPipe *m_pipe;
-   PipeMessageReceiver *m_receiver;
+   MsgWaitQueue *m_messageQueue;
+   THREAD m_receiverThread;
    SubProcessState m_state;
    VolatileCounter m_requestId;
    TCHAR m_name[MAX_SUBPROCESS_NAME_LEN];
+
+   void receiverThread();
 
    static ObjectArray<SubProcessExecutor> *m_registry;
    static Mutex m_registryLock;
@@ -172,6 +178,7 @@ private:
    static CONDITION m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL monitorThread(void *arg);
+   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *arg);
 
 public:
    SubProcessExecutor(const TCHAR *name, const TCHAR *command);
@@ -180,12 +187,18 @@ public:
    virtual bool execute();
    virtual void stop();
 
-   NXCPMessage *sendRequest(NXCPMessage *request);
+   bool sendCommand(UINT16 command, const void *data = NULL, size_t dataSize = 0, UINT32 *requestId = NULL);
+   bool sendRequest(UINT16 command, const void *data, size_t dataSize, void **response, size_t *rspSize, UINT32 timeout);
 
    const TCHAR *getName() const { return m_name; }
    SubProcessState getState() const { return m_state; }
 
    static void shutdown();
 };
+
+/**
+ * Initialize and run sub-process (should be called from sub-process's main())
+ */
+int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessRequestHandler requestHandler);
 
 #endif   /* _nxproc_h_ */

@@ -2,6 +2,7 @@
 #include <nms_util.h>
 #include <nxqueue.h>
 #include <nxcpapi.h>
+#include <nxproc.h>
 #include <testtools.h>
 
 void TestMsgWaitQueue();
@@ -11,6 +12,8 @@ void TestRWLockWrapper();
 void TestConditionWrapper();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
+void TestSubProcess(const char *procname);
+NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -1329,14 +1332,37 @@ static void TestObjectMemoryPool()
 }
 
 /**
+ * Debug writer for logger
+ */
+static void DebugWriter(const TCHAR *tag, const TCHAR *message)
+{
+   if (tag != NULL)
+      _tprintf(_T("[DEBUG/%-20s] %s\n"), tag, message);
+   else
+      _tprintf(_T("[DEBUG%-21s] %s\n"), _T(""), message);
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
 {
-   if ((argc > 1) && !strcmp(argv[1], "@proc"))
+   if (argc > 1)
    {
-      TestProcessExecutorWorker();
-      return 0;
+      if (!strcmp(argv[1], "@proc"))
+      {
+         TestProcessExecutorWorker();
+         return 0;
+      }
+      else if (!strcmp(argv[1], "@subproc"))
+      {
+         SubProcessMain(argc, argv, TestSubProcessRequestHandler);
+         return 0;
+      }
+      else if (!strcmp(argv[1], "-debug"))
+      {
+         nxlog_set_debug_writer(DebugWriter);
+      }
    }
 
 #ifdef _WIN32
@@ -1369,6 +1395,7 @@ int main(int argc, char *argv[])
    TestDebugLevel();
    TestDebugTags();
    TestProcessExecutor(argv[0]);
+   TestSubProcess(argv[0]);
 
    MsgWaitQueue::shutdown();
    return 0;

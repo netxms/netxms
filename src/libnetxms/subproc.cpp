@@ -57,7 +57,23 @@ static void PipeConnector(NamedPipe *pipe, void *userArg)
             goto stop;
          default:
             if (request->getCode() >= SPC_USER)
-               response = reinterpret_cast<SubProcessRequestHandler>(userArg)(request);
+            {
+               const void *data;
+               size_t size;
+               if (request->isBinary())
+               {
+                  data = request->getBinaryData();
+                  size = request->getBinaryDataSize();
+               }
+               else
+               {
+                  data = NULL;
+                  size = 0;
+               }
+               response = reinterpret_cast<SubProcessRequestHandler>(userArg)(request->getCode(), data, size);
+               if (response != NULL)
+                  response->setId(request->getId());
+            }
             break;
       }
       delete request;
@@ -79,7 +95,7 @@ stop:
 /**
  * Initialize and run sub-process (should be called from sub-process's main())
  */
-int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv, SubProcessRequestHandler requestHandler)
+int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessRequestHandler requestHandler)
 {
    TCHAR pipeName[256];
    _sntprintf(pipeName, 256, _T("netxms.subprocess.%u"), GetCurrentProcessId());
@@ -138,6 +154,15 @@ THREAD_RESULT THREAD_CALL SubProcessExecutor::monitorThread(void *arg)
 }
 
 /**
+ * Receiver thread starter
+ */
+THREAD_RESULT THREAD_CALL SubProcessExecutor::receiverThreadStarter(void *arg)
+{
+   static_cast<SubProcessExecutor*>(arg)->receiverThread();
+   return THREAD_OK;
+}
+
+/**
  * Shutdown monitor thread and all registered sub-processes
  */
 void SubProcessExecutor::shutdown()
@@ -162,13 +187,14 @@ void SubProcessExecutor::shutdown()
 /**
  * Sub-process executor constructor
  */
-SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) : ProcessExecutor(command)
+SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) : ProcessExecutor(command, false)
 {
    _tcslcpy(m_name, name, MAX_SUBPROCESS_NAME_LEN);
    m_state = SP_INIT;
    m_requestId = 0;
    m_pipe = NULL;
-   m_receiver = NULL;
+   m_messageQueue = new MsgWaitQueue();
+   m_receiverThread = INVALID_THREAD_HANDLE;
 
    m_registryLock.lock();
    if (m_registry == NULL)
@@ -190,7 +216,7 @@ SubProcessExecutor::~SubProcessExecutor()
    m_registry->remove(this);
    m_registryLock.unlock();
 
-   delete m_receiver;
+   delete m_messageQueue;
    delete m_pipe;
 }
 
@@ -204,18 +230,29 @@ bool SubProcessExecutor::execute()
 
    TCHAR pipeName[256];
    _sntprintf(pipeName, 256, _T("netxms.subprocess.%u"), getProcessId());
-   m_pipe = NamedPipe::connect(pipeName, 5000);
-   if (m_pipe == NULL)
+   int retryCount = 5;
+   do
    {
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s started but did not respond to connect"), m_name);
-      stop();
-      return false;
-   }
-
-   m_receiver = new PipeMessageReceiver(m_pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
+      m_pipe = NamedPipe::connect(pipeName, 5000);
+      if (m_pipe == NULL)
+      {
+         if (--retryCount > 0)
+         {
+            ThreadSleep(1);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s started but did not respond to connect"), m_name);
+            stop();
+            return false;
+         }
+      }
+   } while(m_pipe == NULL);
 
    m_state = SP_RUNNING;
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s started and connected"), m_name);
+
+   m_receiverThread = ThreadCreateEx(SubProcessExecutor::receiverThreadStarter, 0, this);
    return true;
 }
 
@@ -225,54 +262,105 @@ bool SubProcessExecutor::execute()
 void SubProcessExecutor::stop()
 {
    m_state = SP_STOPPED;
-   if (isRunning())
+   if (isRunning() && sendCommand(SPC_EXIT))
    {
-      NXCPMessage request(SPC_EXIT, InterlockedIncrement(&m_requestId));
-      NXCPMessage *response = sendRequest(&request);
-      if (response != NULL)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Shutdown request processed by sub-process %s (RCC=%d)"), m_name, response->getFieldAsInt32(VID_RCC));
-         delete response;
-         ThreadSleep(1);
-      }
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Shutdown request sent to sub-process %s"), m_name);
+      ThreadSleep(1);
    }
-   delete_and_null(m_receiver);
+   ThreadJoin(m_receiverThread);
+   m_receiverThread = INVALID_THREAD_HANDLE;
    delete_and_null(m_pipe);
    ProcessExecutor::stop();
 }
 
 /**
- * Send request to sub-process
+ * Receiver thread
  */
-NXCPMessage *SubProcessExecutor::sendRequest(NXCPMessage *request)
+void SubProcessExecutor::receiverThread()
 {
-   if (m_pipe == NULL)
-      return NULL;
-
-   NXCP_MESSAGE *data = request->serialize(false);
-   m_pipe->write(data, ntohl(data->size));
-   free(data);
-
-   while(true)
+   PipeMessageReceiver receiver(m_pipe->handle(), 8192, 4194304);  // 8K initial, 4M max
+   while(m_state == SP_RUNNING)
    {
       MessageReceiverResult result;
-      NXCPMessage *response = m_receiver->readMessage(5000, &result);
+      NXCPMessage *response = receiver.readMessage(5000, &result);
       if (response != NULL)
       {
-         if (response->getId() < request->getId())
-         {
-            delete response;
-            continue;
-         }
+         m_messageQueue->put(response);
       }
-      if (result == MSGRECV_CLOSED)
+      else if (result == MSGRECV_CLOSED)
       {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Communication channel with sub-process %s closed unexpectedly"), m_name);
-         delete_and_null(m_receiver);
-         delete_and_null(m_pipe);
-         stop();
-         return NULL;
+         m_state = SP_COMM_FAILURE;
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Communication channel with sub-process %s closed"), m_name);
+         break;
       }
    }
-   return NULL;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Sub-process %s receiver thread stopped"), m_name);
+}
+
+/**
+ * Send command to sub-process
+ */
+bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t dataSize, UINT32 *requestId)
+{
+   if (m_pipe == NULL)
+      return false;
+
+   UINT32 rid = InterlockedIncrement(&m_requestId);
+
+   NXCP_MESSAGE msg;
+   msg.code = htons(command);
+   msg.id = htonl(rid);
+   msg.flags = htons((data != NULL) ? MF_BINARY : MF_CONTROL);
+   msg.numFields = htonl((UINT32)dataSize);
+   UINT32 padding = (8 - (dataSize % 8)) & 7;
+   msg.size = htonl(NXCP_HEADER_SIZE + dataSize + padding);
+   if (!m_pipe->write(&msg, NXCP_HEADER_SIZE))
+      return false;
+   if (data != NULL)
+   {
+      if (!m_pipe->write(data, dataSize))
+         return false;
+      if (padding > 0)
+      {
+         char paddingBytes[8] = "ABCDEFG";
+         if (!m_pipe->write(paddingBytes, padding))
+            return false;
+      }
+   }
+
+   if (requestId != NULL)
+      *requestId = rid;
+
+   return true;
+}
+
+/**
+ * Send request to sub-process
+ */
+bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t dataSize, void **response, size_t *rspSize, UINT32 timeout)
+{
+   UINT32 requestId;
+   if (!sendCommand(command, data, dataSize, &requestId))
+      return false;
+
+   NXCPMessage *rmsg = m_messageQueue->waitForMessage(SPC_REQUEST_COMPLETED, requestId, timeout);
+   if (rmsg == NULL)
+      return false;
+
+   if ((response != NULL) && (rspSize != NULL))
+   {
+      if (rmsg->isBinary())
+      {
+         *response = nx_memdup(rmsg->getBinaryData(), rmsg->getBinaryDataSize());
+         *rspSize = rmsg->getBinaryDataSize();
+      }
+      else
+      {
+         *response = NULL;
+         *rspSize = 0;
+      }
+   }
+
+   delete rmsg;
+   return true;
 }
