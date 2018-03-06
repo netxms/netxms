@@ -23,6 +23,14 @@
 #ifndef _nxpython_h_
 #define _nxpython_h_
 
+#include <nms_common.h>
+
+#ifdef LIBNXPYTHON_EXPORTS
+#define LIBNXPYTHON_EXPORTABLE EXPORT
+#else
+#define LIBNXPYTHON_EXPORTABLE IMPORT
+#endif
+
 #if WITH_PYTHON
 
 #include <Python.h>
@@ -30,7 +38,7 @@
 /**
  * Wrapper for Python sub-interpreter
  */
-class PythonInterpreter
+class LIBNXPYTHON_EXPORTABLE PythonInterpreter
 {
 private:
    PyThreadState *m_threadState;
@@ -50,7 +58,7 @@ public:
 /**
  * Wrapper for Python sub-interpreter
  */
-class PythonInterpreter
+class LIBNXPYTHON_EXPORTABLE PythonInterpreter
 {
 public:
    static PythonInterpreter *create();

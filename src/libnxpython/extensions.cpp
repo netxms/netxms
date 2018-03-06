@@ -20,10 +20,7 @@
 **
 **/
 
-#include "nxcore.h"
-#include <nxpython.h>
-
-#if WITH_PYTHON
+#include "libnxpython.h"
 
 /**
  * Method netxms.trace()
@@ -96,5 +93,3 @@ void RegisterPythonExtensions()
 {
    PyImport_AppendInittab("netxms", PyInit_netxms);
 }
-
-#endif /* WITH_PYTHON */

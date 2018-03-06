@@ -732,7 +732,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
@@ -786,6 +786,12 @@ check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	MODULES="$MODULES libnxjava"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
+fi
+
+check_substr "$COMPONENTS" "python"
+if test $? = 0; then
+	MODULES="$MODULES libnxpython"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS python"
 fi
 
 check_substr "$COMPONENTS" "static-agent"
@@ -3971,6 +3977,7 @@ AC_CONFIG_FILES([
 	src/libnxjava/java/bridge/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
+	src/libnxpython/Makefile
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile
 	src/libtre/Makefile
