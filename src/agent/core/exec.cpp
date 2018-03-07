@@ -567,18 +567,26 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
  */
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mode=%c cmd=\"%s\""), cmd, arg[0], arg[1], &arg[2]);
+   const ExternalTableDefinition *td = reinterpret_cast<const ExternalTableDefinition*>(arg);
+   session->debugPrintf(4, _T("H_ExternalTable called for \"%s\" (separator=0x%04X mode=%c cmd=\"%s\""), cmd, td->separator, td->cmdLine[0], &td->cmdLine[1]);
    StringList output;
-   LONG status = RunExternal(cmd, &arg[1], &output);
+   LONG status = RunExternal(cmd, td->cmdLine, &output);
    if (status == SYSINFO_RC_SUCCESS)
    {
       if (output.size() > 0)
       {
          int numColumns = 0;
-         TCHAR **columns = SplitString(output.get(0), arg[0], &numColumns);
+         TCHAR **columns = SplitString(output.get(0), td->separator, &numColumns);
          for(int n = 0; n < numColumns; n++)
          {
-            value->addColumn(columns[n]);
+            bool instanceColumn = false;
+            for(int i = 0; i < td->instanceColumnCount; i++)
+               if (!_tcsicmp(td->instanceColumns[i], columns[n]))
+               {
+                  instanceColumn = true;
+                  break;
+               }
+            value->addColumn(columns[n], DCI_DT_INT, columns[n], instanceColumn);
             free(columns[n]);
          }
          free(columns);
@@ -587,7 +595,7 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
          {
             value->addRow();
             int count = 0;
-            TCHAR **data = SplitString(output.get(i), arg[0], &count);
+            TCHAR **data = SplitString(output.get(i), td->separator, &count);
             for(int n = 0; n < count; n++)
             {
                if (n < numColumns)
