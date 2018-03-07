@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = airespace at avaya cisco dell-pwc dlink extreme hpe \
+SUBDIRS = airespace at avaya cisco dell-pwc dlink extreme hpe huawei \
           ignitenet juniper mikrotik net-snmp netonix ping3 qtech-olt \
           rittal symbol-ws tb ubnt
 
