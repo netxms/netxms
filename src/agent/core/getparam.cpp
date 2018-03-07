@@ -551,6 +551,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       m_pTableList[m_iNumTables].numColumns = numColumns;
       m_pTableList[m_iNumTables].columns = columns;
       m_iNumTables++;
+      nxlog_debug(7, _T("Table %s added (%d predefined columns, instance columns \"%s\")"), name, numColumns, instanceColumns);
    }
 }
 
@@ -637,11 +638,13 @@ bool AddExternalTable(TCHAR *config, bool shellExec)
       }
    }
 
-   TCHAR *arg = (TCHAR *)malloc((_tcslen(cmdLine) + 3) * sizeof(TCHAR));
-   arg[0] = separator[0];
-   arg[1] = shellExec ? _T('S') : _T('E');
-   _tcscpy(&arg[2], cmdLine);
-   AddTable(config, H_ExternalTable, arg, instanceColumns, description, 0, NULL);
+   ExternalTableDefinition *td = new ExternalTableDefinition;
+   td->separator = separator[0];
+   td->cmdLine = (TCHAR *)malloc((_tcslen(cmdLine) + 2) * sizeof(TCHAR));
+   td->cmdLine[0] = shellExec ? _T('S') : _T('E');
+   _tcscpy(&td->cmdLine[1], cmdLine);
+   td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
+   AddTable(config, H_ExternalTable, (const TCHAR *)td, instanceColumns, description, 0, NULL);
    return true;
 }
 

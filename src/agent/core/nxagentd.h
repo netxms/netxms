@@ -160,9 +160,20 @@ enum ThreadPoolStat
 #define AGENT_ACTION_SHELLEXEC	3
 
 /**
+ * External table definition
+ */
+struct ExternalTableDefinition
+{
+   TCHAR *cmdLine;
+   TCHAR separator;
+   int instanceColumnCount;
+   TCHAR **instanceColumns;
+};
+
+/**
  * Action definition structure
  */
-typedef struct
+struct ACTION
 {
    TCHAR szName[MAX_PARAM_NAME];
    int iType;
@@ -177,7 +188,7 @@ typedef struct
       } sa;
    } handler;
    TCHAR szDescription[MAX_DB_STRING];
-} ACTION;
+};
 
 /**
  * Loaded subagent information
