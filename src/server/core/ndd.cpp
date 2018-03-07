@@ -45,17 +45,21 @@ static void LoadDriver(const TCHAR *file)
    if (hModule != NULL)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
-      NetworkDeviceDriver *(* CreateInstance)() = (NetworkDeviceDriver *(*)())DLGetSymbolAddr(hModule, "nddCreateInstance", errorText);
+      ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
 
-      if ((apiVersion != NULL) && (CreateInstance != NULL))
+      if ((apiVersion != NULL) && (CreateInstances != NULL))
       {
          if (*apiVersion == NDDRV_API_VERSION)
          {
-				NetworkDeviceDriver *driver = CreateInstance();
-				if (driver != NULL)
+            ObjectArray<NetworkDeviceDriver> *drivers = CreateInstances();
+				if (drivers != NULL)
 				{
-					s_drivers[s_numDrivers++] = driver;
-					nxlog_write(MSG_NDD_LOADED, EVENTLOG_INFORMATION_TYPE, "s", driver->getName());
+				   for(int i = 0; i < drivers->size(); i++)
+				   {
+                  s_drivers[s_numDrivers++] = drivers->get(i);
+                  nxlog_write(MSG_NDD_LOADED, EVENTLOG_INFORMATION_TYPE, "s", drivers->get(i)->getName());
+				   }
+				   delete drivers;
 				}
 				else
 				{

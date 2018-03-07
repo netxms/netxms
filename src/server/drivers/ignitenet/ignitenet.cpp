@@ -138,7 +138,7 @@ void IgniteNetDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attribu
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, IgniteNetDriver);
+DECLARE_NDD_ENTRY_POINT(IgniteNetDriver);
 
 /**
  * DLL entry point

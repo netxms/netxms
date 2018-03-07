@@ -282,7 +282,7 @@ ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Trans
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, MikrotikDriver);
+DECLARE_NDD_ENTRY_POINT(MikrotikDriver);
 
 /**
  * DLL entry point

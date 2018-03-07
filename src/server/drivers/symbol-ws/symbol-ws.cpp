@@ -502,7 +502,7 @@ ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transpo
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, SymbolDriver);
+DECLARE_NDD_ENTRY_POINT(SymbolDriver);
 
 /**
  * DLL entry point

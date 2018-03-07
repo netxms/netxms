@@ -174,7 +174,7 @@ ObjectArray<AgentParameterDefinition> *NetSnmpDriver::getAvailableMetrics(SNMP_T
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, NetSnmpDriver);
+DECLARE_NDD_ENTRY_POINT(NetSnmpDriver);
 
 /**
  * DLL entry point

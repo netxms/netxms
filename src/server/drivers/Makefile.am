@@ -8,9 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
-	  dell-pwc dlink ers8000 extreme h3c hpsw ignitenet juniper mikrotik \
-	  net-snmp netonix netscreen ntws ping3 procurve qtech-olt rittal \
-	  symbol-ws tb ubnt
+SUBDIRS = airespace at avaya cisco dell-pwc dlink extreme hpe \
+          ignitenet juniper mikrotik net-snmp netonix ping3 qtech-olt \
+          rittal symbol-ws tb ubnt
 
 EXTRA_DIST = Makefile.w32

@@ -238,7 +238,7 @@ InterfaceList *TelcoBridgesDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, TelcoBridgesDriver);
+DECLARE_NDD_ENTRY_POINT(TelcoBridgesDriver);
 
 /**
  * DLL entry point

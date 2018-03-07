@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,20 +27,48 @@
 #include <nxsrvapi.h>
 
 /**
- *API version
+ * API version
  */
-#define NDDRV_API_VERSION           6
+#define NDDRV_API_VERSION           7
 
 /**
- * Driver header
+ * Begin driver list
  */
-#define DECLARE_NDD_ENTRY_POINT(name, implClass) \
-extern "C" int __EXPORT nddAPIVersion; \
-extern "C" const TCHAR __EXPORT *nddName; \
-int __EXPORT nddAPIVersion = NDDRV_API_VERSION; \
-const TCHAR __EXPORT *nddName = name; \
-extern "C" NetworkDeviceDriver __EXPORT *nddCreateInstance() { return new implClass; }
+#define NDD_BEGIN_DRIVER_LIST static ObjectArray<NetworkDeviceDriver> *s_createInstances() { \
+   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, false);
 
+/**
+ * Declare driver within list
+ */
+#define NDD_DRIVER(implClass) \
+   drivers->add(new implClass);
+
+/**
+ * End driver list
+ */
+#define NDD_END_DRIVER_LIST \
+   return drivers; \
+}
+
+/**
+ * NDD module entry point
+ */
+#define DECLARE_NDD_MODULE_ENTRY_POINT \
+extern "C" int __EXPORT nddAPIVersion; \
+int __EXPORT nddAPIVersion = NDDRV_API_VERSION; \
+extern "C" ObjectArray<NetworkDeviceDriver> __EXPORT *nddCreateInstances() { return s_createInstances(); }
+
+/**
+ * NDD module entry point - single driver
+ */
+#define DECLARE_NDD_ENTRY_POINT(implClass) \
+extern "C" int __EXPORT nddAPIVersion; \
+int __EXPORT nddAPIVersion = NDDRV_API_VERSION; \
+extern "C" ObjectArray<NetworkDeviceDriver> __EXPORT *nddCreateInstances() { \
+   ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, false); \
+   drivers->add(new implClass); \
+   return drivers; \
+}
 
 /**
  * Port numbering schemes

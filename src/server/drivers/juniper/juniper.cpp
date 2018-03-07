@@ -23,21 +23,11 @@
 #include "juniper.h"
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("JUNIPER");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
  * Get driver name
  */
 const TCHAR *JuniperDriver::getName()
 {
-	return s_driverName;
+	return _T("JUNIPER");
 }
 
 /**
@@ -45,7 +35,7 @@ const TCHAR *JuniperDriver::getName()
  */
 const TCHAR *JuniperDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_BUILD_TAG;
 }
 
 /**
@@ -222,9 +212,13 @@ void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes,
 }
 
 /**
- * Driver entry point
+ * Driver module entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, JuniperDriver);
+NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(JuniperDriver)
+NDD_DRIVER(NetscreenDriver)
+NDD_END_DRIVER_LIST
+DECLARE_NDD_MODULE_ENTRY_POINT
 
 #ifdef _WIN32
 

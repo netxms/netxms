@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Nortel WLAN Security Switch series
-** Copyright (C) 2013-2016 Raden Solutions
+** Copyright (C) 2013-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -18,21 +18,15 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **/
 
-#include "ntws.h"
+#include "avaya.h"
 #include <math.h>
-
-/**
- * Static data
- */
-static TCHAR s_driverName[] = _T("NTWS");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name
  */
 const TCHAR *NtwsDriver::getName()
 {
-   return s_driverName;
+   return _T("NTWS");
 }
 
 /**
@@ -40,7 +34,7 @@ const TCHAR *NtwsDriver::getName()
  */
 const TCHAR *NtwsDriver::getVersion()
 {
-   return s_driverVersion;
+   return NETXMS_BUILD_TAG;
 }
 
 /**
@@ -352,25 +346,3 @@ ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport
 
    return wsList;
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(NtwsDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-   if (dwReason == DLL_PROCESS_ATTACH)
-   {
-      DisableThreadLibraryCalls(hInstance);
-   }
-
-   return TRUE;
-}
-
-#endif

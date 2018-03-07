@@ -110,7 +110,7 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, PowerConnectDriver);
+DECLARE_NDD_ENTRY_POINT(PowerConnectDriver);
 
 /**
  * DLL entry point

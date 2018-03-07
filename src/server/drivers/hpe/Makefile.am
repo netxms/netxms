@@ -1,16 +1,16 @@
-DRIVER = juniper
+DRIVER = hpe
 
-pkglib_LTLIBRARIES = juniper.la
-juniper_la_SOURCES = juniper.cpp netscreen.cpp
-juniper_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-juniper_la_LDFLAGS = -module -avoid-version
-juniper_la_LIBADD = ../../../libnetxms/libnetxms.la \
+pkglib_LTLIBRARIES = hpe.la
+hpe_la_SOURCES = h3c.cpp hpe.cpp hpsw.cpp procurve.cpp
+hpe_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+hpe_la_LDFLAGS = -module -avoid-version
+hpe_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \
 		      ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	juniper.vcxproj juniper.vcxproj.filters \
-	juniper.h \
+	hpe.vcxproj hpe.vcxproj.filters \
+	hpe.h \
 	Makefile.w32
 
 install-exec-hook:

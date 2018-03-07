@@ -3892,29 +3892,18 @@ AC_CONFIG_FILES([
 	src/server/drivers/Makefile
 	src/server/drivers/airespace/Makefile
 	src/server/drivers/at/Makefile
-	src/server/drivers/baystack/Makefile
-	src/server/drivers/cat2900xl/Makefile
-	src/server/drivers/catalyst/Makefile
-	src/server/drivers/cisco-esw/Makefile
-	src/server/drivers/cisco-sb/Makefile
+	src/server/drivers/avaya/Makefile
+	src/server/drivers/cisco/Makefile
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/dlink/Makefile
-	src/server/drivers/ers8000/Makefile
 	src/server/drivers/extreme/Makefile
-	src/server/drivers/h3c/Makefile
-	src/server/drivers/hpsw/Makefile
+	src/server/drivers/hpe/Makefile
 	src/server/drivers/ignitenet/Makefile
 	src/server/drivers/juniper/Makefile
-	src/server/drivers/lib/Makefile
-	src/server/drivers/lib/avaya-ers/Makefile
-	src/server/drivers/lib/cisco/Makefile
 	src/server/drivers/mikrotik/Makefile
 	src/server/drivers/net-snmp/Makefile
 	src/server/drivers/netonix/Makefile
-	src/server/drivers/netscreen/Makefile
-	src/server/drivers/ntws/Makefile
 	src/server/drivers/ping3/Makefile
-	src/server/drivers/procurve/Makefile
 	src/server/drivers/qtech-olt/Makefile
 	src/server/drivers/rittal/Makefile
 	src/server/drivers/symbol-ws/Makefile

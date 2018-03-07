@@ -143,7 +143,7 @@ void ExtremeDriver::getModuleLayout(SNMP_Transport *snmp, StringMap *attributes,
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, ExtremeDriver);
+DECLARE_NDD_ENTRY_POINT(ExtremeDriver);
 
 #ifdef _WIN32
 

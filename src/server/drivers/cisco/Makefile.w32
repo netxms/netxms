@@ -1,0 +1,8 @@
+TARGET = cisco.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp sb.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Avaya ERS 8xxx switches (former Nortel/Bay Networks Passport)
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -20,31 +20,14 @@
 ** File: ers8000.cpp
 **/
 
-#include "ers8000.h"
-
-
-//
-// Static data
-//
-
-static TCHAR s_driverName[] = _T("ERS8000");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
+#include "avaya.h"
 
 /**
  * Get driver name
  */
 const TCHAR *PassportDriver::getName()
 {
-	return s_driverName;
-}
-
-/**
- * Get driver version
- */
-const TCHAR *PassportDriver::getVersion()
-{
-	return s_driverVersion;
+	return _T("ERS8000");
 }
 
 /**
@@ -134,22 +117,3 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 
 	return ifList;
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(PassportDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif
