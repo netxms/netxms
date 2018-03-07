@@ -180,7 +180,7 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attribut
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, QtechOLTDriver);
+DECLARE_NDD_ENTRY_POINT(QtechOLTDriver);
 
 #ifdef _WIN32
 

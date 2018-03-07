@@ -266,7 +266,7 @@ failure:
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, AlliedTelesisDriver);
+DECLARE_NDD_ENTRY_POINT(AlliedTelesisDriver);
 
 /**
  * DLL entry point

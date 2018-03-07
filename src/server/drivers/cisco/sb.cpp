@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for D-Link switches
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Driver for Cisco Small Business switches
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,30 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: dlink.cpp
+** File: sb.cpp
 **/
 
-#include "dlink.h"
-
-/**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("DLINK");
+#include "cisco.h"
 
 /**
  * Get driver name
  */
-const TCHAR *DLinkDriver::getName()
+const TCHAR *CiscoSbDriver::getName()
 {
-	return s_driverName;
+	return _T("CISCO-SB");
 }
 
 /**
  * Get driver version
  */
-const TCHAR *DLinkDriver::getVersion()
+const TCHAR *CiscoSbDriver::getVersion()
 {
-	return NETXMS_VERSION_STRING;
+   return NETXMS_BUILD_TAG;
 }
 
 /**
@@ -48,9 +43,16 @@ const TCHAR *DLinkDriver::getVersion()
  *
  * @param oid Device OID
  */
-int DLinkDriver::isPotentialDevice(const TCHAR *oid)
+int CiscoSbDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.171.10."), 20) == 0) ? 127 : 0;
+	if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.6.1."), 19) != 0)
+		return 0;
+
+	if (!_tcsncmp(&oid[19], _T("80."), 3) || !_tcsncmp(&oid[19], _T("81."), 3) ||
+       !_tcsncmp(&oid[19], _T("82."), 3) || !_tcsncmp(&oid[19], _T("83."), 3) ||
+       !_tcsncmp(&oid[19], _T("85."), 3))
+		return 252;
+	return 0;
 }
 
 /**
@@ -59,22 +61,9 @@ int DLinkDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool CiscoSbDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
-}
-
-/**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
-{
-	attributes->set(_T(".dlink.slotSize"), 48);
 }
 
 /**
@@ -83,45 +72,37 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMa
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 slotSize = attributes->getUInt32(_T(".dlink.slotSize"), 48);
+   // Check if there are indexes below 49
+   bool highBase = true;
+	for(int i = 0; i < ifList->size(); i++)
+   {
+      if (ifList->get(i)->index < 49)
+      {
+         highBase = false;
+         break;
+      }
+   }
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		InterfaceInfo *iface = ifList->get(i);
-		if (iface->index < 1024)
+		if (iface->index < 1000)
 		{
 			iface->isPhysicalPort = true;
-			iface->slot = (iface->index / slotSize) + 1;
-			iface->port = iface->index % slotSize;
+			iface->slot = (iface->index - 1) / 110 + 1;
+			iface->port = (iface->index - 1) % 110 + 1;
+         if (highBase)
+            iface->port -= 48;
 		}
 	}
 
 	return ifList;
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(DLinkDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif

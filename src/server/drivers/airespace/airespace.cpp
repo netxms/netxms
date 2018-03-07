@@ -23,21 +23,11 @@
 #include "airespace.h"
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("AIRESPACE");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
  * Get driver name
  */
 const TCHAR *AirespaceDriver::getName()
 {
-   return s_driverName;
+   return _T("AIRESPACE");
 }
 
 /**
@@ -45,7 +35,7 @@ const TCHAR *AirespaceDriver::getName()
  */
 const TCHAR *AirespaceDriver::getVersion()
 {
-   return s_driverVersion;
+   return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -290,7 +280,7 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, AirespaceDriver);
+DECLARE_NDD_ENTRY_POINT(AirespaceDriver);
 
 /**
  * DLL entry point

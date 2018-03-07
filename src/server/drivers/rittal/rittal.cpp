@@ -23,21 +23,11 @@
 #include "rittal.h"
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("RITTAL");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
  * Get driver name
  */
 const TCHAR *RittalDriver::getName()
 {
-	return s_driverName;
+	return _T("RITTAL");
 }
 
 /**
@@ -45,7 +35,7 @@ const TCHAR *RittalDriver::getName()
  */
 const TCHAR *RittalDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_BUILD_TAG;
 }
 
 /**
@@ -149,7 +139,7 @@ ObjectArray<AgentParameterDefinition> *RittalDriver::getAvailableMetrics(SNMP_Tr
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, RittalDriver);
+DECLARE_NDD_ENTRY_POINT(RittalDriver);
 
 /**
  * DLL entry point

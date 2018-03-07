@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for D-Link switches
+** Driver for HP ProCurve switches
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,30 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: dlink.cpp
+** File: procurve.cpp
 **/
 
-#include "dlink.h"
-
-/**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("DLINK");
+#include "hpe.h"
 
 /**
  * Get driver name
  */
-const TCHAR *DLinkDriver::getName()
+const TCHAR *ProCurveDriver::getName()
 {
-	return s_driverName;
+	return _T("PROCURVE");
 }
 
 /**
  * Get driver version
  */
-const TCHAR *DLinkDriver::getVersion()
+const TCHAR *ProCurveDriver::getVersion()
 {
-	return NETXMS_VERSION_STRING;
+	return NETXMS_BUILD_TAG;
 }
 
 /**
@@ -48,9 +43,9 @@ const TCHAR *DLinkDriver::getVersion()
  *
  * @param oid Device OID
  */
-int DLinkDriver::isPotentialDevice(const TCHAR *oid)
+int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.171.10."), 20) == 0) ? 127 : 0;
+	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.11.2.3.7.11"), 24) == 0) ? 127 : 0;
 }
 
 /**
@@ -59,7 +54,7 @@ int DLinkDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
 }
@@ -72,9 +67,17 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
-	attributes->set(_T(".dlink.slotSize"), 48);
+	int model = _tcstol(&oid[25], NULL, 10);
+	
+	// modular switches
+	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || 
+	    (model == 27) || (model == 46) || (model == 47) || (model == 50) || (model == 51))
+	{
+		attributes->set(_T(".procurve.isModular"), _T("1"));
+		attributes->set(_T(".procurve.slotSize"), _T("24"));
+	}
 }
 
 /**
@@ -83,45 +86,35 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMa
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 slotSize = attributes->getUInt32(_T(".dlink.slotSize"), 48);
+	bool isModular = attributes->getBoolean(_T(".procurve.isModular"), false);
+	UINT32 slotSize = attributes->getUInt32(_T(".procurve.slotSize"), 24);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		InterfaceInfo *iface = ifList->get(i);
-		if (iface->index < 1024)
+		if (iface->type == IFTYPE_ETHERNET_CSMACD)
 		{
 			iface->isPhysicalPort = true;
-			iface->slot = (iface->index / slotSize) + 1;
-			iface->port = iface->index % slotSize;
+			if (isModular)
+			{
+				iface->slot = (iface->index / slotSize) + 1;
+				iface->port = iface->index % slotSize;
+			}
+			else
+			{
+				iface->slot = 1;
+				iface->port = iface->index;
+			}
 		}
 	}
 
 	return ifList;
 }
-
-/**
- * Driver entry point
- */
-DECLARE_NDD_ENTRY_POINT(DLinkDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif

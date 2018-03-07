@@ -127,7 +127,7 @@ InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, Ping3Driver);
+DECLARE_NDD_ENTRY_POINT(Ping3Driver);
 
 /**
  * DLL entry point

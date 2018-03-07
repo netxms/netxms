@@ -105,7 +105,7 @@ InterfaceList *NetonixDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, NetonixDriver);
+DECLARE_NDD_ENTRY_POINT(NetonixDriver);
 
 /**
  * DLL entry point

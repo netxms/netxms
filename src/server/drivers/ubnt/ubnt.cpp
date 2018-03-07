@@ -254,7 +254,7 @@ ObjectArray<WirelessStationInfo> *UbiquityNetworksDriver::getWirelessStations(SN
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, UbiquityNetworksDriver);
+DECLARE_NDD_ENTRY_POINT(UbiquityNetworksDriver);
 
 /**
  * DLL entry point

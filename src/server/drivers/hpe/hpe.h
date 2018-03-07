@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for Juniper Networks devices
+** Drivers for HPE (Hewlett Packard Enterprise) devices
 ** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,19 +17,19 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: juniper.h
+** File: hpe.h
 **
 **/
 
-#ifndef _juniper_h_
-#define _juniper_h_
+#ifndef _hpe_h_
+#define _hpe_h_
 
 #include <nddrv.h>
 
 /**
- * Driver's class
+ * Driver for H3C (now HP A-series) switches
  */
-class JuniperDriver : public NetworkDeviceDriver
+class H3CDriver : public NetworkDeviceDriver
 {
 public:
 	virtual const TCHAR *getName();
@@ -37,16 +37,31 @@ public:
 
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
 };
 
 /**
- * Driver for Juniper ScreenOS devices (former Netscreen)
+ * Driver for HP switches with HH3C MIB support
  */
-class NetscreenDriver : public NetworkDeviceDriver
+class HPSwitchDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName();
+   virtual const TCHAR *getVersion();
+
+   virtual int isPotentialDevice(const TCHAR *oid);
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+};
+
+/**
+ * Driver for HP ProCurve switches
+ */
+class ProCurveDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getName();

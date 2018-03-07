@@ -1,0 +1,8 @@
+TARGET = avaya.ndd
+TYPE = ndd
+COMPONENT = server
+SOURCES = avaya.cpp baystack.cpp ers8000.cpp ntws.cpp vlan-if.cpp
+
+LIBS = libnxsrv.lib libnxsnmp.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
