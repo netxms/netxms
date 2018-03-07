@@ -21,11 +21,39 @@
 #include "python_subagent.h"
 
 /**
- * Supported parameters
+ * Plugin registry
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static ObjectArray<PythonPlugin> s_plugins(16, 16, false);
+
+/**
+ * Register plugins
+ */
+static void RegisterPlugins(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
 {
-};
+   ObjectArray<ConfigEntry> *plugins = config->getSubEntries(_T("/Python/Plugin"), _T("*"));
+   if (plugins != NULL)
+   {
+      for(int i = 0; i < plugins->size(); i++)
+      {
+         PythonPlugin *p = PythonPlugin::load(plugins->get(i)->getValue(), parameters);
+         if (p != NULL)
+         {
+            s_plugins.add(p);
+         }
+         else
+         {
+            AgentWriteLog(NXLOG_WARNING, _T("Python: cannot load plugin %s"), plugins->get(i)->getName());
+         }
+      }
+      delete plugins;
+   }
+   nxlog_debug_tag(PY_SUBAGENT_DEBUG_TAG, 3, _T("%d parameters added from plugins"), parameters->size());
+}
+
+/**
+ * Agent module initialization
+ */
+PyObject *PyInit_netxms_agent();
 
 /**
  * Subagent information
@@ -35,8 +63,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("PYTHON"), NETXMS_BUILD_TAG,
 	NULL, NULL, NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
+   0, NULL,    // parameters
 	0, NULL,		// lists
 	0, NULL,		// tables
 	0, NULL,		// actions
@@ -44,10 +71,32 @@ static NETXMS_SUBAGENT_INFO m_info =
 };
 
 /**
+ * Python modules
+ */
+static struct NXPYTHON_MODULE_INFO s_pythonModules[] =
+{
+   { "netxms.agent", PyInit_netxms_agent },
+   { NULL, NULL }
+};
+
+/**
  * Entry point for NetXMS agent
  */
 DECLARE_SUBAGENT_ENTRY_POINT(PYTHON)
 {
+   nxlog_debug_tag(PY_SUBAGENT_DEBUG_TAG, 1, _T("Initializing Python subagent"));
+
+   InitializeEmbeddedPython(s_pythonModules);
+
+   StructArray<NETXMS_SUBAGENT_PARAM> *parameters = new StructArray<NETXMS_SUBAGENT_PARAM>();
+
+   RegisterPlugins(parameters, config);
+
+   m_info.numParameters = parameters->size();
+   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
+                     parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+   delete parameters;
+
 	*ppInfo = &m_info;
 	return true;
 }

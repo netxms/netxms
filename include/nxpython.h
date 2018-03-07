@@ -42,18 +42,31 @@ class LIBNXPYTHON_EXPORTABLE PythonInterpreter
 {
 private:
    PyThreadState *m_threadState;
+   PyObject *m_mainModule;
 
    PythonInterpreter(PyThreadState *s);
+
+   void logExecutionError(const TCHAR *format);
 
 public:
    ~PythonInterpreter();
    
    bool execute(const char *source);
+   PyObject *call(const char *name, PyObject *args = NULL);
    
    static PythonInterpreter *create();
 };
 
-void LIBNXPYTHON_EXPORTABLE InitializeEmbeddedPython();
+/**
+ * Additional module info
+ */
+struct NXPYTHON_MODULE_INFO
+{
+   const char *name;
+   PyObject *(*initFunction)();
+};
+
+void LIBNXPYTHON_EXPORTABLE InitializeEmbeddedPython(NXPYTHON_MODULE_INFO *modules = NULL);
 void LIBNXPYTHON_EXPORTABLE ShutdownEmbeddedPython();
 PythonInterpreter LIBNXPYTHON_EXPORTABLE *CreatePythonInterpreter();
 

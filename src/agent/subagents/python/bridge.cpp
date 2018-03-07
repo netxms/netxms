@@ -16,11 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: extensions.cpp
+** File: bridge.cpp
 **
 **/
 
-#include "libnxpython.h"
+#include "python_subagent.h"
 
 /**
  * Method netxms.trace()
@@ -45,29 +45,11 @@ static PyObject *M_trace(PyObject *self, PyObject *args)
 }
 
 /**
- * Method netxms.version()
- */
-static PyObject *M_version(PyObject *self, PyObject *args)
-{
-   return PyUnicode_FromString(NETXMS_VERSION_STRING_A);
-}
-
-/**
- * Method netxms.buildTag()
- */
-static PyObject *M_buildTag(PyObject *self, PyObject *args)
-{
-   return PyUnicode_FromString(NETXMS_BUILD_TAG_A);
-}
-
-/**
- * Methods in module "netxms"
+ * Methods in module "netxms.agent"
  */
 static PyMethodDef s_methods[] =
 {
-   { "buildTag", M_buildTag, METH_NOARGS, "Return NetXMS build tag" },
    { "trace", M_trace, METH_VARARGS, "Write debug message to NetXMS log file" },
-   { "version", M_version, METH_NOARGS, "Return NetXMS version" },
    { NULL, NULL, 0, NULL }
 };
 
@@ -77,7 +59,7 @@ static PyMethodDef s_methods[] =
 static PyModuleDef s_module =
 {
    PyModuleDef_HEAD_INIT,
-   "netxms",   // name
+   "netxms.agent",   // name
    NULL,       // documentation
    -1,         // state struct size
    s_methods,  // methods
@@ -90,7 +72,18 @@ static PyModuleDef s_module =
 /**
  * Module initialization
  */
-PyObject *PyInit_netxms()
+PyObject *PyInit_netxms_agent()
 {
-   return PyModule_Create(&s_module);
+   PyObject *module = PyModule_Create(&s_module);
+
+   // DCI data types
+   PyModule_AddIntConstant(module, "DCI_DT_COUNTER32", DCI_DT_COUNTER32);
+   PyModule_AddIntConstant(module, "DCI_DT_COUNTER64", DCI_DT_COUNTER64);
+   PyModule_AddIntConstant(module, "DCI_DT_INT", DCI_DT_INT);
+   PyModule_AddIntConstant(module, "DCI_DT_INT64", DCI_DT_INT64);
+   PyModule_AddIntConstant(module, "DCI_DT_STRING", DCI_DT_STRING);
+   PyModule_AddIntConstant(module, "DCI_DT_UINT", DCI_DT_UINT);
+   PyModule_AddIntConstant(module, "DCI_DT_UINT", DCI_DT_UINT64);
+
+   return module;
 }
