@@ -3989,6 +3989,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/extreme/Makefile
 	src/server/drivers/hpe/Makefile
+	src/server/drivers/huawei/Makefile
 	src/server/drivers/ignitenet/Makefile
 	src/server/drivers/juniper/Makefile
 	src/server/drivers/mikrotik/Makefile
