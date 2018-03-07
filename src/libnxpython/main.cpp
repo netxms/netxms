@@ -1,6 +1,5 @@
 /* 
 ** NetXMS - Network Management System
-** NetXMS Python Interface
 ** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,15 +16,22 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnxpython.h
+** File: main.cpp
 **
 **/
 
-#ifndef _libnxpython_h_
-#define _libnxpython_h_
+#include "libnxpython.h"
 
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nxpython.h>
+#if defined(_WIN32) && !defined(UNDER_CE)
 
-#endif
+/**
+ * DLL entry point
+ */
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
+}
+
+#endif   /* _WIN32 */

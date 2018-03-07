@@ -16,16 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: py_mgr.cpp
+** File: manager.cpp
 **
 **/
 
-#include "nxcore.h"
-#include <nxpython.h>
+#include "libnxpython.h"
+#include <nxqueue.h>
 
 #define DEBUG_TAG _T("python")
-
-#if WITH_PYTHON
 
 /**
  * Register extensions
@@ -137,9 +135,6 @@ static THREAD_RESULT THREAD_CALL PythonManager(void *arg)
  */
 PythonInterpreter *PythonInterpreter::create()
 {
-   if (!(g_flags & AF_ENABLE_EMBEDDED_PYTHON))
-      return NULL;
-
    PythonManagerRequest r;
    s_managerRequestQueue.put(&r);
    r.wait();
@@ -224,44 +219,30 @@ bool PythonInterpreter::execute(const char *source)
  */
 static THREAD s_managerThread = INVALID_THREAD_HANDLE;
 
-#else
-
-/**
- * Create Python sub-interpreter - dummy for build without Python support
- */
-PythonInterpreter *PythonInterpreter::create()
-{
-   return NULL;
-}
-
-#endif
-
 /**
  * Initialize embedded Python
  */
-void InitializeEmbeddedPython()
+void LIBNXPYTHON_EXPORTABLE InitializeEmbeddedPython()
 {
-#if WITH_PYTHON
-   if (!(g_flags & AF_ENABLE_EMBEDDED_PYTHON))
-      return;
-
    CONDITION initCompleted = ConditionCreate(true);
    s_managerThread = ThreadCreateEx(PythonManager, 0, initCompleted);
    ConditionWait(initCompleted, INFINITE);
    ConditionDestroy(initCompleted);
-#endif
 }
 
 /**
  * Shutdown embedded Python
  */
-void ShutdownEmbeddedPython()
+void LIBNXPYTHON_EXPORTABLE ShutdownEmbeddedPython()
 {
-#if WITH_PYTHON
-   if (!(g_flags & AF_ENABLE_EMBEDDED_PYTHON))
-      return;
-
    s_managerRequestQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_managerThread);
-#endif
+}
+
+/**
+ * Create Python interpreter
+ */
+PythonInterpreter LIBNXPYTHON_EXPORTABLE *CreatePythonInterpreter()
+{
+   return PythonInterpreter::create();
 }

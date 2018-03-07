@@ -11,7 +11,11 @@ netxmsd_LDADD = \
 	../../db/libnxdb/libnxdb.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
-   @SERVER_LIBS@ @PYTHON_LIBS@
+   @SERVER_LIBS@
+
+if PYTHON_SUPPORT
+netxmsd_LDADD += ../../libnxpython/libnxpython.la @PYTHON_LIBS@
+endif
 
 EXTRA_DIST = \
 	netxmsd.vcxproj netxmsd.vcxproj.filters \

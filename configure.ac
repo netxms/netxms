@@ -3736,6 +3736,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([MQTT_SUPPORT], [test "x$MQTT_SUPPORT" = "xyes"])
+AM_CONDITIONAL([PYTHON_SUPPORT], [test "x$PYTHON_SUPPORT" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
@@ -3922,6 +3923,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/portCheck/Makefile
+	src/agent/subagents/python/Makefile
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/ssh/Makefile

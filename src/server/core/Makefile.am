@@ -27,7 +27,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			netmap_objlist.cpp netobj.cpp netsrv.cpp \
 			node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
-			pds.cpp poll.cpp ps.cpp py_ext.cpp py_mgr.cpp rack.cpp \
+			pds.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp session.cpp slmcheck.cpp smclp.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
@@ -48,7 +48,10 @@ libnxcore_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
-	@SERVER_LIBS@ @PYTHON_LIBS@
+	@SERVER_LIBS@
+if PYTHON_SUPPORT
+libnxcore_la_LIBADD += @top_srcdir@/src/libnxpython/libnxpython.la @PYTHON_LIBS@
+endif
 if XMPP_SUPPORT
 libnxcore_la_LIBADD += @top_srcdir@/src/libstrophe/libstrophe.la
 endif

@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: py_ext.cpp
+** File: extensions.cpp
 **
 **/
 
@@ -53,12 +53,21 @@ static PyObject *M_version(PyObject *self, PyObject *args)
 }
 
 /**
+ * Method netxms.buildTag()
+ */
+static PyObject *M_buildTag(PyObject *self, PyObject *args)
+{
+   return PyUnicode_FromString(NETXMS_BUILD_TAG_A);
+}
+
+/**
  * Methods in module "netxms"
  */
 static PyMethodDef s_methods[] =
 {
+   { "buildTag", M_buildTag, METH_NOARGS, "Return NetXMS build tag" },
    { "trace", M_trace, METH_VARARGS, "Write debug message to NetXMS log file" },
-   { "version", M_version, METH_NOARGS, "Return NetXMS server version" },
+   { "version", M_version, METH_NOARGS, "Return NetXMS version" },
    { NULL, NULL, 0, NULL }
 };
 

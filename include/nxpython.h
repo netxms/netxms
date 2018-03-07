@@ -26,9 +26,9 @@
 #include <nms_common.h>
 
 #ifdef LIBNXPYTHON_EXPORTS
-#define LIBNXPYTHON_EXPORTABLE EXPORT
+#define LIBNXPYTHON_EXPORTABLE __EXPORT
 #else
-#define LIBNXPYTHON_EXPORTABLE IMPORT
+#define LIBNXPYTHON_EXPORTABLE __IMPORT
 #endif
 
 #if WITH_PYTHON
@@ -53,17 +53,10 @@ public:
    static PythonInterpreter *create();
 };
 
-#else
+void LIBNXPYTHON_EXPORTABLE InitializeEmbeddedPython();
+void LIBNXPYTHON_EXPORTABLE ShutdownEmbeddedPython();
+PythonInterpreter LIBNXPYTHON_EXPORTABLE *CreatePythonInterpreter();
 
-/**
- * Wrapper for Python sub-interpreter
- */
-class LIBNXPYTHON_EXPORTABLE PythonInterpreter
-{
-public:
-   static PythonInterpreter *create();
-};
-
-#endif
+#endif   /* WITH_PYTHON */
 
 #endif
