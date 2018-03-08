@@ -1,30 +1,40 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '25.0.3'
+    compileSdkVersion 27
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "org.netxms.agent.android"
-        minSdkVersion 9
-        targetSdkVersion 23
+        minSdkVersion 14
+        targetSdkVersion 27
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            signingConfig signingConfigs.release
         }
     }
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.4.0'
-    compile('org.netxms:netxms-client:2.2.4') {
+    implementation 'com.android.support:support-v4:27.1.0'
+    implementation('org.netxms:netxms-client:2.2.4') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    compile('org.netxms:netxms-base:2.2.4')
-    compile 'ch.acra:acra:4.9.0'
+    implementation('org.netxms:netxms-base:2.2.4')
+    implementation 'ch.acra:acra:4.9.0'
 }
