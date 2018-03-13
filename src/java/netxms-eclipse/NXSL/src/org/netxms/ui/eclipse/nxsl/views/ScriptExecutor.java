@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.nxsl.views;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -496,6 +498,12 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             library = session.getScriptLibrary();
+            Collections.sort(library, new Comparator<Script>() {
+               @Override
+               public int compare(Script lhs, Script rhs) {
+                   return lhs.getName().compareTo(rhs.getName());
+               }
+            });
             
             runInUIThread(new Runnable() {
                @Override
