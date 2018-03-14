@@ -17,6 +17,13 @@
 
 
 *
+* 2.2.5
+*
+
+- Fixed issues:
+   NX-1418 (Sort scripts in Execute Server Script dropdown)
+
+*
 * 2.2.4
 *
 
