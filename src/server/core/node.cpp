@@ -1735,6 +1735,7 @@ restart_agent_check:
             if((m_dwDynamicFlags & NDF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(dwRqId))
             {
                PostEvent(EVENT_NODE_DOWN, m_id, NULL);
+               m_dwDynamicFlags &= ~NDF_NETWORK_PATH_PROBLEM;
             }
             sendPollerMsg(dwRqId, POLLER_WARNING _T("Node is still unreachable\r\n"));
          }
