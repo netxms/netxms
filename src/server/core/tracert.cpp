@@ -106,7 +106,7 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
       TCHAR name[MAX_OBJECT_NAME];
       if (pCurr->getNextHop(srcAddr, pDest->getIpAddress(), &nextHop, &route, &dwIfIndex, &isVpn, name))
       {
-			pNext = FindNodeByIP(pSrc->getZoneUIN(), nextHop);
+			pNext = FindNodeByIP(pDest->getZoneUIN(), nextHop);
 			path->addHop(nextHop, route, pCurr, dwIfIndex, isVpn, name);
          if ((pNext == pCurr) || !nextHop.isValid())
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace

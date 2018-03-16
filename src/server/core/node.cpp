@@ -1715,6 +1715,7 @@ restart_agent_check:
             if((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId))
             {
                PostEvent(EVENT_NODE_DOWN, m_id, NULL);
+               m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
             }
             sendPollerMsg(rqId, POLLER_WARNING _T("Node is still unreachable\r\n"));
          }
