@@ -27,7 +27,7 @@
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST
-NDD_DRIVER(HuaweiOptixDriver)
+NDD_DRIVER(OptixDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT
 
