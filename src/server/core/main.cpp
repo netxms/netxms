@@ -25,6 +25,7 @@
 #include <netxms_mt.h>
 #include <hdlink.h>
 #include <agent_tunnel.h>
+#include <nxpython.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -83,8 +84,6 @@ void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
-void InitializeEmbeddedPython();
-void ShutdownEmbeddedPython();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -896,7 +895,8 @@ retry_db_lock:
 	// Initialize certificate store and CA
 	InitCertificates();
 
-	InitializeEmbeddedPython();
+   if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
+      InitializeEmbeddedPython();
 
 	// Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
@@ -1205,7 +1205,8 @@ void NXCORE_EXPORTABLE Shutdown()
    MsgWaitQueue::shutdown();
    WatchdogShutdown();
 
-   ShutdownEmbeddedPython();
+   if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
+      ShutdownEmbeddedPython();
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();

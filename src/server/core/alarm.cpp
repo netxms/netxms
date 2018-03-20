@@ -1335,7 +1335,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
 {
    UINT32 dwObjectId = 0;
 
-   if(!alreadyLocked)
+   if (!alreadyLocked)
       MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
@@ -1347,7 +1347,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
       }
    }
 
-   if(!alreadyLocked)
+   if (!alreadyLocked)
       MutexUnlock(m_mutex);
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
