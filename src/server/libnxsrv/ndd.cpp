@@ -574,6 +574,8 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
  * @param attributes node's custom attributes
  * @param driverData driver's data
  * @param ifIndex interface index
+ * @param ifTableSuffixLen length of interface table suffix
+ * @param ifTableSuffix interface table suffix
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */

@@ -29,7 +29,7 @@
 /**
  * Driver for Optix devices
  */
-class HuaweiOptixDriver : public NetworkDeviceDriver
+class OptixDriver : public NetworkDeviceDriver
 {
 public:
 	virtual const TCHAR *getName();
@@ -39,6 +39,8 @@ public:
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
 	virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual void getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex,
+                                  int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
 };
 
 #endif
