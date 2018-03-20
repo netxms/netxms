@@ -21,7 +21,9 @@
 *
 
 - Fixed issues:
-   NX-1418 (Sort scripts in Execute Server Script dropdown)
+	NX-1418 (Sort scripts in Execute Server Script dropdown)
+	NX-1420 (Do not use unmanaged devices with SNMP for MAC resolving)
+
 
 *
 * 2.2.4

@@ -688,13 +688,11 @@ ARP_CACHE *Node::getArpCache()
    }
    else if (m_capabilities & NC_IS_SNMP)
    {
-      SNMP_Transport *pTransport;
-
-      pTransport = createSnmpTransport();
-      if (pTransport != NULL)
+      SNMP_Transport *transport = createSnmpTransport();
+      if (transport != NULL)
       {
-         pArpCache = SnmpGetArpCache(m_snmpVersion, pTransport);
-         delete pTransport;
+         pArpCache = SnmpGetArpCache(m_snmpVersion, transport);
+         delete transport;
       }
    }
 
@@ -5488,7 +5486,8 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    if ((!(m_capabilities & NC_IS_NATIVE_AGENT)) ||
        (m_flags & NF_DISABLE_NXCP) ||
        (m_state & NSF_AGENT_UNREACHABLE) ||
-       (m_state & DCSF_UNREACHABLE))
+       (m_state & DCSF_UNREACHABLE) ||
+       (m_status == STATUS_UNMANAGED))
       return NULL;
 
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
@@ -5531,6 +5530,9 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
  */
 AgentConnectionEx *Node::getAgentConnection()
 {
+   if (m_status == STATUS_UNMANAGED)
+      return NULL;
+
    AgentConnectionEx *conn = NULL;
 
    bool success;
@@ -6245,7 +6247,7 @@ UINT32 Node::getEffectiveZoneProxy() const
  */
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
-   if (m_flags & NF_DISABLE_SNMP)
+   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED))
       return NULL;
 
    SNMP_Transport *pTransport = NULL;
