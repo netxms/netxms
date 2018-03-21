@@ -211,6 +211,7 @@
     <ClCompile Include="inetaddr.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="lz4.c" />
+    <ClCompile Include="macaddr.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="message.cpp" />
