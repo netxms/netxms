@@ -172,6 +172,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="juniper.cpp" />
+    <ClCompile Include="netscreen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h" />
