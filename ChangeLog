@@ -21,6 +21,7 @@
 *
 
 - Fixed issues:
+	NX-1397 (Implement Windows Update information parameters for Windows 10 and Windows Server 2016)
 	NX-1418 (Sort scripts in Execute Server Script dropdown)
 	NX-1420 (Do not use unmanaged devices with SNMP for MAC resolving)
 	NX-1421 (Configuration poll for node without SNMP and agent always read ARP cache from all SNMP devices in subnet)

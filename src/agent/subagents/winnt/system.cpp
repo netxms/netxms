@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "winnt_subagent.h"
+#include <wuapi.h>
 
 /**
  * Handler for System.ServiceState parameter
@@ -410,55 +411,111 @@ LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, Ab
 }
 
 /**
+ * Read update time from registry
+ */
+static bool ReadSystemUpdateTimeFromRegistry(const TCHAR *type, TCHAR *value)
+{
+   TCHAR buffer[MAX_PATH];
+   _sntprintf(buffer, MAX_PATH, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\%s"), type);
+
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+      return false;
+
+   DWORD size = MAX_PATH * sizeof(TCHAR);
+   if (RegQueryValueEx(hKey, _T("LastSuccessTime"), NULL, NULL, (BYTE *)buffer, &size) != ERROR_SUCCESS)
+   {
+      RegCloseKey(hKey);
+      return false;
+   }
+   RegCloseKey(hKey);
+
+   // Date stored as YYYY-mm-dd HH:MM:SS in UTC
+   if (_tcslen(buffer) != 19)
+      return false;
+
+   struct tm t;
+   memset(&t, 0, sizeof(struct tm));
+   t.tm_isdst = 0;
+
+   buffer[4] = 0;
+   t.tm_year = _tcstol(buffer, NULL, 10) - 1900;
+
+   buffer[7] = 0;
+   t.tm_mon = _tcstol(&buffer[5], NULL, 10) - 1;
+
+   buffer[10] = 0;
+   t.tm_mday = _tcstol(&buffer[8], NULL, 10);
+
+   buffer[13] = 0;
+   t.tm_hour = _tcstol(&buffer[11], NULL, 10);
+
+   buffer[16] = 0;
+   t.tm_min = _tcstol(&buffer[14], NULL, 10);
+
+   t.tm_sec = _tcstol(&buffer[17], NULL, 10);
+
+   ret_int64(value, timegm(&t));
+   return true;
+}
+
+/**
+* Read update time from COM component
+*/
+static bool ReadSystemUpdateTimeFromCOM(const TCHAR *type, TCHAR *value)
+{
+   bool success = false;
+
+   CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+   IAutomaticUpdates2 *updateService;
+   if (CoCreateInstance(CLSID_AutomaticUpdates, NULL, CLSCTX_ALL, IID_IAutomaticUpdates2, (void**)&updateService) == S_OK)
+   {
+      IAutomaticUpdatesResults *results;
+      if (updateService->get_Results(&results) == S_OK)
+      {
+         VARIANT v;
+         HRESULT hr = !_tcscmp(type, _T("Detect")) ? results->get_LastSearchSuccessDate(&v)  : results->get_LastInstallationSuccessDate(&v);
+         if (hr == S_OK)
+         {
+            if (v.vt == VT_DATE)
+            {
+               SYSTEMTIME st;
+               VariantTimeToSystemTime(v.date, &st);
+               
+               FILETIME ft;
+               SystemTimeToFileTime(&st, &ft);
+
+               LARGE_INTEGER li;
+               li.LowPart = ft.dwLowDateTime;
+               li.HighPart = ft.dwHighDateTime;
+               li.QuadPart -= EPOCHFILETIME;
+               ret_int64(value, li.QuadPart / 10000000); // Convert to seconds
+               success = true;
+            }
+            else if (v.vt == VT_EMPTY)
+            {
+               ret_int64(value, 0);
+               success = true;
+            }
+         }
+      }
+      updateService->Release();
+   }
+
+   CoUninitialize();
+   return success;
+}
+
+/**
  * Handler for System.Update.*Time parameters
  */
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR buffer[MAX_PATH];
-   _sntprintf(buffer, MAX_PATH, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\%s"), arg);
+   if (ReadSystemUpdateTimeFromRegistry(arg, value))
+      return SYSINFO_RC_SUCCESS;
 
-   HKEY hKey;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-      return SYSINFO_RC_ERROR;
-
-   LONG rc;
-   DWORD size = MAX_PATH * sizeof(TCHAR);
-   if (RegQueryValueEx(hKey, _T("LastSuccessTime"), NULL, NULL, (BYTE *)buffer, &size) == ERROR_SUCCESS)
-   {
-      // Date stored as YYYY-mm-dd HH:MM:SS in UTC
-      if (_tcslen(buffer) == 19)
-      {
-         struct tm t;
-         memset(&t, 0, sizeof(struct tm));
-         t.tm_isdst = 0;
-
-         buffer[4] = 0;
-         t.tm_year = _tcstol(buffer, NULL, 10) - 1900;
-
-         buffer[7] = 0;
-         t.tm_mon = _tcstol(&buffer[5], NULL, 10) - 1;
-
-         buffer[10] = 0;
-         t.tm_mday = _tcstol(&buffer[8], NULL, 10);
-
-         buffer[13] = 0;
-         t.tm_hour = _tcstol(&buffer[11], NULL, 10);
-
-         buffer[16] = 0;
-         t.tm_min = _tcstol(&buffer[14], NULL, 10);
-
-         t.tm_sec = _tcstol(&buffer[17], NULL, 10);
-
-         ret_int64(value, timegm(&t));
-         rc = SYSINFO_RC_SUCCESS;
-      }      
-   }
-   else
-   {
-      rc = SYSINFO_RC_ERROR;
-   }
-   RegCloseKey(hKey);
-	return rc;
+   return ReadSystemUpdateTimeFromCOM(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
