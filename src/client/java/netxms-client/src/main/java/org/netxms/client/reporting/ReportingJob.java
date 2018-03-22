@@ -41,6 +41,7 @@ public class ReportingJob
 	private int userId;
 	private int type = TYPE_ONCE;
 	private Date startTime;
+	private String reportName;
 	private String comments;
 	private boolean notifyOnCompletion = false;
 	private ReportRenderFormat renderFormat = ReportRenderFormat.NONE;
@@ -51,10 +52,11 @@ public class ReportingJob
 	 * 
 	 * @param reportId report id
 	 */
-	public ReportingJob(UUID reportId)
+	public ReportingJob(ReportDefinition report)
 	{
 		jobId = UUID.randomUUID();
-		this.reportId = reportId;
+		reportId = report.getId();
+		reportName = report.getName();
 		startTime = new Date();
 		daysOfWeek = 0;
 		daysOfMonth = 0;
@@ -122,16 +124,14 @@ public class ReportingJob
 	}
 
 	/**
-	 * Set unique report ID
-	 * 
-	 * @param reportId report unique ID
-	 */
-	public void setReportId(UUID reportId)
-	{
-		this.reportId = reportId;
-	}
+    * @return the reportName
+    */
+   public String getReportName()
+   {
+      return reportName;
+   }
 
-	/**
+   /**
 	 * Get job ID
 	 * 
 	 * @return job ID
@@ -139,16 +139,6 @@ public class ReportingJob
 	public UUID getJobId()
 	{
 		return jobId;
-	}
-
-	/**
-	 * Set job ID
-	 * 
-	 * @param jobId job ID
-	 */
-	public void setJobId(UUID jobId)
-	{
-		this.jobId = jobId;
 	}
 
 	/**

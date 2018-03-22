@@ -123,7 +123,7 @@ public class ReportExecutionForm extends Composite
 		super(parent, style);
 		this.report = report;
 		this.workbenchPart = workbenchPart;
-
+		
 		createActions();
 
 		imageCache = new ImageCache(this);
@@ -281,7 +281,7 @@ public class ReportExecutionForm extends Composite
             WidgetHelper.saveTableViewerSettings(scheduleList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ScheduleList");
          }
       });
-
+		
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png"))); //$NON-NLS-1$
 		link.setText("Add Schedule");
@@ -296,7 +296,7 @@ public class ReportExecutionForm extends Composite
 	   createSchedulesContextMenu();
 	   
 	   scheduleList.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
+         @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
             IStructuredSelection selection = (IStructuredSelection)scheduleList.getSelection();
@@ -314,10 +314,10 @@ public class ReportExecutionForm extends Composite
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
-			{
+         {
             fillSchedulesContextMenu(mgr);
-			}
-		});
+         }
+      });
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(scheduleList.getControl());
@@ -331,8 +331,8 @@ public class ReportExecutionForm extends Composite
    private void fillSchedulesContextMenu(IMenuManager manager)
    {
       manager.add(actionDeleteSchedule);
-	}
-	
+   }
+   
 	/**
 	 * Create "Results" section's content
 	 * 
@@ -376,34 +376,34 @@ public class ReportExecutionForm extends Composite
 				executeReport();
 			}
 		});
-
+		
 		createResultsContextMenu();
 		
 		resultList.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
+         @Override
          public void selectionChanged(SelectionChangedEvent event)
-			{
+         {
             IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
             actionDeleteResult.setEnabled(selection.size() > 0);
             actionRenderPDF.setEnabled(selection.size() == 1);
             actionRenderXLS.setEnabled(selection.size() == 1);
-			}
-		});
+         }
+      });
 	}
 	
    /**
     * Create results context menu
     */
    private void createResultsContextMenu()
-		{
+   {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
-			{
+         {
             fillResultsContextMenu(mgr);
-			}
-		});
+         }
+      });
 
       // Create menu.
       Menu menu = menuMgr.createContextMenu(resultList.getControl());
@@ -420,7 +420,7 @@ public class ReportExecutionForm extends Composite
       manager.add(actionRenderXLS);
       manager.add(new Separator());
       manager.add(actionDeleteResult);
-	}
+   }
 
 	/**
 	 * Create entry fields for parameters
@@ -752,7 +752,7 @@ public class ReportExecutionForm extends Composite
 				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
 		
-		final ReportingJob job = new ReportingJob(report.getId());
+		final ReportingJob job = new ReportingJob(report);
 		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, job);
 		dialog.getShell().setText("Report Execution Schedule");
 		if (dialog.open() != Window.OK)
