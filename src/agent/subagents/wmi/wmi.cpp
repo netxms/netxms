@@ -129,7 +129,8 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 
 	memset(ctx, 0, sizeof(WMI_QUERY_CONTEXT));
 
-	if (CoInitializeEx(0, COINIT_MULTITHREADED) != S_OK)
+   HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	if ((hr != S_OK) && (hr != S_FALSE))
 		return NULL;
 
 	if (CoInitializeSecurity(NULL, -1, NULL, NULL,

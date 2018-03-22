@@ -189,6 +189,11 @@ typedef int bool;
 #define _WIN32_WINNT		0x0501
 #endif
 
+/**
+ * Epoch offset for FILETIME structure
+ */
+#define EPOCHFILETIME           (116444736000000000i64)
+
 #define WITH_IPV6               1
 
 #define USE_BUNDLED_LIBTRE      1
