@@ -113,7 +113,7 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       nn->train(series, values->size(), 10000, 0.01);
       nn->unlock();
-      delete series;
+      delete[] series;
    }
    delete values;
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Training completed for DCI %u/%u"), nodeId, dciId);
@@ -176,7 +176,7 @@ double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId
    double result = nn->computeOutput(series);
    nn->unlock();
 
-   delete series;
+   delete[] series;
    return result;
 }
 

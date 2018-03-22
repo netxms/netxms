@@ -214,7 +214,7 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
    }
 
    delete[] hSignals;
-   delete sequence;
+   delete[] sequence;
    for(int i = 0; i < blockCount; i++)
       delete[] trainData[i];
    delete[] trainData;
