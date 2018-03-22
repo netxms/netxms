@@ -170,6 +170,7 @@
   <ItemGroup>
     <ClCompile Include="agent.cpp" />
     <ClCompile Include="apinfo.cpp" />
+    <ClCompile Include="arp.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hostmib.cpp" />
     <ClCompile Include="iflist.cpp" />
