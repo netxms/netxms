@@ -26,6 +26,17 @@
 #include <netxms-regex.h>
 
 /**
+ * Returns true if MAC address is valid (has non-zero length and do not consists of all zeroes
+ */
+bool MacAddress::isValid() const
+{
+   for(int i = 0; i < m_length; i++)
+      if (m_value[i] != 0)
+         return true;
+   return false;
+}
+
+/**
  * Returns true if it is the multicast address
  */
 bool MacAddress::isMulticast() const

@@ -87,6 +87,7 @@ Node::Node() : DataCollectionTarget()
    memset(m_lastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_pRoutingTable = NULL;
+   m_arpCache = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
@@ -198,6 +199,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, true);
    m_isHidden = true;
    m_pRoutingTable = NULL;
+   m_arpCache = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
@@ -262,6 +264,8 @@ Node::~Node()
    delete m_driverParameters;
    free(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
+   if (m_arpCache != NULL)
+      m_arpCache->decRefCount();
    if (m_linkLayerNeighbors != NULL)
       m_linkLayerNeighbors->decRefCount();
    delete m_vrrpInfo;
@@ -669,20 +673,32 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Get ARP cache from node
  */
-ARP_CACHE *Node::getArpCache()
+ArpCache *Node::getArpCache(bool forceRead)
 {
-   ARP_CACHE *pArpCache = NULL;
+   ArpCache *arpCache = NULL;
+   if (!forceRead)
+   {
+      lockProperties();
+      if ((m_arpCache != NULL) && (m_arpCache->timestamp() > time(NULL) - 3600))
+      {
+         arpCache = m_arpCache;
+         arpCache->incRefCount();
+      }
+      unlockProperties();
+      if (arpCache != NULL)
+         return arpCache;
+   }
 
    if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      pArpCache = GetLocalArpCache();
+      arpCache = GetLocalArpCache();
    }
    else if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
       AgentConnectionEx *conn = getAgentConnection();
       if (conn != NULL)
       {
-         pArpCache = conn->getArpCache();
+         arpCache = conn->getArpCache();
          conn->decRefCount();
       }
    }
@@ -691,12 +707,24 @@ ARP_CACHE *Node::getArpCache()
       SNMP_Transport *transport = createSnmpTransport();
       if (transport != NULL)
       {
-         pArpCache = SnmpGetArpCache(m_snmpVersion, transport);
+         if (m_driver != NULL)
+         {
+            arpCache = m_driver->getArpCache(transport, m_driverData);
+         }
          delete transport;
       }
    }
 
-   return pArpCache;
+   if (arpCache != NULL)
+   {
+      lockProperties();
+      if (m_arpCache != NULL)
+         m_arpCache->decRefCount();
+      m_arpCache = arpCache;
+      m_arpCache->incRefCount();
+      unlockProperties();
+   }
+   return arpCache;
 }
 
 /**

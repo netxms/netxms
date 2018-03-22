@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,9 +136,9 @@ void StrToMac(const TCHAR *pszStr, BYTE *pBuffer)
 /**
  * Get local ARP cache
  */
-static ARP_CACHE *SysGetLocalArpCache()
+static ArpCache *SysGetLocalArpCache()
 {
-   ARP_CACHE *pArpCache = NULL;
+   ArpCache *arpCache = NULL;
 
 #ifdef _WIN32
    MIB_IPNETTABLE *sysArpCache;
@@ -157,18 +157,13 @@ static ARP_CACHE *SysGetLocalArpCache()
       return NULL;
    }
 
-   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-   pArpCache->dwNumEntries = 0;
-   pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * sysArpCache->dwNumEntries);
+   arpCache = new ArpCache();
 
    for(i = 0; i < sysArpCache->dwNumEntries; i++)
       if ((sysArpCache->table[i].dwType == 3) ||
           (sysArpCache->table[i].dwType == 4))  // Only static and dynamic entries
       {
-         pArpCache->pEntries[pArpCache->dwNumEntries].dwIndex = sysArpCache->table[i].dwIndex;
-         pArpCache->pEntries[pArpCache->dwNumEntries].ipAddr = ntohl(sysArpCache->table[i].dwAddr);
-         memcpy(pArpCache->pEntries[pArpCache->dwNumEntries].bMacAddr, sysArpCache->table[i].bPhysAddr, 6);
-         pArpCache->dwNumEntries++;
+         arpCache->addEntry(ntohl(sysArpCache->table[i].dwAddr), MacAddress(sysArpCache->table[i].bPhysAddr, 6), sysArpCache->table[i].dwIndex);
       }
 
    free(sysArpCache);
@@ -182,11 +177,7 @@ static ARP_CACHE *SysGetLocalArpCache()
 
       if (imp_NxSubAgentGetArpCache(&list))
       {
-         // Create empty structure
-         pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-         pArpCache->dwNumEntries = list.size();
-         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.size());
-         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.size());
+         arpCache = new ArpCache();
 
          szByte[2] = 0;
 
@@ -206,10 +197,11 @@ static ARP_CACHE *SysGetLocalArpCache()
             }
 
             // MAC address
+            BYTE macAddr[6];
             for(j = 0; j < 6; j++)
             {
                memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
-               pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
+               macAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
                pBuf += 2;
             }
 
@@ -219,11 +211,12 @@ static ARP_CACHE *SysGetLocalArpCache()
             pChar = _tcschr(pBuf, _T(' '));
             if (pChar != NULL)
                *pChar = 0;
-            pArpCache->pEntries[i].ipAddr = InetAddress::parse(pBuf);
+            InetAddress ipAddr = InetAddress::parse(pBuf);
 
             // Interface index
-            if (pChar != NULL)
-               pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+            UINT32 ifIndex = (pChar != NULL) ? _tcstoul(pChar + 1, NULL, 10) : 0;
+
+            arpCache->addEntry(ipAddr, MacAddress(macAddr, 6), ifIndex);
 
             free(pTemp);
          }
@@ -231,7 +224,7 @@ static ARP_CACHE *SysGetLocalArpCache()
    }
 #endif
 
-   return pArpCache;
+   return arpCache;
 }
 
 /**
@@ -419,9 +412,9 @@ static InterfaceList *SysGetLocalIfList()
 /**
  * Get local ARP cache
  */
-ARP_CACHE *GetLocalArpCache()
+ArpCache *GetLocalArpCache()
 {
-   ARP_CACHE *pArpCache = NULL;
+   ArpCache *pArpCache = NULL;
 
    // Get ARP cache from built-in code or platform subagent
    pArpCache = SysGetLocalArpCache();

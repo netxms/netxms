@@ -302,7 +302,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nF
       switch(nFmt)
       {
          case CFMT_MAC_ADDR:
-            pVar->getValueAsMACAddr(buffer);
+            pVar->getValueAsMACAddr().toString(buffer);
             break;
          case CFMT_IP_ADDR:
             pVar->getValueAsIPAddr(buffer);

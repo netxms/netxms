@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1743,6 +1743,9 @@ inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
    return false;
 }
 
+/**
+ * MAC address notations
+ */
 enum MacAddressNotation
 {
    MAC_ADDR_FLAT_STRING = 0,
@@ -1766,7 +1769,7 @@ private:
    TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
 
 public:
-   MacAddress() { m_length = 0; memset(m_value, 0, 16); }
+   MacAddress(size_t length = 0) { m_length = MIN(length, 16); memset(m_value, 0, 16); }
    MacAddress(const BYTE *value, size_t length) { m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
    MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, src.m_length); m_length = src.m_length; }
 
@@ -1776,6 +1779,7 @@ public:
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
 
+   bool isValid() const;
    bool isMulticast() const;
    bool isBroadcast() const;
    bool equals(const MacAddress &a) const;

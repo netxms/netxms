@@ -1031,9 +1031,7 @@ void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 
 void InitLocalNetInfo();
 
-ARP_CACHE *GetLocalArpCache();
-ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport);
-
+ArpCache *GetLocalArpCache();
 InterfaceList *GetLocalInterfaceList();
 
 ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport);

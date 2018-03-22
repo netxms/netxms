@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,59 +21,6 @@
 **/
 
 #include "nxcore.h"
-
-/**
- * Handler for ARP enumeration
- */
-static UINT32 HandlerArp(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
-{
-   UINT32 oidName[MAX_OID_LEN], dwIndex = 0;
-   BYTE bMac[64];
-   UINT32 dwResult;
-
-   size_t nameLen = pVar->getName().length();
-   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
-
-   oidName[nameLen - 6] = 1;  // Retrieve interface index
-   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0, NULL);
-   if (dwResult != SNMP_ERR_SUCCESS)
-      return dwResult;
-
-   oidName[nameLen - 6] = 2;  // Retrieve MAC address for this IP
-	dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, bMac, 64, SG_RAW_RESULT, NULL);
-   if (dwResult == SNMP_ERR_SUCCESS)
-   {
-      ((ARP_CACHE *)pArg)->dwNumEntries++;
-      ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
-               sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].ipAddr = ntohl(pVar->getValueAsUInt());
-      memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
-   }
-   return dwResult;
-}
-
-/**
- * Get ARP cache via SNMP
- */
-ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport)
-{
-   ARP_CACHE *pArpCache;
-
-   pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-   if (pArpCache == NULL)
-      return NULL;
-
-   pArpCache->dwNumEntries = 0;
-   pArpCache->pEntries = NULL;
-
-   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, pArpCache) != SNMP_ERR_SUCCESS)
-   {
-      DestroyArpCache(pArpCache);
-      pArpCache = NULL;
-   }
-   return pArpCache;
-}
 
 /**
  * Handler for route enumeration

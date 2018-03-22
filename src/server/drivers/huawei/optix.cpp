@@ -259,3 +259,39 @@ void OptixDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes,
       delete response;
    }
 }
+
+/**
+ * Handler for ARP enumeration
+ */
+static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   // IP address used as table element index - each OID element at range 16..19 represents single byte
+   const SNMP_ObjectId& oid = var->getName();
+   UINT32 ipAddr = (oid.getElement(16) << 24) | (oid.getElement(17) << 16) | (oid.getElement(18) << 8) | oid.getElement(19);
+   TCHAR buffer[256];
+   MacAddress macAddr = MacAddress::parse(var->getValueAsString(buffer, 256));
+   if (macAddr.isValid())
+   {
+      ArpCache *arpCache = static_cast<ArpCache*>(arg);
+      arpCache->addEntry(ipAddr, macAddr);
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get ARP cache
+ *
+ * @param snmp SNMP transport
+ * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
+ * @return ARP cache or NULL on failure
+ */
+ArpCache *OptixDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
+{
+   ArpCache *arpCache = new ArpCache();
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.23.1.1.1.3"), HandlerArp, arpCache) != SNMP_ERR_SUCCESS)
+   {
+      arpCache->decRefCount();
+      arpCache = NULL;
+   }
+   return arpCache;
+}

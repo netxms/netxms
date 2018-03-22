@@ -1813,6 +1813,7 @@ protected:
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
+	ArpCache *m_arpCache;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
 	VlanList *m_vlans;
 	VrrpInfo *m_vrrpInfo;
@@ -2012,7 +2013,7 @@ public:
    void forceSyncDataCollectionConfig();
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
 
-   ARP_CACHE *getArpCache();
+   ArpCache *getArpCache(bool forceRead = false);
    InterfaceList *getInterfaceList();
    Interface *findInterfaceByIndex(UINT32 ifIndex);
    Interface *findInterfaceByName(const TCHAR *name);

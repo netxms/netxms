@@ -929,3 +929,50 @@ DataCollectionError NetworkDeviceDriver::getHostMibMetric(SNMP_Transport *snmp, 
 
    return ((e != NULL) && e->getMetric(suffix, value, size)) ? DCE_SUCCESS : DCE_NOT_SUPPORTED;
 }
+
+/**
+ * Handler for ARP enumeration
+ */
+static UINT32 HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+
+   SNMP_ObjectId oid = var->getName();
+   oid.changeElement(oid.length() - 6, 1);   // ifIndex
+   request.bindVariable(new SNMP_Variable(oid));
+
+   oid.changeElement(oid.length() - 6, 2);   // MAC address
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response;
+   UINT32 rcc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   if (rcc != SNMP_ERR_SUCCESS)
+      return rcc;
+
+   if (response->getNumVariables() == request.getNumVariables())
+   {
+      ArpCache *arpCache = static_cast<ArpCache*>(arg);
+      arpCache->addEntry(ntohl(var->getValueAsUInt()), response->getVariable(1)->getValueAsMACAddr(), response->getVariable(0)->getValueAsUInt());
+   }
+
+   delete response;
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get ARP cache
+ *
+ * @param snmp SNMP transport
+ * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
+ * @return ARP cache or NULL on failure
+ */
+ArpCache *NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
+{
+   ArpCache *arpCache = new ArpCache();
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, arpCache) != SNMP_ERR_SUCCESS)
+   {
+      arpCache->decRefCount();
+      arpCache = NULL;
+   }
+   return arpCache;
+}

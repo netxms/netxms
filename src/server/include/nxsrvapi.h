@@ -192,21 +192,39 @@ enum ActionCallbackEvent
 /**
  * Single ARP cache entry
  */
-typedef struct
+struct ArpEntry
 {
-   UINT32 dwIndex;       // Interface index
+   UINT32 ifIndex;       // Interface index, 0 if unknown
    InetAddress ipAddr;
-   BYTE bMacAddr[MAC_ADDR_LENGTH];
-} ARP_ENTRY;
+   MacAddress macAddr;
+
+   ArpEntry(const InetAddress& _ipAddr, const MacAddress& _macAddr, UINT32 _ifIndex) : ipAddr(_ipAddr), macAddr(_macAddr) { ifIndex = _ifIndex; }
+};
 
 /**
  * ARP cache structure used by discovery functions and AgentConnection class
  */
-typedef struct
+class LIBNXSRV_EXPORTABLE ArpCache : public RefCountObject
 {
-   UINT32 dwNumEntries;
-   ARP_ENTRY *pEntries;
-} ARP_CACHE;
+private:
+   ObjectArray<ArpEntry> *m_entries;
+   HashMap<InetAddress, ArpEntry> *m_ipIndex;
+   time_t m_timestamp;
+
+protected:
+   virtual ~ArpCache();
+
+public:
+   ArpCache();
+
+   void addEntry(ArpEntry *entry);
+   void addEntry(const InetAddress& ipAddr, const MacAddress& macAddr, UINT32 ifIndex = 0) { addEntry(new ArpEntry(ipAddr, macAddr, ifIndex)); }
+
+   int size() const { return m_entries->size(); }
+   time_t timestamp() const { return m_timestamp; }
+   const ArpEntry *get(int index) const { return m_entries->get(index); }
+   const ArpEntry *findByIP(const InetAddress& addr) { return m_ipIndex->get(addr); }
+};
 
 /**
  * Interface information structure used by discovery functions and AgentConnection class
@@ -577,7 +595,7 @@ public:
    bool sendRawMessage(NXCP_MESSAGE *pMsg);
    NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
 
-   ARP_CACHE *getArpCache();
+   ArpCache *getArpCache();
    InterfaceList *getInterfaceList();
    ROUTING_TABLE *getRoutingTable();
    UINT32 getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer);
@@ -712,7 +730,6 @@ public:
 // Functions
 //
 
-void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);

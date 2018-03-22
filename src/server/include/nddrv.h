@@ -328,6 +328,7 @@ public:
    virtual bool hasMetrics();
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual ArpCache *getArpCache(SNMP_Transport *snmp, DriverData *driverData);
 };
 
 #endif   /* _nddrv_h_ */

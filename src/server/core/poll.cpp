@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -297,7 +297,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const BYTE *macAddr = NULL)
 {
    TCHAR buffer[64];
    nxlog_debug(6, _T("DiscoveryPoller(): checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
@@ -413,13 +413,16 @@ static void DiscoveryPoller(void *arg)
 	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
-   ARP_CACHE *pArpCache = node->getArpCache();
+   ArpCache *pArpCache = node->getArpCache(true);
    if (pArpCache != NULL)
    {
-      for(UINT32 i = 0; i < pArpCache->dwNumEntries; i++)
-			if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
-				CheckPotentialNode(node, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
-      DestroyArpCache(pArpCache);
+      for(UINT32 i = 0; i < pArpCache->size(); i++)
+      {
+         const ArpEntry *e = pArpCache->get(i);
+			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
+				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr.value());
+      }
+      pArpCache->decRefCount();
    }
 
 	// Retrieve and analyze node's routing table
