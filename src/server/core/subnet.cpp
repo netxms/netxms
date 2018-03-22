@@ -216,21 +216,18 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 
 		Node *node = (Node *)m_childList->get(i);
 		DbgPrintf(6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
-		ARP_CACHE *arpCache = node->getArpCache();
+		ArpCache *arpCache = node->getArpCache();
 		if (arpCache == NULL)
 			continue;
 
-		for(UINT32 j = 0; j < arpCache->dwNumEntries; j++)
-		{
-			if (arpCache->pEntries[j].ipAddr.equals(ipAddr))
-			{
-				memcpy(macAddr, arpCache->pEntries[j].bMacAddr, MAC_ADDR_LENGTH);
-				success = true;
-				break;
-			}
-		}
+		const ArpEntry *e = arpCache->findByIP(ipAddr);
+		if (e != NULL)
+      {
+         memcpy(macAddr, e->macAddr.value(), MAC_ADDR_LENGTH);
+         success = true;
+      }
 
-		DestroyArpCache(arpCache);
+		arpCache->decRefCount();
    }
 
 	unlockChildList();

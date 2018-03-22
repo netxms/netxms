@@ -423,7 +423,7 @@ public:
    TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
    TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
    SNMP_ObjectId getValueAsObjectId() const;
-   TCHAR *getValueAsMACAddr(TCHAR *buffer) const;
+   MacAddress getValueAsMACAddr() const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
 
    void setValueFromString(UINT32 type, const TCHAR *value);

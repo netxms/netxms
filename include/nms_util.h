@@ -1767,7 +1767,7 @@ private:
    TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
 
 public:
-   MacAddress() { m_length = 0; memset(m_value, 0, 16); }
+   MacAddress(size_t length = 0) { m_length = MIN(length, 16); memset(m_value, 0, 16); }
    MacAddress(const BYTE *value, size_t length) { m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
    MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, src.m_length); m_length = src.m_length; }
 
@@ -1777,6 +1777,7 @@ public:
    const BYTE *value() const { return m_value; }
    size_t length() const { return m_length; }
 
+   bool isValid() const;
    bool isMulticast() const;
    bool isBroadcast() const;
    bool equals(const MacAddress &a) const;

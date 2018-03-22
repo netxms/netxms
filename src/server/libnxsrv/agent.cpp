@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -929,16 +929,14 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 /**
  * Get ARP cache
  */
-ARP_CACHE *AgentConnection::getArpCache()
+ArpCache *AgentConnection::getArpCache()
 {
    StringList *data;
    if (getList(_T("Net.ArpCache"), &data) != ERR_SUCCESS)
       return NULL;
 
    // Create empty structure
-   ARP_CACHE *pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-   pArpCache->dwNumEntries = data->size();
-   pArpCache->pEntries = (ARP_ENTRY *)calloc(data->size(), sizeof(ARP_ENTRY));
+   ArpCache *arpCache = new ArpCache();
 
    TCHAR szByte[4], *pBuf, *pChar;
    szByte[2] = 0;
@@ -960,10 +958,11 @@ ARP_CACHE *AgentConnection::getArpCache()
       }
 
       // MAC address
+      BYTE macAddr[6];
       for(int j = 0; j < 6; j++)
       {
          memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
-         pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
+         macAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
          pBuf += 2;
       }
 
@@ -973,17 +972,18 @@ ARP_CACHE *AgentConnection::getArpCache()
       pChar = _tcschr(pBuf, _T(' '));
       if (pChar != NULL)
          *pChar = 0;
-      pArpCache->pEntries[i].ipAddr = ntohl(_t_inet_addr(pBuf));
+      InetAddress ipAddr = InetAddress::parse(pBuf);
 
       // Interface index
-      if (pChar != NULL)
-         pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+      UINT32 ifIndex = (pChar != NULL) ? _tcstoul(pChar + 1, NULL, 10) : 0;
+
+      arpCache->addEntry(ipAddr, MacAddress(macAddr, 6), ifIndex);
 
       free(line);
    }
 
    delete data;
-   return pArpCache;
+   return arpCache;
 }
 
 /**

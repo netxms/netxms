@@ -62,6 +62,25 @@ static bool IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars)
 }
 
 /**
+ * Print ARP cache
+ */
+static void PrintArpCache(CONSOLE_CTX ctx, Node *node, ArpCache *arpCache)
+{
+   ConsolePrintf(ctx, _T("\x1b[1mIP address\x1b[0m      | \x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m\n"));
+   ConsolePrintf(ctx, _T("----------------+-------------------+---------+----------------------\n"));
+
+   TCHAR ipAddrStr[64], macAddrStr[64];
+   for(int i = 0; i < arpCache->size(); i++)
+   {
+      const ArpEntry *e = arpCache->get(i);
+      Interface *iface = node->findInterfaceByIndex(e->ifIndex);
+      ConsolePrintf(ctx, _T("%-15s | %s | %7d | %-20s\n"), e->ipAddr.toString(ipAddrStr), e->macAddr.toString(macAddrStr),
+         e->ifIndex, (iface != NULL) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
+   }
+   ConsolePrintf(ctx, _T("\n%d entries\n\n"), arpCache->size());
+}
+
+/**
  * Dump index callback (by IP address)
  */
 static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *data)
@@ -439,7 +458,45 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       // Get argument
       pArg = ExtractWord(pArg, szBuffer);
 
-      if (IsCommand(_T("COMPONENTS"), szBuffer, 1))
+      if (IsCommand(_T("ARP"), szBuffer, 2))
+      {
+         // Get argument
+         ExtractWord(pArg, szBuffer);
+         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         if (dwNode != 0)
+         {
+            NetObj *pObject = FindObjectById(dwNode);
+            if (pObject != NULL)
+            {
+               if (pObject->getObjectClass() == OBJECT_NODE)
+               {
+                  ArpCache *arpCache = static_cast<Node*>(pObject)->getArpCache();
+                  if (arpCache != NULL)
+                  {
+                     PrintArpCache(pCtx, static_cast<Node*>(pObject), arpCache);
+                     arpCache->decRefCount();
+                  }
+                  else
+                  {
+                     ConsoleWrite(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
+                  }
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+               }
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+         }
+      }
+      else if (IsCommand(_T("COMPONENTS"), szBuffer, 1))
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
@@ -1212,6 +1269,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
+            _T("   show arp <node>                   - Show ARP cache for node\n")
             _T("   show components <node>            - Show physical components of given node\n")
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")

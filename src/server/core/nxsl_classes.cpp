@@ -1579,8 +1579,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	else if (!_tcscmp(attr, _T("valueAsMac")))
 	{
    	TCHAR strValue[128];
-		t->getValueAsMACAddr(strValue);
-		value = new NXSL_Value(strValue);
+		value = new NXSL_Value(t->getValueAsMACAddr().toString(strValue));
 	}
 
 	return value;

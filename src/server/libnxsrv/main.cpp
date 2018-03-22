@@ -123,19 +123,6 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
 }
 
 /**
- * Destroy ARP cache created by discovery functions
- */
-void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache)
-{
-   if (pArpCache != NULL)
-   {
-      if (pArpCache->pEntries != NULL)
-         free(pArpCache->pEntries);
-      free(pArpCache);
-   }
-}
-
-/**
  * Destroy routing table
  */
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT)

@@ -393,23 +393,17 @@ SNMP_ObjectId SNMP_Variable::getValueAsObjectId() const
 /**
  * Get value as MAC address
  */
-TCHAR *SNMP_Variable::getValueAsMACAddr(TCHAR *buffer) const
+MacAddress SNMP_Variable::getValueAsMACAddr() const
 {
-   int i;
-   TCHAR *pszPos;
-
    // MAC address usually encoded as octet string
    if ((m_type == ASN_OCTET_STRING) && (m_valueLength >= 6))
    {
-      for(i = 0, pszPos = buffer; i < 6; i++, pszPos += 3)
-         _sntprintf(pszPos, 4, _T("%02X:"), m_value[i]);
-      *(pszPos - 1) = 0;
+      return MacAddress(m_value, m_valueLength);
    }
    else
    {
-      _tcscpy(buffer, _T("00:00:00:00:00:00"));
+      return MacAddress(6);   // return 00:00:00:00:00:00 if value cannot be interpreted as MAC address
    }
-   return buffer;
 }
 
 /**
