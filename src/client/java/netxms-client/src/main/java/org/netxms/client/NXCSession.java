@@ -9637,7 +9637,7 @@ public class NXCSession
          msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
          msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
          msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, job.getRenderFormat().getCode());
-         msg.setField(NXCPCodes.VID_RS_REPORT_NAME, job.getComments());  // FIXME: is this correct?
+         msg.setField(NXCPCodes.VID_RS_REPORT_NAME, job.getReportName());
          msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, job.getEmailRecipients().size());
          varId = NXCPCodes.VID_ITEM_LIST;
          for(String s : job.getEmailRecipients())

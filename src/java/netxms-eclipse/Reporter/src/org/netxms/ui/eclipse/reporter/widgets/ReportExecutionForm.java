@@ -810,7 +810,7 @@ public class ReportExecutionForm extends Composite
 				execParameters.put(parameters.get(i).getName(), fields.get(i).getValue());
 		}
 		
-		final ReportingJob job = new ReportingJob(report.getId());
+		final ReportingJob job = new ReportingJob(report);
 		final PropertyDialog dialog = PropertyDialog.createDialogOn(workbenchPart.getSite().getShell(), General.ID, job);
 		dialog.getShell().setText("Report Execution Schedule");
 		if (dialog.open() != Window.OK)
