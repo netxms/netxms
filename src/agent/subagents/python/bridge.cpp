@@ -56,7 +56,7 @@ static PyMethodDef s_methods[] =
 /**
  * Module definition
  */
-static PyModuleDef s_module =
+static PyModuleDef s_agentModule =
 {
    PyModuleDef_HEAD_INIT,
    "netxms.agent",   // name
@@ -74,7 +74,7 @@ static PyModuleDef s_module =
  */
 PyObject *PyInit_netxms_agent()
 {
-   PyObject *module = PyModule_Create(&s_module);
+   PyObject *module = PyModule_Create(&s_agentModule);
 
    // DCI data types
    PyModule_AddIntConstant(module, "DCI_DT_COUNTER32", DCI_DT_COUNTER32);
@@ -86,4 +86,28 @@ PyObject *PyInit_netxms_agent()
    PyModule_AddIntConstant(module, "DCI_DT_UINT", DCI_DT_UINT64);
 
    return module;
+}
+
+/**
+ * Sub-agent module definition
+ */
+static PyModuleDef s_subAgentModule =
+{
+   PyModuleDef_HEAD_INIT,
+   "netxms.subagent",   // name
+   NULL,       // documentation
+   -1,         // state struct size
+   NULL,       // methods
+   NULL,       // slots
+   NULL,       // traverse
+   NULL,       // clear
+   NULL        // free
+};
+
+/**
+ * Module initialization
+ */
+PyObject *PyInit_netxms_subagent()
+{
+   return PyModule_Create(&s_subAgentModule);
 }

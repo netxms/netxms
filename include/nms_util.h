@@ -2318,6 +2318,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 #else
 #define LoadFileA LoadFile
 #endif
+char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName);
 
 UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);

@@ -30,22 +30,21 @@ static ObjectArray<PythonPlugin> s_plugins(16, 16, false);
  */
 static void RegisterPlugins(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
 {
-   ObjectArray<ConfigEntry> *plugins = config->getSubEntries(_T("/Python/Plugin"), _T("*"));
+   ConfigEntry *plugins = config->getEntry(_T("/Python/Plugin"));
    if (plugins != NULL)
    {
-      for(int i = 0; i < plugins->size(); i++)
+      for(int i = 0; i < plugins->getValueCount(); i++)
       {
-         PythonPlugin *p = PythonPlugin::load(plugins->get(i)->getValue(), parameters);
+         PythonPlugin *p = PythonPlugin::load(plugins->getValue(i), parameters);
          if (p != NULL)
          {
             s_plugins.add(p);
          }
          else
          {
-            AgentWriteLog(NXLOG_WARNING, _T("Python: cannot load plugin %s"), plugins->get(i)->getName());
+            AgentWriteLog(NXLOG_WARNING, _T("Python: cannot load plugin %s"), plugins->getValue(i));
          }
       }
-      delete plugins;
    }
    nxlog_debug_tag(PY_SUBAGENT_DEBUG_TAG, 3, _T("%d parameters added from plugins"), parameters->size());
 }
@@ -54,6 +53,11 @@ static void RegisterPlugins(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Conf
  * Agent module initialization
  */
 PyObject *PyInit_netxms_agent();
+
+/**
+ * Sub-agent module initialization
+ */
+PyObject *PyInit_netxms_subagent();
 
 /**
  * Subagent information
@@ -76,6 +80,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 static struct NXPYTHON_MODULE_INFO s_pythonModules[] =
 {
    { "netxms.agent", PyInit_netxms_agent },
+   { "netxms.subagent", PyInit_netxms_subagent },
    { NULL, NULL }
 };
 

@@ -51,9 +51,16 @@ private:
 public:
    ~PythonInterpreter();
    
-   bool execute(const char *source);
-   PyObject *call(const char *name, PyObject *args = NULL);
+   PyObject *loadModule(const char *source, const char *moduleName, const char *fileName = NULL);
+   PyObject *loadModuleFromFile(const TCHAR *fileName, const char *moduleName);
+   bool loadMainModule(const char *source, const char *fileName = NULL);
+   bool loadMainModuleFromFile(const TCHAR *fileName);
+
+   PyObject *call(PyObject *module, const char *name, PyObject *args = NULL);
+   PyObject *call(const char *name, PyObject *args = NULL) { return call(m_mainModule, name, args); }
    
+   void decref(PyObject *object);
+
    static PythonInterpreter *create();
 };
 

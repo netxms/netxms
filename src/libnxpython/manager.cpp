@@ -117,6 +117,22 @@ static THREAD_RESULT THREAD_CALL PythonManager(void *arg)
             request->interpreter = Py_NewInterpreter();
             if (request->interpreter != NULL)
             {
+               PyRun_SimpleString(
+                       "import importlib.abc\n"
+                       "import importlib.machinery\n"
+                       "import sys\n"
+                       "\n"
+                       "class Finder(importlib.abc.MetaPathFinder):\n"
+                       "    def find_spec(self, fullname, path, target=None):\n"
+                       "        if fullname in sys.builtin_module_names:\n"
+                       "            return importlib.machinery.ModuleSpec(\n"
+                       "                fullname,\n"
+                       "                importlib.machinery.BuiltinImporter,\n"
+                       "            )\n"
+                       "\n"
+                       "sys.meta_path.append(Finder())\n"
+                   );
+
                PyThreadState_Swap(mainPyThread);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Created Python interpreter instance %p"), request->interpreter);
             }
@@ -186,11 +202,14 @@ void PythonInterpreter::logExecutionError(const TCHAR *format)
 {
    PyObject *type, *value, *traceback;
    PyErr_Fetch(&type, &value, &traceback);
+   PyObject *text = (value != NULL) ? PyObject_Str(value) : NULL;
 #ifdef UNICODE
-   nxlog_debug_tag(DEBUG_TAG, 6, format, (value != NULL) ? PyUnicode_AsUnicode(value) : L"error text not provided");
+   nxlog_debug_tag(DEBUG_TAG, 6, format, (text != NULL) ? PyUnicode_AsUnicode(text) : L"error text not provided");
 #else
-   nxlog_debug_tag(DEBUG_TAG, 6, format, (value != NULL) ? PyUnicode_AsUTF8(value) : "error text not provided");
+   nxlog_debug_tag(DEBUG_TAG, 6, format, (text != NULL) ? PyUnicode_AsUTF8(text) : "error text not provided");
 #endif
+   if (text != NULL)
+      Py_DECREF(text);
    if (type != NULL)
       Py_DECREF(type);
    if (value != NULL)
@@ -200,9 +219,57 @@ void PythonInterpreter::logExecutionError(const TCHAR *format)
 }
 
 /**
- * Execute script from given source
+ * Load and execute module from given source
  */
-bool PythonInterpreter::execute(const char *source)
+PyObject *PythonInterpreter::loadModule(const char *source, const char *moduleName, const char *fileName)
+{
+   PyObject *module = NULL;
+   PyEval_AcquireThread(m_threadState);
+
+   PyObject *code = Py_CompileString(source, (fileName != NULL) ? fileName : ":memory:", Py_file_input);
+   if (code != NULL)
+   {
+      module = PyImport_ExecCodeModuleEx(moduleName, code, fileName);
+      if (module == NULL)
+      {
+         TCHAR format[256];
+         _sntprintf(format, 256, _T("Cannot import module %hs (%%s)"), moduleName);
+         logExecutionError(format);
+      }
+      Py_DECREF(code);
+   }
+   else
+   {
+      logExecutionError(_T("Source compilation failed (%s)"));
+   }
+
+   PyEval_ReleaseThread(m_threadState);
+   return module;
+}
+
+/**
+ * Load source code from file and execute
+ */
+PyObject *PythonInterpreter::loadModuleFromFile(const TCHAR *fileName, const char *moduleName)
+{
+   char *source = LoadFileAsUTF8String(fileName);
+   if (source == NULL)
+      return NULL;
+#ifdef UNICODE
+   char *utfFileName = UTF8StringFromWideString(fileName);
+   PyObject *module = loadModule(source, moduleName, utfFileName);
+   free(utfFileName);
+#else
+   bool success = loadModule(source, moduleName, fileName);
+#endif
+   free(source);
+   return module;
+}
+
+/**
+ * Load main module
+ */
+bool PythonInterpreter::loadMainModule(const char *source, const char *fileName)
 {
    bool success = false;
    PyEval_AcquireThread(m_threadState);
@@ -213,11 +280,15 @@ bool PythonInterpreter::execute(const char *source)
       m_mainModule = NULL;
    }
 
-   PyObject *code = Py_CompileString(source, "memory", Py_file_input);
+   PyObject *code = Py_CompileString(source, (fileName != NULL) ? fileName : ":memory:", Py_file_input);
    if (code != NULL)
    {
-      m_mainModule = PyImport_ExecCodeModule("__main__", code);
-      if (m_mainModule == NULL)
+      m_mainModule = PyImport_ExecCodeModuleEx("__main__", code, fileName);
+      if (m_mainModule != NULL)
+      {
+         success = true;
+      }
+      else
       {
          logExecutionError(_T("Cannot create __main__ module (%s)"));
       }
@@ -233,17 +304,36 @@ bool PythonInterpreter::execute(const char *source)
 }
 
 /**
+ * Load main module from file
+ */
+bool PythonInterpreter::loadMainModuleFromFile(const TCHAR *fileName)
+{
+   char *source = LoadFileAsUTF8String(fileName);
+   if (source == NULL)
+      return false;
+#ifdef UNICODE
+   char *utfFileName = UTF8StringFromWideString(fileName);
+   bool success = loadMainModule(source, utfFileName);
+   free(utfFileName);
+#else
+   bool success = loadMainModule(source, fileName);
+#endif
+   free(source);
+   return success;
+}
+
+/**
  * Call function within main module
  */
-PyObject *PythonInterpreter::call(const char *name, PyObject *args)
+PyObject *PythonInterpreter::call(PyObject *module, const char *name, PyObject *args)
 {
-   if (m_mainModule == NULL)
+   if (module == NULL)
       return NULL;
 
    PyObject *result = NULL;
    PyEval_AcquireThread(m_threadState);
 
-   PyObject *func = PyObject_GetAttrString(m_mainModule, name);
+   PyObject *func = PyObject_GetAttrString(module, name);
    if ((func != NULL) && PyCallable_Check(func))
    {
       result = PyObject_CallObject(func, args);
@@ -259,6 +349,16 @@ PyObject *PythonInterpreter::call(const char *name, PyObject *args)
 
    PyEval_ReleaseThread(m_threadState);
    return result;
+}
+
+/**
+ * Decrement object reference
+ */
+void PythonInterpreter::decref(PyObject *object)
+{
+   PyEval_AcquireThread(m_threadState);
+   Py_DECREF(object);
+   PyEval_ReleaseThread(m_threadState);
 }
 
 /**

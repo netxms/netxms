@@ -1985,8 +1985,6 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
    return true;
 }
 
-#ifndef UNDER_CE
-
 /**
  * Load file content into memory
  */
@@ -2020,41 +2018,52 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
    return pBuffer;
 }
 
+/**
+ * Load file into memory
+ */
 BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
 {
-   int fd;
-   BYTE *pBuffer = NULL;
-
-   fd = _topen(pszFileName, O_RDONLY | O_BINARY);
+   BYTE *buffer = NULL;
+   int fd = _topen(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-		pBuffer = LoadFileContent(fd, pdwFileSize);
+		buffer = LoadFileContent(fd, pdwFileSize);
    }
-   return pBuffer;
+   return buffer;
 }
 
 #ifdef UNICODE
 
+/**
+ * Load file into memory
+ */
 BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize)
 {
-   int fd;
-   BYTE *pBuffer = NULL;
-
-#ifdef _WIN32
-   fd = _open(pszFileName, O_RDONLY | O_BINARY);
-#else
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
-#endif
+   BYTE *buffer = NULL;
+   int fd = _open(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-      pBuffer = LoadFileContent(fd, pdwFileSize);
+      buffer = LoadFileContent(fd, pdwFileSize);
    }
-   return pBuffer;
+   return buffer;
 }
 
 #endif
 
-#endif
+/**
+ * Load file into memory as string (with null byte at the end)
+ */
+char LIBNETXMS_EXPORTABLE *LoadFileAsUTF8String(const TCHAR *fileName)
+{
+   BYTE *buffer = NULL;
+   int fd = _topen(fileName, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      UINT32 size;
+      buffer = LoadFileContent(fd, &size);
+   }
+   return reinterpret_cast<char*>(buffer);
+}
 
 #ifdef _WIN32
 

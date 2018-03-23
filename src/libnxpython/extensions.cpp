@@ -92,5 +92,7 @@ static PyModuleDef s_module =
  */
 PyObject *PyInit_netxms()
 {
-   return PyModule_Create(&s_module);
+   PyObject *mod = PyModule_Create(&s_module);
+   PyModule_AddObject(mod, "__path__", Py_BuildValue("()"));
+   return mod;
 }

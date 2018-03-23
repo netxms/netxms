@@ -1,5 +1,8 @@
 SUBAGENT = python
 
+pylibdir = $(pkglibdir)
+pylib_DATA = subagent.py
+
 pkglib_LTLIBRARIES = python.la
 python_la_SOURCES = bridge.cpp main.cpp plugin.cpp
 python_la_CPPFLAGS = -I@top_srcdir@/include @PYTHON_CPPFLAGS@
