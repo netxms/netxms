@@ -28,14 +28,14 @@ static ObjectArray<PythonPlugin> s_plugins(16, 16, false);
 /**
  * Register plugins
  */
-static void RegisterPlugins(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Config *config)
+static void RegisterPlugins(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists, Config *config)
 {
    ConfigEntry *plugins = config->getEntry(_T("/Python/Plugin"));
    if (plugins != NULL)
    {
       for(int i = 0; i < plugins->getValueCount(); i++)
       {
-         PythonPlugin *p = PythonPlugin::load(plugins->getValue(i), parameters);
+         PythonPlugin *p = PythonPlugin::load(plugins->getValue(i), parameters, lists);
          if (p != NULL)
          {
             s_plugins.add(p);
@@ -94,13 +94,17 @@ DECLARE_SUBAGENT_ENTRY_POINT(PYTHON)
    InitializeEmbeddedPython(s_pythonModules);
 
    StructArray<NETXMS_SUBAGENT_PARAM> *parameters = new StructArray<NETXMS_SUBAGENT_PARAM>();
+   StructArray<NETXMS_SUBAGENT_LIST> *lists = new StructArray<NETXMS_SUBAGENT_LIST>();
 
-   RegisterPlugins(parameters, config);
+   RegisterPlugins(parameters, lists, config);
 
    m_info.numParameters = parameters->size();
-   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(),
-                     parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+   m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(parameters->getBuffer(), parameters->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+   m_info.numLists = lists->size();
+   m_info.lists = (NETXMS_SUBAGENT_LIST *)nx_memdup(lists->getBuffer(), lists->size() * sizeof(NETXMS_SUBAGENT_PARAM));
+
    delete parameters;
+   delete lists;
 
 	*ppInfo = &m_info;
 	return true;

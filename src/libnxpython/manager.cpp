@@ -323,9 +323,36 @@ bool PythonInterpreter::loadMainModuleFromFile(const TCHAR *fileName)
 }
 
 /**
- * Call function within main module
+ * Call function in main module with C arguments
  */
-PyObject *PythonInterpreter::call(PyObject *module, const char *name, PyObject *args)
+PyObject *PythonInterpreter::call(const char *name, const char *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   PyObject *result = callv(m_mainModule, name, format, args);
+   va_end(args);
+   return result;
+}
+
+/**
+ * Call function with C arguments
+ */
+PyObject *PythonInterpreter::call(PyObject *module, const char *name, const char *format, ...)
+{
+   if (module == NULL)
+      return NULL;
+
+   va_list args;
+   va_start(args, format);
+   PyObject *result = callv(module, name, format, args);
+   va_end(args);
+   return result;
+}
+
+/**
+ * Call function with C arguments
+ */
+PyObject *PythonInterpreter::callv(PyObject *module, const char *name, const char *format, va_list args)
 {
    if (module == NULL)
       return NULL;
@@ -336,11 +363,14 @@ PyObject *PythonInterpreter::call(PyObject *module, const char *name, PyObject *
    PyObject *func = PyObject_GetAttrString(module, name);
    if ((func != NULL) && PyCallable_Check(func))
    {
-      result = PyObject_CallObject(func, args);
+      PyObject *pargs = (format != NULL) ? Py_VaBuildValue(format, args) : NULL;
+      result = PyObject_CallObject(func, pargs);
       if (result == NULL)
       {
          logExecutionError(_T("Function call failed (%s)"));
       }
+      if (pargs != NULL)
+         Py_DECREF(pargs);
    }
    else
    {

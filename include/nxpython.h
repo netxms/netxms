@@ -56,8 +56,10 @@ public:
    bool loadMainModule(const char *source, const char *fileName = NULL);
    bool loadMainModuleFromFile(const TCHAR *fileName);
 
-   PyObject *call(PyObject *module, const char *name, PyObject *args = NULL);
-   PyObject *call(const char *name, PyObject *args = NULL) { return call(m_mainModule, name, args); }
+   PyObject *call(PyObject *module, const char *name, const char *format, ...);
+   PyObject *callv(PyObject *module, const char *name, const char *format, va_list args);
+   PyObject *call(const char *name, const char *format, ...);
+   PyObject *callv(const char *name, const char *format, va_list args) { return callv(m_mainModule, name, format, args); }
    
    void decref(PyObject *object);
 
