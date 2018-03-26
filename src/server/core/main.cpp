@@ -895,8 +895,10 @@ retry_db_lock:
 	// Initialize certificate store and CA
 	InitCertificates();
 
+#if WITH_PYTHON
    if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
       InitializeEmbeddedPython();
+#endif
 
 	// Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
@@ -1205,8 +1207,10 @@ void NXCORE_EXPORTABLE Shutdown()
    MsgWaitQueue::shutdown();
    WatchdogShutdown();
 
+#if WITH_PYTHON
    if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
       ShutdownEmbeddedPython();
+#endif
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
