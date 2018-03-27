@@ -61,6 +61,7 @@ Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, in
    m_sourceEventId = event->getId();
    m_sourceEventCode = event->getCode();
    m_sourceObject = event->getSourceId();
+   m_zoneUIN = event->getZoneUIN();
    m_dciId = event->getDciId();
    m_creationTime = time(NULL);
    m_lastChangeTime = m_creationTime;
@@ -92,24 +93,25 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
    m_alarmId = DBGetFieldULong(hResult, row, 0);
    m_sourceObject = DBGetFieldULong(hResult, row, 1);
-   m_sourceEventCode = DBGetFieldULong(hResult, row, 2);
-   m_sourceEventId = DBGetFieldUInt64(hResult, row, 3);
-   DBGetField(hResult, row, 4, m_message, MAX_EVENT_MSG_LENGTH);
-   m_originalSeverity = (BYTE)DBGetFieldLong(hResult, row, 5);
-   m_currentSeverity = (BYTE)DBGetFieldLong(hResult, row, 6);
-   DBGetField(hResult, row, 7, m_key, MAX_DB_STRING);
-   m_creationTime = DBGetFieldULong(hResult, row, 8);
-   m_lastChangeTime = DBGetFieldULong(hResult, row, 9);
-   m_helpDeskState = (BYTE)DBGetFieldLong(hResult, row, 10);
-   DBGetField(hResult, row, 11, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
-   m_ackByUser = DBGetFieldULong(hResult, row, 12);
-   m_repeatCount = DBGetFieldULong(hResult, row, 13);
-   m_state = (BYTE)DBGetFieldLong(hResult, row, 14);
-   m_timeout = DBGetFieldULong(hResult, row, 15);
-   m_timeoutEvent = DBGetFieldULong(hResult, row, 16);
-   m_resolvedByUser = DBGetFieldULong(hResult, row, 17);
-   m_ackTimeout = DBGetFieldULong(hResult, row, 18);
-   m_dciId = DBGetFieldULong(hResult, row, 19);
+   m_zoneUIN = DBGetFieldULong(hResult, row, 2);
+   m_sourceEventCode = DBGetFieldULong(hResult, row, 3);
+   m_sourceEventId = DBGetFieldUInt64(hResult, row, 4);
+   DBGetField(hResult, row, 5, m_message, MAX_EVENT_MSG_LENGTH);
+   m_originalSeverity = (BYTE)DBGetFieldLong(hResult, row, 6);
+   m_currentSeverity = (BYTE)DBGetFieldLong(hResult, row, 7);
+   DBGetField(hResult, row, 8, m_key, MAX_DB_STRING);
+   m_creationTime = DBGetFieldULong(hResult, row, 9);
+   m_lastChangeTime = DBGetFieldULong(hResult, row, 10);
+   m_helpDeskState = (BYTE)DBGetFieldLong(hResult, row, 11);
+   DBGetField(hResult, row, 12, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
+   m_ackByUser = DBGetFieldULong(hResult, row, 13);
+   m_repeatCount = DBGetFieldULong(hResult, row, 14);
+   m_state = (BYTE)DBGetFieldLong(hResult, row, 15);
+   m_timeout = DBGetFieldULong(hResult, row, 16);
+   m_timeoutEvent = DBGetFieldULong(hResult, row, 17);
+   m_resolvedByUser = DBGetFieldULong(hResult, row, 18);
+   m_ackTimeout = DBGetFieldULong(hResult, row, 19);
+   m_dciId = DBGetFieldULong(hResult, row, 20);
    m_notificationCode = 0;
 
    m_commentCount = GetCommentCount(hdb, m_alarmId);
@@ -154,6 +156,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode)
    m_creationTime = src->m_creationTime;
    m_lastChangeTime = src->m_lastChangeTime;
    m_sourceObject = src->m_sourceObject;
+   m_zoneUIN = src->m_zoneUIN;
    m_sourceEventCode = src->m_sourceEventCode;
    m_dciId = src->m_dciId;
    m_currentSeverity = src->m_currentSeverity;
@@ -274,34 +277,35 @@ void Alarm::createInDatabase()
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
               _T("INSERT INTO alarms (alarm_id,creation_time,last_change_time,")
-              _T("source_object_id,source_event_code,message,original_severity,")
+              _T("source_object_id,zone_uin,source_event_code,message,original_severity,")
               _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
               _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
-              _T("ack_timeout,dci_id,alarm_category_ids) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+              _T("ack_timeout,dci_id,alarm_category_ids) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)m_creationTime);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)m_lastChangeTime);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_sourceObject);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_sourceEventCode);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_originalSeverity);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_key, DB_BIND_STATIC);
-      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_state);
-      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_ackByUser);
-      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_resolvedByUser);
-      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
-      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC);
-      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_repeatCount);
-      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_termByUser);
-      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_timeout);
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_timeoutEvent);
-      DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_sourceEventId);
-      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
-      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_dciId);
-      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_zoneUIN);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sourceEventCode);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_message, DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_originalSeverity);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_key, DB_BIND_STATIC);
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_state);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_ackByUser);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_resolvedByUser);
+      DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_helpDeskState);
+      DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, m_helpDeskRef, DB_BIND_STATIC);
+      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_repeatCount);
+      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_termByUser);
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_timeout);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_timeoutEvent);
+      DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_sourceEventId);
+      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_dciId);
+      DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -1830,7 +1834,7 @@ bool InitAlarmManager()
 
    // Load active alarms into memory
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT alarm_id,source_object_id,")
+   hResult = DBSelect(hdb, _T("SELECT alarm_id,source_object_id,zone_uin,")
                            _T("source_event_code,source_event_id,message,")
                            _T("original_severity,current_severity,")
                            _T("alarm_key,creation_time,last_change_time,")

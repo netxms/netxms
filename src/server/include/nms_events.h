@@ -77,6 +77,7 @@ private:
    int m_severity;
    UINT32 m_flags;
    UINT32 m_sourceId;
+   UINT32 m_zoneUIN;
    UINT32 m_dciId;
 	TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_messageText;
@@ -98,6 +99,7 @@ public:
    UINT32 getSeverity() const { return m_severity; }
    UINT32 getFlags() const { return m_flags; }
    UINT32 getSourceId() const { return m_sourceId; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getDciId() const { return m_dciId; }
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }

@@ -31,6 +31,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -210,6 +211,17 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return Messages.get().LogLabelProvider_Error;
 				}
+         case LogColumn.LC_ZONE_UIN:
+            try
+            {
+               long uin = Long.parseLong(value);
+               Zone zone = session.findZone(uin);
+               return (zone != null) ? zone.getObjectName() : "[" + uin + "]";
+            }
+            catch(NumberFormatException e)
+            {
+               return null;
+            }
 			default:
 				return value;
 		}

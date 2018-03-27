@@ -33,6 +33,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("alarm_state"), _T("State"), LC_ALARM_STATE },
 			{ _T("hd_state"), _T("Helpdesk State"), LC_ALARM_HD_STATE },
 			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },
+         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN },
          { _T("dci_id"), _T("DCI"), LC_INTEGER },
 			{ _T("current_severity"), _T("Severity"), LC_SEVERITY },
 			{ _T("original_severity"), _T("Original Severity"), LC_SEVERITY },
@@ -69,6 +70,7 @@ static NXCORE_LOG s_logs[] =
          { _T("event_id"), _T("ID"), LC_INTEGER },
 			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
+         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN },
          { _T("dci_id"), _T("DCI"), LC_INTEGER },
 			{ _T("event_code"), _T("Event"), LC_EVENT_CODE },
 			{ _T("event_severity"), _T("Severity"), LC_SEVERITY },
@@ -83,6 +85,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("trap_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("ip_addr"), _T("Source IP"), LC_TEXT },
 			{ _T("object_id"), _T("Object"), LC_OBJECT_ID },
+         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN },
 			{ _T("trap_oid"), _T("Trap OID"), LC_TEXT },
 			{ _T("trap_varlist"), _T("Varbinds"), LC_TEXT },
 			{ NULL, NULL, 0 }
@@ -92,6 +95,7 @@ static NXCORE_LOG s_logs[] =
 		{
 			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },
+         { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN },
 			{ _T("facility"), _T("Facility"), LC_INTEGER },
 			{ _T("severity"), _T("Severity"), LC_INTEGER },
 			{ _T("hostname"), _T("Host"), LC_TEXT },

@@ -349,6 +349,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
    {
 	   node->incSyslogMessageCount();
       pRec->dwSourceObject = node->getId();
+      pRec->zoneUIN = zoneUIN;
       if (pRec->szHostName[0] == 0)
 		{
 #ifdef UNICODE
@@ -395,7 +396,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?)"), true);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO syslog (msg_id,msg_timestamp,facility,severity,source_object_id,zone_uin,hostname,msg_tag,msg_text) VALUES (?,?,?,?,?,?,?,?,?)"), true);
       if (hStmt == NULL)
       {
          free(r);
@@ -412,14 +413,15 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, r->nFacility);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, r->nSeverity);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, r->dwSourceObject);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, r->zoneUIN);
 #ifdef UNICODE
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szHostName), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szTag), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szMessage), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szHostName), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szTag), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromMBString(r->szMessage), DB_BIND_DYNAMIC);
 #else
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, r->szHostName, DB_BIND_STATIC);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, r->szTag, DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, r->szMessage, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, r->szHostName, DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, r->szTag, DB_BIND_STATIC);
+         DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, r->szMessage, DB_BIND_STATIC);
 #endif
 
          if (!DBExecute(hStmt))

@@ -37,6 +37,7 @@
 #define LC_INTEGER         6
 #define LC_ALARM_STATE     7
 #define LC_ALARM_HD_STATE  8
+#define LC_ZONE_UIN        9
 
 /**
  * Column filter types

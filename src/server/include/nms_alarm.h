@@ -39,6 +39,7 @@ private:
    time_t m_creationTime;    // Alarm creation time in UNIX time format
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
    UINT32 m_sourceObject;    // Source object ID
+   UINT32 m_zoneUIN;         // Zone UIN for source object
    UINT32 m_sourceEventCode; // Originating event code
    UINT32 m_dciId;           // related DCI ID
    BYTE m_currentSeverity;   // Alarm's current severity

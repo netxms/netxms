@@ -83,6 +83,7 @@ Event::Event()
    m_code = 0;
    m_severity = SEVERITY_NORMAL;
    m_sourceId = 0;
+   m_zoneUIN = 0;
    m_dciId = 0;
    m_flags = 0;
    m_messageText = NULL;
@@ -104,6 +105,7 @@ Event::Event(const Event *src)
    m_code = src->m_code;
    m_severity = src->m_severity;
    m_sourceId = src->m_sourceId;
+   m_zoneUIN = src->m_zoneUIN;
    m_dciId = src->m_dciId;
    m_flags = src->m_flags;
    m_messageText = _tcsdup_ex(src->m_messageText);
@@ -139,6 +141,34 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
       m_userTag[MAX_USERTAG_LENGTH - 1] = 0;
 	m_customMessage = NULL;
 	m_parameters.setOwner(true);
+
+	// Zone UIN
+	NetObj *source = FindObjectById(sourceId);
+	if (source != NULL)
+	{
+	   switch(source->getObjectClass())
+	   {
+	      case OBJECT_NODE:
+	         m_zoneUIN = static_cast<Node*>(source)->getZoneUIN();
+	         break;
+         case OBJECT_CLUSTER:
+            m_zoneUIN = static_cast<Cluster*>(source)->getZoneUIN();
+            break;
+         case OBJECT_INTERFACE:
+            m_zoneUIN = static_cast<Interface*>(source)->getZoneUIN();
+            break;
+         case OBJECT_SUBNET:
+            m_zoneUIN = static_cast<Subnet*>(source)->getZoneUIN();
+            break;
+         default:
+            m_zoneUIN = 0;
+            break;
+	   }
+	}
+	else
+	{
+	   m_zoneUIN = 0;
+	}
 
    // Create parameters
    if (szFormat != NULL)

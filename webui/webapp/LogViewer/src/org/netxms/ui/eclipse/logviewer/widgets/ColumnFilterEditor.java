@@ -225,6 +225,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			case LogColumn.LC_USER_ID:
 			   editor = new UserConditionEditor(this, toolkit);
             break;
+         case LogColumn.LC_ZONE_UIN:
+            editor = new ZoneConditionEditor(this, toolkit);
+            break;
 			default:
 			   editor = new TextConditionEditor(this, toolkit);
             break;
