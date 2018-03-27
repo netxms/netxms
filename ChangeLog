@@ -10,6 +10,7 @@
 - Improved audit logging on object creation
 - NXSL function "GeoLocation" replaced with "GeoLocation" class constructor
 - Portech SMS gateway works correctly with newer gateway versions
+- Agent tunnel falls back to unbound mode in case of agent certificate validation failure
 - Fixed issues: 
 	NX-662 (New network map element - text box)
 	NX-703 (Export/Import actions)
