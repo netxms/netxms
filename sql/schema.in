@@ -828,6 +828,7 @@ CREATE TABLE event_log
   event_code integer not null,
   event_timestamp integer not null,
   event_source integer not null,    /* Source object ID */
+  zone_uin integer not null,
   dci_id integer not null,                /* ID of related DCI or 0 */
   event_severity integer not null,
   event_message varchar(2000) null,
@@ -975,6 +976,7 @@ CREATE TABLE alarms
   creation_time integer not null,
   last_change_time integer not null,
   source_object_id integer not null,
+  zone_uin integer not null,
   source_event_code integer not null,
   source_event_id SQL_INT64 not null,
   dci_id integer not null,
@@ -1167,6 +1169,7 @@ CREATE TABLE syslog
   facility integer not null,
   severity integer not null,
   source_object_id integer not null,
+  zone_uin integer not null,
   hostname varchar(127) null,
   msg_tag varchar(32) null,
   msg_text SQL_TEXT null,
@@ -1191,13 +1194,13 @@ CREATE TABLE script_library
 /*
 ** Extended SNMP trap log
 */
-
 CREATE TABLE snmp_trap_log
 (
   trap_id SQL_INT64 not null,
   trap_timestamp integer not null,
   ip_addr varchar(48) not null,
   object_id integer not null,
+  zone_uin integer not null,
   trap_oid varchar(255) not null,
   trap_varlist SQL_TEXT null,
   PRIMARY KEY(trap_id)

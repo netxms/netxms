@@ -35,6 +35,7 @@ public class LogColumn
 	public static final int LC_INTEGER        = 6;
 	public static final int LC_ALARM_STATE    = 7;
 	public static final int LC_ALARM_HD_STATE = 8;
+   public static final int LC_ZONE_UIN       = 9;
 
 	private String name;
 	private String description;

@@ -53,11 +53,15 @@ void LogHandle::getColumnInfo(NXCPMessage &msg)
 {
 	UINT32 count = 0;
 	UINT32 varId = VID_COLUMN_INFO_BASE;
-	for(int i = 0; m_log->columns[i].name != NULL; i++, count++, varId += 7)
+	for(int i = 0; m_log->columns[i].name != NULL; i++)
 	{
+	   if (!IsZoningEnabled() && (m_log->columns[i].type == LC_ZONE_UIN))
+	      continue;   // ignore zone columns if zoning is disabled
 		msg.setField(varId++, m_log->columns[i].name);
 		msg.setField(varId++, (WORD)m_log->columns[i].type);
 		msg.setField(varId++, m_log->columns[i].description);
+      varId += 7;
+		count++;
 	}
 	msg.setField(VID_NUM_COLUMNS, count);
 }
@@ -84,6 +88,12 @@ void LogHandle::buildQueryColumnList()
 	bool first = true;
 	while(column->name != NULL)
 	{
+	   if (!IsZoningEnabled() && (column->type == LC_ZONE_UIN))
+	   {
+	      column++;
+	      continue;   // ignore zone columns if zoning is disabled
+	   }
+
 		if (!first)
 		{
 			m_queryColumns += _T(",");
@@ -300,12 +310,16 @@ Table *LogHandle::createTable()
 	Table *table = new Table();
 
 	LOG_COLUMN *column = m_log->columns;
-	int columnCount = 0;
-	while (column->name != NULL)
+	while(column->name != NULL)
 	{
+      if (!IsZoningEnabled() && (column->type == LC_ZONE_UIN))
+      {
+         column++;
+         continue;   // ignore zone columns if zoning is disabled
+      }
+
 		table->addColumn(column->name);
 		column++;
-		columnCount++;
 	}
 
 	return table;

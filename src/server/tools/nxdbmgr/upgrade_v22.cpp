@@ -24,11 +24,43 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.20 to 30.0
+ * Upgrade from 22.21 to 30.0
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.20 to 22.21
  */
 static bool H_UpgradeFromV20()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE alarms ADD zone_uin integer\n")
+      _T("ALTER TABLE event_log ADD zone_uin integer\n")
+      _T("ALTER TABLE snmp_trap_log ADD zone_uin integer\n")
+      _T("ALTER TABLE syslog ADD zone_uin integer\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE alarms SET zone_uin=(SELECT zone_guid FROM nodes WHERE nodes.id=alarms.source_object_id)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE event_log SET zone_uin=(SELECT zone_guid FROM nodes WHERE nodes.id=event_log.event_source)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE snmp_trap_log SET zone_uin=(SELECT zone_guid FROM nodes WHERE nodes.id=snmp_trap_log.object_id)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE syslog SET zone_uin=(SELECT zone_guid FROM nodes WHERE nodes.id=syslog.source_object_id)")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE alarms SET zone_uin=0 WHERE zone_uin IS NULL")));
+   CHK_EXEC(SQLQuery(_T("UPDATE event_log SET zone_uin=0 WHERE zone_uin IS NULL")));
+   CHK_EXEC(SQLQuery(_T("UPDATE snmp_trap_log SET zone_uin=0 WHERE zone_uin IS NULL")));
+   CHK_EXEC(SQLQuery(_T("UPDATE syslog SET zone_uin=0 WHERE zone_uin IS NULL")));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("alarms"), _T("zone_uin")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("event_log"), _T("zone_uin")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("snmp_trap_log"), _T("zone_uin")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("syslog"), _T("zone_uin")));
+
+   CHK_EXEC(SetMinorSchemaVersion(21));
    return true;
 }
 
@@ -368,7 +400,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 20, 30, 0,  H_UpgradeFromV20 },
+   { 21, 30, 0,  H_UpgradeFromV21 },
+   { 20, 22, 21, H_UpgradeFromV20 },
    { 19, 22, 20, H_UpgradeFromV19 },
    { 18, 22, 19, H_UpgradeFromV18 },
    { 17, 22, 18, H_UpgradeFromV17 },

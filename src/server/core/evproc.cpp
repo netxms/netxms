@@ -113,10 +113,11 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
 			TCHAR szQuery[4096];
-			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
+			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,")
 											  _T("dci_id,event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT
-											  _T(",%d,%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
-											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getDciId(), pEvent->getSeverity(),
+											  _T(",%d,%d,%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(),
+											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getZoneUIN(),
+											  pEvent->getDciId(), pEvent->getSeverity(),
 											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
 			DBQuery(hdb, szQuery);
@@ -126,8 +127,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-				_T("event_source,dci_id,event_severity,event_message,root_event_id,user_tag) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?)"), true);
+				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,user_tag) ")
+				_T("VALUES (?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				do
@@ -136,11 +137,12 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
 					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)pEvent->getTimeStamp());
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getDciId());
-					DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-					DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-               DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getZoneUIN());
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getDciId());
+					DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+					DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, pEvent->getRootId());
+               DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
 					DBExecute(hStmt);
 					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;

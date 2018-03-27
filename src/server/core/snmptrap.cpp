@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -522,10 +522,11 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 		UINT64 trapId = s_trapId++; // FIXME: change to 64 bit volatile counter
 		s_trapCountersLock.unlock();
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
-                                _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
-                                _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
+                                _T("ip_addr,object_id,zone_uin,trap_oid,trap_varlist) VALUES ")
+                                _T("(") INT64_FMT _T(",%d,'%s',%d,%d,'%s',%s)"),
                  trapId, dwTimeStamp, srcAddr.toString(szBuffer),
-                 (node != NULL) ? node->getId() : (UINT32)0, pdu->getTrapId()->toString(oidText, 1024),
+                 (node != NULL) ? node->getId() : (UINT32)0, (node != NULL) ? node->getZoneUIN() : zoneUIN,
+                 pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
       QueueSQLRequest(szQuery);
 

@@ -21,6 +21,7 @@
 *
 
 - Agent tunnel falls back to unbound mode in case of agent certificate validation failure
+- Zone information added to alarm log, event log, SNMP trap log, and syslog
 - Fixed issues:
 	NX-1397 (Implement Windows Update information parameters for Windows 10 and Windows Server 2016)
 	NX-1418 (Sort scripts in Execute Server Script dropdown)
