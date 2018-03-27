@@ -1186,16 +1186,9 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (p != NULL)
          {
             pArg = ExtractWord(pArg, szBuffer);
-            char *script;
-            UINT32 fileSize;
-            if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
+            if (!p->loadMainModuleFromFile(szBuffer))
             {
-               p->execute(script);
-               free(script);
-            }
-            else
-            {
-               ConsolePrintf(pCtx, _T("ERROR: Cannot load script\n\n"));
+               ConsolePrintf(pCtx, _T("ERROR: Cannot load and execute script\n\n"));
             }
             delete p;
          }
