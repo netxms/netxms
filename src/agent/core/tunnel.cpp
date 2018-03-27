@@ -99,6 +99,7 @@ private:
    MsgWaitQueue *m_queue;
    RefCountHashMap<UINT32, TunnelCommChannel> m_channels;
    MUTEX m_channelLock;
+   bool m_ignoreClientCertificate;
 
    Tunnel(const TCHAR *hostname, UINT16 port);
 
@@ -113,7 +114,7 @@ private:
 
    X509_REQ *createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
-   void loadCertificate();
+   bool loadCertificate();
 
    void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
@@ -152,6 +153,7 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
    m_channelLock = MutexCreate();
+   m_ignoreClientCertificate = false;
 }
 
 /**
@@ -351,7 +353,7 @@ bool Tunnel::sendMessage(const NXCPMessage *msg)
 /**
  * Load certificate for this tunnel
  */
-void Tunnel::loadCertificate()
+bool Tunnel::loadCertificate()
 {
    BYTE addressHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
@@ -382,12 +384,12 @@ void Tunnel::loadCertificate()
          if (f == NULL)
          {
             debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
-            return;
+            return false;
          }
       }
       else
       {
-         return;
+         return false;
       }
    }
 
@@ -397,7 +399,7 @@ void Tunnel::loadCertificate()
    if (cert == NULL)
    {
       debugPrintf(4, _T("Cannot load certificate from file \"%s\""), name);
-      return;
+      return false;
    }
 
    _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
@@ -406,7 +408,7 @@ void Tunnel::loadCertificate()
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
       X509_free(cert);
-      return;
+      return false;
    }
 
    EVP_PKEY *key = PEM_read_PrivateKey(f, NULL, NULL, (void *)"nxagentd");
@@ -416,14 +418,16 @@ void Tunnel::loadCertificate()
    {
       debugPrintf(4, _T("Cannot load private key from file \"%s\""), name);
       X509_free(cert);
-      return;
+      return false;
    }
 
+   bool success = false;
    if (SSL_CTX_use_certificate(m_context, cert) == 1)
    {
       if (SSL_CTX_use_PrivateKey(m_context, key) == 1)
       {
          debugPrintf(4, _T("Certificate and private key loaded"));
+         success = true;
       }
       else
       {
@@ -437,6 +441,7 @@ void Tunnel::loadCertificate()
 
    X509_free(cert);
    EVP_PKEY_free(key);
+   return success;
 }
 
 /**
@@ -498,7 +503,8 @@ bool Tunnel::connectToServer()
 #else
    SSL_CTX_set_options(m_context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 #endif
-   loadCertificate();
+   bool certificateLoaded = m_ignoreClientCertificate ? false : loadCertificate();
+   m_ignoreClientCertificate = false;  // reset ignore flag for next try
 
    m_ssl = SSL_new(m_context);
    if (m_ssl == NULL)
@@ -529,6 +535,11 @@ bool Tunnel::connectToServer()
          {
             char buffer[128];
             debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
+            if (certificateLoaded)
+            {
+               m_ignoreClientCertificate = true;
+               debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
+            }
             return false;
          }
       }

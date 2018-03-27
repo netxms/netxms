@@ -2,6 +2,7 @@
 * 2.2.5
 *
 
+- Agent tunnel falls back to unbound mode in case of agent certificate validation failure
 - Fixed issues:
 	NX-1397 (Implement Windows Update information parameters for Windows 10 and Windows Server 2016)
 	NX-1418 (Sort scripts in Execute Server Script dropdown)
