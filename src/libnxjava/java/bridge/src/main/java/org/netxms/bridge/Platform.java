@@ -41,12 +41,24 @@ public final class Platform
    protected static native void writeLog(int level, String message);
 
    /**
-    * Write debug log message using NetXMS loggin facility
+    * Write debug log message using NetXMS logging facility
     * 
     * @param level debug level (0-9)
     * @param message message
     */
-   public static native void writeDebugLog(int level, String message);
+   public static void writeDebugLog(int level, String message)
+   {
+      writeDebugLog(null,  level, message);
+   }
+
+   /**
+    * Write debug log message using NetXMS logging facility
+    * 
+    * @param tag debug tag
+    * @param level debug level (0-9)
+    * @param message message
+    */
+   public static native void writeDebugLog(String tag, int level, String message);
 
    /**
     * Wrapper for native writeLog call
@@ -68,14 +80,27 @@ public final class Platform
     */
    public static void writeDebugLog(int level, String prefix, Throwable e)
    {
+      writeDebugLog(null, level, prefix, e);
+   }
+   
+   /**
+    * Write exception's stack trace to debug log
+    * 
+    * @param tag debug tag
+    * @param level log level
+    * @param prefix message prefix
+    * @param e exception to log
+    */
+   public static void writeDebugLog(String tag, int level, String prefix, Throwable e)
+   {
       for(StackTraceElement s : e.getStackTrace())
       {
-         writeDebugLog(level, prefix + s.toString());
+         writeDebugLog(tag, level, prefix + s.toString());
       }
       if (e.getCause() != null)
       {
-         writeDebugLog(level, prefix.trim() + " Caused by: " + e.getCause().getClass().getCanonicalName() + ": " + e.getCause().getMessage());
-         writeDebugLog(level, prefix, e.getCause());
+         writeDebugLog(tag, level, prefix.trim() + " Caused by: " + e.getCause().getClass().getCanonicalName() + ": " + e.getCause().getMessage());
+         writeDebugLog(tag, level, prefix, e.getCause());
       }
    }
    
