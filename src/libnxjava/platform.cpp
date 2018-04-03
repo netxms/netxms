@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -44,22 +44,31 @@ static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jm
       return;
 
    TCHAR *message = CStringFromJavaString(jenv, jmessage);
-   nxlog_write_generic((int)level, _T("%s"), message);
+   nxlog_write_generic(static_cast<int>(level), _T("%s"), message);
    free(message);
 }
 
 /**
  * Class:     org.netxms.bridge.Platform
  * Method:    writeDebugLog
- * Signature: (ILjava/lang/String;)V
+ * Signature: (Ljava/lang/String;ILjava/lang/String;)V
  */
-static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jstring jtag, jint level, jstring jmessage)
 {
    if (jmessage == NULL)
       return;
 
    TCHAR *message = CStringFromJavaString(jenv, jmessage);
-   nxlog_debug((int)level, _T("%s"), message);
+   if (jtag != NULL)
+   {
+      TCHAR *tag = CStringFromJavaString(jenv, jtag);
+      nxlog_debug_tag(tag, static_cast<int>(level), _T("%s"), message);
+      free(tag);
+   }
+   else
+   {
+      nxlog_debug(static_cast<int>(level), _T("%s"), message);
+   }
    free(message);
 }
 
@@ -69,7 +78,7 @@ static void JNICALL J_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstri
 static JNINativeMethod s_jniNativeMethods[] =
 {
    { (char *)"getNetXMSDirectoryInternal", (char *)"(I)Ljava/lang/String;", (void *)J_getNetXMSDirectoryInternal },
-   { (char *)"writeDebugLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeDebugLog },
+   { (char *)"writeDebugLog", (char *)"(Ljava/lang/String;ILjava/lang/String;)V", (void *)J_writeDebugLog },
    { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)J_writeLog }
 };
 
