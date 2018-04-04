@@ -82,7 +82,7 @@ bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	}
 
 	m_nodeId	= DBGetFieldLong(hResult, 0, 0);
-	if (m_nodeId <= 0)
+	if (m_nodeId == 0)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
@@ -103,42 +103,19 @@ bool NodeLink::saveToDatabase(DB_HANDLE hdb)
 {
    if (m_modified & MODIFY_OTHER)
    {
-      BOOL bNewObject = TRUE;
-
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT nodelink_id FROM node_links WHERE nodelink_id=?"));
+      static const TCHAR *columns[] = { _T("node_id"), NULL };
+      DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("node_links"), _T("nodelink_id"), m_id, columns);
       if (hStmt == NULL)
-      {
-         DbgPrintf(4, _T("Cannot prepare select from node_links"));
          return false;
-      }
 
       lockProperties();
-
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != NULL)
-      {
-         bNewObject = (DBGetNumRows(hResult) <= 0);
-         DBFreeResult(hResult);
-      }
-      DBFreeStatement(hStmt);
-
-      hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
-                                      _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
-      if (hStmt == NULL)
-      {
-         unlockProperties();
-         return false;
-      }
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
       unlockProperties();
-      if (!DBExecute(hStmt))
-      {
-         DBFreeStatement(hStmt);
-         return false;
-      }
+      bool success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
+      if (!success)
+         return false;
    }
 	return ServiceContainer::saveToDatabase(hdb);
 }

@@ -61,7 +61,7 @@ BusinessService::~BusinessService()
 bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
 	if (!ServiceContainer::loadFromDatabase(hdb, id))
-		return FALSE;
+		return false;
 
 	// now it doesn't make any sense but hopefully will do in the future
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
@@ -97,46 +97,13 @@ bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool BusinessService::saveToDatabase(DB_HANDLE hdb)
 {
-	BOOL bNewObject = TRUE;
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
-	if (hStmt == NULL)
-		return false;
-
-	lockProperties();
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	DB_RESULT hResult = DBSelectPrepared(hStmt);
-	if (hResult != NULL)
-	{
-		bNewObject = (DBGetNumRows(hResult) <= 0);
-		DBFreeResult(hResult);
-	}
-	DBFreeStatement(hStmt);
-
-	hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO business_services (service_id) VALUES (?)") :
-											  _T("UPDATE business_services SET service_id=service_id WHERE service_id=?"));
-	if (hStmt == NULL)
-	{
-		unlockProperties();
-		return false;
-	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	unlockProperties();
-
-	if (!DBExecute(hStmt))
-	{
-		DBFreeStatement(hStmt);
-		return false;
-	}
-
-	DBFreeStatement(hStmt);
-
-	saveACLToDB(hdb);
-
-	lockProperties();
-	m_modified = 0;
-	unlockProperties();
+   if (!IsDatabaseRecordExist(hdb, _T("business_services"), _T("service_id"), m_id))
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("INSERT INTO business_services (service_id) VALUES (%u)"), m_id);
+      if (!DBQuery(hdb, query))
+         return false;
+   }
 
 	return ServiceContainer::saveToDatabase(hdb);
 }
