@@ -87,6 +87,7 @@ struct PoolConnectionInfo
 {
    DB_HANDLE handle;
    bool inUse;
+   bool resetOnRelease;
    time_t lastAccessTime;
    time_t connectTime;
    UINT32 usageCount;
@@ -218,6 +219,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 																int basePoolSize, int maxPoolSize, int cooldownTime,
 																int connTTL);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
+void LIBNXDB_EXPORTABLE DBConnectionPoolReset();
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine);
 #define DBConnectionPoolAcquireConnection() __DBConnectionPoolAcquireConnection(__FILE__, __LINE__)
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);

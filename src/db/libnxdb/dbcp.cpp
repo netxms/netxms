@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008-2015 Raden Solutions
+** Copyright (C) 2008-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -124,6 +124,7 @@ static bool ResetConnection(PoolConnectionInfo *conn)
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnect failure (%s)"), conn->handle, errorText);
 		return false;
 	}
+   conn->resetOnRelease = false;
 }
 
 /**
@@ -281,6 +282,40 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 }
 
 /**
+ * Reset connection pool (reconnect all idle connections and mark non-idle for reconnect after release)
+ */
+void LIBNXDB_EXPORTABLE DBConnectionPoolReset()
+{
+   MutexLock(m_poolAccessMutex);
+
+   time_t now = time(NULL);
+   for(int i = 0; i < m_connections.size(); i++)
+   {
+      PoolConnectionInfo *conn = m_connections.get(i);
+      if (conn->inUse)
+      {
+         conn->resetOnRelease = true;
+      }
+      else if (m_connections.size() > m_basePoolSize)
+      {
+         DBDisconnect(conn->handle);
+         m_connections.remove(i);
+         i--;
+      }
+      else
+      {
+         if (!ResetConnection(conn))
+         {
+            m_connections.remove(i);
+            i--;
+         }
+      }
+   }
+
+   MutexUnlock(m_poolAccessMutex);
+}
+
+/**
  * Acquire connection from pool. This function never fails - if it's impossible to acquire
  * pooled connection, calling thread will be suspended until there will be connection available.
  */
@@ -363,10 +398,27 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
       PoolConnectionInfo *conn = m_connections.get(i);
       if (conn->handle == handle)
 		{
-         conn->inUse = false;
-         conn->lastAccessTime = time(NULL);
          conn->srcFile[0] = 0;
          conn->srcLine = 0;
+         if (conn->resetOnRelease)
+         {
+            MutexUnlock(m_poolAccessMutex);
+            bool success = ResetConnection(conn);
+            MutexLock(m_poolAccessMutex);
+            if (success)
+            {
+               conn->inUse = false;
+            }
+            else
+            {
+               m_connections.remove(i);
+            }
+         }
+         else
+         {
+            conn->inUse = false;
+            conn->lastAccessTime = time(NULL);
+         }
 			break;
 		}
 	}
