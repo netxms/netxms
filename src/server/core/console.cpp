@@ -146,6 +146,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
+   else if (IsCommand(_T("DBCP"), szBuffer, 3))
+   {
+      ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("RESET"), szBuffer, 5))
+      {
+         ConsoleWrite(pCtx, _T("Resetting database connection pool\n"));
+         DBConnectionPoolReset();
+         ConsoleWrite(pCtx, _T("Database connection pool reset completed\n"));
+      }
+      else
+      {
+         ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+      }
+   }
    else if (IsCommand(_T("DEBUG"), szBuffer, 2))
    {
       StringList *list = ParseCommandLine(pArg);
@@ -1254,6 +1268,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("Valid commands are:\n")
             _T("   at +<sec> <script> [<params>]     - Schedule one time script execution task\n")
             _T("   at <schedule> <script> [<params>] - Schedule repeated script execution task\n")
+            _T("   dbcp reset                        - Reset database connection pool\n")
             _T("   debug [<level>|off]               - Set debug level (valid range is 0..9)\n")
             _T("   down                              - Shutdown NetXMS server\n")
             _T("   exec <script> [<params>]          - Executes NXSL script from script library\n")
