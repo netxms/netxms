@@ -225,6 +225,9 @@ public class ScheduledTask
       this.objectId = objectId;
    } 
    
+   /**
+    * @return
+    */
    public String getStatus()
    {
       if ((flags & RUNNING) != 0)
@@ -255,11 +258,41 @@ public class ScheduledTask
       this.comments = comments;
    }
    
-   public boolean isDisbaled()
+   /**
+    * @return
+    */
+   public boolean isSystem()
    {
-      return (flags & DISABLED) > 0;
+      return (flags & SYSTEM) != 0;
    }
 
+   /**
+    * @return
+    */
+   public boolean isCompleted()
+   {
+      return (flags & EXECUTED) != 0;
+   }
+
+   /**
+    * @return
+    */
+   public boolean isDisabled()
+   {
+      return (flags & DISABLED) != 0;
+   }
+
+   /**
+    * @return
+    */
+   public boolean isRecurring()
+   {
+      return (schedule != null) && !schedule.isEmpty();
+   }
+
+   /**
+    * @param enabled
+    */
    public void setEnabed(boolean enabled)
    {
       if(enabled)
