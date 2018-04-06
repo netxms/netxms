@@ -61,7 +61,6 @@ NetObj::NetObj()
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
-	m_maintenanceMode = false;
 	m_maintenanceEventId = 0;
    m_childList = new ObjectArray<NetObj>(0, 16, false);
    m_parentList = new ObjectArray<NetObj>(4, 4, false);
@@ -85,6 +84,7 @@ NetObj::NetObj()
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
    m_urls = new ObjectArray<ObjectUrl>(4, 4, true);
+   m_stateBeforeMaintenance = 0;
 }
 
 /**
@@ -262,7 +262,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode,maint_mode,maint_event_id FROM object_properties ")
+                             _T("street_address,postcode,maint_event_id,state_before_maint FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -314,8 +314,8 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             delete m_postalAddress;
             m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
 
-            m_maintenanceMode = DBGetFieldLong(hResult, 0, 26) ? true : false;
-            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 27);
+            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 26);
+            m_stateBeforeMaintenance = DBGetFieldULong(hResult, 0, 27);
 
 				success = true;
 			}
@@ -463,7 +463,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("image"), _T("submap_id"), _T("country"), _T("city"),
-      _T("street_address"), _T("postcode"), _T("maint_mode"), _T("maint_event_id"),
+      _T("street_address"), _T("postcode"), _T("maint_event_id"), _T("state_before_maint"),
       NULL
    };
 
@@ -506,8 +506,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
-   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 28, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+   DBBind(hStmt, 27, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+   DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_stateBeforeMaintenance);
 	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
@@ -1650,6 +1650,15 @@ void NetObj::unhide()
    unlockChildList();
 }
 
+UINT32 NetObj::getState()
+{
+   return 0;
+}
+
+void NetObj::setState(UINT32 state)
+{
+}
+
 /**
  * Return status propagated to parent
  */
@@ -2388,7 +2397,6 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "statusSingleThreshold", json_integer(m_statusSingleThreshold));
    json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
    json_object_set_new(root, "isSystem", json_boolean(m_isSystem));
-   json_object_set_new(root, "maintenanceMode", json_boolean(m_maintenanceMode));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
    json_object_set_new(root, "image", m_image.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());

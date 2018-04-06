@@ -1001,6 +1001,20 @@ void DCObject::processNewError(bool noInstance, time_t now)
 }
 
 /**
+ * Save information about threshold state before maintenance
+ */
+void DCObject::updateThresholdsBeforeMaintenanceState()
+{
+}
+
+/**
+ * Generate events that persist after maintenance
+ */
+void DCObject::generateEventsBasedOnThrDiff()
+{
+}
+
+/**
  * Should return true if object has (or can have) value
  */
 bool DCObject::hasValue()

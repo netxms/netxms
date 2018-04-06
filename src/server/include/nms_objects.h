@@ -581,11 +581,11 @@ protected:
    int m_statusTranslation[4];
    int m_statusSingleThreshold;
    int m_statusThresholds[4];
+   UINT32 m_stateBeforeMaintenance;
    UINT32 m_modified;
    bool m_isDeleted;
    bool m_isHidden;
 	bool m_isSystem;
-	bool m_maintenanceMode;
 	UINT64 m_maintenanceEventId;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
@@ -663,6 +663,8 @@ public:
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
    int getStatus() const { return m_status; }
+   virtual UINT32 getState();
+   virtual void setState(UINT32 state);
    int getPropagatedStatus();
    time_t getTimeStamp() const { return m_timestamp; }
 	const uuid& getGuid() const { return m_guid; }
@@ -717,7 +719,7 @@ public:
    void resetStatus() { m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
-   bool isInMaintenanceMode() const { return m_maintenanceMode; }
+   bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
    UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
@@ -1317,7 +1319,7 @@ public:
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
-   AccessPointState getState() { return m_state; }
+   AccessPointState getApState() { return m_state; }
    Node *getParentNode();
 
 	void attachToNode(UINT32 nodeId);
@@ -1728,6 +1730,8 @@ public:
    NodeType getType() const { return m_type; }
    const TCHAR *getSubType() const { return m_subType; }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
+   virtual UINT32 getState();
+   virtual void setState(UINT32 state);
 
    void setFlag(UINT32 flag) { lockProperties(); m_flags |= flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }
    void clearFlag(UINT32 flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_NODE_PROPERTIES); unlockProperties(); }

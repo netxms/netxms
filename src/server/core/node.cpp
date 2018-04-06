@@ -6440,6 +6440,18 @@ Cluster *Node::getMyCluster()
    return pCluster;
 }
 
+
+
+UINT32 Node::getState()
+{
+   return m_dwDynamicFlags & NDF_PERSISTENT;
+}
+
+void Node::setState(UINT32 state)
+{
+   m_dwDynamicFlags = state | (m_dwDynamicFlags & ~NDF_PERSISTENT);
+}
+
 /**
  * Get effective SNMP proxy for this node
  */

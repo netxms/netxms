@@ -26,6 +26,7 @@
  * Data collector thread pool
  */
 extern ThreadPool *g_dataCollectorThreadPool;
+extern ThreadPool *g_pollerThreadPool;
 
 /**
  * Data collector worker
@@ -1127,10 +1128,22 @@ void DataCollectionTarget::enterMaintenanceMode()
 {
    DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
    UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, NULL);
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+         continue;
+
+      dco->updateThresholdsBeforeMaintenanceState();
+   }
+   unlockDciAccess();
+
    lockProperties();
-   m_maintenanceMode = true;
    m_maintenanceEventId = eventId;
-   setModified(MODIFY_COMMON_PROPERTIES);
+   m_stateBeforeMaintenance = getState();
+   setModified(MODIFY_COMMON_PROPERTIES | MODIFY_DATA_COLLECTION);
    unlockProperties();
 }
 
@@ -1141,11 +1154,31 @@ void DataCollectionTarget::leaveMaintenanceMode()
 {
    DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
    PostEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+      {
+         continue;
+      }
+
+      dco->generateEventsBasedOnThrDiff();
+   }
+   unlockDciAccess();
+
    lockProperties();
-   m_maintenanceMode = false;
    m_maintenanceEventId = 0;
+   bool forcePoll = getState() != m_stateBeforeMaintenance;
+   setState(m_stateBeforeMaintenance);
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
+
+   if(forcePoll && getObjectClass() == OBJECT_NODE)
+   {
+      ThreadPoolExecute(g_pollerThreadPool, (Node *)this, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, (Node *)this));
+   }
 }
 
 /**

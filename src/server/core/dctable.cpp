@@ -506,6 +506,35 @@ void DCTable::processNewError(bool noInstance, time_t now)
 }
 
 /**
+ * Save information about threshold state before maintenance
+ */
+void DCTable::updateThresholdsBeforeMaintenanceState()
+{
+   lock();
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      m_thresholds->get(i)->updateBeforeMaintenanceState();
+   }
+   unlock();
+}
+
+/**
+ * Generate events based on saved state before maintenance
+ */
+void DCTable::generateEventsBasedOnThrDiff()
+{
+   lock();
+   TableThresholdCbData data;
+   for(int i = 0; i < m_thresholds->size(); i++)
+   {
+      data.threshold = m_thresholds->get(i);
+      data.table = this;
+      m_thresholds->get(i)->generateEventsBasedOnThrDiff(&data);
+   }
+   unlock();
+}
+
+/**
  * Save to database
  */
 bool DCTable::saveToDatabase(DB_HANDLE hdb)
