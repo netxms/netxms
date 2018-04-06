@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.32 to 30.33 (changes also included into 22.22)
+ */
+static bool H_UpgradeFromV32()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 22)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Alarms.IgnoreHelpdeskState"), _T("0"), _T("If set alarm helpdesk state will be ignored when resolving or terminating."), NULL, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 22));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(33));
+   return true;
+}
+
+/**
  * Upgrade from 30.31 to 30.32 (changes also included into 22.21)
  */
 static bool H_UpgradeFromV31()
@@ -1032,6 +1046,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 32, 30, 33, H_UpgradeFromV32 },
    { 31, 30, 32, H_UpgradeFromV31 },
    { 30, 30, 31, H_UpgradeFromV30 },
    { 29, 30, 30, H_UpgradeFromV29 },

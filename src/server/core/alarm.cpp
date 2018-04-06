@@ -779,7 +779,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
          if (alarm->getAlarmId() == alarmIds->get(i))
          {
             // If alarm is open in helpdesk, it cannot be terminated
-            if (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN)
+            if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
             {
                if (session != NULL)
                {
@@ -847,7 +847,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    {
       Alarm *alarm = m_alarmList->get(i);
 		if ((useRegexp ? RegexpMatch(alarm->getKey(), pszKey, TRUE) : !_tcscmp(pszKey, alarm->getKey())) &&
-         (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
+          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)))
       {
          // Add alarm's source object to update list
          int j;
@@ -890,7 +890,8 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
-      if ((alarm->getDciId() == dciId) && (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
+      if ((alarm->getDciId() == dciId) &&
+          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)))
       {
          // Add alarm's source object to update list
          int j;
