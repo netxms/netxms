@@ -19,7 +19,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ScheduleTableEntryLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-   private static final Color FONT_COLOR = new Color(Display.getDefault(), new RGB(126, 137, 185));
+   private static final Color COLOR_DISABLED = new Color(Display.getDefault(), new RGB(126, 137, 185));
+   private static final Color COLOR_SYSTEM = new Color(Display.getDefault(), new RGB(196, 170, 94));
+   
    private static final int EXECUTED = 0;
    private static final int PENDING = 1;
    private static final int DISBALED = 2;
@@ -54,7 +56,7 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
       switch(columnIndex)
       {
          case ScheduledTaskView.SCHEDULE_ID:
-            if(task.isDisbaled())
+            if(task.isDisabled())
                return statusImages[DISBALED];
             if((task.getFlags() & ScheduledTask.EXECUTED) != 0 || (task.getFlags() & ScheduledTask.RUNNING) != 0)
                return statusImages[EXECUTED];
@@ -96,7 +98,7 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
          case ScheduledTaskView.STATUS:
             return task.getStatus();
          case ScheduledTaskView.MANAGMENT_STATE:
-            return task.isDisbaled() ? "Disabled" : "Enabled";
+            return task.isDisabled() ? "Disabled" : "Enabled";
          case ScheduledTaskView.OWNER:
             if ((task.getFlags() & ScheduledTask.SYSTEM) != 0)
                return "system";
@@ -108,24 +110,25 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
       return null;
    }
 
-
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
    public Color getForeground(Object element)
    {
-      if (((ScheduledTask)element).isDisbaled())
-      {
-         return FONT_COLOR;
-      }
+      if (((ScheduledTask)element).isDisabled())
+         return COLOR_DISABLED;
+      if (((ScheduledTask)element).isSystem())
+         return COLOR_SYSTEM;
       return null;
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
    @Override
    public Color getBackground(Object element)
    {
-      // TODO Auto-generated method stub
       return null;
    }
 }

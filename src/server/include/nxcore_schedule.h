@@ -114,6 +114,7 @@ public:
    bool isRunning() const { return (m_flags & SCHEDULED_TASK_RUNNING) != 0; }
    bool isCompleted() const { return (m_flags & SCHEDULED_TASK_COMPLETED) != 0; }
    bool isDisabled() const { return (m_flags & SCHEDULED_TASK_DISABLED) != 0; }
+   bool isSystem() const { return (m_flags & SCHEDULED_TASK_SYSTEM) != 0; }
    bool canAccess(UINT32 userId, UINT64 systemAccess) const;
 };
 

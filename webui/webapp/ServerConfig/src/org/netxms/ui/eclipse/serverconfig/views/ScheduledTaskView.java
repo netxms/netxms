@@ -22,12 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,6 +60,7 @@ import org.netxms.ui.eclipse.serverconfig.dialogs.RerunTimeDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ScheduledTaskEditor;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryLabelProvider;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduledTaskFilter;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -84,7 +87,11 @@ public class ScheduledTaskView extends ViewPart
    private NXCSession session;
    private SessionListener listener;
    private SortableTableViewer viewer;
+   private ScheduledTaskFilter filter;
    private Action actionRefresh;
+   private Action actionShowCompletedTasks;
+   private Action actionShowDisabledTasks;
+   private Action actionShowSystemTasks;
    private Action actionCreate;
    private Action actionEdit;
    private Action actionDelete;
@@ -113,7 +120,7 @@ public class ScheduledTaskView extends ViewPart
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScheduleTableEntryLabelProvider());
-      viewer.setComparator(new ScheduleTableEntryComparator());    
+      viewer.setComparator(new ScheduleTableEntryComparator());
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -121,12 +128,25 @@ public class ScheduledTaskView extends ViewPart
             actionEdit.run();
          }
       });
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ScheduledTasks");
+      
+      filter = new ScheduledTaskFilter();
+      viewer.addFilter(filter);
+
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, "ScheduledTasks");
+      filter.setShowCompletedTasks(getBooleanFromSettings(settings, "ScheduledTasks.showCompleted", true));
+      filter.setShowDisabledTasks(getBooleanFromSettings(settings, "ScheduledTasks.showDisabled", true));
+      filter.setShowSystemTasks(getBooleanFromSettings(settings, "ScheduledTasks.showSystem", false));
+      
       viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ScheduledTasks");
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            WidgetHelper.saveTableViewerSettings(viewer, settings, "ScheduledTasks");
+            settings.put("ScheduledTasks.showCompleted", filter.isShowCompletedTasks());
+            settings.put("ScheduledTasks.showDisabled", filter.isShowDisabledTasks());
+            settings.put("ScheduledTasks.showSystem", filter.isShowSystemTasks());
          }
       });
 
@@ -157,6 +177,19 @@ public class ScheduledTaskView extends ViewPart
    }
 
    /**
+    * @param settings
+    * @param name
+    * @param defaultValue
+    * @return
+    */
+   private static boolean getBooleanFromSettings(IDialogSettings settings, String name, boolean defaultValue)
+   {
+      if (settings.get(name) == null)
+         return defaultValue;
+      return settings.getBoolean(name);
+   }
+
+   /**
     * Activate context
     */
    private void activateContext()
@@ -182,6 +215,36 @@ public class ScheduledTaskView extends ViewPart
             refresh();
          }
       };
+      
+      actionShowCompletedTasks = new Action("Show &completed tasks", IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setShowCompletedTasks(actionShowCompletedTasks.isChecked());
+            viewer.refresh();
+         }
+      };
+      actionShowCompletedTasks.setChecked(filter.isShowCompletedTasks());
+      
+      actionShowDisabledTasks = new Action("Show &disabled tasks", IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setShowDisabledTasks(actionShowDisabledTasks.isChecked());
+            viewer.refresh();
+         }
+      };
+      actionShowDisabledTasks.setChecked(filter.isShowDisabledTasks());
+      
+      actionShowSystemTasks = new Action("Show &system tasks", IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setShowSystemTasks(actionShowSystemTasks.isChecked());
+            viewer.refresh();
+         }
+      };
+      actionShowSystemTasks.setChecked(filter.isShowSystemTasks());
       
       actionCreate = new Action("New scheduled task...", SharedIcons.ADD_OBJECT) {
          @Override
@@ -428,6 +491,10 @@ public class ScheduledTaskView extends ViewPart
    {
       manager.add(actionCreate);
       manager.add(new Separator());
+      manager.add(actionShowCompletedTasks);
+      manager.add(actionShowDisabledTasks);
+      manager.add(actionShowSystemTasks);
+      manager.add(new Separator());
       manager.add(actionRefresh);
    }
 
@@ -483,7 +550,7 @@ public class ScheduledTaskView extends ViewPart
       boolean containEnabled = false;
       for(Object o : selection.toList())
       {
-         if(((ScheduledTask)o).isDisbaled())
+         if(((ScheduledTask)o).isDisabled())
             containDisabled = true;
          else
             containEnabled = true;

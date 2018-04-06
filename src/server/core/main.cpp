@@ -1070,9 +1070,19 @@ retry_db_lock:
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing
-   if (FindScheduledTaskByHandlerId(UNBOUND_TUNNEL_PROCESSOR_TASK_ID) == NULL)
+   ScheduledTask *task = FindScheduledTaskByHandlerId(UNBOUND_TUNNEL_PROCESSOR_TASK_ID);
+   if (task != NULL)
    {
-      AddScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), 0);
+      // Make sure task is marked as system
+      if (!task->isSystem())
+      {
+         task->setFlag(SCHEDULED_TASK_SYSTEM);
+         task->saveToDatabase(false);
+      }
+   }
+   else
+   {
+      AddScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
    }
 
    // Send summary emails
