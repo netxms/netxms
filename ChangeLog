@@ -25,6 +25,7 @@
 - Fixed issues:
 	NX-922 (Service check template objects disappears after server restart)
 	NX-1097 (Configuration option to ignore alarm's helpdesk state when doing resolve or terminate)
+	NX-1157 (configure --with-dist fails if OpenSSL is not installed)
 	NX-1397 (Implement Windows Update information parameters for Windows 10 and Windows Server 2016)
 	NX-1418 (Sort scripts in Execute Server Script dropdown)
 	NX-1419 (AgentTunnels.ProcessUnbound scheduled task should be hidden)

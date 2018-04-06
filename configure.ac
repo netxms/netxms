@@ -744,6 +744,9 @@ AC_ARG_WITH(dist,
 	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxsms"
 	SERVER_TOOLS="nxconfig"
+	# disable unnecessary checks
+	DISABLE_ENCRYPTION="yes"
+	DISABLE_ICONV="yes"
 )
 
 AC_ARG_WITH(tests,
@@ -2860,285 +2863,285 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
-AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+if test "x$ac_found_iconv" = "xyes"; then
+   AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-2-INTERNAL")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_2_INTERNAL, 1, Define to 1 if iconv supports UCS-2-INTERNAL)
-    valid_ucs2_code="UCS-2-INTERNAL"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-2-INTERNAL")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_2_INTERNAL, 1, Define to 1 if iconv supports UCS-2-INTERNAL)
+      valid_ucs2_code="UCS-2-INTERNAL"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-2)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-2)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-2")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_2, 1, Define to 1 if iconv supports UCS-2)
-    valid_ucs2_code="UCS-2"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-2")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_2, 1, Define to 1 if iconv supports UCS-2)
+      valid_ucs2_code="UCS-2"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS2)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS2)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS2")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS2, 1, Define to 1 if iconv supports UCS2)
-    valid_ucs2_code="UCS2"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS2")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS2, 1, Define to 1 if iconv supports UCS2)
+      valid_ucs2_code="UCS2"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-2BE)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-2BE)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-2BE")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_2BE, 1, Define to 1 if iconv supports UCS-2BE)
-    valid_ucs2_code="UCS-2BE"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-2BE")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_2BE, 1, Define to 1 if iconv supports UCS-2BE)
+      valid_ucs2_code="UCS-2BE"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-2LE)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-2LE)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-2LE")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_2LE, 1, Define to 1 if iconv supports UCS-2LE)
-    valid_ucs2_code="UCS-2LE"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-2LE")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_2LE, 1, Define to 1 if iconv supports UCS-2LE)
+      valid_ucs2_code="UCS-2LE"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UTF-16)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UTF-16)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UTF-16")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UTF_16, 1, Define to 1 if iconv supports UTF-16)
-    valid_ucs2_code="UTF-16"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UTF-16")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UTF_16, 1, Define to 1 if iconv supports UTF-16)
+      valid_ucs2_code="UTF-16"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-4-INTERNAL)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-4-INTERNAL)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-4-INTERNAL")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_4_INTERNAL, 1, Define to 1 if iconv supports UCS-4-INTERNAL)
-    valid_ucs4_code="UCS-4-INTERNAL"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-4-INTERNAL")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_4_INTERNAL, 1, Define to 1 if iconv supports UCS-4-INTERNAL)
+      valid_ucs4_code="UCS-4-INTERNAL"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-4)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-4)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-4")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_4, 1, Define to 1 if iconv supports UCS-4)
-    valid_ucs4_code="UCS-4"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-4")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_4, 1, Define to 1 if iconv supports UCS-4)
+      valid_ucs4_code="UCS-4"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS4)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS4)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS4")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS4, 1, Define to 1 if iconv supports UCS4)
-    valid_ucs4_code="UCS4"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS4")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS4, 1, Define to 1 if iconv supports UCS4)
+      valid_ucs4_code="UCS4"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-4BE)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-4BE)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-4BE")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_4BE, 1, Define to 1 if iconv supports UCS-4BE)
-    valid_ucs4_code="UCS-4BE"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-4BE")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_4BE, 1, Define to 1 if iconv supports UCS-4BE)
+      valid_ucs4_code="UCS-4BE"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UCS-4LE)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UCS-4LE)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UCS-4LE")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_4LE, 1, Define to 1 if iconv supports UCS-4LE)
-    valid_ucs4_code="UCS-4LE"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UCS-4LE")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UCS_4LE, 1, Define to 1 if iconv supports UCS-4LE)
+      valid_ucs4_code="UCS-4LE"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports UTF-32)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports UTF-32)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8","UTF-32")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UTF_32, 1, Define to 1 if iconv supports UTF-32)
-    valid_ucs4_code="UTF-32"
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8","UTF-32")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_UTF_32, 1, Define to 1 if iconv supports UTF-32)
+      valid_ucs4_code="UTF-32"
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports //IGNORE)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports //IGNORE)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     return iconv_open("UTF-8//IGNORE","$valid_ucs2_code")==(iconv_t)(-1);
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_IGNORE, 1, Define to 1 if iconv supports //IGNORE option)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      return iconv_open("UTF-8//IGNORE","$valid_ucs2_code")==(iconv_t)(-1);
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_IGNORE, 1, Define to 1 if iconv supports //IGNORE option)
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv supports state reset)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([
+   AC_MSG_CHECKING(whether iconv supports state reset)
+   AC_RUN_IFELSE(
+   [AC_LANG_PROGRAM([
 #include <stdio.h>
 #if HAVE_ICONV_H
 #include <iconv.h>
 #endif
-     ], [
-     iconv_t cd = iconv_open("UTF-8","$valid_ucs2_code");
-     if (cd == (iconv_t)(-1)) return 1;
-     return iconv(cd, NULL, NULL, NULL, NULL) != 0;
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_STATE_RESET, 1, Define to 1 if iconv supports state reset)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+      ], [
+      iconv_t cd = iconv_open("UTF-8","$valid_ucs2_code");
+      if (cd == (iconv_t)(-1)) return 1;
+      return iconv(cd, NULL, NULL, NULL, NULL) != 0;
+      ])
+   ],
+   [ AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_ICONV_STATE_RESET, 1, Define to 1 if iconv supports state reset)
+   ],
+   [ AC_MSG_RESULT(no) ],
+   [ AC_MSG_RESULT(no) ]
+   )
 
-AC_MSG_CHECKING(whether iconv descriptor cache is needed)
-case $enable_iconv_cache in
-    auto)
-        case $PLATFORM in
-            SunOS|HP-UX|AIX)
-                enable_iconv_cache=yes
-                ;;
-            *)
-                enable_iconv_cache=no
-                ;;
-        esac
-        ;;
-    yes|no)
-        ;;
-    *)
-        AC_MSG_ERROR([Value given to --enable-iconv-cache must be one of yes, no or auto])
-        ;;
-esac
-if test "x$enable_iconv_cache" = "xyes"; then
-    AC_DEFINE(WITH_ICONV_CACHE, 1, Define to 1 to enable iconv descriptor cache)
-fi
-AC_MSG_RESULT($enable_iconv_cache)
+   AC_MSG_CHECKING(whether iconv descriptor cache is needed)
+   case $enable_iconv_cache in
+      auto)
+         case $PLATFORM in
+               SunOS|HP-UX|AIX)
+                  enable_iconv_cache=yes
+                  ;;
+               *)
+                  enable_iconv_cache=no
+                  ;;
+         esac
+         ;;
+      yes|no)
+         ;;
+      *)
+         AC_MSG_ERROR([Value given to --enable-iconv-cache must be one of yes, no or auto])
+         ;;
+   esac
+   if test "x$enable_iconv_cache" = "xyes"; then
+      AC_DEFINE(WITH_ICONV_CACHE, 1, Define to 1 to enable iconv descriptor cache)
+   fi
+   AC_MSG_RESULT($enable_iconv_cache)
 
-# taken from ZSH's configure
-# Check if iconv uses const in prototype declaration
-if test "x$ac_found_iconv" = "xyes"; then
+   # taken from ZSH's configure
+   # Check if iconv uses const in prototype declaration
 	AC_LANG_PUSH([C++])
 	OLD_CXXFLAGS="$CXXFLAGS"
 	if test "x$CXX" = "xaCC"; then
@@ -3159,8 +3162,7 @@ if test "x$ac_found_iconv" = "xyes"; then
 		[ac_cv_iconv_const=])])
 	CXXFLAGS="$OLD_CXXFLAGS"
 	AC_LANG_POP([C++])
-	AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
-    [Define as const if the declaration of iconv() needs const.])
+	AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const, [Define as const if the declaration of iconv() needs const.])
 fi
 
 if test "x$ac_cv_type_wchar_t" = "xyes"; then
