@@ -550,11 +550,11 @@ protected:
    UINT32 m_flags;
    UINT32 m_runtimeFlags;
    UINT32 m_state;
+   UINT32 m_stateBeforeMaintenance;
    UINT32 m_modified;
    bool m_isDeleted;
    bool m_isHidden;
 	bool m_isSystem;
-	bool m_maintenanceMode;
 	UINT64 m_maintenanceEventId;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
@@ -704,7 +704,7 @@ public:
    void resetStatus() { m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
-   bool isInMaintenanceMode() const { return m_maintenanceMode; }
+   bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
    UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();

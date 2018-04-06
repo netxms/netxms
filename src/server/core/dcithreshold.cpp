@@ -40,6 +40,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_script = NULL;
    m_lastScriptErrorReport = 0;
    m_isReached = FALSE;
+   m_wasReachedBeforeMaint = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -64,6 +65,7 @@ Threshold::Threshold()
    m_script = NULL;
    m_lastScriptErrorReport = 0;
    m_isReached = FALSE;
+   m_wasReachedBeforeMaint = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
@@ -90,6 +92,7 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
    setScript(_tcsdup_ex(src->m_scriptSource));
    m_lastScriptErrorReport = shadowCopy ? src->m_lastScriptErrorReport : 0;
    m_isReached = shadowCopy ? src->m_isReached : FALSE;
+   m_wasReachedBeforeMaint = shadowCopy ? src->m_wasReachedBeforeMaint : FALSE;
 	m_currentSeverity = shadowCopy ? src->m_currentSeverity : SEVERITY_NORMAL;
 	m_repeatInterval = src->m_repeatInterval;
 	m_lastEventTimestamp = shadowCopy ? src->m_lastEventTimestamp : 0;
@@ -101,7 +104,7 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
  * This constructor assumes that SELECT query look as following:
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
- *        repeat_interval,current_severity,last_event_timestamp,match_count FROM thresholds
+ *        repeat_interval,current_severity,last_event_timestamp,match_count,state_before_maint FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
@@ -125,6 +128,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_lastScriptErrorReport = 0;
    setScript(DBGetField(hResult, iRow, 6, NULL, 0));
    m_isReached = DBGetFieldLong(hResult, iRow, 8);
+   m_wasReachedBeforeMaint = DBGetFieldLong(hResult, iRow, 14) ? true : false;
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
 	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
@@ -152,6 +156,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    const TCHAR *script = config->getSubEntryValue(_T("script"));
    setScript(_tcsdup_ex(script));
    m_isReached = FALSE;
+   m_wasReachedBeforeMaint = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
@@ -187,16 +192,16 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
-			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
+			_T("sequence_number,current_state,state_before_maint,rearm_event_code,repeat_interval,")
 			_T("current_severity,last_event_timestamp,match_count,threshold_id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb,
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
-         _T("sequence_number=?,current_state=?,rearm_event_code=?,")
+         _T("sequence_number=?,current_state=?,state_before_maint=?,rearm_event_code=?,")
 			_T("repeat_interval=?,current_severity=?,last_event_timestamp=?,")
          _T("match_count=? WHERE threshold_id=?"));
 	}
@@ -213,12 +218,13 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_eventCode);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, dwIndex);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)(m_isReached ? 1 : 0));
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_rearmEventCode);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_id);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, (m_wasReachedBeforeMaint ? _T("1") : _T("0")), DB_BIND_STATIC);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_rearmEventCode);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -929,6 +935,7 @@ void Threshold::reconcile(const Threshold *src)
 {
    m_numMatches = src->m_numMatches;
    m_isReached = src->m_isReached;
+   m_wasReachedBeforeMaint = src->m_wasReachedBeforeMaint;
    m_lastEventTimestamp = src->m_lastEventTimestamp;
    m_currentSeverity = src->m_currentSeverity;
    m_lastScriptErrorReport = src->m_lastScriptErrorReport;

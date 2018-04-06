@@ -105,6 +105,7 @@ private:
    NXSL_Program *m_script;
    time_t m_lastScriptErrorReport;
    BOOL m_isReached;
+   BOOL m_wasReachedBeforeMaint;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
@@ -134,6 +135,8 @@ public:
 	int getSampleCount() { return m_sampleCount; }
    const TCHAR *getStringValue() { return m_value.getString(); }
    BOOL isReached() { return m_isReached; }
+   BOOL wasReachedBeforeMaintenance() { return m_wasReachedBeforeMaint; }
+   void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
 
 	int getRepeatInterval() { return m_repeatInterval; }
 	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
@@ -244,6 +247,8 @@ public:
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    void processNewError(bool noInstance);
    virtual void processNewError(bool noInstance, time_t now);
+   virtual void updateThresholdsBeforeMaintenanceState();
+   virtual void generateEventsBasedOnThrDiff();
 
 	UINT32 getId() const { return m_id; }
 	const uuid& getGuid() const { return m_guid; }
@@ -400,6 +405,8 @@ public:
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError(bool noInstance, time_t now);
+   virtual void updateThresholdsBeforeMaintenanceState();
+   virtual void generateEventsBasedOnThrDiff();
 
    void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls);
@@ -435,6 +442,8 @@ public:
 
    static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
+
+struct TableThresholdCbData;
 
 /**
  * Table column definition
@@ -531,15 +540,18 @@ private:
    TCHAR *m_name;
    int m_matchCount;
    bool m_active;
+   int m_row;
 
 public:
-   DCTableThresholdInstance(const TCHAR *name, int matchCount, bool active);
+   DCTableThresholdInstance(const TCHAR *name, int matchCount, bool active, int row);
    DCTableThresholdInstance(const DCTableThresholdInstance *src);
    ~DCTableThresholdInstance();
 
    const TCHAR *getName() const { return m_name; }
    int getMatchCount() const { return m_matchCount; }
+   int getRow() const { return m_row; }
    bool isActive() const { return m_active; }
+   void updateRow(int row) { m_row = row; }
 
    void incMatchCount() { m_matchCount++; }
    void setActive() { m_active = true; }
@@ -557,6 +569,7 @@ private:
    UINT32 m_deactivationEvent;
    int m_sampleCount;
    StringObjectMap<DCTableThresholdInstance> *m_instances;
+   StringObjectMap<DCTableThresholdInstance> *m_instancesBeforeMaint;
 
    void loadConditions(DB_HANDLE hdb);
    void loadInstances(DB_HANDLE hdb);
@@ -572,6 +585,9 @@ public:
    void copyState(DCTableThreshold *src);
 
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
+   void updateBeforeMaintenanceState();
+   void generateEventsBasedOnThrDiff(TableThresholdCbData *data);
+   DCTableThresholdInstance *findInstance(const TCHAR *instance, bool originalList);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
@@ -626,6 +642,8 @@ public:
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError(bool noInstance, time_t now);
+   virtual void updateThresholdsBeforeMaintenanceState();
+   virtual void generateEventsBasedOnThrDiff();
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
@@ -650,6 +668,16 @@ public:
    void updateResultColumns(Table *t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
+};
+
+/**
+ * Callback data for after maintenance event generation
+ */
+struct TableThresholdCbData
+{
+   DCTableThreshold *threshold;
+   DCTable *table;
+   bool originalList;
 };
 
 /**

@@ -247,7 +247,7 @@
 #define NDF_NEW_TUNNEL_BIND            0x00100000
 
 /**
- *
+ * Data Collection Object status flags
  */
 #define DCSF_UNREACHABLE               0x00000001
 #define DCSF_NETWORK_PATH_PROBLEM      0x00000002

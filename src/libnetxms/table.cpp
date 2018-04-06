@@ -861,6 +861,11 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
             instance += value;
       }
    }
+   if(instance.isEmpty())
+   {
+      instance.append(_T("#"));
+      instance.append(row);
+   }
    _tcslcpy(buffer, (const TCHAR *)instance, bufLen);
 }
 

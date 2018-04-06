@@ -23,6 +23,31 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 30.33 to 30.34 (changes also included into 22.23)
+ */
+static bool H_UpgradeFromV33()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 23)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE object_properties ADD state_before_maint integer\n")
+         _T("ALTER TABLE dct_threshold_instances ADD row integer\n")
+         _T("ALTER TABLE dct_threshold_instances ADD maint_copy char(1)\n")
+         _T("ALTER TABLE thresholds ADD state_before_maint char(1)\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_properties"), _T("maint_mode")));
+      CHK_EXEC(DBAddPrimaryKey(g_hCoreDB, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 23));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
+
 /**
  * Upgrade from 30.32 to 30.33 (changes also included into 22.22)
  */
@@ -1046,6 +1071,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 33, 30, 34, H_UpgradeFromV33 },
    { 32, 30, 33, H_UpgradeFromV32 },
    { 31, 30, 32, H_UpgradeFromV31 },
    { 30, 30, 31, H_UpgradeFromV30 },
