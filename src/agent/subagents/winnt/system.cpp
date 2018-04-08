@@ -593,17 +593,16 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    MEMORYSTATUSEX mse;
-
    mse.dwLength = sizeof(MEMORYSTATUSEX);
    if (!GlobalMemoryStatusEx(&mse))
       return SYSINFO_RC_ERROR;
 
    switch (CAST_FROM_POINTER(arg, int))
    {
-      case MEMINFO_PHYSICAL_FREE:
+      case MEMINFO_PHYSICAL_AVAIL:
          ret_uint64(value, mse.ullAvailPhys);
          break;
-      case MEMINFO_PHYSICAL_FREE_PCT:
+      case MEMINFO_PHYSICAL_AVAIL_PCT:
          ret_double(value, ((double)mse.ullAvailPhys * 100.0 / mse.ullTotalPhys), 2);
          break;
       case MEMINFO_PHYSICAL_TOTAL:
@@ -629,6 +628,36 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
          break;
       case MEMINFO_VIRTUAL_USED_PCT:
          ret_double(value, (((double)mse.ullTotalPageFile - mse.ullAvailPageFile) * 100.0 / mse.ullTotalPageFile), 2);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+* Handler for System.Memory.XXX parameters
+*/
+LONG H_MemoryInfo2(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   PERFORMANCE_INFORMATION pi;
+   if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+      return SYSINFO_RC_ERROR;
+
+   switch (CAST_FROM_POINTER(arg, int))
+   {
+      case MEMINFO_PHYSICAL_FREE:
+         ret_uint64(value, (pi.PhysicalAvailable - pi.SystemCache) * pi.PageSize);
+         break;
+      case MEMINFO_PHYSICAL_FREE_PCT:
+         ret_double(value, ((double)(pi.PhysicalAvailable - pi.SystemCache) * 100.0 / pi.PhysicalTotal), 2);
+         break;
+      case MEMINFO_PHYSICAL_CACHE:
+         ret_uint64(value, pi.SystemCache * pi.PageSize);
+         break;
+      case MEMINFO_PHYSICAL_CACHE_PCT:
+         ret_double(value, ((double)pi.SystemCache * 100.0 / pi.PhysicalTotal), 2);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
