@@ -299,8 +299,6 @@
     <ClCompile Include="pds.cpp" />
     <ClCompile Include="poll.cpp" />
     <ClCompile Include="ps.cpp" />
-    <ClCompile Include="py_ext.cpp" />
-    <ClCompile Include="py_mgr.cpp" />
     <ClCompile Include="rack.cpp" />
     <ClCompile Include="radius.cpp" />
     <ClCompile Include="reporting.cpp" />
