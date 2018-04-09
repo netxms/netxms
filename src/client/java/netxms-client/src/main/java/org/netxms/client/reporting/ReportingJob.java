@@ -50,7 +50,7 @@ public class ReportingJob
 	/**
 	 * Create reportingJob
 	 * 
-	 * @param reportId report id
+	 * @param report report definition object
 	 */
 	public ReportingJob(ReportDefinition report)
 	{
