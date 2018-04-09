@@ -202,6 +202,9 @@ target
 /src/nxcproxy/nxcproxy
 /src/nxlptest/nxlptest
 /src/nxscript/nxscript
+/src/server/jcore/.classpath
+/src/server/jcore/.project
+/src/server/jcore/.settings
 /src/server/core/lex.nxmp_parser.cpp
 /src/server/core/netxmsd
 /src/server/core/nxmp_lex.yy.cpp

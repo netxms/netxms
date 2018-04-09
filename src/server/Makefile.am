@@ -8,6 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd tools drivers hdlink pdsdrv spe
+SUBDIRS = @SERVER_INCLUDE@ libnxsrv core jcore netxmsd tools drivers hdlink pdsdrv spe
 
 EXTRA_DIST = Makefile.w32

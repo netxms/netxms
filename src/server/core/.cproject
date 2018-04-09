@@ -26,6 +26,8 @@
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${PYTHON_INCLUDE_DIR}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include/linux&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1933827161" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
@@ -41,6 +43,8 @@
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${PYTHON_INCLUDE_DIR}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include/linux&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1835930340" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
@@ -63,6 +67,8 @@
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/src/server/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${PYTHON_INCLUDE_DIR}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${JAVA_HOME}/include/linux&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.202025359" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

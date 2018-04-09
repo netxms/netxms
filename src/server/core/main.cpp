@@ -85,6 +85,10 @@ void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
 
+void JavaCoreStart();
+void JavaCoreStop();
+void JavaCoreWaitForShutdown();
+
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
 void MaintenanceModeLeave(const ScheduledTaskParameters *params);
@@ -895,6 +899,9 @@ retry_db_lock:
 	// Initialize certificate store and CA
 	InitCertificates();
 
+	if (!JavaCoreStart())
+	   return FALSE;
+
 #if WITH_PYTHON
    if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
       InitializeEmbeddedPython();
@@ -1147,6 +1154,7 @@ void NXCORE_EXPORTABLE Shutdown()
          g_pModuleList[i].pfShutdown();
    }
 
+   JavaCoreStop();
    StopHouseKeeper();
    ShutdownTaskScheduler();
 
@@ -1221,6 +1229,8 @@ void NXCORE_EXPORTABLE Shutdown()
    if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
       ShutdownEmbeddedPython();
 #endif
+
+   JavaCoreWaitForShutdown();
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();

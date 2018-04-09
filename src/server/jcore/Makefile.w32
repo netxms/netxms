@@ -1,0 +1,5 @@
+TARGET = netxms-server.jar
+TYPE = jar
+JAR_BUILD_MODE = package
+
+include ..\..\..\Makefile.inc.w32

@@ -1106,4 +1106,10 @@ Language=English
 Failed to execute filter script for policy object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_JVM_CREATION_FAILED
+Language=English
+Cannot create Java VM (%1)
+.
+
 ;#endif
