@@ -255,6 +255,7 @@ Source: "..\files\windows\x86\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\files\windows\x86\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x86\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x86\libssl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x86\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 ; Install-time files
 Source: "..\files\windows\x86\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
