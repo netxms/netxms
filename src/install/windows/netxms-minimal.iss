@@ -249,10 +249,11 @@ Source: "..\..\..\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\client\nxshell\java\target\nxshell.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 ; Third party files
-Source: "..\files\windows\x86\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x86\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x86\libcrypto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x86\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x86\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x86\libssl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x86\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 ; Install-time files
 Source: "..\files\windows\x86\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
