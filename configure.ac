@@ -925,6 +925,9 @@ if test $? = 0; then
 	if test "x$DBDRIVER_SELECTED" != "xyes"; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
+	if test "x$DISABLE_ENCRYPTION" = "xyes"; then
+		AC_MSG_ERROR(Encryption support is required for server build.)
+	fi
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl libnxcc server smsdrv nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
