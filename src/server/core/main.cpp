@@ -85,7 +85,7 @@ void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
 
-void JavaCoreStart();
+bool JavaCoreStart();
 void JavaCoreStop();
 void JavaCoreWaitForShutdown();
 
