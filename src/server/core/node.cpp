@@ -5533,7 +5533,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
       {
          nxlog_debug(7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
-         return false;
+         return NULL;
       }
       conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       if (!setAgentProxy(conn))
