@@ -40,6 +40,7 @@ static bool H_UpgradeFromV33()
       CHK_EXEC(SQLBatch(batch));
 
       CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_properties"), _T("maint_mode")));
+      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("dct_threshold_instances")));
       CHK_EXEC(DBAddPrimaryKey(g_hCoreDB, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 23));
