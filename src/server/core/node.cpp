@@ -1464,7 +1464,6 @@ restart_agent_check:
          {
             if (pTransport->isProxyTransport() && (dwResult == SNMP_ERR_COMM))
             {
-
                AgentConnectionEx *pconn = acquireProxyConnection(SNMP_PROXY, true);
                if (pconn != NULL)
                {
@@ -3849,9 +3848,10 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    // Check if tunnel is available
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
-   if ((tunnel == NULL) && !m_ipAddress.isValidUnicast())
+   if ((tunnel == NULL) && (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
-      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): node primary IP is invalid and there are no active tunnels"), m_name, m_id);
+      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+               (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
       return false;
    }
 
@@ -5528,8 +5528,13 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    }
    else
    {
-      if (!m_ipAddress.isValidUnicast())
-         return NULL;
+      AgentTunnel *tunnel = GetTunnelForNode(m_id);
+      if (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
+      {
+         nxlog_debug(7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+                  (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
+         return false;
+      }
       conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       if (!setAgentProxy(conn))
       {

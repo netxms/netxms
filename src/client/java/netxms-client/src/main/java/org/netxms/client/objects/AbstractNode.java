@@ -79,6 +79,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NF_DISABLE_ICMP           = 0x00200000;
 	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
    public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
+   public static final int NF_AGENT_OVER_TUNNEL_ONLY = 0x01000000;
 	
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;

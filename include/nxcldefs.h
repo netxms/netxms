@@ -216,6 +216,7 @@
 #define NF_DISABLE_ICMP           0x00200000
 #define NF_FORCE_ENCRYPTION       0x00400000
 #define NF_DISABLE_ROUTE_POLL     0x00800000
+#define NF_AGENT_OVER_TUNNEL_ONLY 0x01000000
 
 /**
  * Data Collection flags first half of int

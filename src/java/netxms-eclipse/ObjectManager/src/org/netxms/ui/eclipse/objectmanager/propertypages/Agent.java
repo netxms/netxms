@@ -55,6 +55,7 @@ public class Agent extends PropertyPage
    private LabeledText agentSharedSecret;
    private Combo agentAuthMethod;
    private Button agentForceEncryption;
+   private Button agentTunnelOnly;
    private ObjectSelector agentProxy;
    private Button radioAgentCompressionDefault;
    private Button radioAgentCompressionEnabled;
@@ -100,9 +101,17 @@ public class Agent extends PropertyPage
       fd.top = new FormAttachment(agentPort, 0, SWT.BOTTOM);
       agentForceEncryption.setLayoutData(fd);
       
+      agentTunnelOnly = new Button(dialogArea, SWT.CHECK);
+      agentTunnelOnly.setText("Agent connections through &tunnel only");
+      agentTunnelOnly.setSelection((node.getFlags() & AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY) != 0);
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
+      agentTunnelOnly.setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(agentTunnelOnly, 0, SWT.BOTTOM);
       agentAuthMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, Messages.get().Communication_AuthMethod, fd);
       agentAuthMethod.add(Messages.get().Communication_AuthNone);
       agentAuthMethod.add(Messages.get().Communication_AuthPlain);
@@ -129,7 +138,7 @@ public class Agent extends PropertyPage
       fd = new FormData();
       fd.left = new FormAttachment(agentAuthMethod.getParent(), 0, SWT.RIGHT);
       fd.right = new FormAttachment(100, 0);
-      fd.top = new FormAttachment(agentForceEncryption, 0, SWT.BOTTOM);
+      fd.top = new FormAttachment(agentTunnelOnly, 0, SWT.BOTTOM);
       agentSharedSecret.setLayoutData(fd);
       agentSharedSecret.getTextControl().setEnabled(node.getAgentAuthMethod() != AbstractNode.AGENT_AUTH_NONE);
       
@@ -203,7 +212,9 @@ public class Agent extends PropertyPage
       md.setAgentAuthMethod(agentAuthMethod.getSelectionIndex());
       md.setAgentSecret(agentSharedSecret.getText());
       md.setAgentCompressionMode(collectAgentCompressionMode());
-      md.setObjectFlags(agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0, AbstractNode.NF_FORCE_ENCRYPTION);
+      md.setObjectFlags((agentForceEncryption.getSelection() ? AbstractNode.NF_FORCE_ENCRYPTION : 0) | 
+               (agentTunnelOnly.getSelection() ? AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY : 0), 
+            AbstractNode.NF_FORCE_ENCRYPTION | AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY);
 
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating agent communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
