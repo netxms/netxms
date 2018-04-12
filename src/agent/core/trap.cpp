@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,10 +26,10 @@
 /**
  * Static data
  */
-static Queue *s_trapQueue = NULL;
+static Queue s_trapQueue;
 static UINT64 s_genTrapCount = 0;	// Number of generated traps
 static UINT64 s_sentTrapCount = 0;	// Number of sent traps
-static UINT64 s_trapIdBase = 0;
+static UINT64 s_trapIdBase = static_cast<UINT64>(time(NULL)) << 32;
 static VolatileCounter s_trapIdCounter = 0;
 static time_t s_lastTrapTime = 0;
 
@@ -38,19 +38,14 @@ static time_t s_lastTrapTime = 0;
  */
 THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 {
-   NXCP_MESSAGE *pMsg;
-   UINT32 i;
-   bool trapSent;
-
-   s_trapQueue = new Queue;
-	s_trapIdBase = (QWORD)time(NULL) << 32;
-   while(1)
+   nxlog_debug(1, _T("Trap sender thread started"));
+   while(true)
    {
-      pMsg = (NXCP_MESSAGE *)s_trapQueue->getOrBlock();
+      NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)s_trapQueue.getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
-      trapSent = false;
+      bool trapSent = false;
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {
@@ -59,13 +54,12 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
       else
       {
          MutexLock(g_hSessionListAccess);
-         for(i = 0; i < g_dwMaxSessions; i++)
-            if (g_pSessionList[i] != NULL)
-               if (g_pSessionList[i]->canAcceptTraps())
-               {
-                  g_pSessionList[i]->sendRawMessage(pMsg);
-                  trapSent = true;
-               }
+         for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+            if ((g_pSessionList[i] != NULL) && g_pSessionList[i]->canAcceptTraps())
+            {
+               g_pSessionList[i]->sendRawMessage(pMsg);
+               trapSent = true;
+            }
          MutexUnlock(g_hSessionListAccess);
       }
 
@@ -76,13 +70,11 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 		}
 		else
 		{
-         s_trapQueue->insert(pMsg);	// Re-queue trap
+         s_trapQueue.insert(pMsg);	// Re-queue trap
 			ThreadSleep(1);
 		}
    }
-   delete s_trapQueue;
-   s_trapQueue = NULL;
-	DebugPrintf(1, _T("Trap sender thread terminated"));
+	nxlog_debug(1, _T("Trap sender thread terminated"));
    return THREAD_OK;
 }
 
@@ -91,7 +83,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
  */
 void ShutdownTrapSender()
 {
-	s_trapQueue->setShutdownMode();
+	s_trapQueue.setShutdownMode();
 }
 
 /**
@@ -122,12 +114,9 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TC
    msg.setField(VID_NUM_ARGS, (WORD)iNumArgs);
    for(int i = 0; i < iNumArgs; i++)
       msg.setField(VID_EVENT_ARG_BASE + i, ppArgList[i]);
-   if (s_trapQueue != NULL)
-	{
-		s_genTrapCount++;
-		s_lastTrapTime = time(NULL);
-      s_trapQueue->put(msg.serialize());
-	}
+	s_genTrapCount++;
+	s_lastTrapTime = time(NULL);
+   s_trapQueue.put(msg.serialize());
 }
 
 /**
@@ -229,12 +218,9 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 void ForwardTrap(NXCPMessage *msg)
 {
 	msg->setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
-   if (s_trapQueue != NULL)
-	{
-		s_genTrapCount++;
-		s_lastTrapTime = time(NULL);
-      s_trapQueue->put(msg->serialize());
-	}
+	s_genTrapCount++;
+	s_lastTrapTime = time(NULL);
+   s_trapQueue.put(msg->serialize());
 }
 
 /**
