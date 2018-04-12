@@ -258,6 +258,7 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="isc.cpp" />
+    <ClCompile Include="java.cpp" />
     <ClCompile Include="job.cpp" />
     <ClCompile Include="jobmgr.cpp" />
     <ClCompile Include="jobqueue.cpp" />
@@ -399,6 +400,9 @@
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libnxjava\libnxjava.vcxproj">
+      <Project>{6d5e7620-aa4b-7144-94dc-1907c970a3fd}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\libnxlp\libnxlp.vcxproj">
       <Project>{64efc0c2-c67b-41f6-851d-f11dab27a60b}</Project>

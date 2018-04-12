@@ -444,6 +444,9 @@
     <ClCompile Include="dci_recalc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="java.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">

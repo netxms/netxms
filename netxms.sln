@@ -92,6 +92,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxsrv", "src\server\libnxsrv\libnxsrv.vcxproj", "{CB89D905-C8BE-4027-B2D8-F96C245E9160}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxcore", "src\server\core\nxcore.vcxproj", "{3B172035-5EEC-45A3-8471-2C390B7ED683}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D5E7620-AA4B-7144-94DC-1907C970A3FD} = {6D5E7620-AA4B-7144-94DC-1907C970A3FD}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxsl", "src\libnxsl\libnxsl.vcxproj", "{B2988503-1921-4B9F-BBC1-5E5CF62F335E}"
 EndProject
