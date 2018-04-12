@@ -63,7 +63,7 @@ Node::Node() : DataCollectionTarget()
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
    m_agentConnection = NULL;
-   m_proxyConnections = new ObjectLock<AgentConnectionEx>[MAX_PROXY_TYPE];
+   m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -173,7 +173,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_mutexRTAccess = MutexCreate();
    m_mutexTopoAccess = MutexCreate();
    m_agentConnection = NULL;
-   m_proxyConnections = new ObjectLock<AgentConnectionEx>[MAX_PROXY_TYPE];
+   m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -5887,10 +5887,11 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
       }
    }
 
-   if (conn == NULL)
+   if ((conn == NULL) && (time(NULL) - m_proxyConnections[type].getLastConnectTime() > 60))
    {
       conn = createAgentConnection();
       m_proxyConnections[type].set(conn);
+      m_proxyConnections[type].setLastConnectTime(time(NULL));
       if (conn != NULL)
          nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
    }
