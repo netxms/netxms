@@ -1723,6 +1723,23 @@ enum ProxyType
 };
 
 /**
+ * Container for proxy agent connections
+ */
+class ProxyAgentConnection : public ObjectLock<AgentConnectionEx>
+{
+private:
+   time_t m_lastConnect;
+
+public:
+   ProxyAgentConnection() : ObjectLock() { m_lastConnect = 0; }
+   ProxyAgentConnection(AgentConnectionEx *object) : ObjectLock(object) { m_lastConnect = 0; }
+   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock(src) { m_lastConnect = src.m_lastConnect; }
+
+   void setLastConnectTime(time_t t) { m_lastConnect = t; }
+   time_t getLastConnectTime() const { return m_lastConnect; }
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1799,7 +1816,7 @@ protected:
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_agentConnection;
-   ObjectLock<AgentConnectionEx> *m_proxyConnections;
+   ProxyAgentConnection *m_proxyConnections;
    SMCLP_Connection *m_smclpConnection;
 	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
    UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
