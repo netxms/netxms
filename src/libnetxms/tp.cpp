@@ -219,6 +219,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
                break;
             }
             p->schedulerQueue->remove(0);
+            InterlockedIncrement(&p->activeRequests);
             p->queue->put(rq);
          }
       }
