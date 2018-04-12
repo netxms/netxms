@@ -115,19 +115,28 @@ time_t LogParser::readLastProcessedRecordTimestamp()
    if (m_marker == NULL)
       return time(NULL);
 
+   time_t now = time(NULL);
    time_t result;
    HKEY hKey;
    if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\LogParserLibrary"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       DWORD t;
       DWORD size = sizeof(DWORD);
-      RegQueryValueEx(hKey, m_marker, NULL, NULL, (BYTE *)&t, &size);
+      if (RegQueryValueEx(hKey, m_marker, NULL, NULL, (BYTE *)&t, &size) == ERROR_SUCCESS)
+      {
+         result = (time_t)t;
+         if (result < now - 86400) // do not read records older than 24 hours
+            result = now - 86400;
+      }
+      else
+      {
+         result = now;
+      }
       RegCloseKey(hKey);
-      result = (time_t)t;
    }
    else
    {
-      result = time(NULL);
+      result = now;
    }
    return result;
 }
