@@ -1430,7 +1430,7 @@ public:
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
-   AccessPointState getState() { return m_apState; }
+   AccessPointState getApState() { return m_apState; }
    Node *getParentNode();
 
 	void attachToNode(UINT32 nodeId);
