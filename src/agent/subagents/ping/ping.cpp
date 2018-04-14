@@ -54,7 +54,7 @@ static void Poller(void *arg)
    }
 
 retry:
-   if (IcmpPing(target->ipAddr, 1, m_timeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
+   if (IcmpPing(target->ipAddr, 1, m_timeout, &target->lastRTT, target->packetSize, target->dontFragment) != ICMP_SUCCESS)
    {
       InetAddress ip = InetAddress::resolveHostName(target->dnsName);
       if (!ip.equals(target->ipAddr))
@@ -130,18 +130,22 @@ retry:
  */
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
+	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32], dontFragmentFlag[32];
 	UINT32 dwTimeOut = m_timeout, dwRTT, dwPacketSize = m_defaultPacketSize;
+	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 	Trim(szHostName);
-	if (!AgentGetParameterArg(pszParam, 2, szTimeOut, 256))
+	if (!AgentGetParameterArg(pszParam, 2, szTimeOut, 32))
 		return SYSINFO_RC_UNSUPPORTED;
 	Trim(szTimeOut);
-	if (!AgentGetParameterArg(pszParam, 3, szPacketSize, 256))
+	if (!AgentGetParameterArg(pszParam, 3, szPacketSize, 32))
 		return SYSINFO_RC_UNSUPPORTED;
 	Trim(szPacketSize);
+   if (!AgentGetParameterArg(pszParam, 4, dontFragmentFlag, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+   Trim(dontFragmentFlag);
 
    InetAddress addr = InetAddress::resolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
@@ -156,8 +160,12 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	{
 		dwPacketSize = _tcstoul(szPacketSize, NULL, 0);
 	}
+	if (dontFragmentFlag[0] != 0)
+	{
+	   dontFragment = (_tcstol(dontFragmentFlag, NULL, 0) != 0);
+	}
 
-	if (IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize) != ICMP_SUCCESS)
+	if (IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize, dontFragment) != ICMP_SUCCESS)
 		dwRTT = 10000;
 	ret_uint(pValue, dwRTT);
 	return SYSINFO_RC_SUCCESS;
@@ -214,6 +222,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          nx_strncpy(t->dnsName, szTarget, MAX_DB_STRING);
          nx_strncpy(t->name, szTarget, MAX_DB_STRING);
          t->packetSize = m_defaultPacketSize;
+         t->dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
          t->automatic = true;
          s_targets.add(t);
 
@@ -320,6 +329,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
 	UINT32 dwPacketSize = m_defaultPacketSize;
+	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 	BOOL bResult = FALSE;
 
 	pszLine = _tcsdup(pszCfg);
@@ -354,7 +364,20 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 			ptr++;
 			StrStrip(ptr);
 			StrStrip(pszName);
-			dwPacketSize = _tcstoul(ptr, NULL, 0);
+
+			// Options
+	      TCHAR *options = _tcschr(ptr, _T(':'));
+	      if (options != NULL)
+	      {
+	         *options = 0;
+	         options++;
+	         StrStrip(ptr);
+	         StrStrip(options);
+	         dontFragment = (_tcsicmp(options, _T("DF")) != 0);
+	      }
+
+	      if (*ptr != 0)
+	         dwPacketSize = _tcstoul(ptr, NULL, 0);
 		}
 	}
 	StrStrip(addrStart);
@@ -371,6 +394,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 		else
          addr.toString(t->name);
 		t->packetSize = dwPacketSize;
+		t->dontFragment = dontFragment;
       s_targets.add(t);
 		bResult = TRUE;
 	}
@@ -387,6 +411,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("AutoConfigureTargets"), CT_BOOLEAN, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options },
 	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_defaultPacketSize },
+   { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options },
    { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime },
 	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_pollsPerMinute },
 	{ _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList },

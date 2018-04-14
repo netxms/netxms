@@ -8114,7 +8114,7 @@ void Node::updatePingData()
    }
    else  // not using ICMP proxy
    {
-      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
       if (dwPingStatus != ICMP_SUCCESS)
       {
          nxlog_debug(7, _T("Node::updatePingData: error getting ping %d"), dwPingStatus);

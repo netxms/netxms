@@ -2421,7 +2421,7 @@ AC_RUN_IFELSE(
 #--------------------------------------------------------------------
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64, htonll, ntohll],,,[
-#ifdef HAVE_SYS_TYPES_H
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 #if HAVE_BYTESWAP_H
@@ -2434,19 +2434,27 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64, htonll, ntohll],,,[
 #include <net/nh.h>
 #endif
 ])
+AC_CHECK_DECLS([IP_MTU_DISCOVER, IP_DONTFRAG],,,[
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+])
 AC_CHECK_DECLS([RTLD_NOW, RTLD_GLOBAL],,,[
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_DLFCN_H
+#if HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
 ])
 AC_CHECK_DECLS([va_copy, __va_copy],,,[
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_STDARG_H
+#if HAVE_STDARG_H
 #include <stdarg.h>
 #endif
 #ifdef HAVE_STDLIB_H

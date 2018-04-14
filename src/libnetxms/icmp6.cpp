@@ -227,7 +227,7 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
 /**
  * Ping IPv6 address
  */
-UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
+UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment)
 {
    struct sockaddr_in6 src, dest;
    addr.fillSockAddr((SockAddrBuffer *)&dest);
@@ -237,6 +237,19 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
    int sd = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
    if (sd < 0)
       return ICMP_RAW_SOCK_FAILED;
+
+   if (dontFragment)
+   {
+#if HAVE_DECL_IP_MTU_DISCOVER
+      int v = IP_PMTUDISC_DO;
+      setsockopt(sd, IPPROTO_IP, IP_MTU_DISCOVER, &v, sizeof(v));
+#elif HAVE_DECL_IP_DONTFRAG
+      int v = 1;
+      setsockopt(sd, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v));
+#else
+      return ICMP_API_ERROR;
+#endif
+   }
 
    // Prepare packet and calculate checksum
    static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
