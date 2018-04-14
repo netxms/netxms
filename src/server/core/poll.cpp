@@ -475,7 +475,7 @@ static void CheckRange(const InetAddressListElement& range)
    for(UINT32 curr = from; (curr <= to) && !IsShutdownInProgress(); curr++)
    {
       InetAddress addr = InetAddress(curr);
-      if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
+      if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false) == ICMP_SUCCESS)
       {
          DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"), addr.toString(ipAddr1));
          if (FindNodeByIP(0, addr) == NULL)

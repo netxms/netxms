@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -517,7 +517,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
          TCHAR buffer[64];
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,NULL,%d)"), m_id, m_name, m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
-			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
          m_pingLastTimeStamp = time(NULL);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
@@ -607,7 +607,7 @@ void AccessPoint::updatePingData()
    }
    else	// not using ICMP proxy
    {
-      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
       if (dwPingStatus != ICMP_SUCCESS)
       {
          DbgPrintf(7, _T("AccessPoint::updatePingData: error getting ping %d"), dwPingStatus);

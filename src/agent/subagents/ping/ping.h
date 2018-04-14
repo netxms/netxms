@@ -34,6 +34,7 @@
 #define MAX_POLLS_PER_MINUTE     6000
 
 #define PING_OPT_ALLOW_AUTOCONFIGURE   0x0001
+#define PING_OPT_DONT_FRAGMENT         0x0002
 
 #define DEBUG_TAG _T("ping")
 
@@ -53,6 +54,7 @@ struct PING_TARGET
    UINT32 history[MAX_POLLS_PER_MINUTE];
    int bufPos;
 	int ipAddrAge;
+	bool dontFragment;
 	bool automatic;
 	time_t lastDataRead;
 };

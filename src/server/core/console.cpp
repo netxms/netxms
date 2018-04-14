@@ -339,7 +339,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (addr.isValid())
          {
             UINT32 rtt;
-            UINT32 rc = IcmpPing(addr, 1, 2000, &rtt, 128);
+            UINT32 rc = IcmpPing(addr, 1, 2000, &rtt, 128, false);
             switch(rc)
             {
                case ICMP_SUCCESS:

@@ -376,7 +376,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 	}
 	else	// not using ICMP proxy
 	{
-		if (IcmpPing(ipAddr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
+		if (IcmpPing(ipAddr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false) == ICMP_SUCCESS)
 			reachable = true;
 	}
 

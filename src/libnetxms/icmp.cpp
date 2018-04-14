@@ -262,7 +262,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize)
+static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment)
 {
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
 
@@ -277,6 +277,19 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
    if (sock == INVALID_SOCKET)
    {
       return ICMP_RAW_SOCK_FAILED;
+   }
+
+   if (dontFragment)
+   {
+#if HAVE_DECL_IP_MTU_DISCOVER
+      int v = IP_PMTUDISC_DO;
+      setsockopt(sock, IPPROTO_IP, IP_MTU_DISCOVER, &v, sizeof(v));
+#elif HAVE_DECL_IP_DONTFRAG
+      int v = 1;
+      setsockopt(sock, IPPROTO_IP, IP_DONTFRAG, &v, sizeof(v));
+#else
+      return ICMP_API_ERROR;
+#endif
    }
 
    // Setup destination address structure
@@ -331,7 +344,7 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
 /**
  * Ping IPv6 address
  */
-UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize);
+UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);
 
 /**
  * Do an ICMP ping to specific IP address
@@ -340,13 +353,13 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment)
 {
    if (addr.getFamily() == AF_INET)
-      return IcmpPing4(htonl(addr.getAddressV4()), iNumRetries, dwTimeout, pdwRTT, dwPacketSize);
+      return IcmpPing4(htonl(addr.getAddressV4()), numRetries, timeout, rtt, packetSize, dontFragment);
 #ifdef WITH_IPV6
    if (addr.getFamily() == AF_INET6)
-      return IcmpPing6(addr, iNumRetries, dwTimeout, pdwRTT, dwPacketSize);
+      return IcmpPing6(addr, numRetries, timeout, rtt, packetSize, dontFragment);
 #endif
    return ICMP_API_ERROR;
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
       for(i = 0; i < hostList.size(); i++)
 		{
          DbgPrintf(7, _T("Beacon poller: checking host %s"), hostList.get(i).toString(hosts));
-         if (IcmpPing(hostList.get(i), 1, timeout, NULL, packetSize) == ICMP_SUCCESS)
+         if (IcmpPing(hostList.get(i), 1, timeout, NULL, packetSize, false) == ICMP_SUCCESS)
 				break;	// At least one beacon responds, no need to check others
 		}
       if ((i == hostList.size()) && (!(g_flags & AF_NO_NETWORK_CONNECTIVITY)))
