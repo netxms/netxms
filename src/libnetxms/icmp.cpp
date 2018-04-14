@@ -43,7 +43,7 @@
  *             iNumRetries - number of retries
  *             dwTimeout - Timeout waiting for response in milliseconds
  */
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UINT32 timeout, UINT32 *prtt, UINT32 packetSize, bool dontFragment)
 {
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
@@ -51,15 +51,20 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
 	if (hIcmpFile == INVALID_HANDLE_VALUE)
 		return ICMP_API_ERROR;
 
-   DWORD replySize = dwPacketSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
+   DWORD replySize = packetSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
 	char *reply = (char *)alloca(replySize);
-	int retries = iNumRetries;
+	int retries = numRetries;
 	UINT32 rc = ICMP_API_ERROR;
 	do
 	{
 		if (addr.getFamily() == AF_INET)
       {
-         rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)dwPacketSize, NULL, reply, replySize, dwTimeout);
+         IP_OPTION_INFORMATION opt;
+         memset(&opt, 0, sizeof(opt));
+         opt.Ttl = 127;
+         if (dontFragment)
+            opt.Flags = IP_FLAG_DF;
+         rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)packetSize, &opt, reply, replySize, timeout);
       }
       else
       {
@@ -76,7 +81,9 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
          IP_OPTION_INFORMATION opt;
          memset(&opt, 0, sizeof(opt));
          opt.Ttl = 127;
-         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)dwPacketSize, &opt, reply, replySize, dwTimeout);
+         if (dontFragment)
+            opt.Flags = IP_FLAG_DF;
+         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)packetSize, &opt, reply, replySize, timeout);
       }
 		if (rc != 0)
 		{
@@ -103,8 +110,8 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
 			{
 				case IP_SUCCESS:
 					rc = ICMP_SUCCESS;
-					if (pdwRTT != NULL)
-						*pdwRTT = rtt;
+					if (prtt != NULL)
+						*prtt = rtt;
 					break;
 				case IP_REQ_TIMED_OUT:
 					rc = ICMP_TIMEOUT;
