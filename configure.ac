@@ -3350,6 +3350,9 @@ if test $? = 0; then
 	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 	LDFLAGS="$LDFLAGS -L${JDK_LOCATION}/lib"
 	CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include"
+	if test -d "${JDK_LOCATION}/include/freebsd"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/freebsd"
+	fi
 	if test -d "${JDK_LOCATION}/include/linux"; then
 		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/linux"
 	fi
