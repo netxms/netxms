@@ -859,7 +859,7 @@ DCObject *Template::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId)
          if (curr->hasAccess(userId))
             object = curr;
          else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), object->getId(), userId);
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
 		}
 	}
@@ -885,7 +885,7 @@ DCObject *Template::getDCObjectByName(const TCHAR *name, UINT32 userId)
          if (curr->hasAccess(userId))
             object = curr;
          else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByName: denied access to DCObject %u for user %u"), object->getId(), userId);
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByName: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
 		}
 	}
@@ -910,7 +910,7 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *description, UINT32 us
          if (curr->hasAccess(userId))
             object = curr;
          else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByDescription: denied access to DCObject %u for user %u"), object->getId(), userId);
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByDescription: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
 		}
 	}
@@ -937,7 +937,7 @@ DCObject *Template::getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock
          if (curr->hasAccess(userId))
             object = curr;
          else
-            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByGUID: denied access to DCObject %u for user %u"), object->getId(), userId);
+            nxlog_debug_tag(_T("obj.dc"), 6, _T("Template::getDCObjectByGUID: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
       }
    }
