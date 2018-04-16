@@ -298,15 +298,7 @@ AC_ARG_WITH(jdk,
 [AS_HELP_STRING(--with-jdk,build Java-dependent components)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-		if test -d "${withval}/include/linux"; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include/linux"
-		fi
-		if test -d "${withval}/include/solaris"; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include/solaris"
-		fi
+		JDK_LOCATION="$withval"
 		AC_DEFINE_UNQUOTED([JDK_LOCATION],["$withval"],[JDK location])
 	fi
 	COMPONENTS="$COMPONENTS java"
@@ -3350,6 +3342,20 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
+	if test "x$JDK_LOCATION" = "x"; then
+		JDK_LOCATION="/usr/java"
+		AC_DEFINE_UNQUOTED([JDK_LOCATION],["$JDK_LOCATION"],[JDK location])
+	fi
+
+	LD_RUN_PATH="${JDK_LOCATION}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+	LDFLAGS="$LDFLAGS -L${JDK_LOCATION}/lib"
+	CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include"
+	if test -d "${JDK_LOCATION}/include/linux"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/linux"
+	fi
+	if test -d "${JDK_LOCATION}/include/solaris"; then
+		CPPFLAGS="$CPPFLAGS -I${JDK_LOCATION}/include/solaris"
+	fi
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
 fi
 
@@ -4042,6 +4048,11 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 else
 	echo "Build Server            : NO"
 fi
+
+if test "x${JDK_LOCATION}" != "x"; then
+	echo "JDK location            : ${JDK_LOCATION}"
+fi
+
 if test "x${WITH_ENCRYPTION}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
