@@ -7,7 +7,8 @@
 - Agent returns correct free memory value on Windows
 - Parameter System.Memory.Physical.Cached supported on Windows
 - Fixed issues:
-	NX-622 ( Alerts will not be generated in certain conditions: events, that persist after maintenence and node down after unreachable)
+	NX-333 (Add windows service descriptions for both server and agent)
+	NX-622 (Alerts will not be generated in certain conditions: events, that persist after maintenence and node down after unreachable)
 	NX-922 (Service check template objects disappears after server restart)
 	NX-1097 (Configuration option to ignore alarm's helpdesk state when doing resolve or terminate)
 	NX-1157 (configure --with-dist fails if OpenSSL is not installed)
