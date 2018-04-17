@@ -158,20 +158,45 @@ void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel)
 		_tcscat(cmdLine, _T("\""));
 	}
    
-	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ,
+	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ | SERVICE_CHANGE_CONFIG,
 	                        SERVICE_WIN32_OWN_PROCESS | ((g_dwFlags & AF_INTERACTIVE_SERVICE) ? SERVICE_INTERACTIVE_PROCESS : 0),
                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, NULL, NULL, NULL, NULL, NULL);
    if (service == NULL)
    {
       DWORD code = GetLastError();
-
       if (code == ERROR_SERVICE_EXISTS)
-         _tprintf(_T("ERROR: Service named '%s' already exist\n"), g_windowsServiceName);
+      {
+         _tprintf(_T("WARNING: Service named '%s' already exist\n"), g_windowsServiceName);
+
+         // Update service description in case we are updating older installation
+         service = OpenService(mgr, g_windowsServiceName, SERVICE_CHANGE_CONFIG);
+         if (service != NULL)
+         {
+            SERVICE_DESCRIPTION sd;
+            sd.lpDescription = _T("This service collects system health and performance information and forwards it to remote NetXMS server");
+            if (!ChangeServiceConfig2(service, SERVICE_CONFIG_DESCRIPTION, &sd))
+            {
+               TCHAR errorText[1024];
+               _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+            }
+            CloseServiceHandle(service);
+         }
+      }
       else
+      {
          _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, szErrorText, 256));
+      }
    }
    else
    {
+      SERVICE_DESCRIPTION sd;
+      sd.lpDescription = _T("This service collects system health and performance information and forwards it to remote NetXMS server");
+      if (!ChangeServiceConfig2(service, SERVICE_CONFIG_DESCRIPTION, &sd))
+      {
+         TCHAR errorText[1024];
+         _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      }
+
       _tprintf(_T("Service \"%s\" created successfully\n"), g_windowsServiceName);
       CloseServiceHandle(service);
 

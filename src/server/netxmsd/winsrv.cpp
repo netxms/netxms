@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,20 +141,45 @@ void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *lo
 
    _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_bCheckDB ? _T(" --check-db") : _T(""));
    hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
-                            GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+                            GENERIC_READ | SERVICE_CHANGE_CONFIG, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
                             szCmdLine, NULL, NULL, NULL, login, password);
    if (hService == NULL)
    {
       DWORD code = GetLastError();
-
       if (code == ERROR_SERVICE_EXISTS)
-         _tprintf(_T("ERROR: Service named '") CORE_SERVICE_NAME _T("' already exist\n"));
+      {
+         _tprintf(_T("WARNING: Service named '") CORE_SERVICE_NAME _T("' already exist\n"));
+
+         // Update service description in case we are updating older installation
+         hService = OpenService(hMgr, CORE_SERVICE_NAME, SERVICE_CHANGE_CONFIG);
+         if (hService != NULL)
+         {
+            SERVICE_DESCRIPTION sd;
+            sd.lpDescription = _T("This service provides core functionality of NetXMS management server");
+            if (!ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd))
+            {
+               TCHAR errorText[1024];
+               _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+            }
+            CloseServiceHandle(hService);
+         }
+      }
       else
+      {
          _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, errorText, 1024));
+      }
    }
    else
    {
+      SERVICE_DESCRIPTION sd;
+      sd.lpDescription = _T("This service provides core functionality of NetXMS management server");
+      if (!ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd))
+      {
+         TCHAR errorText[1024];
+         _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      }
+
       _tprintf(_T("NetXMS Core service created successfully\n"));
       CloseServiceHandle(hService);
    }
