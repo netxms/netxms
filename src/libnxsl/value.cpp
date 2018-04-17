@@ -100,7 +100,7 @@ NXSL_ValueManager::~NXSL_ValueManager()
 NXSL_Value::NXSL_Value()
 {
    m_dataType = NXSL_DT_NULL;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -146,24 +146,24 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
          m_length = value->m_length;
          if (m_length < NXSL_SHORT_STRING_LENGTH)
          {
-            memcpy(m_value.string, value->m_value.string, (m_length + 1) * sizeof(TCHAR));
-            m_string = NULL;
+            memcpy(m_stringValue, value->m_stringValue, (m_length + 1) * sizeof(TCHAR));
+            m_stringPtr = NULL;
          }
          else
          {
-            m_string = (TCHAR *)nx_memdup(value->m_string, (m_length + 1) * sizeof(TCHAR));
+            m_stringPtr = (TCHAR *)nx_memdup(value->m_stringPtr, (m_length + 1) * sizeof(TCHAR));
          }
       }
       else
       {
-         m_string = NULL;
+         m_stringPtr = NULL;
       }
 		m_name = (value->m_name != NULL) ? strdup(value->m_name) : NULL;
    }
    else
    {
       m_dataType = NXSL_DT_NULL;
-      m_string = NULL;
+      m_stringPtr = NULL;
 		m_name = NULL;
    }
 #ifdef UNICODE
@@ -178,7 +178,7 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
 {
    m_dataType = NXSL_DT_OBJECT;
    m_value.object = object;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -195,7 +195,7 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
    m_dataType = NXSL_DT_ARRAY;
    m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(array);
 	m_value.arrayHandle->incRefCount();
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -212,7 +212,7 @@ NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
    m_dataType = NXSL_DT_HASHMAP;
    m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(hashMap);
 	m_value.hashMapHandle->incRefCount();
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -229,7 +229,7 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
    m_dataType = NXSL_DT_ITERATOR;
    m_value.iterator = iterator;
 	iterator->incRefCount();
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -244,7 +244,7 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
 NXSL_Value::NXSL_Value(INT32 nValue)
 {
    m_dataType = NXSL_DT_INT32;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -260,7 +260,7 @@ NXSL_Value::NXSL_Value(INT32 nValue)
 NXSL_Value::NXSL_Value(UINT32 uValue)
 {
    m_dataType = NXSL_DT_UINT32;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -276,7 +276,7 @@ NXSL_Value::NXSL_Value(UINT32 uValue)
 NXSL_Value::NXSL_Value(INT64 nValue)
 {
    m_dataType = NXSL_DT_INT64;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -292,7 +292,7 @@ NXSL_Value::NXSL_Value(INT64 nValue)
 NXSL_Value::NXSL_Value(UINT64 uValue)
 {
    m_dataType = NXSL_DT_UINT64;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -308,7 +308,7 @@ NXSL_Value::NXSL_Value(UINT64 uValue)
 NXSL_Value::NXSL_Value(double dValue)
 {
    m_dataType = NXSL_DT_REAL;
-   m_string = NULL;
+   m_stringPtr = NULL;
    m_length = 0;
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -329,19 +329,19 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 		m_length = (UINT32)_tcslen(value);
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
-		   _tcscpy(m_value.string, value);
-		   m_string = NULL;
+		   _tcscpy(m_stringValue, value);
+		   m_stringPtr = NULL;
 		}
 		else
 		{
-		   m_string = _tcsdup(value);
+		   m_stringPtr = _tcsdup(value);
 		}
 	}
 	else
 	{
 		m_length = 0;
-		m_value.string[0] = 0;
-		m_string = NULL;
+		m_stringValue[0] = 0;
+		m_stringPtr = NULL;
 	}
 #ifdef UNICODE
 	m_mbString = NULL;
@@ -361,20 +361,20 @@ NXSL_Value::NXSL_Value(const char *value)
    m_dataType = NXSL_DT_STRING;
 	if (value != NULL)
 	{
-		m_string = WideStringFromUTF8String(value);
-		m_length = (UINT32)_tcslen(m_string);
+		m_stringPtr = WideStringFromUTF8String(value);
+		m_length = (UINT32)_tcslen(m_stringPtr);
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
-		   _tcscpy(m_value.string, m_string);
-		   free(m_string);
-		   m_string = NULL;
+		   _tcscpy(m_stringValue, m_stringPtr);
+		   free(m_stringPtr);
+		   m_stringPtr = NULL;
 		}
 	}
 	else
 	{
 		m_length = 0;
-      m_value.string[0] = 0;
-      m_string = NULL;
+      m_stringValue[0] = 0;
+      m_stringPtr = NULL;
 	}
 	m_mbString = NULL;
    m_stringIsValid = TRUE;
@@ -395,26 +395,26 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
    {
       if (value != NULL)
       {
-         memcpy(m_value.string, value, dwLen * sizeof(TCHAR));
-         m_value.string[dwLen] = 0;
+         memcpy(m_stringValue, value, dwLen * sizeof(TCHAR));
+         m_stringValue[dwLen] = 0;
       }
       else
       {
-         memset(m_value.string, 0, (dwLen + 1) * sizeof(TCHAR));
+         memset(m_stringValue, 0, (dwLen + 1) * sizeof(TCHAR));
       }
-      m_string = NULL;
+      m_stringPtr = NULL;
    }
    else
    {
-      m_string = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
+      m_stringPtr = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
       if (value != NULL)
       {
-         memcpy(m_string, value, dwLen * sizeof(TCHAR));
-         m_string[dwLen] = 0;
+         memcpy(m_stringPtr, value, dwLen * sizeof(TCHAR));
+         m_stringPtr[dwLen] = 0;
       }
       else
       {
-         memset(m_string, 0, (dwLen + 1) * sizeof(TCHAR));
+         memset(m_stringPtr, 0, (dwLen + 1) * sizeof(TCHAR));
       }
    }
 #ifdef UNICODE
@@ -431,7 +431,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 NXSL_Value::~NXSL_Value()
 {
 	free(m_name);
-   free(m_string);
+   free(m_stringPtr);
 #ifdef UNICODE
 	free(m_mbString);
 #endif
@@ -464,7 +464,7 @@ NXSL_Value::~NXSL_Value()
 void NXSL_Value::set(INT32 nValue)
 {
    m_dataType = NXSL_DT_INT32;
-	safe_free_and_null(m_string);
+	safe_free_and_null(m_stringPtr);
 #ifdef UNICODE
 	safe_free_and_null(m_mbString);
 #endif
@@ -477,7 +477,7 @@ void NXSL_Value::set(INT32 nValue)
  */
 void NXSL_Value::updateNumber()
 {
-   const TCHAR *s = (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
+   const TCHAR *s = (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
    if (s[0] == 0)
       return;
 
@@ -514,7 +514,7 @@ void NXSL_Value::updateString()
 {
    TCHAR szBuffer[64];
 
-   free(m_string);
+   free(m_stringPtr);
 #ifdef UNICODE
 	safe_free_and_null(m_mbString);
 #endif
@@ -557,12 +557,12 @@ void NXSL_Value::updateString()
    m_length = (UINT32)_tcslen(szBuffer);
    if (m_length < NXSL_SHORT_STRING_LENGTH)
    {
-      _tcscpy(m_value.string, szBuffer);
-      m_string = NULL;
+      _tcscpy(m_stringValue, szBuffer);
+      m_stringPtr = NULL;
    }
    else
    {
-      m_string = _tcsdup(szBuffer);
+      m_stringPtr = _tcsdup(szBuffer);
    }
    m_stringIsValid = TRUE;
 }
@@ -653,7 +653,7 @@ const TCHAR *NXSL_Value::getValueAsCString()
 
    if (!m_stringIsValid)
       updateString();
-   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
+   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
 }
 
 /**
@@ -671,7 +671,7 @@ const char *NXSL_Value::getValueAsMBString()
 
    if (!m_stringIsValid)
       updateString();
-   m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : CHECK_NULL_EX(m_string));
+   m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : CHECK_NULL_EX(m_stringPtr));
    return m_mbString;
 }
 
@@ -685,7 +685,7 @@ const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
    if (!m_stringIsValid)
       updateString();
    *pdwLen = m_length;
-   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string;
+   return (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
 }
 
 /**
@@ -782,25 +782,25 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
    {
       if (m_length + dwLen < NXSL_SHORT_STRING_LENGTH)
       {
-         memcpy(&m_value.string[m_length], pszString, dwLen * sizeof(TCHAR));
+         memcpy(&m_stringValue[m_length], pszString, dwLen * sizeof(TCHAR));
          m_length += dwLen;
-         m_value.string[m_length] = 0;
+         m_stringValue[m_length] = 0;
       }
       else
       {
-         m_string = (TCHAR *)malloc((m_length + dwLen + 1) * sizeof(TCHAR));
-         memcpy(m_string, m_value.string, m_length * sizeof(TCHAR));
-         memcpy(&m_string[m_length], pszString, dwLen * sizeof(TCHAR));
+         m_stringPtr = (TCHAR *)malloc((m_length + dwLen + 1) * sizeof(TCHAR));
+         memcpy(m_stringPtr, m_stringValue, m_length * sizeof(TCHAR));
+         memcpy(&m_stringPtr[m_length], pszString, dwLen * sizeof(TCHAR));
          m_length += dwLen;
-         m_string[m_length] = 0;
+         m_stringPtr[m_length] = 0;
       }
    }
    else
    {
-      m_string = (TCHAR *)realloc(m_string, (m_length + dwLen + 1) * sizeof(TCHAR));
-      memcpy(&m_string[m_length], pszString, dwLen * sizeof(TCHAR));
+      m_stringPtr = (TCHAR *)realloc(m_stringPtr, (m_length + dwLen + 1) * sizeof(TCHAR));
+      memcpy(&m_stringPtr[m_length], pszString, dwLen * sizeof(TCHAR));
       m_length += dwLen;
-      m_string[m_length] = 0;
+      m_stringPtr[m_length] = 0;
    }
    m_dataType = NXSL_DT_STRING;
    updateNumber();
@@ -1434,8 +1434,8 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
          if (v->m_length != m_length)
             return false;
          if (m_length < NXSL_SHORT_STRING_LENGTH)
-            return !_tcscmp(v->m_value.string, m_value.string) ? true : false;
-         return !_tcscmp(v->m_string, m_string) ? true : false;
+            return !_tcscmp(v->m_stringValue, m_stringValue) ? true : false;
+         return !_tcscmp(v->m_stringPtr, m_stringPtr) ? true : false;
       case NXSL_DT_UINT32:
          return v->m_value.uint32 == m_value.uint32;
       case NXSL_DT_UINT64:
@@ -1484,7 +1484,7 @@ void NXSL_Value::serialize(ByteStream &s) const
          s.write(m_value.real);
          break;
       case NXSL_DT_STRING:
-         s.writeString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_value.string : m_string);
+         s.writeString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr);
          break;
       case NXSL_DT_UINT32:
          s.write(m_value.uint32);
@@ -1540,13 +1540,13 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          v->m_value.real = s.readDouble();
          break;
       case NXSL_DT_STRING:
-         v->m_string = s.readString();
-         v->m_length = (UINT32)_tcslen(v->m_string);
+         v->m_stringPtr = s.readString();
+         v->m_length = (UINT32)_tcslen(v->m_stringPtr);
          if (v->m_length < NXSL_SHORT_STRING_LENGTH)
          {
-            _tcscpy(v->m_value.string, v->m_string);
-            free(v->m_string);
-            v->m_string = NULL;
+            _tcscpy(v->m_stringValue, v->m_stringPtr);
+            free(v->m_stringPtr);
+            v->m_stringPtr = NULL;
          }
          v->m_stringIsValid = TRUE;
          v->updateNumber();

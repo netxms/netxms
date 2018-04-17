@@ -427,7 +427,8 @@ class LIBNXSL_EXPORTABLE NXSL_Value
 
 protected:
    UINT32 m_length;
-   TCHAR *m_string;
+   TCHAR m_stringValue[NXSL_SHORT_STRING_LENGTH];
+   TCHAR *m_stringPtr;
 #ifdef UNICODE
 	char *m_mbString;	// value as MB string; NULL until first request
 #endif
@@ -445,7 +446,6 @@ protected:
 		NXSL_Iterator *iterator;
 		NXSL_Handle<NXSL_Array> *arrayHandle;
       NXSL_Handle<NXSL_HashMap> *hashMapHandle;
-      TCHAR string[NXSL_SHORT_STRING_LENGTH];
    } m_value;
 
    void updateNumber();
@@ -453,7 +453,7 @@ protected:
 
    void invalidateString()
    {
-      safe_free_and_null(m_string);
+      safe_free_and_null(m_stringPtr);
 #ifdef UNICODE
 		safe_free_and_null(m_mbString);
 #endif
