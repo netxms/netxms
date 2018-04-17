@@ -33,7 +33,9 @@
 
 #if defined(_WIN32)
 
-#define NX_STAT _tstati64
+int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st);
+
+#define NX_STAT _statw32
 #define NX_FSTAT _fstati64
 #define NX_STAT_STRUCT struct _stati64
 
