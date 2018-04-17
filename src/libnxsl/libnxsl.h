@@ -176,6 +176,7 @@ protected:
 	NXSL_Stack *m_breakStack;
 	NXSL_Stack *m_selectStack;
 	int m_idOpCode;
+	int m_foreachLevel;
 
 public:
    NXSL_Compiler();
@@ -200,6 +201,10 @@ public:
    void closeSelectLevel();
    void pushSelectJumpAddr(UINT32 addr);
    UINT32 popSelectJumpAddr();
+
+   void newForEachLevel() { m_foreachLevel++; }
+   void closeForEachLevel() { m_foreachLevel--; }
+   int getForEachLevel() { return m_foreachLevel; }
 
 	void setIdentifierOperation(int opcode) { m_idOpCode = opcode; }
 	int getIdentifierOperation() { return m_idOpCode; }
