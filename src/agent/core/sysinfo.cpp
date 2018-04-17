@@ -98,7 +98,10 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
    LONG nRet = SYSINFO_RC_SUCCESS;
 
    if (CALL_STAT(szPath, &fileInfo) == -1)
-       return SYSINFO_RC_ERROR;
+   {
+      nxlog_debug(5, _T("GetDirInfo: stat() call on \"%s\" failed (%s)"), szPath, _tcserror(errno));
+      return SYSINFO_RC_ERROR;
+   }
 
    // if this is just a file than simply return statistics
    // Filters ignored in this case
@@ -210,6 +213,13 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
        (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
       return SYSINFO_RC_UNSUPPORTED;
 
+   // Remove trailing backslash on Windows
+#ifdef _WIN32
+   size_t i = _tcslen(szRealPath) - 1;
+   if (szRealPath[i] == _T('\\'))
+      szRealPath[i] = 0;
+#endif
+
    int mode = CAST_FROM_POINTER(arg, int);
    DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
 
@@ -218,14 +228,14 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    switch(mode)
    {
       case DIRINFO_FILE_SIZE:
-           ret_uint64(value, llFileSize);
-           break;
+         ret_uint64(value, llFileSize);
+         break;
       case DIRINFO_FILE_COUNT:
       case DIRINFO_FOLDER_COUNT:
-           ret_uint(value, uFileCount);
-           break;
+         ret_uint(value, uFileCount);
+         break;
       default:
-           nRet = SYSINFO_RC_UNSUPPORTED;
+         nRet = SYSINFO_RC_UNSUPPORTED;
          break;
    }
 

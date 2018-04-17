@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -2998,3 +2998,56 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
    return buffer;
 #endif   /* _WIN32 */
 }
+
+#ifdef _WIN32
+
+/**
+ * Convert FILETIME structure to time_t
+ */
+static time_t FileTimeToUnixTime(FILETIME *ft)
+{
+   LARGE_INTEGER li;
+   li.LowPart = ft->dwLowDateTime;
+   li.HighPart = ft->dwHighDateTime;
+   INT64 t = li.QuadPart; // In 100-nanosecond intervals
+   t -= EPOCHFILETIME;    // Offset to the Epoch time
+   t /= 10000000;         // Convert to seconds
+   return static_cast<time_t>(t);
+}
+
+/**
+ * stat() implementaion for Windows
+ */
+int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
+{
+   WIN32_FIND_DATA fd;
+   HANDLE h = FindFirstFile(file, &fd);
+   if (h == INVALID_HANDLE_VALUE)
+   {
+      _set_errno((GetLastError() == ERROR_FILE_NOT_FOUND) ? ENOENT : EIO);
+      return -1;
+   }
+
+   memset(st, 0, sizeof(struct _stati64));
+   st->st_mode = _S_IREAD;
+   if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+      st->st_mode |= _S_IWRITE;
+   if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      st->st_mode |= _S_IFDIR;
+   else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      st->st_mode |= _S_IFDIR;
+   else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
+      st->st_mode |= _S_IFCHR;
+   else
+      st->st_mode |= _S_IFREG;
+
+   st->st_size = (static_cast<INT64>(fd.nFileSizeHigh) << 32) + fd.nFileSizeLow;
+   st->st_atime = FileTimeToUnixTime(&fd.ftLastAccessTime);
+   st->st_ctime = FileTimeToUnixTime(&fd.ftCreationTime);
+   st->st_mtime = FileTimeToUnixTime(&fd.ftLastWriteTime);
+
+   FindClose(h);
+   return 0;
+}
+
+#endif   /* _WIN32 */
