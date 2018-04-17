@@ -20,7 +20,10 @@
 
 #include "filemgr.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <accctrl.h>
+#include <aclapi.h>
+#else
 #include <pwd.h>
 #include <grp.h>
 #endif
@@ -244,7 +247,7 @@ static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false
 
 #define REGULAR_FILE    1
 #define DIRECTORY       2
-#define SYMLINC         4
+#define SYMLINK         4
 
 /**
  * Returns if file already exist
@@ -254,12 +257,7 @@ int CheckFileType(const TCHAR *fileName)
    NX_STAT_STRUCT st;
    if (CALL_STAT(fileName, &st) == 0)
    {
-      if(S_ISDIR(st.st_mode))
-      {
-         return DIRECTORY;
-      }
-      else
-         return REGULAR_FILE;
+      return S_ISDIR(st.st_mode) ? DIRECTORY : REGULAR_FILE;
    }
    return -1;
 }
@@ -278,9 +276,35 @@ bool VerifyFileOperation(const TCHAR *fileName, bool allowOverwirite, NXCPMessag
 
 #ifdef _WIN32
 
+/**
+ * Get file owner information on Windows
+ */
 TCHAR *GetFileOwnerWin(const TCHAR *file)
 {
-   return _tcsdup(_T(""));
+   HANDLE hFile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+   if (hFile == INVALID_HANDLE_VALUE)
+      return _tcsdup(_T(""));
+
+   // Get the owner SID of the file.
+   PSID owner = NULL;
+   PSECURITY_DESCRIPTOR sd = NULL;
+   if (GetSecurityInfo(hFile, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, &owner, NULL, NULL, NULL, &sd) != ERROR_SUCCESS)
+   {
+      CloseHandle(hFile);
+      return _tcsdup(_T(""));
+   }
+   CloseHandle(hFile);
+
+   // Resolve account and domain name
+   TCHAR acctName[256], domainName[256];
+   DWORD acctNameSize = 256, domainNameSize = 256;
+   SID_NAME_USE use = SidTypeUnknown;
+   if (!LookupAccountSid(NULL, owner, acctName, &acctNameSize, domainName, &domainNameSize, &use))
+      return _tcsdup(_T(""));
+
+   TCHAR *name = (TCHAR *)malloc(512 * sizeof(TCHAR));
+   _sntprintf(name, 512, _T("%s\\%s"), domainName, acctName);
+   return name;
 }
 
 #endif // _WIN32
@@ -302,11 +326,11 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       if(S_ISLNK(st.st_mode))
       {
          accessRights[0] = _T('l');
-         type |= SYMLINC;
-         NX_STAT_STRUCT symlincSt;
-         if (CALL_STAT_FOLLOW_SYMLINK(filePath, &symlincSt) == 0)
+         type |= SYMLINK;
+         NX_STAT_STRUCT SYMLINKSt;
+         if (CALL_STAT_FOLLOW_SYMLINK(filePath, &SYMLINKSt) == 0)
          {
-            type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
+            type |= S_ISDIR(SYMLINKSt.st_mode) ? DIRECTORY : 0;
          }
       }
 
@@ -355,7 +379,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
 #else
       TCHAR *owner = GetFileOwnerWin(filePath);
       msg->setField(varId++, owner);
-      safe_free(owner);
+      free(owner);
       msg->setField(varId++, _T(""));
       msg->setField(varId++, _T(""));
 #endif // _WIN32
