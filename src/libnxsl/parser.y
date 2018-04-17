@@ -826,6 +826,10 @@ SimpleStatementKeyword:
 }
 |	T_RETURN
 {
+   if (pCompiler->getForEachLevel() > 0)
+   {
+	   pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)pCompiler->getForEachLevel()));
+   }
 	$$ = new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_RETURN);
 }
 |	T_PRINT
@@ -906,7 +910,7 @@ ForStatement:
 ;
 
 ForEachStatement:
-	ForEach ForEachBody
+	ForEach { pCompiler->newForEachLevel(); } ForEachBody { pCompiler->closeForEachLevel(); }
 ;
 
 ForEach:
