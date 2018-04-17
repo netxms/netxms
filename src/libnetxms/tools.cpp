@@ -3020,8 +3020,21 @@ static time_t FileTimeToUnixTime(FILETIME *ft)
  */
 int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
 {
+   TCHAR *fn;
+   size_t l = _tcslen(file);
+   if (file[l - 1] == _T('\\'))
+   {
+      fn = (TCHAR *)alloca(l * sizeof(TCHAR));
+      memcpy(fn, file, (l - 1) * sizeof(TCHAR));
+      fn[l - 1] = 0;
+   }
+   else
+   {
+      fn = const_cast<TCHAR*>(file);
+   }
+
    WIN32_FIND_DATA fd;
-   HANDLE h = FindFirstFile(file, &fd);
+   HANDLE h = FindFirstFile(fn, &fd);
    if (h == INVALID_HANDLE_VALUE)
    {
       _set_errno((GetLastError() == ERROR_FILE_NOT_FOUND) ? ENOENT : EIO);
