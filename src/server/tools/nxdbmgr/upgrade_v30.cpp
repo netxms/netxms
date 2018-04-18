@@ -23,9 +23,23 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 30.34 to 30.35 (changes also included into 22.24)
+ */
+static bool H_UpgradeFromV34()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 24)
+   {
+      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 24));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(35));
+   return true;
+}
 
 /**
- * Upgrade from 30.33 to 30.34 (changes also included into 22.23)
+ * Upgrade from 30.33 to 30.35 (changes also included into 22.23)
  */
 static bool H_UpgradeFromV33()
 {
@@ -33,7 +47,7 @@ static bool H_UpgradeFromV33()
    {
       static const TCHAR *batch =
          _T("ALTER TABLE object_properties ADD state_before_maint integer\n")
-         _T("ALTER TABLE dct_threshold_instances ADD row integer\n")
+         _T("ALTER TABLE dct_threshold_instances ADD row_number integer\n")
          _T("ALTER TABLE dct_threshold_instances ADD maint_copy char(1)\n")
          _T("ALTER TABLE thresholds ADD state_before_maint char(1)\n")
          _T("<END>");
@@ -45,9 +59,9 @@ static bool H_UpgradeFromV33()
       CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("maint_copy")));
       CHK_EXEC(DBAddPrimaryKey(g_hCoreDB, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
 
-      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 23));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 24));
    }
-   CHK_EXEC(SetMinorSchemaVersion(34));
+   CHK_EXEC(SetMinorSchemaVersion(35));
    return true;
 }
 
@@ -1074,7 +1088,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 33, 30, 34, H_UpgradeFromV33 },
+   { 34, 30, 35, H_UpgradeFromV34 },
+   { 33, 30, 35, H_UpgradeFromV33 },
    { 32, 30, 33, H_UpgradeFromV32 },
    { 31, 30, 32, H_UpgradeFromV31 },
    { 30, 30, 31, H_UpgradeFromV30 },
